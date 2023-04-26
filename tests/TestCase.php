@@ -13,9 +13,5 @@ class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-
-        $this->loadMigrationsFrom(__DIR__ . '/Support/database/migrations');
-        $this->withFactories(__DIR__ . '/Support/database/factories');
     }
 }
