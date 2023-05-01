@@ -18,6 +18,8 @@ trait PerformsRestOperations
     public function search(SearchRequest $request) {
         $resource = static::newResource();
 
+        $this->authorizeTo('viewAny', $resource::$model);
+
         $query = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
             ->tap(function ($query) use ($request) {
                 self::newResource()->fetchQuery($request, $query->toBase());

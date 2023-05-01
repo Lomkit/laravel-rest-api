@@ -93,7 +93,7 @@ class Builder implements QueryBuilder
             return $this->queryBuilder->where(function ($query) use ($nested) {
                 $this->newQueryBuilder(['resource' => $this->resource, 'query' => $query])
                     ->applyFilters($nested);
-            });
+            }, null, null, $type);
         }
 
         // Here we assume the user has asked a relation filter

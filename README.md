@@ -64,5 +64,6 @@ Estimate time for Beta delivery: July 2023
 - Actions / Metrics
 - Automatic Gates
 - Aggregating (V2)
+- Stubs
 - Create entries (Including distant ones)
 - Update entries (Including distant ones)

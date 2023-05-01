@@ -1,6 +1,6 @@
 <?php
 
-namespace Support\Rest\Resources;
+namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Lomkit\Rest\Http\Requests\RestRequest;

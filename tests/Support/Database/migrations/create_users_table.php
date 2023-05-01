@@ -13,11 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('models', function (Blueprint $table) {
+        Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\BelongsToRelation::class)->constrained();
-            $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\HasOneRelation::class)->constrained();
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->rememberToken();
             $table->timestamps();
         });
     }

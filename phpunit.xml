@@ -4,13 +4,14 @@
     <testsuite name="Unit">
       <directory suffix="Test.php">./tests/Unit</directory>
     </testsuite>
-<!--    <testsuite name="Feature">-->
-<!--      <directory suffix="Test.php">./tests/Feature</directory>-->
-<!--    </testsuite>-->
+    <testsuite name="Feature">
+      <directory suffix="Test.php">./tests/Feature</directory>
+    </testsuite>
   </testsuites>
   <coverage/>
   <php>
     <env name="APP_ENV" value="testing"/>
+    <env name="APP_DEBUG" value="true"/>
     <env name="BCRYPT_ROUNDS" value="4"/>
     <env name="CACHE_DRIVER" value="array"/>
     <env name="DB_CONNECTION" value="sqlite"/>

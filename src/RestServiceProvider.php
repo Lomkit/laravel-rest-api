@@ -3,6 +3,7 @@
 namespace Lomkit\Rest;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Query\Builder;
 
@@ -25,5 +26,6 @@ class RestServiceProvider extends ServiceProvider{
      */
     public function boot()
     {
+        //@TODO: for tests see https://github.com/rebing/graphql-laravel/tree/master/tests
     }
 }

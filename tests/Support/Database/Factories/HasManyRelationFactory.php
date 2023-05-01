@@ -4,9 +4,17 @@ namespace Lomkit\Rest\Tests\Support\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 
-class BelongsToManyRelationFactory extends Factory
+class HasManyRelationFactory extends Factory
 {
+    /**
+     * The name of the factory's corresponding model.
+     *
+     * @var class-string<\Illuminate\Database\Eloquent\Model|TModel>
+     */
+    protected $model = HasManyRelation::class;
+
     /**
      * Define the model's default state.
      *
