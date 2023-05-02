@@ -2,9 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Support\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
 class HasOneRelation extends Model
 {
-
+    public function model() {
+        return $this->belongsTo(Model::class);
+    }
 }

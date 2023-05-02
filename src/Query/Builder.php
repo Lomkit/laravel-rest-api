@@ -10,6 +10,9 @@ use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\BelongsTo;
+use Lomkit\Rest\Relations\HasMany;
+use Lomkit\Rest\Relations\HasOne;
 use RuntimeException;
 
 class Builder implements QueryBuilder
@@ -66,6 +69,7 @@ class Builder implements QueryBuilder
         $this->when(isset($parameters['scopes']), function () use ($parameters) {
             $this->applyScopes($parameters['scopes']);
         });
+
 
         $this->when(isset($parameters['selects']), function () use ($parameters) {
             $this->applySelects($parameters['selects']);
@@ -148,7 +152,15 @@ class Builder implements QueryBuilder
     }
 
     public function include($include) {
-        return $this->queryBuilder->with($include['relation'], function(Relation $query) use ($include) {
+
+        // If we have a belongsTo relation we add the key to the select, otherwise eager loading won't work
+        if (($relation = $this->resource->relation($include['relation'])) instanceof BelongsTo) {
+            $this->select(
+                ['field' => $this->resource::newModel()->{$relation->relation}()->getForeignKeyName()]
+            );
+        }
+
+        return $this->queryBuilder->with($include['relation'], function(Relation $query) use ($relation, $include) {
             //@TODO: ici vu que c'est une relation query je dois sûrement pouvoir filter by le pivot !!!!
             //@TODO: le soucis c'est que le "getQuery" m'enlève la relation
 
@@ -156,8 +168,16 @@ class Builder implements QueryBuilder
 
             $resource->fetchQuery(app()->make(RestRequest::class), $query->getQuery());
 
-            return $this->newQueryBuilder(['resource' => $resource, 'query' => $query->getQuery()])
-                ->search($include);
+            $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query->getQuery()]);
+
+            // If we have a hasMany relation we add the key to the select, otherwise eager loading won't work
+            if ($relation instanceof HasOne) {
+                $queryBuilder->select(
+                    ['field' => $this->resource::newModel()->{$relation->relation}()->getForeignKeyName()]
+                );
+            }
+
+            return $queryBuilder->search($include);
         });
     }
 
