@@ -20,7 +20,8 @@ class ModelResource extends Resource
             HasOne::make('hasOneRelation', HasOneResource::class),
             BelongsTo::make('belongsToRelation', BelongsToResource::class),
             HasMany::make('hasManyRelation', HasManyResource::class),
-            BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class),
+            BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
+                ->withPivotFields(['created_at']),
         ];
     }
 

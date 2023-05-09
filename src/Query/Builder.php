@@ -11,6 +11,7 @@ use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
+use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Relations\HasOne;
 use RuntimeException;
@@ -158,6 +159,10 @@ class Builder implements QueryBuilder
             $this->select(
                 ['field' => $this->resource::newModel()->{$relation->relation}()->getForeignKeyName()]
             );
+        } elseif ($relation instanceof HasOne || $relation instanceof HasMany || $relation instanceof BelongsToMany) {
+            $this->select(
+                ['field' => $this->resource::newModel()->getKeyName()]
+            );
         }
 
         return $this->queryBuilder->with($include['relation'], function(Relation $query) use ($relation, $include) {
@@ -171,7 +176,7 @@ class Builder implements QueryBuilder
             $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query->getQuery()]);
 
             // If we have a hasMany relation we add the key to the select, otherwise eager loading won't work
-            if ($relation instanceof HasOne) {
+            if ($relation instanceof HasOne || $relation instanceof HasMany) {
                 $queryBuilder->select(
                     ['field' => $this->resource::newModel()->{$relation->relation}()->getForeignKeyName()]
                 );

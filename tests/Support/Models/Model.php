@@ -19,6 +19,8 @@ class Model extends BaseModel
     }
 
     public function belongsToManyRelation() {
-        return $this->belongsToMany(BelongsToRelation::class);
+        return $this->belongsToMany(BelongsToManyRelation::class)
+            ->as('belongs_to_many_pivot')
+            ->withPivot('created_at', 'updated_at');
     }
 }

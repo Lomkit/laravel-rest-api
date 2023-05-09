@@ -13,10 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('has_many_relations', function (Blueprint $table) {
-            $table->id();
+        Schema::create('belongs_to_many_relation_model', function (Blueprint $table) {
+            $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation::class)->constrained();
             $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\Model::class)->constrained();
+
             $table->timestamps();
+
+            $table->primary(['model_id', 'belongs_to_many_relation_id']);
         });
     }
 };

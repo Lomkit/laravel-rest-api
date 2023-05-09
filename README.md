@@ -67,3 +67,4 @@ Estimate time for Beta delivery: July 2023
 - Stubs
 - Create entries (Including distant ones)
 - Update entries (Including distant ones)
+- Automatic documentation with extending possible
