@@ -71,9 +71,11 @@ class SearchIncludingOperationsTest extends TestCase
             [
                 [
                     'belongs_to_relation' => $matchingModel->belongsToRelation->only((new BelongsToResource)->exposedFields(app()->make(RestRequest::class))),
+                    'belongs_to_relation_id' => $belongsTo->getKey()
                 ],
                 [
                     'belongs_to_relation' => null,
+                    'belongs_to_relation_id' => null,
                 ]
             ]
         );
@@ -110,7 +112,7 @@ class SearchIncludingOperationsTest extends TestCase
             [
                 [
                     'has_one_relation' => $matchingModel->hasOneRelation->only(
-                        (new HasOneResource)->exposedFields(app()->make(RestRequest::class))
+                        array_merge((new HasOneResource)->exposedFields(app()->make(RestRequest::class)), ['model_id'])
                     ),
                 ],
                 [
@@ -149,7 +151,7 @@ class SearchIncludingOperationsTest extends TestCase
                 [
                     'has_many_relation' => $matchingModel->hasManyRelation->map(function ($relation) {
                         return $relation->only(
-                            (new HasManyResource)->exposedFields(app()->make(RestRequest::class))
+                            array_merge((new HasOneResource)->exposedFields(app()->make(RestRequest::class)), ['model_id'])
                         );
                     })->toArray(),
                 ],
@@ -160,12 +162,14 @@ class SearchIncludingOperationsTest extends TestCase
         );
     }
 
+    // @TODO: add the ability to specify pivot fields (using relationable) ?
     /** @test */
     public function getting_a_list_of_resources_including_belongs_to_many_relation(): void
     {
         $matchingModel = ModelFactory::new()
             ->has(BelongsToManyRelationFactory::new()->count(2))
             ->create()->fresh();
+        $pivotAccessor = $matchingModel->belongsToManyRelation()->getPivotAccessor();
 
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
@@ -187,12 +191,18 @@ class SearchIncludingOperationsTest extends TestCase
             new ModelResource,
             [
                 [
-                    'belongs_to_many_relation' => $matchingModel->belongsToManyRelation->map(function ($relation) {
+                    'belongs_to_many_relation' => $matchingModel->belongsToManyRelation->map(function ($relation) use ($matchingModel, $pivotAccessor) {
                         return collect($relation->only(
-                            array_merge((new BelongsToManyResource)->exposedFields(app()->make(RestRequest::class)), ['pivot'])
+                            array_merge((new BelongsToManyResource)->exposedFields(app()->make(RestRequest::class)), [$pivotAccessor])
                         ))
-                            ->pipe(function ($relation) {
-                                $relation['pivot'] = $relation['pivot']->toArray();
+                            ->pipe(function ($relation) use ($matchingModel, $pivotAccessor) {
+                                $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
+                                    ->only(
+                                        array_merge(
+                                            $matchingModel->belongsToManyRelation()->getPivotColumns(),
+                                            ['model_id', 'belongs_to_many_relation_id']
+                                        )
+                                    );
                                 return $relation;
                             });
                     })->toArray(),
@@ -203,11 +213,4 @@ class SearchIncludingOperationsTest extends TestCase
             ]
         );
     }
-
-    //@TODO: test if id is not selected if it still works !
-
-    //@TODO: belongs to many with pivot fields not working --> ca select tout ! --> bien select les pivots fields nécessaires
-    //@TODO: au final ca regroupe le fait de ne pas vouloir select les pivots fields
-
-    //@TODO: if "exposedFields" are empty, it selects all by default - might be corrected with the changes above
 }

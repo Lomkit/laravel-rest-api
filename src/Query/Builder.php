@@ -72,14 +72,17 @@ class Builder implements QueryBuilder
         });
 
 
+        if (empty($exposedFields = $this->resource->exposedFields(app()->make(RestRequest::class)))) {
+            throw new RuntimeException('No exposed fields are specified on resource');
+        }
         $this->when(isset($parameters['selects']), function () use ($parameters) {
             $this->applySelects($parameters['selects']);
-        }, function () {
+        }, function () use ($exposedFields) {
             $this->applySelects(array_map(
                 function ($field) {
                     return compact('field');
                 },
-                $this->resource->exposedFields(app()->make(RestRequest::class))
+                $exposedFields
             ));
         });
 
@@ -154,7 +157,7 @@ class Builder implements QueryBuilder
 
     public function include($include) {
 
-        // If we have a belongsTo relation we add the key to the select, otherwise eager loading won't work
+        // Add fields for prefetching relations
         if (($relation = $this->resource->relation($include['relation'])) instanceof BelongsTo) {
             $this->select(
                 ['field' => $this->resource::newModel()->{$relation->relation}()->getForeignKeyName()]
@@ -175,7 +178,7 @@ class Builder implements QueryBuilder
 
             $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query->getQuery()]);
 
-            // If we have a hasMany relation we add the key to the select, otherwise eager loading won't work
+            // Add fields for prefetching relations
             if ($relation instanceof HasOne || $relation instanceof HasMany) {
                 $queryBuilder->select(
                     ['field' => $this->resource::newModel()->{$relation->relation}()->getForeignKeyName()]
