@@ -33,4 +33,20 @@ class ModelResource extends Resource
             'number'
         ];
     }
+
+    public function exposedScopes(RestRequest $request)
+    {
+        return [
+            'numbered'
+        ];
+    }
+
+    public function exposedPaginations(RestRequest $request) {
+        return [
+            1,
+            10,
+            25,
+            50
+        ];
+    }
 }

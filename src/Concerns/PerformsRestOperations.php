@@ -14,7 +14,6 @@ use Lomkit\Rest\Http\Requests\SearchRequest;
 trait PerformsRestOperations
 {
     // @TODO: il faut tester le projet jusqu'ici :)
-    // @TODO: + bribes de la doc
     public function search(SearchRequest $request) {
         $resource = static::newResource();
 
