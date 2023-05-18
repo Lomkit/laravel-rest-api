@@ -14,6 +14,9 @@ class TestCase extends BaseTestCase
 {
     use InteractsWithAuthorization, InteractsWithResource;
 
+    // @TODO tester register des routes (with deletes / etc)
+    // @TODO test query builder
+
     protected function setUp(): void
     {
         parent::setUp();
