@@ -71,11 +71,9 @@ class SearchIncludingOperationsTest extends TestCase
             [
                 [
                     'belongs_to_relation' => $matchingModel->belongsToRelation->only((new BelongsToResource)->exposedFields(app()->make(RestRequest::class))),
-                    'belongs_to_relation_id' => $belongsTo->getKey()
                 ],
                 [
                     'belongs_to_relation' => null,
-                    'belongs_to_relation_id' => null,
                 ]
             ]
         );
@@ -112,7 +110,7 @@ class SearchIncludingOperationsTest extends TestCase
             [
                 [
                     'has_one_relation' => $matchingModel->hasOneRelation->only(
-                        array_merge((new HasOneResource)->exposedFields(app()->make(RestRequest::class)), ['model_id'])
+                        (new HasOneResource)->exposedFields(app()->make(RestRequest::class))
                     ),
                 ],
                 [
@@ -151,7 +149,7 @@ class SearchIncludingOperationsTest extends TestCase
                 [
                     'has_many_relation' => $matchingModel->hasManyRelation->map(function ($relation) {
                         return $relation->only(
-                            array_merge((new HasOneResource)->exposedFields(app()->make(RestRequest::class)), ['model_id'])
+                            (new HasOneResource)->exposedFields(app()->make(RestRequest::class))
                         );
                     })->toArray(),
                 ],
@@ -162,7 +160,6 @@ class SearchIncludingOperationsTest extends TestCase
         );
     }
 
-    // @TODO: add the ability to specify pivot fields (using relationable) ?
     /** @test */
     public function getting_a_list_of_resources_including_belongs_to_many_relation(): void
     {
@@ -198,10 +195,7 @@ class SearchIncludingOperationsTest extends TestCase
                             ->pipe(function ($relation) use ($matchingModel, $pivotAccessor) {
                                 $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                     ->only(
-                                        array_merge(
-                                            $matchingModel->belongsToManyRelation()->getPivotColumns(),
-                                            ['model_id', 'belongs_to_many_relation_id']
-                                        )
+                                        (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()
                                     );
                                 return $relation;
                             });

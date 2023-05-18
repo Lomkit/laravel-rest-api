@@ -71,21 +71,6 @@ class Builder implements QueryBuilder
             $this->applyScopes($parameters['scopes']);
         });
 
-
-        if (empty($exposedFields = $this->resource->exposedFields(app()->make(RestRequest::class)))) {
-            throw new RuntimeException('No exposed fields are specified on resource');
-        }
-        $this->when(isset($parameters['selects']), function () use ($parameters) {
-            $this->applySelects($parameters['selects']);
-        }, function () use ($exposedFields) {
-            $this->applySelects(array_map(
-                function ($field) {
-                    return compact('field');
-                },
-                $exposedFields
-            ));
-        });
-
         $this->when(isset($parameters['includes']), function () use ($parameters) {
             $this->applyIncludes($parameters['includes']);
         });
@@ -145,45 +130,13 @@ class Builder implements QueryBuilder
         }
     }
 
-    public function select($select) {
-        return $this->queryBuilder->addSelect($select['field']);
-    }
-
-    public function applySelects($selects) {
-        foreach ($selects as $select) {
-            $this->select($select);
-        }
-    }
-
     public function include($include) {
-
-        // Add fields for prefetching relations
-        if (($relation = $this->resource->relation($include['relation'])) instanceof BelongsTo) {
-            $this->select(
-                ['field' => $this->resource::newModel()->{$relation->relation}()->getForeignKeyName()]
-            );
-        } elseif ($relation instanceof HasOne || $relation instanceof HasMany || $relation instanceof BelongsToMany) {
-            $this->select(
-                ['field' => $this->resource::newModel()->getKeyName()]
-            );
-        }
-
-        return $this->queryBuilder->with($include['relation'], function(Relation $query) use ($relation, $include) {
-            //@TODO: ici vu que c'est une relation query je dois sûrement pouvoir filter by le pivot !!!!
-            //@TODO: le soucis c'est que le "getQuery" m'enlève la relation
-
+        return $this->queryBuilder->with($include['relation'], function(Relation $query) use ($include) {
             $resource = $this->resource->relationResource($include['relation']);
 
             $resource->fetchQuery(app()->make(RestRequest::class), $query->getQuery());
 
             $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query->getQuery()]);
-
-            // Add fields for prefetching relations
-            if ($relation instanceof HasOne || $relation instanceof HasMany) {
-                $queryBuilder->select(
-                    ['field' => $this->resource::newModel()->{$relation->relation}()->getForeignKeyName()]
-                );
-            }
 
             return $queryBuilder->search($include);
         });

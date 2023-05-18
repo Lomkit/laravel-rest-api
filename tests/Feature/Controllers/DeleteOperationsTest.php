@@ -22,6 +22,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
+use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class DeleteOperationsTest extends TestCase
 {
@@ -55,8 +56,7 @@ class DeleteOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        // @TODO: on delete/ restore/force delete all fields are exposed ?
-        $response->assertJson($model->toArray());
+        $this->assertResourceModel($response, $model, new ModelResource);
         $this->assertDatabaseMissing('models', $model->only('id'));
     }
 
@@ -73,7 +73,7 @@ class DeleteOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        $response->assertJson($softDeletedModel->toArray());
+        $this->assertResourceModel($response, $softDeletedModel, new SoftDeletedModelResource);
         $this->assertDatabaseHas('soft_deleted_models', [
             'id' => $softDeletedModel->getKey(),
             'deleted_at' => Carbon::parse($response->json('deleted_at'))

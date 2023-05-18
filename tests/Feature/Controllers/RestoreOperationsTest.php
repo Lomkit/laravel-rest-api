@@ -22,6 +22,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
+use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class RestoreOperationsTest extends TestCase
 {
@@ -55,7 +56,7 @@ class RestoreOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        $response->assertJson($softDeletedModel->fresh()->toArray());
+        $this->assertResourceModel($response, $softDeletedModel, new SoftDeletedModelResource);
         $this->assertDatabaseHas('soft_deleted_models', [
             'id' => $softDeletedModel->getKey(),
             'deleted_at' => null

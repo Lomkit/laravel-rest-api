@@ -25,9 +25,11 @@ trait PerformsRestOperations
             })
             ->search($request->all());
 
-        return $resource::newResponse()->responsable(
-            $resource->paginate($query, $request)
-        );
+        return $resource::newResponse()
+            ->resource($resource)
+            ->responsable(
+                $resource->paginate($query, $request)
+            );
     }
 
     //@TODO: donner la possibilité à l'utilisateur de valider la requête notamment pour la création / storing ?
@@ -47,7 +49,9 @@ trait PerformsRestOperations
         $resource->performDelete($request, $model);
 
         //@TODO: il faut prévoir de pouvoir load des relations ici ?
-        return $resource::newResponse()->responsable($model);
+        return $resource::newResponse()
+            ->resource($resource)
+            ->responsable($model);
     }
 
     public function restore(RestoreRequest $request, $key) {
@@ -61,7 +65,9 @@ trait PerformsRestOperations
 
         $resource->performRestore($request, $model);
 
-        return $resource::newResponse()->responsable($model);
+        return $resource::newResponse()
+            ->resource($resource)
+            ->responsable($model);
     }
 
     public function forceDelete(RestoreRequest $request, $key) {
@@ -75,6 +81,8 @@ trait PerformsRestOperations
 
         $resource->performForceDelete($request, $model);
 
-        return $resource::newResponse()->responsable($model);
+        return $resource::newResponse()
+            ->resource($resource)
+            ->responsable($model);
     }
 }

@@ -31,22 +31,31 @@ trait InteractsWithResource
         );
 
         $this->assertEquals(
-            collect(
-                $resource::newResponse()->responsable(new LengthAwarePaginator($models, 1, 1))->toResponse(request())->items()
-            )->map(function ($model) use ($resource) {
-                return $model->only($resource->exposedFields(App::make(RestRequest::class)));
-            })->when(!empty($additionalFields), function (Collection $collection) use ($additionalFields) {
-                return $collection
-                    ->map(function ($item, $key) use ($additionalFields) {
-                        return array_merge($item, $additionalFields[$key]);
-                    });
-            })->when(!empty($onlyFields), function (Collection $collection) use ($onlyFields) {
-                return $collection
-                    ->map(function ($item) use ($onlyFields) {
-                       return array_intersect_key($item, array_flip($onlyFields));
-                    });
-            })
+            collect($models)
+                ->map(function ($model) use ($resource) {
+                    return $model->only($resource->exposedFields(App::make(RestRequest::class)));
+                })
+                ->when(!empty($additionalFields), function (Collection $collection) use ($additionalFields) {
+                    return $collection
+                        ->map(function ($item, $key) use ($additionalFields) {
+                            return array_merge($item, $additionalFields[$key]);
+                        });
+                })->when(!empty($onlyFields), function (Collection $collection) use ($onlyFields) {
+                    return $collection
+                        ->map(function ($item) use ($onlyFields) {
+                           return array_intersect_key($item, array_flip($onlyFields));
+                        });
+                })
                 ->toArray(),
+            $response->json('data')
+        );
+    }
+
+    protected function assertResourceModel($response, $model, Resource $resource) {
+        $response->assertStatus(200);
+
+        $this->assertEquals(
+            $model->only($resource->exposedFields(App::make(RestRequest::class))),
             $response->json('data')
         );
     }

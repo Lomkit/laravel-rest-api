@@ -45,7 +45,6 @@ class Relation
     }
 
     public function applyFetchQuery(Builder $query) {
-        //@TODO: apply custom fetchQuery when needed
         //@T0DO: don't apply fetchQuery on polymorphic relation ?
         $resource = $this->resource();
 
