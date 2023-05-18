@@ -27,7 +27,6 @@ abstract class Controller extends \Illuminate\Routing\Controller
 
     //@TODO: voir si toutes ces manières de call en static c'est pas plus dérangeant qu'autre chose
     //@TODO: surtout avec octane où il faut éviter le static !?
-    //@TODO: en plus c'est pas beau
     /**
      * Get a fresh instance of the resource represented by the entry.
      *
