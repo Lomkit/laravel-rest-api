@@ -36,6 +36,13 @@ class Builder implements QueryBuilder
     /**
      * The query builder instance.
      *
+     * @var Resource
+     */
+    protected $resource;
+
+    /**
+     * The query builder instance.
+     *
      * @var \Illuminate\Database\Eloquent\Builder|null
      */
     protected $queryBuilder;

@@ -14,8 +14,6 @@ class TestCase extends BaseTestCase
 {
     use InteractsWithAuthorization, InteractsWithResource;
 
-    // @TODO test query builder
-
     protected function setUp(): void
     {
         parent::setUp();
