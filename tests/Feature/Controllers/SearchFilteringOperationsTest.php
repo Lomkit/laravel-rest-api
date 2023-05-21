@@ -11,8 +11,6 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class SearchFilteringOperationsTest extends TestCase
 {
-    // @TODO: test like, ilike, not like, not ilike
-
     public function test_getting_a_list_of_resources_filtered_by_not_authorized_field(): void
     {
         ModelFactory::new()->count(2)->create();
@@ -223,6 +221,104 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
+            new ModelResource
+        );
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_like_operator(): void
+    {
+        $matchingModel = ModelFactory::new()->create(['name' => 'like a day'])->fresh();
+        ModelFactory::new()->create(['name' => 'not'])->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'filters' => [
+                    ['field' => 'name', 'operator' => 'like', 'value' => '%like%'],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel],
+            new ModelResource
+        );
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_like_right_operator(): void
+    {
+        $matchingModel = ModelFactory::new()->create(['name' => 'like a day'])->fresh();
+        $matchingModel2 = ModelFactory::new()->create(['name' => 'like'])->fresh();
+        ModelFactory::new()->create(['name' => 'not like'])->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'filters' => [
+                    ['field' => 'name', 'operator' => 'like', 'value' => 'like%'],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource
+        );
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_not_like_operator(): void
+    {
+        $matchingModel = ModelFactory::new()->create(['name' => 'not'])->fresh();
+        ModelFactory::new()->create(['name' => 'its a like today'])->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'filters' => [
+                    ['field' => 'name', 'operator' => 'not like', 'value' => '%like%'],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel],
+            new ModelResource
+        );
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_not_like_right_operator(): void
+    {
+        $matchingModel = ModelFactory::new()->create(['name' => 'its a like'])->fresh();
+        $matchingModel2 = ModelFactory::new()->create(['name' => ' like '])->fresh();
+        ModelFactory::new()->create(['name' => 'like it'])->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'filters' => [
+                    ['field' => 'name', 'operator' => 'not like', 'value' => 'like%'],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
             new ModelResource
         );
     }
