@@ -21,8 +21,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class SearchScopingOperationsTest extends TestCase
 {
-    /** @test */
-    public function getting_a_list_of_resources_scoping_unauthorized_relation(): void
+    public function test_getting_a_list_of_resources_scoping_unauthorized_relation(): void
     {
         ModelFactory::new()->count(2)->create();
 
@@ -42,8 +41,7 @@ class SearchScopingOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['scopes.0.name']]);
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_scoping_numbered(): void
+    public function test_getting_a_list_of_resources_scoping_numbered(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 1])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['number' => -1])->fresh();
@@ -67,8 +65,7 @@ class SearchScopingOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_scoping_numbered_with_params(): void
+    public function test_getting_a_list_of_resources_scoping_numbered_with_params(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 1])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['number' => 2])->fresh();

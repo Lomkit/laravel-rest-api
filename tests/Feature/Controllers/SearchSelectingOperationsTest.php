@@ -21,8 +21,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class SearchSelectingOperationsTest extends TestCase
 {
-    /** @test */
-    public function getting_a_list_of_resources_selecting_unauthorized_relation(): void
+    public function test_getting_a_list_of_resources_selecting_unauthorized_relation(): void
     {
         ModelFactory::new()->count(2)->create();
 
@@ -42,8 +41,7 @@ class SearchSelectingOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['selects.0.field']]);
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_selecting_id_field(): void
+    public function test_getting_a_list_of_resources_selecting_id_field(): void
     {
         $matchingModel = ModelFactory::new()->create()->fresh();
         $matchingModel2 = ModelFactory::new()->create()->fresh();
@@ -69,8 +67,7 @@ class SearchSelectingOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_selecting_two_fields(): void
+    public function test_getting_a_list_of_resources_selecting_two_fields(): void
     {
         $matchingModel = ModelFactory::new()->create()->fresh();
         $matchingModel2 = ModelFactory::new()->create()->fresh();

@@ -26,8 +26,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class ForceDeleteOperationsTest extends TestCase
 {
-    /** @test */
-    public function force_deleting_a_non_authorized_model(): void
+    public function test_force_deleting_a_non_authorized_model(): void
     {
         $softDeletedModel = SoftDeletedModelFactory::new()->count(1)->trashed()->createOne();
 
@@ -43,8 +42,7 @@ class ForceDeleteOperationsTest extends TestCase
         $response->assertJson(['message' => 'This action is unauthorized.']);
     }
 
-    /** @test */
-    public function force_deleting_a_soft_deleted_model(): void
+    public function test_force_deleting_a_soft_deleted_model(): void
     {
         $softDeletedModel = SoftDeletedModelFactory::new()->count(1)->trashed()->createOne();
 
@@ -62,8 +60,7 @@ class ForceDeleteOperationsTest extends TestCase
         ]);
     }
 
-    /** @test */
-    public function force_deleting_a_model(): void
+    public function test_force_deleting_a_model(): void
     {
         $softDeletedModel = SoftDeletedModelFactory::new()->count(1)->createOne();
 

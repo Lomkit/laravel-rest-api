@@ -21,8 +21,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class SearchPaginateOperationsTest extends TestCase
 {
-    /** @test */
-    public function getting_a_list_of_resources_paginating_unauthorized_limit(): void
+    public function test_getting_a_list_of_resources_paginating_unauthorized_limit(): void
     {
         ModelFactory::new()->count(2)->create();
 
@@ -40,8 +39,7 @@ class SearchPaginateOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['limit']]);
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_paginating_second_page(): void
+    public function test_getting_a_list_of_resources_paginating_second_page(): void
     {
         $matchingModel = ModelFactory::new()->create()->fresh();
         $matchingModel2 = ModelFactory::new()->create()->fresh();
@@ -65,8 +63,7 @@ class SearchPaginateOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_paginating_with_many_records(): void
+    public function test_getting_a_list_of_resources_paginating_with_many_records(): void
     {
         ModelFactory::new()->count(100)->create()->fresh();
         $matchingModel = ModelFactory::new()->create()->fresh();

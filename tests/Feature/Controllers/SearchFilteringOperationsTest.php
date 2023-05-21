@@ -13,8 +13,7 @@ class SearchFilteringOperationsTest extends TestCase
 {
     // @TODO: test like, ilike, not like, not ilike
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_not_authorized_field(): void
+    public function test_getting_a_list_of_resources_filtered_by_not_authorized_field(): void
     {
         ModelFactory::new()->count(2)->create();
 
@@ -34,8 +33,7 @@ class SearchFilteringOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['filters.0.field']]);
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_default_operator(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_default_operator(): void
     {
         $matchingModel = ModelFactory::new()->create(['name' => 'match'])->fresh();
         ModelFactory::new()->create(['name' => 'not match'])->fresh();
@@ -59,8 +57,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_in_operator(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_in_operator(): void
     {
         $matchingModel = ModelFactory::new()->create(['name' => 'match'])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['name' => 'match2'])->fresh();
@@ -85,8 +82,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_not_in_operator(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_not_in_operator(): void
     {
         $matchingModel = ModelFactory::new()->create(['name' => 'match'])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['name' => 'match2'])->fresh();
@@ -111,8 +107,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_not_equal_operator(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_not_equal_operator(): void
     {
         $matchingModel = ModelFactory::new()->create(['name' => 'match'])->fresh();
         ModelFactory::new()->create(['name' => 'not_match'])->fresh();
@@ -136,8 +131,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_greater_than_operator(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_greater_than_operator(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 2])->fresh();
         ModelFactory::new()->create(['number' => 1])->fresh();
@@ -161,8 +155,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_greater_than_or_equal_operator(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_greater_than_or_equal_operator(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 2])->fresh();
         ModelFactory::new()->create(['number' => 1])->fresh();
@@ -186,8 +179,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_less_than_operator(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_less_than_operator(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 1])->fresh();
         ModelFactory::new()->create(['number' => 2])->fresh();
@@ -211,8 +203,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_less_than_or_equal_operator(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_less_than_or_equal_operator(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 1])->fresh();
         ModelFactory::new()->create(['number' => 2])->fresh();
@@ -236,8 +227,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_or_type(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_or_type(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 1])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['number' => 3])->fresh();
@@ -263,8 +253,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_and_type(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_and_type(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 1, 'name' => 'match'])->fresh();
         ModelFactory::new()->create(['number' => 2, 'name' => 'match'])->fresh();
@@ -289,8 +278,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_nested_operator(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_nested_operator(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 1, 'name' => 'match'])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['number' => 2, 'name' => 'match2'])->fresh();
@@ -322,8 +310,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_filtered_by_model_field_using_nested_operator_using_or_type(): void
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_nested_operator_using_or_type(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 1, 'name' => 'match'])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['number' => 2, 'name' => 'match2'])->fresh();

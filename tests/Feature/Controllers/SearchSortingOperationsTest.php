@@ -21,8 +21,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class SearchSortingOperationsTest extends TestCase
 {
-    /** @test */
-    public function getting_a_list_of_resources_sorting_by_unauthorized_relation(): void
+    public function test_getting_a_list_of_resources_sorting_by_unauthorized_relation(): void
     {
         ModelFactory::new()->count(2)->create();
 
@@ -42,8 +41,7 @@ class SearchSortingOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['sorts.0.field']]);
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_sorting_by_id_field(): void
+    public function test_getting_a_list_of_resources_sorting_by_id_field(): void
     {
         $matchingModel = ModelFactory::new()->create()->fresh();
         $matchingModel2 = ModelFactory::new()->create()->fresh();
@@ -67,8 +65,7 @@ class SearchSortingOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_sorting_by_desc_id_field(): void
+    public function test_getting_a_list_of_resources_sorting_by_desc_id_field(): void
     {
         $matchingModel = ModelFactory::new()->create()->fresh();
         $matchingModel2 = ModelFactory::new()->create()->fresh();
@@ -92,8 +89,7 @@ class SearchSortingOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_sorting_by_asc_id_field(): void
+    public function test_getting_a_list_of_resources_sorting_by_asc_id_field(): void
     {
         $matchingModel = ModelFactory::new()->create()->fresh();
         $matchingModel2 = ModelFactory::new()->create()->fresh();
@@ -117,8 +113,7 @@ class SearchSortingOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_sorting_by_two_fields_with_first_that_has_no_impact(): void
+    public function test_getting_a_list_of_resources_sorting_by_two_fields_with_first_that_has_no_impact(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 2])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['number' => 2])->fresh();
@@ -143,8 +138,7 @@ class SearchSortingOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_sorting_by_two_fields_with_first_that_has_no_impact_desc(): void
+    public function test_getting_a_list_of_resources_sorting_by_two_fields_with_first_that_has_no_impact_desc(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 2])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['number' => 2])->fresh();
@@ -169,8 +163,7 @@ class SearchSortingOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_sorting_by_two_fields_with_second_that_has_no_impact(): void
+    public function test_getting_a_list_of_resources_sorting_by_two_fields_with_second_that_has_no_impact(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 2])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['number' => 3])->fresh();
@@ -195,8 +188,7 @@ class SearchSortingOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_sorting_by_two_fields_with_second_that_has_no_impact_desc(): void
+    public function test_getting_a_list_of_resources_sorting_by_two_fields_with_second_that_has_no_impact_desc(): void
     {
         $matchingModel = ModelFactory::new()->create(['number' => 2])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['number' => 3])->fresh();

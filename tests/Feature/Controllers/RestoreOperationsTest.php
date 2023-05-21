@@ -26,8 +26,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class RestoreOperationsTest extends TestCase
 {
-    /** @test */
-    public function restoring_a_non_authorized_model(): void
+    public function test_restoring_a_non_authorized_model(): void
     {
         $softDeletedModel = SoftDeletedModelFactory::new()->count(1)->trashed()->createOne();
 
@@ -43,8 +42,7 @@ class RestoreOperationsTest extends TestCase
         $response->assertJson(['message' => 'This action is unauthorized.']);
     }
 
-    /** @test */
-    public function restoring_a_soft_deleted_model(): void
+    public function test_restoring_a_soft_deleted_model(): void
     {
         $softDeletedModel = SoftDeletedModelFactory::new()->count(1)->trashed()->createOne();
 

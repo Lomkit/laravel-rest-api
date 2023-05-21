@@ -21,8 +21,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class SearchIncludingOperationsTest extends TestCase
 {
-    /** @test */
-    public function getting_a_list_of_resources_including_unauthorized_relation(): void
+    public function test_getting_a_list_of_resources_including_unauthorized_relation(): void
     {
         ModelFactory::new()->count(2)->create();
 
@@ -42,8 +41,7 @@ class SearchIncludingOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['includes.0.relation']]);
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_including_belongs_to_relation(): void
+    public function test_getting_a_list_of_resources_including_belongs_to_relation(): void
     {
         $belongsTo = BelongsToRelationFactory::new()->create();
         $matchingModel = ModelFactory::new()
@@ -79,8 +77,7 @@ class SearchIncludingOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_including_has_one_relation(): void
+    public function test_getting_a_list_of_resources_including_has_one_relation(): void
     {
         $matchingModel = ModelFactory::new()
             ->create()->fresh();
@@ -120,8 +117,7 @@ class SearchIncludingOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_including_has_many_relation(): void
+    public function test_getting_a_list_of_resources_including_has_many_relation(): void
     {
         $matchingModel = ModelFactory::new()
             ->has(HasManyRelationFactory::new()->count(2))
@@ -160,8 +156,7 @@ class SearchIncludingOperationsTest extends TestCase
         );
     }
 
-    /** @test */
-    public function getting_a_list_of_resources_including_belongs_to_many_relation(): void
+    public function test_getting_a_list_of_resources_including_belongs_to_many_relation(): void
     {
         $matchingModel = ModelFactory::new()
             ->has(BelongsToManyRelationFactory::new()->count(2))
