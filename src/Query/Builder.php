@@ -83,6 +83,7 @@ class Builder implements QueryBuilder
         });
 
         // @TODO: there is a bug with this limit when you are eager loading, need to fix this. on belongs to many relation it doesnt get much results
+        // @TODO: multiply per includes + limit on resource side after ?
         $this->queryBuilder->limit($parameters['limit'] ?? 50);
 
         return $this->queryBuilder;

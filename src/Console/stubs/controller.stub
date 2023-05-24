@@ -1,0 +1,15 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Rest\Controller as RestController;
+
+class {{ class }} extends RestController
+{
+    /**
+     * The resource the controller corresponds to.
+     *
+     * @var class-string<\Lomkit\Rest\Http\Resource>
+     */
+    public static $resource = \{{ namespacedResource }}::class;
+}

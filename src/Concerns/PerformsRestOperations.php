@@ -36,6 +36,7 @@ trait PerformsRestOperations
 
 
     //@TODO: faire un stub pour les controllers / resources / responsables
+    //@TODO: par défaut à l'installation mettre un controller sur lequel on va pointer le reste de nos controllers
 
     public function destroy(DestroyRequest $request, $key) {
         $resource = static::newResource();
