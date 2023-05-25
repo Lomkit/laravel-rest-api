@@ -3,8 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Tests\Support\Http\Controllers\ModelController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\SoftDeletedModelController;
-use Orion\Facades\Orion;
-use Orion\Tests\Fixtures\App\Http\Controllers\DummyController;
 
 class RoutesTest extends \Lomkit\Rest\Tests\TestCase
 {
