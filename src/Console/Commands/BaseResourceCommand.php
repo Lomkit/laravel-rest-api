@@ -9,7 +9,7 @@ use Illuminate\Support\Composer;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\ResolvesStubPath;
 
-class BaseControllerCommand extends GeneratorCommand implements PromptsForMissingInput
+class BaseResourceCommand extends GeneratorCommand implements PromptsForMissingInput
 {
     use ResolvesStubPath;
 
@@ -18,8 +18,8 @@ class BaseControllerCommand extends GeneratorCommand implements PromptsForMissin
      *
      * @var string
      */
-    protected $signature = 'rest:base-controller {name : The name of the controller}
-        {--path= : The location where the controller file should be created}';
+    protected $signature = 'rest:base-resource {name : The name of the resource}
+        {--path= : The location where the resource file should be created}';
 
     /**
      * Indicates whether the command should be shown in the Artisan command list.
@@ -33,14 +33,14 @@ class BaseControllerCommand extends GeneratorCommand implements PromptsForMissin
      *
      * @var string
      */
-    protected $type = 'Controller';
+    protected $type = 'Resource';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create a new base controller class';
+    protected $description = 'Create a new base resource class';
 
     /**
      * Execute the console command.
@@ -59,7 +59,7 @@ class BaseControllerCommand extends GeneratorCommand implements PromptsForMissin
      */
     protected function getStub()
     {
-        return $this->resolveStubPath('/stubs/rest/base-controller.stub');
+        return $this->resolveStubPath('/stubs/rest/base-resource.stub');
     }
 
     /**

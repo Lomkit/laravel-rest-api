@@ -5,7 +5,9 @@ namespace Lomkit\Rest;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\Commands\BaseControllerCommand;
+use Lomkit\Rest\Console\Commands\BaseResourceCommand;
 use Lomkit\Rest\Console\Commands\ControllerCommand;
+use Lomkit\Rest\Console\Commands\ResourceCommand;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Query\Builder;
 
@@ -43,7 +45,9 @@ class RestServiceProvider extends ServiceProvider{
         if ($this->app->runningInConsole()) {
             $this->commands([
                 BaseControllerCommand::class,
-                ControllerCommand::class
+                ControllerCommand::class,
+                BaseResourceCommand::class,
+                ResourceCommand::class
             ]);
         }
     }
