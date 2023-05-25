@@ -13,10 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('has_one_relations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\Model::class)->constrained();
-            $table->timestamps();
+        Schema::table('has_one_relations', function (Blueprint $table) {
+            $table->foreign('model_id')->references('id')->on('models');
         });
     }
 };
