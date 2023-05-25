@@ -27,7 +27,7 @@ class Builder implements QueryBuilder
      * @param  Resource  $resource
      * @return void
      */
-    public function __construct(Resource $resource, \Illuminate\Database\Eloquent\Builder $query = null)
+    public function __construct(Resource $resource, \Illuminate\Database\Eloquent\Builder|Relation $query = null)
     {
         $this->resource = $resource;
         $this->queryBuilder = $query ?? $resource::newModel()->query();
@@ -82,9 +82,10 @@ class Builder implements QueryBuilder
             $this->applyIncludes($parameters['includes']);
         });
 
-        // @TODO: there is a bug with this limit when you are eager loading, need to fix this. on belongs to many relation it doesnt get much results
-        // @TODO: multiply per includes + limit on resource side after ?
-        $this->queryBuilder->limit($parameters['limit'] ?? 50);
+        // @TODO: is this a problem also with HasMany ??
+        // In case of BelongsToMany we cap the limit
+        $limit = $this->queryBuilder instanceof \Illuminate\Database\Eloquent\Relations\BelongsToMany ? 9999 : ($parameters['limit'] ?? 50);
+        $this->queryBuilder->limit($limit);
 
         return $this->queryBuilder;
     }
@@ -144,7 +145,7 @@ class Builder implements QueryBuilder
 
             $resource->fetchQuery(app()->make(RestRequest::class), $query->getQuery());
 
-            $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query->getQuery()]);
+            $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
 
             return $queryBuilder->search($include);
         });

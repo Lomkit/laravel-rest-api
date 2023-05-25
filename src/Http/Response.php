@@ -6,6 +6,7 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
@@ -60,7 +61,10 @@ class Response implements Responsable
                             return $include['relation'] === $relationName;
                         });
 
-                    if ($modelRelation instanceof Model) {
+                    // We reapply the limits in case of BelongsToManyRelation where we can't apply limits easily
+                    if ($modelRelation instanceof Collection) {
+                        $modelRelation = $modelRelation->take($requestArrayRelation['limit'] ?? 50);
+                    } else if ($modelRelation instanceof Model) {
                         return [
                             $key => $this->modelToResponse(
                                 $modelRelation,
