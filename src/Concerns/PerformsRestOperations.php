@@ -13,7 +13,6 @@ use Lomkit\Rest\Http\Requests\SearchRequest;
 
 trait PerformsRestOperations
 {
-    // @TODO: il faut tester le projet jusqu'ici :)
     public function search(SearchRequest $request) {
         $resource = static::newResource();
 
@@ -35,8 +34,7 @@ trait PerformsRestOperations
     //@TODO: donner la possibilité à l'utilisateur de valider la requête notamment pour la création / storing ?
 
 
-    //@TODO: faire un stub pour les controllers / resources / responsables
-    //@TODO: par défaut à l'installation mettre un controller sur lequel on va pointer le reste de nos controllers
+    //@TODO: stubs for responsables
 
     public function destroy(DestroyRequest $request, $key) {
         $resource = static::newResource();

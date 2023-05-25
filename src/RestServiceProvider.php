@@ -12,9 +12,6 @@ use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Query\Builder;
 
 class RestServiceProvider extends ServiceProvider{
-    // @TODO offerPublishing pour le default publish avec la création du dossier "Rest" + controller + etc ?
-    // @TODO l'idée c'est de préparer le projet à l'installation
-
     /**
      * Register the service provider.
      *
