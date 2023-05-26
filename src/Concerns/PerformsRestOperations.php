@@ -13,10 +13,10 @@ use Lomkit\Rest\Http\Requests\SearchRequest;
 
 trait PerformsRestOperations
 {
-    // @TODO: il faut tester le projet jusqu'ici :)
-    // @TODO: + bribes de la doc
     public function search(SearchRequest $request) {
         $resource = static::newResource();
+
+        $this->authorizeTo('viewAny', $resource::$model);
 
         $query = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
             ->tap(function ($query) use ($request) {
@@ -24,15 +24,17 @@ trait PerformsRestOperations
             })
             ->search($request->all());
 
-        return $resource::newResponse()->responsable(
-            $resource->paginate($query, $request)
-        );
+        return $resource::newResponse()
+            ->resource($resource)
+            ->responsable(
+                $resource->paginate($query, $request)
+            );
     }
 
     //@TODO: donner la possibilité à l'utilisateur de valider la requête notamment pour la création / storing ?
 
 
-    //@TODO: faire un stub pour les controllers / resources / responsables
+    //@TODO: stubs for responsables
 
     public function destroy(DestroyRequest $request, $key) {
         $resource = static::newResource();
@@ -46,7 +48,9 @@ trait PerformsRestOperations
         $resource->performDelete($request, $model);
 
         //@TODO: il faut prévoir de pouvoir load des relations ici ?
-        return $resource::newResponse()->responsable($model);
+        return $resource::newResponse()
+            ->resource($resource)
+            ->responsable($model);
     }
 
     public function restore(RestoreRequest $request, $key) {
@@ -60,7 +64,9 @@ trait PerformsRestOperations
 
         $resource->performRestore($request, $model);
 
-        return $resource::newResponse()->responsable($model);
+        return $resource::newResponse()
+            ->resource($resource)
+            ->responsable($model);
     }
 
     public function forceDelete(RestoreRequest $request, $key) {
@@ -74,6 +80,8 @@ trait PerformsRestOperations
 
         $resource->performForceDelete($request, $model);
 
-        return $resource::newResponse()->responsable($model);
+        return $resource::newResponse()
+            ->resource($resource)
+            ->responsable($model);
     }
 }

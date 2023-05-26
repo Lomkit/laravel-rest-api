@@ -50,7 +50,7 @@ class SearchRequest extends RestRequest
                     'string'
                 ],
                 $prefix.'.*.operator' => [
-                    Rule::in('=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'ilike', 'not ilike', 'in', 'not in'),
+                    Rule::in('=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'),
                     'string',
                 ],
                 $prefix.'.*.value' => [

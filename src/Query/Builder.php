@@ -10,6 +10,10 @@ use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\BelongsTo;
+use Lomkit\Rest\Relations\BelongsToMany;
+use Lomkit\Rest\Relations\HasMany;
+use Lomkit\Rest\Relations\HasOne;
 use RuntimeException;
 
 class Builder implements QueryBuilder
@@ -23,11 +27,18 @@ class Builder implements QueryBuilder
      * @param  Resource  $resource
      * @return void
      */
-    public function __construct(Resource $resource, \Illuminate\Database\Eloquent\Builder $query = null)
+    public function __construct(Resource $resource, \Illuminate\Database\Eloquent\Builder|Relation $query = null)
     {
         $this->resource = $resource;
         $this->queryBuilder = $query ?? $resource::newModel()->query();
     }
+
+    /**
+     * The query builder instance.
+     *
+     * @var Resource
+     */
+    protected $resource;
 
     /**
      * The query builder instance.
@@ -67,23 +78,14 @@ class Builder implements QueryBuilder
             $this->applyScopes($parameters['scopes']);
         });
 
-        $this->when(isset($parameters['selects']), function () use ($parameters) {
-            $this->applySelects($parameters['selects']);
-        }, function () {
-            $this->applySelects(array_map(
-                function ($field) {
-                    return compact('field');
-                },
-                $this->resource->exposedFields(app()->make(RestRequest::class))
-            ));
-        });
-
         $this->when(isset($parameters['includes']), function () use ($parameters) {
             $this->applyIncludes($parameters['includes']);
         });
 
-        // @TODO: there is a bug with this limit when you are eager loading, need to fix this. on belongs to many relation it doesnt get much results
-        $this->queryBuilder->limit($parameters['limit'] ?? 50);
+        // @TODO: is this a problem also with HasMany ??
+        // In case of BelongsToMany we cap the limit
+        $limit = $this->queryBuilder instanceof \Illuminate\Database\Eloquent\Relations\BelongsToMany ? 9999 : ($parameters['limit'] ?? 50);
+        $this->queryBuilder->limit($limit);
 
         return $this->queryBuilder;
     }
@@ -93,7 +95,7 @@ class Builder implements QueryBuilder
             return $this->queryBuilder->where(function ($query) use ($nested) {
                 $this->newQueryBuilder(['resource' => $this->resource, 'query' => $query])
                     ->applyFilters($nested);
-            });
+            }, null, null, $type);
         }
 
         // Here we assume the user has asked a relation filter
@@ -137,27 +139,15 @@ class Builder implements QueryBuilder
         }
     }
 
-    public function select($select) {
-        return $this->queryBuilder->addSelect($select['field']);
-    }
-
-    public function applySelects($selects) {
-        foreach ($selects as $select) {
-            $this->select($select);
-        }
-    }
-
     public function include($include) {
         return $this->queryBuilder->with($include['relation'], function(Relation $query) use ($include) {
-            //@TODO: ici vu que c'est une relation query je dois sûrement pouvoir filter by le pivot !!!!
-            //@TODO: le soucis c'est que le "getQuery" m'enlève la relation
-
             $resource = $this->resource->relationResource($include['relation']);
 
             $resource->fetchQuery(app()->make(RestRequest::class), $query->getQuery());
 
-            return $this->newQueryBuilder(['resource' => $resource, 'query' => $query->getQuery()])
-                ->search($include);
+            $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
+
+            return $queryBuilder->search($include);
         });
     }
 

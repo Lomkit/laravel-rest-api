@@ -3,6 +3,11 @@
 namespace Lomkit\Rest;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
+use Lomkit\Rest\Console\Commands\BaseControllerCommand;
+use Lomkit\Rest\Console\Commands\BaseResourceCommand;
+use Lomkit\Rest\Console\Commands\ControllerCommand;
+use Lomkit\Rest\Console\Commands\ResourceCommand;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Query\Builder;
 
@@ -14,8 +19,7 @@ class RestServiceProvider extends ServiceProvider{
      */
     public function register()
     {
-        $this->app->singleton('lomkit-rest', Rest::class);
-        $this->app->bind(QueryBuilder::class, Builder::class);
+        $this->registerServices();
     }
 
     /**
@@ -25,5 +29,34 @@ class RestServiceProvider extends ServiceProvider{
      */
     public function boot()
     {
+        $this->registerCommands();
+    }
+
+    /**
+     * Register the Rest Artisan commands.
+     *
+     * @return void
+     */
+    protected function registerCommands()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                BaseControllerCommand::class,
+                ControllerCommand::class,
+                BaseResourceCommand::class,
+                ResourceCommand::class
+            ]);
+        }
+    }
+
+    /**
+     * Register Rest's services in the container.
+     *
+     * @return void
+     */
+    protected function registerServices()
+    {
+        $this->app->singleton('lomkit-rest', Rest::class);
+        $this->app->bind(QueryBuilder::class, Builder::class);
     }
 }
