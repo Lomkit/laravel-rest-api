@@ -3,13 +3,16 @@
 namespace Lomkit\Rest\Tests;
 
 use Illuminate\Config\Repository;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Artisan;
 use Lomkit\Rest\RestServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class TestCase extends BaseTestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected function setUp(): void
     {
