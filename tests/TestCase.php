@@ -3,8 +3,10 @@
 namespace Lomkit\Rest\Tests;
 
 use Illuminate\Config\Repository;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\Artisan;
 use Lomkit\Rest\RestServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
@@ -12,7 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class TestCase extends BaseTestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected function setUp(): void
     {
@@ -20,13 +22,33 @@ class TestCase extends BaseTestCase
     }
 
     /**
-     * Define database migrations.
+     * Refresh a conventional test database.
      *
      * @return void
      */
-    protected function defineDatabaseMigrations()
+    protected function refreshTestDatabase()
     {
-        $this->loadMigrationsFrom(__DIR__ . '/Support/Database/migrations');
+        if (!RefreshDatabaseState::$migrated) {
+            $this->artisan('migrate', ['--path' => __DIR__ .  '/Support/Database/migrations', '--realpath' => true]);
+
+            $this->app[Kernel::class]->setArtisan(null);
+
+            RefreshDatabaseState::$migrated = true;
+        }
+
+        $this->beginDatabaseTransaction();
+    }
+
+    /**
+     * Refresh the in-memory database.
+     *
+     * @return void
+     */
+    protected function refreshInMemoryDatabase()
+    {
+        $this->artisan('migrate', ['--path' => __DIR__ . '/Support/Database/migrations', '--realpath' => true]);
+
+        $this->app[Kernel::class]->setArtisan(null);
     }
 
     /**
