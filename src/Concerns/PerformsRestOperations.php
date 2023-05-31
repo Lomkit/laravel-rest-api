@@ -10,6 +10,7 @@ use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
+use Lomkit\Rest\Http\Requests\MutateRequest;
 
 trait PerformsRestOperations
 {
@@ -33,9 +34,25 @@ trait PerformsRestOperations
 
     //@TODO: donner la possibilité à l'utilisateur de valider la requête notamment pour la création / storing ?
 
+    public function mutate(MutateRequest $request) {
+        $resource = static::newResource();
+
+        $this->authorizeTo('create', $resource::$model);
+
+        dd('ok');
+        // @TODO: store here
+
+//        return $resource::newResponse()
+//            ->resource($resource)
+//            ->responsable(
+//                $resource->paginate($query, $request)
+//            );
+    }
+
 
     //@TODO: stubs for responsables
 
+    //@TODO: change destroy/restore/forceDelete to allow multiple models
     public function destroy(DestroyRequest $request, $key) {
         $resource = static::newResource();
 
