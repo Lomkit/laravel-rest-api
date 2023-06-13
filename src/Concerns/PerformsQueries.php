@@ -9,13 +9,24 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 trait PerformsQueries
 {
     /**
-     * Build a query for fetching resource.
+     * Build a query for searching resource.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Contracts\Database\Eloquent\Builder
      */
-    public function fetchQuery(RestRequest $request, Builder $query) {
+    public function searchQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query) {
+        return $query;
+    }
+
+    /**
+     * Build a query for mutating resource.
+     *
+     * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
+     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Contracts\Database\Eloquent\Builder
+     */
+    public function mutateQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query) {
         return $query;
     }
 
@@ -23,10 +34,10 @@ trait PerformsQueries
      * Build a "destroy" query for the given resource.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Contracts\Database\Eloquent\Builder
      */
-    public function destroyQuery(RestRequest $request, Builder $query)
+    public function destroyQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
     {
         return $query;
     }
@@ -35,10 +46,10 @@ trait PerformsQueries
      * Build a "restore" query for the given resource.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Contracts\Database\Eloquent\Builder
      */
-    public function restoreQuery(RestRequest $request, Builder $query)
+    public function restoreQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
     {
         return $query;
     }
@@ -47,10 +58,10 @@ trait PerformsQueries
      * Build a "forceDelete" query for the given resource.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Contracts\Database\Eloquent\Builder
      */
-    public function forceDeleteQuery(RestRequest $request, Builder $query)
+    public function forceDeleteQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
     {
         return $query;
     }

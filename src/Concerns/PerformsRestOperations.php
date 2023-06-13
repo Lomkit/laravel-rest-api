@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Concerns;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
@@ -17,12 +18,7 @@ trait PerformsRestOperations
     public function search(SearchRequest $request) {
         $resource = static::newResource();
 
-        $this->authorizeTo('viewAny', $resource::$model);
-
         $query = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
-            ->tap(function ($query) use ($request) {
-                self::newResource()->fetchQuery($request, $query->toBase());
-            })
             ->search($request->all());
 
         return $resource::newResponse()
@@ -37,16 +33,21 @@ trait PerformsRestOperations
     public function mutate(MutateRequest $request) {
         $resource = static::newResource();
 
-        $this->authorizeTo('create', $resource::$model);
+        // @TODO: valider la requête
+//        $this->authorizeTo('create', $resource::$model);
 
-        dd('ok');
-        // @TODO: store here
+        DB::beginTransaction();
 
-//        return $resource::newResponse()
-//            ->resource($resource)
-//            ->responsable(
-//                $resource->paginate($query, $request)
-//            );
+        $operations = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
+            ->tap(function ($query) use ($request) {
+                self::newResource()->mutateQuery($request, $query->toBase());
+            })
+            ->mutate($request->all());
+
+        //@TODO: UNCOMMIT THIS
+//        DB::commit();
+
+        return $operations;
     }
 
 

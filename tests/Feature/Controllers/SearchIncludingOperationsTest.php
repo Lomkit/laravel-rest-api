@@ -10,7 +10,9 @@ use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
+use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
+use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
@@ -51,6 +53,7 @@ class SearchIncludingOperationsTest extends TestCase
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -126,6 +129,7 @@ class SearchIncludingOperationsTest extends TestCase
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -166,6 +170,7 @@ class SearchIncludingOperationsTest extends TestCase
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',

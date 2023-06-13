@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Tappable;
+use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -23,7 +24,8 @@ class Builder implements QueryBuilder
     use Tappable,
         Conditionable,
         PerformSearch,
-        PerformMutation;
+        PerformMutation,
+        Authorizable;
 
     /**
      * Construct a new query builder for a resource.

@@ -9,6 +9,10 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 trait PerformSearch
 {
     public function search(array $parameters = []) {
+        $this->authorizeTo('viewAny', $this->resource::$model);
+
+        $this->resource->searchQuery(app()->make(RestRequest::class), $this->queryBuilder);
+
         // Here we run the filters in a subquery to avoid conflicts
         $this->when(isset($parameters['filters']), function () use ($parameters) {
             $this->queryBuilder->where(function($query) use ($parameters) {
@@ -50,7 +54,7 @@ trait PerformSearch
         if (Str::contains($field, '.')) {
             $relation = $this->resource->relation($field);
             return $relation->filter($this->queryBuilder, $field, $operator, $value, $type, function ($query) use ($relation) {
-                $relation->applyFetchQuery($query);
+                $relation->applySearchQuery($query);
             }, $this->resource);
         } else {
             if (in_array($operator, ['in', 'not in'])) {
@@ -90,8 +94,6 @@ trait PerformSearch
     public function include($include) {
         return $this->queryBuilder->with($include['relation'], function(Relation $query) use ($include) {
             $resource = $this->resource->relationResource($include['relation']);
-
-            $resource->fetchQuery(app()->make(RestRequest::class), $query->getQuery());
 
             $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
 
