@@ -28,7 +28,7 @@ trait PerformMutation
             'updated' => []
         ];
 
-        foreach ($parameters as $parameter) {
+        foreach ($parameters['mutate'] as $parameter) {
             $operations[
                 $this->mutateOperationsVerbose[$parameter['operation']]
             ][] = $this->applyMutation($parameter)->getKey();

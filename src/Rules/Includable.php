@@ -48,7 +48,7 @@ class Includable implements Rule, DataAwareRule, ValidatorAwareRule
     /**
      *
      *
-     * @param  int  $kilobytes
+     * @param $resource
      * @return $this
      */
     public function resource($resource)

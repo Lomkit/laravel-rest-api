@@ -33,9 +33,6 @@ trait PerformsRestOperations
     public function mutate(MutateRequest $request) {
         $resource = static::newResource();
 
-        // @TODO: valider la requête
-//        $this->authorizeTo('create', $resource::$model);
-
         DB::beginTransaction();
 
         $operations = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
@@ -66,6 +63,7 @@ trait PerformsRestOperations
         $resource->performDelete($request, $model);
 
         //@TODO: il faut prévoir de pouvoir load des relations ici ?
+        //@TODO: aussi possiblement pouvoir load du mutate ? ajouter une clé sur l'array de base du coup
         return $resource::newResponse()
             ->resource($resource)
             ->responsable($model);
