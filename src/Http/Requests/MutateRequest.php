@@ -13,10 +13,10 @@ use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Rules\Includable;
+use Lomkit\Rest\Rules\RequiredRelation;
 
 class MutateRequest extends RestRequest
 {
-    //@TODO: requiredOnCreation
     //@TODO: custom validation
 
     public function rules()
@@ -73,6 +73,12 @@ class MutateRequest extends RestRequest
 
             $rules = array_merge(
                 $rules,
+                $relation->isRequiredOnCreation(
+                    app()->make(RestRequest::class),
+                    $relation->resource()
+                ) ? [
+                    $prefix => RequiredRelation::make()->resource($resource)
+                ] : [],
                 $this->mutateRules($relation->resource(), $prefixRelation, array_merge($loadedRelations, [$relation->relation]))
             );
         }
