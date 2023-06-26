@@ -48,7 +48,7 @@ trait PerformsRestOperations
     }
 
 
-    //@TODO: stubs for responsables
+    //@TODO: stubs for responsables / rules
 
     //@TODO: change destroy/restore/forceDelete to allow multiple models
     public function destroy(DestroyRequest $request, $key) {
@@ -63,7 +63,6 @@ trait PerformsRestOperations
         $resource->performDelete($request, $model);
 
         //@TODO: il faut prévoir de pouvoir load des relations ici ?
-        //@TODO: aussi possiblement pouvoir load du mutate ? ajouter une clé sur l'array de base du coup
         return $resource::newResponse()
             ->resource($resource)
             ->responsable($model);

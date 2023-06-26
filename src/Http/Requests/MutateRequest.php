@@ -12,6 +12,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
+use Lomkit\Rest\Rules\CustomRulable;
 use Lomkit\Rest\Rules\Includable;
 use Lomkit\Rest\Rules\RequiredRelation;
 
@@ -42,6 +43,9 @@ class MutateRequest extends RestRequest
                     'required_if:'.$prefix.'.operation,detach',
                     'prohibited_if:'.$prefix.'.operation,create',
                     'exists:'.$resource::newModel()->getTable().','.$resource::newModel()->getKeyName()
+                ],
+                $prefix => [
+                    CustomRulable::make()->resource($resource)
                 ]
             ],
             $this->relationRules($resource, $prefix.'.relations', $loadedRelations)
