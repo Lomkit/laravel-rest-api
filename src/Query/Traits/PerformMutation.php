@@ -64,12 +64,14 @@ trait PerformMutation
             );
         }
 
+        $newModel = $this->resource::newModel()
+            ::find($mutation['key']);
 
-
-        return $this->resource::newModel()
-            ::find($mutation['key'])
+        $newModel
             ->forceFill($allAttributes)
             ->save();
+
+        return $newModel;
     }
 
     public function mutateModel(Model $model, $attributes, $relations) {

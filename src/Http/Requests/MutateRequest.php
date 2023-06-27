@@ -18,8 +18,6 @@ use Lomkit\Rest\Rules\RequiredRelation;
 
 class MutateRequest extends RestRequest
 {
-    //@TODO: custom validation
-
     public function rules()
     {
         return $this->mutateRules($this->route()->controller::newResource());

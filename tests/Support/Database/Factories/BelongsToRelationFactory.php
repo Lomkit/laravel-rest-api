@@ -23,6 +23,8 @@ class BelongsToRelationFactory extends Factory
      */
     public function definition()
     {
-        return [];
+        return [
+            'number' => fake()->numberBetween(-5000, 5000)
+        ];
     }
 }

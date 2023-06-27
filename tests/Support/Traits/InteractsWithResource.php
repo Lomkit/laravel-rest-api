@@ -59,4 +59,17 @@ trait InteractsWithResource
             $response->json('data')
         );
     }
+
+    protected function assertMutatedResponse($response, $createdModels = [], $updatedModels = []) {
+        $response->assertStatus(200);
+
+        $this->assertEquals(
+            array_map(function ($model) { return $model->getKey(); }, $updatedModels),
+            $response->json('updated')
+        );
+
+        foreach ($createdModels as $model) {
+            $this->assertDatabaseHas($model->getTable(), $model->getAttributes());
+        }
+    }
 }
