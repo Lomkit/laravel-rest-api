@@ -10,7 +10,7 @@ use Lomkit\Rest\Contracts\RelationResource;
 
 class HasOne extends Relation implements RelationResource
 {
-    public function beforeMutating(Model $model, Relation $relation, array $mutationRelations)
+    public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
         $attributes = [
             $model->{$relation->relation}()->getForeignKeyName() => $mutationRelations[$relation->relation]['operation'] === 'detach' ? null : $model->{$relation->relation}()->getParentKey()

@@ -149,7 +149,7 @@ class SearchIncludingOperationsTest extends TestCase
                 [
                     'has_many_relation' => $matchingModel->hasManyRelation->map(function ($relation) {
                         return $relation->only(
-                            (new HasOneResource)->exposedFields(app()->make(RestRequest::class))
+                            (new HasManyResource)->exposedFields(app()->make(RestRequest::class))
                         );
                     })->toArray(),
                 ],

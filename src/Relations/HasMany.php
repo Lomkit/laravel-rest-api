@@ -10,7 +10,7 @@ use Lomkit\Rest\Contracts\RelationResource;
 
 class HasMany extends Relation implements RelationResource
 {
-    public function beforeMutating(Model $model, Relation $relation, array $mutationRelations)
+    public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
             $attributes = [

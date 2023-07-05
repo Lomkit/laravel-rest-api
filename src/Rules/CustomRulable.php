@@ -61,8 +61,6 @@ class CustomRulable implements Rule, DataAwareRule, ValidatorAwareRule
 
     public function passes($attribute, $value)
     {
-//        dd($this->data, $attribute);
-
         $validator = Validator::make(
             $this->data,
             $this->buildValidationRules($attribute, $value)
