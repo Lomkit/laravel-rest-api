@@ -57,14 +57,15 @@ Estimate time for Beta delivery: July 2023
 
 ## Roadmap
 
-- Unit testing
+- Unit testing - 50%
 - Documentation
 - Morph support for relationing
+- Through relation support
 - Custom directives (Filters / sorting)
 - Actions / Metrics
 - Automatic Gates
 - Aggregating (V2)
-- Stubs
+- Stubs - Missing Responsable (+ Request ?)
 - Create entries (Including distant ones)
 - Update entries (Including distant ones)
 - Automatic documentation with extending possible

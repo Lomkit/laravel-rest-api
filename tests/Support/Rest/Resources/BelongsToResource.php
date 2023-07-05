@@ -19,7 +19,8 @@ class BelongsToResource extends Resource
     public function exposedFields(RestRequest $request)
     {
         return [
-            'id'
+            'id',
+            'number'
         ];
     }
 }

@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create('has_one_relations', function (Blueprint $table) {
             $table->id();
+            $table->integer('number')->default(0);
             $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\Model::class);
             $table->timestamps();
         });

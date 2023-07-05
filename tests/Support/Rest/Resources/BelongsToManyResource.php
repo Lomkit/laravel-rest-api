@@ -18,7 +18,8 @@ class BelongsToManyResource extends Resource
     public function exposedFields(RestRequest $request)
     {
         return [
-            'id'
+            'id',
+            'number'
         ];
     }
 }

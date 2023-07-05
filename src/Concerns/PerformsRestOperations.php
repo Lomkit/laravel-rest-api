@@ -4,24 +4,21 @@ namespace Lomkit\Rest\Concerns;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
+use Lomkit\Rest\Http\Requests\MutateRequest;
 
 trait PerformsRestOperations
 {
     public function search(SearchRequest $request) {
         $resource = static::newResource();
 
-        $this->authorizeTo('viewAny', $resource::$model);
-
         $query = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
-            ->tap(function ($query) use ($request) {
-                self::newResource()->fetchQuery($request, $query->toBase());
-            })
             ->search($request->all());
 
         return $resource::newResponse()
@@ -31,11 +28,26 @@ trait PerformsRestOperations
             );
     }
 
-    //@TODO: donner la possibilité à l'utilisateur de valider la requête notamment pour la création / storing ?
+    public function mutate(MutateRequest $request) {
+        $resource = static::newResource();
+
+        DB::beginTransaction();
+
+        $operations = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
+            ->tap(function ($query) use ($request) {
+                self::newResource()->mutateQuery($request, $query->toBase());
+            })
+            ->mutate($request->all());
+
+        DB::commit();
+
+        return $operations;
+    }
 
 
-    //@TODO: stubs for responsables
+    //@TODO: stubs for responsables / rules
 
+    //@TODO: change destroy/restore/forceDelete to allow multiple models
     public function destroy(DestroyRequest $request, $key) {
         $resource = static::newResource();
 

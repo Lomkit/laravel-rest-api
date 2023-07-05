@@ -1,18 +1,23 @@
 <?php
 
 use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Query\Builder;
 use Lomkit\Rest\Tests\Support\Http\Controllers\ModelController;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
+use Lomkit\Rest\Tests\Support\Policies\RedPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class QueryBuilderTest extends \Lomkit\Rest\Tests\TestCase
 {
     public function test_building_query_for_empty_params()
     {
+        Auth::setUser(Mockery::mock(\Lomkit\Rest\Tests\Support\Models\User::class));
+        Gate::policy(Model::class, GreenPolicy::class);
+
         $queryBuilderMock = Mockery::mock(Builder::class, [new ModelResource()])->makePartial();
 
         $queryBuilderMock->shouldReceive('applySorts')->with([])->never();
@@ -26,6 +31,9 @@ class QueryBuilderTest extends \Lomkit\Rest\Tests\TestCase
 
     public function test_building_query_for_sorts()
     {
+        Auth::setUser(Mockery::mock(\Lomkit\Rest\Tests\Support\Models\User::class));
+        Gate::policy(Model::class, GreenPolicy::class);
+
         $queryBuilderMock = Mockery::mock(Builder::class, [new ModelResource()])->makePartial();
 
         $queryBuilderMock->shouldReceive('applySorts')->with(
