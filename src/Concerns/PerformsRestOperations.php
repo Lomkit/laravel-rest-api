@@ -28,8 +28,6 @@ trait PerformsRestOperations
             );
     }
 
-    //@TODO: donner la possibilité à l'utilisateur de valider la requête notamment pour la création / storing ?
-
     public function mutate(MutateRequest $request) {
         $resource = static::newResource();
 
@@ -41,8 +39,7 @@ trait PerformsRestOperations
             })
             ->mutate($request->all());
 
-        //@TODO: UNCOMMIT THIS
-//        DB::commit();
+        DB::commit();
 
         return $operations;
     }

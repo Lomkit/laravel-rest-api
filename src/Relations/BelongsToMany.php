@@ -18,7 +18,7 @@ class BelongsToMany extends Relation implements RelationResource
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
             $model
                 ->{$relation->relation}()
-                ->{$mutationRelations[$relation->relation]['operation'] === 'detach' ? 'detach' : 'attach'}(
+                ->{$mutationRelation['operation'] === 'detach' ? 'detach' : 'attach'}(
                     app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
                         ->applyMutation($mutationRelation)
                 );
