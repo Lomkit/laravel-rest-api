@@ -15,9 +15,9 @@ class RoutesTest extends \Lomkit\Rest\Tests\TestCase
             }
         );
 
-        // @TODO: add other routes and verify that assert route registered works well
+        $this->assertRouteRegistered('api.dummy-models.mutate', ['POST'], 'api/dummy-models/mutate', ModelController::class.'@mutate');
         $this->assertRouteRegistered('api.dummy-models.search', ['POST'], 'api/dummy-models/search', ModelController::class.'@search');
-        $this->assertRouteRegistered('api.dummy-models.destroy', ['DELETE'], 'api/dummy-models/{dummy_model}', ModelController::class.'@destroy');
+        $this->assertRouteRegistered('api.dummy-models.destroy', ['DELETE'], 'api/dummy-models', ModelController::class.'@destroy');
 
         $this->assertRouteNotRegistered('api.models.restore');
         $this->assertRouteNotRegistered('api.models.forceDelete');
@@ -32,8 +32,8 @@ class RoutesTest extends \Lomkit\Rest\Tests\TestCase
             }
         );
 
-        $this->assertRouteRegistered('api.dummy-soft-deleted-models.restore', ['POST'], 'api/dummy-soft-deleted-models/{dummy_soft_deleted_model}/restore', SoftDeletedModelController::class.'@restore');
-        $this->assertRouteRegistered('api.dummy-soft-deleted-models.forceDelete', ['DELETE'], 'api/dummy-soft-deleted-models/{dummy_soft_deleted_model}/force', SoftDeletedModelController::class.'@forceDelete');
+        $this->assertRouteRegistered('api.dummy-soft-deleted-models.restore', ['POST'], 'api/dummy-soft-deleted-models/restore', SoftDeletedModelController::class.'@restore');
+        $this->assertRouteRegistered('api.dummy-soft-deleted-models.forceDelete', ['DELETE'], 'api/dummy-soft-deleted-models/force', SoftDeletedModelController::class.'@forceDelete');
     }
 
     /**

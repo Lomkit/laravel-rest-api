@@ -33,8 +33,10 @@ class RestoreOperationsTest extends TestCase
         Gate::policy(SoftDeletedModel::class, RedPolicy::class);
 
         $response = $this->post(
-            '/api/soft-deleted-models/'.$softDeletedModel->getKey().'/restore',
-            [],
+            '/api/soft-deleted-models/restore',
+            [
+                'resources' => [$softDeletedModel->getKey()]
+            ],
             ['Accept' => 'application/json']
         );
 
@@ -49,12 +51,14 @@ class RestoreOperationsTest extends TestCase
         Gate::policy(SoftDeletedModel::class, GreenPolicy::class);
 
         $response = $this->post(
-            '/api/soft-deleted-models/'.$softDeletedModel->getKey().'/restore',
-            [],
+            '/api/soft-deleted-models/restore',
+            [
+                'resources' => [$softDeletedModel->getKey()]
+            ],
             ['Accept' => 'application/json']
         );
 
-        $this->assertResourceModel($response, $softDeletedModel, new SoftDeletedModelResource);
+        $this->assertResourceModel($response, [$softDeletedModel], new SoftDeletedModelResource);
         $this->assertDatabaseHas('soft_deleted_models', [
             'id' => $softDeletedModel->getKey(),
             'deleted_at' => null

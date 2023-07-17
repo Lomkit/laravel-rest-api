@@ -14,7 +14,7 @@ class ResourceRegistrar extends BaseResourceRegistrar
      *
      * @var string[]
      */
-    protected $resourceDefaults = ['search', 'show', 'mutate', 'destroy', 'restore', 'forceDelete'];
+    protected $resourceDefaults = ['search', 'mutate', 'destroy', 'restore', 'forceDelete'];
 
     /**
      * The verbs used in the resource URIs.
@@ -81,7 +81,7 @@ class ResourceRegistrar extends BaseResourceRegistrar
     {
         $name = $this->getShallowName($name, $options);
 
-        $uri = $this->getResourceUri($name).'/{'.$base.'}'.'/'.static::$verbs['restore'];
+        $uri = $this->getResourceUri($name).'/'.static::$verbs['restore'];
 
         $action = $this->getResourceAction($name, $controller, 'restore', $options);
 
@@ -101,9 +101,20 @@ class ResourceRegistrar extends BaseResourceRegistrar
     {
         $name = $this->getShallowName($name, $options);
 
-        $uri = $this->getResourceUri($name).'/{'.$base.'}'.'/'.static::$verbs['forceDelete'];
+        $uri = $this->getResourceUri($name).'/'.static::$verbs['forceDelete'];
 
         $action = $this->getResourceAction($name, $controller, 'forceDelete', $options);
+
+        return $this->router->delete($uri, $action);
+    }
+
+    protected function addResourceDestroy($name, $base, $controller, $options)
+    {
+        $name = $this->getShallowName($name, $options);
+
+        $uri = $this->getResourceUri($name);
+
+        $action = $this->getResourceAction($name, $controller, 'destroy', $options);
 
         return $this->router->delete($uri, $action);
     }
