@@ -135,7 +135,12 @@ class SearchIncludingOperationsTest extends TestCase
             '/api/models/search',
             [
                 'includes' => [
-                    ['relation' => 'hasManyRelation'],
+                    [
+                        'relation' => 'hasManyRelation',
+                        'sorts' => [
+                            ['field' => 'id', 'direction' => 'asc']
+                        ]
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -176,7 +181,9 @@ class SearchIncludingOperationsTest extends TestCase
             '/api/models/search',
             [
                 'includes' => [
-                    ['relation' => 'belongsToManyRelation'],
+                    [
+                        'relation' => 'belongsToManyRelation'
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -188,7 +195,10 @@ class SearchIncludingOperationsTest extends TestCase
             new ModelResource,
             [
                 [
-                    'belongs_to_many_relation' => $matchingModel->belongsToManyRelation->map(function ($relation) use ($matchingModel, $pivotAccessor) {
+                    'belongs_to_many_relation' => $matchingModel->belongsToManyRelation()
+                        ->orderBy('id', 'desc')
+                        ->get()
+                        ->map(function ($relation) use ($matchingModel, $pivotAccessor) {
                         return collect($relation->only(
                             array_merge((new BelongsToManyResource)->exposedFields(app()->make(RestRequest::class)), [$pivotAccessor])
                         ))
@@ -199,7 +209,8 @@ class SearchIncludingOperationsTest extends TestCase
                                     );
                                 return $relation;
                             });
-                    })->toArray(),
+                    })
+                        ->toArray(),
                 ],
                 [
                     'belongs_to_many_relation' => [],

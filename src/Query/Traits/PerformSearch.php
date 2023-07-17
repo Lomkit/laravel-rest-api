@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Query\Traits;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
 
 trait PerformSearch
 {
@@ -21,6 +22,13 @@ trait PerformSearch
             });
         });
 
+        if (!isset($parameters['sorts']) || empty($parameters['sorts'])) {
+            foreach ($this->resource->defaultOrderBy(
+                app()->make(RestRequest::class)
+            ) as $column => $order) {
+                $this->queryBuilder->orderBy($this->queryBuilder->getModel()->getTable().'.'.$column, $order);
+            }
+        }
         $this->when(isset($parameters['sorts']), function () use ($parameters) {
             $this->applySorts($parameters['sorts']);
         });
