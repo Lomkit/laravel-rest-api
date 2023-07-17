@@ -33,8 +33,10 @@ class DeleteOperationsTest extends TestCase
         Gate::policy(Model::class, RedPolicy::class);
 
         $response = $this->delete(
-            '/api/models/'.$model->getKey(),
-            [],
+            '/api/models',
+            [
+                'resources' => [$model->getKey()]
+            ],
             ['Accept' => 'application/json']
         );
 
@@ -49,12 +51,14 @@ class DeleteOperationsTest extends TestCase
         Gate::policy(Model::class, GreenPolicy::class);
 
         $response = $this->delete(
-            '/api/models/'.$model->getKey(),
-            [],
+            '/api/models',
+            [
+                'resources' => [$model->getKey()]
+            ],
             ['Accept' => 'application/json']
         );
 
-        $this->assertResourceModel($response, $model, new ModelResource);
+        $this->assertResourceModel($response, [$model], new ModelResource);
         $this->assertDatabaseMissing('models', $model->only('id'));
     }
 
@@ -65,14 +69,42 @@ class DeleteOperationsTest extends TestCase
         Gate::policy(SoftDeletedModel::class, GreenPolicy::class);
 
         $response = $this->delete(
-            '/api/soft-deleted-models/'.$softDeletedModel->getKey(),
-            [],
+            '/api/soft-deleted-models',
+            [
+                'resources' => [$softDeletedModel->getKey()]
+            ],
             ['Accept' => 'application/json']
         );
 
-        $this->assertResourceModel($response, $softDeletedModel, new SoftDeletedModelResource);
+        $this->assertResourceModel($response, [$softDeletedModel], new SoftDeletedModelResource);
         $this->assertDatabaseHas('soft_deleted_models', [
             'id' => $softDeletedModel->getKey(),
+            'deleted_at' => Carbon::parse($response->json('deleted_at'))
+        ]);
+    }
+
+    public function test_deleting_multiple_soft_deleted_models(): void
+    {
+        $softDeletedModel = SoftDeletedModelFactory::new()->count(1)->createOne();
+        $softDeletedModel2 = SoftDeletedModelFactory::new()->count(1)->createOne();
+
+        Gate::policy(SoftDeletedModel::class, GreenPolicy::class);
+
+        $response = $this->delete(
+            '/api/soft-deleted-models',
+            [
+                'resources' => [$softDeletedModel->getKey(), $softDeletedModel2->getKey()]
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourceModel($response, [$softDeletedModel, $softDeletedModel2], new SoftDeletedModelResource);
+        $this->assertDatabaseHas('soft_deleted_models', [
+            'id' => $softDeletedModel->getKey(),
+            'deleted_at' => Carbon::parse($response->json('deleted_at'))
+        ]);
+        $this->assertDatabaseHas('soft_deleted_models', [
+            'id' => $softDeletedModel2->getKey(),
             'deleted_at' => Carbon::parse($response->json('deleted_at'))
         ]);
     }

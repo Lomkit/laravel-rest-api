@@ -51,12 +51,30 @@ trait InteractsWithResource
         );
     }
 
-    protected function assertResourceModel($response, $model, Resource $resource) {
+    protected function assertResourceModel($response, $models, Resource $resource) {
         $response->assertStatus(200);
 
         $this->assertEquals(
-            $model->only($resource->exposedFields(App::make(RestRequest::class))),
+            array_map(
+                function($model) use ($resource) {
+                    return $model->only($resource->exposedFields(App::make(RestRequest::class)));
+                },
+                $models
+            ),
             $response->json('data')
         );
+    }
+
+    protected function assertMutatedResponse($response, $createdModels = [], $updatedModels = []) {
+        $response->assertStatus(200);
+
+        $this->assertEquals(
+            array_map(function ($model) { return $model->getKey(); }, $updatedModels),
+            $response->json('updated')
+        );
+
+        foreach ($createdModels as $model) {
+            $this->assertDatabaseHas($model->getTable(), $model->getAttributes());
+        }
     }
 }

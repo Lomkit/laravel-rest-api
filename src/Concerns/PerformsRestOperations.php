@@ -4,24 +4,22 @@ namespace Lomkit\Rest\Concerns;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
+use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
+use Lomkit\Rest\Http\Requests\MutateRequest;
 
 trait PerformsRestOperations
 {
     public function search(SearchRequest $request) {
         $resource = static::newResource();
 
-        $this->authorizeTo('viewAny', $resource::$model);
-
         $query = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
-            ->tap(function ($query) use ($request) {
-                self::newResource()->fetchQuery($request, $query->toBase());
-            })
             ->search($request->all());
 
         return $resource::newResponse()
@@ -31,57 +29,86 @@ trait PerformsRestOperations
             );
     }
 
-    //@TODO: donner la possibilité à l'utilisateur de valider la requête notamment pour la création / storing ?
+    public function mutate(MutateRequest $request) {
+        $resource = static::newResource();
+
+        DB::beginTransaction();
+
+        $operations = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
+            ->tap(function ($query) use ($request) {
+                self::newResource()->mutateQuery($request, $query->toBase());
+            })
+            ->mutate($request->all());
+
+        DB::commit();
+
+        return $operations;
+    }
 
 
-    //@TODO: stubs for responsables
+    //@TODO: stubs for responsables / rules
 
-    public function destroy(DestroyRequest $request, $key) {
+    //@TODO: change destroy/restore/forceDelete to allow multiple models
+    public function destroy(DestroyRequest $request) {
         $resource = static::newResource();
 
         $query = $resource->destroyQuery($request, $resource::newModel()::query());
 
-        $model = $query->findOrFail($key);
+        $models = $query
+            ->whereIn($resource::newModel()->getKeyName(), $request->input('resources'))
+            ->get();
 
-        $this->authorizeTo('delete', $model);
+        foreach ($models as $model) {
+            $this->authorizeTo('delete', $model);
 
-        $resource->performDelete($request, $model);
+            $resource->performDelete($request, $model);
+        }
 
         //@TODO: il faut prévoir de pouvoir load des relations ici ?
         return $resource::newResponse()
             ->resource($resource)
-            ->responsable($model);
+            ->responsable($models);
     }
 
-    public function restore(RestoreRequest $request, $key) {
+    public function restore(RestoreRequest $request) {
         $resource = static::newResource();
 
         $query = $resource->restoreQuery($request, $resource::newModel()::query());
 
-        $model = $query->withTrashed()->findOrFail($key);
+        $models = $query
+            ->withTrashed()
+            ->whereIn($resource::newModel()->getKeyName(), $request->input('resources'))
+            ->get();
 
-        $this->authorizeTo('restore', $model);
+        foreach ($models as $model) {
+            $this->authorizeTo('restore', $model);
 
-        $resource->performRestore($request, $model);
+            $resource->performRestore($request, $model);
+        }
 
         return $resource::newResponse()
             ->resource($resource)
-            ->responsable($model);
+            ->responsable($models);
     }
 
-    public function forceDelete(RestoreRequest $request, $key) {
+    public function forceDelete(ForceDestroyRequest $request) {
         $resource = static::newResource();
 
         $query = $resource->forceDeleteQuery($request, $resource::newModel()::query());
 
-        $model = $query->withTrashed()->findOrFail($key);
+        $models = $query
+            ->withTrashed()
+            ->whereIn($resource::newModel()->getKeyName(), $request->input('resources'))
+            ->get();
 
-        $this->authorizeTo('forceDelete', $model);
+        foreach ($models as $model) {
+            $this->authorizeTo('forceDelete', $model);
 
-        $resource->performForceDelete($request, $model);
+            $resource->performForceDelete($request, $model);
+        }
 
         return $resource::newResponse()
             ->resource($resource)
-            ->responsable($model);
+            ->responsable($models);
     }
 }

@@ -14,7 +14,7 @@ class ResourceRegistrar extends BaseResourceRegistrar
      *
      * @var string[]
      */
-    protected $resourceDefaults = ['search', 'store', 'show', 'update', 'destroy', 'restore', 'forceDelete'];
+    protected $resourceDefaults = ['search', 'mutate', 'destroy', 'restore', 'forceDelete'];
 
     /**
      * The verbs used in the resource URIs.
@@ -23,12 +23,13 @@ class ResourceRegistrar extends BaseResourceRegistrar
      */
     protected static $verbs = [
         'search' => 'search',
+        'mutate' => 'mutate',
         'restore' => 'restore',
         'forceDelete' => 'force',
     ];
 
     /**
-     * Add the index method for a resourceful route.
+     * Add the search method for a resourceful route.
      *
      * @param  string  $name
      * @param  string  $base
@@ -48,6 +49,26 @@ class ResourceRegistrar extends BaseResourceRegistrar
     }
 
     /**
+     * Add the search method for a resourceful route.
+     *
+     * @param  string  $name
+     * @param  string  $base
+     * @param  string $controller
+     * @param  array  $options
+     * @return \Illuminate\Routing\Route
+     */
+    protected function addResourceMutate($name, $base, $controller, $options)
+    {
+        $uri = $this->getResourceUri($name).'/'.static::$verbs['mutate'];
+
+        unset($options['missing']);
+
+        $action = $this->getResourceAction($name, $controller, 'mutate', $options);
+
+        return $this->router->post($uri, $action);
+    }
+
+    /**
      * Add the index method for a resourceful route.
      *
      * @param  string  $name
@@ -60,7 +81,7 @@ class ResourceRegistrar extends BaseResourceRegistrar
     {
         $name = $this->getShallowName($name, $options);
 
-        $uri = $this->getResourceUri($name).'/{'.$base.'}'.'/'.static::$verbs['restore'];
+        $uri = $this->getResourceUri($name).'/'.static::$verbs['restore'];
 
         $action = $this->getResourceAction($name, $controller, 'restore', $options);
 
@@ -80,9 +101,20 @@ class ResourceRegistrar extends BaseResourceRegistrar
     {
         $name = $this->getShallowName($name, $options);
 
-        $uri = $this->getResourceUri($name).'/{'.$base.'}'.'/'.static::$verbs['forceDelete'];
+        $uri = $this->getResourceUri($name).'/'.static::$verbs['forceDelete'];
 
         $action = $this->getResourceAction($name, $controller, 'forceDelete', $options);
+
+        return $this->router->delete($uri, $action);
+    }
+
+    protected function addResourceDestroy($name, $base, $controller, $options)
+    {
+        $name = $this->getShallowName($name, $options);
+
+        $uri = $this->getResourceUri($name);
+
+        $action = $this->getResourceAction($name, $controller, 'destroy', $options);
 
         return $this->router->delete($uri, $action);
     }

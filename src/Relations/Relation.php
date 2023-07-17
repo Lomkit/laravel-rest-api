@@ -9,16 +9,16 @@ use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\Traits\Constrained;
+use Lomkit\Rest\Relations\Traits\Mutates;
 
 class Relation
 {
-    use Makeable;
+    use Makeable, Mutates, Constrained;
     public string $relation;
     protected array $types;
 
     protected Resource $fromResource;
-
-    //@TODO toutes les méthodes: "requiredOnCreate", ...
 
     public function __construct($relation, $type)
     {
@@ -44,11 +44,11 @@ class Relation
         });
     }
 
-    public function applyFetchQuery(Builder $query) {
-        //@T0DO: don't apply fetchQuery on polymorphic relation ?
+    public function applySearchQuery(Builder $query) {
+        //@T0DO: don't apply applySearchQuery on polymorphic relation ?
         $resource = $this->resource();
 
-        $resource->fetchQuery(app()->make(RestRequest::class), $query);
+        $resource->searchQuery(app()->make(RestRequest::class), $query);
     }
 
     public function resource() {

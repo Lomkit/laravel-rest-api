@@ -10,7 +10,9 @@ use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
+use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
+use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
@@ -51,6 +53,7 @@ class SearchIncludingOperationsTest extends TestCase
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -126,12 +129,18 @@ class SearchIncludingOperationsTest extends TestCase
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
             [
                 'includes' => [
-                    ['relation' => 'hasManyRelation'],
+                    [
+                        'relation' => 'hasManyRelation',
+                        'sorts' => [
+                            ['field' => 'id', 'direction' => 'asc']
+                        ]
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -145,7 +154,7 @@ class SearchIncludingOperationsTest extends TestCase
                 [
                     'has_many_relation' => $matchingModel->hasManyRelation->map(function ($relation) {
                         return $relation->only(
-                            (new HasOneResource)->exposedFields(app()->make(RestRequest::class))
+                            (new HasManyResource)->exposedFields(app()->make(RestRequest::class))
                         );
                     })->toArray(),
                 ],
@@ -166,12 +175,15 @@ class SearchIncludingOperationsTest extends TestCase
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
             [
                 'includes' => [
-                    ['relation' => 'belongsToManyRelation'],
+                    [
+                        'relation' => 'belongsToManyRelation'
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -183,7 +195,10 @@ class SearchIncludingOperationsTest extends TestCase
             new ModelResource,
             [
                 [
-                    'belongs_to_many_relation' => $matchingModel->belongsToManyRelation->map(function ($relation) use ($matchingModel, $pivotAccessor) {
+                    'belongs_to_many_relation' => $matchingModel->belongsToManyRelation()
+                        ->orderBy('id', 'desc')
+                        ->get()
+                        ->map(function ($relation) use ($matchingModel, $pivotAccessor) {
                         return collect($relation->only(
                             array_merge((new BelongsToManyResource)->exposedFields(app()->make(RestRequest::class)), [$pivotAccessor])
                         ))
@@ -194,7 +209,8 @@ class SearchIncludingOperationsTest extends TestCase
                                     );
                                 return $relation;
                             });
-                    })->toArray(),
+                    })
+                        ->toArray(),
                 ],
                 [
                     'belongs_to_many_relation' => [],

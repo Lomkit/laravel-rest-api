@@ -89,6 +89,12 @@ class Response implements Responsable
             return $this->responsable->through(function ($model) use ($request) {
                 return $this->map($model, $this->modelToResponse($model, $this->resource, $request->input()));
             });
+        } elseif ($this->responsable instanceof Collection) {
+            return [
+                'data' => $this->responsable->map(function ($model) use ($request) {
+                    return $this->map($model, $this->modelToResponse($model, $this->resource, $request->input()));
+                })
+            ];
         }
 
         return $this->map($this->responsable, [

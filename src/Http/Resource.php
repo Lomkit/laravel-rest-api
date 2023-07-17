@@ -8,6 +8,8 @@ use Lomkit\Rest\Concerns\PerformsQueries;
 use Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
+use Lomkit\Rest\Concerns\Resource\Rulable;
+use Lomkit\Rest\Http\Requests\RestRequest;
 
 class Resource
 {
@@ -15,6 +17,7 @@ class Resource
         PerformsModelOperations,
         Relationable,
         Paginable,
+        Rulable,
         ConfiguresRestParameters;
 
     /**
@@ -55,5 +58,11 @@ class Resource
         $response = static::$response;
 
         return new $response;
+    }
+
+    public function defaultOrderBy(RestRequest $request) {
+        return [
+            'id' => 'desc'
+        ];
     }
 }

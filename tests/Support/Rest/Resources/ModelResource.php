@@ -49,4 +49,11 @@ class ModelResource extends Resource
             50
         ];
     }
+
+    public function defaultOrderBy(RestRequest $request)
+    {
+        return [
+            'id' => 'asc'
+        ];
+    }
 }

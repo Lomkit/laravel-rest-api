@@ -9,10 +9,11 @@ use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Lomkit\Rest\Concerns\Makeable;
+use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
 
-class Includable implements Rule, DataAwareRule, ValidatorAwareRule
+class CustomRulable implements Rule, DataAwareRule, ValidatorAwareRule
 {
 
     use Makeable;
@@ -79,17 +80,22 @@ class Includable implements Rule, DataAwareRule, ValidatorAwareRule
      */
     protected function buildValidationRules($attribute, $value)
     {
-        $relationResource = $this->resource->relationResource($value['relation']);
+        $rules = [];
 
-        if (is_null($relationResource)) {
-            return [];
+        if ($value['operation'] === 'create') {
+            $rules = $this->resource->createRules(
+                app()->make(RestRequest::class)
+            );
+        } elseif ($value['operation'] === 'update') {
+            $rules = $this->resource->updateRules(
+                app()->make(RestRequest::class)
+            );
         }
 
-        return (new SearchRequest())
-            ->searchRules(
-                $relationResource,
-                $attribute
-            );
+        return collect($rules)
+            ->mapWithKeys(function ($item, $key) use ($attribute) {
+                return [$attribute.'.attributes.'.$key => $item];
+            })->toArray();
     }
 
     /**
