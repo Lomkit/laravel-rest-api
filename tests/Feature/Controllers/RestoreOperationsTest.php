@@ -64,4 +64,30 @@ class RestoreOperationsTest extends TestCase
             'deleted_at' => null
         ]);
     }
+
+    public function test_restoring_multiple_soft_deleted_models(): void
+    {
+        $softDeletedModel = SoftDeletedModelFactory::new()->count(1)->trashed()->createOne();
+        $softDeletedModel2 = SoftDeletedModelFactory::new()->count(1)->trashed()->createOne();
+
+        Gate::policy(SoftDeletedModel::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/soft-deleted-models/restore',
+            [
+                'resources' => [$softDeletedModel->getKey(), $softDeletedModel2->getKey()]
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourceModel($response, [$softDeletedModel, $softDeletedModel2], new SoftDeletedModelResource);
+        $this->assertDatabaseHas('soft_deleted_models', [
+            'id' => $softDeletedModel->getKey(),
+            'deleted_at' => null
+        ]);
+        $this->assertDatabaseHas('soft_deleted_models', [
+            'id' => $softDeletedModel2->getKey(),
+            'deleted_at' => null
+        ]);
+    }
 }
