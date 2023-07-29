@@ -97,12 +97,20 @@ class Response implements Responsable
             ];
         }
 
-        return $this->map($this->responsable, [
-            'data' => $this->modelToResponse($this->responsable, $this->resource, $request->input())
-        ]);
+        return [
+            'data' => $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input()))
+        ];
     }
 
-    protected function map(Model $model, array $response) {
-        return $response;
+    /**
+     * This map on each model returned by the API, use it at your ease.
+     *
+     * @var \Illuminate\Database\Eloquent\Model $model
+     * @var array $responseModel
+     *
+     * @return array
+     */
+    protected function map(\Illuminate\Database\Eloquent\Model $model, array $responseModel) : array {
+        return $responseModel;
     }
 }

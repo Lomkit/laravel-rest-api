@@ -20,7 +20,7 @@ class ResourceCommand extends GeneratorCommand implements PromptsForMissingInput
      */
     protected $signature = 'rest:resource {name : The name of the resource}
         {--model= : The model to be associated with}
-        {--path= : The location where the controller file should be created}';
+        {--path= : The location where the resource file should be created}';
 
     /**
      * The type of class being generated.
