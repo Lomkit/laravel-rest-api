@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: mnavarrocarter/packagist-update@v1.0
+    - uses: mnavarrocarter/packagist-update@v1.0.0
       with:
         username: "GautierDele"
         api_token: ${{ secrets.PACKAGIST_TOKEN }}
