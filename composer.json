@@ -1,7 +1,7 @@
 {
-  "name": "lomkit/laravel-api-rest",
+  "name": "lomkit/laravel-rest-api",
   "description": "A package to build quick and robust rest api for the Laravel framework.",
-  "keywords": ["laravel", "api", "rest", "lomkit", "graphql"],
+  "keywords": ["laravel", "rest", "api", "lomkit", "graphql"],
   "license": "MIT",
   "authors": [
     {
