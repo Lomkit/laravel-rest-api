@@ -4,6 +4,9 @@
 
 Laravel Rest Api is an elegant way to expose your app through an API, it takes full advantage of the Laravel ecosystem such as Policies, Controllers, Eloquent, ...
 
+# BETA
+Please note that this package is under beta and is not recommended to use for production environment for now. End of beta should be by the end of 2023.
+
 ## Documentation, Installation, and Usage Instructions
 
 See the [documentation](https://laravel-rest-api.lomkit.com) for detailed installation and usage instructions.
