@@ -1,8 +1,16 @@
+<p align="center"><img src="https://raw.githubusercontent.com/Lomkit/art/master/laravel-rest-api/cover.png" alt="Social Card of Laravel Permission"></p>
 
 # Laravel Rest Api
 
-This project is under construction. It has been made to cover nowadays problem with constructing API.
-This project aims to be as powerfull as GraphQL with the full integration of Laravel (Policies / Eloquent / etc)
+Laravel Rest Api is an elegant way to expose your app through an API, it takes full advantage of the Laravel ecosystem such as Policies, Controllers, Eloquent, ...
+
+## Documentation, Installation, and Usage Instructions
+
+See the [documentation](https://laravel-rest-api.lomkit.com) for detailed installation and usage instructions.
+
+## What It Does
+
+You'll find multiple endpoints exposed when using this package such as mutating, searching, showing, deleting, ...
 
 Here is a quick look at what you can do using API search method:
 ```
@@ -53,19 +61,20 @@ Here is a quick look at what you can do using API search method:
 }
 ```
 
-Estimate time for Beta delivery: July 2023
+## Changelog
+
+TODO
+
+## Contributing
+
+TODO
 
 ## Roadmap
 
-- Unit testing - 50%
-- Documentation
-- Morph support for relationing
+- Morph support
 - Through relation support
 - Custom directives (Filters / sorting)
 - Actions / Metrics
 - Automatic Gates
 - Aggregating (V2)
-- Stubs - Missing Responsable (+ Request ?)
-- Create entries (Including distant ones)
-- Update entries (Including distant ones)
 - Automatic documentation with extending possible

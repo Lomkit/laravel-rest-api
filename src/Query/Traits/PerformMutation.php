@@ -21,8 +21,6 @@ trait PerformMutation
     ];
 
     public function mutate(array $parameters = []) {
-        // @TODO: Attentions aux permissions aussi sur le search
-
         $operations = [
             'created' => [],
             'updated' => []

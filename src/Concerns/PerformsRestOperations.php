@@ -45,10 +45,6 @@ trait PerformsRestOperations
         return $operations;
     }
 
-
-    //@TODO: stubs for responsables / rules
-
-    //@TODO: change destroy/restore/forceDelete to allow multiple models
     public function destroy(DestroyRequest $request) {
         $resource = static::newResource();
 
