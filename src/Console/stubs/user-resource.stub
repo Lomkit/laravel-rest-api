@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Rest\Resources;
+
+use App\Rest\Resource as RestResource;
+
+class User extends Resource
+{
+    /**
+     * The model the resource corresponds to.
+     *
+     * @var class-string<\Illuminate\Database\Eloquent\Model>
+     */
+    public static $model = \App\User::class;
+
+    public function exposedFields(\Lomkit\Rest\Http\Requests\RestRequest $request)
+    {
+        return [
+            'id',
+            'name',
+            'email'
+        ];
+    }
+
+    public function relations(\Lomkit\Rest\Http\Requests\RestRequest $request)
+    {
+        return [];
+    }
+
+    public function exposedScopes(\Lomkit\Rest\Http\Requests\RestRequest $request) {
+        return [];
+    }
+
+    public function exposedPaginations(\Lomkit\Rest\Http\Requests\RestRequest $request) {
+        return [
+            10,
+            25,
+            50
+        ];
+    }
+}
