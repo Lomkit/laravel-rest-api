@@ -18,8 +18,6 @@ abstract class Controller extends \Illuminate\Routing\Controller
     use PerformsRestOperations,
         Authorizable;
 
-    // @TODO Make an installation command that provides base controller, resource, etc
-
     /**
      * The resource the entry corresponds to.
      *

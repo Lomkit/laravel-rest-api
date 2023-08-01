@@ -1,0 +1,15 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Rest\Controller as RestController;
+
+class UsersController extends RestController
+{
+    /**
+     * The resource the controller corresponds to.
+     *
+     * @var class-string<\Lomkit\Rest\Http\Resource>
+     */
+    public static $resource = \App\User::class;
+}

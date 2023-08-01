@@ -84,4 +84,4 @@ TODO
 - Actions / Metrics
 - Automatic Gates
 - Aggregating (V2)
-- Automatic documentation with extending possible
+- Automatic documentation with extension possible

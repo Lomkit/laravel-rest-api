@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Lomkit\Rest\Console\Commands\BaseControllerCommand;
 use Lomkit\Rest\Console\Commands\BaseResourceCommand;
 use Lomkit\Rest\Console\Commands\ControllerCommand;
+use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceCommand;
 use Lomkit\Rest\Console\Commands\ResponseCommand;
 use Lomkit\Rest\Contracts\QueryBuilder;
@@ -46,7 +47,8 @@ class RestServiceProvider extends ServiceProvider{
                 ControllerCommand::class,
                 BaseResourceCommand::class,
                 ResourceCommand::class,
-                ResponseCommand::class
+                ResponseCommand::class,
+                QuickStartCommand::class
             ]);
         }
     }
