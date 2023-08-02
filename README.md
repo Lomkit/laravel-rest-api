@@ -83,5 +83,5 @@ TODO
 - Custom directives (Filters / sorting)
 - Actions / Metrics
 - Automatic Gates
-- Aggregating (V2)
+- Aggregating
 - Automatic documentation with extension possible

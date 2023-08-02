@@ -41,7 +41,7 @@ class ModelResource extends Resource
         ];
     }
 
-    public function exposedPaginations(RestRequest $request) {
+    public function exposedLimits(RestRequest $request) {
         return [
             1,
             10,

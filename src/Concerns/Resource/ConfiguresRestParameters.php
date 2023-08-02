@@ -51,7 +51,7 @@ trait ConfiguresRestParameters
         return [];
     }
 
-    public function exposedPaginations(RestRequest $request) {
+    public function exposedLimits(RestRequest $request) {
         return [
             10,
             25,
