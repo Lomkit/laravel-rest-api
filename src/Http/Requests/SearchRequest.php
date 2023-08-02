@@ -32,7 +32,7 @@ class SearchRequest extends RestRequest
             [$prefix.'selects' => ['sometimes', 'array']],
             $this->selectsRules($resource, $prefix.'selects'),
             [
-                'limit' => ['sometimes', 'integer', Rule::in($resource->exposedPaginations($this))],
+                'limit' => ['sometimes', 'integer', Rule::in($resource->exposedLimits($this))],
                 'page' => ['sometimes', 'integer']
             ],
             $prefix === '' ? ['includes' => ['sometimes', 'array']] : [],

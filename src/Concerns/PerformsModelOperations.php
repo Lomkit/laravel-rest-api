@@ -10,7 +10,7 @@ trait PerformsModelOperations
 {
 
     /**
-     * Build a query for the given resource.
+     * Build a "delete" query for the given resource.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
      * @param  \Illuminate\Database\Eloquent\Model  $query
@@ -20,10 +20,24 @@ trait PerformsModelOperations
         $model->delete();
     }
 
+    /**
+     * Build a "restore" query for the given resource.
+     *
+     * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Model  $query
+     * @return void
+     */
     public function performRestore(RestRequest $request, Model $model) {
         $model->restore();
     }
 
+    /**
+     * Build a "forceDelete" query for the given resource.
+     *
+     * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Model  $query
+     * @return void
+     */
     public function performForceDelete(RestRequest $request, Model $model) {
         $model->forceDelete();
     }
