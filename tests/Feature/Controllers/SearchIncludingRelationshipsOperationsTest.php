@@ -13,6 +13,7 @@ use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
+use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
@@ -21,7 +22,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
-class SearchIncludingOperationsTest extends TestCase
+class SearchIncludingRelationshipsOperationsTest extends TestCase
 {
     public function test_getting_a_list_of_resources_including_unauthorized_relation(): void
     {
@@ -92,6 +93,7 @@ class SearchIncludingOperationsTest extends TestCase
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasOneRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',

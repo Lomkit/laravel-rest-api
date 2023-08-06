@@ -12,6 +12,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
+use Lomkit\Rest\Relations\HasManyThrough;
 use Lomkit\Rest\Rules\CustomRulable;
 use Lomkit\Rest\Rules\Includable;
 use Lomkit\Rest\Rules\RequiredRelation;
@@ -69,18 +70,15 @@ class MutateRequest extends RestRequest
         ) {
             $prefixRelation = $prefix.'.'.$relation->relation;
 
-            if ($relation instanceof BelongsToMany || $relation instanceof HasMany) {
+            if ($relation instanceof BelongsToMany || $relation instanceof HasMany || $relation instanceof HasManyThrough) {
                 $prefixRelation .= '.*';
             }
 
-            $rules = array_merge(
+            $rules = array_merge_recursive(
                 $rules,
-                $relation->isRequiredOnCreation(
-                    app()->make(RestRequest::class),
-                    $relation->resource()
-                ) ? [
-                    $prefix => RequiredRelation::make()->resource($resource)
-                ] : [],
+                [
+                    $prefix.'.'.$relation->relation => $relation->rules($resource)
+                ],
                 $this->mutateRules($relation->resource(), $prefixRelation, array_merge($loadedRelations, [$relation->relation]))
             );
         }

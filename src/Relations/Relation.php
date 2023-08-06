@@ -11,6 +11,7 @@ use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\Mutates;
+use Lomkit\Rest\Rules\RequiredRelation;
 
 class Relation
 {
@@ -59,5 +60,17 @@ class Relation
         return tap($this, function () use ($fromResource) {
             $this->fromResource = $fromResource;
         });
+    }
+
+    public function rules(Resource $resource) {
+        $rules = [];
+
+        if ($this->isRequiredOnCreation(
+            app()->make(RestRequest::class)
+        )) {
+            $rules[] = RequiredRelation::make()->resource($resource);
+        }
+
+        return $rules;
     }
 }
