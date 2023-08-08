@@ -79,7 +79,6 @@ TODO
 ## Roadmap
 
 - Morph support
-- Through relation support
 - Custom directives (Filters / sorting)
 - Actions / Metrics
 - Automatic Gates

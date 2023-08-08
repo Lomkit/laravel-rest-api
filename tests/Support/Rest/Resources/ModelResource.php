@@ -10,7 +10,12 @@ use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Relations\HasManyThrough;
 use Lomkit\Rest\Relations\HasOne;
 use Lomkit\Rest\Relations\HasOneThrough;
+use Lomkit\Rest\Relations\MorphMany;
+use Lomkit\Rest\Relations\MorphOne;
+use Lomkit\Rest\Relations\MorphOneOfMany;
+use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Tests\Support\Models\Model;
+use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 
 class ModelResource extends Resource
 {
@@ -24,8 +29,16 @@ class ModelResource extends Resource
             HasMany::make('hasManyRelation', HasManyResource::class),
             BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
                 ->withPivotFields(['created_at']),
+
+            // Through relationships
             HasOneThrough::make('hasOneThroughRelation', HasOneThroughResource::class),
-            HasManyThrough::make('hasManyThroughRelation', HasManyThroughResource::class)
+            HasManyThrough::make('hasManyThroughRelation', HasManyThroughResource::class),
+
+            // Morph relationships
+            MorphTo::make('morphToRelation', [MorphToResource::class]),
+            MorphOne::make('morphOneRelation', MorphOneResource::class),
+            MorphOneOfMany::make('morphOneOfManyRelation', MorphOneOfManyResource::class),
+            MorphMany::make('morphManyRelation', MorphManyResource::class)
         ];
     }
 

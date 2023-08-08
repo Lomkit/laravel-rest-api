@@ -37,6 +37,22 @@ class Model extends BaseModel
             ->withPivot('created_at', 'updated_at');
     }
 
+    public function morphOneRelation() {
+        return $this->morphOne(MorphOneRelation::class, 'morph_one_relation');
+    }
+
+    public function morphOneOfManyRelation() {
+        return $this->morphOne(MorphOneOfManyRelation::class, 'morph_one_of_many_relation')->latestOfMany();
+    }
+
+    public function morphToRelation() {
+        return $this->morphTo();
+    }
+
+    public function morphManyRelation() {
+        return $this->morphMany(MorphManyRelation::class, 'morph_many_relation');
+    }
+
     public function scopeNumbered(Builder $query, int $number = 0): void
     {
         $query->where('number', '>', $number);
