@@ -10,10 +10,12 @@ use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Relations\HasManyThrough;
 use Lomkit\Rest\Relations\HasOne;
 use Lomkit\Rest\Relations\HasOneThrough;
+use Lomkit\Rest\Relations\MorphedByMany;
 use Lomkit\Rest\Relations\MorphMany;
 use Lomkit\Rest\Relations\MorphOne;
 use Lomkit\Rest\Relations\MorphOneOfMany;
 use Lomkit\Rest\Relations\MorphTo;
+use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 
@@ -38,7 +40,11 @@ class ModelResource extends Resource
             MorphTo::make('morphToRelation', [MorphToResource::class]),
             MorphOne::make('morphOneRelation', MorphOneResource::class),
             MorphOneOfMany::make('morphOneOfManyRelation', MorphOneOfManyResource::class),
-            MorphMany::make('morphManyRelation', MorphManyResource::class)
+            MorphMany::make('morphManyRelation', MorphManyResource::class),
+            MorphToMany::make('morphToManyRelation', MorphToManyResource::class)
+                ->withPivotFields(['created_at']),
+            MorphedByMany::make('morphedByManyRelation', MorphedByManyResource::class)
+                ->withPivotFields(['created_at']),
         ];
     }
 
