@@ -56,19 +56,31 @@ class Relation
         return new $this->types[0];
     }
 
+    public function resourceForModel(string $model) {
+        $array =
+            array_filter(
+                $this->types,
+                function ($type) use ($model) {
+                    return (new $type)::$model === $model;
+                }
+            );
+        return new (reset($array));
+
+    }
+
     public function fromResource(Resource $fromResource) {
         return tap($this, function () use ($fromResource) {
             $this->fromResource = $fromResource;
         });
     }
 
-    public function rules(Resource $resource) {
+    public function rules(Resource $resource, string $prefix) {
         $rules = [];
 
         if ($this->isRequiredOnCreation(
             app()->make(RestRequest::class)
         )) {
-            $rules[] = RequiredRelation::make()->resource($resource);
+            $rules[$prefix] = RequiredRelation::make()->resource($resource);
         }
 
         return $rules;

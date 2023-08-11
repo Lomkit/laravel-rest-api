@@ -16,10 +16,10 @@ class HasOneThrough extends Relation implements RelationResource
         throw new \RuntimeException('You can\'t mutate a \'HasOneThrough\' relation.');
     }
 
-    public function rules(Resource $resource)
+    public function rules(Resource $resource, string $prefix)
     {
         return [
-            'prohibited'
+            $prefix => 'prohibited'
         ];
     }
 }

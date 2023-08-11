@@ -17,6 +17,7 @@ use Lomkit\Rest\Relations\MorphOneOfMany;
 use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Tests\Support\Models\Model;
+use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 
 class ModelResource extends Resource
@@ -37,7 +38,7 @@ class ModelResource extends Resource
             HasManyThrough::make('hasManyThroughRelation', HasManyThroughResource::class),
 
             // Morph relationships
-            MorphTo::make('morphToRelation', [MorphToResource::class]),
+            MorphTo::make('morphToRelation', [MorphToResource::class, MorphedByManyResource::class]),
             MorphOne::make('morphOneRelation', MorphOneResource::class),
             MorphOneOfMany::make('morphOneOfManyRelation', MorphOneOfManyResource::class),
             MorphMany::make('morphManyRelation', MorphManyResource::class),

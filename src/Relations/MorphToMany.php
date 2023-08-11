@@ -15,14 +15,13 @@ class MorphToMany extends MorphRelation implements RelationResource
 
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
-        dd('after mutating');
-//        foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
-//            $model
-//                ->{$relation->relation}()
-//                ->{$mutationRelation['operation'] === 'detach' ? 'detach' : 'attach'}(
-//                    app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
-//                        ->applyMutation($mutationRelation)
-//                );
-//        }
+        foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
+            $model
+                ->{$relation->relation}()
+                ->{$mutationRelation['operation'] === 'detach' ? 'detach' : 'attach'}(
+                    app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+                        ->applyMutation($mutationRelation)
+                );
+        }
     }
 }
