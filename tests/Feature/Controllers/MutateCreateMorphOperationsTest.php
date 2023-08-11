@@ -240,7 +240,7 @@ class MutateCreateMorphOperationsTest extends TestCase
             ],
             ['Accept' => 'application/json']
         );
-        
+
         $this->assertMutatedResponse(
             $response,
             [$modelToCreate],

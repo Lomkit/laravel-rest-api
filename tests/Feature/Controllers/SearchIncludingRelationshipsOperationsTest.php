@@ -154,11 +154,14 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             new ModelResource,
             [
                 [
-                    'has_many_relation' => $matchingModel->hasManyRelation->map(function ($relation) {
-                        return $relation->only(
-                            (new HasManyResource)->exposedFields(app()->make(RestRequest::class))
-                        );
-                    })->toArray(),
+                    'has_many_relation' => $matchingModel->hasManyRelation()
+                        ->orderBy('id')
+                        ->get()
+                        ->map(function ($relation) {
+                            return $relation->only(
+                                (new HasManyResource)->exposedFields(app()->make(RestRequest::class))
+                            );
+                        })->toArray(),
                 ],
                 [
                     'has_many_relation' => [],

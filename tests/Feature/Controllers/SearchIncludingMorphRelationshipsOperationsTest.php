@@ -194,11 +194,14 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
             new ModelResource,
             [
                 [
-                    'morph_many_relation' => $matchingModel->morphManyRelation->map(function ($relation) {
-                        return $relation->only(
-                            (new MorphManyResource)->exposedFields(app()->make(RestRequest::class))
-                        );
-                    })->toArray(),
+                    'morph_many_relation' => $matchingModel->morphManyRelation()
+                        ->orderBy('id')
+                        ->get()
+                        ->map(function ($relation) {
+                            return $relation->only(
+                                (new MorphManyResource)->exposedFields(app()->make(RestRequest::class))
+                            );
+                        })->toArray(),
                 ],
                 [
                     'morph_many_relation' => [],
