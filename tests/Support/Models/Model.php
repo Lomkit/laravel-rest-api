@@ -27,6 +27,10 @@ class Model extends BaseModel
         return $this->hasMany(HasManyRelation::class);
     }
 
+    public function hasOneOfManyRelation() {
+        return $this->hasOne(HasOneOfManyRelation::class)->ofMany();
+    }
+
     public function hasManyThroughRelation() {
         return $this->hasManyThrough(HasManyThroughRelation::class, HasManyRelation::class);
     }
@@ -42,7 +46,7 @@ class Model extends BaseModel
     }
 
     public function morphOneOfManyRelation() {
-        return $this->morphOne(MorphOneOfManyRelation::class, 'morph_one_of_many_relation')->latestOfMany();
+        return $this->morphOne(MorphOneOfManyRelation::class, 'morph_one_of_many_relation')->ofMany();
     }
 
     public function morphToRelation() {

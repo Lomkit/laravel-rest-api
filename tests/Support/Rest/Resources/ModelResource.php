@@ -9,6 +9,7 @@ use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Relations\HasManyThrough;
 use Lomkit\Rest\Relations\HasOne;
+use Lomkit\Rest\Relations\HasOneOfMany;
 use Lomkit\Rest\Relations\HasOneThrough;
 use Lomkit\Rest\Relations\MorphedByMany;
 use Lomkit\Rest\Relations\MorphMany;
@@ -28,6 +29,7 @@ class ModelResource extends Resource
     {
         return [
             HasOne::make('hasOneRelation', HasOneResource::class),
+            HasOneOfMany::make('hasOneOfManyRelation', HasOneOfManyResource::class),
             BelongsTo::make('belongsToRelation', BelongsToResource::class),
             HasMany::make('hasManyRelation', HasManyResource::class),
             BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)

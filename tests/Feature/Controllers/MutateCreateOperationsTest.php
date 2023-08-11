@@ -19,9 +19,9 @@ use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
-class MutateUpdateOperationsTest extends TestCase
+class MutateCreateOperationsTest extends TestCase
 {
-    public function test_updating_a_resource_using_not_authorized_field(): void
+    public function test_creating_a_resource_using_not_authorized_field(): void
     {
         Gate::policy(Model::class, GreenPolicy::class);
 
@@ -30,7 +30,7 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
+                        'operation' => 'create',
                         'attributes' => ['not_authorized_field' => true]
                     ],
                 ],
@@ -42,9 +42,9 @@ class MutateUpdateOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
     }
 
-    public function test_updating_a_resource(): void
+    public function test_creating_a_resource(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
 
@@ -53,11 +53,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ]
                     ],
                 ],
@@ -67,22 +66,13 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
-        );
-
-        $this->assertDatabaseHas(
-            $modelToUpdate->getTable(),
-            [
-                'name' => 'new name',
-                'number' => 5001
-            ]
+            [$modelToCreate],
         );
     }
 
-    public function test_updating_a_resource_with_creating_belongs_to_relation(): void
+    public function test_creating_a_resource_with_creating_belongs_to_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(BelongsToRelation::class, GreenPolicy::class);
@@ -92,11 +82,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'belongsToRelation' => [
@@ -112,24 +101,15 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
-        );
-
-        $this->assertDatabaseHas(
-            $modelToUpdate->getTable(),
-            [
-                'name' => 'new name',
-                'number' => 5001
-            ]
+            [$modelToCreate],
         );
 
         $this->assertNotNull(Model::first()->belongs_to_relation_id);
     }
 
-    public function test_updating_a_resource_with_attaching_belongs_to_relation(): void
+    public function test_creating_a_resource_with_attaching_belongs_to_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
         $belongsToRelationToAttach = BelongsToRelationFactory::new()->createOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
@@ -140,11 +120,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'belongsToRelation' => [
@@ -160,65 +139,18 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         $this->assertEquals(
             $belongsToRelationToAttach->getKey(),
-            Model::find($response->json('updated.0'))->belongs_to_relation_id
+            Model::find($response->json('created.0'))->belongs_to_relation_id
         );
     }
 
-    public function test_updating_a_resource_with_detaching_belongs_to_relation(): void
+    public function test_creating_a_resource_with_updating_belongs_to_relation(): void
     {
-        $belongsToRelationToDetach = BelongsToRelationFactory::new()
-            ->createOne();
-
-        $modelToUpdate = ModelFactory::new()
-            ->for($belongsToRelationToDetach)
-            ->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
-                        ],
-                        'relations' => [
-                            'belongsToRelation' => [
-                                'operation' => 'detach',
-                                'key' => $belongsToRelationToDetach->getKey()
-                            ]
-                        ]
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertMutatedResponse(
-            $response,
-            [],
-            [$modelToUpdate],
-        );
-
-        $this->assertNull(
-            Model::find($response->json('updated.0'))->belongs_to_relation_id
-        );
-    }
-
-    public function test_updating_a_resource_with_updating_belongs_to_relation(): void
-    {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
         $belongsToRelationToUpdate = BelongsToRelationFactory::new()->createOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
@@ -229,11 +161,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'belongsToRelation' => [
@@ -250,8 +181,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the number has been modified on the relation
@@ -262,14 +192,14 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongs_to_relation_id,
+            Model::find($response->json('created.0'))->belongs_to_relation_id,
             $belongsToRelationToUpdate->getKey()
         );
     }
 
-    public function test_updating_a_resource_with_creating_has_many_relation(): void
+    public function test_creating_a_resource_with_creating_has_many_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(HasManyRelation::class, GreenPolicy::class);
@@ -279,11 +209,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'hasManyRelation' => [
@@ -302,19 +231,18 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasManyRelation()->count(), 1
         );
     }
 
-    public function test_updating_a_resource_with_creating_multiple_has_many_relation(): void
+    public function test_creating_a_resource_with_creating_multiple_has_many_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(HasManyRelation::class, GreenPolicy::class);
@@ -324,11 +252,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'hasManyRelation' => [
@@ -351,20 +278,22 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(), 2
+            Model::find($response->json('created.0'))->hasManyRelation()->count(), 2
         );
     }
 
-    public function test_updating_a_resource_with_attaching_has_many_relation(): void
+    public function test_creating_a_resource_with_attaching_has_many_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
         $hasManyRelationToAttach = HasManyRelationFactory::new()
+            ->for(
+                ModelFactory::new()->createOne()
+            )
             ->createOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
@@ -375,11 +304,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'hasManyRelation' => [
@@ -397,66 +325,18 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasManyRelation()->count(), 1
         );
     }
 
-    public function test_updating_a_resource_with_detaching_has_many_relation(): void
+    public function test_creating_a_resource_with_updating_has_many_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
-        $hasManyRelationToDetach = HasManyRelationFactory::new()
-            ->for($modelToUpdate)
-            ->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(HasManyRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
-                        ],
-                        'relations' => [
-                            'hasManyRelation' => [
-                                [
-                                    'operation' => 'detach',
-                                    'key' => $hasManyRelationToDetach->getKey()
-                                ]
-                            ]
-                        ]
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertMutatedResponse(
-            $response,
-            [],
-            [$modelToUpdate],
-        );
-
-        // Here we test that the relation is correctly linked
-        $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(), 0
-        );
-    }
-
-    public function test_updating_a_resource_with_updating_has_many_relation(): void
-    {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
         $hasManyRelationToAttach = HasManyRelationFactory::new()
             ->for(
                 ModelFactory::new()->createOne()
@@ -471,11 +351,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'hasManyRelation' => [
@@ -495,8 +374,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the number has been modified on the relation
@@ -507,13 +385,13 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasManyRelation()->count(), 1
         );
     }
 
-    public function test_updating_a_resource_with_creating_has_one_relation(): void
+    public function test_creating_a_resource_with_creating_has_one_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(HasOneRelation::class, GreenPolicy::class);
@@ -523,11 +401,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'hasOneRelation' => [
@@ -543,19 +420,18 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneRelation()->count(), 1
         );
     }
 
-    public function test_updating_a_resource_with_attaching_has_one_relation(): void
+    public function test_creating_a_resource_with_attaching_has_one_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
         $hasOneRelationToAttach = HasOneRelationFactory::new()
             ->for(
                 ModelFactory::new()->createOne()
@@ -570,11 +446,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'hasOneRelation' => [
@@ -590,64 +465,18 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneRelation()->count(), 1
         );
     }
 
-    public function test_updating_a_resource_with_detaching_has_one_relation(): void
+    public function test_creating_a_resource_with_updating_has_one_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
-        $hasOneRelationToDetach = HasOneRelationFactory::new()
-            ->for($modelToUpdate)
-            ->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(HasOneRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
-                        ],
-                        'relations' => [
-                            'hasOneRelation' => [
-                                'operation' => 'detach',
-                                'key' => $hasOneRelationToDetach->getKey()
-                            ]
-                        ]
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertMutatedResponse(
-            $response,
-            [],
-            [$modelToUpdate],
-        );
-
-        // Here we test that the relation is correctly linked
-        $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneRelation()->count(), 0
-        );
-    }
-
-    public function test_updating_a_resource_with_updating_has_one_relation(): void
-    {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
         $hasOneRelationToAttach = HasOneRelationFactory::new()
             ->for(
                 ModelFactory::new()->createOne()
@@ -662,11 +491,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'hasOneRelation' => [
@@ -684,8 +512,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the number has been modified on the relation
@@ -696,13 +523,13 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneRelation()->count(), 1
         );
     }
 
-    public function test_updating_a_resource_with_creating_has_one_of_many_relation(): void
+    public function test_creating_a_resource_with_creating_has_one_of_many_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(HasOneOfManyRelation::class, GreenPolicy::class);
@@ -712,11 +539,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
@@ -732,19 +558,18 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneOfManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(), 1
         );
     }
 
-    public function test_updating_a_resource_with_attaching_has_one_of_many_relation(): void
+    public function test_creating_a_resource_with_attaching_has_one_of_many_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
         $hasOneOfManyRelationToAttach = HasOneOfManyRelationFactory::new()
             ->for(
                 ModelFactory::new()->createOne()
@@ -759,11 +584,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
@@ -779,65 +603,19 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneOfManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(), 1
         );
     }
 
-    public function test_updating_a_resource_with_detaching_has_one_of_many_relation(): void
+    public function test_creating_a_resource_with_updating_has_one_of_many_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
-        $hasOneOfManyRelationToDetach = HasOneOfManyRelationFactory::new()
-            ->for($modelToUpdate)
-            ->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(HasOneOfManyRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
-                        ],
-                        'relations' => [
-                            'hasOneOfManyRelation' => [
-                                'operation' => 'detach',
-                                'key' => $hasOneOfManyRelationToDetach->getKey()
-                            ]
-                        ]
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertMutatedResponse(
-            $response,
-            [],
-            [$modelToUpdate],
-        );
-
-        // Here we test that the relation is correctly linked
-        $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneOfManyRelation()->count(), 0
-        );
-    }
-
-    public function test_updating_a_resource_with_updating_has_one_of_many_relation(): void
-    {
-        $modelToUpdate = ModelFactory::new()->createOne();
-        $hasOneOfManyRelationToUpdate = HasOneOfManyRelationFactory::new()
+        $modelToCreate = ModelFactory::new()->makeOne();
+        $hasOneOfManyRelationToAttach = HasOneOfManyRelationFactory::new()
             ->for(
                 ModelFactory::new()->createOne()
             )
@@ -851,16 +629,15 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
                                 'operation' => 'update',
-                                'key' => $hasOneOfManyRelationToUpdate->getKey(),
+                                'key' => $hasOneOfManyRelationToAttach->getKey(),
                                 'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
                             ]
                         ]
@@ -873,25 +650,24 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the number has been modified on the relation
         $this->assertEquals(
-            $hasOneOfManyRelationToUpdate->fresh()->number,
+            $hasOneOfManyRelationToAttach->fresh()->number,
             5001
         );
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneOfManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(), 1
         );
     }
 
-    public function test_updating_a_resource_with_creating_belongs_to_many_relation(): void
+    public function test_creating_a_resource_with_creating_belongs_to_many_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
@@ -901,11 +677,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
@@ -923,18 +698,18 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->belongsToManyRelation()->count(), 1
         );
     }
-    public function test_updating_a_resource_with_creating_multiple_belongs_to_many_relation(): void
+
+    public function test_creating_a_resource_with_creating_multiple_belongs_to_many_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
@@ -944,11 +719,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
@@ -971,19 +745,18 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(), 2
+            Model::find($response->json('created.0'))->belongsToManyRelation()->count(), 2
         );
     }
 
-    public function test_updating_a_resource_with_attaching_belongs_to_many_relation(): void
+    public function test_creating_a_resource_with_attaching_belongs_to_many_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
+        $modelToCreate = ModelFactory::new()->makeOne();
         $belongsToManyRelationToAttach = BelongsToManyRelationFactory::new()
             ->has(
                 ModelFactory::new()->count(1)
@@ -998,11 +771,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
@@ -1020,67 +792,19 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->belongsToManyRelation()->count(), 1
         );
     }
 
-    public function test_updating_a_resource_with_detaching_belongs_to_many_relation(): void
+    public function test_creating_a_resource_with_updating_belongs_to_many_relation(): void
     {
-        $modelToUpdate = ModelFactory::new()->createOne();
-        $belongsToManyRelationToDetach = BelongsToManyRelationFactory::new()
-            ->recycle($modelToUpdate)
-            ->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
-                        ],
-                        'relations' => [
-                            'belongsToManyRelation' => [
-                                [
-                                    'operation' => 'detach',
-                                    'key' => $belongsToManyRelationToDetach->getKey()
-                                ]
-                            ]
-                        ]
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertMutatedResponse(
-            $response,
-            [],
-            [$modelToUpdate],
-        );
-
-        // Here we test that the relation is correctly linked
-        $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(), 0
-        );
-    }
-
-    public function test_updating_a_resource_with_updating_belongs_to_many_relation(): void
-    {
-        $modelToUpdate = ModelFactory::new()->createOne();
-        $belongsToManyRelationToUpdate = BelongsToManyRelationFactory::new()
+        $modelToCreate = ModelFactory::new()->makeOne();
+        $belongsToManyRelationToAttach = BelongsToManyRelationFactory::new()
             ->has(
                 ModelFactory::new()->count(1)
             )
@@ -1094,17 +818,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation' => 'create',
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'update',
-                                    'key' => $belongsToManyRelationToUpdate->getKey(),
+                                    'key' => $belongsToManyRelationToAttach->getKey(),
                                     'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
                                 ]
                             ]
@@ -1118,19 +841,18 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [],
-            [$modelToUpdate],
+            [$modelToCreate],
         );
 
         // Here we test that the number has been modified on the relation
         $this->assertEquals(
-            $belongsToManyRelationToUpdate->fresh()->number,
+            $belongsToManyRelationToAttach->fresh()->number,
             5001
         );
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->belongsToManyRelation()->count(), 1
         );
     }
 }
