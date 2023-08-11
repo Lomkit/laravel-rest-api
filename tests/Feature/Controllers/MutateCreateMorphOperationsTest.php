@@ -627,10 +627,10 @@ class MutateCreateMorphOperationsTest extends TestCase
             Model::find($response->json('created.0'))->morphToManyRelation()->count(), 2
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphToManyRelation[0]->morph_to_many_pivot->number, 20
+            Model::find($response->json('created.0'))->morphToManyRelation()->orderBy('id')->get()[0]->morph_to_many_pivot->number, 20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphToManyRelation[1]->morph_to_many_pivot->number, 30
+            Model::find($response->json('created.0'))->morphToManyRelation()->orderBy('id')->get()[1]->morph_to_many_pivot->number, 30
         );
     }
 
