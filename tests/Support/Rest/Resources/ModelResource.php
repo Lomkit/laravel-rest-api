@@ -7,7 +7,9 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
+use Lomkit\Rest\Relations\HasManyThrough;
 use Lomkit\Rest\Relations\HasOne;
+use Lomkit\Rest\Relations\HasOneThrough;
 use Lomkit\Rest\Tests\Support\Models\Model;
 
 class ModelResource extends Resource
@@ -22,6 +24,8 @@ class ModelResource extends Resource
             HasMany::make('hasManyRelation', HasManyResource::class),
             BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
                 ->withPivotFields(['created_at']),
+            HasOneThrough::make('hasOneThroughRelation', HasOneThroughResource::class),
+            HasManyThrough::make('hasManyThroughRelation', HasManyThroughResource::class)
         ];
     }
 

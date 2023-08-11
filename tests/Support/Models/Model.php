@@ -15,12 +15,20 @@ class Model extends BaseModel
         return $this->belongsTo(BelongsToRelation::class);
     }
 
+    public function hasOneThroughRelation() {
+        return $this->hasOneThrough(HasOneThroughRelation::class, HasOneRelation::class);
+    }
+
     public function hasOneRelation() {
         return $this->hasOne(HasOneRelation::class);
     }
 
     public function hasManyRelation() {
         return $this->hasMany(HasManyRelation::class);
+    }
+
+    public function hasManyThroughRelation() {
+        return $this->hasManyThrough(HasManyThroughRelation::class, HasManyRelation::class);
     }
 
     public function belongsToManyRelation() {
