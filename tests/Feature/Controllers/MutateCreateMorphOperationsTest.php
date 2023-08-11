@@ -538,6 +538,102 @@ class MutateCreateMorphOperationsTest extends TestCase
         );
     }
 
+    public function test_creating_a_resource_with_creating_morph_to_many_relation_with_unauthorized_pivot_fields(): void
+    {
+        $modelToCreate = ModelFactory::new()->makeOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(MorphToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'create',
+                        'attributes' => [
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
+                        ],
+                        'relations' => [
+                            'morphToManyRelation' => [
+                                [
+                                    'operation' => 'create',
+                                    'attributes' => [],
+                                    'pivot' => [
+                                        ['field' => 'unauthorized_field', 'value' => 20]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.morphToManyRelation.0.pivot.0.field']]);
+    }
+
+    public function test_creating_a_resource_with_creating_morph_to_many_relation_with_pivot_fields(): void
+    {
+        $modelToCreate = ModelFactory::new()->makeOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(MorphToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'create',
+                        'attributes' => [
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
+                        ],
+                        'relations' => [
+                            'morphToManyRelation' => [
+                                [
+                                    'operation' => 'create',
+                                    'attributes' => [],
+                                    'pivot' => [
+                                        ['field' => 'number', 'value' => 20]
+                                    ]
+                                ],
+                                [
+                                    'operation' => 'create',
+                                    'attributes' => [],
+                                    'pivot' => [
+                                        ['field' => 'number', 'value' => 30]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [$modelToCreate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('created.0'))->morphToManyRelation()->count(), 2
+        );
+        $this->assertEquals(
+            Model::find($response->json('created.0'))->morphToManyRelation[0]->morph_to_many_pivot->number, 20
+        );
+        $this->assertEquals(
+            Model::find($response->json('created.0'))->morphToManyRelation[1]->morph_to_many_pivot->number, 30
+        );
+    }
+
     public function test_creating_a_resource_with_creating_morph_to_many_relation(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
@@ -614,7 +710,6 @@ class MutateCreateMorphOperationsTest extends TestCase
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -768,6 +863,102 @@ class MutateCreateMorphOperationsTest extends TestCase
         // Here we test that the relation is correctly linked
         $this->assertEquals(
             Model::find($response->json('created.0'))->morphedByManyRelation()->count(), 1
+        );
+    }
+
+    public function test_creating_a_resource_with_creating_morphed_by_many_relation_with_unauthorized_pivot_fields(): void
+    {
+        $modelToCreate = ModelFactory::new()->makeOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(MorphedByManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'create',
+                        'attributes' => [
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
+                        ],
+                        'relations' => [
+                            'morphedByManyRelation' => [
+                                [
+                                    'operation' => 'create',
+                                    'attributes' => [],
+                                    'pivot' => [
+                                        ['field' => 'unauthorized_field', 'value' => 20]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.morphedByManyRelation.0.pivot.0.field']]);
+    }
+
+    public function test_creating_a_resource_with_creating_morphed_by_many_relation_with_pivot_fields(): void
+    {
+        $modelToCreate = ModelFactory::new()->makeOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(MorphedByManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'create',
+                        'attributes' => [
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
+                        ],
+                        'relations' => [
+                            'morphedByManyRelation' => [
+                                [
+                                    'operation' => 'create',
+                                    'attributes' => [],
+                                    'pivot' => [
+                                        ['field' => 'number', 'value' => 20]
+                                    ]
+                                ],
+                                [
+                                    'operation' => 'create',
+                                    'attributes' => [],
+                                    'pivot' => [
+                                        ['field' => 'number', 'value' => 30]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [$modelToCreate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('created.0'))->morphedByManyRelation()->count(), 2
+        );
+        $this->assertEquals(
+            Model::find($response->json('created.0'))->morphedByManyRelation[0]->morphed_by_many_pivot->number, 20
+        );
+        $this->assertEquals(
+            Model::find($response->json('created.0'))->morphedByManyRelation[1]->morphed_by_many_pivot->number, 30
         );
     }
 

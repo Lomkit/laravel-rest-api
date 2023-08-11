@@ -210,7 +210,6 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         );
     }
 
-    // @TODO: with morphToMany, verify that you can filter pivot :)
     public function test_getting_a_list_of_resources_including_morph_to_many_relation(): void
     {
         $matchingModel = ModelFactory::new()

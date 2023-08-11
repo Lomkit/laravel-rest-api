@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('inversables', function (Blueprint $table) {
             $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\Model::class)->constrained();
             $table->morphs('inversable');
+            $table->integer('number')->default(0);
 
             $table->timestamps();
 

@@ -932,6 +932,67 @@ class MutateUpdateOperationsTest extends TestCase
             Model::find($response->json('updated.0'))->belongsToManyRelation()->count(), 1
         );
     }
+
+    public function test_updating_a_resource_with_creating_belongs_to_many_relation_with_pivot_fields(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name' => 'new name',
+                            'number' => 5001
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation' => 'create',
+                                    'attributes' => [],
+                                    'pivot' => [
+                                        ['field' => 'number', 'value' => 20]
+                                    ]
+                                ],
+                                [
+                                    'operation' => 'create',
+                                    'attributes' => [],
+                                    'pivot' => [
+                                        ['field' => 'number', 'value' => 30]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(), 2
+        );
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number, 20
+        );
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number, 30
+        );
+    }
+
     public function test_updating_a_resource_with_creating_multiple_belongs_to_many_relation(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();

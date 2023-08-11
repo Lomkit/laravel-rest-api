@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('morphables', function (Blueprint $table) {
             $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\MorphToManyRelation::class)->constrained(indexName: 'morph_to_many_relation_self_id_foreign');
             $table->morphs('morphable');
+            $table->integer('number')->default(0);
 
             $table->timestamps();
 

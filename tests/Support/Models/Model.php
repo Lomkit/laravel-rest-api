@@ -38,7 +38,7 @@ class Model extends BaseModel
     public function belongsToManyRelation() {
         return $this->belongsToMany(BelongsToManyRelation::class)
             ->as('belongs_to_many_pivot')
-            ->withPivot('created_at', 'updated_at');
+            ->withPivot('created_at', 'updated_at', 'number');
     }
 
     public function morphOneRelation() {
@@ -60,13 +60,13 @@ class Model extends BaseModel
     public function morphToManyRelation() {
         return $this->morphToMany(MorphToManyRelation::class, 'morphable')
             ->as('morph_to_many_pivot')
-            ->withPivot('created_at', 'updated_at');
+            ->withPivot('created_at', 'updated_at', 'number');
     }
 
     public function morphedByManyRelation() {
         return $this->morphedByMany(MorphedByManyRelation::class, 'inversable')
             ->as('morphed_by_many_pivot')
-            ->withPivot('created_at', 'updated_at');
+            ->withPivot('created_at', 'updated_at', 'number');
     }
 
     public function scopeNumbered(Builder $query, int $number = 0): void

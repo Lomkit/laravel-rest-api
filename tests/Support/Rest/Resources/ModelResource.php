@@ -33,7 +33,7 @@ class ModelResource extends Resource
             BelongsTo::make('belongsToRelation', BelongsToResource::class),
             HasMany::make('hasManyRelation', HasManyResource::class),
             BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
-                ->withPivotFields(['created_at']),
+                ->withPivotFields(['created_at', 'number']),
 
             // Through relationships
             HasOneThrough::make('hasOneThroughRelation', HasOneThroughResource::class),
@@ -45,9 +45,9 @@ class ModelResource extends Resource
             MorphOneOfMany::make('morphOneOfManyRelation', MorphOneOfManyResource::class),
             MorphMany::make('morphManyRelation', MorphManyResource::class),
             MorphToMany::make('morphToManyRelation', MorphToManyResource::class)
-                ->withPivotFields(['created_at']),
+                ->withPivotFields(['created_at', 'number']),
             MorphedByMany::make('morphedByManyRelation', MorphedByManyResource::class)
-                ->withPivotFields(['created_at']),
+                ->withPivotFields(['created_at', 'number']),
         ];
     }
 
