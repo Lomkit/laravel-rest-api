@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
+use Lomkit\Rest\Relations\Traits\HasMultipleResults;
 
 class MorphedByMany extends MorphRelation implements RelationResource
 {
-    use HasPivotFields;
+    use HasPivotFields, HasMultipleResults;
 
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {

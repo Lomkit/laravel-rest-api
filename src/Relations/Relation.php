@@ -46,10 +46,13 @@ class Relation
     }
 
     public function applySearchQuery(Builder $query) {
-        //@T0DO: don't apply applySearchQuery on polymorphic relation ?
         $resource = $this->resource();
 
         $resource->searchQuery(app()->make(RestRequest::class), $query);
+    }
+
+    public function hasMultipleEntries() {
+        return false;
     }
 
     public function resource() {

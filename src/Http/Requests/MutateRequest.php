@@ -73,7 +73,7 @@ class MutateRequest extends RestRequest
         ) {
             $prefixRelation = $prefix.'.'.$relation->relation;
 
-            if ($relation instanceof BelongsToMany || $relation instanceof HasMany || $relation instanceof HasManyThrough || $relation instanceof MorphMany || $relation instanceof MorphToMany || $relation instanceof MorphedByMany) {
+            if ($relation->hasMultipleEntries()) {
                 $prefixRelation .= '.*';
             }
 
