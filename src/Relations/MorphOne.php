@@ -14,7 +14,7 @@ class MorphOne extends MorphRelation implements RelationResource
     {
         $attributes = [
             $model->{$relation->relation}()->getForeignKeyName() => $mutationRelations[$relation->relation]['operation'] === 'detach' ? null : $model->{$relation->relation}()->getParentKey(),
-            $model->{$relation->relation}()->getQualifiedMorphType() => $model::class
+            $model->{$relation->relation}()->getMorphType() => $model::class
         ];
 
         app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
