@@ -59,18 +59,6 @@ class Relation
         return new $this->types[0];
     }
 
-    public function resourceForModel(string $model) {
-        $array =
-            array_filter(
-                $this->types,
-                function ($type) use ($model) {
-                    return (new $type)::$model === $model;
-                }
-            );
-        return new (reset($array));
-
-    }
-
     public function fromResource(Resource $fromResource) {
         return tap($this, function () use ($fromResource) {
             $this->fromResource = $fromResource;

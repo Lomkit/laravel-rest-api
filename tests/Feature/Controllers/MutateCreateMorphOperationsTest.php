@@ -26,6 +26,8 @@ use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToRelation;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
+use Lomkit\Rest\Tests\Support\Rest\Resources\MorphedByManyResource;
+use Lomkit\Rest\Tests\Support\Rest\Resources\MorphToResource;
 
 class MutateCreateMorphOperationsTest extends TestCase
 {
@@ -49,7 +51,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'create',
-                                'type' => MorphToRelation::class,
+                                'type' => MorphToResource::class,
                                 'attributes' => []
                             ]
                         ]
@@ -89,7 +91,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'create',
-                                'type' => MorphedByManyRelation::class,
+                                'type' => MorphedByManyResource::class,
                                 'attributes' => []
                             ]
                         ]
@@ -130,7 +132,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'attach',
-                                'type' => MorphToRelation::class,
+                                'type' => MorphToResource::class,
                                 'key' => $morphToRelationToAttach->getKey()
                             ]
                         ]
@@ -177,7 +179,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                             'morphToRelation' => [
                                 'operation' => 'update',
                                 'key' => $morphToRelationToUpdate->getKey(),
-                                'type' => MorphToRelation::class,
+                                'type' => MorphToResource::class,
                                 'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
                             ]
                         ]

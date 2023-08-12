@@ -23,9 +23,7 @@ class MorphTo extends MorphRelation implements RelationResource
         $model
             ->{$relation->relation}()
             ->{$mutationRelations[$relation->relation]['operation'] === 'detach' ? 'dissociate' : 'associate'}(
-                app()->make(QueryBuilder::class, ['resource' => $relation->resourceForModel(
-                    $mutationRelations[$relation->relation]['type']
-                )])
+                app()->make(QueryBuilder::class, ['resource' => new $mutationRelations[$relation->relation]['type']])
                     ->applyMutation($mutationRelations[$relation->relation])
             );
     }
@@ -37,7 +35,7 @@ class MorphTo extends MorphRelation implements RelationResource
             $prefix.'.type' => [
                 'required_with:'.$prefix,
                 Rule::in(
-                    array_map(function ($type) {return (new $type)::$model;}, $this->types)
+                    $this->types
                 )
             ]
         ];
