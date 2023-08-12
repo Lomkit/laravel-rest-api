@@ -561,7 +561,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                                     'operation' => 'create',
                                     'attributes' => [],
                                     'pivot' => [
-                                        ['field' => 'unauthorized_field', 'value' => 20]
+                                        'unauthorized_field' => 20
                                     ]
                                 ]
                             ]
@@ -573,7 +573,7 @@ class MutateCreateMorphOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.morphToManyRelation.0.pivot.0.field']]);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.morphToManyRelation.0.pivot']]);
     }
 
     public function test_creating_a_resource_with_creating_morph_to_many_relation_with_pivot_fields(): void
@@ -599,14 +599,14 @@ class MutateCreateMorphOperationsTest extends TestCase
                                     'operation' => 'create',
                                     'attributes' => [],
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 20]
+                                        'number' => 20
                                     ]
                                 ],
                                 [
                                     'operation' => 'create',
                                     'attributes' => [],
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 30]
+                                        'number' => 30
                                     ]
                                 ]
                             ]
@@ -889,7 +889,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                                     'operation' => 'create',
                                     'attributes' => [],
                                     'pivot' => [
-                                        ['field' => 'unauthorized_field', 'value' => 20]
+                                        'unauthorized_field' => 20
                                     ]
                                 ]
                             ]
@@ -901,7 +901,7 @@ class MutateCreateMorphOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.morphedByManyRelation.0.pivot.0.field']]);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.morphedByManyRelation.0.pivot']]);
     }
 
     public function test_creating_a_resource_with_creating_morphed_by_many_relation_with_pivot_fields(): void
@@ -927,14 +927,14 @@ class MutateCreateMorphOperationsTest extends TestCase
                                     'operation' => 'create',
                                     'attributes' => [],
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 20]
+                                        'number' => 20
                                     ]
                                 ],
                                 [
                                     'operation' => 'create',
                                     'attributes' => [],
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 30]
+                                        'number' => 30
                                     ]
                                 ]
                             ]

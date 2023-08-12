@@ -731,7 +731,7 @@ class MutateCreateOperationsTest extends TestCase
                                     'operation' => 'create',
                                     'attributes' => [],
                                     'pivot' => [
-                                        ['field' => 'unauthorized_field', 'value' => 20]
+                                        'unauthorized_field' => 20
                                     ]
                                 ]
                             ]
@@ -743,7 +743,7 @@ class MutateCreateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot.0.field']]);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot']]);
     }
 
     public function test_creating_a_resource_with_creating_belongs_to_many_relation_with_pivot_fields(): void
@@ -769,14 +769,14 @@ class MutateCreateOperationsTest extends TestCase
                                     'operation' => 'create',
                                     'attributes' => [],
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 20]
+                                        'number' => 20
                                     ]
                                 ],
                                 [
                                     'operation' => 'create',
                                     'attributes' => [],
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 30]
+                                        'number' => 30
                                     ]
                                 ]
                             ]
@@ -931,14 +931,14 @@ class MutateCreateOperationsTest extends TestCase
                                     'operation' => 'attach',
                                     'key' => $belongsToManyRelationToAttach1->getKey(),
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 20]
+                                        'number' => 20
                                     ]
                                 ],
                                 [
                                     'operation' => 'attach',
                                     'key' => $belongsToManyRelationToAttach2->getKey(),
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 30]
+                                        'number' => 30
                                     ]
                                 ]
                             ]
@@ -1054,7 +1054,7 @@ class MutateCreateOperationsTest extends TestCase
                                     'operation' => 'update',
                                     'key' => $belongsToManyRelationToUpdate1->getKey(),
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 20]
+                                        'number' => 20
                                     ],
                                     'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
                                 ],
@@ -1062,7 +1062,7 @@ class MutateCreateOperationsTest extends TestCase
                                     'operation' => 'update',
                                     'key' => $belongsToManyRelationToUpdate2->getKey(),
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 30]
+                                        'number' => 30
                                     ],
                                     'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
                                 ]

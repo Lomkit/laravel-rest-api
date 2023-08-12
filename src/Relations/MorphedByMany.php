@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Relations;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Contracts\QueryBuilder;
@@ -22,14 +23,8 @@ class MorphedByMany extends MorphRelation implements RelationResource
             parent::rules($resource, $prefix),
             [
                 $prefix.'.*.pivot' => [
-                    'prohibited_if:'.$prefix.'.*.operation,detach'
-                ],
-                $prefix.'.*.pivot.*.field' => [
-                    'required_with:'.$prefix.'.*.pivot.*',
-                    Rule::in($this->getPivotFields())
-                ],
-                $prefix.'.*.pivot.*.value' => [
-                    'required_with:'.$prefix.'.*.pivot.*'
+                    'prohibited_if:'.$prefix.'.*.operation,detach',
+                    'array:'.Arr::join($this->getPivotFields(), ',')
                 ]
             ]
         );
@@ -55,11 +50,7 @@ class MorphedByMany extends MorphRelation implements RelationResource
                                 ->applyMutation($mutationRelation)
                                 ->getKey()
                             =>
-                                collect($mutationRelation['pivot'] ?? [])
-                                    ->mapWithKeys(function ($pivot) {
-                                        return [$pivot['field'] => $pivot['value']];
-                                    })
-                                    ->toArray()
+                                $mutationRelation['pivot'] ?? []
                         ]
                     );
             }

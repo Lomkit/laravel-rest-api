@@ -957,14 +957,14 @@ class MutateUpdateOperationsTest extends TestCase
                                     'operation' => 'create',
                                     'attributes' => [],
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 20]
+                                        'number' => 20
                                     ]
                                 ],
                                 [
                                     'operation' => 'create',
                                     'attributes' => [],
                                     'pivot' => [
-                                        ['field' => 'number', 'value' => 30]
+                                        'number' => 30
                                     ]
                                 ]
                             ]
