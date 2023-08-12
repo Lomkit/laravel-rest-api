@@ -33,9 +33,17 @@ class Response implements Responsable
             // toArray to take advantage of Laravel's logic
             collect($model->attributesToArray())
                 ->only(
-                    isset($requestArray['selects']) ?
-                        collect($requestArray['selects'])->pluck('field') :
-                        $resource->exposedFields(app()->make(RestRequest::class))
+                    array_merge(
+                        isset($requestArray['selects']) ?
+                                collect($requestArray['selects'])->pluck('field') :
+                                $resource->exposedFields(app()->make(RestRequest::class)),
+                        // Here we add the aggregates
+                        collect($requestArray['aggregates'] ?? [])
+                            ->map(function ($aggregate) {
+                                return Str::snake($aggregate['relation']).'_'.$aggregate['type'].(isset($aggregate['field']) ? '_'.$aggregate['field'] : '');
+                            })
+                            ->toArray()
+                    )
                 )
                 ->toArray(),
             collect($model->getRelations())

@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Query\Traits;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -39,6 +40,10 @@ trait PerformSearch
 
         $this->when(isset($parameters['includes']), function () use ($parameters) {
             $this->applyIncludes($parameters['includes']);
+        });
+
+        $this->when(isset($parameters['aggregates']), function () use ($parameters) {
+            $this->applyAggregates($parameters['aggregates']);
         });
 
         // @TODO: is this a problem also with HasMany ??
@@ -112,6 +117,22 @@ trait PerformSearch
     public function applyIncludes($includes) {
         foreach ($includes as $include) {
             $this->include($include);
+        }
+    }
+
+    public function aggregate($aggregate) {
+        return $this->queryBuilder->withAggregate([$aggregate['relation'] => function(Builder $query) use ($aggregate) {
+            $resource = $this->resource->relationResource($aggregate['relation']);
+
+            $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
+
+            return $queryBuilder->search(['filters' => $aggregate['filters'] ?? []]);
+        }], $aggregate['field'] ?? '*', $aggregate['type']);
+    }
+
+    public function applyAggregates($aggregates) {
+        foreach ($aggregates as $aggregate) {
+            $this->aggregate($aggregate);
         }
     }
 }
