@@ -19,7 +19,6 @@ trait Relationable
             return $relation->relation === $relationName;
         });
 
-        //TODO: be careful here, nested morph relation here are not supported, might need to protect params validator
         if ($isSubRelation && Str::contains($nestedRelation = Str::after($name, '.'), '.')) {
             return $relation->resource()->relation($nestedRelation);
         }

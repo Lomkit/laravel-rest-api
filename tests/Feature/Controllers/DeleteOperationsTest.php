@@ -77,10 +77,7 @@ class DeleteOperationsTest extends TestCase
         );
 
         $this->assertResourceModel($response, [$softDeletedModel], new SoftDeletedModelResource);
-        $this->assertDatabaseHas('soft_deleted_models', [
-            'id' => $softDeletedModel->getKey(),
-            'deleted_at' => Carbon::parse($response->json('deleted_at'))
-        ]);
+        $this->assertSoftDeleted($softDeletedModel);
     }
 
     public function test_deleting_multiple_soft_deleted_models(): void
@@ -99,13 +96,7 @@ class DeleteOperationsTest extends TestCase
         );
 
         $this->assertResourceModel($response, [$softDeletedModel, $softDeletedModel2], new SoftDeletedModelResource);
-        $this->assertDatabaseHas('soft_deleted_models', [
-            'id' => $softDeletedModel->getKey(),
-            'deleted_at' => Carbon::parse($response->json('deleted_at'))
-        ]);
-        $this->assertDatabaseHas('soft_deleted_models', [
-            'id' => $softDeletedModel2->getKey(),
-            'deleted_at' => Carbon::parse($response->json('deleted_at'))
-        ]);
+        $this->assertSoftDeleted($softDeletedModel);
+        $this->assertSoftDeleted($softDeletedModel2);
     }
 }
