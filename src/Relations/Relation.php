@@ -82,7 +82,7 @@ class Relation
                 $pivotPrefix .= '.*';
             }
             $pivotPrefix.= '.pivot.';
-            // @TODO pivot fields here :) + doc
+
             foreach ($this->getPivotRules() as $pivotKey => $pivotRule) {
                 $rules[$pivotPrefix.$pivotKey] = $pivotRule;
             }
