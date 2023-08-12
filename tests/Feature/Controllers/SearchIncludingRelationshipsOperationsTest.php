@@ -8,17 +8,20 @@ use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
+use Lomkit\Rest\Tests\Support\Database\Factories\HasOneOfManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
+use Lomkit\Rest\Tests\Support\Models\HasOneOfManyRelation;
 use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
+use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneOfManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
@@ -122,6 +125,47 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         );
     }
 
+    public function test_getting_a_list_of_resources_including_has_one_of_many_relation(): void
+    {
+        $matchingModel = ModelFactory::new()
+            ->create()->fresh();
+        HasOneOfManyRelationFactory::new()
+            ->for($matchingModel)
+            ->create();
+
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasOneOfManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'includes' => [
+                    ['relation' => 'hasOneOfManyRelation'],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource,
+            [
+                [
+                    'has_one_of_many_relation' => $matchingModel->hasOneOfManyRelation->only(
+                        (new HasOneOfManyResource)->exposedFields(app()->make(RestRequest::class))
+                    ),
+                ],
+                [
+                    'has_one_of_many_relation' => null,
+                ]
+            ]
+        );
+    }
+
     public function test_getting_a_list_of_resources_including_has_many_relation(): void
     {
         $matchingModel = ModelFactory::new()
@@ -154,11 +198,14 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             new ModelResource,
             [
                 [
-                    'has_many_relation' => $matchingModel->hasManyRelation->map(function ($relation) {
-                        return $relation->only(
-                            (new HasManyResource)->exposedFields(app()->make(RestRequest::class))
-                        );
-                    })->toArray(),
+                    'has_many_relation' => $matchingModel->hasManyRelation()
+                        ->orderBy('id')
+                        ->get()
+                        ->map(function ($relation) {
+                            return $relation->only(
+                                (new HasManyResource)->exposedFields(app()->make(RestRequest::class))
+                            );
+                        })->toArray(),
                 ],
                 [
                     'has_many_relation' => [],

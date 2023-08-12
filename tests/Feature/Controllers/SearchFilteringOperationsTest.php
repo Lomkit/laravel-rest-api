@@ -4,7 +4,10 @@ namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\TestCase;
+use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
+use Lomkit\Rest\Tests\Support\Database\Factories\MorphedByManyRelationFactory;
+use Lomkit\Rest\Tests\Support\Database\Factories\MorphToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
@@ -435,6 +438,108 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
+            new ModelResource
+        );
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_belongs_to_many_pivot_operation(): void
+    {
+        $belongsToManyRelation = BelongsToManyRelationFactory::new()
+            ->create();
+
+        $matchingModel = ModelFactory::new()
+            ->hasAttached($belongsToManyRelation, ['number' => 10], 'belongsToManyRelation')
+            ->create(['number' => 1, 'name' => 'match'])->fresh();
+        ModelFactory::new()
+            ->hasAttached($belongsToManyRelation, ['number' => 11], 'belongsToManyRelation')
+            ->create(['number' => 1, 'name' => 'match2'])->fresh();
+        ModelFactory::new()->create(['number' => 1, 'name' => 'match'])->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'filters' => [
+                    ['field' => 'number', 'value' => 1],
+                    ['field' => 'belongsToManyRelation.pivot.number', 'value' => 10]
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel],
+            new ModelResource
+        );
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_morph_to_many_pivot_operation(): void
+    {
+        $morphToManyRelation = MorphToManyRelationFactory::new()
+            ->create();
+
+        $matchingModel = ModelFactory::new()
+            ->hasAttached($morphToManyRelation, ['number' => 10], 'morphToManyRelation')
+            ->create(['number' => 1, 'name' => 'match'])->fresh();
+        ModelFactory::new()
+            ->hasAttached($morphToManyRelation, ['number' => 11], 'morphToManyRelation')
+            ->create(['number' => 1, 'name' => 'match2'])->fresh();
+        ModelFactory::new()->create(['number' => 1, 'name' => 'match'])->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'filters' => [
+                    ['field' => 'number', 'value' => 1],
+                    ['field' => 'morphToManyRelation.pivot.number', 'value' => 10]
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel],
+            new ModelResource
+        );
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_morphed_by_many_pivot_operation(): void
+    {
+        $morphedByManyRelation = MorphedByManyRelationFactory::new()
+            ->create();
+
+        $matchingModel = ModelFactory::new()
+            ->hasAttached($morphedByManyRelation, ['number' => 10], 'morphedByManyRelation')
+            ->create(['number' => 1, 'name' => 'match'])->fresh();
+        ModelFactory::new()
+            ->hasAttached($morphedByManyRelation, ['number' => 11], 'morphedByManyRelation')
+            ->create(['number' => 1, 'name' => 'match2'])->fresh();
+        ModelFactory::new()->create(['number' => 1, 'name' => 'match'])->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'filters' => [
+                    ['field' => 'number', 'value' => 1],
+                    ['field' => 'morphedByManyRelation.pivot.number', 'value' => 10]
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel],
             new ModelResource
         );
     }

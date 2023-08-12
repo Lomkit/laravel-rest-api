@@ -80,17 +80,22 @@ class CustomRulable implements Rule, DataAwareRule, ValidatorAwareRule
      */
     protected function buildValidationRules($attribute, $value)
     {
-        $rules = [];
-
         if ($value['operation'] === 'create') {
             $rules = $this->resource->createRules(
                 app()->make(RestRequest::class)
             );
-        } elseif ($value['operation'] === 'update') {
+        } else {
             $rules = $this->resource->updateRules(
                 app()->make(RestRequest::class)
             );
         }
+
+        $rules = array_merge_recursive(
+            $rules,
+            $this->resource->rules(
+                app()->make(RestRequest::class)
+            )
+        );
 
         return collect($rules)
             ->mapWithKeys(function ($item, $key) use ($attribute) {

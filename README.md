@@ -76,12 +76,10 @@ TODO
 
 TODO
 
-## Roadmap
+## Roadmap for the end of bêta (Estimated delivery October 2023)
 
-- Morph support
-- Through relation support
 - Custom directives (Filters / sorting)
 - Actions / Metrics
-- Automatic Gates
+- Automatic Gates (with config customisation)
 - Aggregating
 - Automatic documentation with extension possible

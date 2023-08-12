@@ -13,7 +13,7 @@ use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
 
-class BelongsToMany extends Relation implements RelationResource
+class MorphedByMany extends MorphRelation implements RelationResource
 {
     use HasPivotFields, HasMultipleResults;
 

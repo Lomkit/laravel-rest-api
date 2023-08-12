@@ -60,7 +60,6 @@ trait PerformsRestOperations
             $resource->performDelete($request, $model);
         }
 
-        //@TODO: il faut prévoir de pouvoir load des relations ici ?
         return $resource::newResponse()
             ->resource($resource)
             ->responsable($models);

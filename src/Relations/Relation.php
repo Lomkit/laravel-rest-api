@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Relations;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Concerns\Makeable;
@@ -46,10 +47,13 @@ class Relation
     }
 
     public function applySearchQuery(Builder $query) {
-        //@T0DO: don't apply applySearchQuery on polymorphic relation ?
         $resource = $this->resource();
 
         $resource->searchQuery(app()->make(RestRequest::class), $query);
+    }
+
+    public function hasMultipleEntries() {
+        return false;
     }
 
     public function resource() {
@@ -62,13 +66,26 @@ class Relation
         });
     }
 
-    public function rules(Resource $resource) {
+    public function rules(Resource $resource, string $prefix) {
         $rules = [];
 
         if ($this->isRequiredOnCreation(
             app()->make(RestRequest::class)
         )) {
-            $rules[] = RequiredRelation::make()->resource($resource);
+            $rules[$prefix] = RequiredRelation::make()->resource($resource);
+        }
+
+        if (in_array(HasPivotFields::class, class_uses_recursive($this), true)) {
+
+            $pivotPrefix = $prefix;
+            if ($this->hasMultipleEntries()) {
+                $pivotPrefix .= '.*';
+            }
+            $pivotPrefix.= '.pivot.';
+
+            foreach ($this->getPivotRules() as $pivotKey => $pivotRule) {
+                $rules[$pivotPrefix.$pivotKey] = $pivotRule;
+            }
         }
 
         return $rules;

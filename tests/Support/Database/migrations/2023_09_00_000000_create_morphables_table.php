@@ -13,11 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('has_many_relations', function (Blueprint $table) {
-            $table->id();
+        Schema::create('morphables', function (Blueprint $table) {
+            $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\MorphToManyRelation::class)->constrained(indexName: 'morph_to_many_relation_self_id_foreign');
+            $table->morphs('morphable');
             $table->integer('number')->default(0);
-            $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\Model::class)->nullable()->constrained(null, 'id', 'has_many_relations_model_foreign');
+
             $table->timestamps();
+
+            $table->primary(['morph_to_many_relation_id', 'morphable_id', 'morphable_type']);
         });
     }
 };

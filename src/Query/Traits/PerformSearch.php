@@ -85,7 +85,7 @@ trait PerformSearch
 
     public function applySorts($sorts) {
         foreach ($sorts as $sort) {
-            $this->sort($sort['field'], $sort['direction'] ?? 'asc');
+            $this->sort($this->queryBuilder->getModel()->getTable().'.'.$sort['field'], $sort['direction'] ?? 'asc');
         }
     }
 
