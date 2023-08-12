@@ -43,6 +43,65 @@ class MutateCreateOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
     }
 
+    public function test_creating_a_resource_using_field_not_following_custom_rules(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'create',
+                        'attributes' => ['string' => true]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0']]);
+    }
+
+    public function test_creating_a_resource_using_pivot_field_not_following_custom_pivot_rules(): void
+    {
+        $modelToCreate = ModelFactory::new()->makeOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'create',
+                        'attributes' => [
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation' => 'create',
+                                    'attributes' => [],
+                                    'pivot' => [
+                                        'number' => true
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot.number']]);
+    }
+
     public function test_creating_a_resource(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
@@ -1078,7 +1137,6 @@ class MutateCreateOperationsTest extends TestCase
             $response,
             [$modelToCreate],
         );
-
 
         // Here we test that the number has been modified on the relation
         $this->assertEquals(

@@ -25,6 +25,20 @@ class ModelResource extends Resource
 {
     public static $model = Model::class;
 
+    public function createRules(RestRequest $request)
+    {
+        return [
+            'string' => 'string'
+        ];
+    }
+
+    public function updateRules(RestRequest $request)
+    {
+        return [
+            'string' => 'string'
+        ];
+    }
+
     public function relations(RestRequest $request)
     {
         return [
@@ -33,6 +47,9 @@ class ModelResource extends Resource
             BelongsTo::make('belongsToRelation', BelongsToResource::class),
             HasMany::make('hasManyRelation', HasManyResource::class),
             BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
+                ->withPivotRules([
+                    'number' => 'numeric'
+                ])
                 ->withPivotFields(['created_at', 'number']),
 
             // Through relationships
@@ -56,7 +73,8 @@ class ModelResource extends Resource
         return [
             'id',
             'name',
-            'number'
+            'number',
+            'string'
         ];
     }
 

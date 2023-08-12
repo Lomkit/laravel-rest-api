@@ -30,6 +30,30 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\MorphToResource;
 
 class MutateUpdateMorphOperationsTest extends TestCase
 {
+    public function test_updating_a_resource_using_field_not_following_custom_rules(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
+                        'attributes' => ['string' => true]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0']]);
+    }
+
     public function test_updating_a_resource_with_creating_morph_to_relation(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
@@ -1045,9 +1069,9 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
     }
 
-    public function test_creating_a_resource_with_creating_morphed_by_many_relation_with_unauthorized_pivot_fields(): void
+    public function test_updating_a_resource_with_creating_morphed_by_many_relation_with_unauthorized_pivot_fields(): void
     {
-        $modelToCreate = ModelFactory::new()->makeOne();
+        $modelToUpdate = ModelFactory::new()->createOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(MorphedByManyRelation::class, GreenPolicy::class);
@@ -1057,10 +1081,11 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name' => 'new name',
+                            'number' => 5001
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
@@ -1083,9 +1108,9 @@ class MutateUpdateMorphOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.morphedByManyRelation.0.pivot']]);
     }
 
-    public function test_creating_a_resource_with_creating_morphed_by_many_relation_with_pivot_fields(): void
+    public function test_updating_a_resource_with_creating_morphed_by_many_relation_with_pivot_fields(): void
     {
-        $modelToCreate = ModelFactory::new()->makeOne();
+        $modelToUpdate = ModelFactory::new()->createOne();
 
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(MorphedByManyRelation::class, GreenPolicy::class);
@@ -1095,10 +1120,11 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name' => 'new name',
+                            'number' => 5001
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
@@ -1126,18 +1152,19 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         $this->assertMutatedResponse(
             $response,
-            [$modelToCreate],
+            [],
+            [$modelToUpdate]
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation()->count(), 2
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(), 2
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation[0]->morphed_by_many_pivot->number, 20
+            Model::find($response->json('updated.0'))->morphedByManyRelation[0]->morphed_by_many_pivot->number, 20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation[1]->morphed_by_many_pivot->number, 30
+            Model::find($response->json('updated.0'))->morphedByManyRelation[1]->morphed_by_many_pivot->number, 30
         );
     }
 

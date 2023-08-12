@@ -42,6 +42,41 @@ class MutateUpdateOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
     }
 
+    public function test_updating_a_resource_using_pivot_field_not_following_custom_pivot_rules(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation' => 'create',
+                                    'attributes' => [],
+                                    'pivot' => [
+                                        'number' => true
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot.number']]);
+    }
+
     public function test_updating_a_resource(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
@@ -1175,7 +1210,6 @@ class MutateUpdateOperationsTest extends TestCase
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,

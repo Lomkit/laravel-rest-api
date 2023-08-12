@@ -9,6 +9,10 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Rulable
 {
+    public function rules(RestRequest $request) {
+        return [];
+    }
+
     public function createRules(RestRequest $request) {
         return [];
     }

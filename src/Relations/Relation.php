@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Relations;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Concerns\Makeable;
@@ -72,6 +73,19 @@ class Relation
             app()->make(RestRequest::class)
         )) {
             $rules[$prefix] = RequiredRelation::make()->resource($resource);
+        }
+
+        if (in_array(HasPivotFields::class, class_uses_recursive($this), true)) {
+
+            $pivotPrefix = $prefix;
+            if ($this->hasMultipleEntries()) {
+                $pivotPrefix .= '.*';
+            }
+            $pivotPrefix.= '.pivot.';
+            // @TODO pivot fields here :) + doc
+            foreach ($this->getPivotRules() as $pivotKey => $pivotRule) {
+                $rules[$pivotPrefix.$pivotKey] = $pivotRule;
+            }
         }
 
         return $rules;
