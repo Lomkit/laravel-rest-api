@@ -67,7 +67,7 @@ Here is a quick look at what you can do using API search method:
         {
             "relation": "stars",
             "type": "max",
-            "max": "rate",
+            "field": "rate",
             "filters": [
                 {"field": 'approved', "value": true}
             ]
