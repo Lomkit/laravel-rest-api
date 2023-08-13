@@ -21,12 +21,10 @@ trait InteractsWithResource
             [
                 'data',
                 'current_page',
-                'next_page_url',
-                'path',
                 'per_page',
-                'prev_page_url',
                 'to',
-                'total'
+                'total',
+                'meta'
             ]
         );
 

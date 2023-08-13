@@ -21,6 +21,10 @@ class RestServiceProvider extends ServiceProvider{
      */
     public function register()
     {
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/rest.php', 'rest'
+        );
+
         $this->registerServices();
     }
 
@@ -32,6 +36,7 @@ class RestServiceProvider extends ServiceProvider{
     public function boot()
     {
         $this->registerCommands();
+        $this->registerPublishing();
     }
 
     /**
@@ -50,6 +55,20 @@ class RestServiceProvider extends ServiceProvider{
                 ResponseCommand::class,
                 QuickStartCommand::class
             ]);
+        }
+    }
+
+    /**
+     * Register the package's publishable resources.
+     *
+     * @return void
+     */
+    private function registerPublishing()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../config/rest.php' => config_path('rest.php'),
+            ], 'rest-config');
         }
     }
 

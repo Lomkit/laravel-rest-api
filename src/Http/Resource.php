@@ -65,4 +65,8 @@ class Resource
             'id' => 'desc'
         ];
     }
+
+    public function isAutomaticGatingEnabled() : bool {
+        return config('rest.automatic_gates.enabled');
+    }
 }

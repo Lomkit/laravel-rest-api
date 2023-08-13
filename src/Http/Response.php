@@ -5,8 +5,10 @@ namespace Lomkit\Rest\Http;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Http\Resources\Json\PaginatedResourceResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
@@ -28,6 +30,16 @@ class Response implements Responsable
         });
     }
 
+    protected function buildGatesForModel(Model $model) {
+        return [
+            config('rest.automatic_gates.names.authorized_to_view') => Gate::allows('view', $model),
+            config('rest.automatic_gates.names.authorized_to_update') => Gate::allows('update', $model),
+            config('rest.automatic_gates.names.authorized_to_delete') => Gate::allows('delete', $model),
+            config('rest.automatic_gates.names.authorized_to_restore') => Gate::allows('restore', $model),
+            config('rest.automatic_gates.names.authorized_to_force_delete') => Gate::allows('forceDelete', $model),
+        ];
+    }
+
     public function modelToResponse(Model $model, Resource $resource, array $requestArray, Relation $relation = null) {
         return array_merge(
             // toArray to take advantage of Laravel's logic
@@ -45,6 +57,12 @@ class Response implements Responsable
                             ->toArray()
                     )
                 )
+                ->when($resource->isAutomaticGatingEnabled(), function ($attributes) use ($model) {
+                    return $attributes->put(
+                        config('rest.automatic_gates.key'),
+                        $this->buildGatesForModel($model)
+                    );
+                })
                 ->toArray(),
             collect($model->getRelations())
                 ->mapWithKeys(function ($modelRelation, $relationName) use ($requestArray, $relation, $resource) {
@@ -94,19 +112,38 @@ class Response implements Responsable
 
     public function toResponse($request) {
         if ($this->responsable instanceof LengthAwarePaginator) {
-            return $this->responsable->through(function ($model) use ($request) {
+            $restLengthAwarePaginator = new \Lomkit\Rest\Pagination\LengthAwarePaginator(
+                $this->responsable->items(),
+                $this->responsable->total(),
+                $this->responsable->perPage(),
+                $this->responsable->currentPage(),
+                $this->responsable->getOptions(),
+                $this->resource->isAutomaticGatingEnabled() ? [
+                    config('rest.automatic_gates.key') => [
+                        config('rest.automatic_gates.names.authorized_to_create') => Gate::allows('create', $this->responsable->first()::class),
+                    ]
+                ] : []
+            );
+
+            $restLengthAwarePaginator->through(function ($model) use ($request) {
                 return $this->map($model, $this->modelToResponse($model, $this->resource, $request->input()));
             });
+
+            return $restLengthAwarePaginator;
+
         } elseif ($this->responsable instanceof Collection) {
-            return [
-                'data' => $this->responsable->map(function ($model) use ($request) {
-                    return $this->map($model, $this->modelToResponse($model, $this->resource, $request->input()));
-                })
-            ];
+            $data = $this->responsable->map(function ($model) use ($request) {
+                return $this->map($model, $this->modelToResponse($model, $this->resource, $request->input()));
+            });
         }
 
         return [
-            'data' => $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input()))
+            'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input())),
+            'meta' => [
+                config('rest.automatic_gates.key') => [
+                    config('rest.automatic_gates.names.authorized_to_create') => Gate::allows('create', $this->responsable->first()::class),
+                ]
+            ]
         ];
     }
 
@@ -121,4 +158,7 @@ class Response implements Responsable
     protected function map(\Illuminate\Database\Eloquent\Model $model, array $responseModel) : array {
         return $responseModel;
     }
+
+    // @TODO: this class needs a refactor because it has grown a lot since the beginning also with the "lengthAwarePaginator"
+    // @TODO: recursive response for those gates ?
 }
