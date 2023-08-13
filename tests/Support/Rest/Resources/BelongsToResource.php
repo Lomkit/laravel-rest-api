@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Lomkit\Rest\Concerns\Resource\DisableAutomaticGates;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 
 class BelongsToResource extends Resource
@@ -16,7 +17,9 @@ class BelongsToResource extends Resource
 
     public function relations(RestRequest $request)
     {
-        return [];
+        return [
+            HasMany::make('models', ModelResource::class)
+        ];
     }
 
     public function exposedFields(RestRequest $request)

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model as BaseModel;
 
 class BelongsToRelation extends BaseModel
 {
-    public function model() {
+    public function models() {
         return $this->hasMany(Model::class);
     }
 }

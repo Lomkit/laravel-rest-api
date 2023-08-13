@@ -29,7 +29,7 @@ class {{ class }} extends Resource
         return [];
     }
 
-    public function exposedPaginations(\Lomkit\Rest\Http\Requests\RestRequest $request) {
+    public function exposedLimits(\Lomkit\Rest\Http\Requests\RestRequest $request) {
         return [
             10,
             25,

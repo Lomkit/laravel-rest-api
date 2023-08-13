@@ -84,6 +84,55 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         );
     }
 
+    public function test_getting_a_list_of_resources_including_belongs_to_has_many_relation(): void
+    {
+        $belongsTo = BelongsToRelationFactory::new()->create();
+        $matchingModel = ModelFactory::new()
+            ->for($belongsTo)
+            ->create()->fresh();
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'includes' => [
+                    ['relation' => 'belongsToRelation.models'],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $matchingModelBelongsToRelation = $matchingModel->belongsToRelation;
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource,
+            [
+                [
+                    'belongs_to_relation' => array_merge(
+                        $matchingModelBelongsToRelation
+                            ->only((new BelongsToResource)->exposedFields(app()->make(RestRequest::class))),
+                        [
+                            'models' => $matchingModelBelongsToRelation->models
+                                ->map(function($model) {
+                                    return $model->only((new ModelResource)->exposedFields(app()->make(RestRequest::class)));
+                                })
+                                ->toArray(),
+                        ]
+                    ),
+                ],
+                [
+                    'belongs_to_relation' => null,
+                ]
+            ]
+        );
+    }
+
     public function test_getting_a_list_of_resources_including_has_one_relation(): void
     {
         $matchingModel = ModelFactory::new()

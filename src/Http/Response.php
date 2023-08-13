@@ -41,6 +41,11 @@ class Response implements Responsable
     }
 
     public function modelToResponse(Model $model, Resource $resource, array $requestArray, Relation $relation = null) {
+        $currentRequestArray = $relation === null ? $requestArray : collect($requestArray['includes'])
+            ->first(function ($include) use ($relation) {
+                return preg_match('/(?:\.\b)?'.$relation->relation.'\b/', $include['relation']);
+            });
+
         return array_merge(
             // toArray to take advantage of Laravel's logic
             collect($model->attributesToArray())
@@ -84,7 +89,7 @@ class Response implements Responsable
                     $relationResource = $relationConcrete->resource();
                     $requestArrayRelation = collect($requestArray['includes'])
                         ->first(function ($include) use ($relationName) {
-                            return $include['relation'] === $relationName;
+                            return preg_match('/(?:\.\b)?'.$relationName.'\b/', $include['relation']);
                         });
 
                     // We reapply the limits in case of BelongsToManyRelation where we can't apply limits easily
@@ -95,14 +100,14 @@ class Response implements Responsable
                             $key => $this->modelToResponse(
                                 $modelRelation,
                                 $relationResource,
-                                $requestArrayRelation,
+                                $requestArray,
                                 $relationConcrete
                             )
                         ];
                     }
                     return [
                         $key => $modelRelation
-                            ->map(fn ($collectionRelation) => $this->modelToResponse($collectionRelation, $relationResource, $requestArrayRelation, $relationConcrete))
+                            ->map(fn ($collectionRelation) => $this->modelToResponse($collectionRelation, $relationResource, $requestArray, $relationConcrete))
                             ->toArray()
                     ];
                 })
