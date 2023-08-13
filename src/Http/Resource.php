@@ -62,7 +62,7 @@ class Resource
         return new $response;
     }
 
-    public function defaultOrderBy(RestRequest $request) {
+    public function defaultOrderBy(RestRequest $request): array {
         return [
             'id' => 'desc'
         ];

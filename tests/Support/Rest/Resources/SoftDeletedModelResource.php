@@ -18,7 +18,7 @@ class SoftDeletedModelResource extends Resource
 
     public static $model = SoftDeletedModel::class;
 
-    public function exposedFields(RestRequest $request)
+    public function exposedFields(RestRequest $request): array
     {
         return [
             'id'

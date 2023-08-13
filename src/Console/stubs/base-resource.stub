@@ -10,10 +10,10 @@ abstract class Resource extends RestResource
      * Build a query for fetching resource.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Contracts\Database\Eloquent\Builder
      */
-    public function fetchQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Database\Eloquent\Builder $query) {
+    public function fetchQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query) {
         return $query;
     }
 
@@ -21,10 +21,10 @@ abstract class Resource extends RestResource
      * Build a "destroy" query for the given resource.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Contracts\Database\Eloquent\Builder
      */
-    public function destroyQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Database\Eloquent\Builder $query)
+    public function destroyQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
     {
         return $query;
     }
@@ -33,10 +33,10 @@ abstract class Resource extends RestResource
      * Build a "restore" query for the given resource.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Contracts\Database\Eloquent\Builder
      */
-    public function restoreQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Database\Eloquent\Builder $query)
+    public function restoreQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
     {
         return $query;
     }
@@ -45,10 +45,10 @@ abstract class Resource extends RestResource
      * Build a "forceDelete" query for the given resource.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Contracts\Database\Eloquent\Builder
      */
-    public function forceDeleteQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Database\Eloquent\Builder $query)
+    public function forceDeleteQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
     {
         return $query;
     }

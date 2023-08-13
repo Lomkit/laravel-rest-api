@@ -6,7 +6,7 @@ Laravel Rest Api is an elegant way to expose your app through an API, it takes f
 
 ## Requirements
 
-PHP 7.3+ and Laravel 8.0+
+PHP 8.0+ and Laravel 8.0+
 
 # BETA
 Please note that this package is under beta and is not recommended to use for production environment for now. End of beta should be by October 2023.
@@ -69,7 +69,7 @@ Here is a quick look at what you can do using API search method:
             "type": "max",
             "field": "rate",
             "filters": [
-                {"field": "approved', "value": true}
+                {"field": "approved", "value": true}
             ]
         },
     ],

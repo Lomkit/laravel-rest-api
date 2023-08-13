@@ -25,7 +25,7 @@ class AutomaticGatingResource extends Resource
 
     public static $model = Model::class;
 
-    public function relations(RestRequest $request)
+    public function relations(RestRequest $request): array
     {
         return [
             BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
@@ -36,7 +36,7 @@ class AutomaticGatingResource extends Resource
         ];
     }
 
-    public function exposedFields(RestRequest $request)
+    public function exposedFields(RestRequest $request): array
     {
         return [
             'id',

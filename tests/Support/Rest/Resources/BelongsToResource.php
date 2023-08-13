@@ -15,14 +15,14 @@ class BelongsToResource extends Resource
 
     public static $model = BelongsToRelation::class;
 
-    public function relations(RestRequest $request)
+    public function relations(RestRequest $request): array
     {
         return [
             HasMany::make('models', ModelResource::class)
         ];
     }
 
-    public function exposedFields(RestRequest $request)
+    public function exposedFields(RestRequest $request): array
     {
         return [
             'id',

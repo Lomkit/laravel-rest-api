@@ -13,12 +13,12 @@ class HasManyResource extends Resource
     use DisableAutomaticGates;
     public static $model = HasManyRelation::class;
 
-    public function relations(RestRequest $request)
+    public function relations(RestRequest $request): array
     {
         return [];
     }
 
-    public function exposedFields(RestRequest $request)
+    public function exposedFields(RestRequest $request): array
     {
         return [
             'id',

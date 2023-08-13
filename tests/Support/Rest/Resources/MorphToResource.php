@@ -15,12 +15,12 @@ class MorphToResource extends Resource
 
     public static $model = MorphToRelation::class;
 
-    public function relations(RestRequest $request)
+    public function relations(RestRequest $request): array
     {
         return [];
     }
 
-    public function exposedFields(RestRequest $request)
+    public function exposedFields(RestRequest $request): array
     {
         return [
             'id',

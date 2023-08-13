@@ -8,6 +8,7 @@ use Illuminate\Database\Migrations\MigrationCreator;
 use Illuminate\Support\Composer;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\ResolvesStubPath;
+use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class ControllerCommand extends GeneratorCommand implements PromptsForMissingInput
 {
@@ -58,7 +59,7 @@ class ControllerCommand extends GeneratorCommand implements PromptsForMissingInp
         $resourceNamespace = $this->getResourceNamespace();
 
         if (is_null($resource)) {
-            $resource = $resourceNamespace.str_replace('/', '\\', $this->argument('name'));
+            $resource = $resourceNamespace.'ModelResource';
         } elseif (! Str::startsWith($resource, [
             $resourceNamespace, '\\',
         ])) {

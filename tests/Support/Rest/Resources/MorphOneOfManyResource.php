@@ -13,12 +13,12 @@ class MorphOneOfManyResource extends Resource
 
     public static $model = MorphOneOfManyRelation::class;
 
-    public function relations(RestRequest $request)
+    public function relations(RestRequest $request): array
     {
         return [];
     }
 
-    public function exposedFields(RestRequest $request)
+    public function exposedFields(RestRequest $request): array
     {
         return [
             'id',

@@ -9,7 +9,7 @@ use Lomkit\Rest\Http\Resource;
 
 trait ConfiguresRestParameters
 {
-    public function exposedFields(RestRequest $request) {
+    public function exposedFields(RestRequest $request): array {
         return [];
     }
 
@@ -47,11 +47,11 @@ trait ConfiguresRestParameters
         return $exposedFields;
     }
 
-    public function exposedScopes(RestRequest $request) {
+    public function exposedScopes(RestRequest $request): array {
         return [];
     }
 
-    public function exposedLimits(RestRequest $request) {
+    public function exposedLimits(RestRequest $request): array {
         return [
             10,
             25,

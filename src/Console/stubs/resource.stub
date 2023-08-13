@@ -4,7 +4,7 @@ namespace {{ namespace }};
 
 use App\Rest\Resource as RestResource;
 
-class {{ class }} extends Resource
+class {{ class }} extends RestResource
 {
     /**
      * The model the resource corresponds to.
@@ -13,23 +13,25 @@ class {{ class }} extends Resource
      */
     public static $model = \{{ namespacedModel }}::class;
 
-    public function exposedFields(\Lomkit\Rest\Http\Requests\RestRequest $request)
+    public function exposedFields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [
             'id'
         ];
     }
 
-    public function relations(\Lomkit\Rest\Http\Requests\RestRequest $request)
+    public function relations(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [];
     }
 
-    public function exposedScopes(\Lomkit\Rest\Http\Requests\RestRequest $request) {
+    public function exposedScopes(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
         return [];
     }
 
-    public function exposedLimits(\Lomkit\Rest\Http\Requests\RestRequest $request) {
+    public function exposedLimits(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
         return [
             10,
             25,

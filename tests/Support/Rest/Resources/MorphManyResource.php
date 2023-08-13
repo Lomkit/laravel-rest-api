@@ -17,12 +17,12 @@ class MorphManyResource extends Resource
 
     public static $model = MorphManyRelation::class;
 
-    public function relations(RestRequest $request)
+    public function relations(RestRequest $request): array
     {
         return [];
     }
 
-    public function exposedFields(RestRequest $request)
+    public function exposedFields(RestRequest $request): array
     {
         return [
             'id',

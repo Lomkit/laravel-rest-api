@@ -15,12 +15,12 @@ class HasManyThroughResource extends Resource
     use DisableAutomaticGates;
     public static $model = HasManyThroughRelation::class;
 
-    public function relations(RestRequest $request)
+    public function relations(RestRequest $request): array
     {
         return [];
     }
 
-    public function exposedFields(RestRequest $request)
+    public function exposedFields(RestRequest $request): array
     {
         return [
             'id',

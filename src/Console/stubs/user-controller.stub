@@ -11,5 +11,5 @@ class UsersController extends RestController
      *
      * @var class-string<\Lomkit\Rest\Http\Resource>
      */
-    public static $resource = \App\User::class;
+    public static $resource = \App\Rest\Resources\UserResource::class;
 }

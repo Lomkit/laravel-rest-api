@@ -17,7 +17,7 @@ class Rest implements Registrar
      * @param  array  $options
      * @return \Lomkit\Rest\Http\Routing\PendingResourceRegistration
      */
-    public function resource($name, $controller, array $options = [])
+    public function resource(string $name, string $controller, array $options = [])
     {
         if (app()->bound(ResourceRegistrar::class)) {
             $registrar = app()->make(ResourceRegistrar::class);
