@@ -53,7 +53,7 @@ trait Relationable
         return $relations;
     }
 
-    public function relations(RestRequest $request) {
+    public function relations(RestRequest $request): array {
         return [];
     }
 

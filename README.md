@@ -69,7 +69,7 @@ Here is a quick look at what you can do using API search method:
             "type": "max",
             "field": "rate",
             "filters": [
-                {"field": "approved', "value": true}
+                {"field": "approved", "value": true}
             ]
         },
     ],

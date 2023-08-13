@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Contracts\Http\Routing;
 
+use Lomkit\Rest\Http\Controllers\Controller;
+
 interface Registrar
 {
     /**
@@ -12,5 +14,5 @@ interface Registrar
      * @param  array  $options
      * @return Lomkit\Rest\Http\Routing\PendingResourceRegistration
      */
-    public function resource($name, $controller, array $options = []);
+    public function resource(string $name, string $controller, array $options = []);
 }

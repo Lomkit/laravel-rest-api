@@ -42,7 +42,7 @@ class ModelResource extends Resource
         ];
     }
 
-    public function relations(RestRequest $request)
+    public function relations(RestRequest $request): array
     {
         return [
             HasOne::make('hasOneRelation', HasOneResource::class),
@@ -71,7 +71,7 @@ class ModelResource extends Resource
         ];
     }
 
-    public function exposedFields(RestRequest $request)
+    public function exposedFields(RestRequest $request): array
     {
         return [
             'id',
@@ -81,14 +81,14 @@ class ModelResource extends Resource
         ];
     }
 
-    public function exposedScopes(RestRequest $request)
+    public function exposedScopes(RestRequest $request): array
     {
         return [
             'numbered'
         ];
     }
 
-    public function exposedLimits(RestRequest $request) {
+    public function exposedLimits(RestRequest $request): array {
         return [
             1,
             10,
@@ -97,7 +97,7 @@ class ModelResource extends Resource
         ];
     }
 
-    public function defaultOrderBy(RestRequest $request)
+    public function defaultOrderBy(RestRequest $request): array
     {
         return [
             'id' => 'asc'

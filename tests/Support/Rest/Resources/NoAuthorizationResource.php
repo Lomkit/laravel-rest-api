@@ -27,7 +27,7 @@ class NoAuthorizationResource extends Resource
 
     public static $model = Model::class;
 
-    public function exposedFields(RestRequest $request)
+    public function exposedFields(RestRequest $request): array
     {
         return [
             'id',

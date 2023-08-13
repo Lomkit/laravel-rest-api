@@ -33,7 +33,7 @@ class QuickStartCommand extends Command
     {
         $this->comment('Generating User Resource...');
         $this->callSilent('rest:resource', ['name' => 'UserResource']);
-        copy($this->resolveStubPath('../stubs/user-resource.stub'), app_path('Rest/Resources/UserResource.php'));
+        copy($this->resolveStubPath('/stubs/user-resource.stub'), app_path('Rest/Resources/UserResource.php'));
 
         if (file_exists(app_path('Models/User.php'))) {
             file_put_contents(
@@ -44,7 +44,7 @@ class QuickStartCommand extends Command
 
         $this->comment('Generating User Controller...');
         $this->callSilent('rest:controller', ['name' => 'UsersController']);
-        copy($this->resolveStubPath('../stubs/user-controller.stub'), app_path('Http/Controllers/UsersController.php'));
+        copy($this->resolveStubPath('/stubs/user-controller.stub'), app_path('Http/Controllers/UsersController.php'));
 
         if (file_exists(app_path('Models/User.php'))) {
             file_put_contents(
@@ -75,7 +75,7 @@ class QuickStartCommand extends Command
     {
         $namespace = $this->laravel->getNamespace();
 
-        $this->setAppNamespaceOn(app_path('Rest/Resource/UserResource.php'), $namespace);
+        $this->setAppNamespaceOn(app_path('Rest/Resources/UserResource.php'), $namespace);
         $this->setAppNamespaceOn(app_path('Http/Controllers/UsersController.php'), $namespace);
     }
 
