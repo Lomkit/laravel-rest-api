@@ -63,6 +63,16 @@ Here is a quick look at what you can do using API search method:
             ]
         }
     ],
+    "aggregates": [
+        {
+            "relation": "stars",
+            "type": "max",
+            "field": "rate",
+            "filters": [
+                {"field": 'approved', "value": true}
+            ]
+        },
+    ],
     "page": 2,
     "limit": 10
 }
@@ -74,6 +84,7 @@ TODO
 
 ## Contributing
 
+
 TODO
 
 ## Roadmap for the end of bêta (Estimated delivery October 2023)
@@ -81,5 +92,5 @@ TODO
 - Custom directives (Filters / sorting)
 - Actions / Metrics
 - Automatic Gates (with config customisation)
-- Aggregating
 - Automatic documentation with extension possible
+- Add the possibility to disable authorization

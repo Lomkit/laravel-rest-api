@@ -7,6 +7,8 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Rules\AggregateField;
+use Lomkit\Rest\Rules\AggregateFilterable;
 use Lomkit\Rest\Rules\Includable;
 
 class SearchRequest extends RestRequest
@@ -31,6 +33,8 @@ class SearchRequest extends RestRequest
             $this->sortsRules($resource, $prefix.'sorts'),
             [$prefix.'selects' => ['sometimes', 'array']],
             $this->selectsRules($resource, $prefix.'selects'),
+            [$prefix.'aggregates' => ['sometimes', 'array']],
+            $this->aggregatesRules($resource, $prefix.'aggregates'),
             [
                 'limit' => ['sometimes', 'integer', Rule::in($resource->exposedLimits($this))],
                 'page' => ['sometimes', 'integer']
@@ -41,7 +45,7 @@ class SearchRequest extends RestRequest
     }
 
     // @TODO: For now it's prohibited to have more than one nested depth, is this needed ?
-    protected function filtersRules(Resource $resource, string $prefix, $isMaxDepth = false) {
+    public function filtersRules(Resource $resource, string $prefix, $isMaxDepth = false) {
         $rules = array_merge(
             [
                 $prefix.'.*.field' => [
@@ -134,6 +138,34 @@ class SearchRequest extends RestRequest
             ],
             'includes.*' => [
                 Includable::make()
+                    ->resource($resource)
+            ]
+        ];
+    }
+
+    protected function aggregatesRules(Resource $resource, string $prefix) {
+        return [
+            $prefix.'.*.relation' => [
+                'required',
+                Rule::in(
+                    array_keys(
+                        $resource->nestedRelations(app()->make(RestRequest::class))
+                    )
+                )
+            ],
+            $prefix.'.*.type' => [
+                Rule::in(['count', 'min', 'max', 'avg', 'sum', 'exists'])
+            ],
+            $prefix.'.*.field' => [
+                'required_if:'.$prefix.'.*.type,min,max,avg,sum',
+                'prohibited_if:'.$prefix.'.*.type,count,exists'
+            ],
+            $prefix.'.*' => [
+                AggregateField::make()
+                    ->resource($resource)
+            ],
+            $prefix.'.*.filters' => [
+                AggregateFilterable::make()
                     ->resource($resource)
             ]
         ];
