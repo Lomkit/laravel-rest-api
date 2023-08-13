@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Http;
 
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
 use Lomkit\Rest\Concerns\PerformsQueries;
 use Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters;
@@ -18,7 +19,8 @@ class Resource
         Relationable,
         Paginable,
         Rulable,
-        ConfiguresRestParameters;
+        ConfiguresRestParameters,
+        Authorizable;
 
     /**
      * The model the entry corresponds to.
@@ -68,5 +70,9 @@ class Resource
 
     public function isAutomaticGatingEnabled() : bool {
         return config('rest.automatic_gates.enabled');
+    }
+
+    public function isAuthorizingEnabled() : bool {
+        return config('rest.authorizations.enabled');
     }
 }

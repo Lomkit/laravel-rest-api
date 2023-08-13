@@ -41,7 +41,7 @@ trait PerformMutation
         if ($mutation['operation'] === 'create') {
             $model = $this->resource::newModel();
 
-            $this->authorizeTo('create', $model);
+            $this->resource->authorizeTo('create', $model);
 
             return $this->mutateModel(
                 $model,
@@ -53,7 +53,7 @@ trait PerformMutation
         if ($mutation['operation'] === 'update') {
             $model = $this->resource::newModel()::find($mutation['key']);
 
-            $this->authorizeTo('update', $model);
+            $this->resource->authorizeTo('update', $model);
 
             return $this->mutateModel(
                 $model,

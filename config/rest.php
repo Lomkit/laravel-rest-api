@@ -25,4 +25,18 @@ return [
             'authorized_to_force_delete' => 'authorized_to_force_delete',
         ]
     ],
+
+    /*
+|--------------------------------------------------------------------------
+| Rest Authorizations
+|--------------------------------------------------------------------------
+|
+| This is the feature that automatically binds to policies to validate incoming requests.
+| Laravel Rest Api will validate each models searched / mutated / deleted to avoid leaks in your API.
+|
+*/
+
+    'authorizations' => [
+        'enabled' => true
+    ],
 ];

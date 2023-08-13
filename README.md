@@ -92,5 +92,4 @@ TODO
 - Custom directives (Filters / sorting)
 - Actions / Metrics
 - Automatic documentation with extension possible
-- Add the possibility to disable authorization
 - Refactor the response class
