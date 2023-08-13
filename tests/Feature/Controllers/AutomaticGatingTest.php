@@ -71,6 +71,30 @@ class AutomaticGatingTest extends TestCase
         );
     }
 
+    public function test_searching_automatic_gated_resource_with_global_config_disabled(): void
+    {
+        $model = ModelFactory::new()
+            ->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        config(['rest.automatic_gates.enabled' => false]);
+
+        $response = $this->post(
+            '/api/automatic-gating/search',
+            [
+
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$model],
+            new AutomaticGatingResource
+        );
+    }
+
     public function test_searching_automatic_gated_resource_with_create_policy(): void
     {
         $model = ModelFactory::new()

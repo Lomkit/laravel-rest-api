@@ -73,6 +73,6 @@ class Resource
     }
 
     public function isAuthorizingEnabled() : bool {
-        return true;
+        return config('rest.authorizations.enabled');
     }
 }

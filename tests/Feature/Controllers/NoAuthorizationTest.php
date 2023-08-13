@@ -36,6 +36,30 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class NoAuthorizationTest extends TestCase
 {
+    public function test_searching_with_global_authorization_disabled(): void
+    {
+        $model = ModelFactory::new()
+            ->create();
+
+        Gate::policy(Model::class, RedPolicy::class);
+
+        config(['rest.authorizations.enabled' => false]);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$model],
+            new ModelResource
+        );
+    }
+
     public function test_searching_with_no_authorizations(): void
     {
         $model = ModelFactory::new()
