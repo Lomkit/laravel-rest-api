@@ -11,7 +11,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
 trait PerformSearch
 {
     public function search(array $parameters = []) {
-        $this->authorizeTo('viewAny', $this->resource::$model);
+        $this->resource->authorizeTo('viewAny', $this->resource::$model);
 
         $this->resource->searchQuery(app()->make(RestRequest::class), $this->queryBuilder);
 

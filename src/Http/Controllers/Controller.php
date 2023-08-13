@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
 use Lomkit\Rest\Concerns\PerformsRestOperations;
@@ -15,8 +16,7 @@ use Lomkit\Rest\Http\Resource;
 
 abstract class Controller extends \Illuminate\Routing\Controller
 {
-    use PerformsRestOperations,
-        Authorizable;
+    use PerformsRestOperations;
 
     /**
      * The resource the entry corresponds to.
@@ -39,4 +39,6 @@ abstract class Controller extends \Illuminate\Routing\Controller
 
         return new $resource;
     }
+
+    //@TODO: are controllers useless in a certain way ??
 }

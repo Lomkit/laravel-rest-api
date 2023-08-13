@@ -55,7 +55,7 @@ trait PerformsRestOperations
             ->get();
 
         foreach ($models as $model) {
-            $this->authorizeTo('delete', $model);
+            self::newResource()->authorizeTo('delete', $model);
 
             $resource->performDelete($request, $model);
         }
@@ -76,7 +76,7 @@ trait PerformsRestOperations
             ->get();
 
         foreach ($models as $model) {
-            $this->authorizeTo('restore', $model);
+            self::newResource()->authorizeTo('restore', $model);
 
             $resource->performRestore($request, $model);
         }
@@ -97,7 +97,7 @@ trait PerformsRestOperations
             ->get();
 
         foreach ($models as $model) {
-            $this->authorizeTo('forceDelete', $model);
+            self::newResource()->authorizeTo('forceDelete', $model);
 
             $resource->performForceDelete($request, $model);
         }

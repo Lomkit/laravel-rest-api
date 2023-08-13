@@ -18,7 +18,9 @@ trait Authorizable
      */
     public function authorizeTo($ability, $model)
     {
-        Gate::authorize($ability, $model);
+        if ($this->isAuthorizingEnabled()) {
+            Gate::authorize($ability, $model);
+        }
     }
 
     /**
@@ -30,6 +32,9 @@ trait Authorizable
      */
     public function authorizedTo($ability, $model)
     {
-        return Gate::check($ability, $model);
+        if ($this->isAuthorizingEnabled()) {
+            return Gate::check($ability, $model);
+        }
+        return true;
     }
 }
