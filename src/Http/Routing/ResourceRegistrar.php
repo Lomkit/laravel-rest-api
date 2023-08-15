@@ -14,7 +14,7 @@ class ResourceRegistrar extends BaseResourceRegistrar
      *
      * @var string[]
      */
-    protected $resourceDefaults = ['search', 'mutate', 'destroy', 'restore', 'forceDelete'];
+    protected $resourceDefaults = ['search', 'mutate', 'actions', 'operate', 'destroy', 'restore', 'forceDelete'];
 
     /**
      * The verbs used in the resource URIs.
@@ -24,6 +24,7 @@ class ResourceRegistrar extends BaseResourceRegistrar
     protected static $verbs = [
         'search' => 'search',
         'mutate' => 'mutate',
+        'actions' => 'actions',
         'restore' => 'restore',
         'forceDelete' => 'force',
     ];
@@ -49,7 +50,7 @@ class ResourceRegistrar extends BaseResourceRegistrar
     }
 
     /**
-     * Add the search method for a resourceful route.
+     * Add the mutate method for a resourceful route.
      *
      * @param  string  $name
      * @param  string  $base
@@ -64,6 +65,46 @@ class ResourceRegistrar extends BaseResourceRegistrar
         unset($options['missing']);
 
         $action = $this->getResourceAction($name, $controller, 'mutate', $options);
+
+        return $this->router->post($uri, $action);
+    }
+
+    /**
+     * Add the actions method for a resourceful route.
+     *
+     * @param  string  $name
+     * @param  string  $base
+     * @param  string $controller
+     * @param  array  $options
+     * @return \Illuminate\Routing\Route
+     */
+    protected function addResourceActions($name, $base, $controller, $options)
+    {
+        $uri = $this->getResourceUri($name).'/'.static::$verbs['actions'];
+
+        unset($options['missing']);
+
+        $action = $this->getResourceAction($name, $controller, 'actions', $options);
+
+        return $this->router->get($uri, $action);
+    }
+
+    /**
+     * Add the actions method for a resourceful route.
+     *
+     * @param  string  $name
+     * @param  string  $base
+     * @param  string $controller
+     * @param  array  $options
+     * @return \Illuminate\Routing\Route
+     */
+    protected function addResourceOperate($name, $base, $controller, $options)
+    {
+        $uri = $this->getResourceUri($name).'/'.static::$verbs['actions'].'/{action}';
+
+        unset($options['missing']);
+
+        $action = $this->getResourceAction($name, $controller, 'operate', $options);
 
         return $this->router->post($uri, $action);
     }

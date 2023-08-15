@@ -21,6 +21,8 @@ use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
+use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
+use Lomkit\Rest\Tests\Support\Rest\Actions\QueueableModifyNumberAction;
 
 class ModelResource extends Resource
 {
@@ -81,6 +83,11 @@ class ModelResource extends Resource
         ];
     }
 
+    /**
+     * The exposed scopes that could be provided
+     * @param RestRequest $request
+     * @return array
+     */
     public function exposedScopes(RestRequest $request): array
     {
         return [
@@ -88,6 +95,11 @@ class ModelResource extends Resource
         ];
     }
 
+    /**
+     * The exposed limits that could be provided
+     * @param RestRequest $request
+     * @return array
+     */
     public function exposedLimits(RestRequest $request): array {
         return [
             1,
@@ -101,6 +113,18 @@ class ModelResource extends Resource
     {
         return [
             'id' => 'asc'
+        ];
+    }
+
+    /**
+     * The actions that should be linked
+     * @param RestRequest $request
+     * @return array
+     */
+    public function actions(RestRequest $request): array {
+        return [
+            ModifyNumberAction::make(),
+            QueueableModifyNumberAction::make()
         ];
     }
 }

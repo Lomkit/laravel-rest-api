@@ -13,6 +13,11 @@ class User extends RestResource
      */
     public static $model = \App\User::class;
 
+    /**
+     * The exposed fields that could be provided
+     * @param RestRequest $request
+     * @return array
+     */
     public function exposedFields(\Lomkit\Rest\Http\Requests\RestRequest $request)
     {
         return [
@@ -22,20 +27,44 @@ class User extends RestResource
         ];
     }
 
+    /**
+     * The exposed relations that could be provided
+     * @param RestRequest $request
+     * @return array
+     */
     public function relations(\Lomkit\Rest\Http\Requests\RestRequest $request)
     {
         return [];
     }
 
+    /**
+     * The exposed scopes that could be provided
+     * @param RestRequest $request
+     * @return array
+     */
     public function exposedScopes(\Lomkit\Rest\Http\Requests\RestRequest $request) {
         return [];
     }
 
+    /**
+     * The exposed limits that could be provided
+     * @param RestRequest $request
+     * @return array
+     */
     public function exposedLimits(\Lomkit\Rest\Http\Requests\RestRequest $request) {
         return [
             10,
             25,
             50
         ];
+    }
+
+    /**
+     * The actions that should be linked
+     * @param RestRequest $request
+     * @return array
+     */
+    public function actions(RestRequest $request): array {
+        return [];
     }
 }

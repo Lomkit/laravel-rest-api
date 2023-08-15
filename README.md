@@ -84,12 +84,14 @@ TODO
 
 ## Contributing
 
-
 TODO
 
 ## Roadmap for the end of bêta (Estimated delivery October 2023)
 
 - Custom directives (Filters / sorting)
-- Actions / Metrics
 - Automatic documentation with extension possible
+
+## Roadmap
+
+- Metrics
 - Refactor the response class

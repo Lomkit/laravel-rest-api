@@ -53,6 +53,11 @@ trait Relationable
         return $relations;
     }
 
+    /**
+     * The exposed relations that could be provided
+     * @param RestRequest $request
+     * @return array
+     */
     public function relations(RestRequest $request): array {
         return [];
     }

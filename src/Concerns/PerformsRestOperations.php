@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Contracts\QueryBuilder;
+use Lomkit\Rest\Http\Requests\ActionsRequest;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
+use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
@@ -17,7 +20,7 @@ use Lomkit\Rest\Http\Requests\MutateRequest;
 trait PerformsRestOperations
 {
     public function search(SearchRequest $request) {
-        $resource = static::newResource();
+        $request->resource($resource = static::newResource());
 
         $query = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
             ->search($request->all());
@@ -30,7 +33,7 @@ trait PerformsRestOperations
     }
 
     public function mutate(MutateRequest $request) {
-        $resource = static::newResource();
+        $request->resource($resource = static::newResource());
 
         DB::beginTransaction();
 
@@ -45,8 +48,32 @@ trait PerformsRestOperations
         return $operations;
     }
 
+    public function actions(ActionsRequest $request) {
+        $request->resource($resource = static::newResource());
+
+        return response([
+            'data' =>
+                collect($resource->actions($request))->each->jsonSerialize()
+        ]);
+    }
+
+    public function operate(OperateRequest $request, $action) {
+        $request->resource($resource = static::newResource());
+
+        $actionInstance = $resource->action($request, $action);
+
+        $modelsImpacted = $actionInstance->handleRequest($request);
+
+        return response([
+            'data' =>
+                [
+                    'impacted' => $modelsImpacted
+                ]
+        ]);
+    }
+
     public function destroy(DestroyRequest $request) {
-        $resource = static::newResource();
+        $request->resource($resource = static::newResource());
 
         $query = $resource->destroyQuery($request, $resource::newModel()::query());
 
@@ -66,7 +93,7 @@ trait PerformsRestOperations
     }
 
     public function restore(RestoreRequest $request) {
-        $resource = static::newResource();
+        $request->resource($resource = static::newResource());
 
         $query = $resource->restoreQuery($request, $resource::newModel()::query());
 
@@ -87,7 +114,7 @@ trait PerformsRestOperations
     }
 
     public function forceDelete(ForceDestroyRequest $request) {
-        $resource = static::newResource();
+        $request->resource($resource = static::newResource());
 
         $query = $resource->forceDeleteQuery($request, $resource::newModel()::query());
 

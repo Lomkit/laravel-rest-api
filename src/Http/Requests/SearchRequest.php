@@ -18,7 +18,8 @@ class SearchRequest extends RestRequest
     {
         return $this->searchRules($this->route()->controller::newResource());
     }
-    public function searchRules(Resource $resource, $prefix = '')
+
+    public function searchRules(Resource $resource, $prefix = '', $isRootSearchRules = true)
     {
         if ($prefix !== '') {
             $prefix .= '.';
@@ -39,8 +40,8 @@ class SearchRequest extends RestRequest
                 'limit' => ['sometimes', 'integer', Rule::in($resource->exposedLimits($this))],
                 'page' => ['sometimes', 'integer']
             ],
-            $prefix === '' ? ['includes' => ['sometimes', 'array']] : [],
-            $prefix === '' ? $this->includesRules($resource) : [],
+            $isRootSearchRules ? ['includes' => ['sometimes', 'array']] : [],
+            $isRootSearchRules ? $this->includesRules($resource) : [],
         );
     }
 
