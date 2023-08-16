@@ -1,0 +1,9 @@
+name: Question / Enchancement proposal
+description: "Ask a question or for a feature"
+body:
+  - type: textarea
+    attributes:
+      label: Description
+      description: Leave a comment
+    validations:
+      required: true
