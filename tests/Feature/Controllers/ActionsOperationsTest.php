@@ -33,7 +33,7 @@ class ActionsOperationsTest extends TestCase
             '/api/models/actions',
             ['Accept' => 'application/json']
         );
-
+        
         $response->assertJson(
             ['data' => collect(new ModelResource)->each->jsonSerialize()->toArray()]
         );

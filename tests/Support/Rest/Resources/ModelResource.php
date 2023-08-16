@@ -23,6 +23,7 @@ use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\QueueableModifyNumberAction;
+use Lomkit\Rest\Tests\Support\Rest\Actions\WithMetaModifyNumberAction;
 
 class ModelResource extends Resource
 {
@@ -124,7 +125,8 @@ class ModelResource extends Resource
     public function actions(RestRequest $request): array {
         return [
             ModifyNumberAction::make(),
-            QueueableModifyNumberAction::make()
+            QueueableModifyNumberAction::make(),
+            WithMetaModifyNumberAction::make()
         ];
     }
 }

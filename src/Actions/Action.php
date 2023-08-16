@@ -6,12 +6,13 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\Makeable;
+use Lomkit\Rest\Concerns\Metable;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 class Action implements \JsonSerializable
 {
-    use Makeable;
+    use Makeable, Metable;
 
     /**
      * The name of the connection the job should be sent to.
@@ -73,7 +74,8 @@ class Action implements \JsonSerializable
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
-            'fields' => $this->fields($request)
+            'fields' => $this->fields($request),
+            'meta' => $this->meta()
         ];
     }
 
