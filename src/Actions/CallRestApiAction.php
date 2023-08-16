@@ -60,17 +60,6 @@ class CallRestApiAction
     }
 
     /**
-     * Call the failed method on the job instance.
-     *
-     * @param  \Exception  $e
-     * @return void
-     */
-    public function failed($e)
-    {
-        $this->action->failed($this->fields, $this->models, $e);
-    }
-
-    /**
      * Get the display name for the queued job.
      *
      * @return string

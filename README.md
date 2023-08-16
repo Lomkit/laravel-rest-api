@@ -90,6 +90,8 @@ TODO
 
 - Custom directives (Filters / sorting)
 - Automatic documentation with extension possible
+- Alias for includes / aggregates
+- 
 
 ## Roadmap
 
