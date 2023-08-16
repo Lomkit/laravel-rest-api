@@ -25,6 +25,7 @@ use Lomkit\Rest\Tests\Support\Rest\Actions\BatchableModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\QueueableModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\WithMetaModifyNumberAction;
+use Lomkit\Rest\Tests\Support\Rest\Instructions\NumberedInstruction;
 
 class ModelResource extends Resource
 {
@@ -129,6 +130,17 @@ class ModelResource extends Resource
             QueueableModifyNumberAction::make(),
             WithMetaModifyNumberAction::make(),
             BatchableModifyNumberAction::make()
+        ];
+    }
+
+    /**
+     * The instructions that should be linked
+     * @param RestRequest $request
+     * @return array
+     */
+    public function instructions(RestRequest $request): array {
+        return [
+            NumberedInstruction::make()
         ];
     }
 }

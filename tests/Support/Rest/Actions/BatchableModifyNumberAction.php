@@ -12,48 +12,8 @@ use Lomkit\Rest\Contracts\BatchableAction;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Throwable;
 
-class BatchableModifyNumberAction extends Action implements ShouldQueue, BatchableAction
+class BatchableModifyNumberAction extends ModifyNumberAction implements ShouldQueue, BatchableAction
 {
-    public function __construct()
-    {
-        $this->withMeta([
-            'color' => '#FFFFFF'
-        ]);
-    }
-
-    /**
-     * Perform the action on the given models.
-     *
-     * @param  array  $fields
-     * @param  \Illuminate\Support\Collection  $models
-     * @return mixed
-     */
-    public function handle(array $fields, Collection $models)
-    {
-        foreach ($models as $model) {
-            /** @var Model $model */
-            $model->forceFill(
-                ['number' => $fields['number'] ?? 100000000]
-            )
-                ->save();
-        }
-    }
-
-    /**
-     * Called in an action failed.
-     *
-     * @param  RestRequest $request
-     * @return array
-     */
-    public function fields(RestRequest $request)
-    {
-        return [
-            'number' => [
-                'min: 100'
-            ]
-        ];
-    }
-
     /**
      * Register callbacks on the pending batch.
      *

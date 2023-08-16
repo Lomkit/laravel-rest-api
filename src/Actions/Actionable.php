@@ -26,6 +26,7 @@ trait Actionable
         return collect($this->actions($request))
             ->sole(function (Action $action) use ($actionKey) {
                 return $action->uriKey() === $actionKey;
-            });
+            })
+            ->resource($this);
     }
 }

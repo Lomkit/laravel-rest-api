@@ -88,8 +88,8 @@ TODO
 
 ## Roadmap for the end of bêta (Estimated delivery October 2023)
 
-- Custom directives (Filters / sorting)
 - Automatic documentation with extension possible
+- Refactor actions listing to --> Get resource informations (fields exposed / actions / etc ? regroupe all those possibilities)
 
 ## Roadmap
 

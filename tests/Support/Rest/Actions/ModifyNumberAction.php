@@ -35,11 +35,12 @@ class ModifyNumberAction extends Action
      * @param  RestRequest $request
      * @return array
      */
-    public function fields(RestRequest $request)
+    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [
             'number' => [
-                'min: 100'
+                'numeric',
+                'min:100'
             ]
         ];
     }

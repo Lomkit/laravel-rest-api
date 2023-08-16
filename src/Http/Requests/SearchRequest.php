@@ -10,6 +10,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Rules\AggregateField;
 use Lomkit\Rest\Rules\AggregateFilterable;
 use Lomkit\Rest\Rules\Includable;
+use Lomkit\Rest\Rules\Instruction;
 
 class SearchRequest extends RestRequest
 {
@@ -36,6 +37,8 @@ class SearchRequest extends RestRequest
             $this->selectsRules($resource, $prefix.'selects'),
             [$prefix.'aggregates' => ['sometimes', 'array']],
             $this->aggregatesRules($resource, $prefix.'aggregates'),
+            [$prefix.'instructions' => ['sometimes', 'array']],
+            $this->instructionsRules($resource, $prefix.'instructions'),
             [
                 'limit' => ['sometimes', 'integer', Rule::in($resource->exposedLimits($this))],
                 'page' => ['sometimes', 'integer']
@@ -90,6 +93,30 @@ class SearchRequest extends RestRequest
             $prefix.'.*.parameters' => [
                 'sometimes',
                 'array'
+            ]
+        ];
+
+        return $rules;
+    }
+
+    protected function instructionsRules(Resource $resource, string $prefix) {
+        $rules = [
+            $prefix.'.*.name' => [
+                Rule::in(
+                    collect($resource->instructions($this))
+                        ->map(function ($instruction) { return $instruction->uriKey(); })
+                        ->toArray()
+                ),
+                'required',
+                'string'
+            ],
+            $prefix.'.*.fields' => [
+                'sometimes',
+                'array'
+            ],
+            $prefix.'.*' => [
+                Instruction::make()
+                    ->resource($resource)
             ]
         ];
 

@@ -36,8 +36,8 @@ class ActionsOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        $response->assertJson(
-            ['data' => collect(new ModelResource)->each->jsonSerialize()->toArray()]
+        $response->assertExactJson(
+            ['data' => collect((new ModelResource)->actions(app(RestRequest::class)))->map->jsonSerialize()->toArray()]
         );
     }
 
@@ -112,14 +112,34 @@ class ActionsOperationsTest extends TestCase
             '/api/models/actions/modify-number',
             [
                 'fields' => [
-                    'unauthorized_field' => 100000001
+                    ['name' => 'unauthorized_field', 'value' => 100000001]
                 ]
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['fields']]);
+        $response->assertJsonStructure(['message', 'errors' => ['fields.0.name']]);
+    }
+
+    public function test_operate_action_with_unauthorized_field_validation(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/modify-number',
+            [
+                'fields' => [
+                    ['name' => 'number', 'value' => 1]
+                ]
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['fields.0']]);
     }
 
     public function test_operate_action_with_fields(): void
@@ -132,7 +152,7 @@ class ActionsOperationsTest extends TestCase
             '/api/models/actions/modify-number',
             [
                 'fields' => [
-                    'number' => 100000001
+                    ['name' => 'number', 'value' => 100000001]
                 ]
             ],
             ['Accept' => 'application/json']
@@ -159,7 +179,7 @@ class ActionsOperationsTest extends TestCase
             '/api/models/actions/modify-number',
             [
                 'fields' => [
-                    'number' => 100000001
+                    ['name' => 'number', 'value' => 100000001]
                 ]
             ],
             ['Accept' => 'application/json']
