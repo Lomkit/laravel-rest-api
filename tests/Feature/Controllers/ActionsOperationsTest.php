@@ -2,7 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Controllers;
 
+use Illuminate\Bus\PendingBatch;
 use Illuminate\Queue\Queue;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Actions\CallRestApiAction;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -33,7 +35,7 @@ class ActionsOperationsTest extends TestCase
             '/api/models/actions',
             ['Accept' => 'application/json']
         );
-        
+
         $response->assertJson(
             ['data' => collect(new ModelResource)->each->jsonSerialize()->toArray()]
         );
@@ -248,5 +250,26 @@ class ActionsOperationsTest extends TestCase
             1,
             Model::where('number', 100000000)->count()
         );
+    }
+
+    public function test_operate_batchable_action(): void
+    {
+        ModelFactory::new()->count(150)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        Bus::fake();
+
+        $response = $this->post(
+            '/api/models/actions/batchable-modify-number',
+            [],
+            ['Accept' => 'application/json']
+        );
+
+
+        Bus::assertBatched(function (PendingBatch $batch) {
+            return $batch->name == 'batchable-modify-number' &&
+                $batch->jobs->count() === 2;
+        });
     }
 }

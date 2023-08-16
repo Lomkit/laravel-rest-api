@@ -21,6 +21,7 @@ use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
+use Lomkit\Rest\Tests\Support\Rest\Actions\BatchableModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\QueueableModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\WithMetaModifyNumberAction;
@@ -126,7 +127,8 @@ class ModelResource extends Resource
         return [
             ModifyNumberAction::make(),
             QueueableModifyNumberAction::make(),
-            WithMetaModifyNumberAction::make()
+            WithMetaModifyNumberAction::make(),
+            BatchableModifyNumberAction::make()
         ];
     }
 }

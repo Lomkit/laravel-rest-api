@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
+use Lomkit\Rest\Contracts\BatchableAction;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -35,6 +36,12 @@ class DispatchAction
      */
     protected $fields;
 
+    /**
+     * The pending batch instance.
+     *
+     * @var \Illuminate\Bus\PendingBatch|null
+     */
+    protected $batchJob;
 
     /**
      * Create a new action dispatcher instance.
@@ -44,11 +51,38 @@ class DispatchAction
      * @param  array  $fields
      * @return void
      */
-    public function __construct(OperateRequest $request, Action $action, array $fields)
+    public function __construct(OperateRequest $request, \Lomkit\Rest\Actions\Action $action, array $fields)
     {
         $this->request = $request;
         $this->action = $action;
         $this->fields = $fields;
+
+        if ($action instanceof BatchableAction) {
+            $this->configureBatchJob($action, $fields);
+        }
+    }
+
+    /**
+     * Configure the batch job for the action.
+     *
+     * @param  \Lomkit\Rest\Actions\Action  $action
+     * @param  array  $fields
+     * @return void
+     */
+    protected function configureBatchJob(\Lomkit\Rest\Actions\Action $action, array $fields)
+    {
+        $batch = Bus::batch([]);
+        $batch->name($action->uriKey());
+
+        if (! is_null($connection = $this->connection())) {
+            $batch->onConnection($connection);
+        }
+        if (! is_null($queue = $this->queue())) {
+            $batch->onQueue($queue);
+        }
+
+        $action->withBatch($fields, $batch);
+        $this->batchJob = $batch;
     }
 
     /**
@@ -76,6 +110,10 @@ class DispatchAction
                     );
                 }
             );
+
+        if (! is_null($this->batchJob)) {
+            $this->batchJob->dispatch();
+        }
 
         return $searchQuery->count();
     }
@@ -129,13 +167,15 @@ class DispatchAction
      */
     protected function addQueuedActionJob( Collection $models)
     {
-        $job = new CallRestApiAction(
-            $this->action, $this->fields, $models
-        );
+        $job = new CallRestApiAction($this->action, $this->fields, $models);
 
-        Queue::connection($this->connection())->pushOn(
-            $this->queue(), $job
-        );
+        if ($this->action instanceof BatchableAction) {
+            $this->batchJob->add([$job]);
+        } else {
+            Queue::connection($this->connection())->pushOn(
+                $this->queue(), $job
+            );
+        }
 
         return $this;
     }

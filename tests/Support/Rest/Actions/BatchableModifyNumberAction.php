@@ -2,14 +2,24 @@
 
 namespace Lomkit\Rest\Tests\Support\Rest\Actions;
 
+use Illuminate\Bus\Batch;
+use Illuminate\Bus\PendingBatch;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Contracts\BatchableAction;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Throwable;
 
-class ModifyNumberAction extends Action
+class BatchableModifyNumberAction extends Action implements ShouldQueue, BatchableAction
 {
-    public $queue = 'custom-queue';
+    public function __construct()
+    {
+        $this->withMeta([
+            'color' => '#FFFFFF'
+        ]);
+    }
 
     /**
      * Perform the action on the given models.
@@ -44,8 +54,21 @@ class ModifyNumberAction extends Action
         ];
     }
 
-    public function failed(array $fields, Collection $models, $exception)
+    /**
+     * Register callbacks on the pending batch.
+     *
+     * @param  array  $fields
+     * @param  \Illuminate\Bus\PendingBatch  $batch
+     * @return void
+     */
+    public function withBatch(array $fields, PendingBatch $batch)
     {
-        dump('FAILED');
+        $batch->then(function (Batch $batch) {
+            // ...
+        })->catch(function (Batch $batch, Throwable $e) {
+            // ...
+        })->finally(function (Batch $batch) {
+            // ...
+        });
     }
 }

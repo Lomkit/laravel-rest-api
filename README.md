@@ -93,5 +93,6 @@ TODO
 
 ## Roadmap
 
-- Metrics
+- Metrics support
 - Refactor the response class
+- Plain text search using Laravel Scout

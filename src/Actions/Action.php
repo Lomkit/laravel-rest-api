@@ -2,7 +2,12 @@
 
 namespace Lomkit\Rest\Actions;
 
+use Illuminate\Bus\Batchable;
+use Illuminate\Bus\PendingBatch;
 use Illuminate\Bus\Queueable;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\Makeable;
@@ -12,7 +17,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 class Action implements \JsonSerializable
 {
-    use Makeable, Metable;
+    use Makeable, Metable, Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * The name of the connection the job should be sent to.
@@ -113,6 +118,18 @@ class Action implements \JsonSerializable
     public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request)
     {
         return [];
+    }
+
+    /**
+     * Register callbacks on the pending batch.
+     *
+     * @param  array  $fields
+     * @param  \Illuminate\Bus\PendingBatch  $batch
+     * @return void
+     */
+    public function withBatch(array $fields, PendingBatch $batch)
+    {
+        //
     }
 
     /**

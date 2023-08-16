@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Actions;
 
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -10,7 +11,7 @@ use Illuminate\Support\Collection;
 
 class CallRestApiAction
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * Models collection.
@@ -55,7 +56,7 @@ class CallRestApiAction
      */
     public function handle()
     {
-        $this->action->handle($this->fields, $this->models);
+        $this->action->setJob($this->job)->handle($this->fields, $this->models);
     }
 
     /**
