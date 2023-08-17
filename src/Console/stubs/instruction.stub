@@ -2,26 +2,24 @@
 
 namespace {{ namespace }};
 
-use Lomkit\Rest\Actions\Action as RestAction;
+use Lomkit\Rest\Instructions\Instruction as RestInstruction;
 
-class {{ class }} extends RestAction
+class {{ class }} extends RestInstruction
 {
     /**
          * Perform the action on the given models.
          *
          * @param  array  $fields
-         * @param  \Illuminate\Support\Collection  $models
-         * @return mixed
+         * @param  \Illuminate\Database\Eloquent\Builder $query
+         * @return void
          */
-        public function handle(array $fields, \Illuminate\Support\Collection $models)
+        public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query)
         {
-            foreach ($models as $model) {
-                // ...
-            }
+            // ...
         }
 
         /**
-         * The action fields.
+         * The instruction fields.
          *
          * @param  \Lomkit\Rest\Http\Requests\RestRequest $request
          * @return array
