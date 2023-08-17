@@ -28,7 +28,7 @@ class Instruction
      */
     public function name()
     {
-        return $this->name ?: Str::of(class_basename(get_class($this)))->beforeLast('Instruction')->snake(' ')->title();
+        return $this->name ?: Str::of(class_basename(get_class($this)))->beforeLast('Instruction')->snake(' ')->title()->toString();
     }
 
     /**

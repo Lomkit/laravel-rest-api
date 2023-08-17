@@ -14,7 +14,7 @@ class ResourceRegistrar extends BaseResourceRegistrar
      *
      * @var string[]
      */
-    protected $resourceDefaults = ['search', 'mutate', 'actions', 'operate', 'destroy', 'restore', 'forceDelete'];
+    protected $resourceDefaults = ['detail', 'search', 'mutate', 'operate', 'destroy', 'restore', 'forceDelete'];
 
     /**
      * The verbs used in the resource URIs.
@@ -28,6 +28,26 @@ class ResourceRegistrar extends BaseResourceRegistrar
         'restore' => 'restore',
         'forceDelete' => 'force',
     ];
+
+    /**
+     * Add the detail method for a resourceful route.
+     *
+     * @param  string  $name
+     * @param  string  $base
+     * @param  string $controller
+     * @param  array  $options
+     * @return \Illuminate\Routing\Route
+     */
+    protected function addResourceDetail($name, $base, $controller, $options)
+    {
+        $uri = $this->getResourceUri($name);
+
+        unset($options['missing']);
+
+        $action = $this->getResourceAction($name, $controller, 'detail', $options);
+
+        return $this->router->get($uri, $action);
+    }
 
     /**
      * Add the search method for a resourceful route.
@@ -67,26 +87,6 @@ class ResourceRegistrar extends BaseResourceRegistrar
         $action = $this->getResourceAction($name, $controller, 'mutate', $options);
 
         return $this->router->post($uri, $action);
-    }
-
-    /**
-     * Add the actions method for a resourceful route.
-     *
-     * @param  string  $name
-     * @param  string  $base
-     * @param  string $controller
-     * @param  array  $options
-     * @return \Illuminate\Routing\Route
-     */
-    protected function addResourceActions($name, $base, $controller, $options)
-    {
-        $uri = $this->getResourceUri($name).'/'.static::$verbs['actions'];
-
-        unset($options['missing']);
-
-        $action = $this->getResourceAction($name, $controller, 'actions', $options);
-
-        return $this->router->get($uri, $action);
     }
 
     /**

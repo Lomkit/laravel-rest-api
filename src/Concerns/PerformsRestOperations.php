@@ -10,6 +10,7 @@ use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\ActionsRequest;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
+use Lomkit\Rest\Http\Requests\DetailRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
@@ -19,6 +20,16 @@ use Lomkit\Rest\Http\Requests\MutateRequest;
 
 trait PerformsRestOperations
 {
+    public function detail(DetailRequest $request) {
+        $request->resource($resource = static::newResource());
+
+        $resource->authorizeTo('viewAny', $resource::$model);
+
+        return [
+            'data' => $resource->jsonSerialize()
+        ];
+    }
+
     public function search(SearchRequest $request) {
         $request->resource($resource = static::newResource());
 
@@ -46,15 +57,6 @@ trait PerformsRestOperations
         DB::commit();
 
         return $operations;
-    }
-
-    public function actions(ActionsRequest $request) {
-        $request->resource($resource = static::newResource());
-
-        return response([
-            'data' =>
-                collect($resource->actions($request))->each->jsonSerialize()
-        ]);
     }
 
     public function operate(OperateRequest $request, $action) {
