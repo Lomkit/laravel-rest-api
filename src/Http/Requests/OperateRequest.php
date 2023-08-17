@@ -19,6 +19,7 @@ use Lomkit\Rest\Relations\HasManyThrough;
 use Lomkit\Rest\Relations\MorphedByMany;
 use Lomkit\Rest\Relations\MorphMany;
 use Lomkit\Rest\Relations\MorphToMany;
+use Lomkit\Rest\Rules\ActionField;
 use Lomkit\Rest\Rules\CustomRulable;
 use Lomkit\Rest\Rules\Includable;
 use Lomkit\Rest\Rules\RequiredRelation;
@@ -42,8 +43,16 @@ class OperateRequest extends RestRequest
         return array_merge(
             app(SearchRequest::class)->searchRules($resource, 'search'),
             [
+                'fields.*.name' => [
+                    Rule::in(array_keys($operatedAction->fields($this)))
+                ],
                 'fields' => [
-                    'array:'.implode(',', array_keys($operatedAction->fields($this)))
+                    'sometimes',
+                    'array'
+                ],
+                'fields.*' => [
+                    ActionField::make()
+                        ->action($operatedAction)
                 ]
             ]
         );

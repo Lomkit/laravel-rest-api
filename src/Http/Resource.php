@@ -12,6 +12,7 @@ use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
 use Lomkit\Rest\Concerns\Resource\Rulable;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Instructions\Instructionable;
 
 class Resource
 {
@@ -22,7 +23,8 @@ class Resource
         Rulable,
         ConfiguresRestParameters,
         Authorizable,
-        Actionable;
+        Actionable,
+        Instructionable;
 
     /**
      * The model the entry corresponds to.

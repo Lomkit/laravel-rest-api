@@ -10,14 +10,17 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Concerns\Fieldable;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Metable;
+use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Resource;
 
 class Action implements \JsonSerializable
 {
-    use Makeable, Metable, Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Makeable, Metable, Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Fieldable, Resourcable;
 
     /**
      * The name of the connection the job should be sent to.
@@ -94,17 +97,6 @@ class Action implements \JsonSerializable
     public function handle(array $fields, \Illuminate\Support\Collection $models)
     {
         //
-    }
-
-    /**
-     * Called in an action failed.
-     *
-     * @param  \Lomkit\Rest\Http\Requests\RestRequest $request
-     * @return array
-     */
-    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request)
-    {
-        return [];
     }
 
     /**

@@ -39,6 +39,10 @@ trait PerformSearch
             $this->applyScopes($parameters['scopes']);
         });
 
+        $this->when(isset($parameters['instructions']), function () use ($parameters) {
+            $this->applyInstructions($parameters['instructions']);
+        });
+
         $this->when(isset($parameters['includes']), function () use ($parameters) {
             $this->applyIncludes($parameters['includes']);
         });
@@ -102,6 +106,20 @@ trait PerformSearch
     public function applyScopes($scopes) {
         foreach ($scopes as $scope) {
             $this->scope($scope['name'], $scope['parameters'] ?? []);
+        }
+    }
+
+    public function instruction($name, $fields = []) {
+        return $this->resource->instruction(app(RestRequest::class), $name)
+            ->handle(
+                collect($fields)->mapWithKeys(function ($field) {return [ $field['name'] => $field['value']]; })->toArray(),
+                $this->queryBuilder
+            );
+    }
+
+    public function applyInstructions($instructions) {
+        foreach ($instructions as $instruction) {
+            $this->instruction($instruction['name'], $instruction['fields'] ?? []);
         }
     }
 

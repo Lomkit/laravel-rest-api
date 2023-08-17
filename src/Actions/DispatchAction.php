@@ -152,7 +152,10 @@ class DispatchAction
     protected function dispatchSynchronouslyForCollection(Collection $models)
     {
         return DB::transaction(function () use ($models) {
-            return $this->action->handle($this->fields, $models);
+            return $this->action->handle(
+                collect($this->fields)->mapWithKeys(function ($field) {return [ $field['name'] => $field['value']]; })->toArray(),
+                $models
+            );
         });
     }
 

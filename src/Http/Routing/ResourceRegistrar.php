@@ -90,7 +90,7 @@ class ResourceRegistrar extends BaseResourceRegistrar
     }
 
     /**
-     * Add the actions method for a resourceful route.
+     * Add the operate method for a resourceful route.
      *
      * @param  string  $name
      * @param  string  $base
