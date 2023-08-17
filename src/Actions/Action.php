@@ -100,19 +100,6 @@ class Action implements \JsonSerializable
     }
 
     /**
-     * Called in an action failed.
-     *
-     * @param  \Exception $exception
-     * @param  array  $fields
-     * @param  \Illuminate\Support\Collection  $models
-     * @return mixed
-     */
-    public function failed(array $fields, Collection $models, $exception)
-    {
-        //
-    }
-
-    /**
      * Register callbacks on the pending batch.
      *
      * @param  array  $fields

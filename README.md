@@ -6,7 +6,7 @@ Laravel Rest Api is an elegant way to expose your app through an API, it takes f
 
 ## Requirements
 
-PHP 8.0+ and Laravel 8.0+
+PHP 8.1+ and Laravel 8.0+
 
 # BETA
 Please note that this package is under beta and is not recommended to use for production environment for now. End of beta should be by October 2023.
@@ -90,6 +90,7 @@ TODO
 
 - Automatic documentation with extension possible
 - Refactor actions listing to --> Get resource informations (fields exposed / actions / etc ? regroupe all those possibilities)
+- Alias for includes / aggregates
 
 ## Roadmap
 

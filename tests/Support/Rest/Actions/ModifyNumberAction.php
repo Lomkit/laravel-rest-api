@@ -44,9 +44,4 @@ class ModifyNumberAction extends Action
             ]
         ];
     }
-
-    public function failed(array $fields, Collection $models, $exception)
-    {
-        dump('FAILED');
-    }
 }
