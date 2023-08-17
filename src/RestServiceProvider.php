@@ -4,6 +4,7 @@ namespace Lomkit\Rest;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Console\Commands\ActionCommand;
 use Lomkit\Rest\Console\Commands\BaseControllerCommand;
 use Lomkit\Rest\Console\Commands\BaseResourceCommand;
 use Lomkit\Rest\Console\Commands\ControllerCommand;
@@ -53,7 +54,8 @@ class RestServiceProvider extends ServiceProvider{
                 BaseResourceCommand::class,
                 ResourceCommand::class,
                 ResponseCommand::class,
-                QuickStartCommand::class
+                QuickStartCommand::class,
+                ActionCommand::class
             ]);
         }
     }

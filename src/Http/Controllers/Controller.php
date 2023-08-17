@@ -34,7 +34,6 @@ abstract class Controller extends \Illuminate\Routing\Controller
      */
     public static function newResource(): Resource
     {
-        /** @var Resource $resource */
         $resource = static::$resource;
 
         return new $resource;

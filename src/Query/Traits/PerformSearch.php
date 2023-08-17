@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Query\Traits;
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;

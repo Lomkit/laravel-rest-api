@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Http;
 
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Actions\Actionable;
 use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
 use Lomkit\Rest\Concerns\PerformsQueries;
@@ -20,7 +21,8 @@ class Resource
         Paginable,
         Rulable,
         ConfiguresRestParameters,
-        Authorizable;
+        Authorizable,
+        Actionable;
 
     /**
      * The model the entry corresponds to.

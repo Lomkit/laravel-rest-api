@@ -84,12 +84,17 @@ TODO
 
 ## Contributing
 
-
 TODO
 
 ## Roadmap for the end of bêta (Estimated delivery October 2023)
 
 - Custom directives (Filters / sorting)
-- Actions / Metrics
 - Automatic documentation with extension possible
+- Alias for includes / aggregates
+- 
+
+## Roadmap
+
+- Metrics support
 - Refactor the response class
+- Plain text search using Laravel Scout
