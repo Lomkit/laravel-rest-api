@@ -8,6 +8,7 @@ use Lomkit\Rest\Console\Commands\ActionCommand;
 use Lomkit\Rest\Console\Commands\BaseControllerCommand;
 use Lomkit\Rest\Console\Commands\BaseResourceCommand;
 use Lomkit\Rest\Console\Commands\ControllerCommand;
+use Lomkit\Rest\Console\Commands\InstructionCommand;
 use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceCommand;
 use Lomkit\Rest\Console\Commands\ResponseCommand;
@@ -55,7 +56,8 @@ class RestServiceProvider extends ServiceProvider{
                 ResourceCommand::class,
                 ResponseCommand::class,
                 QuickStartCommand::class,
-                ActionCommand::class
+                ActionCommand::class,
+                InstructionCommand::class
             ]);
         }
     }

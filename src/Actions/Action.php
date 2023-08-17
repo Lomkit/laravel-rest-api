@@ -57,7 +57,7 @@ class Action implements \JsonSerializable
      */
     public function name()
     {
-        return $this->name ?: Str::of(class_basename(get_class($this)))->beforeLast('Action')->snake(' ')->title();
+        return $this->name ?: Str::of(class_basename(get_class($this)))->beforeLast('Action')->snake(' ')->title()->toString();
     }
 
     /**

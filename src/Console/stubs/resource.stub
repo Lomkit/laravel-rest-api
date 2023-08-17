@@ -67,4 +67,13 @@ class {{ class }} extends RestResource
     public function actions(RestRequest $request): array {
         return [];
     }
+
+    /**
+     * The instructions that should be linked
+     * @param RestRequest $request
+     * @return array
+     */
+    public function instructions(RestRequest $request): array {
+        return [];
+    }
 }

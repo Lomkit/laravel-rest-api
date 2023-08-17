@@ -27,20 +27,6 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class ActionsOperationsTest extends TestCase
 {
-    public function test_getting_actions(): void
-    {
-        ModelFactory::new()->count(2)->create();
-
-        $response = $this->get(
-            '/api/models/actions',
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertExactJson(
-            ['data' => collect((new ModelResource)->actions(app(RestRequest::class)))->map->jsonSerialize()->toArray()]
-        );
-    }
-
     public function test_operate_action(): void
     {
         ModelFactory::new()->count(2)->create();

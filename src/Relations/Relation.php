@@ -14,11 +14,18 @@ use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\Mutates;
 use Lomkit\Rest\Rules\RequiredRelation;
 
-class Relation
+class Relation implements \JsonSerializable
 {
     use Makeable, Mutates, Constrained;
     public string $relation;
     protected array $types;
+
+    /**
+     * The displayable name of the relation.
+     *
+     * @var string
+     */
+    public $name;
 
     protected Resource $fromResource;
 
@@ -26,6 +33,16 @@ class Relation
     {
         $this->relation = $relation;
         $this->types = [$type];
+    }
+
+    /**
+     * Get the name of the relation.
+     *
+     * @return string
+     */
+    public function name()
+    {
+        return $this->name ?: (new \ReflectionClass($this))->getShortName();
     }
 
     public function filter(Builder $query, $relation, $operator, $value, $boolean = 'and', Closure $callback = null)
@@ -89,5 +106,19 @@ class Relation
         }
 
         return $rules;
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        $request = app(RestRequest::class);
+
+        return [
+            'resources' => $this->types,
+            'relation' => $this->relation,
+            'constraints' => [
+                'requiredOnCreation' => $this->isRequiredOnCreation($request)
+            ],
+            'name' => $this->name()
+        ];
     }
 }
