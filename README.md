@@ -73,6 +73,14 @@ Here is a quick look at what you can do using API search method:
             ]
         },
     ],
+    "instructions": [
+      {
+        "name": "odd-even-id",
+        "fields": [
+          { "name": "type", "value": "odd" }
+        ]
+      }
+    ],
     "page": 2,
     "limit": 10
 }
