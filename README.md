@@ -97,11 +97,11 @@ TODO
 ## Roadmap for the end of bêta (Estimated delivery October 2023)
 
 - Automatic documentation with extension possible
-- Refactor actions listing to --> Get resource informations (fields exposed / actions / etc ? regroupe all those possibilities)
-- Alias for includes / aggregates
+- Add tests for all commands !!!!
 
 ## Roadmap
 
 - Metrics support
 - Refactor the response class
 - Plain text search using Laravel Scout
+- Alias for includes / aggregates
