@@ -65,4 +65,9 @@ class Server extends Schema
             'variables' => collect($this->variables())->map->jsonSerialize()->toArray()
         ];
     }
+
+    public function generate(): Server
+    {
+        return $this;
+    }
 }

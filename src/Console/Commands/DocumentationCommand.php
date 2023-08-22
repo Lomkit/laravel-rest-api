@@ -34,7 +34,8 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
 
     public function handle()
     {
-        $openApi = $this->generateOpenApiSchema();
+        $openApi = (new OpenAPI)
+            ->generate();
 
         $path = $this->getPath('open-api');
 
@@ -55,51 +56,6 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
     protected function getPath($name)
     {
         return storage_path('app/documentation/'.$name.'.json');
-    }
-
-
-
-    protected function generateOpenApiSchema(): OpenAPI
-    {
-        return (new OpenAPI)
-            ->withInfo(
-                $this->generateInfoSchema()
-            )
-            ->withPaths([])
-            ->withSecurity([])
-            ->withServers([]);
-    }
-
-    protected function generateInfoSchema(): Info
-    {
-        return (new Info)
-            ->withTitle(config('rest.documentation.info.title'))
-            ->withSummary(config('rest.documentation.info.summary'))
-            ->withDescription(config('rest.documentation.info.description'))
-            ->withTermsOfService(config('rest.documentation.info.termsOfService'))
-            ->withContact(
-                $this->generateContactSchema()
-            )
-            ->withLicense(
-                $this->generateLicense()
-            )
-            ->withVersion(config('rest.documentation.info.version'));
-    }
-
-    protected function generateContactSchema(): Contact
-    {
-        return (new Contact)
-            ->withName(config('rest.documentation.info.contact.name'))
-            ->withEmail(config('rest.documentation.info.contact.email'))
-            ->withUrl(config('rest.documentation.info.contact.url'));
-    }
-
-    protected function generateLicense(): License
-    {
-        return (new License)
-            ->withUrl(config('rest.documentation.info.license.url'))
-            ->withName(config('rest.documentation.info.license.name'))
-            ->withIdentifier(config('rest.documentation.info.license.identifier'));
     }
 
     protected function getStub()

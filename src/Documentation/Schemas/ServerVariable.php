@@ -63,4 +63,9 @@ class ServerVariable extends Schema
             'description' => $this->description()
         ];
     }
+
+    public function generate(): ServerVariable
+    {
+        return $this;
+    }
 }

@@ -2,6 +2,9 @@
 
 namespace Lomkit\Rest\Documentation\Schemas;
 
+use Illuminate\Support\Str;
+use Lomkit\Rest\Http\Controllers\Controller;
+
 class Operation extends Schema
 {
     /**
@@ -23,6 +26,12 @@ class Operation extends Schema
      * @var string
      */
     protected string $description;
+
+    /**
+     * The request body applicable for this operation.
+     * @var RequestBody
+     */
+    protected RequestBody $requestBody;
 
     /**
      * The list of possible responses as they are returned from executing this operation.
@@ -76,11 +85,78 @@ class Operation extends Schema
 
     public function jsonSerialize(): mixed
     {
-        return [
-            'tags' => $this->tags(),
-            'summary' => $this->summary(),
-            'description' => $this->description(),
-            'responses' => $this->responses()->jsonSerialize()
-        ];
+        return array_merge(
+            [
+                'tags' => $this->tags(),
+                'summary' => $this->summary(),
+                'description' => $this->description(),
+                'responses' => $this->responses()->jsonSerialize()
+            ],
+            isset($this->requestBody) ? ['requestBody' => $this->requestBody()->jsonSerialize()] : []
+        );
+    }
+
+    public function generate(): Schema
+    {
+        return $this;
+    }
+
+    public function generateDetail(Controller $controller): Operation
+    {
+        return $this
+            ->withSummary('Get the resource detail')
+            ->withDescription('Get every detail about the resource according to the current user connected')
+            ->withResponses(
+                (new Responses)->generateDetail($controller)
+            )
+            ->withTags([
+                Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+            ])
+            ->generate();
+    }
+
+    public function generateSearch(Controller $controller): Operation
+    {
+        return $this
+            ->withSummary('Perform a search request')
+            ->withDescription('Crunch the Api\'s data with multiple attributes')
+            ->withResponses(
+                (new Responses)->generateSearch($controller)
+            )
+            ->withTags([
+                Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+            ])
+            ->withRequestBody(
+                (new RequestBody)->generateSearch($controller)
+            )
+            ->generate();
+    }
+
+    public function generateMutate(Controller $controller): Operation
+    {
+        return $this
+            ->withSummary('Perform a mutate request')
+            ->withDescription('Create / Modify the database data with multiple options')
+            ->withResponses(
+                (new Responses)->generateMutate($controller)
+            )
+            ->withTags([
+                Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+            ])
+            ->withRequestBody(
+                (new RequestBody)->generateMutate($controller)
+            )
+            ->generate();
+    }
+
+    public function withRequestBody(RequestBody $requestBody): Operation
+    {
+        $this->requestBody = $requestBody;
+        return $this;
+    }
+
+    public function requestBody(): RequestBody
+    {
+        return $this->requestBody;
     }
 }

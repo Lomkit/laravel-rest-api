@@ -2,6 +2,11 @@
 
 namespace Lomkit\Rest\Documentation\Schemas;
 
+use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+use Lomkit\Rest\Http\Controllers\Controller;
+
 class OpenAPI extends Schema
 {
     /**
@@ -107,5 +112,49 @@ class OpenAPI extends Schema
             'servers' => collect($this->servers())->map->jsonSerialize()->toArray(),
             'security' => collect($this->security())->map->jsonSerialize()->toArray()
         ];
+    }
+
+    public function generate(): OpenAPI
+    {
+        return $this
+            ->withInfo(
+                (new Info)
+                    ->generate()
+            )
+            ->withPaths(
+                $this->generatePaths()
+            )
+            ->withSecurity([])
+            ->withServers([]);
+    }
+
+    public function generatePaths() {
+        $paths = [];
+
+        foreach (Route::getRoutes() as $route) {
+            /** @var \Illuminate\Routing\Route $route */
+
+            if (is_null($route->getName()))
+            {
+                continue;
+            }
+
+            $controller = $route->getController();
+
+            if ($controller instanceof Controller) {
+                $path = match (Str::afterLast($route->getName(), '.')) {
+                    'detail' => (new Path)->generateDetail($controller),
+                    'search' => (new Path)->generateSearch($controller),
+                    'mutate' => (new Path)->generateMutate($controller),
+                    default => null
+                };
+
+                if (!is_null($path)) {
+                    $paths['/'.$route->uri()] = $path;
+                }
+            }
+        }
+
+        return $paths;
     }
 }

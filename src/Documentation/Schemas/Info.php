@@ -137,4 +137,22 @@ class Info extends Schema
             !is_null($this->termsOfService()) ? ['termsOfService' => $this->termsOfService()] : []
         );
     }
+
+    public function generate(): Info
+    {
+        return $this
+            ->withTitle(config('rest.documentation.info.title'))
+            ->withSummary(config('rest.documentation.info.summary'))
+            ->withDescription(config('rest.documentation.info.description'))
+            ->withTermsOfService(config('rest.documentation.info.termsOfService'))
+            ->withContact(
+                (new Contact)
+                    ->generate()
+            )
+            ->withLicense(
+                (new License)
+                    ->generate()
+            )
+            ->withVersion(config('rest.documentation.info.version'));
+    }
 }

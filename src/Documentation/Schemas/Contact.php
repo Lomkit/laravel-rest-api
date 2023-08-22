@@ -63,4 +63,12 @@ class Contact extends Schema
             'email' => $this->email()
         ];
     }
+
+    public function generate(): Contact
+    {
+        return $this
+            ->withName(config('rest.documentation.info.contact.name'))
+            ->withEmail(config('rest.documentation.info.contact.email'))
+            ->withUrl(config('rest.documentation.info.contact.url'));
+    }
 }

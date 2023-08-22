@@ -36,6 +36,12 @@ class Parameter extends Schema
      */
     protected bool $deprecated;
 
+    /**
+     * Schema for the parameter
+     * @var SchemaConcrete
+     */
+    protected SchemaConcrete $schema;
+
     public function withName(string $name): Parameter
     {
         $this->name = $name;
@@ -93,12 +99,29 @@ class Parameter extends Schema
 
     public function jsonSerialize(): mixed
     {
-        return [
-            'name' => $this->name(),
-            'in' => $this->in(),
-            'description' => $this->description(),
-            'required' => $this->required(),
-            'deprecated' => $this->deprecated()
-        ];
+        return array_merge(
+            isset($this->name) ? ['name' => $this->name()] : [],
+            isset($this->in) ? ['in' => $this->in()] : [],
+            isset($this->description) ? ['description' => $this->description()] : [],
+            isset($this->required) ? ['required' => $this->required()] : [],
+            isset($this->deprecated) ? ['deprecated' => $this->deprecated()] : [],
+            isset($this->schema) ? ['schema' => $this->schema()] : [],
+        );
+    }
+
+    public function generate(): Schema
+    {
+        return $this;
+    }
+
+    public function withSchema(SchemaConcrete $schema): Parameter
+    {
+        $this->schema = $schema;
+        return $this;
+    }
+
+    public function schema(): SchemaConcrete
+    {
+        return $this->schema;
     }
 }

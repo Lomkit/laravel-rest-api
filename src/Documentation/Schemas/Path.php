@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Documentation\Schemas;
 
+use Lomkit\Rest\Http\Controllers\Controller;
+
 class Path extends Schema
 {
 
@@ -194,18 +196,55 @@ class Path extends Schema
 
     public function jsonSerialize(): mixed
     {
-        return [
-            'summary' => $this->summary(),
-            'description' => $this->description(),
-            'get' => $this->get()->jsonSerialize(),
-            'put' => $this->put()->jsonSerialize(),
-            'post' => $this->post()->jsonSerialize(),
-            'delete' => $this->delete()->jsonSerialize(),
-            'options' => $this->options()->jsonSerialize(),
-            'head' => $this->head()->jsonSerialize(),
-            'patch' => $this->patch()->jsonSerialize(),
-            'trace' => $this->trace()->jsonSerialize(),
-            'parameters' => $this->parameters()
-        ];
+        return array_merge(
+            isset($this->description) ? ['description' => $this->description()] : [],
+            isset($this->summary) ? ['summary' => $this->summary()] : [],
+            isset($this->parameters) ? ['parameters' => collect($this->parameters())->map->jsonSerialize()] : [],
+            isset($this->get) ? ['get' => $this->get()->jsonSerialize()] : [],
+            isset($this->put) ? ['put' => $this->get()->jsonSerialize()] : [],
+            isset($this->post) ? ['post' => $this->post()->jsonSerialize()] : [],
+            isset($this->delete) ? ['delete' => $this->delete()->jsonSerialize()] : [],
+            isset($this->options) ? ['options' => $this->options()->jsonSerialize()] : [],
+            isset($this->head) ? ['head' => $this->head()->jsonSerialize()] : [],
+            isset($this->patch) ? ['patch' => $this->patch()->jsonSerialize()] : [],
+            isset($this->trace) ? ['trace' => $this->trace()->jsonSerialize()] : [],
+        );
+    }
+
+    public function generate(): Path
+    {
+        return $this;
+    }
+
+    public function generateDetail(Controller $controller): Path
+    {
+        $resource = $controller::newResource();
+
+        return $this
+            ->withGet(
+                (new Operation)
+                    ->generateDetail($controller)
+            )
+            ->generate();
+    }
+
+    public function generateSearch(Controller $controller): Path
+    {
+        return $this
+            ->withPost(
+                (new Operation)
+                    ->generateSearch($controller)
+            )
+            ->generate();
+    }
+
+    public function generateMutate(Controller $controller): Path
+    {
+        return $this
+            ->withPost(
+                (new Operation)
+                    ->generateMutate($controller)
+            )
+            ->generate();
     }
 }

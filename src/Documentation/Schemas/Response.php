@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Documentation\Schemas;
 
+use Lomkit\Rest\Http\Controllers\Controller;
+
 class Response extends Schema
 {
     /**
@@ -76,11 +78,57 @@ class Response extends Schema
 
     public function jsonSerialize(): mixed
     {
-        return [
-            'description' => $this->description(),
-            'headers' => $this->headers(),
-            'content' => $this->content(),
-            'links' => $this->links()
-        ];
+        return array_merge(
+            [
+                'description' => $this->description(),
+            ],
+            !empty($this->headers) ? ['headers' => collect($this->headers())->map->jsonSerialize()->toArray()] : [],
+            !empty($this->content) ? ['content' => $this->content()] : [],
+            !empty($this->links) ? ['links' => $this->links()] : []
+        );
+    }
+
+    public function generate(): Response
+    {
+        return $this;
+    }
+
+    public function generateDetail(Controller $controller): Response
+    {
+        return $this
+            ->withDescription('')
+            ->withContent(
+                [
+                    'application/json' => (new MediaType)
+                        ->generateDetail($controller)
+                ]
+            )
+            ->generate();
+    }
+
+    public function generateSearch(Controller $controller): Response
+    {
+        return $this
+            ->withDescription('')
+            ->withContent(
+                [
+                    'application/json' => (new MediaType)
+                        ->generateSearch($controller)
+                ]
+            )
+            ->generate();
+    }
+
+    public function generateMutate(Controller $controller): Response
+    {
+        return $this
+            ->withDescription('')
+            ->withContent(
+                [
+                    'application/json' => (new MediaType)
+                        ->generateMutate($controller)
+                ]
+            )
+            ->generate();
     }
 }

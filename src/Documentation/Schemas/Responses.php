@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Documentation\Schemas;
 
+use Lomkit\Rest\Http\Controllers\Controller;
+
 class Responses extends Schema
 {
     /**
@@ -14,7 +16,7 @@ class Responses extends Schema
      * Other responses
      * @var object
      */
-    protected array $others;
+    protected array $others = [];
 
     public function withDefault(Response $default): Responses
     {
@@ -42,7 +44,42 @@ class Responses extends Schema
     {
         return array_merge(
             ['default' => $this->default()->jsonSerialize()],
-            $this->others()
+            collect($this->others())->map->jsonSerialize()->toArray()
         );
+    }
+
+    public function generate(): Responses
+    {
+        return $this;
+    }
+
+    public function generateDetail(Controller $controller): Responses
+    {
+        return $this
+            ->withDefault(
+                (new Response)
+                    ->generateDetail($controller)
+            )
+            ->generate();
+    }
+
+    public function generateSearch(Controller $controller): Responses
+    {
+        return $this
+            ->withDefault(
+                (new Response)
+                    ->generateSearch($controller)
+            )
+            ->generate();
+    }
+
+    public function generateMutate(Controller $controller): Responses
+    {
+        return $this
+            ->withDefault(
+                (new Response)
+                    ->generateMutate($controller)
+            )
+            ->generate();
     }
 }

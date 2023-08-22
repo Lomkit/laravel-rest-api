@@ -65,4 +65,12 @@ class License extends Schema
             !is_null($this->url()) ? ['url' => $this->url()] : []
         );
     }
+
+    public function generate(): License
+    {
+        return $this
+            ->withUrl(config('rest.documentation.info.license.url'))
+            ->withName(config('rest.documentation.info.license.name'))
+            ->withIdentifier(config('rest.documentation.info.license.identifier'));
+    }
 }
