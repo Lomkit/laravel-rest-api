@@ -75,7 +75,7 @@ class Parameter extends Schema
         return $this->description;
     }
 
-    public function withRequired(bool $required): Parameter
+    public function withRequired(bool $required = true): Parameter
     {
         $this->required = $required;
         return $this;

@@ -121,6 +121,17 @@ class RequestBody extends Schema
                                                 ]
                                             ]
                                         ],
+                                        'instructions' => [
+                                            [
+                                                'name' => 'odd-even-id',
+                                                'fields' => [
+                                                    [
+                                                        'name' => 'type',
+                                                        'value' => 'odd'
+                                                    ]
+                                                ]
+                                            ]
+                                        ],
                                         'page' => 2,
                                         'limit' => 10
                                     ]
@@ -165,6 +176,98 @@ class RequestBody extends Schema
                                                     ]
                                                 ]
                                             ]]
+                                    ]
+                                )
+                                ->generate()
+                        )
+                        ->generate()
+                ]
+            )
+            ->generate();
+    }
+
+    public function generateActions(Controller $controller): RequestBody
+    {
+        return $this
+            ->withContent(
+                [
+                    'application/json' => (new MediaType)
+                        ->withExample(
+                            (new Example)
+                                ->withValue(
+                                    [
+                                        'search' => [
+                                            'filters' => [
+                                                ['field' => 'has_received_welcome_notification', 'value' => false]
+                                            ]
+                                        ],
+                                        'fields' => [
+                                            ['name' => 'expires_at', 'value' => '2023-04-29']
+                                        ]
+
+                                    ]
+                                )
+                                ->generate()
+                        )
+                        ->generate()
+                ]
+            )
+            ->generate();
+    }
+
+    public function generateDestroy(Controller $controller): RequestBody
+    {
+        return $this
+            ->withContent(
+                [
+                    'application/json' => (new MediaType)
+                        ->withExample(
+                            (new Example)
+                                ->withValue(
+                                    [
+                                        'resources' => [1, 5, 6]
+                                    ]
+                                )
+                                ->generate()
+                        )
+                        ->generate()
+                ]
+            )
+            ->generate();
+    }
+
+    public function generateRestore(Controller $controller): RequestBody
+    {
+        return $this
+            ->withContent(
+                [
+                    'application/json' => (new MediaType)
+                        ->withExample(
+                            (new Example)
+                                ->withValue(
+                                    [
+                                        'resources' => [1, 5, 6]
+                                    ]
+                                )
+                                ->generate()
+                        )
+                        ->generate()
+                ]
+            )
+            ->generate();
+    }
+
+    public function generateForceDelete(Controller $controller): RequestBody
+    {
+        return $this
+            ->withContent(
+                [
+                    'application/json' => (new MediaType)
+                        ->withExample(
+                            (new Example)
+                                ->withValue(
+                                    [
+                                        'resources' => [1, 5, 6]
                                     ]
                                 )
                                 ->generate()

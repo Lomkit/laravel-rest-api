@@ -131,4 +131,56 @@ class Response extends Schema
             )
             ->generate();
     }
+
+    public function generateActions(Controller $controller): Response
+    {
+        return $this
+            ->withDescription('')
+            ->withContent(
+                [
+                    'application/json' => (new MediaType)
+                        ->generateActions($controller)
+                ]
+            )
+            ->generate();
+    }
+
+    public function generateDestroy(Controller $controller): Response
+    {
+        return $this
+            ->withDescription('')
+            ->withContent(
+                [
+                    'application/json' => (new MediaType)
+                        ->generateDestroy($controller)
+                ]
+            )
+            ->generate();
+    }
+
+    public function generateRestore(Controller $controller): Response
+    {
+        return $this
+            ->withDescription('')
+            ->withContent(
+                [
+                    'application/json' => (new MediaType)
+                        ->generateRestore($controller)
+                ]
+            )
+            ->generate();
+    }
+
+    public function generateForceDelete(Controller $controller): Response
+    {
+        return $this
+            ->withDescription('')
+            ->withContent(
+                [
+                    'application/json' => (new MediaType)
+                        ->generateForceDelete($controller)
+                ]
+            )
+            ->generate();
+    }
 }

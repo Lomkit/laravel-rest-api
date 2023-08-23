@@ -83,15 +83,24 @@ class Operation extends Schema
         return $this->responses;
     }
 
+    public function withRequestBody(RequestBody $requestBody): Operation
+    {
+        $this->requestBody = $requestBody;
+        return $this;
+    }
+
+    public function requestBody(): RequestBody
+    {
+        return $this->requestBody;
+    }
+
     public function jsonSerialize(): mixed
     {
         return array_merge(
-            [
-                'tags' => $this->tags(),
-                'summary' => $this->summary(),
-                'description' => $this->description(),
-                'responses' => $this->responses()->jsonSerialize()
-            ],
+            isset($this->tags) ? ['tags' => $this->tags()] : [],
+            isset($this->summary) ? ['summary' => $this->summary()] : [],
+            isset($this->responses) ? ['responses' => $this->responses()->jsonSerialize()] : [],
+            isset($this->description) ? ['description' => $this->description()] : [],
             isset($this->requestBody) ? ['requestBody' => $this->requestBody()->jsonSerialize()] : []
         );
     }
@@ -103,60 +112,131 @@ class Operation extends Schema
 
     public function generateDetail(Controller $controller): Operation
     {
-        return $this
-            ->withSummary('Get the resource detail')
-            ->withDescription('Get every detail about the resource according to the current user connected')
-            ->withResponses(
-                (new Responses)->generateDetail($controller)
-            )
-            ->withTags([
-                Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
-            ])
-            ->generate();
+        return $controller->generateDocumentationDetailOperation(
+            $this
+                ->withSummary('Get the resource detail')
+                ->withDescription('Get every detail about the resource according to the current user connected')
+                ->withResponses(
+                    (new Responses)->generateDetail($controller)
+                )
+                ->withTags([
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                ])
+                ->generate()
+        );
     }
 
     public function generateSearch(Controller $controller): Operation
     {
-        return $this
-            ->withSummary('Perform a search request')
-            ->withDescription('Crunch the Api\'s data with multiple attributes')
-            ->withResponses(
-                (new Responses)->generateSearch($controller)
-            )
-            ->withTags([
-                Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
-            ])
-            ->withRequestBody(
-                (new RequestBody)->generateSearch($controller)
-            )
-            ->generate();
+        return $controller->generateDocumentationSearchOperation(
+            $this
+                ->withSummary('Perform a search request')
+                ->withDescription('Crunch the Api\'s data with multiple attributes')
+                ->withResponses(
+                    (new Responses)->generateSearch($controller)
+                )
+                ->withTags([
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                ])
+                ->withRequestBody(
+                    (new RequestBody)->generateSearch($controller)
+                )
+                ->generate()
+        );
     }
 
     public function generateMutate(Controller $controller): Operation
     {
-        return $this
-            ->withSummary('Perform a mutate request')
-            ->withDescription('Create / Modify the database data with multiple options')
-            ->withResponses(
-                (new Responses)->generateMutate($controller)
-            )
-            ->withTags([
-                Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
-            ])
-            ->withRequestBody(
-                (new RequestBody)->generateMutate($controller)
-            )
-            ->generate();
+        return $controller->generateDocumentationMutateOperation(
+            $this
+                ->withSummary('Perform a mutate request')
+                ->withDescription('Create / Modify the database data with multiple options')
+                ->withResponses(
+                    (new Responses)->generateMutate($controller)
+                )
+                ->withTags([
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                ])
+                ->withRequestBody(
+                    (new RequestBody)->generateMutate($controller)
+                )
+                ->generate()
+        );
     }
 
-    public function withRequestBody(RequestBody $requestBody): Operation
+    public function generateActions(Controller $controller): Operation
     {
-        $this->requestBody = $requestBody;
-        return $this;
+        return $controller->generateDocumentationActionsOperation(
+            $this
+                ->withSummary('Perform an action request')
+                ->withDescription('Launch actions')
+                ->withResponses(
+                    (new Responses)->generateActions($controller)
+                )
+                ->withTags([
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                ])
+                ->withRequestBody(
+                    (new RequestBody)->generateActions($controller)
+                )
+                ->generate()
+        );
     }
 
-    public function requestBody(): RequestBody
+    public function generateDestroy(Controller $controller): Operation
     {
-        return $this->requestBody;
+        return $controller->generateDocumentationDestroyOperation(
+            $this
+                ->withSummary('Perform a destroy request')
+                ->withDescription('Delete database records using primary key')
+                ->withResponses(
+                    (new Responses)->generateDestroy($controller)
+                )
+                ->withTags([
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                ])
+                ->withRequestBody(
+                    (new RequestBody)->generateDestroy($controller)
+                )
+                ->generate()
+        );
+    }
+
+    public function generateRestore(Controller $controller): Operation
+    {
+        return $controller->generateDocumentationRestoreOperation(
+            $this
+                ->withSummary('Perform a restore request')
+                ->withDescription('Restore a soft deleted record')
+                ->withResponses(
+                    (new Responses)->generateRestore($controller)
+                )
+                ->withTags([
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                ])
+                ->withRequestBody(
+                    (new RequestBody)->generateRestore($controller)
+                )
+                ->generate()
+        );
+    }
+
+    public function generateForceDelete(Controller $controller): Operation
+    {
+        return $controller->generateDocumentationForceDeleteOperation(
+            $this
+                ->withSummary('Perform a force delete request')
+                ->withDescription('Force delete a record')
+                ->withResponses(
+                    (new Responses)->generateForceDelete($controller)
+                )
+                ->withTags([
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                ])
+                ->withRequestBody(
+                    (new RequestBody)->generateForceDelete($controller)
+                )
+                ->generate()
+        );
     }
 }

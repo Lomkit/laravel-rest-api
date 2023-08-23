@@ -46,9 +46,9 @@ class Server extends Schema
         return $this->description;
     }
 
-    public function withVariables(array $variables): Server
+    public function withVariable(string $key, ServerVariable $variable): Server
     {
-        $this->variables = array_merge($variables, $this->variables);
+        $this->variables[$key] = $variable;
         return $this;
     }
 
@@ -59,11 +59,11 @@ class Server extends Schema
 
     public function jsonSerialize(): mixed
     {
-        return [
-            'url' => $this->url(),
-            'description' => $this->description(),
-            'variables' => collect($this->variables())->map->jsonSerialize()->toArray()
-        ];
+        return array_merge(
+            isset($this->url) ? ['url' => $this->url()] : [],
+            isset($this->description) ? ['description' => $this->description()] : [],
+            !empty($this->variables) ? ['variables' => collect($this->variables())->map->jsonSerialize()->toArray()] : [],
+        );
     }
 
     public function generate(): Server

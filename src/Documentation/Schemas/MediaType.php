@@ -99,4 +99,74 @@ class MediaType extends Schema
             )
             ->generate();
     }
+
+    public function generateActions(Controller $controller): MediaType
+    {
+        return $this
+            ->withExample(
+                (new Example)
+                    ->withValue(
+                        [
+                            'data' => [
+                                'impacted' => 2
+                            ]
+                        ]
+                    )
+            )
+            ->generate();
+    }
+
+    public function generateDestroy(Controller $controller): MediaType
+    {
+        return $this
+            ->withExample(
+                (new Example)
+                    ->withValue(
+                        $controller::newResource()::newResponse()
+                            ->resource($controller::newResource())
+                            ->responsable(
+                                $controller::newResource()::newModel()::factory()->makeOne()
+                                    ->withoutRelations()
+                            )
+                            ->toResponse(request())
+                    )
+            )
+            ->generate();
+    }
+
+    public function generateRestore(Controller $controller): MediaType
+    {
+        return $this
+            ->withExample(
+                (new Example)
+                    ->withValue(
+                        $controller::newResource()::newResponse()
+                            ->resource($controller::newResource())
+                            ->responsable(
+                                $controller::newResource()::newModel()::factory()->makeOne()
+                                    ->withoutRelations()
+                            )
+                            ->toResponse(request())
+                    )
+            )
+            ->generate();
+    }
+
+    public function generateForceDelete(Controller $controller): MediaType
+    {
+        return $this
+            ->withExample(
+                (new Example)
+                    ->withValue(
+                        $controller::newResource()::newResponse()
+                            ->resource($controller::newResource())
+                            ->responsable(
+                                $controller::newResource()::newModel()::factory()->makeOne()
+                                    ->withoutRelations()
+                            )
+                            ->toResponse(request())
+                    )
+            )
+            ->generate();
+    }
 }

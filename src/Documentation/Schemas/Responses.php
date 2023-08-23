@@ -82,4 +82,44 @@ class Responses extends Schema
             )
             ->generate();
     }
+
+    public function generateActions(Controller $controller): Responses
+    {
+        return $this
+            ->withDefault(
+                (new Response)
+                    ->generateActions($controller)
+            )
+            ->generate();
+    }
+
+    public function generateDestroy(Controller $controller): Responses
+    {
+        return $this
+            ->withDefault(
+                (new Response)
+                    ->generateDestroy($controller)
+            )
+            ->generate();
+    }
+
+    public function generateRestore(Controller $controller): Responses
+    {
+        return $this
+            ->withDefault(
+                (new Response)
+                    ->generateRestore($controller)
+            )
+            ->generate();
+    }
+
+    public function generateForceDelete(Controller $controller): Responses
+    {
+        return $this
+            ->withDefault(
+                (new Response)
+                    ->generateForceDelete($controller)
+            )
+            ->generate();
+    }
 }

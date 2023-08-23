@@ -5,10 +5,13 @@ namespace Lomkit\Rest\Documentation\Schemas;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Controllers\Controller;
 
 class OpenAPI extends Schema
 {
+    // @TODO: generate swagger doc automatically
+
     /**
      * The version number of the OpenAPI specification
      *
@@ -105,27 +108,76 @@ class OpenAPI extends Schema
 
     public function jsonSerialize(): mixed
     {
-        return [
-            'openapi' => $this->openapi(),
-            'info' => $this->info()->jsonSerialize(),
-            'paths' => collect($this->paths())->map->jsonSerialize()->toArray(),
-            'servers' => collect($this->servers())->map->jsonSerialize()->toArray(),
-            'security' => collect($this->security())->map->jsonSerialize()->toArray()
-        ];
+        return array_merge(
+            [
+                'openapi' => $this->openapi(),
+                'info' => $this->info()->jsonSerialize(),
+                'paths' => collect($this->paths())->map->jsonSerialize()->toArray()
+            ],
+            isset($this->servers) ? ['servers' => collect($this->servers())->map->jsonSerialize()->toArray()] : [],
+            isset($this->security) ? ['security' => collect($this->security())->map->jsonSerialize()->toArray()] : []
+        );
     }
 
     public function generate(): OpenAPI
     {
-        return $this
-            ->withInfo(
-                (new Info)
-                    ->generate()
-            )
-            ->withPaths(
-                $this->generatePaths()
-            )
-            ->withSecurity([])
-            ->withServers([]);
+        $servers = [];
+
+        foreach (config('rest.documentation.servers') as $server) {
+            $serverInstance = (new Server)
+                ->withDescription($server['description'] ?? '')
+                ->withUrl($server['url']);
+
+            foreach ($server['variables'] ?? [] as $key => $variable) {
+                $serverInstance
+                    ->withVariable($key, (new ServerVariable)
+                        ->withDescription($variable['description'] ?? '')
+                        ->withDefault($variable['default'] ?? '')
+                        ->withEnum($variable['enum'] ?? []));
+            }
+
+            $servers[] = $serverInstance;
+        }
+
+        $securities = [];
+
+        foreach (config('rest.documentation.security') as $security) {
+            $securityInstance = (new SecurityScheme)
+                ->withDescription($security['description'] ?? '')
+                ->withIn($security['in'] ?? '')
+                ->withType($security['type'] ?? '')
+                ->withName($security['name'] ?? '')
+                ->withBearerFormat($security['bearerFormat'] ?? '')
+                ->withOpenIdConnectUrl($security['openIdConnectUrl'] ?? '')
+                ->withScheme($security['scheme'] ?? '')
+                ->withFlows($oauthFlows = new OauthFlows());
+
+
+            foreach ($security['flows'] ?? [] as $key => $flow) {
+                $flowInstance = (new OauthFlow)
+                    ->withScopes($flow['scopes'] ?? [])
+                    ->withAuthorizationUrl($flow['authorizationUrl'] ?? '')
+                    ->withTokenUrl($flow['tokenUrl'])
+                    ->withRefreshUrl($flow['refreshUrl']);
+
+                $oauthFlows->{'with'.Str::studly($key)}($flowInstance);
+            }
+
+            $securities[] = $securityInstance;
+        }
+
+        return Rest::applyDocumentationCallback(
+            $this
+                ->withInfo(
+                    (new Info)
+                        ->generate()
+                )
+                ->withPaths(
+                    $this->generatePaths()
+                )
+                ->withSecurity($securities)
+                ->withServers($servers)
+        );
     }
 
     public function generatePaths() {
@@ -143,9 +195,12 @@ class OpenAPI extends Schema
 
             if ($controller instanceof Controller) {
                 $path = match (Str::afterLast($route->getName(), '.')) {
-                    'detail' => (new Path)->generateDetail($controller),
+                    'detail' => (new Path)->generateDetailAndDestroy($controller),
                     'search' => (new Path)->generateSearch($controller),
                     'mutate' => (new Path)->generateMutate($controller),
+                    'operate' => (new Path)->generateActions($controller),
+                    'restore' => (new Path)->generateRestore($controller),
+                    'forceDelete' => (new Path)->generateForceDelete($controller),
                     default => null
                 };
 

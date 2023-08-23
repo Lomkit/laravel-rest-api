@@ -199,7 +199,7 @@ class Path extends Schema
         return array_merge(
             isset($this->description) ? ['description' => $this->description()] : [],
             isset($this->summary) ? ['summary' => $this->summary()] : [],
-            isset($this->parameters) ? ['parameters' => collect($this->parameters())->map->jsonSerialize()] : [],
+            !empty($this->parameters) ? ['parameters' => collect($this->parameters())->map->jsonSerialize()] : [],
             isset($this->get) ? ['get' => $this->get()->jsonSerialize()] : [],
             isset($this->put) ? ['put' => $this->get()->jsonSerialize()] : [],
             isset($this->post) ? ['post' => $this->post()->jsonSerialize()] : [],
@@ -216,14 +216,16 @@ class Path extends Schema
         return $this;
     }
 
-    public function generateDetail(Controller $controller): Path
+    public function generateDetailAndDestroy(Controller $controller): Path
     {
-        $resource = $controller::newResource();
-
         return $this
             ->withGet(
                 (new Operation)
                     ->generateDetail($controller)
+            )
+            ->withDelete(
+                (new Operation)
+                    ->generateDestroy($controller)
             )
             ->generate();
     }
@@ -244,6 +246,51 @@ class Path extends Schema
             ->withPost(
                 (new Operation)
                     ->generateMutate($controller)
+            )
+            ->generate();
+    }
+
+    public function generateActions(Controller $controller): Path
+    {
+        return $this
+            ->withPost(
+                (new Operation)
+                    ->generateActions($controller)
+            )
+            ->withParameters(
+                [
+                    (new Parameter)
+                        ->withName('action')
+                        ->withDescription('The action uriKey')
+                        ->withIn('path')
+                        ->withSchema(
+                            (new SchemaConcrete)
+                                ->withType('string')
+                                ->generate()
+                        )
+                        ->withRequired()
+                        ->generate()
+                ]
+            )
+            ->generate();
+    }
+
+    public function generateRestore(Controller $controller): Path
+    {
+        return $this
+            ->withPost(
+                (new Operation)
+                    ->generateRestore($controller)
+            )
+            ->generate();
+    }
+
+    public function generateForceDelete(Controller $controller): Path
+    {
+        return $this
+            ->withDelete(
+                (new Operation)
+                    ->generateForceDelete($controller)
             )
             ->generate();
     }
