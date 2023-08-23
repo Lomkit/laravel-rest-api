@@ -10,8 +10,6 @@ use Lomkit\Rest\Http\Controllers\Controller;
 
 class OpenAPI extends Schema
 {
-    // @TODO: generate swagger doc automatically
-
     /**
      * The version number of the OpenAPI specification
      *

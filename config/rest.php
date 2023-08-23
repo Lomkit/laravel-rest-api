@@ -52,6 +52,14 @@ return [
     */
 
     'documentation' => [
+        'routing' => [
+            'enabled' => true,
+            'domain' => null,
+            'path' => '/api-documentation',
+            'middlewares' => [
+                'web'
+            ]
+        ],
         'info' => [
             'title' => config('app.name'),
             'summary' => 'This is my projet\'s documentation',

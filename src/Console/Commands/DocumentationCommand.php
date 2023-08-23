@@ -37,7 +37,7 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
         $openApi = (new OpenAPI)
             ->generate();
 
-        $path = $this->getPath('open-api');
+        $path = $this->getPath('openapi');
 
         $this->makeDirectory($path);
 
@@ -55,7 +55,7 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
      */
     protected function getPath($name)
     {
-        return storage_path('app/documentation/'.$name.'.json');
+        return public_path('vendor/rest/'.$name.'.json');
     }
 
     protected function getStub()
