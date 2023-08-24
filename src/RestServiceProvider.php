@@ -2,12 +2,14 @@
 
 namespace Lomkit\Rest;
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\Commands\ActionCommand;
 use Lomkit\Rest\Console\Commands\BaseControllerCommand;
 use Lomkit\Rest\Console\Commands\BaseResourceCommand;
 use Lomkit\Rest\Console\Commands\ControllerCommand;
+use Lomkit\Rest\Console\Commands\DocumentationCommand;
 use Lomkit\Rest\Console\Commands\InstructionCommand;
 use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceCommand;
@@ -39,6 +41,38 @@ class RestServiceProvider extends ServiceProvider{
     {
         $this->registerCommands();
         $this->registerPublishing();
+
+        $this->registerRoutes();
+
+        $this->loadViewsFrom(
+            __DIR__.'/../resources/views', 'rest'
+        );
+    }
+
+    /**
+     * Register the package routes.
+     *
+     * @return void
+     */
+    private function registerRoutes()
+    {
+        Route::group($this->routeConfiguration(), function () {
+            $this->loadRoutesFrom(__DIR__.'/Http/routes.php');
+        });
+    }
+
+    /**
+     * Get the Telescope route group configuration array.
+     *
+     * @return array
+     */
+    private function routeConfiguration()
+    {
+        return [
+            'domain' => config('rest.documentation.routing.domain'),
+            'prefix' => config('rest.documentation.routing.path'),
+            'middleware' =>  config('rest.documentation.routing.middlewares', []),
+        ];
     }
 
     /**
@@ -57,7 +91,8 @@ class RestServiceProvider extends ServiceProvider{
                 ResponseCommand::class,
                 QuickStartCommand::class,
                 ActionCommand::class,
-                InstructionCommand::class
+                InstructionCommand::class,
+                DocumentationCommand::class
             ]);
         }
     }
