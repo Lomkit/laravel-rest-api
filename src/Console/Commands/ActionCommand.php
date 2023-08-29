@@ -41,17 +41,6 @@ class ActionCommand extends GeneratorCommand implements PromptsForMissingInput
     }
 
     /**
-     * Build the class with the given name.
-     *
-     * @param  string  $name
-     * @return string
-     */
-    protected function buildClass($name)
-    {
-        return parent::buildClass($name);
-    }
-
-    /**
      * Get the stub file for the generator.
      *
      * @return string
@@ -59,6 +48,15 @@ class ActionCommand extends GeneratorCommand implements PromptsForMissingInput
     protected function getStub()
     {
         return $this->resolveStubPath('/stubs/rest/action.stub');
+    }
+
+    protected function getPath($name)
+    {
+        if ($this->hasOption('path')) {
+            return $this->option('path').'/'.$this->argument('name').'.php';
+        }
+
+        return parent::getPath($name);
     }
 
     /**

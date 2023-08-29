@@ -146,7 +146,7 @@ class Response implements Responsable
             'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input())),
             'meta' => [
                 config('rest.automatic_gates.key') => [
-                    config('rest.automatic_gates.names.authorized_to_create') => Gate::allows('create', $this->responsable->first()::class),
+                    config('rest.automatic_gates.names.authorized_to_create') => Gate::allows('create', $this->resource::newModel()::class),
                 ]
             ]
         ];

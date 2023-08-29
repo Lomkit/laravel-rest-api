@@ -41,9 +41,11 @@ class ControllerCommand extends GeneratorCommand implements PromptsForMissingInp
     {
         parent::handle();
 
-        $this->callSilent('rest:base-controller', [
-            'name' => 'Controller',
-        ]);
+        if (!$this->hasOption('path')) {
+            $this->callSilent('rest:base-controller', [
+                'name' => 'Controller',
+            ]);
+        }
     }
 
     /**
@@ -85,6 +87,15 @@ class ControllerCommand extends GeneratorCommand implements PromptsForMissingInp
     protected function getStub()
     {
         return $this->resolveStubPath('/stubs/rest/controller.stub');
+    }
+
+    protected function getPath($name)
+    {
+        if ($this->hasOption('path')) {
+            return $this->option('path').'/'.$this->argument('name').'.php';
+        }
+
+        return parent::getPath($name);
     }
 
     /**

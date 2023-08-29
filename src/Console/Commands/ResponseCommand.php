@@ -65,6 +65,15 @@ class ResponseCommand extends GeneratorCommand implements PromptsForMissingInput
         return $this->resolveStubPath('/stubs/rest/response.stub');
     }
 
+    protected function getPath($name)
+    {
+        if ($this->hasOption('path')) {
+            return $this->option('path').'/'.$this->argument('name').'.php';
+        }
+
+        return parent::getPath($name);
+    }
+
     /**
      * Get the default namespace for the class.
      *

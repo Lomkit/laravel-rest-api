@@ -43,16 +43,6 @@ class BaseResourceCommand extends GeneratorCommand implements PromptsForMissingI
     protected $description = 'Create a new base resource class';
 
     /**
-     * Execute the console command.
-     *
-     * @return bool|null
-     */
-    public function handle()
-    {
-        parent::handle();
-    }
-
-    /**
      * Get the stub file for the generator.
      *
      * @return string
@@ -60,6 +50,15 @@ class BaseResourceCommand extends GeneratorCommand implements PromptsForMissingI
     protected function getStub()
     {
         return $this->resolveStubPath('/stubs/rest/base-resource.stub');
+    }
+
+    protected function getPath($name)
+    {
+        if ($this->hasOption('path')) {
+            return $this->option('path').'/'.$this->argument('name').'.php';
+        }
+
+        return parent::getPath($name);
     }
 
     /**
