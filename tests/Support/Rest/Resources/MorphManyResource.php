@@ -22,7 +22,7 @@ class MorphManyResource extends Resource
         return [];
     }
 
-    public function exposedFields(RestRequest $request): array
+    public function fields(RestRequest $request): array
     {
         return [
             'id',

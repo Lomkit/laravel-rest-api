@@ -10,24 +10,24 @@ use Lomkit\Rest\Http\Resource;
 trait ConfiguresRestParameters
 {
     /**
-     * The exposed fields that could be provided
+     * The fields that could be provided
      * @param RestRequest $request
      * @return array
      */
-    public function exposedFields(RestRequest $request): array {
+    public function fields(RestRequest $request): array {
         return [];
     }
 
-    public function getNestedExposedFields(RestRequest $request, string $prefix = '', array $loadedRelations = []) {
+    public function getNestedFields(RestRequest $request, string $prefix = '', array $loadedRelations = []) {
         if ($prefix !== '') {
             $prefix = $prefix.'.';
         }
 
-        $exposedFields = array_map(
-            function ($exposedField) use ($prefix) {
-                return $prefix.$exposedField;
+        $fields = array_map(
+            function ($field) use ($prefix) {
+                return $prefix.$field;
             },
-            $this->exposedFields($request)
+            $this->fields($request)
         );
 
         foreach (
@@ -39,8 +39,8 @@ trait ConfiguresRestParameters
         ) {
             $loadedRelations[] = $relation->relation;
             array_push(
-                $exposedFields,
-                ...$relation->resource()->getNestedExposedFields($request, $prefix.$relation->relation,$loadedRelations),
+                $fields,
+                ...$relation->resource()->getNestedFields($request, $prefix.$relation->relation,$loadedRelations),
                 // We push the pivot fields if they exists
                 ...(
                     collect(method_exists($relation, 'getPivotFields') ? $relation->getPivotFields() : [])
@@ -49,24 +49,24 @@ trait ConfiguresRestParameters
             );
         }
 
-        return $exposedFields;
+        return $fields;
     }
 
     /**
-     * The exposed scopes that could be provided
+     * The scopes that could be provided
      * @param RestRequest $request
      * @return array
      */
-    public function exposedScopes(RestRequest $request): array {
+    public function scopes(RestRequest $request): array {
         return [];
     }
 
     /**
-     * The exposed limits that could be provided
+     * The limits that could be provided
      * @param RestRequest $request
      * @return array
      */
-    public function exposedLimits(RestRequest $request): array {
+    public function limits(RestRequest $request): array {
         return [
             10,
             25,

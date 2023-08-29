@@ -87,9 +87,9 @@ class Resource implements \JsonSerializable
         return [
             'actions' => collect($this->actions($request))->map->jsonSerialize()->toArray(),
             'instructions' => collect($this->instructions($request))->map->jsonSerialize()->toArray(),
-            'fields' => $this->exposedFields($request),
-            'limits' => $this->exposedLimits($request),
-            'scopes' => $this->exposedScopes($request),
+            'fields' => $this->fields($request),
+            'limits' => $this->limits($request),
+            'scopes' => $this->scopes($request),
             'relations' => collect($this->relations($request))->map->jsonSerialize()->toArray(),
             'rules' => [
                 'all' => $this->rules($request),

@@ -356,7 +356,7 @@ class AutomaticGatingTest extends TestCase
                         ->get()
                         ->map(function ($relation) use ($matchingModel, $pivotAccessor) {
                             return collect($relation->only(
-                                array_merge((new BelongsToManyResource)->exposedFields(app()->make(RestRequest::class)), [$pivotAccessor])
+                                array_merge((new BelongsToManyResource)->fields(app()->make(RestRequest::class)), [$pivotAccessor])
                             ))
                                 ->pipe(function ($relation) use ($matchingModel, $pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
