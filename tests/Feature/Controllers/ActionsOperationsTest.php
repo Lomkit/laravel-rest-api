@@ -125,7 +125,7 @@ class ActionsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['fields.0']]);
+        $response->assertJsonStructure(['message', 'errors' => ['fields.0.value']]);
     }
 
     public function test_operate_action_with_fields(): void

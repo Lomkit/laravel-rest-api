@@ -7,13 +7,24 @@ use Lomkit\Rest\Http\Resource as RestResource;
 abstract class Resource extends RestResource
 {
     /**
-     * Build a query for fetching resource.
+     * Build a "search" query for fetching resource.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
      * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
      * @return \Illuminate\Contracts\Database\Eloquent\Builder
      */
-    public function fetchQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query) {
+    public function searchQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query) {
+        return $query;
+    }
+
+    /**
+     * Build a query for mutating resource.
+     *
+     * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
+     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Contracts\Database\Eloquent\Builder
+     */
+    public function mutateQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query) {
         return $query;
     }
 

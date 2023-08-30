@@ -22,7 +22,7 @@ use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Rules\ActionField;
 use Lomkit\Rest\Rules\CustomRulable;
 use Lomkit\Rest\Rules\Includable;
-use Lomkit\Rest\Rules\RequiredRelation;
+use Lomkit\Rest\Rules\RequiredRelationOnCreation;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OperateRequest extends RestRequest

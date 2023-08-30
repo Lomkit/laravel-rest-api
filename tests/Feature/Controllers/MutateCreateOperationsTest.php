@@ -61,7 +61,89 @@ class MutateCreateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0']]);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes.string']]);
+    }
+
+    public function test_creating_a_resource_with_no_required_relation(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/required-creation/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'create',
+                        'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
+    }
+
+    public function test_creating_a_resource_with_no_required_relation_but_empty_array(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/required-creation/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'create',
+                        'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
+                        'relations' => [
+                            'belongsToManyRelation' => []
+                        ]
+                    ]
+                ]
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
+    }
+
+    public function test_creating_a_resource_with_required_relation(): void
+    {
+        $modelToCreate = ModelFactory::new()->makeOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/required-creation/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'create',
+                        'attributes' => [
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation' => 'create',
+                                    'attributes' => []
+                                ]
+                            ]
+                        ]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [$modelToCreate],
+        );
     }
 
     public function test_creating_a_resource_using_pivot_field_not_following_custom_pivot_rules(): void

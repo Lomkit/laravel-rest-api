@@ -18,7 +18,7 @@ use Lomkit\Rest\Relations\MorphMany;
 use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Rules\CustomRulable;
 use Lomkit\Rest\Rules\Includable;
-use Lomkit\Rest\Rules\RequiredRelation;
+use Lomkit\Rest\Rules\RequiredRelationOnCreation;
 
 class ActionsRequest extends RestRequest
 {
