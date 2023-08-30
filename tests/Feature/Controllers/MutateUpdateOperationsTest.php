@@ -115,6 +115,44 @@ class MutateUpdateOperationsTest extends TestCase
         );
     }
 
+    public function test_updating_a_resource_with_required_on_creation_resource(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/required-creation/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name' => 'new name',
+                            'number' => 5001
+                        ]
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        $this->assertDatabaseHas(
+            $modelToUpdate->getTable(),
+            [
+                'name' => 'new name',
+                'number' => 5001
+            ]
+        );
+    }
+
     public function test_updating_a_resource_with_creating_belongs_to_relation(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();

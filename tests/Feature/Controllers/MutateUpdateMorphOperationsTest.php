@@ -51,7 +51,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0']]);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes.string']]);
     }
 
     public function test_updating_a_resource_with_creating_morph_to_relation(): void

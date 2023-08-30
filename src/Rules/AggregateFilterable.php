@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Rules;
 use Closure;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
@@ -12,7 +13,7 @@ use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
 
-class AggregateFilterable implements Rule, DataAwareRule, ValidatorAwareRule
+class AggregateFilterable implements ValidationRule, DataAwareRule, ValidatorAwareRule
 {
 
     use Makeable;
@@ -56,20 +57,6 @@ class AggregateFilterable implements Rule, DataAwareRule, ValidatorAwareRule
         $this->resource = $resource;
 
         return $this;
-    }
-
-    public function passes($attribute, $value)
-    {
-        $validator = Validator::make(
-            $this->data,
-            $this->buildValidationRules($attribute, $value)
-        );
-
-        if ($validator->fails()) {
-            return $this->fail($validator->messages()->all());
-        }
-
-        return true;
     }
 
     /**
@@ -141,5 +128,15 @@ class AggregateFilterable implements Rule, DataAwareRule, ValidatorAwareRule
         $this->data = $data;
 
         return $this;
+    }
+
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
+        $validator = Validator::make(
+            $this->data,
+            $this->buildValidationRules($attribute, $value)
+        );
+
+        $validator->validate();
     }
 }

@@ -12,7 +12,7 @@ use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\Mutates;
-use Lomkit\Rest\Rules\RequiredRelation;
+use Lomkit\Rest\Rules\RequiredRelationOnCreation;
 
 class Relation implements \JsonSerializable
 {
@@ -89,11 +89,10 @@ class Relation implements \JsonSerializable
         if ($this->isRequiredOnCreation(
             app()->make(RestRequest::class)
         )) {
-            $rules[$prefix] = RequiredRelation::make()->resource($resource);
+            $rules[$prefix] = [RequiredRelationOnCreation::make()->resource($resource)];
         }
 
         if (in_array(HasPivotFields::class, class_uses_recursive($this), true)) {
-
             $pivotPrefix = $prefix;
             if ($this->hasMultipleEntries()) {
                 $pivotPrefix .= '.*';

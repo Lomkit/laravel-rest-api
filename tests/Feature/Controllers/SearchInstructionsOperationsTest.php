@@ -94,7 +94,7 @@ class SearchInstructionsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['instructions.0']]);
+        $response->assertJsonStructure(['message', 'errors' => ['instructions.0.fields.0.name']]);
     }
 
     public function test_getting_a_list_of_resources_instructing_numbered_with_unauthorized_validation(): void
@@ -120,7 +120,7 @@ class SearchInstructionsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['instructions.0']]);
+        $response->assertJsonStructure(['message', 'errors' => ['instructions.0.fields.0.value']]);
     }
 
     public function test_getting_a_list_of_resources_instructing_numbered_with_fields(): void
