@@ -54,7 +54,7 @@ trait Relationable
     }
 
     /**
-     * The exposed relations that could be provided
+     * The relations that could be provided
      * @param RestRequest $request
      * @return array
      */

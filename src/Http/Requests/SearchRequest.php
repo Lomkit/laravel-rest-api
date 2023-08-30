@@ -40,7 +40,7 @@ class SearchRequest extends RestRequest
             [$prefix.'instructions' => ['sometimes', 'array']],
             $this->instructionsRules($resource, $prefix.'instructions'),
             [
-                'limit' => ['sometimes', 'integer', Rule::in($resource->exposedLimits($this))],
+                'limit' => ['sometimes', 'integer', Rule::in($resource->limits($this))],
                 'page' => ['sometimes', 'integer']
             ],
             $isRootSearchRules ? ['includes' => ['sometimes', 'array']] : [],
@@ -53,7 +53,7 @@ class SearchRequest extends RestRequest
         $rules = array_merge(
             [
                 $prefix.'.*.field' => [
-                    Rule::in($resource->getNestedExposedFields($this)),
+                    Rule::in($resource->getNestedFields($this)),
                     "required_without:$prefix.*.nested",
                     'string'
                 ],
@@ -86,7 +86,7 @@ class SearchRequest extends RestRequest
     protected function scopesRules(Resource $resource, string $prefix) {
         $rules = [
             $prefix.'.*.name' => [
-                Rule::in($resource->exposedScopes($this)),
+                Rule::in($resource->scopes($this)),
                 'required',
                 'string'
             ],
@@ -126,7 +126,7 @@ class SearchRequest extends RestRequest
     protected function sortsRules(Resource $resource, string $prefix) {
         $rules = [
             $prefix.'.*.field' => [
-                Rule::in($resource->exposedFields($this)),
+                Rule::in($resource->fields($this)),
                 'required',
                 'string'
             ],
@@ -142,7 +142,7 @@ class SearchRequest extends RestRequest
     protected function selectsRules(Resource $resource, string $prefix) {
         $rules = [
             $prefix.'.*.field' => [
-                Rule::in($resource->exposedFields($this)),
+                Rule::in($resource->fields($this)),
                 'required',
                 'string'
             ]

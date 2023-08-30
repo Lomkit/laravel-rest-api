@@ -36,7 +36,7 @@ class AutomaticGatingResource extends Resource
         ];
     }
 
-    public function exposedFields(RestRequest $request): array
+    public function fields(RestRequest $request): array
     {
         return [
             'id',

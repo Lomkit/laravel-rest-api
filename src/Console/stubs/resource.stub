@@ -18,7 +18,7 @@ class {{ class }} extends RestResource
      * @param RestRequest $request
      * @return array
      */
-    public function exposedFields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [
             'id'
@@ -40,7 +40,7 @@ class {{ class }} extends RestResource
      * @param RestRequest $request
      * @return array
      */
-    public function exposedScopes(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function scopes(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [];
     }
@@ -50,7 +50,7 @@ class {{ class }} extends RestResource
      * @param RestRequest $request
      * @return array
      */
-    public function exposedLimits(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function limits(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [
             10,

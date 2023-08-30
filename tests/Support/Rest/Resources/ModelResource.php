@@ -76,7 +76,7 @@ class ModelResource extends Resource
         ];
     }
 
-    public function exposedFields(RestRequest $request): array
+    public function fields(RestRequest $request): array
     {
         return [
             'id',
@@ -87,11 +87,11 @@ class ModelResource extends Resource
     }
 
     /**
-     * The exposed scopes that could be provided
+     * The scopes that could be provided
      * @param RestRequest $request
      * @return array
      */
-    public function exposedScopes(RestRequest $request): array
+    public function scopes(RestRequest $request): array
     {
         return [
             'numbered'
@@ -99,11 +99,11 @@ class ModelResource extends Resource
     }
 
     /**
-     * The exposed limits that could be provided
+     * The limits that could be provided
      * @param RestRequest $request
      * @return array
      */
-    public function exposedLimits(RestRequest $request): array {
+    public function limits(RestRequest $request): array {
         return [
             1,
             10,
