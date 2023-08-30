@@ -61,6 +61,15 @@ class InstructionCommand extends GeneratorCommand implements PromptsForMissingIn
         return $this->resolveStubPath('/stubs/rest/instruction.stub');
     }
 
+    protected function getPath($name)
+    {
+        if ($this->hasOption('path')) {
+            return $this->option('path').'/'.$this->argument('name').'.php';
+        }
+
+        return parent::getPath($name);
+    }
+
     /**
      * Get the default namespace for the class.
      *

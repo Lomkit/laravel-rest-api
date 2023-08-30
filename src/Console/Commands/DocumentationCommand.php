@@ -55,7 +55,8 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
      */
     protected function getPath($name)
     {
-        return public_path('vendor/rest/'.$name.'.json');
+
+        return $this->hasOption('path') ? $this->option('path').'/'.$name.'.json' : public_path('vendor/rest/'.$name.'.json');
     }
 
     protected function getStub()
