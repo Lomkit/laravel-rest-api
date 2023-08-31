@@ -26,8 +26,6 @@ abstract class Controller extends \Illuminate\Routing\Controller
      */
     public static $resource;
 
-    //@TODO: voir si toutes ces manières de call en static c'est pas plus dérangeant qu'autre chose
-    //@TODO: surtout avec octane où il faut éviter le static !?
     /**
      * Get a fresh instance of the resource represented by the entry.
      *
@@ -39,6 +37,4 @@ abstract class Controller extends \Illuminate\Routing\Controller
 
         return new $resource;
     }
-
-    //@TODO: are controllers useless in a certain way ??
 }
