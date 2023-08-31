@@ -86,19 +86,6 @@ Here is a quick look at what you can do using API search method:
 }
 ```
 
-## Changelog
-
-TODO
-
-## Contributing
-
-TODO
-
-## Roadmap for the end of bêta (Estimated delivery October 2023)
-
-- Automatic documentation with extension possible
-- Add tests for all commands !!!!
-
 ## Roadmap
 
 - Metrics support
