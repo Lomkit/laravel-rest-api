@@ -51,11 +51,10 @@ trait PerformSearch
             $this->applyAggregates($parameters['aggregates']);
         });
 
-        // @TODO: is this a problem also with HasMany ??
-        // @TODO: this will be the problem for every relation, need to fix this
-        // In case of BelongsToMany we cap the limit
-        $limit = $this->queryBuilder instanceof \Illuminate\Database\Eloquent\Relations\BelongsToMany ? 9999 : ($parameters['limit'] ?? 50);
-        $this->queryBuilder->limit($limit);
+        // In case we are in a relation we don't apply the limits since we dont know how much records will be related.
+        if (!$this->queryBuilder instanceof Relation) {
+            $this->queryBuilder->limit($parameters['limit'] ?? 50);
+        }
 
         return $this->queryBuilder;
     }
