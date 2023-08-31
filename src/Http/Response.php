@@ -125,7 +125,7 @@ class Response implements Responsable
                 $this->responsable->getOptions(),
                 $this->resource->isAutomaticGatingEnabled() ? [
                     config('rest.automatic_gates.key') => [
-                        config('rest.automatic_gates.names.authorized_to_create') => Gate::allows('create', $this->responsable->first()::class),
+                        config('rest.automatic_gates.names.authorized_to_create') => Gate::allows('create', $this->resource::newModel()::class),
                     ]
                 ] : []
             );
