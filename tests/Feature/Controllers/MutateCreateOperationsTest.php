@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Controllers;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
@@ -18,7 +17,6 @@ use Lomkit\Rest\Tests\Support\Models\HasOneOfManyRelation;
 use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class MutateCreateOperationsTest extends TestCase
 {
@@ -31,8 +29,8 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
-                        'attributes' => ['not_authorized_field' => true]
+                        'operation'  => 'create',
+                        'attributes' => ['not_authorized_field' => true],
                     ],
                 ],
             ],
@@ -52,8 +50,8 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
-                        'attributes' => ['string' => true]
+                        'operation'  => 'create',
+                        'attributes' => ['string' => true],
                     ],
                 ],
             ],
@@ -73,8 +71,8 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
-                        'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1]
+                        'operation'  => 'create',
+                        'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
                     ],
                 ],
             ],
@@ -94,13 +92,13 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
-                        'relations' => [
-                            'belongsToManyRelation' => []
-                        ]
-                    ]
-                ]
+                        'relations'  => [
+                            'belongsToManyRelation' => [],
+                        ],
+                    ],
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -121,19 +119,19 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -158,22 +156,22 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation' => 'create',
+                                    'operation'  => 'create',
                                     'attributes' => [],
-                                    'pivot' => [
-                                        'number' => true
-                                    ]
-                                ]
-                            ]
-                        ]
+                                    'pivot'      => [
+                                        'number' => true,
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -195,11 +193,11 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
-                        ]
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
+                        ],
                     ],
                 ],
             ],
@@ -224,17 +222,17 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
-                                'operation' => 'create',
-                                'attributes' => []
-                            ]
-                        ]
+                                'operation'  => 'create',
+                                'attributes' => [],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -262,17 +260,17 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
                                 'operation' => 'attach',
-                                'key' => $belongsToRelationToAttach->getKey()
-                            ]
-                        ]
+                                'key'       => $belongsToRelationToAttach->getKey(),
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -303,18 +301,18 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
-                                'operation' => 'update',
-                                'key' => $belongsToRelationToUpdate->getKey(),
-                                'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                            ]
-                        ]
+                                'operation'  => 'update',
+                                'key'        => $belongsToRelationToUpdate->getKey(),
+                                'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -351,25 +349,24 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -378,7 +375,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            1
         );
     }
 
@@ -394,29 +392,28 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
+                                    'operation'  => 'create',
+                                    'attributes' => [],
                                 ],
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -425,7 +422,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasManyRelation()->count(), 2
+            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            2
         );
     }
 
@@ -446,19 +444,19 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key' => $hasManyRelationToAttach->getKey()
-                                ]
-                            ]
-                        ]
+                                    'key'       => $hasManyRelationToAttach->getKey(),
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -472,7 +470,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            1
         );
     }
 
@@ -493,26 +492,25 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation' => 'update',
-                                    'key' => $hasManyRelationToAttach->getKey(),
-                                    'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'update',
+                                    'key'        => $hasManyRelationToAttach->getKey(),
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -527,7 +525,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            1
         );
     }
 
@@ -543,17 +542,17 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneRelation' => [
-                                'operation' => 'create',
-                                'attributes' => []
-                            ]
-                        ]
+                                'operation'  => 'create',
+                                'attributes' => [],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -567,7 +566,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneRelation()->count(),
+            1
         );
     }
 
@@ -588,17 +588,17 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneRelation' => [
                                 'operation' => 'attach',
-                                'key' => $hasOneRelationToAttach->getKey()
-                            ]
-                        ]
+                                'key'       => $hasOneRelationToAttach->getKey(),
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -612,7 +612,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneRelation()->count(),
+            1
         );
     }
 
@@ -633,24 +634,23 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneRelation' => [
-                                'operation' => 'update',
-                                'key' => $hasOneRelationToAttach->getKey(),
-                                'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                            ]
-                        ]
+                                'operation'  => 'update',
+                                'key'        => $hasOneRelationToAttach->getKey(),
+                                'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -665,7 +665,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneRelation()->count(),
+            1
         );
     }
 
@@ -681,17 +682,17 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
-                                'operation' => 'create',
-                                'attributes' => []
-                            ]
-                        ]
+                                'operation'  => 'create',
+                                'attributes' => [],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -705,7 +706,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(),
+            1
         );
     }
 
@@ -726,17 +728,17 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
                                 'operation' => 'attach',
-                                'key' => $hasOneOfManyRelationToAttach->getKey()
-                            ]
-                        ]
+                                'key'       => $hasOneOfManyRelationToAttach->getKey(),
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -750,7 +752,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(),
+            1
         );
     }
 
@@ -771,24 +774,23 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
-                                'operation' => 'update',
-                                'key' => $hasOneOfManyRelationToAttach->getKey(),
-                                'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                            ]
-                        ]
+                                'operation'  => 'update',
+                                'key'        => $hasOneOfManyRelationToAttach->getKey(),
+                                'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -803,7 +805,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(),
+            1
         );
     }
 
@@ -819,19 +822,19 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -845,7 +848,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            1
         );
     }
 
@@ -861,22 +865,22 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation' => 'create',
+                                    'operation'  => 'create',
                                     'attributes' => [],
-                                    'pivot' => [
-                                        'unauthorized_field' => 20
-                                    ]
-                                ]
-                            ]
-                        ]
+                                    'pivot'      => [
+                                        'unauthorized_field' => 20,
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -899,29 +903,29 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation' => 'create',
+                                    'operation'  => 'create',
                                     'attributes' => [],
-                                    'pivot' => [
-                                        'number' => 20
-                                    ]
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
                                 ],
                                 [
-                                    'operation' => 'create',
+                                    'operation'  => 'create',
                                     'attributes' => [],
-                                    'pivot' => [
-                                        'number' => 30
-                                    ]
-                                ]
-                            ]
-                        ]
+                                    'pivot'      => [
+                                        'number' => 30,
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -935,13 +939,16 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(), 2
+            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            2
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number, 20
+            Model::find($response->json('created.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number,
+            20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number, 30
+            Model::find($response->json('created.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number,
+            30
         );
     }
 
@@ -957,29 +964,28 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
+                                    'operation'  => 'create',
+                                    'attributes' => [],
                                 ],
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -988,7 +994,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(), 2
+            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            2
         );
     }
 
@@ -1009,19 +1016,19 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key' => $belongsToManyRelationToAttach->getKey()
-                                ]
-                            ]
-                        ]
+                                    'key'       => $belongsToManyRelationToAttach->getKey(),
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -1035,7 +1042,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            1
         );
     }
 
@@ -1061,29 +1069,29 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key' => $belongsToManyRelationToAttach1->getKey(),
-                                    'pivot' => [
-                                        'number' => 20
-                                    ]
+                                    'key'       => $belongsToManyRelationToAttach1->getKey(),
+                                    'pivot'     => [
+                                        'number' => 20,
+                                    ],
                                 ],
                                 [
                                     'operation' => 'attach',
-                                    'key' => $belongsToManyRelationToAttach2->getKey(),
-                                    'pivot' => [
-                                        'number' => 30
-                                    ]
-                                ]
-                            ]
-                        ]
+                                    'key'       => $belongsToManyRelationToAttach2->getKey(),
+                                    'pivot'     => [
+                                        'number' => 30,
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -1097,13 +1105,16 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(), 2
+            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            2
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number, 20
+            Model::find($response->json('created.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number,
+            20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number, 30
+            Model::find($response->json('created.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number,
+            30
         );
     }
 
@@ -1124,26 +1135,25 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation' => 'update',
-                                    'key' => $belongsToManyRelationToUpdate->getKey(),
-                                    'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'update',
+                                    'key'        => $belongsToManyRelationToUpdate->getKey(),
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -1158,7 +1168,8 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(), 1
+            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            1
         );
     }
 
@@ -1184,31 +1195,31 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'update',
-                                    'key' => $belongsToManyRelationToUpdate1->getKey(),
-                                    'pivot' => [
-                                        'number' => 20
+                                    'key'       => $belongsToManyRelationToUpdate1->getKey(),
+                                    'pivot'     => [
+                                        'number' => 20,
                                     ],
-                                    'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                                 [
                                     'operation' => 'update',
-                                    'key' => $belongsToManyRelationToUpdate2->getKey(),
-                                    'pivot' => [
-                                        'number' => 30
+                                    'key'       => $belongsToManyRelationToUpdate2->getKey(),
+                                    'pivot'     => [
+                                        'number' => 30,
                                     ],
-                                    'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                                ]
-                            ]
-                        ]
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -1232,13 +1243,16 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(), 2
+            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            2
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number, 20
+            Model::find($response->json('created.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number,
+            20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number, 30
+            Model::find($response->json('created.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number,
+            30
         );
     }
 }

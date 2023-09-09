@@ -4,9 +4,6 @@ namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
-use Illuminate\Database\Migrations\MigrationCreator;
-use Illuminate\Support\Composer;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Console\ResolvesStubPath;
 
 class BaseResourceCommand extends GeneratorCommand implements PromptsForMissingInput
@@ -55,7 +52,8 @@ class BaseResourceCommand extends GeneratorCommand implements PromptsForMissingI
     /**
      * Get the path where the action file should be created.
      *
-     * @param  string  $name
+     * @param string $name
+     *
      * @return string
      */
     protected function getPath($name)
@@ -70,7 +68,8 @@ class BaseResourceCommand extends GeneratorCommand implements PromptsForMissingI
     /**
      * Get the default namespace for the class.
      *
-     * @param  string  $rootNamespace
+     * @param string $rootNamespace
+     *
      * @return string
      */
     protected function getDefaultNamespace($rootNamespace)

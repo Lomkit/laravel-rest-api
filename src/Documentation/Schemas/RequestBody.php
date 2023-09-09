@@ -7,20 +7,23 @@ use Lomkit\Rest\Http\Controllers\Controller;
 class RequestBody extends Schema
 {
     /**
-     * A brief description of the request body. This could contain examples of use. CommonMark syntax MAY be used for rich text representation
+     * A brief description of the request body. This could contain examples of use. CommonMark syntax MAY be used for rich text representation.
+     *
      * @var string
      */
     protected string $description;
 
     /**
      * The content of the request body. The key is a media type or media type range and the value describes it.
-     * For requests that match multiple keys, only the most specific key is applicable. e.g. text/plain overrides text/*
+     * For requests that match multiple keys, only the most specific key is applicable. e.g. text/plain overrides text/*.
+     *
      * @var array
      */
     protected array $content = [];
 
     /**
      * Determines if the request body is required in the request. Defaults to false.
+     *
      * @var bool
      */
     protected bool $required;
@@ -29,11 +32,13 @@ class RequestBody extends Schema
      * Set a brief description for the request body.
      *
      * @param string $description The description to set.
+     *
      * @return RequestBody
      */
     public function withDescription(string $description): RequestBody
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -51,11 +56,13 @@ class RequestBody extends Schema
      * Set the content of the request body.
      *
      * @param array $content The content to set.
+     *
      * @return RequestBody
      */
     public function withContent(array $content): RequestBody
     {
         $this->content = array_merge($this->content, $content);
+
         return $this;
     }
 
@@ -73,11 +80,13 @@ class RequestBody extends Schema
      * Set whether the request body is required.
      *
      * @param bool $required The required flag to set.
+     *
      * @return RequestBody
      */
     public function withRequired(bool $required = true): RequestBody
     {
         $this->required = $required;
+
         return $this;
     }
 
@@ -119,6 +128,7 @@ class RequestBody extends Schema
      * Generate and return a request body schema for a search operation.
      *
      * @param Controller $controller The controller for which to generate the request body.
+     *
      * @return RequestBody
      */
     public function generateSearch(Controller $controller): RequestBody
@@ -126,68 +136,68 @@ class RequestBody extends Schema
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
+                    'application/json' => (new MediaType())
                         ->withExample(
-                            (new Example)
+                            (new Example())
                                 ->withValue(
                                     [
                                         'scopes' => [
-                                            ['name' => 'withTrashed', 'parameters' => [true]]
+                                            ['name' => 'withTrashed', 'parameters' => [true]],
                                         ],
                                         'filters' => [
                                             ['field' => 'id', 'operator' => '>', 'value' => 1, 'type' => 'or'],
                                             ['nested' => [
                                                 ['field' => 'user.id', 'operator' => '<', 'value' => 2],
                                                 ['field' => 'id', 'operator' => '>', 'value' => 100, 'type' => 'or'],
-                                            ]]
+                                            ]],
                                         ],
                                         'sorts' => [
                                             ['field' => 'user_id', 'direction' => 'desc'],
-                                            ['field' => 'id', 'direction' => 'asc']
+                                            ['field' => 'id', 'direction' => 'asc'],
                                         ],
                                         'selects' => [
-                                            ['field' => 'id']
+                                            ['field' => 'id'],
                                         ],
                                         'includes' => [
                                             [
                                                 'relation' => 'posts',
-                                                'filters' => [
-                                                    ['field' => 'id', 'operator' => 'in', 'value' => [1, 3]]
+                                                'filters'  => [
+                                                    ['field' => 'id', 'operator' => 'in', 'value' => [1, 3]],
                                                 ],
-                                                'limit' => 2
-                                            ]
+                                                'limit' => 2,
+                                            ],
                                         ],
                                         'aggregates' => [
                                             [
                                                 'relation' => 'stars',
-                                                'type' => 'max',
-                                                'field' => 'rate',
-                                                'filters' => [
+                                                'type'     => 'max',
+                                                'field'    => 'rate',
+                                                'filters'  => [
                                                     [
-                                                        'name' => 'type',
-                                                        'value' => 'odd'
-                                                    ]
-                                                ]
-                                            ]
+                                                        'name'  => 'type',
+                                                        'value' => 'odd',
+                                                    ],
+                                                ],
+                                            ],
                                         ],
                                         'instructions' => [
                                             [
-                                                'name' => 'odd-even-id',
+                                                'name'   => 'odd-even-id',
                                                 'fields' => [
                                                     [
-                                                        'name' => 'type',
-                                                        'value' => 'odd'
-                                                    ]
-                                                ]
-                                            ]
+                                                        'name'  => 'type',
+                                                        'value' => 'odd',
+                                                    ],
+                                                ],
+                                            ],
                                         ],
-                                        'page' => 2,
-                                        'limit' => 10
+                                        'page'  => 2,
+                                        'limit' => 10,
                                     ]
                                 )
                                 ->generate()
                         )
-                        ->generate()
+                        ->generate(),
                 ]
             )
             ->generate();
@@ -197,6 +207,7 @@ class RequestBody extends Schema
      * Generate and return a request body schema for a mutate operation.
      *
      * @param Controller $controller The controller for which to generate the request body.
+     *
      * @return RequestBody
      */
     public function generateMutate(Controller $controller): RequestBody
@@ -204,38 +215,38 @@ class RequestBody extends Schema
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
+                    'application/json' => (new MediaType())
                         ->withExample(
-                            (new Example)
+                            (new Example())
                                 ->withValue(
                                     [
                                         'mutate' => [
                                             [
-                                                'operation' => 'create',
+                                                'operation'  => 'create',
                                                 'attributes' => ['email' => 'me@email.com'],
-                                                'relations' => [
+                                                'relations'  => [
                                                     'star' => [
-                                                        'operation' => 'create',
-                                                        'attributes' => ['number' => 2]
-                                                    ]
-                                                ]
+                                                        'operation'  => 'create',
+                                                        'attributes' => ['number' => 2],
+                                                    ],
+                                                ],
                                             ],
                                             [
-                                                'operation' => 'update',
-                                                'key' => 1,
+                                                'operation'  => 'update',
+                                                'key'        => 1,
                                                 'attributes' => ['email' => 'me@email.com'],
-                                                'relations' => [
+                                                'relations'  => [
                                                     'star' => [
                                                         'operation' => 'detach',
-                                                        'key' => 1
-                                                    ]
-                                                ]
-                                            ]]
+                                                        'key'       => 1,
+                                                    ],
+                                                ],
+                                            ]],
                                     ]
                                 )
                                 ->generate()
                         )
-                        ->generate()
+                        ->generate(),
                 ]
             )
             ->generate();
@@ -245,6 +256,7 @@ class RequestBody extends Schema
      * Generate and return a request body schema for an "Actions" operation.
      *
      * @param Controller $controller The controller for which to generate the request body.
+     *
      * @return RequestBody
      */
     public function generateActions(Controller $controller): RequestBody
@@ -252,25 +264,25 @@ class RequestBody extends Schema
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
+                    'application/json' => (new MediaType())
                         ->withExample(
-                            (new Example)
+                            (new Example())
                                 ->withValue(
                                     [
                                         'search' => [
                                             'filters' => [
-                                                ['field' => 'has_received_welcome_notification', 'value' => false]
-                                            ]
+                                                ['field' => 'has_received_welcome_notification', 'value' => false],
+                                            ],
                                         ],
                                         'fields' => [
-                                            ['name' => 'expires_at', 'value' => '2023-04-29']
-                                        ]
+                                            ['name' => 'expires_at', 'value' => '2023-04-29'],
+                                        ],
 
                                     ]
                                 )
                                 ->generate()
                         )
-                        ->generate()
+                        ->generate(),
                 ]
             )
             ->generate();
@@ -280,6 +292,7 @@ class RequestBody extends Schema
      * Generate and return a request body schema for a "Destroy" operation.
      *
      * @param Controller $controller The controller for which to generate the request body.
+     *
      * @return RequestBody
      */
     public function generateDestroy(Controller $controller): RequestBody
@@ -287,17 +300,17 @@ class RequestBody extends Schema
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
+                    'application/json' => (new MediaType())
                         ->withExample(
-                            (new Example)
+                            (new Example())
                                 ->withValue(
                                     [
-                                        'resources' => [1, 5, 6]
+                                        'resources' => [1, 5, 6],
                                     ]
                                 )
                                 ->generate()
                         )
-                        ->generate()
+                        ->generate(),
                 ]
             )
             ->generate();
@@ -307,6 +320,7 @@ class RequestBody extends Schema
      * Generate and return a request body schema for a "Restore" operation.
      *
      * @param Controller $controller The controller for which to generate the request body.
+     *
      * @return RequestBody
      */
     public function generateRestore(Controller $controller): RequestBody
@@ -314,26 +328,27 @@ class RequestBody extends Schema
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
+                    'application/json' => (new MediaType())
                         ->withExample(
-                            (new Example)
+                            (new Example())
                                 ->withValue(
                                     [
-                                        'resources' => [1, 5, 6]
+                                        'resources' => [1, 5, 6],
                                     ]
                                 )
                                 ->generate()
                         )
-                        ->generate()
+                        ->generate(),
                 ]
             )
             ->generate();
     }
-    
+
     /**
      * Generate and return a request body schema for a "Force Delete" operation.
      *
      * @param Controller $controller The controller for which to generate the request body.
+     *
      * @return RequestBody
      */
     public function generateForceDelete(Controller $controller): RequestBody
@@ -341,17 +356,17 @@ class RequestBody extends Schema
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
+                    'application/json' => (new MediaType())
                         ->withExample(
-                            (new Example)
+                            (new Example())
                                 ->withValue(
                                     [
-                                        'resources' => [1, 5, 6]
+                                        'resources' => [1, 5, 6],
                                     ]
                                 )
                                 ->generate()
                         )
-                        ->generate()
+                        ->generate(),
                 ]
             )
             ->generate();

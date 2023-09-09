@@ -11,7 +11,11 @@ use Illuminate\Support\Collection;
 
 class CallRestApiAction
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     /**
      * Models collection.
@@ -37,9 +41,10 @@ class CallRestApiAction
     /**
      * Create a new job instance.
      *
-     * @param  \Lomkit\Rest\Actions\Action  $action
-     * @param  array  $fields
-     * @param  \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection  $models
+     * @param \Lomkit\Rest\Actions\Action                                             $action
+     * @param array                                                                   $fields
+     * @param \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection $models
+     *
      * @return void
      */
     public function __construct(Action $action, array $fields, Collection $models)

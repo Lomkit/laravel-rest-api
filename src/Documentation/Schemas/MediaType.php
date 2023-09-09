@@ -8,18 +8,21 @@ class MediaType extends Schema
 {
     /**
      * The concrete schema for this media type.
+     *
      * @var SchemaConcrete
      */
     protected SchemaConcrete $schemaConcrete;
 
     /**
      * Examples of this media type.
+     *
      * @var Examples
      */
     protected Examples $examples;
 
     /**
      * An example of this media type.
+     *
      * @var Example
      */
     protected Example $example;
@@ -27,12 +30,14 @@ class MediaType extends Schema
     /**
      * Set the concrete schema for this media type.
      *
-     * @param  SchemaConcrete  $schemaConcrete
+     * @param SchemaConcrete $schemaConcrete
+     *
      * @return MediaType
      */
     public function withSchemaConcrete(SchemaConcrete $schemaConcrete): MediaType
     {
         $this->schemaConcrete = $schemaConcrete;
+
         return $this;
     }
 
@@ -49,12 +54,14 @@ class MediaType extends Schema
     /**
      * Set the examples for this media type.
      *
-     * @param  Examples  $examples
+     * @param Examples $examples
+     *
      * @return MediaType
      */
     public function withExamples(Examples $examples): MediaType
     {
         $this->examples = $examples;
+
         return $this;
     }
 
@@ -71,12 +78,14 @@ class MediaType extends Schema
     /**
      * Set an example for this media type.
      *
-     * @param  Example  $example
+     * @param Example $example
+     *
      * @return MediaType
      */
     public function withExample(Example $example): MediaType
     {
         $this->example = $example;
+
         return $this;
     }
 
@@ -117,14 +126,15 @@ class MediaType extends Schema
     /**
      * Generate a MediaType object with an example for a detail action.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return MediaType
      */
     public function generateDetail(Controller $controller): MediaType
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         ['data' => $controller::newResource()->jsonSerialize()]
                     )
@@ -135,14 +145,15 @@ class MediaType extends Schema
     /**
      * Generate a MediaType object with an example for a search action.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return MediaType
      */
     public function generateSearch(Controller $controller): MediaType
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         $controller::newResource()::newResponse()
                             ->resource($controller::newResource())
@@ -159,16 +170,17 @@ class MediaType extends Schema
     /**
      * Generate a MediaType object with an example for a mutate action.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return MediaType
      */
     public function generateMutate(Controller $controller): MediaType
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
-                        ['created' => [1], 'updated' => [2,3]]
+                        ['created' => [1], 'updated' => [2, 3]]
                     )
             )
             ->generate();
@@ -177,19 +189,20 @@ class MediaType extends Schema
     /**
      * Generate a MediaType object with an example for an actions action.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return MediaType
      */
     public function generateActions(Controller $controller): MediaType
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         [
                             'data' => [
-                                'impacted' => 2
-                            ]
+                                'impacted' => 2,
+                            ],
                         ]
                     )
             )
@@ -199,14 +212,15 @@ class MediaType extends Schema
     /**
      * Generate a MediaType object with an example for a destroy action.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return MediaType
      */
     public function generateDestroy(Controller $controller): MediaType
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         $controller::newResource()::newResponse()
                             ->resource($controller::newResource())
@@ -223,14 +237,15 @@ class MediaType extends Schema
     /**
      * Generate a MediaType object with an example for a restore action.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return MediaType
      */
     public function generateRestore(Controller $controller): MediaType
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         $controller::newResource()::newResponse()
                             ->resource($controller::newResource())
@@ -247,14 +262,15 @@ class MediaType extends Schema
     /**
      * Generate a MediaType object with an example for a force delete action.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return MediaType
      */
     public function generateForceDelete(Controller $controller): MediaType
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         $controller::newResource()::newResponse()
                             ->resource($controller::newResource())

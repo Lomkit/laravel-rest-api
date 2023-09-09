@@ -7,22 +7,10 @@ use Illuminate\Queue\Queue;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Actions\CallRestApiAction;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Feature\TestCase;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
-use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Policies\RedPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class SearchInstructionsOperationsTest extends TestCase
@@ -67,7 +55,7 @@ class SearchInstructionsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource,
+            new ModelResource(),
         );
     }
 
@@ -83,10 +71,10 @@ class SearchInstructionsOperationsTest extends TestCase
             [
                 'instructions' => [
                     [
-                        'name' => 'numbered',
+                        'name'   => 'numbered',
                         'fields' => [
-                            ['name' => 'unauthorized_field', 'value' => 1]
-                        ]
+                            ['name' => 'unauthorized_field', 'value' => 1],
+                        ],
                     ],
                 ],
             ],
@@ -109,10 +97,10 @@ class SearchInstructionsOperationsTest extends TestCase
             [
                 'instructions' => [
                     [
-                        'name' => 'numbered',
+                        'name'   => 'numbered',
                         'fields' => [
-                            ['name' => 'number', 'value' => 'unauthorized_string']
-                        ]
+                            ['name' => 'number', 'value' => 'unauthorized_string'],
+                        ],
                     ],
                 ],
             ],
@@ -136,10 +124,10 @@ class SearchInstructionsOperationsTest extends TestCase
             [
                 'instructions' => [
                     [
-                        'name' => 'numbered',
+                        'name'   => 'numbered',
                         'fields' => [
-                            ['name' => 'number', 'value' => 10]
-                        ]
+                            ['name' => 'number', 'value' => 10],
+                        ],
                     ],
                 ],
             ],
@@ -149,7 +137,7 @@ class SearchInstructionsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource,
+            new ModelResource(),
         );
     }
 //    public function test_operate_action(): void

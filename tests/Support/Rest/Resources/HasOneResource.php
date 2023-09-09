@@ -22,7 +22,7 @@ class HasOneResource extends Resource
     {
         return [
             'id',
-            'number'
+            'number',
         ];
     }
 }

@@ -9,7 +9,7 @@ trait DisableAuthorizations
      *
      * @return bool
      */
-    public function isAuthorizingEnabled() : bool
+    public function isAuthorizingEnabled(): bool
     {
         return false;
     }

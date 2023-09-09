@@ -16,15 +16,15 @@ use Lomkit\Rest\Instructions\Instructionable;
 
 class Resource implements \JsonSerializable
 {
-    use PerformsQueries,
-        PerformsModelOperations,
-        Relationable,
-        Paginable,
-        Rulable,
-        ConfiguresRestParameters,
-        Authorizable,
-        Actionable,
-        Instructionable;
+    use PerformsQueries;
+    use PerformsModelOperations;
+    use Relationable;
+    use Paginable;
+    use Rulable;
+    use ConfiguresRestParameters;
+    use Authorizable;
+    use Actionable;
+    use Instructionable;
 
     /**
      * The model the entry corresponds to.
@@ -50,7 +50,7 @@ class Resource implements \JsonSerializable
         /** @var Model $model */
         $model = static::$model;
 
-        return new $model;
+        return new $model();
     }
 
     /**
@@ -63,18 +63,20 @@ class Resource implements \JsonSerializable
         /** @var Response $response */
         $response = static::$response;
 
-        return new $response;
+        return new $response();
     }
 
     /**
      * Return the default ordering for resource queries.
      *
      * @param RestRequest $request
+     *
      * @return array
      */
-    public function defaultOrderBy(RestRequest $request): array {
+    public function defaultOrderBy(RestRequest $request): array
+    {
         return [
-            'id' => 'desc'
+            'id' => 'desc',
         ];
     }
 
@@ -83,7 +85,8 @@ class Resource implements \JsonSerializable
      *
      * @return bool
      */
-    public function isAutomaticGatingEnabled() : bool {
+    public function isAutomaticGatingEnabled(): bool
+    {
         return config('rest.automatic_gates.enabled');
     }
 
@@ -92,7 +95,8 @@ class Resource implements \JsonSerializable
      *
      * @return bool
      */
-    public function isAuthorizingEnabled() : bool {
+    public function isAuthorizingEnabled(): bool
+    {
         return config('rest.authorizations.enabled');
     }
 
@@ -106,17 +110,17 @@ class Resource implements \JsonSerializable
         $request = app(RestRequest::class);
 
         return [
-            'actions' => collect($this->actions($request))->map->jsonSerialize()->toArray(),
+            'actions'      => collect($this->actions($request))->map->jsonSerialize()->toArray(),
             'instructions' => collect($this->instructions($request))->map->jsonSerialize()->toArray(),
-            'fields' => $this->fields($request),
-            'limits' => $this->limits($request),
-            'scopes' => $this->scopes($request),
-            'relations' => collect($this->relations($request))->map->jsonSerialize()->toArray(),
-            'rules' => [
-                'all' => $this->rules($request),
+            'fields'       => $this->fields($request),
+            'limits'       => $this->limits($request),
+            'scopes'       => $this->scopes($request),
+            'relations'    => collect($this->relations($request))->map->jsonSerialize()->toArray(),
+            'rules'        => [
+                'all'    => $this->rules($request),
                 'create' => $this->createRules($request),
-                'update' => $this->updateRules($request)
-            ]
+                'update' => $this->updateRules($request),
+            ],
         ];
     }
 }

@@ -2,11 +2,8 @@
 
 namespace Lomkit\Rest\Relations;
 
-use Closure;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
-use Illuminate\Validation\Rule;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
@@ -15,13 +12,15 @@ use Lomkit\Rest\Relations\Traits\HasMultipleResults;
 
 class MorphToMany extends MorphRelation implements RelationResource
 {
-    use HasPivotFields, HasMultipleResults;
+    use HasPivotFields;
+    use HasMultipleResults;
 
     /**
      * Define validation rules for the MorphToMany relation.
      *
-     * @param Resource $resource The resource associated with the relation.
-     * @param string $prefix The prefix used for validation rules.
+     * @param resource $resource The resource associated with the relation.
+     * @param string   $prefix   The prefix used for validation rules.
+     *
      * @return array An array of validation rules.
      */
     public function rules(Resource $resource, string $prefix)
@@ -31,8 +30,8 @@ class MorphToMany extends MorphRelation implements RelationResource
             [
                 $prefix.'.*.pivot' => [
                     'prohibited_if:'.$prefix.'.*.operation,detach',
-                    'array:'.Arr::join($this->getPivotFields(), ',')
-                ]
+                    'array:'.Arr::join($this->getPivotFields(), ','),
+                ],
             ]
         );
     }
@@ -40,9 +39,9 @@ class MorphToMany extends MorphRelation implements RelationResource
     /**
      * Handle actions after mutating a MorphToMany relation.
      *
-     * @param Model $model The Eloquent model.
-     * @param Relation $relation The relation being mutated.
-     * @param array $mutationRelations An array of mutation relations.
+     * @param Model    $model             The Eloquent model.
+     * @param Relation $relation          The relation being mutated.
+     * @param array    $mutationRelations An array of mutation relations.
      */
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
@@ -62,9 +61,7 @@ class MorphToMany extends MorphRelation implements RelationResource
                         [
                             app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
                                 ->applyMutation($mutationRelation)
-                                ->getKey()
-                            =>
-                                $mutationRelation['pivot'] ?? []
+                                ->getKey() => $mutationRelation['pivot'] ?? [],
                         ]
                     );
             }

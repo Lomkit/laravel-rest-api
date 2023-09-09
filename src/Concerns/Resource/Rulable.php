@@ -2,9 +2,6 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Rulable
@@ -13,9 +10,11 @@ trait Rulable
      * Get the validation rules for resource requests.
      *
      * @param RestRequest $request
+     *
      * @return array
      */
-    public function rules(RestRequest $request) {
+    public function rules(RestRequest $request)
+    {
         return [];
     }
 
@@ -23,9 +22,11 @@ trait Rulable
      * Get the validation rules for resource creation requests.
      *
      * @param RestRequest $request
+     *
      * @return array
      */
-    public function createRules(RestRequest $request) {
+    public function createRules(RestRequest $request)
+    {
         return [];
     }
 
@@ -33,9 +34,11 @@ trait Rulable
      * Get the validation rules for resource update requests.
      *
      * @param RestRequest $request
+     *
      * @return array
      */
-    public function updateRules(RestRequest $request) {
+    public function updateRules(RestRequest $request)
+    {
         return [];
     }
 }

@@ -14,8 +14,9 @@ class ModifyNumberAction extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  array  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param array                          $fields
+     * @param \Illuminate\Support\Collection $models
+     *
      * @return mixed
      */
     public function handle(array $fields, Collection $models)
@@ -32,7 +33,8 @@ class ModifyNumberAction extends Action
     /**
      * Called in an action failed.
      *
-     * @param  RestRequest $request
+     * @param RestRequest $request
+     *
      * @return array
      */
     public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
@@ -40,8 +42,8 @@ class ModifyNumberAction extends Action
         return [
             'number' => [
                 'numeric',
-                'min:100'
-            ]
+                'min:100',
+            ],
         ];
     }
 }

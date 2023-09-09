@@ -2,9 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Support\Traits;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Client\Response;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Testing\TestResponse;
@@ -24,7 +21,7 @@ trait InteractsWithResource
                 'per_page',
                 'to',
                 'total',
-                'meta'
+                'meta',
             ]
         );
 
@@ -41,7 +38,7 @@ trait InteractsWithResource
                 })->when(!empty($onlyFields), function (Collection $collection) use ($onlyFields) {
                     return $collection
                         ->map(function ($item) use ($onlyFields) {
-                           return array_intersect_key($item, array_flip($onlyFields));
+                            return array_intersect_key($item, array_flip($onlyFields));
                         });
                 })
                 ->toArray(),
@@ -49,12 +46,13 @@ trait InteractsWithResource
         );
     }
 
-    protected function assertResourceModel($response, $models, Resource $resource) {
+    protected function assertResourceModel($response, $models, Resource $resource)
+    {
         $response->assertStatus(200);
 
         $this->assertEquals(
             array_map(
-                function($model) use ($resource) {
+                function ($model) use ($resource) {
                     return $model->only($resource->fields(App::make(RestRequest::class)));
                 },
                 $models
@@ -63,7 +61,8 @@ trait InteractsWithResource
         );
     }
 
-    protected function assertMutatedResponse($response, $createdModels = [], $updatedModels = []) {
+    protected function assertMutatedResponse($response, $createdModels = [], $updatedModels = [])
+    {
         $response->assertStatus(200);
 
         $this->assertEquals(

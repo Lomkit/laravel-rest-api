@@ -10,12 +10,14 @@ class Operation extends Schema
     /**
      * A list of tags for API documentation control.
      * Tags can be used for logical grouping of operations by resources or any other qualifier.
+     *
      * @var array
      */
     protected array $tags = [];
 
     /**
      * A short summary of what the operation does.
+     *
      * @var string
      */
     protected string $summary;
@@ -23,18 +25,21 @@ class Operation extends Schema
     /**
      * A verbose explanation of the operation behavior.
      * CommonMark syntax MAY be used for rich text representation.
+     *
      * @var string
      */
     protected string $description;
 
     /**
      * The request body applicable for this operation.
+     *
      * @var RequestBody
      */
     protected RequestBody $requestBody;
 
     /**
      * The list of possible responses as they are returned from executing this operation.
+     *
      * @var Responses
      */
     protected Responses $responses;
@@ -42,13 +47,15 @@ class Operation extends Schema
     public function withTags(array $tags): Operation
     {
         $this->tags = array_merge($this->tags, $tags);
+
         return $this;
     }
 
     /**
      * Set the list of tags for the operation.
      *
-     * @param  array  $tags
+     * @param array $tags
+     *
      * @return Operation
      */
     public function tags(): array
@@ -59,12 +66,14 @@ class Operation extends Schema
     /**
      * Set the short summary of the operation.
      *
-     * @param  string  $summary
+     * @param string $summary
+     *
      * @return Operation
      */
     public function withSummary(string $summary): Operation
     {
         $this->summary = $summary;
+
         return $this;
     }
 
@@ -81,12 +90,14 @@ class Operation extends Schema
     /**
      * Set the verbose explanation of the operation behavior.
      *
-     * @param  string  $description
+     * @param string $description
+     *
      * @return Operation
      */
     public function withDescription(string $description): Operation
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -103,12 +114,14 @@ class Operation extends Schema
     /**
      * Set the possible responses for the operation.
      *
-     * @param  Responses  $responses
+     * @param Responses $responses
+     *
      * @return Operation
      */
     public function withResponses(Responses $responses): Operation
     {
         $this->responses = $responses;
+
         return $this;
     }
 
@@ -125,12 +138,14 @@ class Operation extends Schema
     /**
      * Set the request body applicable for the operation.
      *
-     * @param  RequestBody  $requestBody
+     * @param RequestBody $requestBody
+     *
      * @return Operation
      */
     public function withRequestBody(RequestBody $requestBody): Operation
     {
         $this->requestBody = $requestBody;
+
         return $this;
     }
 
@@ -173,7 +188,8 @@ class Operation extends Schema
     /**
      * Generate an Operation schema for the "Detail" operation.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return Operation
      */
     public function generateDetail(Controller $controller): Operation
@@ -183,10 +199,10 @@ class Operation extends Schema
                 ->withSummary('Get the resource detail')
                 ->withDescription('Get every detail about the resource according to the current user connected')
                 ->withResponses(
-                    (new Responses)->generateDetail($controller)
+                    (new Responses())->generateDetail($controller)
                 )
                 ->withTags([
-                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName()),
                 ])
                 ->generate()
         );
@@ -195,7 +211,8 @@ class Operation extends Schema
     /**
      * Generate an Operation schema for the "Search" operation.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return Operation
      */
     public function generateSearch(Controller $controller): Operation
@@ -205,13 +222,13 @@ class Operation extends Schema
                 ->withSummary('Perform a search request')
                 ->withDescription('Crunch the Api\'s data with multiple attributes')
                 ->withResponses(
-                    (new Responses)->generateSearch($controller)
+                    (new Responses())->generateSearch($controller)
                 )
                 ->withTags([
-                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName()),
                 ])
                 ->withRequestBody(
-                    (new RequestBody)->generateSearch($controller)
+                    (new RequestBody())->generateSearch($controller)
                 )
                 ->generate()
         );
@@ -220,7 +237,8 @@ class Operation extends Schema
     /**
      * Generate an Operation schema for the "Mutate" operation.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return Operation
      */
     public function generateMutate(Controller $controller): Operation
@@ -230,13 +248,13 @@ class Operation extends Schema
                 ->withSummary('Perform a mutate request')
                 ->withDescription('Create / Modify the database data with multiple options')
                 ->withResponses(
-                    (new Responses)->generateMutate($controller)
+                    (new Responses())->generateMutate($controller)
                 )
                 ->withTags([
-                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName()),
                 ])
                 ->withRequestBody(
-                    (new RequestBody)->generateMutate($controller)
+                    (new RequestBody())->generateMutate($controller)
                 )
                 ->generate()
         );
@@ -245,7 +263,8 @@ class Operation extends Schema
     /**
      * Generate an Operation schema for the "Actions" operation.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return Operation
      */
     public function generateActions(Controller $controller): Operation
@@ -255,13 +274,13 @@ class Operation extends Schema
                 ->withSummary('Perform an action request')
                 ->withDescription('Launch actions')
                 ->withResponses(
-                    (new Responses)->generateActions($controller)
+                    (new Responses())->generateActions($controller)
                 )
                 ->withTags([
-                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName()),
                 ])
                 ->withRequestBody(
-                    (new RequestBody)->generateActions($controller)
+                    (new RequestBody())->generateActions($controller)
                 )
                 ->generate()
         );
@@ -270,7 +289,8 @@ class Operation extends Schema
     /**
      * Generate an Operation schema for the "Destroy" operation.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return Operation
      */
     public function generateDestroy(Controller $controller): Operation
@@ -280,13 +300,13 @@ class Operation extends Schema
                 ->withSummary('Perform a destroy request')
                 ->withDescription('Delete database records using primary key')
                 ->withResponses(
-                    (new Responses)->generateDestroy($controller)
+                    (new Responses())->generateDestroy($controller)
                 )
                 ->withTags([
-                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName()),
                 ])
                 ->withRequestBody(
-                    (new RequestBody)->generateDestroy($controller)
+                    (new RequestBody())->generateDestroy($controller)
                 )
                 ->generate()
         );
@@ -295,7 +315,8 @@ class Operation extends Schema
     /**
      * Generate an Operation schema for the "Restore" operation.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return Operation
      */
     public function generateRestore(Controller $controller): Operation
@@ -305,13 +326,13 @@ class Operation extends Schema
                 ->withSummary('Perform a restore request')
                 ->withDescription('Restore a soft deleted record')
                 ->withResponses(
-                    (new Responses)->generateRestore($controller)
+                    (new Responses())->generateRestore($controller)
                 )
                 ->withTags([
-                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName()),
                 ])
                 ->withRequestBody(
-                    (new RequestBody)->generateRestore($controller)
+                    (new RequestBody())->generateRestore($controller)
                 )
                 ->generate()
         );
@@ -320,7 +341,8 @@ class Operation extends Schema
     /**
      * Generate an Operation schema for the "Force Delete" operation.
      *
-     * @param  Controller  $controller
+     * @param Controller $controller
+     *
      * @return Operation
      */
     public function generateForceDelete(Controller $controller): Operation
@@ -330,13 +352,13 @@ class Operation extends Schema
                 ->withSummary('Perform a force delete request')
                 ->withDescription('Force delete a record')
                 ->withResponses(
-                    (new Responses)->generateForceDelete($controller)
+                    (new Responses())->generateForceDelete($controller)
                 )
                 ->withTags([
-                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName())
+                    Str::plural((new \ReflectionClass($controller::newResource()::newModel()))->getShortName()),
                 ])
                 ->withRequestBody(
-                    (new RequestBody)->generateForceDelete($controller)
+                    (new RequestBody())->generateForceDelete($controller)
                 )
                 ->generate()
         );

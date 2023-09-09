@@ -12,7 +12,8 @@ trait HasPivotFields
      *
      * @return array
      */
-    public function getPivotFields() {
+    public function getPivotFields()
+    {
         return $this->pivotFields;
     }
 
@@ -20,9 +21,11 @@ trait HasPivotFields
      * Set the pivot fields.
      *
      * @param array $pivotFields
+     *
      * @return $this
      */
-    public function withPivotFields(array $pivotFields) {
+    public function withPivotFields(array $pivotFields)
+    {
         return tap($this, function () use ($pivotFields) {
             $this->pivotFields = $pivotFields;
         });
@@ -32,9 +35,11 @@ trait HasPivotFields
      * Set the pivot rules.
      *
      * @param array $pivotRules
+     *
      * @return $this
      */
-    public function withPivotRules(array $pivotRules) {
+    public function withPivotRules(array $pivotRules)
+    {
         return tap($this, function () use ($pivotRules) {
             $this->pivotRules = $pivotRules;
         });

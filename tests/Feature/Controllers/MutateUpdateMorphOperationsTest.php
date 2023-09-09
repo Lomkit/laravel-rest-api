@@ -4,20 +4,12 @@ namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\TestCase;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphedByManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphToRelationFactory;
-use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
-use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
-use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphManyRelation;
@@ -25,7 +17,6 @@ use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToRelation;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\MorphToResource;
 
 class MutateUpdateMorphOperationsTest extends TestCase
@@ -41,9 +32,9 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'attributes' => ['string' => true]
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => ['string' => true],
                     ],
                 ],
             ],
@@ -66,19 +57,19 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphToRelation' => [
-                                'operation' => 'create',
-                                'type' => MorphToResource::class,
-                                'attributes' => []
-                            ]
-                        ]
+                                'operation'  => 'create',
+                                'type'       => MorphToResource::class,
+                                'attributes' => [],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -94,8 +85,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
         $this->assertDatabaseHas(
             $modelToUpdate->getTable(),
             [
-                'name' => 'new name',
-                'number' => 5001
+                'name'   => 'new name',
+                'number' => 5001,
             ]
         );
 
@@ -116,19 +107,19 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'attach',
-                                'type' => MorphToResource::class,
-                                'key' => $morphToRelationToAttach->getKey()
-                            ]
-                        ]
+                                'type'      => MorphToResource::class,
+                                'key'       => $morphToRelationToAttach->getKey(),
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -163,19 +154,19 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'detach',
-                                'type' => MorphToResource::class,
-                                'key' => $morphToRelationToDetach->getKey()
-                            ]
-                        ]
+                                'type'      => MorphToResource::class,
+                                'key'       => $morphToRelationToDetach->getKey(),
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -205,20 +196,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphToRelation' => [
-                                'operation' => 'update',
-                                'type' => MorphToResource::class,
-                                'key' => $morphToRelationToUpdate->getKey(),
-                                'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                            ]
-                        ]
+                                'operation'  => 'update',
+                                'type'       => MorphToResource::class,
+                                'key'        => $morphToRelationToUpdate->getKey(),
+                                'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -256,26 +247,25 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -285,7 +275,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphManyRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphManyRelation()->count(),
+            1
         );
     }
 
@@ -301,30 +292,29 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
+                                    'operation'  => 'create',
+                                    'attributes' => [],
                                 ],
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -334,7 +324,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphManyRelation()->count(), 2
+            Model::find($response->json('updated.0'))->morphManyRelation()->count(),
+            2
         );
     }
 
@@ -355,20 +346,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key' => $morphManyRelationToAttach->getKey()
-                                ]
-                            ]
-                        ]
+                                    'key'       => $morphManyRelationToAttach->getKey(),
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -383,7 +374,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphManyRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphManyRelation()->count(),
+            1
         );
     }
 
@@ -402,20 +394,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key' => $morphManyRelationToDetach->getKey()
-                                ]
-                            ]
-                        ]
+                                    'key'       => $morphManyRelationToDetach->getKey(),
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -430,7 +422,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphManyRelation()->count(), 0
+            Model::find($response->json('updated.0'))->morphManyRelation()->count(),
+            0
         );
     }
 
@@ -451,27 +444,26 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation' => 'update',
-                                    'key' => $morphManyRelationToAttach->getKey(),
-                                    'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'update',
+                                    'key'        => $morphManyRelationToAttach->getKey(),
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -487,7 +479,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphManyRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphManyRelation()->count(),
+            1
         );
     }
 
@@ -503,18 +496,18 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
-                                'operation' => 'create',
-                                'attributes' => []
-                            ]
-                        ]
+                                'operation'  => 'create',
+                                'attributes' => [],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -529,7 +522,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphOneRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphOneRelation()->count(),
+            1
         );
     }
 
@@ -550,18 +544,18 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
                                 'operation' => 'attach',
-                                'key' => $morphOneRelationToAttach->getKey()
-                            ]
-                        ]
+                                'key'       => $morphOneRelationToAttach->getKey(),
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -576,7 +570,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphOneRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphOneRelation()->count(),
+            1
         );
     }
 
@@ -595,18 +590,18 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
                                 'operation' => 'detach',
-                                'key' => $morphOneRelationToDetach->getKey()
-                            ]
-                        ]
+                                'key'       => $morphOneRelationToDetach->getKey(),
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -621,7 +616,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphOneRelation()->count(), 0
+            Model::find($response->json('updated.0'))->morphOneRelation()->count(),
+            0
         );
     }
 
@@ -642,25 +638,24 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
-                                'operation' => 'update',
-                                'key' => $morphOneRelationToUpdate->getKey(),
-                                'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                            ]
-                        ]
+                                'operation'  => 'update',
+                                'key'        => $morphOneRelationToUpdate->getKey(),
+                                'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -676,7 +671,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphOneRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphOneRelation()->count(),
+            1
         );
     }
 
@@ -692,20 +688,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -720,7 +716,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphToManyRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphToManyRelation()->count(),
+            1
         );
     }
 
@@ -736,23 +733,23 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation' => 'create',
+                                    'operation'  => 'create',
                                     'attributes' => [],
-                                    'pivot' => [
-                                        'unauithorized_field' => 20
-                                    ]
-                                ]
-                            ]
-                        ]
+                                    'pivot'      => [
+                                        'unauithorized_field' => 20,
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -775,30 +772,30 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation' => 'create',
+                                    'operation'  => 'create',
                                     'attributes' => [],
-                                    'pivot' => [
-                                        'number' => 20
-                                    ]
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
                                 ],
                                 [
-                                    'operation' => 'create',
+                                    'operation'  => 'create',
                                     'attributes' => [],
-                                    'pivot' => [
-                                        'number' => 30
-                                    ]
-                                ]
-                            ]
-                        ]
+                                    'pivot'      => [
+                                        'number' => 30,
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -813,13 +810,16 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphToManyRelation()->count(), 2
+            Model::find($response->json('updated.0'))->morphToManyRelation()->count(),
+            2
         );
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphToManyRelation()->orderBy('id')->get()[0]->morph_to_many_pivot->number, 20
+            Model::find($response->json('updated.0'))->morphToManyRelation()->orderBy('id')->get()[0]->morph_to_many_pivot->number,
+            20
         );
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphToManyRelation()->orderBy('id')->get()[1]->morph_to_many_pivot->number, 30
+            Model::find($response->json('updated.0'))->morphToManyRelation()->orderBy('id')->get()[1]->morph_to_many_pivot->number,
+            30
         );
     }
 
@@ -835,30 +835,29 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
+                                    'operation'  => 'create',
+                                    'attributes' => [],
                                 ],
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -868,7 +867,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphToManyRelation()->count(), 2
+            Model::find($response->json('updated.0'))->morphToManyRelation()->count(),
+            2
         );
     }
 
@@ -889,20 +889,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key' => $morphToManyRelationToAttach->getKey()
-                                ]
-                            ]
-                        ]
+                                    'key'       => $morphToManyRelationToAttach->getKey(),
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -917,7 +917,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphToManyRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphToManyRelation()->count(),
+            1
         );
     }
 
@@ -936,20 +937,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key' => $morphToManyRelationToDetach->getKey()
-                                ]
-                            ]
-                        ]
+                                    'key'       => $morphToManyRelationToDetach->getKey(),
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -964,7 +965,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphToManyRelation()->count(), 0
+            Model::find($response->json('updated.0'))->morphToManyRelation()->count(),
+            0
         );
     }
 
@@ -985,27 +987,26 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation' => 'update',
-                                    'key' => $morphToManyRelationToUpdate->getKey(),
-                                    'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'update',
+                                    'key'        => $morphToManyRelationToUpdate->getKey(),
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -1021,7 +1022,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphToManyRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphToManyRelation()->count(),
+            1
         );
     }
 
@@ -1037,20 +1039,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -1065,7 +1067,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
+            1
         );
     }
 
@@ -1081,23 +1084,23 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation' => 'create',
+                                    'operation'  => 'create',
                                     'attributes' => [],
-                                    'pivot' => [
-                                        'unauthorized_field' => 20
-                                    ]
-                                ]
-                            ]
-                        ]
+                                    'pivot'      => [
+                                        'unauthorized_field' => 20,
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -1120,30 +1123,30 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation' => 'create',
+                                    'operation'  => 'create',
                                     'attributes' => [],
-                                    'pivot' => [
-                                        'number' => 20
-                                    ]
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
                                 ],
                                 [
-                                    'operation' => 'create',
+                                    'operation'  => 'create',
                                     'attributes' => [],
-                                    'pivot' => [
-                                        'number' => 30
-                                    ]
-                                ]
-                            ]
-                        ]
+                                    'pivot'      => [
+                                        'number' => 30,
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -1158,13 +1161,16 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(), 2
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
+            2
         );
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphedByManyRelation[0]->morphed_by_many_pivot->number, 20
+            Model::find($response->json('updated.0'))->morphedByManyRelation[0]->morphed_by_many_pivot->number,
+            20
         );
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphedByManyRelation[1]->morphed_by_many_pivot->number, 30
+            Model::find($response->json('updated.0'))->morphedByManyRelation[1]->morphed_by_many_pivot->number,
+            30
         );
     }
 
@@ -1180,30 +1186,29 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
+                                    'operation'  => 'create',
+                                    'attributes' => [],
                                 ],
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -1213,7 +1218,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(), 2
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
+            2
         );
     }
 
@@ -1234,20 +1240,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key' => $morphedByManyRelationToAttach->getKey()
-                                ]
-                            ]
-                        ]
+                                    'key'       => $morphedByManyRelationToAttach->getKey(),
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -1262,7 +1268,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
+            1
         );
     }
 
@@ -1281,20 +1288,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key' => $morphedByManyRelationToDetach->getKey()
-                                ]
-                            ]
-                        ]
+                                    'key'       => $morphedByManyRelationToDetach->getKey(),
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -1309,7 +1316,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(), 0
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
+            0
         );
     }
 
@@ -1330,27 +1338,26 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001
+                            'name'   => 'new name',
+                            'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation' => 'update',
-                                    'key' => $morphedByManyRelationToUpdate->getKey(),
-                                    'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'update',
+                                    'key'        => $morphedByManyRelationToUpdate->getKey(),
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertMutatedResponse(
             $response,
@@ -1366,7 +1373,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(), 1
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
+            1
         );
     }
 }

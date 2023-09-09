@@ -16,10 +16,12 @@ trait Constrained
     /**
      * Set the callback used to determine if the relation is required.
      *
-     * @param  (callable(RestRequest):bool)|bool  $callback
+     * @param (callable(RestRequest):bool)|bool $callback
+     *
      * @return $this
      */
-    public function requiredOnCreation($callback = true) {
+    public function requiredOnCreation($callback = true)
+    {
         $this->relationRequiredCallback = $callback;
 
         return $this;
@@ -28,8 +30,9 @@ trait Constrained
     /**
      * Check required on creation.
      *
-     * @param  RestRequest  $request
-     * @param  mixed  $resource
+     * @param RestRequest $request
+     * @param mixed       $resource
+     *
      * @return bool
      */
     public function isRequiredOnCreation(RestRequest $request): bool

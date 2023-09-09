@@ -72,14 +72,14 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
-                    'belongs_to_relation' => $matchingModel->belongsToRelation->only((new BelongsToResource)->fields(app()->make(RestRequest::class))),
+                    'belongs_to_relation' => $matchingModel->belongsToRelation->only((new BelongsToResource())->fields(app()->make(RestRequest::class))),
                 ],
                 [
                     'belongs_to_relation' => null,
-                ]
+                ],
             ]
         );
     }
@@ -111,16 +111,16 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'belongs_to_relation' => array_merge(
                         $matchingModelBelongsToRelation
-                            ->only((new BelongsToResource)->fields(app()->make(RestRequest::class))),
+                            ->only((new BelongsToResource())->fields(app()->make(RestRequest::class))),
                         [
                             'models' => $matchingModelBelongsToRelation->models
-                                ->map(function($model) {
-                                    return $model->only((new ModelResource)->fields(app()->make(RestRequest::class)));
+                                ->map(function ($model) {
+                                    return $model->only((new ModelResource())->fields(app()->make(RestRequest::class)));
                                 })
                                 ->toArray(),
                         ]
@@ -128,7 +128,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 ],
                 [
                     'belongs_to_relation' => null,
-                ]
+                ],
             ]
         );
     }
@@ -140,7 +140,6 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         HasOneRelationFactory::new()
             ->for($matchingModel)
             ->create();
-
 
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
@@ -160,16 +159,16 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'has_one_relation' => $matchingModel->hasOneRelation->only(
-                        (new HasOneResource)->fields(app()->make(RestRequest::class))
+                        (new HasOneResource())->fields(app()->make(RestRequest::class))
                     ),
                 ],
                 [
                     'has_one_relation' => null,
-                ]
+                ],
             ]
         );
     }
@@ -181,7 +180,6 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         HasOneOfManyRelationFactory::new()
             ->for($matchingModel)
             ->create();
-
 
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
@@ -201,16 +199,16 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'has_one_of_many_relation' => $matchingModel->hasOneOfManyRelation->only(
-                        (new HasOneOfManyResource)->fields(app()->make(RestRequest::class))
+                        (new HasOneOfManyResource())->fields(app()->make(RestRequest::class))
                     ),
                 ],
                 [
                     'has_one_of_many_relation' => null,
-                ]
+                ],
             ]
         );
     }
@@ -232,9 +230,9 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 'includes' => [
                     [
                         'relation' => 'hasManyRelation',
-                        'sorts' => [
-                            ['field' => 'id', 'direction' => 'asc']
-                        ]
+                        'sorts'    => [
+                            ['field' => 'id', 'direction' => 'asc'],
+                        ],
                     ],
                 ],
             ],
@@ -244,7 +242,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'has_many_relation' => $matchingModel->hasManyRelation()
@@ -252,13 +250,13 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) {
                             return $relation->only(
-                                (new HasManyResource)->fields(app()->make(RestRequest::class))
+                                (new HasManyResource())->fields(app()->make(RestRequest::class))
                             );
                         })->toArray(),
                 ],
                 [
                     'has_many_relation' => [],
-                ]
+                ],
             ]
         );
     }
@@ -280,7 +278,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             [
                 'includes' => [
                     [
-                        'relation' => 'belongsToManyRelation'
+                        'relation' => 'belongsToManyRelation',
                     ],
                 ],
             ],
@@ -290,29 +288,30 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'belongs_to_many_relation' => $matchingModel->belongsToManyRelation()
                         ->orderBy('id', 'desc')
                         ->get()
-                        ->map(function ($relation) use ($matchingModel, $pivotAccessor) {
-                        return collect($relation->only(
-                            array_merge((new BelongsToManyResource)->fields(app()->make(RestRequest::class)), [$pivotAccessor])
-                        ))
-                            ->pipe(function ($relation) use ($matchingModel, $pivotAccessor) {
-                                $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
-                                    ->only(
-                                        (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()
-                                    );
-                                return $relation;
-                            });
-                    })
+                        ->map(function ($relation) use ($pivotAccessor) {
+                            return collect($relation->only(
+                                array_merge((new BelongsToManyResource())->fields(app()->make(RestRequest::class)), [$pivotAccessor])
+                            ))
+                                ->pipe(function ($relation) use ($pivotAccessor) {
+                                    $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
+                                        ->only(
+                                            (new ModelResource())->relation('belongsToManyRelation')->getPivotFields()
+                                        );
+
+                                    return $relation;
+                                });
+                        })
                         ->toArray(),
                 ],
                 [
                     'belongs_to_many_relation' => [],
-                ]
+                ],
             ]
         );
     }

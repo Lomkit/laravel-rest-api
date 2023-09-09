@@ -3,18 +3,10 @@
 namespace Lomkit\Rest\Query\Traits;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Relations\BelongsTo;
-use Lomkit\Rest\Relations\BelongsToMany;
-use Lomkit\Rest\Relations\HasMany;
-use Lomkit\Rest\Relations\HasOne;
 
 trait PerformMutation
 {
-
     /**
      * A map of verbose mutation operations to their actual operation names.
      *
@@ -22,19 +14,21 @@ trait PerformMutation
      */
     protected $mutateOperationsVerbose = [
         'create' => 'created',
-        'update' => 'updated'
+        'update' => 'updated',
     ];
 
     /**
      * Mutate the model based on the provided parameters.
      *
      * @param array $parameters An array of mutation parameters.
+     *
      * @return array An array containing 'created' and 'updated' operations with affected model keys.
      */
-    public function mutate(array $parameters = []) {
+    public function mutate(array $parameters = [])
+    {
         $operations = [
             'created' => [],
-            'updated' => []
+            'updated' => [],
         ];
 
         foreach ($parameters['mutate'] as $parameter) {
@@ -49,11 +43,13 @@ trait PerformMutation
     /**
      * Apply a mutation to the model based on the provided mutation parameters.
      *
-     * @param array $mutation An array of mutation parameters.
+     * @param array $mutation   An array of mutation parameters.
      * @param array $attributes Additional attributes to apply to the model.
+     *
      * @return Model The mutated model.
      */
-    public function applyMutation(array $mutation = [], $attributes = []) {
+    public function applyMutation(array $mutation = [], $attributes = [])
+    {
         $allAttributes = array_merge($attributes, $mutation['attributes'] ?? []);
 
         if ($mutation['operation'] === 'create') {
@@ -64,7 +60,7 @@ trait PerformMutation
             return $this->mutateModel(
                 $model,
                 $allAttributes,
-                    $mutation['relations'] ?? []
+                $mutation['relations'] ?? []
             );
         }
 
@@ -80,8 +76,7 @@ trait PerformMutation
             );
         }
 
-        $newModel = $this->resource::newModel()
-            ::find($mutation['key']);
+        $newModel = $this->resource::newModel()::find($mutation['key']);
 
         $newModel
             ->forceFill($allAttributes)
@@ -93,12 +88,14 @@ trait PerformMutation
     /**
      * Mutate the model by applying attributes and relations.
      *
-     * @param Model $model The Eloquent model to mutate.
+     * @param Model $model      The Eloquent model to mutate.
      * @param array $attributes The attributes to apply to the model.
-     * @param array $relations The relations associated with the model.
+     * @param array $relations  The relations associated with the model.
+     *
      * @return Model The mutated model.
      */
-    public function mutateModel(Model $model, $attributes, $relations) {
+    public function mutateModel(Model $model, $attributes, $relations)
+    {
         $restRelations = array_filter(
             $this->resource
                 ->getRelations(

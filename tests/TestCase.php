@@ -4,13 +4,10 @@ namespace Lomkit\Rest\Tests;
 
 use Illuminate\Config\Repository;
 use Illuminate\Contracts\Console\Kernel;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
-use Illuminate\Support\Facades\Artisan;
 use Lomkit\Rest\RestServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class TestCase extends BaseTestCase
 {
@@ -29,7 +26,7 @@ class TestCase extends BaseTestCase
     protected function refreshTestDatabase()
     {
         if (!RefreshDatabaseState::$migrated) {
-            $this->artisan('migrate', ['--path' => __DIR__ .  '/Support/Database/migrations', '--realpath' => true]);
+            $this->artisan('migrate', ['--path' => __DIR__.'/Support/Database/migrations', '--realpath' => true]);
 
             $this->app[Kernel::class]->setArtisan(null);
 
@@ -46,7 +43,7 @@ class TestCase extends BaseTestCase
      */
     protected function refreshInMemoryDatabase()
     {
-        $this->artisan('migrate', ['--path' => __DIR__ . '/Support/Database/migrations', '--realpath' => true]);
+        $this->artisan('migrate', ['--path' => __DIR__.'/Support/Database/migrations', '--realpath' => true]);
 
         $this->app[Kernel::class]->setArtisan(null);
     }
@@ -54,14 +51,15 @@ class TestCase extends BaseTestCase
     /**
      * Define environment setup.
      *
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param \Illuminate\Foundation\Application $app
+     *
      * @return void
      */
     protected function defineEnvironment($app)
     {
         tap($app->make('config'), function (Repository $config) {
             $config->set('auth.guards.api', [
-                'driver' => 'token',
+                'driver'   => 'token',
                 'provider' => 'users',
             ]);
         });
@@ -70,19 +68,19 @@ class TestCase extends BaseTestCase
     /**
      * Define routes setup.
      *
-     * @param  \Illuminate\Routing\Router  $router
+     * @param \Illuminate\Routing\Router $router
      *
      * @return void
      */
     protected function defineRoutes($router)
     {
-        include(__DIR__.'/Support/Routes/api.php');
+        include __DIR__.'/Support/Routes/api.php';
     }
 
     /**
      * Get package providers.
      *
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param \Illuminate\Foundation\Application $app
      *
      * @return array<int, class-string<\Illuminate\Support\ServiceProvider>>
      */
