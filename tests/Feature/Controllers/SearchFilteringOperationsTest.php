@@ -54,7 +54,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -79,7 +79,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -104,7 +104,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -128,7 +128,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -152,7 +152,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -176,7 +176,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -200,7 +200,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -224,7 +224,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -248,7 +248,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -273,7 +273,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -297,7 +297,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -322,7 +322,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -348,7 +348,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -373,7 +373,7 @@ class SearchFilteringOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -393,7 +393,7 @@ class SearchFilteringOperationsTest extends TestCase
                         'nested' => [
                             ['field' => 'number', 'value' => 1],
                             ['field' => 'name', 'value' => 'match', 'type' => 'and'],
-                        ]
+                        ],
                     ],
                     ['field' => 'number', 'value' => 2, 'type' => 'or'],
                 ],
@@ -401,11 +401,10 @@ class SearchFilteringOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -427,18 +426,17 @@ class SearchFilteringOperationsTest extends TestCase
                             ['field' => 'number', 'value' => 1],
                             ['field' => 'name', 'value' => 'match', 'type' => 'and'],
                         ],
-                        'type' => 'or'
+                        'type' => 'or',
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
 
-
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -462,17 +460,16 @@ class SearchFilteringOperationsTest extends TestCase
             [
                 'filters' => [
                     ['field' => 'number', 'value' => 1],
-                    ['field' => 'belongsToManyRelation.pivot.number', 'value' => 10]
+                    ['field' => 'belongsToManyRelation.pivot.number', 'value' => 10],
                 ],
             ],
             ['Accept' => 'application/json']
         );
 
-
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -496,17 +493,16 @@ class SearchFilteringOperationsTest extends TestCase
             [
                 'filters' => [
                     ['field' => 'number', 'value' => 1],
-                    ['field' => 'morphToManyRelation.pivot.number', 'value' => 10]
+                    ['field' => 'morphToManyRelation.pivot.number', 'value' => 10],
                 ],
             ],
             ['Accept' => 'application/json']
         );
 
-
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -530,17 +526,16 @@ class SearchFilteringOperationsTest extends TestCase
             [
                 'filters' => [
                     ['field' => 'number', 'value' => 1],
-                    ['field' => 'morphedByManyRelation.pivot.number', 'value' => 10]
+                    ['field' => 'morphedByManyRelation.pivot.number', 'value' => 10],
                 ],
             ],
             ['Accept' => 'application/json']
         );
 
-
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource
+            new ModelResource()
         );
     }
 }

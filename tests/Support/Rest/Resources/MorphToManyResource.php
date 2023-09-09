@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 use Lomkit\Rest\Concerns\Resource\DisableAutomaticGates;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
 
 class MorphToManyResource extends Resource
@@ -23,7 +22,7 @@ class MorphToManyResource extends Resource
     {
         return [
             'id',
-            'number'
+            'number',
         ];
     }
 }

@@ -14,16 +14,16 @@ return [
 
     'automatic_gates' => [
         'enabled' => true,
-        'key' => 'gates',
+        'key'     => 'gates',
         // Here you can customize the keys for each gate
         'names' => [
-            'authorized_to_view' => 'authorized_to_view',
-            'authorized_to_create' => 'authorized_to_create',
-            'authorized_to_update' => 'authorized_to_update',
-            'authorized_to_delete' => 'authorized_to_delete',
-            'authorized_to_restore' => 'authorized_to_restore',
+            'authorized_to_view'         => 'authorized_to_view',
+            'authorized_to_create'       => 'authorized_to_create',
+            'authorized_to_update'       => 'authorized_to_update',
+            'authorized_to_delete'       => 'authorized_to_delete',
+            'authorized_to_restore'      => 'authorized_to_restore',
             'authorized_to_force_delete' => 'authorized_to_force_delete',
-        ]
+        ],
     ],
 
     /*
@@ -37,7 +37,7 @@ return [
     */
 
     'authorizations' => [
-        'enabled' => true
+        'enabled' => true,
     ],
 
     /*
@@ -53,70 +53,70 @@ return [
 
     'documentation' => [
         'routing' => [
-            'enabled' => true,
-            'domain' => null,
-            'path' => '/api-documentation',
+            'enabled'     => true,
+            'domain'      => null,
+            'path'        => '/api-documentation',
             'middlewares' => [
-                'web'
-            ]
+                'web',
+            ],
         ],
         'info' => [
-            'title' => config('app.name'),
-            'summary' => 'This is my projet\'s documentation',
-            'description' => 'Find out all about my projet\'s API',
+            'title'          => config('app.name'),
+            'summary'        => 'This is my projet\'s documentation',
+            'description'    => 'Find out all about my projet\'s API',
             'termsOfService' => null, // (Optional) Url to terms of services
-            'contact' => [
-                'name' => 'My Company',
+            'contact'        => [
+                'name'  => 'My Company',
                 'email' => 'email@company.com',
-                'url' => 'https://company.com'
+                'url'   => 'https://company.com',
             ],
             'license' => [
-                'url' => null,
-                'name' => 'Apache 2.0',
-                'identifier' => 'Apache-2.0'
+                'url'        => null,
+                'name'       => 'Apache 2.0',
+                'identifier' => 'Apache-2.0',
             ],
-            'version' => '1.0.0'
+            'version' => '1.0.0',
         ],
         // See https://spec.openapis.org/oas/v3.1.0#server-object
         'servers' => [
             [
-                'url' => '/', // Relative to current
-                'description' => 'The current server'
+                'url'         => '/', // Relative to current
+                'description' => 'The current server',
             ],
-//            [
-//                'url' => '"https://my-server.com:{port}/{basePath}"',
-//                'description' => 'Production server',
-//                'variables' => [
-//                    'port' => [
-//                        'enum' => ['80', '443'],
-//                        'default' => '443'
-//                    ],
-//                    'basePath' => [
-//                        'default' => 'v2',
-//                        'enum' => ['v1', 'v2'],
-//                    ]
-//                ]
-//            ]
+            //            [
+            //                'url' => '"https://my-server.com:{port}/{basePath}"',
+            //                'description' => 'Production server',
+            //                'variables' => [
+            //                    'port' => [
+            //                        'enum' => ['80', '443'],
+            //                        'default' => '443'
+            //                    ],
+            //                    'basePath' => [
+            //                        'default' => 'v2',
+            //                        'enum' => ['v1', 'v2'],
+            //                    ]
+            //                ]
+            //            ]
         ],
         // See https://spec.openapis.org/oas/v3.1.0#security-scheme-object
         'security' => [
-//            [
-//                'type' => 'http',
-//                'description' => 'description',
-//                'scheme' => 'Bearer',
-//                'bearerFormat' => 'JWT'
-//            ],
-//            [
-//                'type' => 'oauth2',
-//                'flows' => [
-//                    'authorizationCode' => [
-//                        'scopes' => ['write:pets'],
-//                        'tokenUrl' => 'https://example.com/api/oauth/token',
-//                        'authorizationUrl' => 'https://example.com/api/oauth/dialog',
-//                        'refreshUrl' => 'https://example.com/api/oauth/refresh',
-//                    ]
-//                ]
-//            ]
-        ]
+            //            [
+            //                'type' => 'http',
+            //                'description' => 'description',
+            //                'scheme' => 'Bearer',
+            //                'bearerFormat' => 'JWT'
+            //            ],
+            //            [
+            //                'type' => 'oauth2',
+            //                'flows' => [
+            //                    'authorizationCode' => [
+            //                        'scopes' => ['write:pets'],
+            //                        'tokenUrl' => 'https://example.com/api/oauth/token',
+            //                        'authorizationUrl' => 'https://example.com/api/oauth/dialog',
+            //                        'refreshUrl' => 'https://example.com/api/oauth/refresh',
+            //                    ]
+            //                ]
+            //            ]
+        ],
     ],
 ];

@@ -12,7 +12,8 @@ class DocumentationController extends \Illuminate\Routing\Controller
      * This method is responsible for rendering and returning the 'index' view,
      * which typically contains the documentation for the application.
      */
-    public function index() {
+    public function index()
+    {
         return view('rest::index');
     }
 }

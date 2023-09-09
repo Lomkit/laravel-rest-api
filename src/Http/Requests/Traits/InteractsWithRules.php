@@ -2,8 +2,6 @@
 
 namespace Lomkit\Rest\Http\Requests\Traits;
 
-use Lomkit\Rest\Facades\Rest;
-
 trait InteractsWithRules
 {
     /**

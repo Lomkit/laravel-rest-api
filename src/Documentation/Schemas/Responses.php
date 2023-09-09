@@ -8,12 +8,14 @@ class Responses extends Schema
 {
     /**
      * The documentation of responses other than the ones declared for specific HTTP response codes. Use this field to cover undeclared responses.
+     *
      * @var Response
      */
     protected Response $default;
 
     /**
-     * Other responses
+     * Other responses.
+     *
      * @var object
      */
     protected array $others = [];
@@ -22,6 +24,7 @@ class Responses extends Schema
      * Set the default response.
      *
      * @param Response $default
+     *
      * @return Responses
      *
      * This method allows setting the default response for undeclared responses in documentation.
@@ -29,6 +32,7 @@ class Responses extends Schema
     public function withDefault(Response $default): Responses
     {
         $this->default = $default;
+
         return $this;
     }
 
@@ -48,6 +52,7 @@ class Responses extends Schema
      * Add other responses to the collection.
      *
      * @param array $others
+     *
      * @return Responses
      *
      * This method allows adding other responses to the collection, typically responses for specific
@@ -56,6 +61,7 @@ class Responses extends Schema
     public function withOthers(array $others): Responses
     {
         $this->others = array_merge($this->others, $others);
+
         return $this;
     }
 
@@ -104,6 +110,7 @@ class Responses extends Schema
      * Generate detailed responses for a controller.
      *
      * @param Controller $controller
+     *
      * @return Responses
      *
      * This method generates detailed responses for a controller, typically for actions that retrieve detailed
@@ -113,7 +120,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateDetail($controller)
             )
             ->generate();
@@ -123,6 +130,7 @@ class Responses extends Schema
      * Generate search responses for a controller.
      *
      * @param Controller $controller
+     *
      * @return Responses
      *
      * This method generates search responses for a controller, typically for actions that retrieve lists
@@ -132,7 +140,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateSearch($controller)
             )
             ->generate();
@@ -142,6 +150,7 @@ class Responses extends Schema
      * Generate mutate responses for a controller.
      *
      * @param Controller $controller
+     *
      * @return Responses
      *
      * This method generates mutate responses for a controller, typically for actions that create, update,
@@ -151,7 +160,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateMutate($controller)
             )
             ->generate();
@@ -161,6 +170,7 @@ class Responses extends Schema
      * Generate action responses for a controller.
      *
      * @param Controller $controller
+     *
      * @return Responses
      *
      * This method generates action responses for a controller, typically for custom actions defined on a resource.
@@ -169,7 +179,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateActions($controller)
             )
             ->generate();
@@ -179,6 +189,7 @@ class Responses extends Schema
      * Generate destroy responses for a controller.
      *
      * @param Controller $controller
+     *
      * @return Responses
      *
      * This method generates destroy responses for a controller, typically for actions that delete resources.
@@ -187,7 +198,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateDestroy($controller)
             )
             ->generate();
@@ -197,6 +208,7 @@ class Responses extends Schema
      * Generate restore responses for a controller.
      *
      * @param Controller $controller
+     *
      * @return Responses
      *
      * This method generates restore responses for a controller, typically for actions that restore deleted resources.
@@ -205,7 +217,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateRestore($controller)
             )
             ->generate();
@@ -215,6 +227,7 @@ class Responses extends Schema
      * Generate force delete responses for a controller.
      *
      * @param Controller $controller
+     *
      * @return Responses
      *
      * This method generates force delete responses for a controller, typically for actions that permanently
@@ -224,7 +237,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateForceDelete($controller)
             )
             ->generate();

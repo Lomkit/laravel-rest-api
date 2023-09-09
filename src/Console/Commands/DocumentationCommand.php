@@ -5,13 +5,6 @@ namespace Lomkit\Rest\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
-use Illuminate\Database\Migrations\MigrationCreator;
-use Illuminate\Support\Composer;
-use Illuminate\Support\Str;
-use Lomkit\Rest\Console\ResolvesStubPath;
-use Lomkit\Rest\Documentation\Schemas\Contact;
-use Lomkit\Rest\Documentation\Schemas\Info;
-use Lomkit\Rest\Documentation\Schemas\License;
 use Lomkit\Rest\Documentation\Schemas\OpenAPI;
 use RuntimeException;
 
@@ -39,7 +32,7 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
      */
     public function handle()
     {
-        $openApi = (new OpenAPI)
+        $openApi = (new OpenAPI())
             ->generate();
 
         $path = $this->getPath('openapi');
@@ -55,20 +48,21 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
     /**
      * Get the documentation path.
      *
-     * @param  string  $name
+     * @param string $name
+     *
      * @return string
      */
     protected function getPath($name)
     {
-
         return $this->hasOption('path') ? $this->option('path').'/'.$name.'.json' : public_path('vendor/rest/'.$name.'.json');
     }
 
     /**
      * Get the stub file for the generator.
      *
-     * @return string
      * @throws RuntimeException
+     *
+     * @return string
      */
     protected function getStub()
     {

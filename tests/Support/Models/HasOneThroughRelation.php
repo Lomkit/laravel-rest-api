@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model as BaseModel;
 
 class HasOneThroughRelation extends BaseModel
 {
-    public function hasOneRelation() {
+    public function hasOneRelation()
+    {
         return $this->belongsTo(HasOneRelation::class);
     }
 }

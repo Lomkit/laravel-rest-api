@@ -2,9 +2,6 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Lomkit\Rest\Contracts\QueryBuilder;
-use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Resource;
 
 class DestroyRequest extends RestRequest
@@ -25,7 +22,8 @@ class DestroyRequest extends RestRequest
     /**
      * Define the validation rules for destroying resources.
      *
-     * @param Resource $resource
+     * @param resource $resource
+     *
      * @return array
      *
      * This method specifies the validation rules for destroying resources.
@@ -36,8 +34,8 @@ class DestroyRequest extends RestRequest
     {
         return [
             'resources' => [
-                'required', 'array'
-            ]
+                'required', 'array',
+            ],
         ];
     }
 }

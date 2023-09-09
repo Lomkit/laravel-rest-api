@@ -5,14 +5,14 @@ namespace Lomkit\Rest\Concerns;
 trait Metable
 {
     /**
-     * The meta array
+     * The meta array.
      *
      * @var array<string, mixed>
      */
     public $meta = [];
 
     /**
-     * Get the meta data
+     * Get the meta data.
      *
      * @return array
      */
@@ -24,7 +24,8 @@ trait Metable
     /**
      * Set additional meta information for the element.
      *
-     * @param  array $meta
+     * @param array $meta
+     *
      * @return $this
      */
     public function withMeta(array $meta)

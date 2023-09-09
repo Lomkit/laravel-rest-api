@@ -2,37 +2,13 @@
 
 namespace Lomkit\Rest\Tests\Feature\Controllers;
 
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Feature\TestCase;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\SoftDeletedModelFactory;
-use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
-use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
-use Lomkit\Rest\Tests\Support\Policies\CreatePolicy;
-use Lomkit\Rest\Tests\Support\Policies\DeletePolicy;
-use Lomkit\Rest\Tests\Support\Policies\ForceDeletePolicy;
-use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Policies\RedPolicy;
-use Lomkit\Rest\Tests\Support\Policies\RestorePolicy;
-use Lomkit\Rest\Tests\Support\Policies\UpdatePolicy;
-use Lomkit\Rest\Tests\Support\Policies\ViewPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\AutomaticGatingResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\NoAuthorizationResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\NoExposedFieldsResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class NoAuthorizationTest extends TestCase
 {
@@ -56,7 +32,7 @@ class NoAuthorizationTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new ModelResource
+            new ModelResource()
         );
     }
 
@@ -76,7 +52,7 @@ class NoAuthorizationTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new NoAuthorizationResource
+            new NoAuthorizationResource()
         );
     }
 
@@ -91,11 +67,11 @@ class NoAuthorizationTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
-                        ]
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
+                        ],
                     ],
                 ],
             ],
@@ -117,12 +93,12 @@ class NoAuthorizationTest extends TestCase
         $response = $this->delete(
             '/api/no-authorization',
             [
-                'resources' => [$model->getKey()]
+                'resources' => [$model->getKey()],
             ],
             ['Accept' => 'application/json']
         );
 
-        $this->assertResourceModel($response, [$model], new ModelResource);
+        $this->assertResourceModel($response, [$model], new ModelResource());
         $this->assertDatabaseMissing('models', $model->only('id'));
     }
 }

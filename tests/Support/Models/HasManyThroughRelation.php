@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model as BaseModel;
 
 class HasManyThroughRelation extends BaseModel
 {
-    public function hasManyRelation() {
+    public function hasManyRelation()
+    {
         return $this->belongsTo(HasManyRelation::class);
     }
 }

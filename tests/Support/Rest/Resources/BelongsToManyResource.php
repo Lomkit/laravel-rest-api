@@ -22,7 +22,7 @@ class BelongsToManyResource extends Resource
     {
         return [
             'id',
-            'number'
+            'number',
         ];
     }
 }

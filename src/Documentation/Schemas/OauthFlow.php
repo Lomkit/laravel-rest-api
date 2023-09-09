@@ -6,24 +6,28 @@ class OauthFlow extends Schema
 {
     /**
      * The authorization URL to be used for this flow. This MUST be in the form of a URL. The OAuth2 standard requires the use of TLS.
+     *
      * @var string
      */
     protected string $authorizationUrl;
 
     /**
      * The token URL to be used for this flow. This MUST be in the form of a URL. The OAuth2 standard requires the use of TLS.
+     *
      * @var string
      */
     protected string $tokenUrl;
 
     /**
      * The URL to be used for obtaining refresh tokens. This MUST be in the form of a URL. The OAuth2 standard requires the use of TLS.
+     *
      * @var string
      */
     protected string $refreshUrl;
 
     /**
      * The available scopes for the OAuth2 security scheme. A map between the scope name and a short description for it. The map MAY be empty.
+     *
      * @var array
      */
     protected array $scopes;
@@ -31,12 +35,14 @@ class OauthFlow extends Schema
     /**
      * Set the authorization URL for this OAuth2 flow.
      *
-     * @param  string  $authorizationUrl
+     * @param string $authorizationUrl
+     *
      * @return OauthFlow
      */
     public function withAuthorizationUrl(string $authorizationUrl): OauthFlow
     {
         $this->authorizationUrl = $authorizationUrl;
+
         return $this;
     }
 
@@ -53,12 +59,14 @@ class OauthFlow extends Schema
     /**
      * Set the token URL for this OAuth2 flow.
      *
-     * @param  string  $tokenUrl
+     * @param string $tokenUrl
+     *
      * @return OauthFlow
      */
     public function withTokenUrl(string $tokenUrl): OauthFlow
     {
         $this->tokenUrl = $tokenUrl;
+
         return $this;
     }
 
@@ -75,12 +83,14 @@ class OauthFlow extends Schema
     /**
      * Set the refresh URL for this OAuth2 flow.
      *
-     * @param  string  $refreshUrl
+     * @param string $refreshUrl
+     *
      * @return OauthFlow
      */
     public function withRefreshUrl(string $refreshUrl): OauthFlow
     {
         $this->refreshUrl = $refreshUrl;
+
         return $this;
     }
 
@@ -97,12 +107,14 @@ class OauthFlow extends Schema
     /**
      * Set the available scopes for this OAuth2 flow.
      *
-     * @param  array  $scopes
+     * @param array $scopes
+     *
      * @return OauthFlow
      */
     public function withScopes(array $scopes): OauthFlow
     {
         $this->scopes = $scopes;
+
         return $this;
     }
 

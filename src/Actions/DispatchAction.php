@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Actions;
 
-use Illuminate\Bus\PendingBatch;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
@@ -46,9 +45,10 @@ class DispatchAction
     /**
      * Create a new action dispatcher instance.
      *
-     * @param  OperateRequest  $request
-     * @param  Action  $action
-     * @param  array  $fields
+     * @param OperateRequest $request
+     * @param Action         $action
+     * @param array          $fields
+     *
      * @return void
      */
     public function __construct(OperateRequest $request, \Lomkit\Rest\Actions\Action $action, array $fields)
@@ -65,8 +65,9 @@ class DispatchAction
     /**
      * Configure the batch job for the action.
      *
-     * @param  \Lomkit\Rest\Actions\Action  $action
-     * @param  array  $fields
+     * @param \Lomkit\Rest\Actions\Action $action
+     * @param array                       $fields
+     *
      * @return void
      */
     protected function configureBatchJob(\Lomkit\Rest\Actions\Action $action, array $fields)
@@ -74,10 +75,10 @@ class DispatchAction
         $batch = Bus::batch([]);
         $batch->name($action->uriKey());
 
-        if (! is_null($connection = $this->connection())) {
+        if (!is_null($connection = $this->connection())) {
             $batch->onConnection($connection);
         }
-        if (! is_null($queue = $this->queue())) {
+        if (!is_null($queue = $this->queue())) {
             $batch->onQueue($queue);
         }
 
@@ -88,9 +89,9 @@ class DispatchAction
     /**
      * Dispatch the action.
      *
-     * @return $this
-     *
      * @throws \Throwable
+     *
+     * @return $this
      */
     public function dispatch($chunkCount)
     {
@@ -111,7 +112,7 @@ class DispatchAction
                 }
             );
 
-        if (! is_null($this->batchJob)) {
+        if (!is_null($this->batchJob)) {
             $this->batchJob->dispatch();
         }
 
@@ -122,9 +123,10 @@ class DispatchAction
      * Dispatch the given action.
      *
      * @param Collection $models
-     * @return mixed|void
      *
      * @throws \Throwable
+     *
+     * @return mixed|void
      */
     public function forModels(Collection $models)
     {
@@ -144,16 +146,17 @@ class DispatchAction
     /**
      * Dispatch the given action synchronously for a model collection.
      *
-     * @param  \Illuminate\Support\Collection  $models
-     * @return mixed
+     * @param \Illuminate\Support\Collection $models
      *
      * @throws \Throwable
+     *
+     * @return mixed
      */
     protected function dispatchSynchronouslyForCollection(Collection $models)
     {
         return DB::transaction(function () use ($models) {
             return $this->action->handle(
-                collect($this->fields)->mapWithKeys(function ($field) {return [ $field['name'] => $field['value']]; })->toArray(),
+                collect($this->fields)->mapWithKeys(function ($field) {return [$field['name'] => $field['value']]; })->toArray(),
                 $models
             );
         });
@@ -162,13 +165,14 @@ class DispatchAction
     /**
      * Dispatch the given action to the queue for a model collection.
      *
-     * @param  string  $method
-     * @param  \Illuminate\Support\Collection  $models
-     * @return $this
+     * @param string                         $method
+     * @param \Illuminate\Support\Collection $models
      *
      * @throws \Throwable
+     *
+     * @return $this
      */
-    protected function addQueuedActionJob( Collection $models)
+    protected function addQueuedActionJob(Collection $models)
     {
         $job = new CallRestApiAction($this->action, $this->fields, $models);
 
@@ -176,7 +180,8 @@ class DispatchAction
             $this->batchJob->add([$job]);
         } else {
             Queue::connection($this->connection())->pushOn(
-                $this->queue(), $job
+                $this->queue(),
+                $job
             );
         }
 

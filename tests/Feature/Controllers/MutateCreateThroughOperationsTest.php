@@ -4,22 +4,16 @@ namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\TestCase;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyThroughRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasOneThroughRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
-use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 use Lomkit\Rest\Tests\Support\Models\HasManyThroughRelation;
-use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
 use Lomkit\Rest\Tests\Support\Models\HasOneThroughRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class MutateCreateThroughOperationsTest extends TestCase
 {
@@ -35,17 +29,17 @@ class MutateCreateThroughOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneThroughRelation' => [
-                                'operation' => 'create',
-                                'attributes' => []
-                            ]
-                        ]
+                                'operation'  => 'create',
+                                'attributes' => [],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -77,17 +71,17 @@ class MutateCreateThroughOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneThroughRelation' => [
                                 'operation' => 'attach',
-                                'key' => $hasOneThroughRelationToAttach->getKey()
-                            ]
-                        ]
+                                'key'       => $hasOneThroughRelationToAttach->getKey(),
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -119,24 +113,23 @@ class MutateCreateThroughOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneThroughRelation' => [
-                                'operation' => 'update',
-                                'key' => $hasOneThroughRelationToUpdate->getKey(),
-                                'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                            ]
-                        ]
+                                'operation'  => 'update',
+                                'key'        => $hasOneThroughRelationToUpdate->getKey(),
+                                'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $response->assertStatus(422);
         $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.hasOneThroughRelation']]);
@@ -154,19 +147,19 @@ class MutateCreateThroughOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyThroughRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -189,29 +182,28 @@ class MutateCreateThroughOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyThroughRelation' => [
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
+                                    'operation'  => 'create',
+                                    'attributes' => [],
                                 ],
                                 [
-                                    'operation' => 'create',
-                                    'attributes' => []
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $response->assertStatus(422);
         $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.hasManyThroughRelation']]);
@@ -238,19 +230,19 @@ class MutateCreateThroughOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyThroughRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key' => $hasManyThroughRelationToAttach->getKey()
-                                ]
-                            ]
-                        ]
+                                    'key'       => $hasManyThroughRelationToAttach->getKey(),
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -282,20 +274,20 @@ class MutateCreateThroughOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyThroughRelation' => [
                                 [
-                                    'operation' => 'update',
-                                    'key' => $hasManyThroughRelationToAttach->getKey(),
-                                    'attributes' => ['number' => 5001] // 5001 because with factory it can't exceed 5000
-                                ]
-                            ]
-                        ]
+                                    'operation'  => 'update',
+                                    'key'        => $hasManyThroughRelationToAttach->getKey(),
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],

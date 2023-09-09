@@ -3,27 +3,13 @@
 namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Bus\PendingBatch;
-use Illuminate\Queue\Queue;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Actions\CallRestApiAction;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Feature\TestCase;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
-use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Policies\RedPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class ActionsOperationsTest extends TestCase
 {
@@ -41,8 +27,8 @@ class ActionsOperationsTest extends TestCase
 
         $response->assertJson([
             'data' => [
-                'impacted' => 2
-            ]
+                'impacted' => 2,
+            ],
         ]);
         $this->assertEquals(
             2,
@@ -79,8 +65,8 @@ class ActionsOperationsTest extends TestCase
 
         $response->assertJson([
             'data' => [
-                'impacted' => 150
-            ]
+                'impacted' => 150,
+            ],
         ]);
         $this->assertEquals(
             150,
@@ -98,8 +84,8 @@ class ActionsOperationsTest extends TestCase
             '/api/models/actions/modify-number',
             [
                 'fields' => [
-                    ['name' => 'unauthorized_field', 'value' => 100000001]
-                ]
+                    ['name' => 'unauthorized_field', 'value' => 100000001],
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -118,8 +104,8 @@ class ActionsOperationsTest extends TestCase
             '/api/models/actions/modify-number',
             [
                 'fields' => [
-                    ['name' => 'number', 'value' => 1]
-                ]
+                    ['name' => 'number', 'value' => 1],
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -138,16 +124,16 @@ class ActionsOperationsTest extends TestCase
             '/api/models/actions/modify-number',
             [
                 'fields' => [
-                    ['name' => 'number', 'value' => 100000001]
-                ]
+                    ['name' => 'number', 'value' => 100000001],
+                ],
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertJson([
             'data' => [
-                'impacted' => 2
-            ]
+                'impacted' => 2,
+            ],
         ]);
         $this->assertEquals(
             2,
@@ -165,16 +151,16 @@ class ActionsOperationsTest extends TestCase
             '/api/models/actions/modify-number',
             [
                 'fields' => [
-                    ['name' => 'number', 'value' => 100000001]
-                ]
+                    ['name' => 'number', 'value' => 100000001],
+                ],
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertJson([
             'data' => [
-                'impacted' => 150
-            ]
+                'impacted' => 150,
+            ],
         ]);
         $this->assertEquals(
             150,
@@ -196,8 +182,8 @@ class ActionsOperationsTest extends TestCase
 
         $response->assertJson([
             'data' => [
-                'impacted' => 2
-            ]
+                'impacted' => 2,
+            ],
         ]);
         $this->assertEquals(
             2,
@@ -226,12 +212,11 @@ class ActionsOperationsTest extends TestCase
     {
         ModelFactory::new()
             ->create([
-                'string' => 'match'
+                'string' => 'match',
             ]);
 
         ModelFactory::new()->count(2)
             ->create();
-
 
         Gate::policy(Model::class, GreenPolicy::class);
 
@@ -240,17 +225,17 @@ class ActionsOperationsTest extends TestCase
             [
                 'search' => [
                     'filters' => [
-                        ['field' => 'string', 'value' => 'match']
-                    ]
-                ]
+                        ['field' => 'string', 'value' => 'match'],
+                    ],
+                ],
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertJson([
             'data' => [
-                'impacted' => 1
-            ]
+                'impacted' => 1,
+            ],
         ]);
         $this->assertEquals(
             1,
@@ -271,7 +256,6 @@ class ActionsOperationsTest extends TestCase
             [],
             ['Accept' => 'application/json']
         );
-
 
         Bus::assertBatched(function (PendingBatch $batch) {
             return $batch->name == 'batchable-modify-number' &&

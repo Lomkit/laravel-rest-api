@@ -9,7 +9,7 @@ trait DisableAutomaticGates
      *
      * @return bool
      */
-    public function isAutomaticGatingEnabled() : bool
+    public function isAutomaticGatingEnabled(): bool
     {
         return false;
     }

@@ -2,10 +2,7 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Lomkit\Rest\Contracts\QueryBuilder;
-use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Rules\AggregateField;
 use Lomkit\Rest\Rules\AggregateFilterable;
@@ -14,7 +11,6 @@ use Lomkit\Rest\Rules\Instruction;
 
 class SearchRequest extends RestRequest
 {
-
     /**
      * Define the validation rules for the search request.
      *
@@ -28,9 +24,10 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for filters within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
-     * @param bool $isMaxDepth
+     * @param resource $resource
+     * @param string   $prefix
+     * @param bool     $isMaxDepth
+     *
      * @return array
      */
     public function searchRules(Resource $resource, $prefix = '', $isRootSearchRules = true)
@@ -54,7 +51,7 @@ class SearchRequest extends RestRequest
             $this->instructionsRules($resource, $prefix.'instructions'),
             [
                 'limit' => ['sometimes', 'integer', Rule::in($resource->limits($this))],
-                'page' => ['sometimes', 'integer']
+                'page'  => ['sometimes', 'integer'],
             ],
             $isRootSearchRules ? ['includes' => ['sometimes', 'array']] : [],
             $isRootSearchRules ? $this->includesRules($resource) : [],
@@ -64,39 +61,41 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for filters within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
-     * @param bool $isMaxDepth
+     * @param resource $resource
+     * @param string   $prefix
+     * @param bool     $isMaxDepth
+     *
      * @return array
      */
     // @TODO: For now it's prohibited to have more than one nested depth, is this needed ?
-    public function filtersRules(Resource $resource, string $prefix, $isMaxDepth = false) {
+    public function filtersRules(Resource $resource, string $prefix, $isMaxDepth = false)
+    {
         $rules = array_merge(
             [
                 $prefix.'.*.field' => [
                     Rule::in($resource->getNestedFields($this)),
                     "required_without:$prefix.*.nested",
-                    'string'
+                    'string',
                 ],
                 $prefix.'.*.operator' => [
                     Rule::in('=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'),
                     'string',
                 ],
                 $prefix.'.*.value' => [
-                    "required_without:$prefix.*.nested"
+                    "required_without:$prefix.*.nested",
                 ],
                 $prefix.'.*.type' => [
                     'sometimes',
-                    Rule::in('or', 'and')
+                    Rule::in('or', 'and'),
                 ],
                 $prefix.'.*.nested' => !$isMaxDepth ? [
                     'sometimes',
                     "prohibits:$prefix.*.field,$prefix.*.operator,$prefix.*.value",
                     'prohibits:value',
-                    'array'
+                    'array',
                 ] : [
-                    'prohibited'
-                ]
+                    'prohibited',
+                ],
             ],
             !$isMaxDepth ? $this->filtersRules($resource, $prefix.'.*.nested', true) : []
         );
@@ -107,21 +106,23 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for scopes within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
+     * @param resource $resource
+     * @param string   $prefix
+     *
      * @return array
      */
-    protected function scopesRules(Resource $resource, string $prefix) {
+    protected function scopesRules(Resource $resource, string $prefix)
+    {
         $rules = [
             $prefix.'.*.name' => [
                 Rule::in($resource->scopes($this)),
                 'required',
-                'string'
+                'string',
             ],
             $prefix.'.*.parameters' => [
                 'sometimes',
-                'array'
-            ]
+                'array',
+            ],
         ];
 
         return $rules;
@@ -130,11 +131,13 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for instructions within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
+     * @param resource $resource
+     * @param string   $prefix
+     *
      * @return array
      */
-    protected function instructionsRules(Resource $resource, string $prefix) {
+    protected function instructionsRules(Resource $resource, string $prefix)
+    {
         $rules = [
             $prefix.'.*.name' => [
                 Rule::in(
@@ -143,16 +146,16 @@ class SearchRequest extends RestRequest
                         ->toArray()
                 ),
                 'required',
-                'string'
+                'string',
             ],
             $prefix.'.*.fields' => [
                 'sometimes',
-                'array'
+                'array',
             ],
             $prefix.'.*' => [
                 Instruction::make()
-                    ->resource($resource)
-            ]
+                    ->resource($resource),
+            ],
         ];
 
         return $rules;
@@ -161,21 +164,23 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for sorting options within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
+     * @param resource $resource
+     * @param string   $prefix
+     *
      * @return array
      */
-    protected function sortsRules(Resource $resource, string $prefix) {
+    protected function sortsRules(Resource $resource, string $prefix)
+    {
         $rules = [
             $prefix.'.*.field' => [
                 Rule::in($resource->fields($this)),
                 'required',
-                'string'
+                'string',
             ],
             $prefix.'.*.direction' => [
                 'sometimes',
-                Rule::in('desc', 'asc')
-            ]
+                Rule::in('desc', 'asc'),
+            ],
         ];
 
         return $rules;
@@ -184,17 +189,19 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for selecting fields within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
+     * @param resource $resource
+     * @param string   $prefix
+     *
      * @return array
      */
-    protected function selectsRules(Resource $resource, string $prefix) {
+    protected function selectsRules(Resource $resource, string $prefix)
+    {
         $rules = [
             $prefix.'.*.field' => [
                 Rule::in($resource->fields($this)),
                 'required',
-                'string'
-            ]
+                'string',
+            ],
         ];
 
         return $rules;
@@ -203,10 +210,12 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for including related resources within the search request.
      *
-     * @param Resource $resource
+     * @param resource $resource
+     *
      * @return array
      */
-    protected function includesRules(Resource $resource) {
+    protected function includesRules(Resource $resource)
+    {
         return [
             'includes.*.relation' => [
                 'required',
@@ -214,26 +223,28 @@ class SearchRequest extends RestRequest
                     array_keys(
                         $resource->nestedRelations(app()->make(RestRequest::class))
                     )
-                )
+                ),
             ],
             'includes.*.includes' => [
-                'prohibited'
+                'prohibited',
             ],
             'includes.*' => [
                 Includable::make()
-                    ->resource($resource)
-            ]
+                    ->resource($resource),
+            ],
         ];
     }
 
     /**
      * Define the validation rules for aggregate functions within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
+     * @param resource $resource
+     * @param string   $prefix
+     *
      * @return array
      */
-    protected function aggregatesRules(Resource $resource, string $prefix) {
+    protected function aggregatesRules(Resource $resource, string $prefix)
+    {
         return [
             $prefix.'.*.relation' => [
                 'required',
@@ -241,23 +252,23 @@ class SearchRequest extends RestRequest
                     array_keys(
                         $resource->nestedRelations(app()->make(RestRequest::class))
                     )
-                )
+                ),
             ],
             $prefix.'.*.type' => [
-                Rule::in(['count', 'min', 'max', 'avg', 'sum', 'exists'])
+                Rule::in(['count', 'min', 'max', 'avg', 'sum', 'exists']),
             ],
             $prefix.'.*.field' => [
                 'required_if:'.$prefix.'.*.type,min,max,avg,sum',
-                'prohibited_if:'.$prefix.'.*.type,count,exists'
+                'prohibited_if:'.$prefix.'.*.type,count,exists',
             ],
             $prefix.'.*' => [
                 AggregateField::make()
-                    ->resource($resource)
+                    ->resource($resource),
             ],
             $prefix.'.*.filters' => [
                 AggregateFilterable::make()
-                    ->resource($resource)
-            ]
+                    ->resource($resource),
+            ],
         ];
     }
 }

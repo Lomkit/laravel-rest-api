@@ -13,66 +13,79 @@ class Model extends BaseModel
 
     protected static function newFactory()
     {
-        return new ModelFactory;
+        return new ModelFactory();
     }
 
     protected $fillable = [
-        'id'
+        'id',
     ];
 
-    public function belongsToRelation() {
+    public function belongsToRelation()
+    {
         return $this->belongsTo(BelongsToRelation::class);
     }
 
-    public function hasOneThroughRelation() {
+    public function hasOneThroughRelation()
+    {
         return $this->hasOneThrough(HasOneThroughRelation::class, HasOneRelation::class);
     }
 
-    public function hasOneRelation() {
+    public function hasOneRelation()
+    {
         return $this->hasOne(HasOneRelation::class);
     }
 
-    public function hasManyRelation() {
+    public function hasManyRelation()
+    {
         return $this->hasMany(HasManyRelation::class);
     }
 
-    public function hasOneOfManyRelation() {
+    public function hasOneOfManyRelation()
+    {
         return $this->hasOne(HasOneOfManyRelation::class)->ofMany();
     }
 
-    public function hasManyThroughRelation() {
+    public function hasManyThroughRelation()
+    {
         return $this->hasManyThrough(HasManyThroughRelation::class, HasManyRelation::class);
     }
 
-    public function belongsToManyRelation() {
+    public function belongsToManyRelation()
+    {
         return $this->belongsToMany(BelongsToManyRelation::class)
             ->as('belongs_to_many_pivot')
             ->withPivot('created_at', 'updated_at', 'number');
     }
 
-    public function morphOneRelation() {
+    public function morphOneRelation()
+    {
         return $this->morphOne(MorphOneRelation::class, 'morph_one_relation');
     }
 
-    public function morphOneOfManyRelation() {
+    public function morphOneOfManyRelation()
+    {
         return $this->morphOne(MorphOneOfManyRelation::class, 'morph_one_of_many_relation')->ofMany();
     }
 
-    public function morphToRelation() {
+    public function morphToRelation()
+    {
         return $this->morphTo();
     }
 
-    public function morphManyRelation() {
+    public function morphManyRelation()
+    {
         return $this->morphMany(MorphManyRelation::class, 'morph_many_relation');
     }
 
-    public function morphToManyRelation() {
+    public function morphToManyRelation()
+    {
         return $this->morphToMany(MorphToManyRelation::class, 'morphable')
             ->as('morph_to_many_pivot')
             ->withPivot('created_at', 'updated_at', 'number');
     }
 
-    public function morphedByManyRelation() {
+    public function morphedByManyRelation()
+    {
         return $this->morphedByMany(MorphedByManyRelation::class, 'inversable')
             ->as('morphed_by_many_pivot')
             ->withPivot('created_at', 'updated_at', 'number');

@@ -16,7 +16,7 @@ class SchemaConcrete extends Schema
     public function jsonSerialize(): mixed
     {
         return [
-            'type' => $this->type()
+            'type' => $this->type(),
         ];
     }
 
@@ -36,6 +36,7 @@ class SchemaConcrete extends Schema
      * Set the data type for the schema.
      *
      * @param string $type
+     *
      * @return SchemaConcrete
      *
      * This method allows setting the data type for the schema, such as "string", "integer", etc.
@@ -43,6 +44,7 @@ class SchemaConcrete extends Schema
     public function withType(string $type): SchemaConcrete
     {
         $this->type = $type;
+
         return $this;
     }
 

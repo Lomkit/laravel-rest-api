@@ -4,19 +4,16 @@ namespace Lomkit\Rest\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\DataAwareRule;
-use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
 
 class ActionField implements ValidationRule, DataAwareRule, ValidatorAwareRule
 {
-
     use Makeable;
 
     /**
@@ -48,9 +45,8 @@ class ActionField implements ValidationRule, DataAwareRule, ValidatorAwareRule
     protected $validator;
 
     /**
-     *
-     *
      * @param \Lomkit\Rest\Actions\Action $instruction
+     *
      * @return $this
      */
     public function action(\Lomkit\Rest\Actions\Action $action)
@@ -74,7 +70,7 @@ class ActionField implements ValidationRule, DataAwareRule, ValidatorAwareRule
         }
 
         return [
-            $attribute.'.value' => $field
+            $attribute.'.value' => $field,
         ];
     }
 
@@ -91,7 +87,8 @@ class ActionField implements ValidationRule, DataAwareRule, ValidatorAwareRule
     /**
      * Adds the given failures, and return false.
      *
-     * @param  array|string  $messages
+     * @param array|string $messages
+     *
      * @return bool
      */
     protected function fail($messages)
@@ -108,7 +105,8 @@ class ActionField implements ValidationRule, DataAwareRule, ValidatorAwareRule
     /**
      * Set the current validator.
      *
-     * @param  \Illuminate\Contracts\Validation\Validator  $validator
+     * @param \Illuminate\Contracts\Validation\Validator $validator
+     *
      * @return $this
      */
     public function setValidator($validator)
@@ -121,7 +119,8 @@ class ActionField implements ValidationRule, DataAwareRule, ValidatorAwareRule
     /**
      * Set the current data under validation.
      *
-     * @param  array  $data
+     * @param array $data
+     *
      * @return $this
      */
     public function setData($data)
@@ -134,9 +133,10 @@ class ActionField implements ValidationRule, DataAwareRule, ValidatorAwareRule
     /**
      * Validate the attribute.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
-     * @param  \Closure  $fail
+     * @param string   $attribute
+     * @param mixed    $value
+     * @param \Closure $fail
+     *
      * @return void
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
