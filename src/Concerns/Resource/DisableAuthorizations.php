@@ -4,7 +4,13 @@ namespace Lomkit\Rest\Concerns\Resource;
 
 trait DisableAuthorizations
 {
-    public function isAuthorizingEnabled() : bool {
+    /**
+     * Check if authorizations are enabled.
+     *
+     * @return bool
+     */
+    public function isAuthorizingEnabled() : bool
+    {
         return false;
     }
 }

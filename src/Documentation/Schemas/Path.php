@@ -73,127 +73,253 @@ class Path extends Schema
      */
     protected array $parameters = [];
 
+    /**
+     * Set the summary for this path.
+     *
+     * @param string $summary
+     * @return Path
+     */
     public function withSummary(string $summary): Path
     {
         $this->summary = $summary;
         return $this;
     }
 
+    /**
+     * Get the summary for this path.
+     *
+     * @return string
+     */
     public function summary(): string
     {
         return $this->summary;
     }
 
+    /**
+     * Set the description for this path.
+     *
+     * @param string $description
+     * @return Path
+     */
     public function withDescription(string $description): Path
     {
         $this->description = $description;
         return $this;
     }
 
+    /**
+     * Get the description for this path.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return $this->description;
     }
 
+    /**
+     * Set the GET operation for this path.
+     *
+     * @param Operation $get The GET operation to set.
+     * @return Path
+     */
     public function withGet(Operation $get): Path
     {
         $this->get = $get;
         return $this;
     }
 
+    /**
+     * Get the GET operation for this path.
+     *
+     * @return Operation
+     */
     public function get(): Operation
     {
         return $this->get;
     }
 
+    /**
+     * Set the PUT operation for this path.
+     *
+     * @param Operation $put The PUT operation to set.
+     * @return Path
+     */
     public function withPut(Operation $put): Path
     {
         $this->put = $put;
         return $this;
     }
 
+    /**
+     * Get the PUT operation for this path.
+     *
+     * @return Operation
+     */
     public function put(): Operation
     {
         return $this->put;
     }
 
+    /**
+     * Set the POST operation for this path.
+     *
+     * @param Operation $post The POST operation to set.
+     * @return Path
+     */
     public function withPost(Operation $post): Path
     {
         $this->post = $post;
         return $this;
     }
 
+    /**
+     * Get the POST operation for this path.
+     *
+     * @return Operation
+     */
     public function post(): Operation
     {
         return $this->post;
     }
 
+    /**
+     * Set the DELETE operation for this path.
+     *
+     * @param Operation $delete The DELETE operation to set.
+     * @return Path
+     */
     public function withDelete(Operation $delete): Path
     {
         $this->delete = $delete;
         return $this;
     }
 
+    /**
+     * Get the DELETE operation for this path.
+     *
+     * @return Operation
+     */
     public function delete(): Operation
     {
         return $this->delete;
     }
 
+    /**
+     * Set the OPTIONS operation for this path.
+     *
+     * @param Operation $options The OPTIONS operation to set.
+     * @return Path
+     */
     public function withOptions(Operation $options): Path
     {
         $this->options = $options;
         return $this;
     }
 
+    /**
+     * Get the OPTIONS operation for this path.
+     *
+     * @return Operation
+     */
     public function options(): Operation
     {
         return $this->options;
     }
 
+    /**
+     * Set the HEAD operation for this path.
+     *
+     * @param Operation $head The HEAD operation to set.
+     * @return Path
+     */
     public function withHead(Operation $head): Path
     {
         $this->head = $head;
         return $this;
     }
 
+    /**
+     * Get the HEAD operation for this path.
+     *
+     * @return Operation
+     */
     public function head(): Operation
     {
         return $this->head;
     }
 
+    /**
+     * Set the PATCH operation for this path.
+     *
+     * @param Operation $patch The PATCH operation to set.
+     * @return Path
+     */
     public function withPatch(Operation $patch): Path
     {
         $this->patch = $patch;
         return $this;
     }
 
+    /**
+     * Get the PATCH operation for this path.
+     *
+     * @return Operation
+     */
     public function patch(): Operation
     {
         return $this->patch;
     }
 
+    /**
+     * Set the TRACE operation for this path.
+     *
+     * @param Operation $trace The TRACE operation to set.
+     * @return Path
+     */
     public function withTrace(Operation $trace): Path
     {
         $this->trace = $trace;
         return $this;
     }
 
+    /**
+     * Get the TRACE operation for this path.
+     *
+     * @return Operation
+     */
     public function trace(): Operation
     {
         return $this->trace;
     }
 
+    /**
+     * Set the parameters applicable to all operations in this path.
+     *
+     * @param array $parameters An array of Parameter objects.
+     * @return Path
+     */
     public function withParameters(array $parameters): Path
     {
         $this->parameters = array_merge($parameters, $this->parameters);
         return $this;
     }
 
+    /**
+    * Get the parameters applicable to all operations in this path.
+    *
+    * @return array
+    */
     public function parameters(): array
     {
         return $this->parameters;
     }
 
+    /**
+     * Serialize the Path instance to an array for JSON serialization.
+     *
+     * @return mixed
+     */
     public function jsonSerialize(): mixed
     {
         return array_merge(
@@ -211,11 +337,22 @@ class Path extends Schema
         );
     }
 
+    /**
+     * Generate a Path schema.
+     *
+     * @return Path
+     */
     public function generate(): Path
     {
         return $this;
     }
 
+    /**
+     * Generates a Path schema with operations for retrieving resource details and performing resource deletion.
+     *
+     * @param Controller $controller The controller instance used for generating documentation.
+     * @return Path
+     */
     public function generateDetailAndDestroy(Controller $controller): Path
     {
         return $this
@@ -230,6 +367,12 @@ class Path extends Schema
             ->generate();
     }
 
+    /**
+     * Generates a Path schema with an operation for searching resources.
+     *
+     * @param Controller $controller The controller instance used for generating documentation.
+     * @return Path
+     */
     public function generateSearch(Controller $controller): Path
     {
         return $this
@@ -240,6 +383,12 @@ class Path extends Schema
             ->generate();
     }
 
+    /**
+     * Generates a Path schema with an operation for mutating resources.
+     *
+     * @param Controller $controller The controller instance used for generating documentation.
+     * @return Path
+     */
     public function generateMutate(Controller $controller): Path
     {
         return $this
@@ -250,6 +399,12 @@ class Path extends Schema
             ->generate();
     }
 
+    /**
+     * Generates a Path schema with an operation for performing resource actions.
+     *
+     * @param Controller $controller The controller instance used for generating documentation.
+     * @return Path
+     */
     public function generateActions(Controller $controller): Path
     {
         return $this
@@ -275,6 +430,12 @@ class Path extends Schema
             ->generate();
     }
 
+    /**
+     * Generates a Path schema with an operation for restoring soft-deleted resources.
+     *
+     * @param Controller $controller The controller instance used for generating documentation.
+     * @return Path
+     */
     public function generateRestore(Controller $controller): Path
     {
         return $this
@@ -285,6 +446,12 @@ class Path extends Schema
             ->generate();
     }
 
+    /**
+     * Generates a Path schema with an operation for performing force deletions of resources.
+     *
+     * @param Controller $controller The controller instance used for generating documentation.
+     * @return Path
+     */
     public function generateForceDelete(Controller $controller): Path
     {
         return $this

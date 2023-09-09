@@ -35,6 +35,11 @@ class InstructionCommand extends GeneratorCommand implements PromptsForMissingIn
      */
     protected $description = 'Create a new instruction class';
 
+    /**
+     * Handle the console command.
+     *
+     * @return void
+     */
     public function handle()
     {
         parent::handle();
@@ -61,6 +66,12 @@ class InstructionCommand extends GeneratorCommand implements PromptsForMissingIn
         return $this->resolveStubPath('/stubs/rest/instruction.stub');
     }
 
+    /**
+     * Get the path where the action file should be created.
+     *
+     * @param  string  $name
+     * @return string
+     */
     protected function getPath($name)
     {
         if ($this->hasOption('path')) {

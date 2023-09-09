@@ -9,6 +9,12 @@ use Lomkit\Rest\Relations\Relation;
 
 trait Relationable
 {
+    /**
+     * Get a relation by name.
+     *
+     * @param string $name
+     * @return Relation|null
+     */
     public function relation($name) {
         $name = relation_without_pivot($name);
 
@@ -26,10 +32,24 @@ trait Relationable
         return $relation;
     }
 
+    /**
+     * Get the resource associated with a relation by name.
+     *
+     * @param string $name
+     * @return Resource|null
+     */
     public function relationResource($name) {
         return $this->relation($name)?->resource();
     }
 
+    /**
+     * Get nested relations with their names as keys.
+     *
+     * @param RestRequest $request
+     * @param string $prefix
+     * @param array $loadedRelations
+     * @return array
+     */
     public function nestedRelations(RestRequest $request, string $prefix = '', array $loadedRelations = []) {
         if ($prefix !== '') {
             $prefix = $prefix.'.';
@@ -62,6 +82,12 @@ trait Relationable
         return [];
     }
 
+    /**
+     * Get the relations for the resource.
+     *
+     * @param RestRequest $request
+     * @return array
+     */
     public function getRelations(RestRequest $request) {
         return array_map(function (Relation $relation) {
             return $relation->fromResource($this);

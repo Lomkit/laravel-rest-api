@@ -20,6 +20,12 @@ use Lomkit\Rest\Http\Requests\MutateRequest;
 
 trait PerformsRestOperations
 {
+    /**
+     * Retrieve details of a resource.
+     *
+     * @param DetailRequest $request
+     * @return array
+     */
     public function detail(DetailRequest $request) {
         $request->resource($resource = static::newResource());
 
@@ -30,6 +36,12 @@ trait PerformsRestOperations
         ];
     }
 
+    /**
+     * Search for resources based on the given criteria.
+     *
+     * @param SearchRequest $request
+     * @return mixed
+     */
     public function search(SearchRequest $request) {
         $request->resource($resource = static::newResource());
 
@@ -43,22 +55,44 @@ trait PerformsRestOperations
             );
     }
 
+    /**
+     * Mutate resources based on the given request data.
+     *
+     * @param MutateRequest $request
+     * @return mixed
+     */
     public function mutate(MutateRequest $request) {
         $request->resource($resource = static::newResource());
 
         DB::beginTransaction();
 
-        $operations = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
-            ->tap(function ($query) use ($request) {
-                self::newResource()->mutateQuery($request, $query->toBase());
-            })
-            ->mutate($request->all());
+        try {
+            
+            $operations = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
+                ->tap(function ($query) use ($request) {
+                    self::newResource()->mutateQuery($request, $query->toBase());
+                })
+                ->mutate($request->all());
+    
+            DB::commit();
+    
+            return $operations;
 
-        DB::commit();
+        } catch (\Throwable $th) {
 
-        return $operations;
+            DB::rollBack();
+            throw new \Exception($th->getMessage(), 500);
+            
+        }
     }
 
+    /**
+     * Perform a specific action on the resource.
+     *
+     * @param OperateRequest $request
+     * @param string $action
+     * @return mixed
+     */
     public function operate(OperateRequest $request, $action) {
         $request->resource($resource = static::newResource());
 
@@ -67,13 +101,18 @@ trait PerformsRestOperations
         $modelsImpacted = $actionInstance->handleRequest($request);
 
         return response([
-            'data' =>
-                [
-                    'impacted' => $modelsImpacted
-                ]
+            'data' => [
+                'impacted' => $modelsImpacted
+            ]
         ]);
     }
 
+    /**
+     * Delete resources based on the given request.
+     *
+     * @param DestroyRequest $request
+     * @return mixed
+     */
     public function destroy(DestroyRequest $request) {
         $request->resource($resource = static::newResource());
 
@@ -94,6 +133,12 @@ trait PerformsRestOperations
             ->responsable($models);
     }
 
+    /**
+     * Restore resources based on the given request.
+     *
+     * @param RestoreRequest $request
+     * @return mixed
+     */
     public function restore(RestoreRequest $request) {
         $request->resource($resource = static::newResource());
 
@@ -115,6 +160,12 @@ trait PerformsRestOperations
             ->responsable($models);
     }
 
+    /**
+     * Force delete resources based on the given request.
+     *
+     * @param ForceDestroyRequest $request
+     * @return mixed
+     */
     public function forceDelete(ForceDestroyRequest $request) {
         $request->resource($resource = static::newResource());
 

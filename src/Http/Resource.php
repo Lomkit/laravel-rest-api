@@ -66,20 +66,41 @@ class Resource implements \JsonSerializable
         return new $response;
     }
 
+    /**
+     * Return the default ordering for resource queries.
+     *
+     * @param RestRequest $request
+     * @return array
+     */
     public function defaultOrderBy(RestRequest $request): array {
         return [
             'id' => 'desc'
         ];
     }
 
+    /**
+     * Check if automatic gating is enabled for this resource.
+     *
+     * @return bool
+     */
     public function isAutomaticGatingEnabled() : bool {
         return config('rest.automatic_gates.enabled');
     }
 
+    /**
+     * Check if authorizations are enabled for this resource.
+     *
+     * @return bool
+     */
     public function isAuthorizingEnabled() : bool {
         return config('rest.authorizations.enabled');
     }
 
+    /**
+     * Serialize the resource into a JSON-serializable format.
+     *
+     * @return mixed
+     */
     public function jsonSerialize(): mixed
     {
         $request = app(RestRequest::class);

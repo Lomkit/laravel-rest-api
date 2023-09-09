@@ -33,12 +33,24 @@ class Rest implements Registrar
         );
     }
 
+    /**
+     * Set the documentation callback for OpenAPI.
+     *
+     * @param  \Closure  $documentationCallback
+     * @return Rest
+     */
     public function withDocumentationCallback(\Closure $documentationCallback): Rest
     {
         $this->documentationCallback = $documentationCallback;
         return $this;
     }
 
+    /**
+     * Apply the documentation callback to the OpenAPI instance.
+     *
+     * @param  OpenAPI  $openAPI
+     * @return OpenAPI
+     */
     public function applyDocumentationCallback(OpenAPI $openAPI): OpenAPI
     {
         if (!isset($this->documentationCallback)) {

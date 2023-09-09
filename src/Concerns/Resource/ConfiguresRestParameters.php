@@ -18,6 +18,14 @@ trait ConfiguresRestParameters
         return [];
     }
 
+    /**
+     * Get nested fields by prefixing them with a given prefix.
+     *
+     * @param RestRequest $request
+     * @param string $prefix
+     * @param array $loadedRelations
+     * @return array
+     */
     public function getNestedFields(RestRequest $request, string $prefix = '', array $loadedRelations = []) {
         if ($prefix !== '') {
             $prefix = $prefix.'.';
@@ -53,7 +61,8 @@ trait ConfiguresRestParameters
     }
 
     /**
-     * The scopes that could be provided
+     * The scopes that could be provided.
+     *
      * @param RestRequest $request
      * @return array
      */
@@ -62,7 +71,8 @@ trait ConfiguresRestParameters
     }
 
     /**
-     * The limits that could be provided
+     * The limits that could be provided.
+     *
      * @param RestRequest $request
      * @return array
      */

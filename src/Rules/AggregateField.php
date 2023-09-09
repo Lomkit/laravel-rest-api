@@ -47,9 +47,9 @@ class AggregateField implements Rule, DataAwareRule, ValidatorAwareRule
     protected $validator;
 
     /**
+     * Set the resource related to.
      *
-     *
-     * @param $resource
+     * @param  mixed  $resource
      * @return $this
      */
     public function resource($resource)
@@ -59,6 +59,13 @@ class AggregateField implements Rule, DataAwareRule, ValidatorAwareRule
         return $this;
     }
 
+    /**
+     * Determine if the validation rule passes.
+     *
+     * @param string $attribute
+     * @param mixed $value
+     * @return bool
+     */
     public function passes($attribute, $value)
     {
         $validator = Validator::make(

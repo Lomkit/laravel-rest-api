@@ -16,10 +16,7 @@ use RuntimeException;
 
 class Builder implements QueryBuilder
 {
-    use Tappable,
-        Conditionable,
-        PerformSearch,
-        PerformMutation;
+    use Tappable, Conditionable, PerformSearch, PerformMutation;
 
     /**
      * Construct a new query builder for a resource.

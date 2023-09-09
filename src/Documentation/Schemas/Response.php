@@ -32,50 +32,99 @@ class Response extends Schema
      */
     protected array $links = [];
 
+    /**
+     * Set the description for the response.
+     *
+     * @param string $description The description of the response.
+     * @return Response
+     */
     public function withDescription(string $description): Response
     {
         $this->description = $description;
         return $this;
     }
 
+    /**
+     * Get the description of the response.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return $this->description;
     }
 
+    /**
+     * Set the response headers.
+     *
+     * @param array $headers The response headers.
+     * @return Response
+     */
     public function withHeaders(array $headers): Response
     {
         $this->headers = array_merge($this->headers, $headers);
         return $this;
     }
 
+    /**
+     * Get the response headers.
+     *
+     * @return array
+     */
     public function headers(): array
     {
         return $this->headers;
     }
 
+    /**
+     * Set the response content.
+     *
+     * @param array $content The response content.
+     * @return Response
+     */
     public function withContent(array $content): Response
     {
         $this->content = array_merge($this->content, $content);
         return $this;
     }
 
+    /**
+     * Get the response content.
+     *
+     * @return array
+     */
     public function content(): array
     {
         return $this->content;
     }
 
+    /**
+     * Set the links that can be followed from the response.
+     *
+     * @param array $links The response links.
+     * @return Response
+     */
     public function withLinks(array $links): Response
     {
         $this->links = array_merge($this->links, $links);
         return $this;
     }
 
+    /**
+     * Get the response links.
+     *
+     * @return array
+     */
     public function links(): array
     {
         return $this->links;
     }
 
+    /**
+     * Generate a JSON serializable representation of the response.
+     *
+     * @return mixed
+     */
     public function jsonSerialize(): mixed
     {
         return array_merge(
@@ -88,11 +137,22 @@ class Response extends Schema
         );
     }
 
+    /**
+     * Generates a new instance of the Response schema.
+     *
+     * @return Response
+     */
     public function generate(): Response
     {
         return $this;
     }
 
+    /**
+     * Generates a detailed response schema for a specific controller action.
+     *
+     * @param Controller $controller The controller associated with the response.
+     * @return Response
+     */
     public function generateDetail(Controller $controller): Response
     {
         return $this
@@ -106,6 +166,12 @@ class Response extends Schema
             ->generate();
     }
 
+    /**
+     * Generates a response schema for a search operation.
+     *
+     * @param Controller $controller The controller associated with the response.
+     * @return Response
+     */
     public function generateSearch(Controller $controller): Response
     {
         return $this
@@ -119,6 +185,12 @@ class Response extends Schema
             ->generate();
     }
 
+    /**
+     * Generates a response schema for a mutation operation.
+     *
+     * @param Controller $controller The controller associated with the response.
+     * @return Response
+     */
     public function generateMutate(Controller $controller): Response
     {
         return $this
@@ -132,6 +204,12 @@ class Response extends Schema
             ->generate();
     }
 
+    /**
+     * Generates a response schema for an actions operation.
+     *
+     * @param Controller $controller The controller associated with the response.
+     * @return Response
+     */
     public function generateActions(Controller $controller): Response
     {
         return $this
@@ -145,6 +223,12 @@ class Response extends Schema
             ->generate();
     }
 
+    /**
+     * Generates a response schema for a destroy operation.
+     *
+     * @param Controller $controller The controller associated with the response.
+     * @return Response
+     */
     public function generateDestroy(Controller $controller): Response
     {
         return $this
@@ -158,6 +242,12 @@ class Response extends Schema
             ->generate();
     }
 
+    /**
+     * Generates a response schema for a restore operation.
+     *
+     * @param Controller $controller The controller associated with the response.
+     * @return Response
+     */
     public function generateRestore(Controller $controller): Response
     {
         return $this
@@ -171,6 +261,12 @@ class Response extends Schema
             ->generate();
     }
 
+    /**
+     * Generates a response schema for a force delete operation.
+     *
+     * @param Controller $controller The controller associated with the response.
+     * @return Response
+     */
     public function generateForceDelete(Controller $controller): Response
     {
         return $this

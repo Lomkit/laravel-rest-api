@@ -45,11 +45,23 @@ class OpenAPI extends Schema
      */
     protected array $security = [];
 
+    /**
+     * Get the version number of the OpenAPI specification.
+     *
+     * @return string
+     */
+
     public function openapi(): string
     {
         return $this->openapi;
     }
 
+    /**
+     * Set the version number of the OpenAPI specification.
+     *
+     * @param  string  $openapi
+     * @return self
+     */
     public function withOpenapi(string $openapi): self
     {
         $this->openapi = $openapi;
@@ -57,11 +69,22 @@ class OpenAPI extends Schema
         return $this;
     }
 
+    /**
+     * Get the metadata about the API.
+     *
+     * @return Info
+     */
     public function info(): Info
     {
         return $this->info;
     }
 
+    /**
+     * Set the metadata about the API.
+     *
+     * @param  Info  $info
+     * @return self
+     */
     public function withInfo(Info $info): self
     {
         $this->info = $info;
@@ -69,10 +92,22 @@ class OpenAPI extends Schema
         return $this;
     }
 
+    /**
+     * Get the available paths and operations for the API.
+     *
+     * @return array
+     */
     public function paths(): array
     {
         return $this->paths;
     }
+
+    /**
+     * Set the available paths and operations for the API.
+     *
+     * @param  array  $paths
+     * @return self
+     */
 
     public function withPaths(array $paths): self
     {
@@ -81,11 +116,23 @@ class OpenAPI extends Schema
         return $this;
     }
 
+    /**
+     * Get the declaration of security mechanisms for the API.
+     *
+     * @return array
+     */
+
     public function security(): array
     {
         return $this->security;
     }
 
+    /**
+     * Set the declaration of security mechanisms for the API.
+     *
+     * @param  array  $security
+     * @return self
+     */
     public function withSecurity(array $security): self
     {
         $this->security = $security;
@@ -93,17 +140,33 @@ class OpenAPI extends Schema
         return $this;
     }
 
+    /**
+     * Set the Server Objects, which provide connectivity information to a target server.
+     *
+     * @param  array  $servers
+     * @return OpenAPI
+     */
     public function withServers(array $servers): OpenAPI
     {
         $this->servers = $servers;
         return $this;
     }
 
+    /**
+     * Get the Server Objects.
+     *
+     * @return array
+     */
     public function servers(): array
     {
         return $this->servers;
     }
 
+    /**
+     * Serialize the OpenAPI object to JSON format.
+     *
+     * @return mixed
+     */
     public function jsonSerialize(): mixed
     {
         return array_merge(
@@ -117,6 +180,11 @@ class OpenAPI extends Schema
         );
     }
 
+    /**
+     * Generate and return the OpenAPI object.
+     *
+     * @return OpenAPI
+     */
     public function generate(): OpenAPI
     {
         $servers = [];
@@ -178,6 +246,11 @@ class OpenAPI extends Schema
         );
     }
 
+    /**
+     * Generate and return the available paths for the OpenAPI specification.
+     *
+     * @return array
+     */
     public function generatePaths() {
         $paths = [];
 

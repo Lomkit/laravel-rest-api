@@ -49,9 +49,9 @@ class RequiredRelationOnCreation implements ValidationRule, DataAwareRule
     }
 
     /**
+     * Set the resource related to.
      *
-     *
-     * @param $resource
+     * @param  mixed  $resource
      * @return $this
      */
     public function resource($resource)
@@ -61,10 +61,24 @@ class RequiredRelationOnCreation implements ValidationRule, DataAwareRule
         return $this;
     }
 
+    /**
+     * Determine if the rule is required for the given operation.
+     *
+     * @param  string  $operation
+     * @return bool
+     */
     protected function isOperationRequired(string $operation) {
         return in_array($operation, ['create']);
     }
 
+    /**
+     * Validate the attribute.
+     *
+     * @param  string  $attribute
+     * @param  mixed  $value
+     * @param  \Closure  $fail
+     * @return void
+     */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $arrayDot = Arr::dot($this->data);

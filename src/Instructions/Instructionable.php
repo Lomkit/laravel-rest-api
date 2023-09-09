@@ -16,6 +16,13 @@ trait Instructionable
         return [];
     }
 
+    /**
+     * Check if a specific instruction exists.
+     *
+     * @param RestRequest $request The REST request instance.
+     * @param string $instructionKey The key of the instruction to check.
+     * @return bool True if the instruction exists; otherwise, false.
+     */
     public function instructionExists(RestRequest $request, string $instructionKey): bool {
         return collect($this->instructions($request))
             ->contains(function (Instruction $instruction) use ($instructionKey) {
@@ -23,6 +30,13 @@ trait Instructionable
             });
     }
 
+    /**
+     * Retrieve a specific instruction by its key.
+     *
+     * @param RestRequest $request The REST request instance.
+     * @param string $instructionKey The key of the instruction to retrieve.
+     * @return Instruction|null The instruction instance or null if not found.
+     */
     public function instruction(RestRequest $request, string $instructionKey) {
         $instruction = collect($this->instructions($request))
             ->first(function (Instruction $instruction) use ($instructionKey) {

@@ -62,6 +62,12 @@ class BaseControllerCommand extends GeneratorCommand implements PromptsForMissin
         return $this->resolveStubPath('/stubs/rest/base-controller.stub');
     }
 
+    /**
+     * Get the path where the action file should be created.
+     *
+     * @param  string  $name
+     * @return string
+     */
     protected function getPath($name)
     {
         if ($this->hasOption('path')) {

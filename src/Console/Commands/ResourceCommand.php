@@ -47,6 +47,12 @@ class ResourceCommand extends GeneratorCommand implements PromptsForMissingInput
         }
     }
 
+    /**
+     * Get the path where the action file should be created.
+     *
+     * @param  string  $name
+     * @return string
+     */
     protected function getPath($name)
     {
         if ($this->hasOption('path')) {

@@ -45,55 +45,110 @@ class Operation extends Schema
         return $this;
     }
 
+    /**
+     * Set the list of tags for the operation.
+     *
+     * @param  array  $tags
+     * @return Operation
+     */
     public function tags(): array
     {
         return $this->tags;
     }
 
+    /**
+     * Set the short summary of the operation.
+     *
+     * @param  string  $summary
+     * @return Operation
+     */
     public function withSummary(string $summary): Operation
     {
         $this->summary = $summary;
         return $this;
     }
 
+    /**
+     * Get the short summary of the operation.
+     *
+     * @return string
+     */
     public function summary(): string
     {
         return $this->summary;
     }
 
+    /**
+     * Set the verbose explanation of the operation behavior.
+     *
+     * @param  string  $description
+     * @return Operation
+     */
     public function withDescription(string $description): Operation
     {
         $this->description = $description;
         return $this;
     }
 
+    /**
+     * Get the verbose explanation of the operation behavior.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return $this->description;
     }
 
+    /**
+     * Set the possible responses for the operation.
+     *
+     * @param  Responses  $responses
+     * @return Operation
+     */
     public function withResponses(Responses $responses): Operation
     {
         $this->responses = $responses;
         return $this;
     }
 
+    /**
+     * Get the possible responses for the operation.
+     *
+     * @return Responses
+     */
     public function responses(): Responses
     {
         return $this->responses;
     }
 
+    /**
+     * Set the request body applicable for the operation.
+     *
+     * @param  RequestBody  $requestBody
+     * @return Operation
+     */
     public function withRequestBody(RequestBody $requestBody): Operation
     {
         $this->requestBody = $requestBody;
         return $this;
     }
 
+    /**
+     * Get the request body applicable for the operation.
+     *
+     * @return RequestBody
+     */
     public function requestBody(): RequestBody
     {
         return $this->requestBody;
     }
 
+    /**
+     * Serialize the Operation object to JSON format.
+     *
+     * @return mixed
+     */
     public function jsonSerialize(): mixed
     {
         return array_merge(
@@ -105,11 +160,22 @@ class Operation extends Schema
         );
     }
 
+    /**
+     * Generate and return a new instance of this Operation schema.
+     *
+     * @return Schema
+     */
     public function generate(): Schema
     {
         return $this;
     }
 
+    /**
+     * Generate an Operation schema for the "Detail" operation.
+     *
+     * @param  Controller  $controller
+     * @return Operation
+     */
     public function generateDetail(Controller $controller): Operation
     {
         return $controller->generateDocumentationDetailOperation(
@@ -126,6 +192,12 @@ class Operation extends Schema
         );
     }
 
+    /**
+     * Generate an Operation schema for the "Search" operation.
+     *
+     * @param  Controller  $controller
+     * @return Operation
+     */
     public function generateSearch(Controller $controller): Operation
     {
         return $controller->generateDocumentationSearchOperation(
@@ -145,6 +217,12 @@ class Operation extends Schema
         );
     }
 
+    /**
+     * Generate an Operation schema for the "Mutate" operation.
+     *
+     * @param  Controller  $controller
+     * @return Operation
+     */
     public function generateMutate(Controller $controller): Operation
     {
         return $controller->generateDocumentationMutateOperation(
@@ -164,6 +242,12 @@ class Operation extends Schema
         );
     }
 
+    /**
+     * Generate an Operation schema for the "Actions" operation.
+     *
+     * @param  Controller  $controller
+     * @return Operation
+     */
     public function generateActions(Controller $controller): Operation
     {
         return $controller->generateDocumentationActionsOperation(
@@ -183,6 +267,12 @@ class Operation extends Schema
         );
     }
 
+    /**
+     * Generate an Operation schema for the "Destroy" operation.
+     *
+     * @param  Controller  $controller
+     * @return Operation
+     */
     public function generateDestroy(Controller $controller): Operation
     {
         return $controller->generateDocumentationDestroyOperation(
@@ -202,6 +292,12 @@ class Operation extends Schema
         );
     }
 
+    /**
+     * Generate an Operation schema for the "Restore" operation.
+     *
+     * @param  Controller  $controller
+     * @return Operation
+     */
     public function generateRestore(Controller $controller): Operation
     {
         return $controller->generateDocumentationRestoreOperation(
@@ -221,6 +317,12 @@ class Operation extends Schema
         );
     }
 
+    /**
+     * Generate an Operation schema for the "Force Delete" operation.
+     *
+     * @param  Controller  $controller
+     * @return Operation
+     */
     public function generateForceDelete(Controller $controller): Operation
     {
         return $controller->generateDocumentationForceDeleteOperation(

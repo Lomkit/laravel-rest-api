@@ -17,6 +17,13 @@ class MorphedByMany extends MorphRelation implements RelationResource
 {
     use HasPivotFields, HasMultipleResults;
 
+    /**
+     * Define validation rules for the MorphTo relation.
+     *
+     * @param Resource $resource The resource associated with the relation.
+     * @param string $prefix The prefix used for validation rules.
+     * @return array An array of validation rules.
+     */
     public function rules(Resource $resource, string $prefix)
     {
         return array_merge(
@@ -30,6 +37,13 @@ class MorphedByMany extends MorphRelation implements RelationResource
         );
     }
 
+    /**
+     * Handle actions after mutating a MorphOne relation.
+     *
+     * @param Model $model The Eloquent model.
+     * @param Relation $relation The relation being mutated.
+     * @param array $mutationRelations An array of mutation relations.
+     */
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {

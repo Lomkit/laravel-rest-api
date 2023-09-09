@@ -25,44 +25,87 @@ class RequestBody extends Schema
      */
     protected bool $required;
 
+    /**
+     * Set a brief description for the request body.
+     *
+     * @param string $description The description to set.
+     * @return RequestBody
+     */
     public function withDescription(string $description): RequestBody
     {
         $this->description = $description;
         return $this;
     }
 
+    /**
+     * Get the description of the request body.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return $this->description;
     }
 
+    /**
+     * Set the content of the request body.
+     *
+     * @param array $content The content to set.
+     * @return RequestBody
+     */
     public function withContent(array $content): RequestBody
     {
         $this->content = array_merge($this->content, $content);
         return $this;
     }
 
+    /**
+     * Get the content of the request body.
+     *
+     * @return array
+     */
     public function content(): array
     {
         return $this->content;
     }
 
+    /**
+     * Set whether the request body is required.
+     *
+     * @param bool $required The required flag to set.
+     * @return RequestBody
+     */
     public function withRequired(bool $required = true): RequestBody
     {
         $this->required = $required;
         return $this;
     }
 
+    /**
+     * Check if the request body is required.
+     *
+     * @return bool
+     */
     public function required(): bool
     {
         return $this->required;
     }
 
+    /**
+     * Generate and return the request body schema.
+     *
+     * @return Schema
+     */
     public function generate(): Schema
     {
         return $this;
     }
 
+    /**
+     * Serialize the request body to JSON format for documentation.
+     *
+     * @return mixed
+     */
     public function jsonSerialize(): mixed
     {
         return array_merge(
@@ -72,6 +115,12 @@ class RequestBody extends Schema
         );
     }
 
+    /**
+     * Generate and return a request body schema for a search operation.
+     *
+     * @param Controller $controller The controller for which to generate the request body.
+     * @return RequestBody
+     */
     public function generateSearch(Controller $controller): RequestBody
     {
         return $this
@@ -144,6 +193,12 @@ class RequestBody extends Schema
             ->generate();
     }
 
+    /**
+     * Generate and return a request body schema for a mutate operation.
+     *
+     * @param Controller $controller The controller for which to generate the request body.
+     * @return RequestBody
+     */
     public function generateMutate(Controller $controller): RequestBody
     {
         return $this
@@ -186,6 +241,12 @@ class RequestBody extends Schema
             ->generate();
     }
 
+    /**
+     * Generate and return a request body schema for an "Actions" operation.
+     *
+     * @param Controller $controller The controller for which to generate the request body.
+     * @return RequestBody
+     */
     public function generateActions(Controller $controller): RequestBody
     {
         return $this
@@ -215,6 +276,12 @@ class RequestBody extends Schema
             ->generate();
     }
 
+    /**
+     * Generate and return a request body schema for a "Destroy" operation.
+     *
+     * @param Controller $controller The controller for which to generate the request body.
+     * @return RequestBody
+     */
     public function generateDestroy(Controller $controller): RequestBody
     {
         return $this
@@ -236,6 +303,12 @@ class RequestBody extends Schema
             ->generate();
     }
 
+    /**
+     * Generate and return a request body schema for a "Restore" operation.
+     *
+     * @param Controller $controller The controller for which to generate the request body.
+     * @return RequestBody
+     */
     public function generateRestore(Controller $controller): RequestBody
     {
         return $this
@@ -256,7 +329,13 @@ class RequestBody extends Schema
             )
             ->generate();
     }
-
+    
+    /**
+     * Generate and return a request body schema for a "Force Delete" operation.
+     *
+     * @param Controller $controller The controller for which to generate the request body.
+     * @return RequestBody
+     */
     public function generateForceDelete(Controller $controller): RequestBody
     {
         return $this

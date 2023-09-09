@@ -15,11 +15,24 @@ use Lomkit\Rest\Rules\Instruction;
 class SearchRequest extends RestRequest
 {
 
+    /**
+     * Define the validation rules for the search request.
+     *
+     * @return array
+     */
     public function rules()
     {
         return $this->searchRules($this->route()->controller::newResource());
     }
 
+    /**
+     * Define the validation rules for filters within the search request.
+     *
+     * @param Resource $resource
+     * @param string $prefix
+     * @param bool $isMaxDepth
+     * @return array
+     */
     public function searchRules(Resource $resource, $prefix = '', $isRootSearchRules = true)
     {
         if ($prefix !== '') {
@@ -48,6 +61,14 @@ class SearchRequest extends RestRequest
         );
     }
 
+    /**
+     * Define the validation rules for filters within the search request.
+     *
+     * @param Resource $resource
+     * @param string $prefix
+     * @param bool $isMaxDepth
+     * @return array
+     */
     // @TODO: For now it's prohibited to have more than one nested depth, is this needed ?
     public function filtersRules(Resource $resource, string $prefix, $isMaxDepth = false) {
         $rules = array_merge(
@@ -83,6 +104,13 @@ class SearchRequest extends RestRequest
         return $rules;
     }
 
+    /**
+     * Define the validation rules for scopes within the search request.
+     *
+     * @param Resource $resource
+     * @param string $prefix
+     * @return array
+     */
     protected function scopesRules(Resource $resource, string $prefix) {
         $rules = [
             $prefix.'.*.name' => [
@@ -99,6 +127,13 @@ class SearchRequest extends RestRequest
         return $rules;
     }
 
+    /**
+     * Define the validation rules for instructions within the search request.
+     *
+     * @param Resource $resource
+     * @param string $prefix
+     * @return array
+     */
     protected function instructionsRules(Resource $resource, string $prefix) {
         $rules = [
             $prefix.'.*.name' => [
@@ -123,6 +158,13 @@ class SearchRequest extends RestRequest
         return $rules;
     }
 
+    /**
+     * Define the validation rules for sorting options within the search request.
+     *
+     * @param Resource $resource
+     * @param string $prefix
+     * @return array
+     */
     protected function sortsRules(Resource $resource, string $prefix) {
         $rules = [
             $prefix.'.*.field' => [
@@ -139,6 +181,13 @@ class SearchRequest extends RestRequest
         return $rules;
     }
 
+    /**
+     * Define the validation rules for selecting fields within the search request.
+     *
+     * @param Resource $resource
+     * @param string $prefix
+     * @return array
+     */
     protected function selectsRules(Resource $resource, string $prefix) {
         $rules = [
             $prefix.'.*.field' => [
@@ -151,6 +200,12 @@ class SearchRequest extends RestRequest
         return $rules;
     }
 
+    /**
+     * Define the validation rules for including related resources within the search request.
+     *
+     * @param Resource $resource
+     * @return array
+     */
     protected function includesRules(Resource $resource) {
         return [
             'includes.*.relation' => [
@@ -171,6 +226,13 @@ class SearchRequest extends RestRequest
         ];
     }
 
+    /**
+     * Define the validation rules for aggregate functions within the search request.
+     *
+     * @param Resource $resource
+     * @param string $prefix
+     * @return array
+     */
     protected function aggregatesRules(Resource $resource, string $prefix) {
         return [
             $prefix.'.*.relation' => [
