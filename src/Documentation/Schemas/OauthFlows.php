@@ -5,25 +5,29 @@ namespace Lomkit\Rest\Documentation\Schemas;
 class OauthFlows extends Schema
 {
     /**
-     * Configuration for the OAuth Implicit flow
+     * Configuration for the OAuth Implicit flow.
+     *
      * @var OauthFlow
      */
     protected OauthFlow $implicit;
 
     /**
-     * Configuration for the OAuth Resource Owner Password flow
+     * Configuration for the OAuth Resource Owner Password flow.
+     *
      * @var OauthFlow
      */
     protected OauthFlow $password;
 
     /**
      * Configuration for the OAuth Client Credentials flow. Previously called application in OpenAPI 2.0.
+     *
      * @var OauthFlow
      */
     protected OauthFlow $clientCredentials;
 
     /**
      * Configuration for the OAuth Authorization Code flow. Previously called accessCode in OpenAPI 2.0.
+     *
      * @var OauthFlow
      */
     protected OauthFlow $authorizationCode;
@@ -31,6 +35,7 @@ class OauthFlows extends Schema
     public function withImplicit(OauthFlow $implicit): OauthFlows
     {
         $this->implicit = $implicit;
+
         return $this;
     }
 
@@ -42,6 +47,7 @@ class OauthFlows extends Schema
     public function withPassword(OauthFlow $password): OauthFlows
     {
         $this->password = $password;
+
         return $this;
     }
 
@@ -53,6 +59,7 @@ class OauthFlows extends Schema
     public function withClientCredentials(OauthFlow $clientCredentials): OauthFlows
     {
         $this->clientCredentials = $clientCredentials;
+
         return $this;
     }
 
@@ -64,6 +71,7 @@ class OauthFlows extends Schema
     public function withAuthorizationCode(OauthFlow $authorizationCode): OauthFlows
     {
         $this->authorizationCode = $authorizationCode;
+
         return $this;
     }
 

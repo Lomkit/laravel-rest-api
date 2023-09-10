@@ -9,18 +9,20 @@ trait Resourcable
     /**
      * The resource.
      *
-     * @var Resource
+     * @var resource
      */
     public Resource $resource;
 
     /**
      * Set the resource.
      *
-     * @param  Resource $resource
+     * @param resource $resource
+     *
      * @return array
      */
-    public function resource(Resource $resource) {
-        return tap($this, function() use ($resource) {
+    public function resource(Resource $resource)
+    {
+        return tap($this, function () use ($resource) {
             $this->resource = $resource;
         });
     }

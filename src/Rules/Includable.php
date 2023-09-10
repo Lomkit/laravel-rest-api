@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Rules;
 
-use Closure;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
@@ -14,7 +13,6 @@ use Lomkit\Rest\Http\Resource;
 
 class Includable implements Rule, DataAwareRule, ValidatorAwareRule
 {
-
     use Makeable;
 
     /**
@@ -34,7 +32,7 @@ class Includable implements Rule, DataAwareRule, ValidatorAwareRule
     /**
      * The resource related to.
      *
-     * @var Resource
+     * @var resource
      */
     protected $resource = null;
 
@@ -46,9 +44,8 @@ class Includable implements Rule, DataAwareRule, ValidatorAwareRule
     protected $validator;
 
     /**
-     *
-     *
      * @param $resource
+     *
      * @return $this
      */
     public function resource($resource)
@@ -106,7 +103,8 @@ class Includable implements Rule, DataAwareRule, ValidatorAwareRule
     /**
      * Adds the given failures, and return false.
      *
-     * @param  array|string  $messages
+     * @param array|string $messages
+     *
      * @return bool
      */
     protected function fail($messages)
@@ -123,7 +121,8 @@ class Includable implements Rule, DataAwareRule, ValidatorAwareRule
     /**
      * Set the current validator.
      *
-     * @param  \Illuminate\Contracts\Validation\Validator  $validator
+     * @param \Illuminate\Contracts\Validation\Validator $validator
+     *
      * @return $this
      */
     public function setValidator($validator)
@@ -136,7 +135,8 @@ class Includable implements Rule, DataAwareRule, ValidatorAwareRule
     /**
      * Set the current data under validation.
      *
-     * @param  array  $data
+     * @param array $data
+     *
      * @return $this
      */
     public function setData($data)

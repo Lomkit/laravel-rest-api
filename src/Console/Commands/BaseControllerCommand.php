@@ -4,9 +4,6 @@ namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
-use Illuminate\Database\Migrations\MigrationCreator;
-use Illuminate\Support\Composer;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Console\ResolvesStubPath;
 
 class BaseControllerCommand extends GeneratorCommand implements PromptsForMissingInput
@@ -74,7 +71,8 @@ class BaseControllerCommand extends GeneratorCommand implements PromptsForMissin
     /**
      * Get the default namespace for the class.
      *
-     * @param  string  $rootNamespace
+     * @param string $rootNamespace
+     *
      * @return string
      */
     protected function getDefaultNamespace($rootNamespace)

@@ -1,14 +1,10 @@
 <?php
 
-use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Query\Builder;
-use Lomkit\Rest\Tests\Support\Http\Controllers\ModelController;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Policies\RedPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class QueryBuilderTest extends \Lomkit\Rest\Tests\TestCase
@@ -38,7 +34,7 @@ class QueryBuilderTest extends \Lomkit\Rest\Tests\TestCase
 
         $queryBuilderMock->shouldReceive('applySorts')->with(
             [
-                ['field' => 'test']
+                ['field' => 'test'],
             ]
         )->once();
         $queryBuilderMock->shouldReceive('applyScopes')->with([])->never();
@@ -48,8 +44,8 @@ class QueryBuilderTest extends \Lomkit\Rest\Tests\TestCase
         $queryBuilderMock
             ->search([
                 'sorts' => [
-                    ['field' => 'test']
-                ]
+                    ['field' => 'test'],
+                ],
             ]);
     }
 }

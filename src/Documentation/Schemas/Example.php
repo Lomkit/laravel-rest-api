@@ -2,12 +2,11 @@
 
 namespace Lomkit\Rest\Documentation\Schemas;
 
-use Lomkit\Rest\Http\Controllers\Controller;
-
 class Example extends Schema
 {
     /**
-     * Value
+     * Value.
+     *
      * @var string
      */
     protected array $value;
@@ -25,6 +24,7 @@ class Example extends Schema
     public function withValue(array $value): Example
     {
         $this->value = $value;
+
         return $this;
     }
 

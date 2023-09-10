@@ -2,9 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Support\Traits;
 
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Http\Response;
-
 trait InteractsWithAuthorization
 {
     protected function withAuthenticatedUser($user = null, string $driver = 'api')
@@ -16,7 +13,6 @@ trait InteractsWithAuthorization
     {
         return null;
     }
-
 
     protected function assertUnauthorizedResponse($response)
     {

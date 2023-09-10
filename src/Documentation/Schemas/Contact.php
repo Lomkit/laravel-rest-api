@@ -6,18 +6,21 @@ class Contact extends Schema
 {
     /**
      * The identifying name of the contact person/organization.
+     *
      * @var string
      */
     protected string $name;
 
     /**
      * The URL pointing to the contact information.
+     *
      * @var string
      */
     protected string $url;
 
     /**
      * The email address of the contact person/organization.
+     *
      * @var string
      */
     protected string $email;
@@ -25,6 +28,7 @@ class Contact extends Schema
     public function withName(string $name): Contact
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -36,6 +40,7 @@ class Contact extends Schema
     public function withUrl(string $url): Contact
     {
         $this->url = $url;
+
         return $this;
     }
 
@@ -47,6 +52,7 @@ class Contact extends Schema
     public function withEmail(string $email): Contact
     {
         $this->email = $email;
+
         return $this;
     }
 
@@ -58,9 +64,9 @@ class Contact extends Schema
     public function jsonSerialize(): mixed
     {
         return [
-            'name' => $this->name(),
-            'url' => $this->url(),
-            'email' => $this->email()
+            'name'  => $this->name(),
+            'url'   => $this->url(),
+            'email' => $this->email(),
         ];
     }
 

@@ -7,7 +7,8 @@ use Lomkit\Rest\Http\Controllers\Controller;
 class Examples extends Schema
 {
     /**
-     * Examples
+     * Examples.
+     *
      * @var array
      */
     protected array $examples = [];
@@ -15,6 +16,7 @@ class Examples extends Schema
     public function withExamples(array $examples): Examples
     {
         $this->examples = array_merge($this->examples, $examples);
+
         return $this;
     }
 
@@ -38,12 +40,12 @@ class Examples extends Schema
         return $this
             ->withExamples(
                 [
-                    'application/json' => (new Example)
+                    'application/json' => (new Example())
                         ->withExample(
                             json_encode(
                                 ['test1234' => 'OAZEOOEZAOEOAZ']
                             )
-                        )
+                        ),
                 ]
             )
             ->generate();

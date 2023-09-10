@@ -2,23 +2,22 @@
 
 namespace Lomkit\Rest\Query\Traits;
 
-use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
 
 trait PerformSearch
 {
-    public function search(array $parameters = []) {
+    public function search(array $parameters = [])
+    {
         $this->resource->authorizeTo('viewAny', $this->resource::$model);
 
         $this->resource->searchQuery(app()->make(RestRequest::class), $this->queryBuilder);
 
         // Here we run the filters in a subquery to avoid conflicts
         $this->when(isset($parameters['filters']), function () use ($parameters) {
-            $this->queryBuilder->where(function($query) use ($parameters) {
+            $this->queryBuilder->where(function ($query) use ($parameters) {
                 $this->newQueryBuilder(['resource' => $this->resource, 'query' => $query])
                     ->applyFilters($parameters['filters']);
             });
@@ -59,7 +58,8 @@ trait PerformSearch
         return $this->queryBuilder;
     }
 
-    public function filter($field, $operator, $value, $type = 'and', $nested = null) {
+    public function filter($field, $operator, $value, $type = 'and', $nested = null)
+    {
         if ($nested !== null) {
             return $this->queryBuilder->where(function ($query) use ($nested) {
                 $this->newQueryBuilder(['resource' => $this->resource, 'query' => $query])
@@ -70,6 +70,7 @@ trait PerformSearch
         // Here we assume the user has asked a relation filter
         if (Str::contains($field, '.')) {
             $relation = $this->resource->relation($field);
+
             return $relation->filter($this->queryBuilder, $field, $operator, $value, $type, function ($query) use ($relation) {
                 $relation->applySearchQuery($query);
             }, $this->resource);
@@ -82,48 +83,56 @@ trait PerformSearch
         }
     }
 
-    public function applyFilters($filters) {
+    public function applyFilters($filters)
+    {
         foreach ($filters as $filter) {
             $this->filter($filter['field'] ?? null, $filter['operator'] ?? '=', $filter['value'] ?? null, $filter['type'] ?? 'and', $filter['nested'] ?? null);
         }
     }
 
-    public function sort($field, $direction = 'asc') {
+    public function sort($field, $direction = 'asc')
+    {
         return $this->queryBuilder->orderBy($field, $direction);
     }
 
-    public function applySorts($sorts) {
+    public function applySorts($sorts)
+    {
         foreach ($sorts as $sort) {
             $this->sort($this->queryBuilder->getModel()->getTable().'.'.$sort['field'], $sort['direction'] ?? 'asc');
         }
     }
 
-    public function scope($name, $parameters = []) {
+    public function scope($name, $parameters = [])
+    {
         return $this->queryBuilder->{$name}(...$parameters);
     }
 
-    public function applyScopes($scopes) {
+    public function applyScopes($scopes)
+    {
         foreach ($scopes as $scope) {
             $this->scope($scope['name'], $scope['parameters'] ?? []);
         }
     }
 
-    public function instruction($name, $fields = []) {
+    public function instruction($name, $fields = [])
+    {
         return $this->resource->instruction(app(RestRequest::class), $name)
             ->handle(
-                collect($fields)->mapWithKeys(function ($field) {return [ $field['name'] => $field['value']]; })->toArray(),
+                collect($fields)->mapWithKeys(function ($field) {return [$field['name'] => $field['value']]; })->toArray(),
                 $this->queryBuilder
             );
     }
 
-    public function applyInstructions($instructions) {
+    public function applyInstructions($instructions)
+    {
         foreach ($instructions as $instruction) {
             $this->instruction($instruction['name'], $instruction['fields'] ?? []);
         }
     }
 
-    public function include($include) {
-        return $this->queryBuilder->with($include['relation'], function(Relation $query) use ($include) {
+    public function include($include)
+    {
+        return $this->queryBuilder->with($include['relation'], function (Relation $query) use ($include) {
             $resource = $this->resource->relationResource($include['relation']);
 
             $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
@@ -132,14 +141,16 @@ trait PerformSearch
         });
     }
 
-    public function applyIncludes($includes) {
+    public function applyIncludes($includes)
+    {
         foreach ($includes as $include) {
             $this->include($include);
         }
     }
 
-    public function aggregate($aggregate) {
-        return $this->queryBuilder->withAggregate([$aggregate['relation'] => function(Builder $query) use ($aggregate) {
+    public function aggregate($aggregate)
+    {
+        return $this->queryBuilder->withAggregate([$aggregate['relation'] => function (Builder $query) use ($aggregate) {
             $resource = $this->resource->relationResource($aggregate['relation']);
 
             $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
@@ -148,7 +159,8 @@ trait PerformSearch
         }], $aggregate['field'] ?? '*', $aggregate['type']);
     }
 
-    public function applyAggregates($aggregates) {
+    public function applyAggregates($aggregates)
+    {
         foreach ($aggregates as $aggregate) {
             $this->aggregate($aggregate);
         }

@@ -7,7 +7,8 @@ trait Fieldable
     /**
      * The fields.
      *
-     * @param  \Lomkit\Rest\Http\Requests\RestRequest $request
+     * @param \Lomkit\Rest\Http\Requests\RestRequest $request
+     *
      * @return array
      */
     public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
@@ -18,8 +19,9 @@ trait Fieldable
     /**
      * The fields.
      *
-     * @param  \Lomkit\Rest\Http\Requests\RestRequest $request
-     * @param  string $name
+     * @param \Lomkit\Rest\Http\Requests\RestRequest $request
+     * @param string                                 $name
+     *
      * @return array
      */
     public function field(\Lomkit\Rest\Http\Requests\RestRequest $request, string $name)

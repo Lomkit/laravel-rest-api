@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Lomkit\Rest\Concerns\Resource\DisableAutomaticGates;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -18,7 +17,7 @@ class BelongsToResource extends Resource
     public function relations(RestRequest $request): array
     {
         return [
-            HasMany::make('models', ModelResource::class)
+            HasMany::make('models', ModelResource::class),
         ];
     }
 
@@ -26,7 +25,7 @@ class BelongsToResource extends Resource
     {
         return [
             'id',
-            'number'
+            'number',
         ];
     }
 }

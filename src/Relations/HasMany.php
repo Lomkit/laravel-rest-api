@@ -2,8 +2,6 @@
 
 namespace Lomkit\Rest\Relations;
 
-use Closure;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
@@ -17,7 +15,7 @@ class HasMany extends Relation implements RelationResource
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
             $attributes = [
-                $model->{$relation->relation}()->getForeignKeyName() => $mutationRelation['operation'] === 'detach' ? null : $model->{$relation->relation}()->getParentKey()
+                $model->{$relation->relation}()->getForeignKeyName() => $mutationRelation['operation'] === 'detach' ? null : $model->{$relation->relation}()->getParentKey(),
             ];
 
             app()->make(QueryBuilder::class, ['resource' => $relation->resource()])

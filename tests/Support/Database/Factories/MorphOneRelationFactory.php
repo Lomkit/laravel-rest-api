@@ -3,8 +3,6 @@
 namespace Lomkit\Rest\Tests\Support\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
-use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 
 class MorphOneRelationFactory extends Factory
@@ -24,7 +22,7 @@ class MorphOneRelationFactory extends Factory
     public function definition()
     {
         return [
-            'number' => fake()->numberBetween(-5000, 5000)
+            'number' => fake()->numberBetween(-5000, 5000),
         ];
     }
 }

@@ -6,42 +6,49 @@ class Info extends Schema
 {
     /**
      * The title of the API.
+     *
      * @var string
      */
     protected string $title;
 
     /**
      * A short summary of the API.
+     *
      * @var string
      */
     protected string $summary;
 
     /**
      * A description of the API. CommonMark syntax MAY be used for rich text representation.
+     *
      * @var string
      */
     protected string $description;
 
     /**
      * A URL to the Terms of Service for the API.
+     *
      * @var string|null
      */
     protected string|null $termsOfService;
 
     /**
      * The contact information for the exposed API.
+     *
      * @var Contact
      */
     protected Contact $contact;
 
     /**
      * The license information for the exposed API.
+     *
      * @var License
      */
     protected License $license;
 
     /**
-     * The version of the OpenAPI document
+     * The version of the OpenAPI document.
+     *
      * @var string
      */
     protected string $version;
@@ -49,6 +56,7 @@ class Info extends Schema
     public function withTitle(string $title): Info
     {
         $this->title = $title;
+
         return $this;
     }
 
@@ -60,6 +68,7 @@ class Info extends Schema
     public function withSummary(string $summary): Info
     {
         $this->summary = $summary;
+
         return $this;
     }
 
@@ -71,6 +80,7 @@ class Info extends Schema
     public function withDescription(string $description): Info
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -82,6 +92,7 @@ class Info extends Schema
     public function withTermsOfService(string|null $termsOfService): Info
     {
         $this->termsOfService = $termsOfService;
+
         return $this;
     }
 
@@ -93,6 +104,7 @@ class Info extends Schema
     public function withContact(Contact $contact): Info
     {
         $this->contact = $contact;
+
         return $this;
     }
 
@@ -104,6 +116,7 @@ class Info extends Schema
     public function withLicense(License $license): Info
     {
         $this->license = $license;
+
         return $this;
     }
 
@@ -115,6 +128,7 @@ class Info extends Schema
     public function withVersion(string $version): Info
     {
         $this->version = $version;
+
         return $this;
     }
 
@@ -127,12 +141,12 @@ class Info extends Schema
     {
         return array_merge(
             [
-                'title' => $this->title(),
-                'summary' => $this->summary(),
+                'title'       => $this->title(),
+                'summary'     => $this->summary(),
                 'description' => $this->description(),
-                'contact' => $this->contact()->jsonSerialize(),
-                'license' => $this->license()->jsonSerialize(),
-                'version' => $this->version()
+                'contact'     => $this->contact()->jsonSerialize(),
+                'license'     => $this->license()->jsonSerialize(),
+                'version'     => $this->version(),
             ],
             !is_null($this->termsOfService()) ? ['termsOfService' => $this->termsOfService()] : []
         );
@@ -146,11 +160,11 @@ class Info extends Schema
             ->withDescription(config('rest.documentation.info.description'))
             ->withTermsOfService(config('rest.documentation.info.termsOfService'))
             ->withContact(
-                (new Contact)
+                (new Contact())
                     ->generate()
             )
             ->withLicense(
-                (new License)
+                (new License())
                     ->generate()
             )
             ->withVersion(config('rest.documentation.info.version'));

@@ -8,12 +8,14 @@ class Responses extends Schema
 {
     /**
      * The documentation of responses other than the ones declared for specific HTTP response codes. Use this field to cover undeclared responses.
+     *
      * @var Response
      */
     protected Response $default;
 
     /**
-     * Other responses
+     * Other responses.
+     *
      * @var object
      */
     protected array $others = [];
@@ -21,6 +23,7 @@ class Responses extends Schema
     public function withDefault(Response $default): Responses
     {
         $this->default = $default;
+
         return $this;
     }
 
@@ -32,6 +35,7 @@ class Responses extends Schema
     public function withOthers(array $others): Responses
     {
         $this->others = array_merge($this->others, $others);
+
         return $this;
     }
 
@@ -57,7 +61,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateDetail($controller)
             )
             ->generate();
@@ -67,7 +71,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateSearch($controller)
             )
             ->generate();
@@ -77,7 +81,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateMutate($controller)
             )
             ->generate();
@@ -87,7 +91,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateActions($controller)
             )
             ->generate();
@@ -97,7 +101,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateDestroy($controller)
             )
             ->generate();
@@ -107,7 +111,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateRestore($controller)
             )
             ->generate();
@@ -117,7 +121,7 @@ class Responses extends Schema
     {
         return $this
             ->withDefault(
-                (new Response)
+                (new Response())
                     ->generateForceDelete($controller)
             )
             ->generate();

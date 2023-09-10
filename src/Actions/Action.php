@@ -8,7 +8,6 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\Fieldable;
 use Lomkit\Rest\Concerns\Makeable;
@@ -16,11 +15,18 @@ use Lomkit\Rest\Concerns\Metable;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\Resource;
 
 class Action implements \JsonSerializable
 {
-    use Makeable, Metable, Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Fieldable, Resourcable;
+    use Makeable;
+    use Metable;
+    use Batchable;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
+    use Fieldable;
+    use Resourcable;
 
     /**
      * The name of the connection the job should be sent to.
@@ -80,18 +86,19 @@ class Action implements \JsonSerializable
         $request = app()->make(RestRequest::class);
 
         return [
-            'name' => $this->name(),
+            'name'   => $this->name(),
             'uriKey' => $this->uriKey(),
             'fields' => $this->fields($request),
-            'meta' => $this->meta()
+            'meta'   => $this->meta(),
         ];
     }
 
     /**
      * Perform the action on the given models.
      *
-     * @param  array  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param array                          $fields
+     * @param \Illuminate\Support\Collection $models
+     *
      * @return mixed
      */
     public function handle(array $fields, \Illuminate\Support\Collection $models)
@@ -102,8 +109,9 @@ class Action implements \JsonSerializable
     /**
      * Register callbacks on the pending batch.
      *
-     * @param  array  $fields
-     * @param  \Illuminate\Bus\PendingBatch  $batch
+     * @param array                        $fields
+     * @param \Illuminate\Bus\PendingBatch $batch
+     *
      * @return void
      */
     public function withBatch(array $fields, PendingBatch $batch)
@@ -114,10 +122,11 @@ class Action implements \JsonSerializable
     /**
      * Execute the action for the given request.
      *
-     * @param  OperateRequest  $request
-     * @return int
+     * @param OperateRequest $request
      *
      * @throws \Throwable
+     *
+     * @return int
      */
     public function handleRequest(OperateRequest $request)
     {

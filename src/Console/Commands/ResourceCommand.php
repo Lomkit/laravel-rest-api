@@ -4,8 +4,6 @@ namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
-use Illuminate\Database\Migrations\MigrationCreator;
-use Illuminate\Support\Composer;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\ResolvesStubPath;
 
@@ -59,7 +57,8 @@ class ResourceCommand extends GeneratorCommand implements PromptsForMissingInput
     /**
      * Build the class with the given name.
      *
-     * @param  string  $name
+     * @param string $name
+     *
      * @return string
      */
     protected function buildClass($name)
@@ -70,20 +69,22 @@ class ResourceCommand extends GeneratorCommand implements PromptsForMissingInput
 
         if (is_null($model)) {
             $resource = $modelNamespace.str_replace('/', '\\', $this->argument('name'));
-        } elseif (! Str::startsWith($model, [
+        } elseif (!Str::startsWith($model, [
             $modelNamespace, '\\',
         ])) {
             $model = $modelNamespace.$model;
         }
 
         $replace = [
-            'DummyFullModel' => $model,
+            'DummyFullModel'        => $model,
             '{{ namespacedModel }}' => $model,
-            '{{namespacedModel}}' => $model,
+            '{{namespacedModel}}'   => $model,
         ];
 
         return str_replace(
-            array_keys($replace), array_values($replace), parent::buildClass($name)
+            array_keys($replace),
+            array_values($replace),
+            parent::buildClass($name)
         );
     }
 
@@ -100,7 +101,8 @@ class ResourceCommand extends GeneratorCommand implements PromptsForMissingInput
     /**
      * Get the default namespace for the class.
      *
-     * @param  string  $rootNamespace
+     * @param string $rootNamespace
+     *
      * @return string
      */
     protected function getDefaultNamespace($rootNamespace)

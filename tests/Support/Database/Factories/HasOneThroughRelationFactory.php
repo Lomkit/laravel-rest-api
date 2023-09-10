@@ -3,9 +3,6 @@
 namespace Lomkit\Rest\Tests\Support\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
-use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\HasOneThroughRelation;
 
 class HasOneThroughRelationFactory extends Factory
@@ -25,7 +22,7 @@ class HasOneThroughRelationFactory extends Factory
     public function definition()
     {
         return [
-            'number' => fake()->numberBetween(-5000, 5000)
+            'number' => fake()->numberBetween(-5000, 5000),
         ];
     }
 }

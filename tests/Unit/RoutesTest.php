@@ -40,7 +40,7 @@ class RoutesTest extends \Lomkit\Rest\Tests\TestCase
      * Asserts that a route with the given signature is registered.
      *
      * @param string $name
-     * @param array $methods
+     * @param array  $methods
      * @param string $uri
      * @param string $controller
      */
