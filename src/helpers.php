@@ -14,3 +14,4 @@ if (!function_exists('relation_without_pivot')) {
             $relation;
     }
 }
+
