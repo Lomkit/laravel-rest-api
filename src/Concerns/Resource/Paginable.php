@@ -10,8 +10,9 @@ trait Paginable
     /**
      * Paginate the results of a query.
      *
-     * @param Builder $query
+     * @param Builder     $query
      * @param RestRequest $request
+     *
      * @return mixed
      */
     public function paginate(Builder $query, RestRequest $request)

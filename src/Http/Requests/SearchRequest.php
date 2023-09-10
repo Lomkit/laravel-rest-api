@@ -24,9 +24,10 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for filters within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
-     * @param bool $isMaxDepth
+     * @param resource $resource
+     * @param string   $prefix
+     * @param bool     $isMaxDepth
+     *
      * @return array
      */
     public function searchRules(Resource $resource, $prefix = '', $isRootSearchRules = true)
@@ -61,9 +62,10 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for filters within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
-     * @param bool $isMaxDepth
+     * @param resource $resource
+     * @param string   $prefix
+     * @param bool     $isMaxDepth
+     *
      * @return array
      */
     public function filtersRules(Resource $resource, string $prefix, $isMaxDepth = false)
@@ -104,8 +106,9 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for scopes within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
+     * @param resource $resource
+     * @param string   $prefix
+     *
      * @return array
      */
     protected function scopesRules(Resource $resource, string $prefix)
@@ -128,8 +131,9 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for instructions within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
+     * @param resource $resource
+     * @param string   $prefix
+     *
      * @return array
      */
     protected function instructionsRules(Resource $resource, string $prefix)
@@ -160,8 +164,9 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for sorting options within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
+     * @param resource $resource
+     * @param string   $prefix
+     *
      * @return array
      */
     protected function sortsRules(Resource $resource, string $prefix)
@@ -184,8 +189,9 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for selecting fields within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
+     * @param resource $resource
+     * @param string   $prefix
+     *
      * @return array
      */
     protected function selectsRules(Resource $resource, string $prefix)
@@ -204,7 +210,8 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for including related resources within the search request.
      *
-     * @param Resource $resource
+     * @param resource $resource
+     *
      * @return array
      */
     protected function includesRules(Resource $resource)
@@ -231,8 +238,9 @@ class SearchRequest extends RestRequest
     /**
      * Define the validation rules for aggregate functions within the search request.
      *
-     * @param Resource $resource
-     * @param string $prefix
+     * @param resource $resource
+     * @param string   $prefix
+     *
      * @return array
      */
     protected function aggregatesRules(Resource $resource, string $prefix)

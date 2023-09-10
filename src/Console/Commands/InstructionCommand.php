@@ -67,7 +67,8 @@ class InstructionCommand extends GeneratorCommand implements PromptsForMissingIn
     /**
      * Get the path where the action file should be created.
      *
-     * @param  string  $name
+     * @param string $name
+     *
      * @return string
      */
     protected function getPath($name)

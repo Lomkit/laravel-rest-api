@@ -63,9 +63,10 @@ class RequiredRelationOnCreation implements ValidationRule, DataAwareRule
     /**
      * Validate the attribute.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
-     * @param  \Closure  $fail
+     * @param string   $attribute
+     * @param mixed    $value
+     * @param \Closure $fail
+     *
      * @return void
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void

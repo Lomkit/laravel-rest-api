@@ -40,7 +40,8 @@ class Rest implements Registrar
     /**
      * Set the documentation callback for OpenAPI.
      *
-     * @param  \Closure  $documentationCallback
+     * @param \Closure $documentationCallback
+     *
      * @return Rest
      */
     public function withDocumentationCallback(\Closure $documentationCallback): Rest
@@ -53,7 +54,8 @@ class Rest implements Registrar
     /**
      * Apply the documentation callback to the OpenAPI instance.
      *
-     * @param  OpenAPI  $openAPI
+     * @param OpenAPI $openAPI
+     *
      * @return OpenAPI
      */
     public function applyDocumentationCallback(OpenAPI $openAPI): OpenAPI

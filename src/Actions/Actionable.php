@@ -22,7 +22,8 @@ trait Actionable
      * Check if a specific action exists.
      *
      * @param RestRequest $request
-     * @param string $actionKey
+     * @param string      $actionKey
+     *
      * @return bool
      */
     public function actionExists(RestRequest $request, string $actionKey): bool
@@ -37,7 +38,8 @@ trait Actionable
      * Get a specific action instance.
      *
      * @param RestRequest $request
-     * @param string $actionKey
+     * @param string      $actionKey
+     *
      * @return Action
      */
     public function action(RestRequest $request, string $actionKey): Action

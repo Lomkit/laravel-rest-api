@@ -13,6 +13,7 @@ trait Relationable
      * Get a relation by name.
      *
      * @param string $name
+     *
      * @return Relation|null
      */
     public function relation($name)
@@ -37,7 +38,8 @@ trait Relationable
      * Get the resource associated with a relation by name.
      *
      * @param string $name
-     * @return Resource|null
+     *
+     * @return resource|null
      */
     public function relationResource($name)
     {
@@ -48,8 +50,9 @@ trait Relationable
      * Get nested relations with their names as keys.
      *
      * @param RestRequest $request
-     * @param string $prefix
-     * @param array $loadedRelations
+     * @param string      $prefix
+     * @param array       $loadedRelations
+     *
      * @return array
      */
     public function nestedRelations(RestRequest $request, string $prefix = '', array $loadedRelations = [])
@@ -92,6 +95,7 @@ trait Relationable
      * Get the relations for the resource.
      *
      * @param RestRequest $request
+     *
      * @return array
      */
     public function getRelations(RestRequest $request)

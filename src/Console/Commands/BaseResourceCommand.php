@@ -52,7 +52,8 @@ class BaseResourceCommand extends GeneratorCommand implements PromptsForMissingI
     /**
      * Get the path where the action file should be created.
      *
-     * @param  string  $name
+     * @param string $name
+     *
      * @return string
      */
     protected function getPath($name)

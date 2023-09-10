@@ -21,6 +21,7 @@ trait PerformMutation
      * Mutate the model based on the provided parameters.
      *
      * @param array $parameters An array of mutation parameters.
+     *
      * @return array An array containing 'created' and 'updated' operations with affected model keys.
      */
     public function mutate(array $parameters = [])
@@ -42,8 +43,9 @@ trait PerformMutation
     /**
      * Apply a mutation to the model based on the provided mutation parameters.
      *
-     * @param array $mutation An array of mutation parameters.
+     * @param array $mutation   An array of mutation parameters.
      * @param array $attributes Additional attributes to apply to the model.
+     *
      * @return Model The mutated model.
      */
     public function applyMutation(array $mutation = [], $attributes = [])
@@ -86,9 +88,10 @@ trait PerformMutation
     /**
      * Mutate the model by applying attributes and relations.
      *
-     * @param Model $model The Eloquent model to mutate.
+     * @param Model $model      The Eloquent model to mutate.
      * @param array $attributes The attributes to apply to the model.
-     * @param array $relations The relations associated with the model.
+     * @param array $relations  The relations associated with the model.
+     *
      * @return Model The mutated model.
      */
     public function mutateModel(Model $model, $attributes, $relations)

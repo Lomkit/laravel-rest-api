@@ -6,7 +6,6 @@ use Lomkit\Rest\Http\Resource;
 
 class ForceDestroyRequest extends RestRequest
 {
-
     /**
      * Define the validation rules for the force destroy request.
      *
@@ -23,7 +22,8 @@ class ForceDestroyRequest extends RestRequest
     /**
      * Define the validation rules for force destroying resources.
      *
-     * @param Resource $resource
+     * @param resource $resource
+     *
      * @return array
      *
      * This method specifies the validation rules for force destroying resources.

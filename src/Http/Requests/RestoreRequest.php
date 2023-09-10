@@ -22,7 +22,8 @@ class RestoreRequest extends RestRequest
     /**
      * Define the validation rules for restoring resources.
      *
-     * @param Resource $resource
+     * @param resource $resource
+     *
      * @return array
      *
      * This method specifies the validation rules for the restoration process.

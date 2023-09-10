@@ -8,13 +8,12 @@ use Lomkit\Rest\Contracts\RelationResource;
 
 class HasOneOfMany extends Relation implements RelationResource
 {
-
     /**
      * Perform actions after mutating the HasOneOfMany relation.
      *
-     * @param Model $model The Eloquent model.
-     * @param Relation $relation The relation being mutated.
-     * @param array $mutationRelations An array of mutation relations.
+     * @param Model    $model             The Eloquent model.
+     * @param Relation $relation          The relation being mutated.
+     * @param array    $mutationRelations An array of mutation relations.
      */
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {

@@ -4,7 +4,8 @@ if (!function_exists('relation_without_pivot')) {
     /**
      * Remove the '.pivot.' portion from a relation name, if present.
      *
-     * @param  string  $relation
+     * @param string $relation
+     *
      * @return string
      */
     function relation_without_pivot(string $relation)
@@ -14,4 +15,3 @@ if (!function_exists('relation_without_pivot')) {
             $relation;
     }
 }
-

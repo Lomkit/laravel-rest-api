@@ -21,8 +21,9 @@ trait Instructionable
     /**
      * Check if a specific instruction exists.
      *
-     * @param RestRequest $request The REST request instance.
-     * @param string $instructionKey The key of the instruction to check.
+     * @param RestRequest $request        The REST request instance.
+     * @param string      $instructionKey The key of the instruction to check.
+     *
      * @return bool True if the instruction exists; otherwise, false.
      */
     public function instructionExists(RestRequest $request, string $instructionKey): bool
@@ -36,8 +37,9 @@ trait Instructionable
     /**
      * Retrieve a specific instruction by its key.
      *
-     * @param RestRequest $request The REST request instance.
-     * @param string $instructionKey The key of the instruction to retrieve.
+     * @param RestRequest $request        The REST request instance.
+     * @param string      $instructionKey The key of the instruction to retrieve.
+     *
      * @return Instruction|null The instruction instance or null if not found.
      */
     public function instruction(RestRequest $request, string $instructionKey)

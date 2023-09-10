@@ -60,8 +60,9 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
     /**
      * Get the stub file for the generator.
      *
-     * @return string
      * @throws RuntimeException
+     *
+     * @return string
      */
     protected function getStub()
     {

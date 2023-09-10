@@ -70,6 +70,7 @@ class Resource implements \JsonSerializable
      * Return the default ordering for resource queries.
      *
      * @param RestRequest $request
+     *
      * @return array
      */
     public function defaultOrderBy(RestRequest $request): array

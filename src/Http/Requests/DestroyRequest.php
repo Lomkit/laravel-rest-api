@@ -22,7 +22,8 @@ class DestroyRequest extends RestRequest
     /**
      * Define the validation rules for destroying resources.
      *
-     * @param Resource $resource
+     * @param resource $resource
+     *
      * @return array
      *
      * This method specifies the validation rules for destroying resources.

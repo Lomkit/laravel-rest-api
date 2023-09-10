@@ -7,9 +7,11 @@ class Header extends Parameter
     /**
      * Set the name for a header (not allowed).
      *
-     * @param  string  $name
-     * @return Parameter
+     * @param string $name
+     *
      * @throws \RuntimeException
+     *
+     * @return Parameter
      */
     public function withName(string $name): Parameter
     {

@@ -49,12 +49,13 @@ class Relation implements \JsonSerializable
     /**
      * Filter the query based on the relation.
      *
-     * @param Builder $query
-     * @param mixed $relation
-     * @param mixed $operator
-     * @param mixed $value
-     * @param string $boolean
+     * @param Builder      $query
+     * @param mixed        $relation
+     * @param mixed        $operator
+     * @param mixed        $value
+     * @param string       $boolean
      * @param Closure|null $callback
+     *
      * @return Builder
      */
     public function filter(Builder $query, $relation, $operator, $value, $boolean = 'and', Closure $callback = null)
@@ -99,7 +100,7 @@ class Relation implements \JsonSerializable
     /**
      * Get the resource associated with this relation.
      *
-     * @return Resource
+     * @return resource
      */
     public function resource()
     {
@@ -109,7 +110,8 @@ class Relation implements \JsonSerializable
     /**
      * Set the "fromResource" property of the relation.
      *
-     * @param Resource $fromResource
+     * @param resource $fromResource
+     *
      * @return $this
      */
     public function fromResource(Resource $fromResource)
@@ -122,8 +124,9 @@ class Relation implements \JsonSerializable
     /**
      * Get the validation rules for this relation.
      *
-     * @param Resource $resource
-     * @param string $prefix
+     * @param resource $resource
+     * @param string   $prefix
+     *
      * @return array
      */
     public function rules(Resource $resource, string $prefix)

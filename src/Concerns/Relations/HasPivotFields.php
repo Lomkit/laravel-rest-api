@@ -21,6 +21,7 @@ trait HasPivotFields
      * Set the pivot fields.
      *
      * @param array $pivotFields
+     *
      * @return $this
      */
     public function withPivotFields(array $pivotFields)
@@ -34,6 +35,7 @@ trait HasPivotFields
      * Set the pivot rules.
      *
      * @param array $pivotRules
+     *
      * @return $this
      */
     public function withPivotRules(array $pivotRules)

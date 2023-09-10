@@ -27,7 +27,8 @@ class OperateRequest extends RestRequest
     /**
      * Define the validation rules for resource operations.
      *
-     * @param Resource $resource
+     * @param resource $resource
+     *
      * @return array
      *
      * This method specifies the validation rules for resource operations.

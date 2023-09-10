@@ -25,9 +25,10 @@ class MutateRequest extends RestRequest
     /**
      * Define the validation rules for mutating resources.
      *
-     * @param Resource $resource
-     * @param string $prefix
-     * @param array $loadedRelations
+     * @param resource $resource
+     * @param string   $prefix
+     * @param array    $loadedRelations
+     *
      * @return array
      *
      * This method specifies the validation rules for resource mutations, including create, update, attach, or detach.
@@ -64,9 +65,10 @@ class MutateRequest extends RestRequest
     /**
      * Define relation-specific validation rules for mutations.
      *
-     * @param Resource $resource
-     * @param string $prefix
-     * @param array $loadedRelations
+     * @param resource $resource
+     * @param string   $prefix
+     * @param array    $loadedRelations
+     *
      * @return array
      *
      * This protected method specifies validation rules for resource relations during mutations.

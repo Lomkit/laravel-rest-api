@@ -6,18 +6,21 @@ class ServerVariable extends Schema
 {
     /**
      * An enumeration of string values to be used if the substitution options are from a limited set.
+     *
      * @var array
      */
     protected array $enum = [];
 
     /**
      * The default value to use for substitution, which SHALL be sent if an alternate value is not supplied.
+     *
      * @var string
      */
     protected string $default;
 
     /**
      * An optional description for the server variable. CommonMark syntax MAY be used for rich text representation.
+     *
      * @var string
      */
     protected string $description;
@@ -26,6 +29,7 @@ class ServerVariable extends Schema
      * Set the enum values for the server variable.
      *
      * @param array $enum
+     *
      * @return ServerVariable
      *
      * This method allows setting an enumeration of string values to be used if the substitution
@@ -34,6 +38,7 @@ class ServerVariable extends Schema
     public function withEnum(array $enum): ServerVariable
     {
         $this->enum = $enum;
+
         return $this;
     }
 
@@ -53,6 +58,7 @@ class ServerVariable extends Schema
      * Set the default value for the server variable.
      *
      * @param string $default
+     *
      * @return ServerVariable
      *
      * This method allows setting the default value to use for substitution if an alternate
@@ -61,6 +67,7 @@ class ServerVariable extends Schema
     public function withDefault(string $default): ServerVariable
     {
         $this->default = $default;
+
         return $this;
     }
 
@@ -80,6 +87,7 @@ class ServerVariable extends Schema
      * Set the description for the server variable.
      *
      * @param string $description
+     *
      * @return ServerVariable
      *
      * This method allows setting an optional description for the server variable. CommonMark syntax
@@ -88,6 +96,7 @@ class ServerVariable extends Schema
     public function withDescription(string $description): ServerVariable
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -114,9 +123,9 @@ class ServerVariable extends Schema
     public function jsonSerialize(): mixed
     {
         return [
-            'enum' => $this->enum(),
-            'default' => $this->default(),
-            'description' => $this->description()
+            'enum'        => $this->enum(),
+            'default'     => $this->default(),
+            'description' => $this->description(),
         ];
     }
 

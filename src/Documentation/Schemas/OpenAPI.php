@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Documentation\Schemas;
 
-use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Facades\Rest;
@@ -11,7 +10,7 @@ use Lomkit\Rest\Http\Controllers\Controller;
 class OpenAPI extends Schema
 {
     /**
-     * The version number of the OpenAPI specification
+     * The version number of the OpenAPI specification.
      *
      * @var string
      */
@@ -50,7 +49,6 @@ class OpenAPI extends Schema
      *
      * @return string
      */
-
     public function openapi(): string
     {
         return $this->openapi;
@@ -59,7 +57,8 @@ class OpenAPI extends Schema
     /**
      * Set the version number of the OpenAPI specification.
      *
-     * @param  string  $openapi
+     * @param string $openapi
+     *
      * @return self
      */
     public function withOpenapi(string $openapi): self
@@ -82,7 +81,8 @@ class OpenAPI extends Schema
     /**
      * Set the metadata about the API.
      *
-     * @param  Info  $info
+     * @param Info $info
+     *
      * @return self
      */
     public function withInfo(Info $info): self
@@ -105,10 +105,10 @@ class OpenAPI extends Schema
     /**
      * Set the available paths and operations for the API.
      *
-     * @param  array  $paths
+     * @param array $paths
+     *
      * @return self
      */
-
     public function withPaths(array $paths): self
     {
         $this->paths = array_merge($this->paths, $paths);
@@ -121,7 +121,6 @@ class OpenAPI extends Schema
      *
      * @return array
      */
-
     public function security(): array
     {
         return $this->security;
@@ -130,7 +129,8 @@ class OpenAPI extends Schema
     /**
      * Set the declaration of security mechanisms for the API.
      *
-     * @param  array  $security
+     * @param array $security
+     *
      * @return self
      */
     public function withSecurity(array $security): self
@@ -143,12 +143,14 @@ class OpenAPI extends Schema
     /**
      * Set the Server Objects, which provide connectivity information to a target server.
      *
-     * @param  array  $servers
+     * @param array $servers
+     *
      * @return OpenAPI
      */
     public function withServers(array $servers): OpenAPI
     {
         $this->servers = $servers;
+
         return $this;
     }
 
@@ -172,8 +174,8 @@ class OpenAPI extends Schema
         return array_merge(
             [
                 'openapi' => $this->openapi(),
-                'info' => $this->info()->jsonSerialize(),
-                'paths' => collect($this->paths())->map->jsonSerialize()->toArray()
+                'info'    => $this->info()->jsonSerialize(),
+                'paths'   => collect($this->paths())->map->jsonSerialize()->toArray(),
             ],
             isset($this->servers) ? ['servers' => collect($this->servers())->map->jsonSerialize()->toArray()] : [],
             isset($this->security) ? ['security' => collect($this->security())->map->jsonSerialize()->toArray()] : []
@@ -190,13 +192,13 @@ class OpenAPI extends Schema
         $servers = [];
 
         foreach (config('rest.documentation.servers') as $server) {
-            $serverInstance = (new Server)
+            $serverInstance = (new Server())
                 ->withDescription($server['description'] ?? '')
                 ->withUrl($server['url']);
 
             foreach ($server['variables'] ?? [] as $key => $variable) {
                 $serverInstance
-                    ->withVariable($key, (new ServerVariable)
+                    ->withVariable($key, (new ServerVariable())
                         ->withDescription($variable['description'] ?? '')
                         ->withDefault($variable['default'] ?? '')
                         ->withEnum($variable['enum'] ?? []));
@@ -208,7 +210,7 @@ class OpenAPI extends Schema
         $securities = [];
 
         foreach (config('rest.documentation.security') as $security) {
-            $securityInstance = (new SecurityScheme)
+            $securityInstance = (new SecurityScheme())
                 ->withDescription($security['description'] ?? '')
                 ->withIn($security['in'] ?? '')
                 ->withType($security['type'] ?? '')
@@ -218,9 +220,8 @@ class OpenAPI extends Schema
                 ->withScheme($security['scheme'] ?? '')
                 ->withFlows($oauthFlows = new OauthFlows());
 
-
             foreach ($security['flows'] ?? [] as $key => $flow) {
-                $flowInstance = (new OauthFlow)
+                $flowInstance = (new OauthFlow())
                     ->withScopes($flow['scopes'] ?? [])
                     ->withAuthorizationUrl($flow['authorizationUrl'] ?? '')
                     ->withTokenUrl($flow['tokenUrl'])
@@ -235,7 +236,7 @@ class OpenAPI extends Schema
         return Rest::applyDocumentationCallback(
             $this
                 ->withInfo(
-                    (new Info)
+                    (new Info())
                         ->generate()
                 )
                 ->withPaths(
@@ -251,14 +252,13 @@ class OpenAPI extends Schema
      *
      * @return array
      */
-    public function generatePaths() {
+    public function generatePaths()
+    {
         $paths = [];
 
         foreach (Route::getRoutes() as $route) {
             /** @var \Illuminate\Routing\Route $route */
-
-            if (is_null($route->getName()))
-            {
+            if (is_null($route->getName())) {
                 continue;
             }
 
@@ -266,13 +266,13 @@ class OpenAPI extends Schema
 
             if ($controller instanceof Controller) {
                 $path = match (Str::afterLast($route->getName(), '.')) {
-                    'detail' => (new Path)->generateDetailAndDestroy($controller),
-                    'search' => (new Path)->generateSearch($controller),
-                    'mutate' => (new Path)->generateMutate($controller),
-                    'operate' => (new Path)->generateActions($controller),
-                    'restore' => (new Path)->generateRestore($controller),
-                    'forceDelete' => (new Path)->generateForceDelete($controller),
-                    default => null
+                    'detail'      => (new Path())->generateDetailAndDestroy($controller),
+                    'search'      => (new Path())->generateSearch($controller),
+                    'mutate'      => (new Path())->generateMutate($controller),
+                    'operate'     => (new Path())->generateActions($controller),
+                    'restore'     => (new Path())->generateRestore($controller),
+                    'forceDelete' => (new Path())->generateForceDelete($controller),
+                    default       => null
                 };
 
                 if (!is_null($path)) {
