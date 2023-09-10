@@ -40,7 +40,7 @@ class ResourceCommand extends GeneratorCommand implements PromptsForMissingInput
     {
         parent::handle();
 
-        if (!$this->hasOption('path')) {
+        if (is_null($this->option('path'))) {
             $this->callSilent('rest:base-resource', [
                 'name' => 'Resource',
             ]);
@@ -49,7 +49,7 @@ class ResourceCommand extends GeneratorCommand implements PromptsForMissingInput
 
     protected function getPath($name)
     {
-        if ($this->hasOption('path')) {
+        if (!is_null($this->option('path'))) {
             return $this->option('path').'/'.$this->argument('name').'.php';
         }
 
