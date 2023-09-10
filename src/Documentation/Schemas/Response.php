@@ -8,6 +8,7 @@ class Response extends Schema
 {
     /**
      * A description of the response. CommonMark syntax MAY be used for rich text representation.
+     *
      * @var string
      */
     protected string $description;
@@ -15,19 +16,22 @@ class Response extends Schema
     /**
      * Maps a header name to its definition. RFC7230 states header names are case insensitive.
      * If a response header is defined with the name "Content-Type", it SHALL be ignored.
+     *
      * @var array
      */
     protected array $headers = [];
 
     /**
      * A map containing descriptions of potential response payloads.
-     * The key is a media type or media type range and the value describes it. For responses that match multiple keys, only the most specific key is applicable. e.g. text/plain overrides text/*
+     * The key is a media type or media type range and the value describes it. For responses that match multiple keys, only the most specific key is applicable. e.g. text/plain overrides text/*.
+     *
      * @var array
      */
     protected array $content = [];
 
     /**
      * A map of operations links that can be followed from the response. The key of the map is a short name for the link, following the naming constraints of the names for Component Objects.
+     *
      * @var array
      */
     protected array $links = [];
@@ -35,6 +39,7 @@ class Response extends Schema
     public function withDescription(string $description): Response
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -46,6 +51,7 @@ class Response extends Schema
     public function withHeaders(array $headers): Response
     {
         $this->headers = array_merge($this->headers, $headers);
+
         return $this;
     }
 
@@ -57,6 +63,7 @@ class Response extends Schema
     public function withContent(array $content): Response
     {
         $this->content = array_merge($this->content, $content);
+
         return $this;
     }
 
@@ -68,6 +75,7 @@ class Response extends Schema
     public function withLinks(array $links): Response
     {
         $this->links = array_merge($this->links, $links);
+
         return $this;
     }
 
@@ -99,8 +107,8 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
-                        ->generateDetail($controller)
+                    'application/json' => (new MediaType())
+                        ->generateDetail($controller),
                 ]
             )
             ->generate();
@@ -112,8 +120,8 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
-                        ->generateSearch($controller)
+                    'application/json' => (new MediaType())
+                        ->generateSearch($controller),
                 ]
             )
             ->generate();
@@ -125,8 +133,8 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
-                        ->generateMutate($controller)
+                    'application/json' => (new MediaType())
+                        ->generateMutate($controller),
                 ]
             )
             ->generate();
@@ -138,8 +146,8 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
-                        ->generateActions($controller)
+                    'application/json' => (new MediaType())
+                        ->generateActions($controller),
                 ]
             )
             ->generate();
@@ -151,8 +159,8 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
-                        ->generateDestroy($controller)
+                    'application/json' => (new MediaType())
+                        ->generateDestroy($controller),
                 ]
             )
             ->generate();
@@ -164,8 +172,8 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
-                        ->generateRestore($controller)
+                    'application/json' => (new MediaType())
+                        ->generateRestore($controller),
                 ]
             )
             ->generate();
@@ -177,8 +185,8 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType)
-                        ->generateForceDelete($controller)
+                    'application/json' => (new MediaType())
+                        ->generateForceDelete($controller),
                 ]
             )
             ->generate();

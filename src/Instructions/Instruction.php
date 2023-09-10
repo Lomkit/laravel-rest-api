@@ -8,11 +8,13 @@ use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Metable;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Query\Builder;
 
 class Instruction
 {
-    use Makeable, Metable, Fieldable, Resourcable;
+    use Makeable;
+    use Metable;
+    use Fieldable;
+    use Resourcable;
 
     /**
      * The displayable name of the instruction.
@@ -51,18 +53,19 @@ class Instruction
         $request = app()->make(RestRequest::class);
 
         return [
-            'name' => $this->name(),
+            'name'   => $this->name(),
             'uriKey' => $this->uriKey(),
             'fields' => $this->fields($request),
-            'meta' => $this->meta()
+            'meta'   => $this->meta(),
         ];
     }
 
     /**
      * Perform the instruction on the given query.
      *
-     * @param array $fields
+     * @param array                                 $fields
      * @param \Illuminate\Database\Eloquent\Builder $query
+     *
      * @return void
      */
     public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query)

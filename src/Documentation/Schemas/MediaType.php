@@ -14,6 +14,7 @@ class MediaType extends Schema
     public function withSchemaConcrete(SchemaConcrete $schemaConcrete): MediaType
     {
         $this->schemaConcrete = $schemaConcrete;
+
         return $this;
     }
 
@@ -25,6 +26,7 @@ class MediaType extends Schema
     public function withExamples(Examples $examples): MediaType
     {
         $this->examples = $examples;
+
         return $this;
     }
 
@@ -36,6 +38,7 @@ class MediaType extends Schema
     public function withExample(Example $example): MediaType
     {
         $this->example = $example;
+
         return $this;
     }
 
@@ -62,7 +65,7 @@ class MediaType extends Schema
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         ['data' => $controller::newResource()->jsonSerialize()]
                     )
@@ -74,7 +77,7 @@ class MediaType extends Schema
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         $controller::newResource()::newResponse()
                             ->resource($controller::newResource())
@@ -92,9 +95,9 @@ class MediaType extends Schema
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
-                        ['created' => [1], 'updated' => [2,3]]
+                        ['created' => [1], 'updated' => [2, 3]]
                     )
             )
             ->generate();
@@ -104,12 +107,12 @@ class MediaType extends Schema
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         [
                             'data' => [
-                                'impacted' => 2
-                            ]
+                                'impacted' => 2,
+                            ],
                         ]
                     )
             )
@@ -120,7 +123,7 @@ class MediaType extends Schema
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         $controller::newResource()::newResponse()
                             ->resource($controller::newResource())
@@ -138,7 +141,7 @@ class MediaType extends Schema
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         $controller::newResource()::newResponse()
                             ->resource($controller::newResource())
@@ -156,7 +159,7 @@ class MediaType extends Schema
     {
         return $this
             ->withExample(
-                (new Example)
+                (new Example())
                     ->withValue(
                         $controller::newResource()::newResponse()
                             ->resource($controller::newResource())

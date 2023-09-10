@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Http\Routing;
 
 use Illuminate\Routing\ResourceRegistrar as BaseResourceRegistrar;
 use Lomkit\Rest\Controller;
-use Lomkit\Rest\Http\Controllers\EntryController;
 use Lomkit\Rest\Http\Resources\Resource;
 
 class ResourceRegistrar extends BaseResourceRegistrar
@@ -22,20 +21,21 @@ class ResourceRegistrar extends BaseResourceRegistrar
      * @var array
      */
     protected static $verbs = [
-        'search' => 'search',
-        'mutate' => 'mutate',
-        'actions' => 'actions',
-        'restore' => 'restore',
+        'search'      => 'search',
+        'mutate'      => 'mutate',
+        'actions'     => 'actions',
+        'restore'     => 'restore',
         'forceDelete' => 'force',
     ];
 
     /**
      * Add the detail method for a resourceful route.
      *
-     * @param  string  $name
-     * @param  string  $base
-     * @param  string $controller
-     * @param  array  $options
+     * @param string $name
+     * @param string $base
+     * @param string $controller
+     * @param array  $options
+     *
      * @return \Illuminate\Routing\Route
      */
     protected function addResourceDetail($name, $base, $controller, $options)
@@ -52,10 +52,11 @@ class ResourceRegistrar extends BaseResourceRegistrar
     /**
      * Add the search method for a resourceful route.
      *
-     * @param  string  $name
-     * @param  string  $base
-     * @param  string $controller
-     * @param  array  $options
+     * @param string $name
+     * @param string $base
+     * @param string $controller
+     * @param array  $options
+     *
      * @return \Illuminate\Routing\Route
      */
     protected function addResourceSearch($name, $base, $controller, $options)
@@ -72,10 +73,11 @@ class ResourceRegistrar extends BaseResourceRegistrar
     /**
      * Add the mutate method for a resourceful route.
      *
-     * @param  string  $name
-     * @param  string  $base
-     * @param  string $controller
-     * @param  array  $options
+     * @param string $name
+     * @param string $base
+     * @param string $controller
+     * @param array  $options
+     *
      * @return \Illuminate\Routing\Route
      */
     protected function addResourceMutate($name, $base, $controller, $options)
@@ -92,10 +94,11 @@ class ResourceRegistrar extends BaseResourceRegistrar
     /**
      * Add the operate method for a resourceful route.
      *
-     * @param  string  $name
-     * @param  string  $base
-     * @param  string $controller
-     * @param  array  $options
+     * @param string $name
+     * @param string $base
+     * @param string $controller
+     * @param array  $options
+     *
      * @return \Illuminate\Routing\Route
      */
     protected function addResourceOperate($name, $base, $controller, $options)
@@ -112,10 +115,11 @@ class ResourceRegistrar extends BaseResourceRegistrar
     /**
      * Add the index method for a resourceful route.
      *
-     * @param  string  $name
-     * @param  string  $base
-     * @param  string $controller
-     * @param  array  $options
+     * @param string $name
+     * @param string $base
+     * @param string $controller
+     * @param array  $options
+     *
      * @return \Illuminate\Routing\Route
      */
     protected function addResourceRestore($name, $base, $controller, $options)
@@ -132,10 +136,11 @@ class ResourceRegistrar extends BaseResourceRegistrar
     /**
      * Add the index method for a resourceful route.
      *
-     * @param  string  $name
-     * @param  string  $base
-     * @param  string $controller
-     * @param  array  $options
+     * @param string $name
+     * @param string $base
+     * @param string $controller
+     * @param array  $options
+     *
      * @return \Illuminate\Routing\Route
      */
     protected function addResourceForceDelete($name, $base, $controller, $options)
@@ -163,9 +168,10 @@ class ResourceRegistrar extends BaseResourceRegistrar
     /**
      * Route a resource to a controller.
      *
-     * @param  string  $name
-     * @param  string  $controller
-     * @param  array  $options
+     * @param string $name
+     * @param string $controller
+     * @param array  $options
+     *
      * @return \Illuminate\Routing\RouteCollection
      */
     public function register($name, $controller, array $options = [])

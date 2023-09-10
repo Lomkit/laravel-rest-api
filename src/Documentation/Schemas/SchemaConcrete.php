@@ -9,7 +9,7 @@ class SchemaConcrete extends Schema
     public function jsonSerialize(): mixed
     {
         return [
-            'type' => $this->type()
+            'type' => $this->type(),
         ];
     }
 
@@ -21,6 +21,7 @@ class SchemaConcrete extends Schema
     public function withType(string $type): SchemaConcrete
     {
         $this->type = $type;
+
         return $this;
     }
 

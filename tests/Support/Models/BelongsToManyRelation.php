@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model as BaseModel;
 
 class BelongsToManyRelation extends BaseModel
 {
-    public function models() {
+    public function models()
+    {
         return $this->belongsToMany(\Lomkit\Rest\Tests\Support\Models\Model::class);
     }
 }

@@ -9,7 +9,8 @@ use Lomkit\Rest\Relations\Relation;
 
 trait Relationable
 {
-    public function relation($name) {
+    public function relation($name)
+    {
         $name = relation_without_pivot($name);
 
         $isSubRelation = Str::contains($name, '.');
@@ -26,11 +27,13 @@ trait Relationable
         return $relation;
     }
 
-    public function relationResource($name) {
+    public function relationResource($name)
+    {
         return $this->relation($name)?->resource();
     }
 
-    public function nestedRelations(RestRequest $request, string $prefix = '', array $loadedRelations = []) {
+    public function nestedRelations(RestRequest $request, string $prefix = '', array $loadedRelations = [])
+    {
         if ($prefix !== '') {
             $prefix = $prefix.'.';
         }
@@ -39,30 +42,34 @@ trait Relationable
 
         foreach (
             collect($this->getRelations($request))
-                ->filter(function($relation) use ($loadedRelations) {
+                ->filter(function ($relation) use ($loadedRelations) {
                     return !in_array($relation->relation, $loadedRelations);
                 })
             as $relation
         ) {
-            $relations[$prefix . $relation->relation] = $relation;
+            $relations[$prefix.$relation->relation] = $relation;
             foreach ($relation->resource()->nestedRelations($request, $prefix.$relation->relation, array_merge($loadedRelations, [$relation->relation])) as $key => $value) {
                 $relations[$key] = $value;
-            };
+            }
         }
 
         return $relations;
     }
 
     /**
-     * The relations that could be provided
+     * The relations that could be provided.
+     *
      * @param RestRequest $request
+     *
      * @return array
      */
-    public function relations(RestRequest $request): array {
+    public function relations(RestRequest $request): array
+    {
         return [];
     }
 
-    public function getRelations(RestRequest $request) {
+    public function getRelations(RestRequest $request)
+    {
         return array_map(function (Relation $relation) {
             return $relation->fromResource($this);
         }, $this->relations($request));

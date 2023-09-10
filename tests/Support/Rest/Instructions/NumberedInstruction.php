@@ -15,8 +15,8 @@ class NumberedInstruction extends Instruction
     {
         return [
             'number' => [
-                'integer'
-            ]
+                'integer',
+            ],
         ];
     }
 }

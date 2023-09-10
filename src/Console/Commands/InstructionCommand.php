@@ -4,9 +4,6 @@ namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
-use Illuminate\Database\Migrations\MigrationCreator;
-use Illuminate\Support\Composer;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Console\ResolvesStubPath;
 
 class InstructionCommand extends GeneratorCommand implements PromptsForMissingInput
@@ -43,7 +40,8 @@ class InstructionCommand extends GeneratorCommand implements PromptsForMissingIn
     /**
      * Build the class with the given name.
      *
-     * @param  string  $name
+     * @param string $name
+     *
      * @return string
      */
     protected function buildClass($name)
@@ -73,7 +71,8 @@ class InstructionCommand extends GeneratorCommand implements PromptsForMissingIn
     /**
      * Get the default namespace for the class.
      *
-     * @param  string  $rootNamespace
+     * @param string $rootNamespace
+     *
      * @return string
      */
     protected function getDefaultNamespace($rootNamespace)

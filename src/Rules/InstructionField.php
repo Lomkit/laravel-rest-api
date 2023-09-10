@@ -4,19 +4,16 @@ namespace Lomkit\Rest\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\DataAwareRule;
-use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
 
 class InstructionField implements ValidationRule, DataAwareRule, ValidatorAwareRule
 {
-
     use Makeable;
 
     /**
@@ -48,9 +45,8 @@ class InstructionField implements ValidationRule, DataAwareRule, ValidatorAwareR
     protected $validator;
 
     /**
-     *
-     *
      * @param \Lomkit\Rest\Instructions\Instruction $instruction
+     *
      * @return $this
      */
     public function instruction(\Lomkit\Rest\Instructions\Instruction $instruction)
@@ -74,7 +70,7 @@ class InstructionField implements ValidationRule, DataAwareRule, ValidatorAwareR
         }
 
         return [
-            $attribute.'.value' => $field
+            $attribute.'.value' => $field,
         ];
     }
 
@@ -91,7 +87,8 @@ class InstructionField implements ValidationRule, DataAwareRule, ValidatorAwareR
     /**
      * Adds the given failures, and return false.
      *
-     * @param  array|string  $messages
+     * @param array|string $messages
+     *
      * @return bool
      */
     protected function fail($messages)
@@ -108,7 +105,8 @@ class InstructionField implements ValidationRule, DataAwareRule, ValidatorAwareR
     /**
      * Set the current validator.
      *
-     * @param  \Illuminate\Contracts\Validation\Validator  $validator
+     * @param \Illuminate\Contracts\Validation\Validator $validator
+     *
      * @return $this
      */
     public function setValidator($validator)
@@ -121,7 +119,8 @@ class InstructionField implements ValidationRule, DataAwareRule, ValidatorAwareR
     /**
      * Set the current data under validation.
      *
-     * @param  array  $data
+     * @param array $data
+     *
      * @return $this
      */
     public function setData($data)

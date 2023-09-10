@@ -9,7 +9,8 @@ class PendingResourceRegistration extends BasePendingResourceRegistration
     /**
      * Define which routes should allow "soft deletes" routes.
      *
-     * @param  array  $methods
+     * @param array $methods
+     *
      * @return \Illuminate\Routing\PendingResourceRegistration
      */
     public function withSoftDeletes(array $methods = [])

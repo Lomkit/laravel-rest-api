@@ -4,11 +4,8 @@ namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
-use Illuminate\Database\Migrations\MigrationCreator;
-use Illuminate\Support\Composer;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\ResolvesStubPath;
-use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class ControllerCommand extends GeneratorCommand implements PromptsForMissingInput
 {
@@ -51,7 +48,8 @@ class ControllerCommand extends GeneratorCommand implements PromptsForMissingInp
     /**
      * Build the class with the given name.
      *
-     * @param  string  $name
+     * @param string $name
+     *
      * @return string
      */
     protected function buildClass($name)
@@ -62,20 +60,22 @@ class ControllerCommand extends GeneratorCommand implements PromptsForMissingInp
 
         if (is_null($resource)) {
             $resource = $resourceNamespace.'ModelResource';
-        } elseif (! Str::startsWith($resource, [
+        } elseif (!Str::startsWith($resource, [
             $resourceNamespace, '\\',
         ])) {
             $resource = $resourceNamespace.$resource;
         }
 
         $replace = [
-            'DummyFullResource' => $resource,
+            'DummyFullResource'        => $resource,
             '{{ namespacedResource }}' => $resource,
-            '{{namespacedResource}}' => $resource,
+            '{{namespacedResource}}'   => $resource,
         ];
 
         return str_replace(
-            array_keys($replace), array_values($replace), parent::buildClass($name)
+            array_keys($replace),
+            array_values($replace),
+            parent::buildClass($name)
         );
     }
 
@@ -101,7 +101,8 @@ class ControllerCommand extends GeneratorCommand implements PromptsForMissingInp
     /**
      * Get the default namespace for the class.
      *
-     * @param  string  $rootNamespace
+     * @param string $rootNamespace
+     *
      * @return string
      */
     protected function getDefaultNamespace($rootNamespace)

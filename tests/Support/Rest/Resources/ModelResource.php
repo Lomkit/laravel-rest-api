@@ -19,8 +19,6 @@ use Lomkit\Rest\Relations\MorphOneOfMany;
 use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Tests\Support\Models\Model;
-use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
-use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 use Lomkit\Rest\Tests\Support\Rest\Actions\BatchableModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\QueueableModifyNumberAction;
@@ -36,14 +34,14 @@ class ModelResource extends Resource
     public function createRules(RestRequest $request)
     {
         return [
-            'string' => 'string'
+            'string' => 'string',
         ];
     }
 
     public function updateRules(RestRequest $request)
     {
         return [
-            'string' => 'string'
+            'string' => 'string',
         ];
     }
 
@@ -56,7 +54,7 @@ class ModelResource extends Resource
             HasMany::make('hasManyRelation', HasManyResource::class),
             BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
                 ->withPivotRules([
-                    'number' => 'numeric'
+                    'number' => 'numeric',
                 ])
                 ->withPivotFields(['created_at', 'number']),
 
@@ -82,65 +80,76 @@ class ModelResource extends Resource
             'id',
             'name',
             'number',
-            'string'
+            'string',
         ];
     }
 
     /**
-     * The scopes that could be provided
+     * The scopes that could be provided.
+     *
      * @param RestRequest $request
+     *
      * @return array
      */
     public function scopes(RestRequest $request): array
     {
         return [
-            'numbered'
+            'numbered',
         ];
     }
 
     /**
-     * The limits that could be provided
+     * The limits that could be provided.
+     *
      * @param RestRequest $request
+     *
      * @return array
      */
-    public function limits(RestRequest $request): array {
+    public function limits(RestRequest $request): array
+    {
         return [
             1,
             10,
             25,
-            50
+            50,
         ];
     }
 
     public function defaultOrderBy(RestRequest $request): array
     {
         return [
-            'id' => 'asc'
+            'id' => 'asc',
         ];
     }
 
     /**
-     * The actions that should be linked
+     * The actions that should be linked.
+     *
      * @param RestRequest $request
+     *
      * @return array
      */
-    public function actions(RestRequest $request): array {
+    public function actions(RestRequest $request): array
+    {
         return [
             ModifyNumberAction::make(),
             QueueableModifyNumberAction::make(),
             WithMetaModifyNumberAction::make(),
-            BatchableModifyNumberAction::make()
+            BatchableModifyNumberAction::make(),
         ];
     }
 
     /**
-     * The instructions that should be linked
+     * The instructions that should be linked.
+     *
      * @param RestRequest $request
+     *
      * @return array
      */
-    public function instructions(RestRequest $request): array {
+    public function instructions(RestRequest $request): array
+    {
         return [
-            NumberedInstruction::make()
+            NumberedInstruction::make(),
         ];
     }
 }

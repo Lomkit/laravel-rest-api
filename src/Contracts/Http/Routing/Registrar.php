@@ -9,9 +9,10 @@ interface Registrar
     /**
      * Route a resource to a controller.
      *
-     * @param  string  $name
-     * @param  string  $controller
-     * @param  array  $options
+     * @param string $name
+     * @param string $controller
+     * @param array  $options
+     *
      * @return Lomkit\Rest\Http\Routing\PendingResourceRegistration
      */
     public function resource(string $name, string $controller, array $options = []);

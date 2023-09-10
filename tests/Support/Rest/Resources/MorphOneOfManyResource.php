@@ -22,7 +22,7 @@ class MorphOneOfManyResource extends Resource
     {
         return [
             'id',
-            'number'
+            'number',
         ];
     }
 }

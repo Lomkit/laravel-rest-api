@@ -4,12 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Relations\MorphOneOfMany;
 use Lomkit\Rest\Tests\Feature\TestCase;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphedByManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphManyRelationFactory;
@@ -17,10 +12,6 @@ use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneOfManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphToRelationFactory;
-use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
-use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
-use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphManyRelation;
@@ -29,10 +20,6 @@ use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToRelation;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\MorphedByManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\MorphManyResource;
@@ -68,14 +55,14 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
-                    'morph_to_relation' => $matchingModel->morphToRelation->only((new MorphToResource)->fields(app()->make(RestRequest::class))),
+                    'morph_to_relation' => $matchingModel->morphToRelation->only((new MorphToResource())->fields(app()->make(RestRequest::class))),
                 ],
                 [
                     'morph_to_relation' => null,
-                ]
+                ],
             ]
         );
     }
@@ -87,7 +74,6 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         MorphOneRelationFactory::new()
             ->for($matchingModel)
             ->create();
-
 
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
@@ -107,16 +93,16 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'morph_one_relation' => $matchingModel->morphOneRelation->only(
-                        (new MorphOneResource)->fields(app()->make(RestRequest::class))
+                        (new MorphOneResource())->fields(app()->make(RestRequest::class))
                     ),
                 ],
                 [
                     'morph_one_relation' => null,
-                ]
+                ],
             ]
         );
     }
@@ -128,7 +114,6 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         MorphOneOfManyRelationFactory::new()
             ->for($matchingModel)
             ->create();
-
 
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
@@ -148,16 +133,16 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'morph_one_of_many_relation' => $matchingModel->morphOneOfManyRelation->only(
-                        (new MorphOneOfManyResource)->fields(app()->make(RestRequest::class))
+                        (new MorphOneOfManyResource())->fields(app()->make(RestRequest::class))
                     ),
                 ],
                 [
                     'morph_one_of_many_relation' => null,
-                ]
+                ],
             ]
         );
     }
@@ -179,9 +164,9 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                 'includes' => [
                     [
                         'relation' => 'morphManyRelation',
-                        'sorts' => [
-                            ['field' => 'id', 'direction' => 'asc']
-                        ]
+                        'sorts'    => [
+                            ['field' => 'id', 'direction' => 'asc'],
+                        ],
                     ],
                 ],
             ],
@@ -191,7 +176,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'morph_many_relation' => $matchingModel->morphManyRelation()
@@ -199,13 +184,13 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) {
                             return $relation->only(
-                                (new MorphManyResource)->fields(app()->make(RestRequest::class))
+                                (new MorphManyResource())->fields(app()->make(RestRequest::class))
                             );
                         })->toArray(),
                 ],
                 [
                     'morph_many_relation' => [],
-                ]
+                ],
             ]
         );
     }
@@ -227,7 +212,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
             [
                 'includes' => [
                     [
-                        'relation' => 'morphToManyRelation'
+                        'relation' => 'morphToManyRelation',
                     ],
                 ],
             ],
@@ -237,29 +222,30 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'morph_to_many_relation' => $matchingModel->morphToManyRelation()
                         ->orderBy('id', 'desc')
                         ->get()
-                        ->map(function ($relation) use ($matchingModel, $pivotAccessor) {
-                        return collect($relation->only(
-                            array_merge((new MorphToManyResource)->fields(app()->make(RestRequest::class)), [$pivotAccessor])
-                        ))
-                            ->pipe(function ($relation) use ($matchingModel, $pivotAccessor) {
-                                $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
-                                    ->only(
-                                        (new ModelResource)->relation('morphToManyRelation')->getPivotFields()
-                                    );
-                                return $relation;
-                            });
-                    })
+                        ->map(function ($relation) use ($pivotAccessor) {
+                            return collect($relation->only(
+                                array_merge((new MorphToManyResource())->fields(app()->make(RestRequest::class)), [$pivotAccessor])
+                            ))
+                                ->pipe(function ($relation) use ($pivotAccessor) {
+                                    $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
+                                        ->only(
+                                            (new ModelResource())->relation('morphToManyRelation')->getPivotFields()
+                                        );
+
+                                    return $relation;
+                                });
+                        })
                         ->toArray(),
                 ],
                 [
                     'morph_to_many_relation' => [],
-                ]
+                ],
             ]
         );
     }
@@ -281,7 +267,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
             [
                 'includes' => [
                     [
-                        'relation' => 'morphedByManyRelation'
+                        'relation' => 'morphedByManyRelation',
                     ],
                 ],
             ],
@@ -291,21 +277,22 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'morphed_by_many_relation' => $matchingModel->morphedByManyRelation()
                         ->orderBy('id', 'desc')
                         ->get()
-                        ->map(function ($relation) use ($matchingModel, $pivotAccessor) {
+                        ->map(function ($relation) use ($pivotAccessor) {
                             return collect($relation->only(
-                                array_merge((new MorphedByManyResource)->fields(app()->make(RestRequest::class)), [$pivotAccessor])
+                                array_merge((new MorphedByManyResource())->fields(app()->make(RestRequest::class)), [$pivotAccessor])
                             ))
-                                ->pipe(function ($relation) use ($matchingModel, $pivotAccessor) {
+                                ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource)->relation('morphedByManyRelation')->getPivotFields()
+                                            (new ModelResource())->relation('morphedByManyRelation')->getPivotFields()
                                         );
+
                                     return $relation;
                                 });
                         })
@@ -313,7 +300,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                 ],
                 [
                     'morphed_by_many_relation' => [],
-                ]
+                ],
             ]
         );
     }

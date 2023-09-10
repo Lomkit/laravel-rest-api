@@ -2,8 +2,6 @@
 
 namespace Lomkit\Rest\Relations;
 
-use Closure;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Contracts\QueryBuilder;
@@ -23,7 +21,7 @@ class MorphTo extends MorphRelation implements RelationResource
         $model
             ->{$relation->relation}()
             ->{$mutationRelations[$relation->relation]['operation'] === 'detach' ? 'dissociate' : 'associate'}(
-                app()->make(QueryBuilder::class, ['resource' => new $mutationRelations[$relation->relation]['type']])
+                app()->make(QueryBuilder::class, ['resource' => new $mutationRelations[$relation->relation]['type']()])
                     ->applyMutation($mutationRelations[$relation->relation])
             );
     }
@@ -36,8 +34,8 @@ class MorphTo extends MorphRelation implements RelationResource
                 'required_with:'.$prefix,
                 Rule::in(
                     $this->types
-                )
-            ]
+                ),
+            ],
         ];
     }
 }

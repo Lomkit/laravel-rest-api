@@ -4,7 +4,6 @@ namespace Lomkit\Rest;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Console\Commands\ActionCommand;
 use Lomkit\Rest\Console\Commands\BaseControllerCommand;
 use Lomkit\Rest\Console\Commands\BaseResourceCommand;
@@ -17,7 +16,8 @@ use Lomkit\Rest\Console\Commands\ResponseCommand;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Query\Builder;
 
-class RestServiceProvider extends ServiceProvider{
+class RestServiceProvider extends ServiceProvider
+{
     /**
      * Register the service provider.
      *
@@ -26,7 +26,8 @@ class RestServiceProvider extends ServiceProvider{
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../config/rest.php', 'rest'
+            __DIR__.'/../config/rest.php',
+            'rest'
         );
 
         $this->registerServices();
@@ -45,7 +46,8 @@ class RestServiceProvider extends ServiceProvider{
         $this->registerRoutes();
 
         $this->loadViewsFrom(
-            __DIR__.'/../resources/views', 'rest'
+            __DIR__.'/../resources/views',
+            'rest'
         );
     }
 
@@ -69,9 +71,9 @@ class RestServiceProvider extends ServiceProvider{
     private function routeConfiguration()
     {
         return [
-            'domain' => config('rest.documentation.routing.domain'),
-            'prefix' => config('rest.documentation.routing.path'),
-            'middleware' =>  config('rest.documentation.routing.middlewares', []),
+            'domain'     => config('rest.documentation.routing.domain'),
+            'prefix'     => config('rest.documentation.routing.path'),
+            'middleware' => config('rest.documentation.routing.middlewares', []),
         ];
     }
 
@@ -92,7 +94,7 @@ class RestServiceProvider extends ServiceProvider{
                 QuickStartCommand::class,
                 ActionCommand::class,
                 InstructionCommand::class,
-                DocumentationCommand::class
+                DocumentationCommand::class,
             ]);
         }
     }

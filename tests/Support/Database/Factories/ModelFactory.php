@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Support\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Tests\Support\Models\Model;
 
 class ModelFactory extends Factory
@@ -23,8 +22,8 @@ class ModelFactory extends Factory
     public function definition()
     {
         return [
-            'name' => fake()->name(),
-            'number' => fake()->numberBetween(-9999999, 9999999)
+            'name'   => fake()->name(),
+            'number' => fake()->numberBetween(-9999999, 9999999),
         ];
     }
 }

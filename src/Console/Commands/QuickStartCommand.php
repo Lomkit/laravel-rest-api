@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Console\ResolvesStubPath;
 
 class QuickStartCommand extends Command
@@ -82,8 +81,9 @@ class QuickStartCommand extends Command
     /**
      * Set the namespace on the given file.
      *
-     * @param  string  $file
-     * @param  string  $namespace
+     * @param string $file
+     * @param string $namespace
+     *
      * @return void
      */
     protected function setAppNamespaceOn($file, $namespace)

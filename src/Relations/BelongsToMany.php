@@ -2,11 +2,8 @@
 
 namespace Lomkit\Rest\Relations;
 
-use Closure;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
-use Illuminate\Validation\Rule;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
@@ -15,7 +12,8 @@ use Lomkit\Rest\Relations\Traits\HasMultipleResults;
 
 class BelongsToMany extends Relation implements RelationResource
 {
-    use HasPivotFields, HasMultipleResults;
+    use HasPivotFields;
+    use HasMultipleResults;
 
     public function rules(Resource $resource, string $prefix)
     {
@@ -24,8 +22,8 @@ class BelongsToMany extends Relation implements RelationResource
             [
                 $prefix.'.*.pivot' => [
                     'prohibited_if:'.$prefix.'.*.operation,detach',
-                    'array:'.Arr::join($this->getPivotFields(), ',')
-                ]
+                    'array:'.Arr::join($this->getPivotFields(), ','),
+                ],
             ]
         );
     }
@@ -48,9 +46,7 @@ class BelongsToMany extends Relation implements RelationResource
                         [
                             app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
                                 ->applyMutation($mutationRelation)
-                                ->getKey()
-                            =>
-                                $mutationRelation['pivot'] ?? []
+                                ->getKey() => $mutationRelation['pivot'] ?? [],
                         ]
                     );
             }

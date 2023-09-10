@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Concerns;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 trait Authorizable
@@ -10,11 +9,12 @@ trait Authorizable
     /**
      * Determine if the current user has a given ability.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  string  $ability
-     * @return void
+     * @param \Illuminate\Http\Request $request
+     * @param string                   $ability
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return void
      */
     public function authorizeTo($ability, $model)
     {
@@ -26,8 +26,9 @@ trait Authorizable
     /**
      * Determine if the current user can view the given resource.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  string  $ability
+     * @param \Illuminate\Http\Request $request
+     * @param string                   $ability
+     *
      * @return bool
      */
     public function authorizedTo($ability, $model)
@@ -35,6 +36,7 @@ trait Authorizable
         if ($this->isAuthorizingEnabled()) {
             return Gate::check($ability, $model);
         }
+
         return true;
     }
 }

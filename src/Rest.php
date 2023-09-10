@@ -15,9 +15,10 @@ class Rest implements Registrar
     /**
      * Route a resource to a controller.
      *
-     * @param  string  $name
-     * @param  class-string<Controller>  $controller
-     * @param  array  $options
+     * @param string                   $name
+     * @param class-string<Controller> $controller
+     * @param array                    $options
+     *
      * @return \Lomkit\Rest\Http\Routing\PendingResourceRegistration
      */
     public function resource(string $name, string $controller, array $options = [])
@@ -29,13 +30,17 @@ class Rest implements Registrar
         }
 
         return new PendingResourceRegistration(
-            $registrar, $name, $controller, $options
+            $registrar,
+            $name,
+            $controller,
+            $options
         );
     }
 
     public function withDocumentationCallback(\Closure $documentationCallback): Rest
     {
         $this->documentationCallback = $documentationCallback;
+
         return $this;
     }
 
@@ -44,6 +49,7 @@ class Rest implements Registrar
         if (!isset($this->documentationCallback)) {
             return $openAPI;
         }
+
         return call_user_func($this->documentationCallback, $openAPI);
     }
 }

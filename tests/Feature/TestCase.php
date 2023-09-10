@@ -2,17 +2,15 @@
 
 namespace Lomkit\Rest\Tests\Feature;
 
-use Illuminate\Foundation\Testing\Concerns\InteractsWithAuthentication;
 use Lomkit\Rest\Tests\Support\Database\Factories\UserFactory;
-use Lomkit\Rest\Tests\Support\Models\User;
-use Lomkit\Rest\Tests\TestCase as BaseTestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Lomkit\Rest\Tests\Support\Traits\InteractsWithAuthorization;
 use Lomkit\Rest\Tests\Support\Traits\InteractsWithResource;
+use Lomkit\Rest\Tests\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
 {
-    use InteractsWithAuthorization, InteractsWithResource;
+    use InteractsWithAuthorization;
+    use InteractsWithResource;
 
     protected function setUp(): void
     {

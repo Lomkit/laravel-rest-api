@@ -4,7 +4,8 @@ namespace Lomkit\Rest\Relations\Traits;
 
 trait HasMultipleResults
 {
-    public function hasMultipleEntries() {
+    public function hasMultipleEntries()
+    {
         return true;
     }
 }

@@ -5,10 +5,9 @@ namespace Lomkit\Rest\Relations;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
-use Lomkit\Rest\Concerns\Relations\HasPivotFields;
-use Lomkit\Rest\Contracts\RelationResource;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Concerns\Makeable;
+use Lomkit\Rest\Concerns\Relations\HasPivotFields;
+use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\Mutates;
@@ -16,7 +15,9 @@ use Lomkit\Rest\Rules\RequiredRelationOnCreation;
 
 class Relation implements \JsonSerializable
 {
-    use Makeable, Mutates, Constrained;
+    use Makeable;
+    use Mutates;
+    use Constrained;
     public string $relation;
     protected array $types;
 
@@ -48,7 +49,6 @@ class Relation implements \JsonSerializable
     public function filter(Builder $query, $relation, $operator, $value, $boolean = 'and', Closure $callback = null)
     {
         return $query->has(Str::beforeLast(relation_without_pivot($relation), '.'), '>=', 1, $boolean, function (Builder $query) use ($value, $operator, $relation, $callback) {
-
             $field = (Str::contains($relation, '.pivot.') ?
                     $this->fromResource::newModel()->{Str::of($relation)->before('.pivot.')->afterLast('.')->toString()}()->getTable() :
                     $query->getModel()->getTable()).'.'.Str::afterLast($relation, '.');
@@ -63,27 +63,32 @@ class Relation implements \JsonSerializable
         });
     }
 
-    public function applySearchQuery(Builder $query) {
+    public function applySearchQuery(Builder $query)
+    {
         $resource = $this->resource();
 
         $resource->searchQuery(app()->make(RestRequest::class), $query);
     }
 
-    public function hasMultipleEntries() {
+    public function hasMultipleEntries()
+    {
         return false;
     }
 
-    public function resource() {
-        return new $this->types[0];
+    public function resource()
+    {
+        return new $this->types[0]();
     }
 
-    public function fromResource(Resource $fromResource) {
+    public function fromResource(Resource $fromResource)
+    {
         return tap($this, function () use ($fromResource) {
             $this->fromResource = $fromResource;
         });
     }
 
-    public function rules(Resource $resource, string $prefix) {
+    public function rules(Resource $resource, string $prefix)
+    {
         $rules = [];
 
         if ($this->isRequiredOnCreation(
@@ -97,7 +102,7 @@ class Relation implements \JsonSerializable
             if ($this->hasMultipleEntries()) {
                 $pivotPrefix .= '.*';
             }
-            $pivotPrefix.= '.pivot.';
+            $pivotPrefix .= '.pivot.';
 
             foreach ($this->getPivotRules() as $pivotKey => $pivotRule) {
                 $rules[$pivotPrefix.$pivotKey] = $pivotRule;
@@ -112,12 +117,12 @@ class Relation implements \JsonSerializable
         $request = app(RestRequest::class);
 
         return [
-            'resources' => $this->types,
-            'relation' => $this->relation,
+            'resources'   => $this->types,
+            'relation'    => $this->relation,
             'constraints' => [
-                'requiredOnCreation' => $this->isRequiredOnCreation($request)
+                'requiredOnCreation' => $this->isRequiredOnCreation($request),
             ],
-            'name' => $this->name()
+            'name' => $this->name(),
         ];
     }
 }

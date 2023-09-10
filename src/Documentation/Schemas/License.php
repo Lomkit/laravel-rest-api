@@ -6,18 +6,21 @@ class License extends Schema
 {
     /**
      * The license name used for the API.
+     *
      * @var string
      */
     protected string $name;
 
     /**
      * An SPDX license expression for the API. The identifier field is mutually exclusive of the url field.
+     *
      * @var string
      */
     protected string $identifier;
 
     /**
      * A URL to the license used for the API. This MUST be in the form of a URL. The url field is mutually exclusive of the identifier field.
+     *
      * @var string
      */
     protected string|null $url;
@@ -25,6 +28,7 @@ class License extends Schema
     public function withName(string $name): License
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -36,6 +40,7 @@ class License extends Schema
     public function withIdentifier(string $identifier): License
     {
         $this->identifier = $identifier;
+
         return $this;
     }
 
@@ -47,6 +52,7 @@ class License extends Schema
     public function withUrl(string|null $url): License
     {
         $this->url = $url;
+
         return $this;
     }
 
@@ -59,7 +65,7 @@ class License extends Schema
     {
         return array_merge(
             [
-                'name' => $this->name(),
+                'name'       => $this->name(),
                 'identifier' => $this->identifier(),
             ],
             !is_null($this->url()) ? ['url' => $this->url()] : []

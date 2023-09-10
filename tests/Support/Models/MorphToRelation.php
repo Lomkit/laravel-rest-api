@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model as BaseModel;
 
 class MorphToRelation extends BaseModel
 {
-    public function model() {
+    public function model()
+    {
         return $this->morphOne(Model::class, 'morph_to');
     }
 }

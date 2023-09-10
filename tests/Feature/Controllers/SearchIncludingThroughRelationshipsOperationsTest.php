@@ -5,26 +5,16 @@ namespace Lomkit\Rest\Tests\Feature\Controllers;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Feature\TestCase;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyThroughRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasOneThroughRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
-use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
-use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 use Lomkit\Rest\Tests\Support\Models\HasManyThroughRelation;
-use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
 use Lomkit\Rest\Tests\Support\Models\HasOneThroughRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyThroughResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneThroughResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
@@ -59,14 +49,14 @@ class SearchIncludingThroughRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'has_one_through_relation' => $matchingModel->hasOneThroughRelation->only((new HasOneThroughResource())->fields(app()->make(RestRequest::class))),
                 ],
                 [
                     'has_one_through_relation' => null,
-                ]
+                ],
             ]
         );
     }
@@ -100,18 +90,18 @@ class SearchIncludingThroughRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource,
+            new ModelResource(),
             [
                 [
                     'has_many_through_relation' => $matchingModel->hasManyThroughRelation->map(function ($relation) {
                         return $relation->only(
-                            (new HasManyThroughResource)->fields(app()->make(RestRequest::class))
+                            (new HasManyThroughResource())->fields(app()->make(RestRequest::class))
                         );
                     })->toArray(),
                 ],
                 [
                     'has_many_through_relation' => [],
-                ]
+                ],
             ]
         );
     }

@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Contracts;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
-use Lomkit\Rest\Http\Requests\RestRequest;
 
 interface RelationResource
 {
