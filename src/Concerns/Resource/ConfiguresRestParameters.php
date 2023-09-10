@@ -54,7 +54,6 @@ trait ConfiguresRestParameters
                 // We push the pivot fields if they exists
                 ...collect(method_exists($relation, 'getPivotFields') ? $relation->getPivotFields() : [])
                         ->map(function ($field) use ($relation, $prefix) { return $prefix.$relation->relation.'.pivot.'.$field; })
-
             );
         }
 
