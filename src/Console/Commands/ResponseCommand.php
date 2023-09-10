@@ -65,6 +65,13 @@ class ResponseCommand extends GeneratorCommand implements PromptsForMissingInput
         return $this->resolveStubPath('/stubs/rest/response.stub');
     }
 
+    /**
+     * Get the path where the action file should be created.
+     *
+     * @param string $name
+     *
+     * @return string
+     */
     protected function getPath($name)
     {
         if (!is_null($this->option('path'))) {

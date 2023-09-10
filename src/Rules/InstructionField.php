@@ -130,6 +130,15 @@ class InstructionField implements ValidationRule, DataAwareRule, ValidatorAwareR
         return $this;
     }
 
+    /**
+     * Validate the attribute.
+     *
+     * @param string   $attribute
+     * @param mixed    $value
+     * @param \Closure $fail
+     *
+     * @return void
+     */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $validator = Validator::make(

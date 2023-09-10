@@ -18,6 +18,15 @@ trait ConfiguresRestParameters
         return [];
     }
 
+    /**
+     * Get nested fields by prefixing them with a given prefix.
+     *
+     * @param RestRequest $request
+     * @param string      $prefix
+     * @param array       $loadedRelations
+     *
+     * @return array
+     */
     public function getNestedFields(RestRequest $request, string $prefix = '', array $loadedRelations = [])
     {
         if ($prefix !== '') {
@@ -45,7 +54,6 @@ trait ConfiguresRestParameters
                 // We push the pivot fields if they exists
                 ...collect(method_exists($relation, 'getPivotFields') ? $relation->getPivotFields() : [])
                         ->map(function ($field) use ($relation, $prefix) { return $prefix.$relation->relation.'.pivot.'.$field; })
-
             );
         }
 

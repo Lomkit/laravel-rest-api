@@ -46,6 +46,18 @@ class Relation implements \JsonSerializable
         return $this->name ?: (new \ReflectionClass($this))->getShortName();
     }
 
+    /**
+     * Filter the query based on the relation.
+     *
+     * @param Builder      $query
+     * @param mixed        $relation
+     * @param mixed        $operator
+     * @param mixed        $value
+     * @param string       $boolean
+     * @param Closure|null $callback
+     *
+     * @return Builder
+     */
     public function filter(Builder $query, $relation, $operator, $value, $boolean = 'and', Closure $callback = null)
     {
         return $query->has(Str::beforeLast(relation_without_pivot($relation), '.'), '>=', 1, $boolean, function (Builder $query) use ($value, $operator, $relation, $callback) {
@@ -63,6 +75,11 @@ class Relation implements \JsonSerializable
         });
     }
 
+    /**
+     * Apply a search query to the relation's builder.
+     *
+     * @param Builder $query
+     */
     public function applySearchQuery(Builder $query)
     {
         $resource = $this->resource();
@@ -70,16 +87,33 @@ class Relation implements \JsonSerializable
         $resource->searchQuery(app()->make(RestRequest::class), $query);
     }
 
+    /**
+     * Check if the relation has multiple entries.
+     *
+     * @return bool
+     */
     public function hasMultipleEntries()
     {
         return false;
     }
 
+    /**
+     * Get the resource associated with this relation.
+     *
+     * @return resource
+     */
     public function resource()
     {
         return new $this->types[0]();
     }
 
+    /**
+     * Set the "fromResource" property of the relation.
+     *
+     * @param resource $fromResource
+     *
+     * @return $this
+     */
     public function fromResource(Resource $fromResource)
     {
         return tap($this, function () use ($fromResource) {
@@ -87,6 +121,14 @@ class Relation implements \JsonSerializable
         });
     }
 
+    /**
+     * Get the validation rules for this relation.
+     *
+     * @param resource $resource
+     * @param string   $prefix
+     *
+     * @return array
+     */
     public function rules(Resource $resource, string $prefix)
     {
         $rules = [];
@@ -112,6 +154,11 @@ class Relation implements \JsonSerializable
         return $rules;
     }
 
+    /**
+     * Serialize the object to JSON.
+     *
+     * @return mixed
+     */
     public function jsonSerialize(): mixed
     {
         $request = app(RestRequest::class);

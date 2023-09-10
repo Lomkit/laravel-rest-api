@@ -48,6 +48,13 @@ class Parameter extends Schema
      */
     protected SchemaConcrete $schema;
 
+    /**
+     * Set the name of the parameter.
+     *
+     * @param string $name
+     *
+     * @return Parameter
+     */
     public function withName(string $name): Parameter
     {
         $this->name = $name;
@@ -55,11 +62,23 @@ class Parameter extends Schema
         return $this;
     }
 
+    /**
+     * Get the name of the parameter.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return $this->name;
     }
 
+    /**
+     * Set the location of the parameter.
+     *
+     * @param string $in
+     *
+     * @return Parameter
+     */
     public function withIn(string $in): Parameter
     {
         $this->in = $in;
@@ -67,11 +86,23 @@ class Parameter extends Schema
         return $this;
     }
 
+    /**
+     * Get the location of the parameter.
+     *
+     * @return string
+     */
     public function in(): string
     {
         return $this->in;
     }
 
+    /**
+     * Set the description of the parameter.
+     *
+     * @param string $description
+     *
+     * @return Parameter
+     */
     public function withDescription(string $description): Parameter
     {
         $this->description = $description;
@@ -79,11 +110,23 @@ class Parameter extends Schema
         return $this;
     }
 
+    /**
+     * Get the description of the parameter.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return $this->description;
     }
 
+    /**
+     * Set whether the parameter is required.
+     *
+     * @param bool $required
+     *
+     * @return Parameter
+     */
     public function withRequired(bool $required = true): Parameter
     {
         $this->required = $required;
@@ -91,11 +134,23 @@ class Parameter extends Schema
         return $this;
     }
 
+    /**
+     * Check if the parameter is required.
+     *
+     * @return bool
+     */
     public function required(): bool
     {
         return $this->required;
     }
 
+    /**
+     * Set whether the parameter is deprecated.
+     *
+     * @param bool $deprecated
+     *
+     * @return Parameter
+     */
     public function withDeprecated(bool $deprecated): Parameter
     {
         $this->deprecated = $deprecated;
@@ -103,11 +158,21 @@ class Parameter extends Schema
         return $this;
     }
 
+    /**
+     * Check if the parameter is deprecated.
+     *
+     * @return bool
+     */
     public function deprecated(): bool
     {
         return $this->deprecated;
     }
 
+    /**
+     * Serialize the Parameter instance to an array for JSON serialization.
+     *
+     * @return mixed
+     */
     public function jsonSerialize(): mixed
     {
         return array_merge(
@@ -120,11 +185,23 @@ class Parameter extends Schema
         );
     }
 
+    /**
+     * Generate a Parameter schema.
+     *
+     * @return Schema
+     */
     public function generate(): Schema
     {
         return $this;
     }
 
+    /**
+     * Set the schema for the parameter.
+     *
+     * @param SchemaConcrete $schema
+     *
+     * @return Parameter
+     */
     public function withSchema(SchemaConcrete $schema): Parameter
     {
         $this->schema = $schema;
@@ -132,6 +209,11 @@ class Parameter extends Schema
         return $this;
     }
 
+    /**
+     * Get the schema for the parameter.
+     *
+     * @return SchemaConcrete
+     */
     public function schema(): SchemaConcrete
     {
         return $this->schema;

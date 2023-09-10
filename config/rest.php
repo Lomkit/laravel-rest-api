@@ -83,40 +83,40 @@ return [
                 'url'         => '/', // Relative to current
                 'description' => 'The current server',
             ],
-            //            [
-            //                'url' => '"https://my-server.com:{port}/{basePath}"',
-            //                'description' => 'Production server',
-            //                'variables' => [
-            //                    'port' => [
-            //                        'enum' => ['80', '443'],
-            //                        'default' => '443'
-            //                    ],
-            //                    'basePath' => [
-            //                        'default' => 'v2',
-            //                        'enum' => ['v1', 'v2'],
-            //                    ]
-            //                ]
-            //            ]
+            //  [
+            //      'url' => '"https://my-server.com:{port}/{basePath}"',
+            //      'description' => 'Production server',
+            //      'variables' => [
+            //          'port' => [
+            //              'enum' => ['80', '443'],
+            //              'default' => '443'
+            //           ],
+            //           'basePath' => [
+            //              'default' => 'v2',
+            //              'enum' => ['v1', 'v2'],
+            //           ]
+            //       ]
+            //  ]
         ],
         // See https://spec.openapis.org/oas/v3.1.0#security-scheme-object
         'security' => [
-            //            [
-            //                'type' => 'http',
-            //                'description' => 'description',
-            //                'scheme' => 'Bearer',
-            //                'bearerFormat' => 'JWT'
-            //            ],
-            //            [
-            //                'type' => 'oauth2',
-            //                'flows' => [
-            //                    'authorizationCode' => [
-            //                        'scopes' => ['write:pets'],
-            //                        'tokenUrl' => 'https://example.com/api/oauth/token',
-            //                        'authorizationUrl' => 'https://example.com/api/oauth/dialog',
-            //                        'refreshUrl' => 'https://example.com/api/oauth/refresh',
-            //                    ]
-            //                ]
-            //            ]
+            //  [
+            //      'type' => 'http',
+            //      'description' => 'description',
+            //      'scheme' => 'Bearer',
+            //      'bearerFormat' => 'JWT'
+            //  ],
+            //  [
+            //       'type' => 'oauth2',
+            //       'flows' => [
+            //          'authorizationCode' => [
+            //              'scopes' => ['write:pets'],
+            //              'tokenUrl' => 'https://example.com/api/oauth/token',
+            //              'authorizationUrl' => 'https://example.com/api/oauth/dialog',
+            //              'refreshUrl' => 'https://example.com/api/oauth/refresh',
+            //          ]
+            //       ]
+            //  ]
         ],
     ],
 ];

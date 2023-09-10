@@ -14,6 +14,13 @@ use Lomkit\Rest\Http\Requests\SearchRequest;
 
 trait PerformsRestOperations
 {
+    /**
+     * Retrieve details of a resource.
+     *
+     * @param DetailRequest $request
+     *
+     * @return array
+     */
     public function detail(DetailRequest $request)
     {
         $request->resource($resource = static::newResource());
@@ -25,6 +32,13 @@ trait PerformsRestOperations
         ];
     }
 
+    /**
+     * Search for resources based on the given criteria.
+     *
+     * @param SearchRequest $request
+     *
+     * @return mixed
+     */
     public function search(SearchRequest $request)
     {
         $request->resource($resource = static::newResource());
@@ -39,6 +53,13 @@ trait PerformsRestOperations
             );
     }
 
+    /**
+     * Mutate resources based on the given request data.
+     *
+     * @param MutateRequest $request
+     *
+     * @return mixed
+     */
     public function mutate(MutateRequest $request)
     {
         $request->resource($resource = static::newResource());
@@ -56,6 +77,14 @@ trait PerformsRestOperations
         return $operations;
     }
 
+    /**
+     * Perform a specific action on the resource.
+     *
+     * @param OperateRequest $request
+     * @param string         $action
+     *
+     * @return mixed
+     */
     public function operate(OperateRequest $request, $action)
     {
         $request->resource($resource = static::newResource());
@@ -71,6 +100,13 @@ trait PerformsRestOperations
         ]);
     }
 
+    /**
+     * Delete resources based on the given request.
+     *
+     * @param DestroyRequest $request
+     *
+     * @return mixed
+     */
     public function destroy(DestroyRequest $request)
     {
         $request->resource($resource = static::newResource());
@@ -92,6 +128,13 @@ trait PerformsRestOperations
             ->responsable($models);
     }
 
+    /**
+     * Restore resources based on the given request.
+     *
+     * @param RestoreRequest $request
+     *
+     * @return mixed
+     */
     public function restore(RestoreRequest $request)
     {
         $request->resource($resource = static::newResource());
@@ -114,6 +157,13 @@ trait PerformsRestOperations
             ->responsable($models);
     }
 
+    /**
+     * Force delete resources based on the given request.
+     *
+     * @param ForceDestroyRequest $request
+     *
+     * @return mixed
+     */
     public function forceDelete(ForceDestroyRequest $request)
     {
         $request->resource($resource = static::newResource());

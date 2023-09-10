@@ -32,6 +32,13 @@ class OauthFlows extends Schema
      */
     protected OauthFlow $authorizationCode;
 
+    /**
+     * Set the configuration for the OAuth Implicit flow.
+     *
+     * @param OauthFlow $implicit
+     *
+     * @return OauthFlows
+     */
     public function withImplicit(OauthFlow $implicit): OauthFlows
     {
         $this->implicit = $implicit;
@@ -39,11 +46,23 @@ class OauthFlows extends Schema
         return $this;
     }
 
+    /**
+     * Get the configuration for the OAuth Implicit flow.
+     *
+     * @return OauthFlow
+     */
     public function implicit(): OauthFlow
     {
         return $this->implicit;
     }
 
+    /**
+     * Set the configuration for the OAuth Resource Owner Password flow.
+     *
+     * @param OauthFlow $password
+     *
+     * @return OauthFlows
+     */
     public function withPassword(OauthFlow $password): OauthFlows
     {
         $this->password = $password;
@@ -51,11 +70,23 @@ class OauthFlows extends Schema
         return $this;
     }
 
+    /**
+     * Get the configuration for the OAuth Resource Owner Password flow.
+     *
+     * @return OauthFlow
+     */
     public function password(): OauthFlow
     {
         return $this->password;
     }
 
+    /**
+     * Set the configuration for the OAuth Client Credentials flow.
+     *
+     * @param OauthFlow $clientCredentials
+     *
+     * @return OauthFlows
+     */
     public function withClientCredentials(OauthFlow $clientCredentials): OauthFlows
     {
         $this->clientCredentials = $clientCredentials;
@@ -63,11 +94,23 @@ class OauthFlows extends Schema
         return $this;
     }
 
+    /**
+     * Get the configuration for the OAuth Client Credentials flow.
+     *
+     * @return OauthFlow
+     */
     public function clientCredentials(): OauthFlow
     {
         return $this->clientCredentials;
     }
 
+    /**
+     * Set the configuration for the OAuth Authorization Code flow.
+     *
+     * @param OauthFlow $authorizationCode
+     *
+     * @return OauthFlows
+     */
     public function withAuthorizationCode(OauthFlow $authorizationCode): OauthFlows
     {
         $this->authorizationCode = $authorizationCode;
@@ -75,16 +118,31 @@ class OauthFlows extends Schema
         return $this;
     }
 
+    /**
+     * Get the configuration for the OAuth Authorization Code flow.
+     *
+     * @return OauthFlow
+     */
     public function authorizationCode(): OauthFlow
     {
         return $this->authorizationCode;
     }
 
+    /**
+     * Generate and return the OauthFlows object.
+     *
+     * @return OauthFlows
+     */
     public function generate(): OauthFlows
     {
         return $this;
     }
 
+    /**
+     * Serialize the OauthFlows object to JSON format.
+     *
+     * @return mixed
+     */
     public function jsonSerialize(): mixed
     {
         return array_merge(

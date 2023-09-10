@@ -9,11 +9,31 @@ use Lomkit\Rest\Rules\CustomRulable;
 
 class MutateRequest extends RestRequest
 {
+    /**
+     * Define the validation rules for the mutate request.
+     *
+     * @return array
+     *
+     * This method defines the validation rules for mutating resources, such as create, update, attach, or detach.
+     * It includes rules for the operation type, attributes, and relations.
+     */
     public function rules()
     {
         return $this->mutateRules($this->route()->controller::newResource());
     }
 
+    /**
+     * Define the validation rules for mutating resources.
+     *
+     * @param resource $resource
+     * @param string   $prefix
+     * @param array    $loadedRelations
+     *
+     * @return array
+     *
+     * This method specifies the validation rules for resource mutations, including create, update, attach, or detach.
+     * It includes rules for the operation type, attributes, keys, and custom rules.
+     */
     public function mutateRules(Resource $resource, $prefix = 'mutate.*', $loadedRelations = [])
     {
         return array_merge(
@@ -42,6 +62,18 @@ class MutateRequest extends RestRequest
         );
     }
 
+    /**
+     * Define relation-specific validation rules for mutations.
+     *
+     * @param resource $resource
+     * @param string   $prefix
+     * @param array    $loadedRelations
+     *
+     * @return array
+     *
+     * This protected method specifies validation rules for resource relations during mutations.
+     * It ensures that relations are properly validated for the given operation type.
+     */
     protected function relationRules(Resource $resource, string $prefix = '', $loadedRelations = [])
     {
         $resourceRelationsNotLoaded = collect($resource->getRelations($this))

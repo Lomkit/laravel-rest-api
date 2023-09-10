@@ -34,6 +34,11 @@ class ControllerCommand extends GeneratorCommand implements PromptsForMissingInp
      */
     protected $description = 'Create a new controller class';
 
+    /**
+     * Handle the console command.
+     *
+     * @return void
+     */
     public function handle()
     {
         parent::handle();
@@ -89,6 +94,13 @@ class ControllerCommand extends GeneratorCommand implements PromptsForMissingInp
         return $this->resolveStubPath('/stubs/rest/controller.stub');
     }
 
+    /**
+     * Get the path where the action file should be created.
+     *
+     * @param string $name
+     *
+     * @return string
+     */
     protected function getPath($name)
     {
         if (!is_null($this->option('path'))) {

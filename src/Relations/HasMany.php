@@ -11,6 +11,13 @@ class HasMany extends Relation implements RelationResource
 {
     use HasMultipleResults;
 
+    /**
+     * Perform actions after mutating the HasMany relation.
+     *
+     * @param Model    $model             The Eloquent model.
+     * @param Relation $relation          The relation being mutated.
+     * @param array    $mutationRelations An array of mutation relations.
+     */
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {

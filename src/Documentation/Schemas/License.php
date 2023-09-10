@@ -25,6 +25,13 @@ class License extends Schema
      */
     protected string|null $url;
 
+    /**
+     * Set the name of the license used for the API.
+     *
+     * @param string $name
+     *
+     * @return License
+     */
     public function withName(string $name): License
     {
         $this->name = $name;
@@ -32,11 +39,23 @@ class License extends Schema
         return $this;
     }
 
+    /**
+     * Get the license name used for the API.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return $this->name;
     }
 
+    /**
+     * Set the SPDX license expression for the API.
+     *
+     * @param string $identifier
+     *
+     * @return License
+     */
     public function withIdentifier(string $identifier): License
     {
         $this->identifier = $identifier;
@@ -44,11 +63,23 @@ class License extends Schema
         return $this;
     }
 
+    /**
+     * Get the SPDX license expression for the API.
+     *
+     * @return string
+     */
     public function identifier(): string
     {
         return $this->identifier;
     }
 
+    /**
+     * Set the URL to the license used for the API.
+     *
+     * @param string|null $url
+     *
+     * @return License
+     */
     public function withUrl(string|null $url): License
     {
         $this->url = $url;
@@ -56,11 +87,21 @@ class License extends Schema
         return $this;
     }
 
+    /**
+     * Get the URL to the license used for the API.
+     *
+     * @return string|null
+     */
     public function url(): string|null
     {
         return $this->url;
     }
 
+    /**
+     * Serialize the object to a JSON representation.
+     *
+     * @return mixed
+     */
     public function jsonSerialize(): mixed
     {
         return array_merge(
@@ -72,6 +113,11 @@ class License extends Schema
         );
     }
 
+    /**
+     * Generate a License object with default values.
+     *
+     * @return License
+     */
     public function generate(): License
     {
         return $this

@@ -25,6 +25,11 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
      */
     protected $description = 'Generate the documentation';
 
+    /**
+     * Handle the console command.
+     *
+     * @return void
+     */
     public function handle()
     {
         $openApi = (new OpenAPI())
@@ -52,6 +57,13 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
         return !is_null($this->option('path')) ? $this->option('path').'/'.$name.'.json' : public_path('vendor/rest/'.$name.'.json');
     }
 
+    /**
+     * Get the stub file for the generator.
+     *
+     * @throws RuntimeException
+     *
+     * @return string
+     */
     protected function getStub()
     {
         throw new RuntimeException('Should not be here');
