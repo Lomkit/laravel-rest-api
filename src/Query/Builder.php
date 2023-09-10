@@ -12,10 +12,7 @@ use Lomkit\Rest\Query\Traits\PerformSearch;
 
 class Builder implements QueryBuilder
 {
-    use Tappable;
-    use Conditionable;
-    use PerformSearch;
-    use PerformMutation;
+    use Tappable, Conditionable, PerformSearch, PerformMutation;
 
     /**
      * Construct a new query builder for a resource.
