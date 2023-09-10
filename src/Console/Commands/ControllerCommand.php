@@ -43,7 +43,7 @@ class ControllerCommand extends GeneratorCommand implements PromptsForMissingInp
     {
         parent::handle();
 
-        if (!$this->hasOption('path')) {
+        if (is_null($this->option('path'))) {
             $this->callSilent('rest:base-controller', [
                 'name' => 'Controller',
             ]);
@@ -103,7 +103,7 @@ class ControllerCommand extends GeneratorCommand implements PromptsForMissingInp
      */
     protected function getPath($name)
     {
-        if ($this->hasOption('path')) {
+        if (!is_null($this->option('path'))) {
             return $this->option('path').'/'.$this->argument('name').'.php';
         }
 

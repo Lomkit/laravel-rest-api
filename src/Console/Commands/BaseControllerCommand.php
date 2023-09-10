@@ -68,7 +68,7 @@ class BaseControllerCommand extends GeneratorCommand implements PromptsForMissin
      */
     protected function getPath($name)
     {
-        if ($this->hasOption('path')) {
+        if (!is_null($this->option('path'))) {
             return $this->option('path').'/'.$this->argument('name').'.php';
         }
 
