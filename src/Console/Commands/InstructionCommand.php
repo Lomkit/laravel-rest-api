@@ -63,7 +63,7 @@ class InstructionCommand extends GeneratorCommand implements PromptsForMissingIn
 
     protected function getPath($name)
     {
-        if ($this->hasOption('path')) {
+        if (!is_null($this->option('path'))) {
             return $this->option('path').'/'.$this->argument('name').'.php';
         }
 

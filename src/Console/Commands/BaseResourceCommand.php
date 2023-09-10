@@ -54,7 +54,7 @@ class BaseResourceCommand extends GeneratorCommand implements PromptsForMissingI
 
     protected function getPath($name)
     {
-        if ($this->hasOption('path')) {
+        if (!is_null($this->option('path'))) {
             return $this->option('path').'/'.$this->argument('name').'.php';
         }
 
