@@ -4,7 +4,7 @@ namespace App\Rest\Resources;
 
 use App\Rest\Resource as RestResource;
 
-class User extends RestResource
+class UserResource extends RestResource
 {
     /**
      * The model the resource corresponds to.
@@ -23,7 +23,8 @@ class User extends RestResource
         return [
             'id',
             'name',
-            'email'
+            'email',
+            'password'
         ];
     }
 
