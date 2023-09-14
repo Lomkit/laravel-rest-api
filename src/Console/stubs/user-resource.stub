@@ -18,7 +18,7 @@ class User extends RestResource
      * @param RestRequest $request
      * @return array
      */
-    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request)
+    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [
             'id',
@@ -32,7 +32,7 @@ class User extends RestResource
      * @param RestRequest $request
      * @return array
      */
-    public function relations(\Lomkit\Rest\Http\Requests\RestRequest $request)
+    public function relations(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [];
     }
@@ -42,7 +42,8 @@ class User extends RestResource
      * @param RestRequest $request
      * @return array
      */
-    public function scopes(\Lomkit\Rest\Http\Requests\RestRequest $request) {
+    public function scopes(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
         return [];
     }
 
@@ -51,7 +52,8 @@ class User extends RestResource
      * @param RestRequest $request
      * @return array
      */
-    public function limits(\Lomkit\Rest\Http\Requests\RestRequest $request) {
+    public function limits(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
         return [
             10,
             25,
@@ -64,7 +66,8 @@ class User extends RestResource
      * @param RestRequest $request
      * @return array
      */
-    public function actions(RestRequest $request): array {
+    public function actions(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
         return [];
     }
 }
