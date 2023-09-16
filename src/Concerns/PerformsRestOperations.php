@@ -21,7 +21,7 @@ trait PerformsRestOperations
      *
      * @return array
      */
-    public function detail(DetailRequest $request)
+    public function details(DetailRequest $request)
     {
         $request->resource($resource = static::newResource());
 
