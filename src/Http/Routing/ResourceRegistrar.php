@@ -13,7 +13,7 @@ class ResourceRegistrar extends BaseResourceRegistrar
      *
      * @var string[]
      */
-    protected $resourceDefaults = ['detail', 'search', 'mutate', 'operate', 'destroy', 'restore', 'forceDelete'];
+    protected $resourceDefaults = ['details', 'search', 'mutate', 'operate', 'destroy', 'restore', 'forceDelete'];
 
     /**
      * The verbs used in the resource URIs.
@@ -29,7 +29,7 @@ class ResourceRegistrar extends BaseResourceRegistrar
     ];
 
     /**
-     * Add the detail method for a resourceful route.
+     * Add the details method for a resourceful route.
      *
      * @param string $name
      * @param string $base
@@ -38,13 +38,13 @@ class ResourceRegistrar extends BaseResourceRegistrar
      *
      * @return \Illuminate\Routing\Route
      */
-    protected function addResourceDetail($name, $base, $controller, $options)
+    protected function addResourceDetails($name, $base, $controller, $options)
     {
         $uri = $this->getResourceUri($name);
 
         unset($options['missing']);
 
-        $action = $this->getResourceAction($name, $controller, 'detail', $options);
+        $action = $this->getResourceAction($name, $controller, 'details', $options);
 
         return $this->router->get($uri, $action);
     }
