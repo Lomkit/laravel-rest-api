@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Http\Requests;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Rules\ArrayWith;
 use Lomkit\Rest\Rules\CustomRulable;
 
 class MutateRequest extends RestRequest
@@ -45,7 +46,7 @@ class MutateRequest extends RestRequest
                 $prefix.'.attributes' => [
                     'prohibited_if:'.$prefix.'.operation,attach',
                     'prohibited_if:'.$prefix.'.operation,detach',
-                    'array:'.Arr::join($resource->fields($this), ','),
+                    new ArrayWith($resource->fields($this)),
                 ],
                 $prefix.'.key' => [
                     'required_if:'.$prefix.'.operation,update',
@@ -83,9 +84,11 @@ class MutateRequest extends RestRequest
 
         $rules = [
             $prefix => [
-                'array:'.Arr::join($resourceRelationsNotLoaded->map(function ($resourceRelationNotLoaded) {
-                    return $resourceRelationNotLoaded->relation;
-                })->toArray(), ','),
+                new ArrayWith(
+                    $resourceRelationsNotLoaded->map(function ($resourceRelationNotLoaded) {
+                        return $resourceRelationNotLoaded->relation;
+                    })->toArray()
+                ),
             ],
         ];
 
