@@ -3,12 +3,12 @@
 namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
+use Lomkit\Rest\Rules\ArrayWith;
 
 class MorphToMany extends MorphRelation implements RelationResource
 {
@@ -30,7 +30,7 @@ class MorphToMany extends MorphRelation implements RelationResource
             [
                 $prefix.'.*.pivot' => [
                     'prohibited_if:'.$prefix.'.*.operation,detach',
-                    'array:'.Arr::join($this->getPivotFields(), ','),
+                    new ArrayWith($this->getPivotFields()),
                 ],
             ]
         );
