@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Rules\ArrayWith;

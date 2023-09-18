@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
