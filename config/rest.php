@@ -55,7 +55,9 @@ return [
 
     'authorizations' => [
         'enabled' => true,
-        // @TODO: here add cache
+        'cache' => [
+            'enabled' => true
+        ]
     ],
 
     /*

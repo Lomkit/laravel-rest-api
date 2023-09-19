@@ -103,6 +103,16 @@ class Resource implements \JsonSerializable
     }
 
     /**
+     * Check if authorization cache is enabled for this resource.
+     *
+     * @return bool
+     */
+    public function isAuthorizationCacheEnabled(): bool
+    {
+        return config('rest.authorizations.cache.enabled');
+    }
+
+    /**
      * Check if authorizations are enabled for this resource.
      *
      * @return bool
