@@ -40,7 +40,7 @@ return [
     'resources' => [
         'cache' => [
             'enabled' => true,
-            'default' => 5 // Cache minutes by default
+            'default' => 5, // Cache minutes by default
         ],
     ],
 
@@ -58,7 +58,7 @@ return [
         'enabled' => true,
         'cache'   => [
             'enabled' => true,
-            'default' => 5 // Cache minutes by default
+            'default' => 5, // Cache minutes by default
         ],
     ],
 
