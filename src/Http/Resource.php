@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Http;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Laravel\Nova\Http\Requests\NovaRequest;
 use Lomkit\Rest\Actions\Actionable;
 use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
@@ -125,7 +124,8 @@ class Resource implements \JsonSerializable
     /**
      * Get the resource cache key.
      *
-     * @param  RestRequest  $request
+     * @param RestRequest $request
+     *
      * @return string
      */
     public function getCacheKey(RestRequest $request, string $identifier)

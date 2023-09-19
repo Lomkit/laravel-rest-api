@@ -7,7 +7,6 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait ConfiguresRestParameters
 {
-
     //@TODO: V2: Pass all fields / relations / other methods in private
     /**
      * The fields that could be provided.
@@ -28,7 +27,8 @@ trait ConfiguresRestParameters
      *
      * @return array
      */
-    public function getFields(\Lomkit\Rest\Http\Requests\RestRequest $request): array {
+    public function getFields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
         $resolver = function () use ($request) {
             return $this->fields($request);
         };
@@ -105,7 +105,8 @@ trait ConfiguresRestParameters
      *
      * @return array
      */
-    public function getScopes(\Lomkit\Rest\Http\Requests\RestRequest $request): array {
+    public function getScopes(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
         $resolver = function () use ($request) {
             return $this->scopes($request);
         };
@@ -144,7 +145,8 @@ trait ConfiguresRestParameters
      *
      * @return array
      */
-    public function getLimits(\Lomkit\Rest\Http\Requests\RestRequest $request): array {
+    public function getLimits(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
         $resolver = function () use ($request) {
             return $this->limits($request);
         };

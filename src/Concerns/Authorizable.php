@@ -24,7 +24,7 @@ trait Authorizable
     public function authorizeTo($ability, $model)
     {
         if ($this->isAuthorizingEnabled()) {
-            $resolver = function() use ($ability, $model) {
+            $resolver = function () use ($ability, $model) {
                 return Gate::authorize($ability, $model);
             };
 
@@ -63,7 +63,7 @@ trait Authorizable
     public function authorizedTo($ability, $model)
     {
         if ($this->isAuthorizingEnabled()) {
-            $resolver = function() use ($ability, $model) {
+            $resolver = function () use ($ability, $model) {
                 return Gate::check($ability, $model);
             };
 

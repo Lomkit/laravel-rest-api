@@ -39,8 +39,8 @@ return [
 
     'resources' => [
         'cache' => [
-            'enabled' => true
-        ]
+            'enabled' => true,
+        ],
     ],
 
     /*
@@ -55,9 +55,9 @@ return [
 
     'authorizations' => [
         'enabled' => true,
-        'cache' => [
-            'enabled' => true
-        ]
+        'cache'   => [
+            'enabled' => true,
+        ],
     ],
 
     /*

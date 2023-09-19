@@ -2,11 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Controllers;
 
-use Illuminate\Bus\PendingBatch;
-use Illuminate\Queue\Queue;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
-use Lomkit\Rest\Actions\CallRestApiAction;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Models\Model;

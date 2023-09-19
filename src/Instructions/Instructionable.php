@@ -26,7 +26,8 @@ trait Instructionable
      *
      * @return array
      */
-    public function getInstructions(\Lomkit\Rest\Http\Requests\RestRequest $request): array {
+    public function getInstructions(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
         $resolver = function () use ($request) {
             return $this->instructions($request);
         };

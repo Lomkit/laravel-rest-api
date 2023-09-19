@@ -26,7 +26,8 @@ trait Actionable
      *
      * @return array
      */
-    public function getActions(\Lomkit\Rest\Http\Requests\RestRequest $request): array {
+    public function getActions(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
         $resolver = function () use ($request) {
             return $this->actions($request);
         };
