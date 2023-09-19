@@ -45,7 +45,7 @@ class MutateRequest extends RestRequest
                 $prefix.'.attributes' => [
                     'prohibited_if:'.$prefix.'.operation,attach',
                     'prohibited_if:'.$prefix.'.operation,detach',
-                    new ArrayWith($resource->fields($this)),
+                    new ArrayWith($resource->getFields($this)),
                 ],
                 $prefix.'.key' => [
                     'required_if:'.$prefix.'.operation,update',

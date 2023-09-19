@@ -94,7 +94,7 @@ class AggregateField implements Rule, DataAwareRule, ValidatorAwareRule
 
         return [
             $attribute.'.field' => \Illuminate\Validation\Rule::in(
-                $relationResource->fields(app()->make(RestRequest::class))
+                $relationResource->getFields(app()->make(RestRequest::class))
             ),
         ];
     }

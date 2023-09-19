@@ -28,6 +28,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Rest Resources
+    |--------------------------------------------------------------------------
+    |
+    | This is the core of the Laravel Rest Api package, resources allows you
+    | to define your own logic and take full advantage of your API. Here
+    | you can disable the cache on all basic resource functions
+    |
+    */
+
+    'resources' => [
+        'cache' => [
+            'enabled' => true
+        ]
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Rest Authorizations
     |--------------------------------------------------------------------------
     |
@@ -38,6 +55,7 @@ return [
 
     'authorizations' => [
         'enabled' => true,
+        // @TODO: here add cache
     ],
 
     /*
