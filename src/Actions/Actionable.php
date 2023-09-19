@@ -32,10 +32,10 @@ trait Actionable
             return $this->actions($request);
         };
 
-        if ($this->isCachingEnabled()) {
+        if ($this->isResourceCacheEnabled()) {
             return Cache::remember(
-                $this->getCacheKey($request, 'actions'),
-                $this->cacheFor(),
+                $this->getResourceCacheKey($request, 'actions'),
+                $this->cacheResourceFor(),
                 $resolver
             );
         }

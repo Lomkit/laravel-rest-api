@@ -112,11 +112,40 @@ class Resource implements \JsonSerializable
     }
 
     /**
-     * Check if authorizations are enabled for this resource.
+     * Get the authorization cache key.
+     *
+     * @param RestRequest $request
+     *
+     * @return string
+     */
+    public function getAuthorizationCacheKey(RestRequest $request, string $identifier)
+    {
+        $class = Str::snake((new \ReflectionClass($this))->getShortName());
+
+        return sprintf(
+            'rest.authorization.%s.%s.%s',
+            $class,
+            $identifier,
+            $request->user()?->getKey()
+        );
+    }
+
+    /**
+     * Determine for how much time the authorization cache should be keeped.
+     *
+     * @return \DateTimeInterface|\DateInterval|float|int|null
+     */
+    public function cacheAuthorizationFor()
+    {
+        return now()->addMinutes(config('rest.authorizations.cache.default', 5));
+    }
+
+    /**
+     * Check if resource cache is enabled for this resource.
      *
      * @return bool
      */
-    public function isCachingEnabled(): bool
+    public function isResourceCacheEnabled(): bool
     {
         return config('rest.resources.cache.enabled');
     }
@@ -128,7 +157,7 @@ class Resource implements \JsonSerializable
      *
      * @return string
      */
-    public function getCacheKey(RestRequest $request, string $identifier)
+    public function getResourceCacheKey(RestRequest $request, string $identifier)
     {
         $class = Str::snake((new \ReflectionClass($this))->getShortName());
 
@@ -141,13 +170,13 @@ class Resource implements \JsonSerializable
     }
 
     /**
-     * Determine for how much time the cache should be keeped.
+     * Determine for how much time the resource cache should be keeped.
      *
      * @return \DateTimeInterface|\DateInterval|float|int|null
      */
-    public function cacheFor()
+    public function cacheResourceFor()
     {
-        return now()->addMinutes(5);
+        return now()->addMinutes(config('rest.resources.cache.default', 5));
     }
 
     /**

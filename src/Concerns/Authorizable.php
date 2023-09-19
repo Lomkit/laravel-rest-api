@@ -30,7 +30,7 @@ trait Authorizable
 
             if ($this->isAuthorizationCacheEnabled()) {
                 $gatePasses = Cache::remember(
-                    $this->getCacheKey(
+                    $this->getAuthorizationCacheKey(
                         app(RestRequest::class),
                         sprintf(
                             '%s.%s.%s',
@@ -39,7 +39,7 @@ trait Authorizable
                             $model instanceof Model ? $model->getKey() : null,
                         )
                     ),
-                    $this->cacheFor(),
+                    $this->cacheAuthorizationFor(),
                     $resolver
                 );
             } else {
@@ -69,7 +69,7 @@ trait Authorizable
 
             if ($this->isAuthorizationCacheEnabled()) {
                 return Cache::remember(
-                    $this->getCacheKey(
+                    $this->getAuthorizationCacheKey(
                         app(RestRequest::class),
                         sprintf(
                             '%s.%s.%s',
@@ -78,7 +78,7 @@ trait Authorizable
                             $model instanceof Model ? $model->getKey() : null,
                         )
                     ),
-                    $this->cacheFor(),
+                    $this->cacheAuthorizationFor(),
                     $resolver
                 );
             }

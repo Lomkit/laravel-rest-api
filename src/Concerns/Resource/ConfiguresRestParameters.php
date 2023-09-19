@@ -33,10 +33,10 @@ trait ConfiguresRestParameters
             return $this->fields($request);
         };
 
-        if ($this->isCachingEnabled()) {
+        if ($this->isResourceCacheEnabled()) {
             return Cache::remember(
-                $this->getCacheKey($request, 'fields'),
-                $this->cacheFor(),
+                $this->getResourceCacheKey($request, 'fields'),
+                $this->cacheResourceFor(),
                 $resolver
             );
         }
@@ -111,10 +111,10 @@ trait ConfiguresRestParameters
             return $this->scopes($request);
         };
 
-        if ($this->isCachingEnabled()) {
+        if ($this->isResourceCacheEnabled()) {
             return Cache::remember(
-                $this->getCacheKey($request, 'scopes'),
-                $this->cacheFor(),
+                $this->getResourceCacheKey($request, 'scopes'),
+                $this->cacheResourceFor(),
                 $resolver
             );
         }
@@ -151,10 +151,10 @@ trait ConfiguresRestParameters
             return $this->limits($request);
         };
 
-        if ($this->isCachingEnabled()) {
+        if ($this->isResourceCacheEnabled()) {
             return Cache::remember(
-                $this->getCacheKey($request, 'limits'),
-                $this->cacheFor(),
+                $this->getResourceCacheKey($request, 'limits'),
+                $this->cacheResourceFor(),
                 $resolver
             );
         }

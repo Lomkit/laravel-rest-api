@@ -32,10 +32,10 @@ trait Instructionable
             return $this->instructions($request);
         };
 
-        if ($this->isCachingEnabled()) {
+        if ($this->isResourceCacheEnabled()) {
             return Cache::remember(
-                $this->getCacheKey($request, 'instructions'),
-                $this->cacheFor(),
+                $this->getResourceCacheKey($request, 'instructions'),
+                $this->cacheResourceFor(),
                 $resolver
             );
         }

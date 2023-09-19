@@ -107,10 +107,10 @@ trait Relationable
             }, $this->relations($request));
         };
 
-        if ($this->isCachingEnabled()) {
+        if ($this->isResourceCacheEnabled()) {
             return Cache::remember(
-                $this->getCacheKey($request, 'relations'),
-                $this->cacheFor(),
+                $this->getResourceCacheKey($request, 'relations'),
+                $this->cacheResourceFor(),
                 $resolver
             );
         }
