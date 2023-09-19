@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Actions;
 
+use Illuminate\Support\Facades\Cache;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Actionable
@@ -19,6 +20,30 @@ trait Actionable
     }
 
     /**
+     * Get the resource's actions.
+     *
+     * @param \Lomkit\Rest\Http\Requests\RestRequest $request
+     *
+     * @return array
+     */
+    public function getActions(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
+        $resolver = function () use ($request) {
+            return $this->actions($request);
+        };
+
+        if ($this->isResourceCacheEnabled()) {
+            return Cache::remember(
+                $this->getResourceCacheKey($request, 'actions'),
+                $this->cacheResourceFor(),
+                $resolver
+            );
+        }
+
+        return $resolver();
+    }
+
+    /**
      * Check if a specific action exists.
      *
      * @param RestRequest $request
@@ -28,7 +53,7 @@ trait Actionable
      */
     public function actionExists(RestRequest $request, string $actionKey): bool
     {
-        return collect($this->actions($request))
+        return collect($this->getActions($request))
             ->contains(function (Action $action) use ($actionKey) {
                 return $action->uriKey() === $actionKey;
             });
@@ -44,7 +69,7 @@ trait Actionable
      */
     public function action(RestRequest $request, string $actionKey): Action
     {
-        return collect($this->actions($request))
+        return collect($this->getActions($request))
             ->sole(function (Action $action) use ($actionKey) {
                 return $action->uriKey() === $actionKey;
             })

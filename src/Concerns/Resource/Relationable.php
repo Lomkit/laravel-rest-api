@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Concerns\Resource;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
@@ -100,8 +101,20 @@ trait Relationable
      */
     public function getRelations(RestRequest $request)
     {
-        return array_map(function (Relation $relation) {
-            return $relation->fromResource($this);
-        }, $this->relations($request));
+        $resolver = function () use ($request) {
+            return array_map(function (Relation $relation) {
+                return $relation->fromResource($this);
+            }, $this->relations($request));
+        };
+
+        if ($this->isResourceCacheEnabled()) {
+            return Cache::remember(
+                $this->getResourceCacheKey($request, 'relations'),
+                $this->cacheResourceFor(),
+                $resolver
+            );
+        }
+
+        return $resolver();
     }
 }

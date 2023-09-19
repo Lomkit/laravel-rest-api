@@ -72,7 +72,7 @@ class Instruction implements ValidationRule, DataAwareRule, ValidatorAwareRule
         return [
             $attribute.'.name' => [
                 \Illuminate\Validation\Rule::in(
-                    collect($this->resource->instructions(app(RestRequest::class)))
+                    collect($this->resource->getInstructions(app(RestRequest::class)))
                         ->map(function (\Lomkit\Rest\Instructions\Instruction $instruction) {
                             return $instruction->uriKey();
                         })

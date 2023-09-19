@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Instructions;
 
+use Illuminate\Support\Facades\Cache;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Instructionable
@@ -19,6 +20,30 @@ trait Instructionable
     }
 
     /**
+     * Get the resource's instructions.
+     *
+     * @param \Lomkit\Rest\Http\Requests\RestRequest $request
+     *
+     * @return array
+     */
+    public function getInstructions(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    {
+        $resolver = function () use ($request) {
+            return $this->instructions($request);
+        };
+
+        if ($this->isResourceCacheEnabled()) {
+            return Cache::remember(
+                $this->getResourceCacheKey($request, 'instructions'),
+                $this->cacheResourceFor(),
+                $resolver
+            );
+        }
+
+        return $resolver();
+    }
+
+    /**
      * Check if a specific instruction exists.
      *
      * @param RestRequest $request        The REST request instance.
@@ -28,7 +53,7 @@ trait Instructionable
      */
     public function instructionExists(RestRequest $request, string $instructionKey): bool
     {
-        return collect($this->instructions($request))
+        return collect($this->getInstructions($request))
             ->contains(function (Instruction $instruction) use ($instructionKey) {
                 return $instruction->uriKey() === $instructionKey;
             });
@@ -44,7 +69,7 @@ trait Instructionable
      */
     public function instruction(RestRequest $request, string $instructionKey)
     {
-        $instruction = collect($this->instructions($request))
+        $instruction = collect($this->getInstructions($request))
             ->first(function (Instruction $instruction) use ($instructionKey) {
                 return $instruction->uriKey() === $instructionKey;
             });

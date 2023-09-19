@@ -52,7 +52,7 @@ class SearchIncludingThroughRelationshipsOperationsTest extends TestCase
             new ModelResource(),
             [
                 [
-                    'has_one_through_relation' => $matchingModel->hasOneThroughRelation->only((new HasOneThroughResource())->fields(app()->make(RestRequest::class))),
+                    'has_one_through_relation' => $matchingModel->hasOneThroughRelation->only((new HasOneThroughResource())->getFields(app()->make(RestRequest::class))),
                 ],
                 [
                     'has_one_through_relation' => null,
@@ -95,7 +95,7 @@ class SearchIncludingThroughRelationshipsOperationsTest extends TestCase
                 [
                     'has_many_through_relation' => $matchingModel->hasManyThroughRelation->map(function ($relation) {
                         return $relation->only(
-                            (new HasManyThroughResource())->fields(app()->make(RestRequest::class))
+                            (new HasManyThroughResource())->getFields(app()->make(RestRequest::class))
                         );
                     })->toArray(),
                 ],

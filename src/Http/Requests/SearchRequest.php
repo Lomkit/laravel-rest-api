@@ -50,7 +50,7 @@ class SearchRequest extends RestRequest
             [$prefix.'instructions' => ['sometimes', 'array']],
             $this->instructionsRules($resource, $prefix.'instructions'),
             [
-                'limit' => ['sometimes', 'integer', Rule::in($resource->limits($this))],
+                'limit' => ['sometimes', 'integer', Rule::in($resource->getLimits($this))],
                 'page'  => ['sometimes', 'integer'],
             ],
             $isRootSearchRules ? ['includes' => ['sometimes', 'array']] : [],
@@ -115,7 +115,7 @@ class SearchRequest extends RestRequest
     {
         $rules = [
             $prefix.'.*.name' => [
-                Rule::in($resource->scopes($this)),
+                Rule::in($resource->getScopes($this)),
                 'required',
                 'string',
             ],
@@ -141,7 +141,7 @@ class SearchRequest extends RestRequest
         $rules = [
             $prefix.'.*.name' => [
                 Rule::in(
-                    collect($resource->instructions($this))
+                    collect($resource->getInstructions($this))
                         ->map(function ($instruction) { return $instruction->uriKey(); })
                         ->toArray()
                 ),
@@ -173,7 +173,7 @@ class SearchRequest extends RestRequest
     {
         $rules = [
             $prefix.'.*.field' => [
-                Rule::in($resource->fields($this)),
+                Rule::in($resource->getFields($this)),
                 'required',
                 'string',
             ],
@@ -198,7 +198,7 @@ class SearchRequest extends RestRequest
     {
         $rules = [
             $prefix.'.*.field' => [
-                Rule::in($resource->fields($this)),
+                Rule::in($resource->getFields($this)),
                 'required',
                 'string',
             ],
