@@ -31,15 +31,16 @@ class Response implements Responsable
         });
     }
 
-    protected function buildGatesForModel(Model $model)
+    protected function buildGatesForModel(Model $model, Resource $resource, array $gates)
     {
-        return [
-            config('rest.automatic_gates.names.authorized_to_view')         => Gate::allows('view', $model),
-            config('rest.automatic_gates.names.authorized_to_update')       => Gate::allows('update', $model),
-            config('rest.automatic_gates.names.authorized_to_delete')       => Gate::allows('delete', $model),
-            config('rest.automatic_gates.names.authorized_to_restore')      => Gate::allows('restore', $model),
-            config('rest.automatic_gates.names.authorized_to_force_delete') => Gate::allows('forceDelete', $model),
-        ];
+        return array_merge(
+            in_array('view', $gates) ? [config('rest.automatic_gates.names.authorized_to_view')         => $resource->authorizedTo('view', $model)] : [],
+            in_array('update', $gates) ? [config('rest.automatic_gates.names.authorized_to_update')         => $resource->authorizedTo('update', $model)] : [],
+            in_array('delete', $gates) ? [config('rest.automatic_gates.names.authorized_to_delete')         => $resource->authorizedTo('delete', $model)] : [],
+            in_array('restore', $gates) ? [config('rest.automatic_gates.names.authorized_to_restore')         => $resource->authorizedTo('restore', $model)] : [],
+            in_array('forceDelete', $gates) ? [config('rest.automatic_gates.names.authorized_to_force_delete')         => $resource->authorizedTo('forceDelete', $model)] : [],
+
+        );
     }
 
     public function modelToResponse(Model $model, Resource $resource, array $requestArray, Relation $relation = null)
@@ -54,26 +55,26 @@ class Response implements Responsable
             collect($model->attributesToArray())
                 ->only(
                     array_merge(
-                        isset($requestArray['selects']) ?
-                                collect($requestArray['selects'])->pluck('field')->toArray() :
+                        isset($currentRequestArray['selects']) ?
+                                collect($currentRequestArray['selects'])->pluck('field')->toArray() :
                                 $resource->getFields(app()->make(RestRequest::class)),
                         // Here we add the aggregates
-                        collect($requestArray['aggregates'] ?? [])
+                        collect($currentRequestArray['aggregates'] ?? [])
                             ->map(function ($aggregate) {
                                 return Str::snake($aggregate['relation']).'_'.$aggregate['type'].(isset($aggregate['field']) ? '_'.$aggregate['field'] : '');
                             })
                             ->toArray()
                     )
                 )
-                ->when($resource->isAutomaticGatingEnabled(), function ($attributes) use ($model) {
+                ->when($resource->isAutomaticGatingEnabled() && isset($currentRequestArray['gates']), function ($attributes) use ($currentRequestArray, $resource, $model) {
                     return $attributes->put(
                         config('rest.automatic_gates.key'),
-                        $this->buildGatesForModel($model)
+                        $this->buildGatesForModel($model, $resource, $currentRequestArray['gates'])
                     );
                 })
                 ->toArray(),
             collect($model->getRelations())
-                ->mapWithKeys(function ($modelRelation, $relationName) use ($requestArray, $relation, $resource) {
+                ->mapWithKeys(function ($modelRelation, $relationName) use ($requestArray, $currentRequestArray, $relation, $resource) {
                     $key = Str::snake($relationName);
 
                     if (is_null($modelRelation)) {
@@ -90,7 +91,7 @@ class Response implements Responsable
 
                     $relationConcrete = $resource->relation($relationName);
                     $relationResource = $relationConcrete->resource();
-                    $requestArrayRelation = collect($requestArray['includes'])
+                    $requestArrayRelation = collect($currentRequestArray['includes'] ?? [])
                         ->first(function ($include) use ($relationName) {
                             return preg_match('/(?:\.\b)?'.$relationName.'\b/', $include['relation']);
                         });
@@ -128,9 +129,9 @@ class Response implements Responsable
                 $this->responsable->perPage(),
                 $this->responsable->currentPage(),
                 $this->responsable->getOptions(),
-                $this->resource->isAutomaticGatingEnabled() ? [
+                $this->resource->isAutomaticGatingEnabled() && in_array('create', $request->input('gates', [])) ? [
                     config('rest.automatic_gates.key') => [
-                        config('rest.automatic_gates.names.authorized_to_create') => Gate::allows('create', $this->resource::newModel()::class),
+                        config('rest.automatic_gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
                     ],
                 ] : []
             );
@@ -148,11 +149,13 @@ class Response implements Responsable
 
         return [
             'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input())),
-            'meta' => [
-                config('rest.automatic_gates.key') => [
-                    config('rest.automatic_gates.names.authorized_to_create') => Gate::allows('create', $this->resource::newModel()::class),
-                ],
-            ],
+            'meta' => array_merge(
+                $this->resource->isAutomaticGatingEnabled() && in_array('create', $request->input('gates', [])) ? [
+                    config('rest.automatic_gates.key') => [
+                        config('rest.automatic_gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
+                    ],
+                ] : []
+            ),
         ];
     }
 

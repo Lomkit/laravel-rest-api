@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsToMany;
+use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Tests\Support\Models\Model;
 
 class AutomaticGatingResource extends Resource
@@ -19,6 +20,7 @@ class AutomaticGatingResource extends Resource
                     'number' => 'numeric',
                 ])
                 ->withPivotFields(['created_at', 'number']),
+            HasMany::make('hasManyRelation', HasManyWithGatesResource::class)
         ];
     }
 

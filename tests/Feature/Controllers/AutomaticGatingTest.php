@@ -2,12 +2,15 @@
 
 namespace Lomkit\Rest\Tests\Feature\Controllers;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
+use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
+use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\CreatePolicy;
 use Lomkit\Rest\Tests\Support\Policies\DeletePolicy;
@@ -32,7 +35,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-
+                'gates' => ['create', 'view', 'update', 'delete', 'forceDelete', 'restore']
             ],
             ['Accept' => 'application/json']
         );
@@ -92,7 +95,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-
+                'gates' => ['create', 'view']
             ],
             ['Accept' => 'application/json']
         );
@@ -105,10 +108,6 @@ class AutomaticGatingTest extends TestCase
                 [
                     'gates' => [
                         'authorized_to_view'         => false,
-                        'authorized_to_update'       => false,
-                        'authorized_to_delete'       => false,
-                        'authorized_to_restore'      => false,
-                        'authorized_to_force_delete' => false,
                     ],
                 ],
             ]
@@ -128,7 +127,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-
+                'gates' => ['view', 'create']
             ],
             ['Accept' => 'application/json']
         );
@@ -141,10 +140,6 @@ class AutomaticGatingTest extends TestCase
                 [
                     'gates' => [
                         'authorized_to_view'         => true,
-                        'authorized_to_update'       => false,
-                        'authorized_to_delete'       => false,
-                        'authorized_to_restore'      => false,
-                        'authorized_to_force_delete' => false,
                     ],
                 ],
             ]
@@ -164,7 +159,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-
+                'gates' => ['update']
             ],
             ['Accept' => 'application/json']
         );
@@ -176,17 +171,13 @@ class AutomaticGatingTest extends TestCase
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => false,
                         'authorized_to_update'       => true,
-                        'authorized_to_delete'       => false,
-                        'authorized_to_restore'      => false,
-                        'authorized_to_force_delete' => false,
                     ],
                 ],
             ]
         );
         $response->assertJson(
-            ['meta' => ['gates' => ['authorized_to_create' => false]]]
+            ['meta' => []]
         );
     }
 
@@ -200,7 +191,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-
+                'gates' => ['create', 'delete']
             ],
             ['Accept' => 'application/json']
         );
@@ -212,11 +203,7 @@ class AutomaticGatingTest extends TestCase
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => false,
-                        'authorized_to_update'       => false,
                         'authorized_to_delete'       => true,
-                        'authorized_to_restore'      => false,
-                        'authorized_to_force_delete' => false,
                     ],
                 ],
             ]
@@ -236,7 +223,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-
+                'gates' => ['restore', 'view']
             ],
             ['Accept' => 'application/json']
         );
@@ -249,16 +236,13 @@ class AutomaticGatingTest extends TestCase
                 [
                     'gates' => [
                         'authorized_to_view'         => false,
-                        'authorized_to_update'       => false,
-                        'authorized_to_delete'       => false,
                         'authorized_to_restore'      => true,
-                        'authorized_to_force_delete' => false,
                     ],
                 ],
             ]
         );
         $response->assertJson(
-            ['meta' => ['gates' => ['authorized_to_create' => false]]]
+            ['meta' => []]
         );
     }
 
@@ -272,7 +256,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-
+                'gates' => ['forceDelete', 'create']
             ],
             ['Accept' => 'application/json']
         );
@@ -284,10 +268,6 @@ class AutomaticGatingTest extends TestCase
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => false,
-                        'authorized_to_update'       => false,
-                        'authorized_to_delete'       => false,
-                        'authorized_to_restore'      => false,
                         'authorized_to_force_delete' => true,
                     ],
                 ],
@@ -316,11 +296,15 @@ class AutomaticGatingTest extends TestCase
                 'includes' => [
                     [
                         'relation' => 'belongsToManyRelation',
+                        'gates' => ['view']
                     ],
                 ],
                 'sorts' => [
                     ['field' => 'id', 'direction' => 'asc'],
                 ],
+                'gates' => [
+                    'view', 'update', 'create', 'delete', 'restore', 'forceDelete'
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -368,8 +352,42 @@ class AutomaticGatingTest extends TestCase
                 ],
             ]
         );
+        $this->assertArrayNotHasKey(
+            'gates', $response->json('data.0.belongs_to_many_relation.0')
+        );
         $response->assertJson(
             ['meta' => ['gates' => ['authorized_to_create' => true]]]
+        );
+    }
+
+    public function test_searching_automatic_gated_resource_with_not_requested_includes_gates(): void
+    {
+        ModelFactory::new()
+            ->count(10)
+            ->has(
+                HasManyRelationFactory::new()
+                    ->count(10)
+            )
+            ->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/automatic-gating/search',
+            [
+                'includes' => [
+                    [
+                        'relation' => 'hasManyRelation'
+                    ]
+                ],
+                'gates' => ['view', 'create', 'update', 'delete', 'restore', 'forceDelete']
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertArrayNotHasKey(
+            'gates', $response->json('data.0.has_many_relation.0')
         );
     }
 }
