@@ -26,7 +26,7 @@ class {{ class }} extends RestAction
      * @param  \Lomkit\Rest\Http\Requests\RestRequest $request
      * @return array
      */
-    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request)
+    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [
             'id' => [

@@ -191,6 +191,9 @@ class RequestBody extends Schema
                                                 ],
                                             ],
                                         ],
+                                        'gates' => [
+                                            'create',
+                                        ],
                                         'page'  => 2,
                                         'limit' => 10,
                                     ]

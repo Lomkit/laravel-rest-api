@@ -133,7 +133,7 @@ class Resource implements \JsonSerializable
     /**
      * Determine for how much time the authorization cache should be keeped.
      *
-     * @return \DateTimeInterface|\DateInterval|float|int|null
+     * @return \DateTimeInterface|\DateInterval
      */
     public function cacheAuthorizationFor()
     {
@@ -172,7 +172,7 @@ class Resource implements \JsonSerializable
     /**
      * Determine for how much time the resource cache should be keeped.
      *
-     * @return \DateTimeInterface|\DateInterval|float|int|null
+     * @return \DateTimeInterface|\DateInterval
      */
     public function cacheResourceFor()
     {
