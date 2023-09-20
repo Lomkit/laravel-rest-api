@@ -84,6 +84,36 @@ class NoAuthorizationTest extends TestCase
         );
     }
 
+    public function test_mutating_with_no_authorizations_and_unauthenticated_user(): void
+    {
+        $modelToCreate = ModelFactory::new()->makeOne();
+
+        Gate::policy(Model::class, RedPolicy::class);
+
+        $this->app->make('auth')->forgetUser();
+
+        $response = $this->post(
+            '/api/no-authorization/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'create',
+                        'attributes' => [
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [$modelToCreate],
+        );
+    }
+
     public function test_deleting_with_no_authorizations(): void
     {
         $model = ModelFactory::new()->count(1)->createOne();
