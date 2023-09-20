@@ -52,7 +52,7 @@ class SearchRequest extends RestRequest
             [
                 'limit' => ['sometimes', 'integer', Rule::in($resource->getLimits($this))],
                 'page'  => ['sometimes', 'integer'],
-                'gates' => ['sometimes', 'array', Rule::in(['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'])]
+                'gates' => ['sometimes', 'array', Rule::in(['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'])],
             ],
             $isRootSearchRules ? ['includes' => ['sometimes', 'array']] : [],
             $isRootSearchRules ? $this->includesRules($resource) : [],

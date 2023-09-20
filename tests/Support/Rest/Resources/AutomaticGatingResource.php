@@ -20,7 +20,7 @@ class AutomaticGatingResource extends Resource
                     'number' => 'numeric',
                 ])
                 ->withPivotFields(['created_at', 'number']),
-            HasMany::make('hasManyRelation', HasManyWithGatesResource::class)
+            HasMany::make('hasManyRelation', HasManyWithGatesResource::class),
         ];
     }
 

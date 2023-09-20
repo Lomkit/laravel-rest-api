@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Controllers;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Feature\TestCase;
@@ -35,7 +34,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['create', 'view', 'update', 'delete', 'forceDelete', 'restore']
+                'gates' => ['create', 'view', 'update', 'delete', 'forceDelete', 'restore'],
             ],
             ['Accept' => 'application/json']
         );
@@ -95,7 +94,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['create', 'view']
+                'gates' => ['create', 'view'],
             ],
             ['Accept' => 'application/json']
         );
@@ -127,7 +126,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['view', 'create']
+                'gates' => ['view', 'create'],
             ],
             ['Accept' => 'application/json']
         );
@@ -159,7 +158,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['update']
+                'gates' => ['update'],
             ],
             ['Accept' => 'application/json']
         );
@@ -191,7 +190,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['create', 'delete']
+                'gates' => ['create', 'delete'],
             ],
             ['Accept' => 'application/json']
         );
@@ -223,7 +222,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['restore', 'view']
+                'gates' => ['restore', 'view'],
             ],
             ['Accept' => 'application/json']
         );
@@ -256,7 +255,7 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['forceDelete', 'create']
+                'gates' => ['forceDelete', 'create'],
             ],
             ['Accept' => 'application/json']
         );
@@ -296,15 +295,15 @@ class AutomaticGatingTest extends TestCase
                 'includes' => [
                     [
                         'relation' => 'belongsToManyRelation',
-                        'gates' => ['view']
+                        'gates'    => ['view'],
                     ],
                 ],
                 'sorts' => [
                     ['field' => 'id', 'direction' => 'asc'],
                 ],
                 'gates' => [
-                    'view', 'update', 'create', 'delete', 'restore', 'forceDelete'
-                ]
+                    'view', 'update', 'create', 'delete', 'restore', 'forceDelete',
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -353,7 +352,8 @@ class AutomaticGatingTest extends TestCase
             ]
         );
         $this->assertArrayNotHasKey(
-            'gates', $response->json('data.0.belongs_to_many_relation.0')
+            'gates',
+            $response->json('data.0.belongs_to_many_relation.0')
         );
         $response->assertJson(
             ['meta' => ['gates' => ['authorized_to_create' => true]]]
@@ -378,16 +378,17 @@ class AutomaticGatingTest extends TestCase
             [
                 'includes' => [
                     [
-                        'relation' => 'hasManyRelation'
-                    ]
+                        'relation' => 'hasManyRelation',
+                    ],
                 ],
-                'gates' => ['view', 'create', 'update', 'delete', 'restore', 'forceDelete']
+                'gates' => ['view', 'create', 'update', 'delete', 'restore', 'forceDelete'],
             ],
             ['Accept' => 'application/json']
         );
 
         $this->assertArrayNotHasKey(
-            'gates', $response->json('data.0.has_many_relation.0')
+            'gates',
+            $response->json('data.0.has_many_relation.0')
         );
     }
 }

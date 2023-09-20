@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
@@ -39,7 +38,6 @@ class Response implements Responsable
             in_array('delete', $gates) ? [config('rest.automatic_gates.names.authorized_to_delete')         => $resource->authorizedTo('delete', $model)] : [],
             in_array('restore', $gates) ? [config('rest.automatic_gates.names.authorized_to_restore')         => $resource->authorizedTo('restore', $model)] : [],
             in_array('forceDelete', $gates) ? [config('rest.automatic_gates.names.authorized_to_force_delete')         => $resource->authorizedTo('forceDelete', $model)] : [],
-
         );
     }
 
