@@ -50,6 +50,13 @@ class Action implements \JsonSerializable
     public $name;
 
     /**
+     * Indicates if the action can be run with no model.
+     *
+     * @var bool
+     */
+    public $standalone = false;
+
+    /**
      * The number of models that should be included in each chunk.
      *
      * @var int
@@ -77,6 +84,28 @@ class Action implements \JsonSerializable
     }
 
     /**
+     * Mark the action as a standalone action.
+     *
+     * @return $this
+     */
+    public function standalone()
+    {
+        $this->standalone = true;
+
+        return $this;
+    }
+
+    /**
+     * Determine if the action is a standalone action.
+     *
+     * @return bool
+     */
+    public function isStandalone()
+    {
+        return $this->standalone;
+    }
+
+    /**
      * Prepare the action for JSON serialization.
      *
      * @return array<string, mixed>
@@ -90,6 +119,7 @@ class Action implements \JsonSerializable
             'uriKey' => $this->uriKey(),
             'fields' => $this->fields($request),
             'meta'   => $this->meta(),
+            'standalone' => $this->isStandalone()
         ];
     }
 

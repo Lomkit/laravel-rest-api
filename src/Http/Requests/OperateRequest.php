@@ -44,7 +44,12 @@ class OperateRequest extends RestRequest
         $operatedAction = $resource->action($this, $this->route()->parameter('action'));
 
         return array_merge(
-            app(SearchRequest::class)->searchRules($resource, 'search'),
+            $operatedAction->isStandalone() ? [
+                'search' => [
+                    'prohibited'
+                ]
+            ] : [],
+            !$operatedAction->isStandalone() ? app(SearchRequest::class)->searchRules($resource, 'search') : [],
             [
                 'fields.*.name' => [
                     Rule::in(array_keys($operatedAction->fields($this))),

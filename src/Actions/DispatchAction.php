@@ -95,6 +95,26 @@ class DispatchAction
      */
     public function dispatch($chunkCount)
     {
+        if ($this->action->isStandalone()) {
+            $modelsImpacted = $this->handleStandalone();
+        } else {
+            $modelsImpacted = $this->handleClassic($chunkCount);
+        }
+
+        if (!is_null($this->batchJob)) {
+            $this->batchJob->dispatch();
+        }
+
+        return $modelsImpacted;
+    }
+
+    /**
+     * Dispatch the given action.
+     *
+     * @param  int  $chunkCount
+     * @return int
+     */
+    public function handleClassic(int $chunkCount) {
         $searchQuery =
             app()->make(QueryBuilder::class, ['resource' => $this->request->resource, 'query' => null])
                 ->search($this->request->input('search', []));
@@ -112,11 +132,22 @@ class DispatchAction
                 }
             );
 
-        if (!is_null($this->batchJob)) {
-            $this->batchJob->dispatch();
-        }
-
         return $searchQuery->count();
+    }
+
+    /**
+     * Dispatch the given standalone action.
+     *
+     * @return int
+     *
+     */
+    public function handleStandalone() {
+
+        $this->forModels(
+            \Illuminate\Database\Eloquent\Collection::make()
+        );
+
+        return 0;
     }
 
     /**
@@ -124,13 +155,11 @@ class DispatchAction
      *
      * @param Collection $models
      *
-     * @throws \Throwable
-     *
      * @return mixed|void
      */
     public function forModels(Collection $models)
     {
-        if ($models->isEmpty()) {
+        if ($models->isEmpty() && !$this->action->isStandalone()) {
             return;
         }
 

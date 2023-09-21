@@ -36,6 +36,58 @@ class ActionsOperationsTest extends TestCase
         );
     }
 
+    public function test_operate_standalone_action(): void
+    {
+        $model = ModelFactory::new()->create();
+        ModelFactory::new()->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/standalone-modify-number',
+            [],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertJson([
+            'data' => [
+                'impacted' => 0,
+            ],
+        ]);
+        $this->assertEquals(
+            1,
+            Model::where('number', 100000000)->count()
+        );
+    }
+
+    public function test_operate_standalone_action_with_fields(): void
+    {
+        $model = ModelFactory::new()->create();
+        ModelFactory::new()->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/standalone-modify-number',
+            [
+                'fields' => [
+                    ['name' => 'number', 'value' => 100000001],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertJson([
+            'data' => [
+                'impacted' => 0,
+            ],
+        ]);
+        $this->assertEquals(
+            1,
+            Model::where('number', 100000001)->count()
+        );
+    }
+
     public function test_operate_not_found_action(): void
     {
         ModelFactory::new()->count(2)->create();
