@@ -115,11 +115,11 @@ class Action implements \JsonSerializable
         $request = app()->make(RestRequest::class);
 
         return [
-            'name'   => $this->name(),
-            'uriKey' => $this->uriKey(),
-            'fields' => $this->fields($request),
-            'meta'   => $this->meta(),
-            'standalone' => $this->isStandalone()
+            'name'       => $this->name(),
+            'uriKey'     => $this->uriKey(),
+            'fields'     => $this->fields($request),
+            'meta'       => $this->meta(),
+            'standalone' => $this->isStandalone(),
         ];
     }
 

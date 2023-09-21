@@ -111,10 +111,12 @@ class DispatchAction
     /**
      * Dispatch the given action.
      *
-     * @param  int  $chunkCount
+     * @param int $chunkCount
+     *
      * @return int
      */
-    public function handleClassic(int $chunkCount) {
+    public function handleClassic(int $chunkCount)
+    {
         $searchQuery =
             app()->make(QueryBuilder::class, ['resource' => $this->request->resource, 'query' => null])
                 ->search($this->request->input('search', []));
@@ -139,10 +141,9 @@ class DispatchAction
      * Dispatch the given standalone action.
      *
      * @return int
-     *
      */
-    public function handleStandalone() {
-
+    public function handleStandalone()
+    {
         $this->forModels(
             \Illuminate\Database\Eloquent\Collection::make()
         );

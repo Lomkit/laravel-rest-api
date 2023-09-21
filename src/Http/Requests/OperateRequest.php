@@ -46,8 +46,8 @@ class OperateRequest extends RestRequest
         return array_merge(
             $operatedAction->isStandalone() ? [
                 'search' => [
-                    'prohibited'
-                ]
+                    'prohibited',
+                ],
             ] : [],
             !$operatedAction->isStandalone() ? app(SearchRequest::class)->searchRules($resource, 'search') : [],
             [
