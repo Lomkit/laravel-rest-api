@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Lomkit\Rest\RestServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
+
 class TestCase extends BaseTestCase
 {
     use RefreshDatabase;
