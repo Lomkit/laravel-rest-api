@@ -88,7 +88,7 @@ class Resource implements \JsonSerializable
      */
     public function isAutomaticGatingEnabled(): bool
     {
-        return config('rest.automatic_gates.enabled');
+        return config('rest.automatic_gates.enabled', true);
     }
 
     /**
@@ -98,7 +98,7 @@ class Resource implements \JsonSerializable
      */
     public function isAuthorizingEnabled(): bool
     {
-        return config('rest.authorizations.enabled');
+        return config('rest.authorizations.enabled', true);
     }
 
     /**
@@ -108,7 +108,7 @@ class Resource implements \JsonSerializable
      */
     public function isAuthorizationCacheEnabled(): bool
     {
-        return config('rest.authorizations.cache.enabled');
+        return config('rest.authorizations.cache.enabled', true);
     }
 
     /**
