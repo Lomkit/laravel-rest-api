@@ -64,7 +64,7 @@ class {{ class }} extends RestResource
      * @param RestRequest $request
      * @return array
      */
-    public function actions(RestRequest $request): array {
+    public function actions(\Lomkit\Rest\Http\Requests\RestRequest $request): array {
         return [];
     }
 
@@ -73,7 +73,7 @@ class {{ class }} extends RestResource
      * @param RestRequest $request
      * @return array
      */
-    public function instructions(RestRequest $request): array {
+    public function instructions(\Lomkit\Rest\Http\Requests\RestRequest $request): array {
         return [];
     }
 }
