@@ -5,6 +5,7 @@ namespace Lomkit\Rest;
 use Lomkit\Rest\Contracts\Http\Routing\Registrar;
 use Lomkit\Rest\Documentation\Schemas\OpenAPI;
 use Lomkit\Rest\Http\Controllers\Controller;
+use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
 use Lomkit\Rest\Http\Routing\ResourceRegistrar;
 
@@ -29,12 +30,13 @@ class Rest implements Registrar
             $registrar = new ResourceRegistrar(app('router'));
         }
 
-        return new PendingResourceRegistration(
+        return (new PendingResourceRegistration(
             $registrar,
             $name,
             $controller,
             $options
-        );
+        ))
+            ->middleware(EnforceExpectsJson::class);
     }
 
     /**
