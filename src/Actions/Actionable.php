@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Actions;
 
-use Illuminate\Support\Facades\Cache;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Actionable

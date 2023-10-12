@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Instructions;
 
-use Illuminate\Support\Facades\Cache;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Instructionable

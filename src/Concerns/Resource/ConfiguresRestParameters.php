@@ -2,13 +2,10 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
-use Illuminate\Support\Facades\Cache;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
 
 trait ConfiguresRestParameters
 {
-
     /**
      * The calculated fields if already done in this request.
      *
