@@ -8,6 +8,13 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 trait Actionable
 {
     /**
+     * The calculated actions if already done in this request.
+     *
+     * @var array
+     */
+    protected array $calculatedActions;
+
+    /**
      * The actions that should be linked.
      *
      * @param RestRequest $request
@@ -28,19 +35,7 @@ trait Actionable
      */
     public function getActions(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
-        $resolver = function () use ($request) {
-            return $this->actions($request);
-        };
-
-        if ($this->isResourceCacheEnabled()) {
-            return Cache::remember(
-                $this->getResourceCacheKey($request, 'actions'),
-                $this->cacheResourceFor(),
-                $resolver
-            );
-        }
-
-        return $resolver();
+        return $this->calculatedActions ?? ($this->calculatedActions = $this->actions($request));
     }
 
     /**

@@ -8,6 +8,13 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 trait Instructionable
 {
     /**
+     * The calculated instructions if already done in this request.
+     *
+     * @var array
+     */
+    protected array $calculatedInstructions;
+
+    /**
      * The instructions that should be linked.
      *
      * @param RestRequest $request
@@ -28,19 +35,7 @@ trait Instructionable
      */
     public function getInstructions(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
-        $resolver = function () use ($request) {
-            return $this->instructions($request);
-        };
-
-        if ($this->isResourceCacheEnabled()) {
-            return Cache::remember(
-                $this->getResourceCacheKey($request, 'instructions'),
-                $this->cacheResourceFor(),
-                $resolver
-            );
-        }
-
-        return $resolver();
+        return $this->calculatedInstructions ?? ($this->calculatedInstructions = $this->instructions($request));
     }
 
     /**
