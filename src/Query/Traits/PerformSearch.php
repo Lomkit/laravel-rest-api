@@ -89,7 +89,7 @@ trait PerformSearch
 
             return $relation->filter($this->queryBuilder, $field, $operator, $value, $type, function ($query) use ($relation) {
                 $relation->applySearchQuery($query);
-            }, $this->resource);
+            });
         } else {
             if (in_array($operator, ['in', 'not in'])) {
                 $this->queryBuilder->whereIn($this->queryBuilder->getModel()->getTable().'.'.$field, $value, $type, $operator === 'not in');

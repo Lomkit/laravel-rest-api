@@ -141,45 +141,6 @@ class Resource implements \JsonSerializable
     }
 
     /**
-     * Check if resource cache is enabled for this resource.
-     *
-     * @return bool
-     */
-    public function isResourceCacheEnabled(): bool
-    {
-        return config('rest.resources.cache.enabled');
-    }
-
-    /**
-     * Get the resource cache key.
-     *
-     * @param RestRequest $request
-     *
-     * @return string
-     */
-    public function getResourceCacheKey(RestRequest $request, string $identifier)
-    {
-        $class = Str::snake((new \ReflectionClass($this))->getShortName());
-
-        return sprintf(
-            'rest.resource.%s.%s.%s',
-            $class,
-            $identifier,
-            $request->user()?->getKey()
-        );
-    }
-
-    /**
-     * Determine for how much time the resource cache should be keeped.
-     *
-     * @return \DateTimeInterface|\DateInterval
-     */
-    public function cacheResourceFor()
-    {
-        return now()->addMinutes(config('rest.resources.cache.default', 5));
-    }
-
-    /**
      * Serialize the resource into a JSON-serializable format.
      *
      * @return mixed

@@ -2,12 +2,17 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
-use Illuminate\Support\Facades\Cache;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait ConfiguresRestParameters
 {
-    //@TODO: V2: Pass all fields / relations / other methods in private
+    /**
+     * The calculated fields if already done in this request.
+     *
+     * @var array
+     */
+    protected array $calculatedFields;
+
     /**
      * The fields that could be provided.
      *
@@ -29,19 +34,7 @@ trait ConfiguresRestParameters
      */
     public function getFields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
-        $resolver = function () use ($request) {
-            return $this->fields($request);
-        };
-
-        if ($this->isResourceCacheEnabled()) {
-            return Cache::remember(
-                $this->getResourceCacheKey($request, 'fields'),
-                $this->cacheResourceFor(),
-                $resolver
-            );
-        }
-
-        return $resolver();
+        return $this->calculatedFields ?? ($this->calculatedFields = $this->fields($request));
     }
 
     /**
@@ -87,6 +80,13 @@ trait ConfiguresRestParameters
     }
 
     /**
+     * The calculated scopes if already done in this request.
+     *
+     * @var array
+     */
+    protected array $calculatedScopes;
+
+    /**
      * The scopes that could be provided.
      *
      * @param RestRequest $request
@@ -107,20 +107,15 @@ trait ConfiguresRestParameters
      */
     public function getScopes(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
-        $resolver = function () use ($request) {
-            return $this->scopes($request);
-        };
-
-        if ($this->isResourceCacheEnabled()) {
-            return Cache::remember(
-                $this->getResourceCacheKey($request, 'scopes'),
-                $this->cacheResourceFor(),
-                $resolver
-            );
-        }
-
-        return $resolver();
+        return $this->calculatedScopes ?? ($this->calculatedScopes = $this->scopes($request));
     }
+
+    /**
+     * The calculated limits if already done in this request.
+     *
+     * @var array
+     */
+    protected array $calculatedLimits;
 
     /**
      * The limits that could be provided.
@@ -147,18 +142,6 @@ trait ConfiguresRestParameters
      */
     public function getLimits(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
-        $resolver = function () use ($request) {
-            return $this->limits($request);
-        };
-
-        if ($this->isResourceCacheEnabled()) {
-            return Cache::remember(
-                $this->getResourceCacheKey($request, 'limits'),
-                $this->cacheResourceFor(),
-                $resolver
-            );
-        }
-
-        return $resolver();
+        return $this->calculatedLimits ?? ($this->calculatedLimits = $this->limits($request));
     }
 }

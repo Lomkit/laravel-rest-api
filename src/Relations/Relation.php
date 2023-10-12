@@ -100,11 +100,18 @@ class Relation implements \JsonSerializable
     /**
      * Get the resource associated with this relation.
      *
-     * @return resource
+     * @return \Lomkit\Rest\Http\Resource
      */
     public function resource()
     {
-        return new $this->types[0]();
+        $resource = $this->types[0];
+
+        // If the resource isn't registered, do it
+        if (!app()->has($resource)) {
+            app()->singleton($resource);
+        }
+
+        return app()->make($resource);
     }
 
     /**

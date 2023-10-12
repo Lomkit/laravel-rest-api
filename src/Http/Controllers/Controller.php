@@ -27,6 +27,11 @@ abstract class Controller extends \Illuminate\Routing\Controller
     {
         $resource = static::$resource;
 
-        return new $resource();
+        // If the resource isn't registered, do it
+        if (!app()->has($resource)) {
+            app()->singleton($resource);
+        }
+
+        return app()->make($resource);
     }
 }

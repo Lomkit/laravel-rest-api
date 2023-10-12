@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Concerns\Resource;
 
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
@@ -40,7 +39,7 @@ trait Relationable
      *
      * @param string $name
      *
-     * @return resource|null
+     * @return \Lomkit\Rest\Http\Resource
      */
     public function relationResource($name)
     {
@@ -81,6 +80,13 @@ trait Relationable
     }
 
     /**
+     * The calculated relations if already done in this request.
+     *
+     * @var array
+     */
+    protected array $calculatedRelations;
+
+    /**
      * The relations that could be provided.
      *
      * @param RestRequest $request
@@ -101,20 +107,12 @@ trait Relationable
      */
     public function getRelations(RestRequest $request)
     {
-        $resolver = function () use ($request) {
-            return array_map(function (Relation $relation) {
-                return $relation->fromResource($this);
-            }, $this->relations($request));
-        };
-
-        if ($this->isResourceCacheEnabled()) {
-            return Cache::remember(
-                $this->getResourceCacheKey($request, 'relations'),
-                $this->cacheResourceFor(),
-                $resolver
+        return $this->calculatedRelations ??
+            (
+                $this->calculatedRelations =
+                    array_map(function (Relation $relation) {
+                        return $relation->fromResource($this);
+                    }, $this->relations($request))
             );
-        }
-
-        return $resolver();
     }
 }
