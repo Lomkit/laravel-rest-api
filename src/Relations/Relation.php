@@ -100,7 +100,7 @@ class Relation implements \JsonSerializable
     /**
      * Get the resource associated with this relation.
      *
-     * @return resource
+     * @return \Lomkit\Rest\Http\Resource
      */
     public function resource()
     {
