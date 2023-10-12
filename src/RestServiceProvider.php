@@ -14,7 +14,6 @@ use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceCommand;
 use Lomkit\Rest\Console\Commands\ResponseCommand;
 use Lomkit\Rest\Contracts\QueryBuilder;
-use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Query\Builder;
 
 class RestServiceProvider extends ServiceProvider
