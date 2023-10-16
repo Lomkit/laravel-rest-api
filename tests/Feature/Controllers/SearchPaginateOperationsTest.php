@@ -22,7 +22,7 @@ class SearchPaginateOperationsTest extends TestCase
             [
                 'search' => [
                     'limit' => 5,
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -45,7 +45,7 @@ class SearchPaginateOperationsTest extends TestCase
                 'search' => [
                     'page'  => 2,
                     'limit' => 1,
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -71,7 +71,7 @@ class SearchPaginateOperationsTest extends TestCase
                 'search' => [
                     'page'  => 101,
                     'limit' => 1,
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );

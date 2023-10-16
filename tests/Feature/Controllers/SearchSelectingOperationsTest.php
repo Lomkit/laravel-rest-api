@@ -24,7 +24,7 @@ class SearchSelectingOperationsTest extends TestCase
                     'selects' => [
                         ['field' => 'not_authorized_field'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -47,7 +47,7 @@ class SearchSelectingOperationsTest extends TestCase
                     'selects' => [
                         ['field' => 'id'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -76,7 +76,7 @@ class SearchSelectingOperationsTest extends TestCase
                         ['field' => 'id'],
                         ['field' => 'number'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );

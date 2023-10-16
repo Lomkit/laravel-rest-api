@@ -40,7 +40,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         ['relation' => 'unauthorized'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -60,13 +60,13 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 'search' => [
                     'includes' => [
                         [
-                            'relation' => 'hasManyRelation',
+                            'relation'   => 'hasManyRelation',
                             'filters'    => [
                                 ['field' => 'unauthorized_field', 'value' => 10000],
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -98,13 +98,13 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 'search' => [
                     'includes' => [
                         [
-                            'relation' => 'hasManyRelation',
+                            'relation'   => 'hasManyRelation',
                             'filters'    => [
                                 ['field' => 'number', 'value' => 10000],
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -151,7 +151,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         ['relation' => 'belongsToRelation'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -190,7 +190,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         ['relation' => 'belongsToRelation.models'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -242,7 +242,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         ['relation' => 'hasOneRelation'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -284,7 +284,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         ['relation' => 'hasOneOfManyRelation'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -329,7 +329,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -377,7 +377,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                             'relation' => 'belongsToManyRelation',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );

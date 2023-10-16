@@ -49,7 +49,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         ['relation' => 'morphToRelation'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -89,7 +89,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         ['relation' => 'morphOneRelation'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -131,7 +131,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         ['relation' => 'morphOneOfManyRelation'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -176,7 +176,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -224,7 +224,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                             'relation' => 'morphToManyRelation',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -281,7 +281,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                             'relation' => 'morphedByManyRelation',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );

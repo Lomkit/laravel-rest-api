@@ -51,7 +51,7 @@ class OperateRequest extends RestRequest
                 ],
             ] : [],
             !$operatedAction->isStandalone() ? [
-                'search' => [new SearchRules($this->resource, $this)]
+                'search' => [new SearchRules($this->resource, $this)],
             ] : [],
             [
                 'fields.*.name' => [

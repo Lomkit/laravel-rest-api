@@ -24,7 +24,7 @@ class SearchSortingOperationsTest extends TestCase
                     'sorts' => [
                         ['field' => 'not_authorized_field'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -47,7 +47,7 @@ class SearchSortingOperationsTest extends TestCase
                     'sorts' => [
                         ['field' => 'id'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -73,7 +73,7 @@ class SearchSortingOperationsTest extends TestCase
                     'sorts' => [
                         ['field' => 'id', 'direction' => 'desc'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -99,7 +99,7 @@ class SearchSortingOperationsTest extends TestCase
                     'sorts' => [
                         ['field' => 'id', 'direction' => 'asc'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -126,7 +126,7 @@ class SearchSortingOperationsTest extends TestCase
                         ['field' => 'number', 'direction' => 'desc'],
                         ['field' => 'id', 'direction' => 'asc'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -153,7 +153,7 @@ class SearchSortingOperationsTest extends TestCase
                         ['field' => 'number', 'direction' => 'desc'],
                         ['field' => 'id', 'direction' => 'desc'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -180,7 +180,7 @@ class SearchSortingOperationsTest extends TestCase
                         ['field' => 'number', 'direction' => 'asc'],
                         ['field' => 'id', 'direction' => 'desc'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -207,7 +207,7 @@ class SearchSortingOperationsTest extends TestCase
                         ['field' => 'number', 'direction' => 'desc'],
                         ['field' => 'id', 'direction' => 'desc'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );

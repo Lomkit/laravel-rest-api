@@ -24,7 +24,7 @@ class SearchScopingOperationsTest extends TestCase
                     'scopes' => [
                         ['name' => 'not_authorized_scope'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -47,7 +47,7 @@ class SearchScopingOperationsTest extends TestCase
                     'scopes' => [
                         ['name' => 'numbered'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -73,7 +73,7 @@ class SearchScopingOperationsTest extends TestCase
                     'scopes' => [
                         ['name' => 'numbered', 'parameters' => [1]],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );

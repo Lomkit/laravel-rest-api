@@ -31,7 +31,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             'field'    => 'id',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -58,7 +58,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             'field'    => 'id',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -85,7 +85,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             'field'    => 'unauthorized_field',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -111,7 +111,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             'type'     => 'min',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -138,7 +138,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             'field'    => 'id',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -176,7 +176,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             'field'    => 'number',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -221,7 +221,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             'field'    => 'number',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -266,7 +266,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             'field'    => 'number',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -311,7 +311,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             'field'    => 'number',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -355,7 +355,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             'type'     => 'count',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -395,7 +395,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             'type'     => 'exists',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -443,7 +443,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -491,7 +491,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -539,7 +539,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -587,7 +587,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -634,7 +634,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -681,7 +681,7 @@ class SearchAggregatesOperationsTest extends TestCase
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );

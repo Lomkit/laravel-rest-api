@@ -43,7 +43,7 @@ class SearchIncludingThroughRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         ['relation' => 'hasOneThroughRelation'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -86,7 +86,7 @@ class SearchIncludingThroughRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         ['relation' => 'hasManyThroughRelation'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );

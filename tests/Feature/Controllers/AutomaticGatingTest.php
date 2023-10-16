@@ -36,7 +36,7 @@ class AutomaticGatingTest extends TestCase
             [
                 'search' => [
                     'gates' => ['create', 'view', 'update', 'delete', 'forceDelete', 'restore'],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -98,7 +98,7 @@ class AutomaticGatingTest extends TestCase
             [
                 'search' => [
                     'gates' => ['create', 'view'],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -132,7 +132,7 @@ class AutomaticGatingTest extends TestCase
             [
                 'search' => [
                     'gates' => ['view', 'create'],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -166,7 +166,7 @@ class AutomaticGatingTest extends TestCase
             [
                 'search' => [
                     'gates' => ['update'],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -200,7 +200,7 @@ class AutomaticGatingTest extends TestCase
             [
                 'search' => [
                     'gates' => ['create', 'delete'],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -234,7 +234,7 @@ class AutomaticGatingTest extends TestCase
             [
                 'search' => [
                     'gates' => ['restore', 'view'],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -269,7 +269,7 @@ class AutomaticGatingTest extends TestCase
             [
                 'search' => [
                     'gates' => ['forceDelete', 'create'],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -319,7 +319,7 @@ class AutomaticGatingTest extends TestCase
                     'gates' => [
                         'view', 'update', 'create', 'delete', 'restore', 'forceDelete',
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -399,7 +399,7 @@ class AutomaticGatingTest extends TestCase
                         ],
                     ],
                     'gates' => ['view', 'create', 'update', 'delete', 'restore', 'forceDelete'],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );

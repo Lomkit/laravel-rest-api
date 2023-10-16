@@ -22,21 +22,21 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
     protected $validator;
 
     /**
-     * The resource instance
+     * The resource instance.
      *
-     * @var Resource
+     * @var resource
      */
     protected Resource $resource;
 
     /**
-     * The request instance
+     * The request instance.
      *
      * @var RestRequest
      */
     protected RestRequest $request;
 
     /**
-     * If the rules is specified at root level
+     * If the rules is specified at root level.
      *
      * @var bool
      */
@@ -101,8 +101,8 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      * Define the validation rules for filters within the search request.
      *
      * @param \Lomkit\Rest\Http\Resource $resource
-     * @param string   $prefix
-     * @param bool $isMaxDepth
+     * @param string                     $prefix
+     * @param bool                       $isMaxDepth
      *
      * @return array
      */
@@ -145,7 +145,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      * Define the validation rules for scopes within the search request.
      *
      * @param \Lomkit\Rest\Http\Resource $resource
-     * @param string   $prefix
+     * @param string                     $prefix
      *
      * @return array
      */
@@ -170,7 +170,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      * Define the validation rules for instructions within the search request.
      *
      * @param \Lomkit\Rest\Http\Resource $resource
-     * @param string   $prefix
+     * @param string                     $prefix
      *
      * @return array
      */
@@ -203,7 +203,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      * Define the validation rules for sorting options within the search request.
      *
      * @param \Lomkit\Rest\Http\Resource $resource
-     * @param string   $prefix
+     * @param string                     $prefix
      *
      * @return array
      */
@@ -228,7 +228,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      * Define the validation rules for selecting fields within the search request.
      *
      * @param \Lomkit\Rest\Http\Resource $resource
-     * @param string   $prefix
+     * @param string                     $prefix
      *
      * @return array
      */
@@ -249,9 +249,11 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      * Define the validation rules for including related resources within the search request.
      *
      * @param \Lomkit\Rest\Http\Resource $resource
-     * @param string $prefix
-     * @return array
+     * @param string                     $prefix
+     *
      * @throws BindingResolutionException
+     *
+     * @return array
      */
     protected function includesRules(\Lomkit\Rest\Http\Resource $resource, string $prefix)
     {
@@ -277,7 +279,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      * Define the validation rules for aggregate functions within the search request.
      *
      * @param \Lomkit\Rest\Http\Resource $resource
-     * @param string $prefix
+     * @param string                     $prefix
      *
      * @return array
      */

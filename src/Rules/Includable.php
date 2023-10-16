@@ -2,17 +2,14 @@
 
 namespace Lomkit\Rest\Rules;
 
-use Illuminate\Contracts\Validation\DataAwareRule;
+use Closure;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
-use Closure;
 
 class Includable implements ValidationRule, ValidatorAwareRule
 {
@@ -26,14 +23,14 @@ class Includable implements ValidationRule, ValidatorAwareRule
     protected \Illuminate\Validation\Validator $validator;
 
     /**
-     * The resource instance
+     * The resource instance.
      *
-     * @var Resource
+     * @var resource
      */
     protected Resource $resource;
 
     /**
-     * If the rules is specified at root level
+     * If the rules is specified at root level.
      *
      * @var bool
      */
@@ -61,7 +58,6 @@ class Includable implements ValidationRule, ValidatorAwareRule
     {
         $relationResource = $this->resource->relationResource($value['relation']);
 
-
         if (is_null($relationResource)) {
             return;
         }
@@ -72,7 +68,7 @@ class Includable implements ValidationRule, ValidatorAwareRule
                 is_null($relationResource) ?
                     [] :
                     [
-                        $attribute => [new SearchRules($relationResource, app(RestRequest::class), false)]
+                        $attribute => [new SearchRules($relationResource, app(RestRequest::class), false)],
                     ]
             )
             ->validate();

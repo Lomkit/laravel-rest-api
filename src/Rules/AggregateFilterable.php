@@ -10,7 +10,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
 
 class AggregateFilterable implements ValidationRule, DataAwareRule, ValidatorAwareRule

@@ -27,7 +27,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'non_authorized_field', 'value' => 'value'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -46,11 +46,11 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-               'search' => [
-                   'filters' => [
-                       ['field' => 'name', 'value' => 'match'],
-                   ],
-               ]
+                'search' => [
+                    'filters' => [
+                        ['field' => 'name', 'value' => 'match'],
+                    ],
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -77,7 +77,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'name', 'operator' => 'in', 'value' => ['match', 'match2']],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -104,7 +104,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'name', 'operator' => 'not in', 'value' => ['not_match']],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -130,7 +130,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'name', 'operator' => '!=', 'value' => 'not_match'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -156,7 +156,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'number', 'operator' => '>', 'value' => 1],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -182,7 +182,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'number', 'operator' => '>=', 'value' => 2],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -208,7 +208,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'number', 'operator' => '<', 'value' => 2],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -234,7 +234,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'number', 'operator' => '<=', 'value' => 1],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -260,7 +260,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'name', 'operator' => 'like', 'value' => '%like%'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -287,7 +287,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'name', 'operator' => 'like', 'value' => 'like%'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -313,7 +313,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'name', 'operator' => 'not like', 'value' => '%like%'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -340,7 +340,7 @@ class SearchFilteringOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'name', 'operator' => 'not like', 'value' => 'like%'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -368,7 +368,7 @@ class SearchFilteringOperationsTest extends TestCase
                         ['field' => 'number', 'value' => 1],
                         ['field' => 'number', 'value' => 3, 'type' => 'or'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -395,7 +395,7 @@ class SearchFilteringOperationsTest extends TestCase
                         ['field' => 'number', 'value' => 1],
                         ['field' => 'name', 'value' => 'match', 'type' => 'and'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -428,7 +428,7 @@ class SearchFilteringOperationsTest extends TestCase
                         ],
                         ['field' => 'number', 'value' => 2, 'type' => 'or'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -462,7 +462,7 @@ class SearchFilteringOperationsTest extends TestCase
                             'type' => 'or',
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -497,7 +497,7 @@ class SearchFilteringOperationsTest extends TestCase
                         ['field' => 'number', 'value' => 1],
                         ['field' => 'belongsToManyRelation.pivot.number', 'value' => 10],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -532,7 +532,7 @@ class SearchFilteringOperationsTest extends TestCase
                         ['field' => 'number', 'value' => 1],
                         ['field' => 'morphToManyRelation.pivot.number', 'value' => 10],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -567,7 +567,7 @@ class SearchFilteringOperationsTest extends TestCase
                         ['field' => 'number', 'value' => 1],
                         ['field' => 'morphedByManyRelation.pivot.number', 'value' => 10],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );

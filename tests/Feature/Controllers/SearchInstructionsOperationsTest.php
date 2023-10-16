@@ -24,7 +24,7 @@ class SearchInstructionsOperationsTest extends TestCase
                     'instructions' => [
                         ['name' => 'not_authorized_instruction'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -47,7 +47,7 @@ class SearchInstructionsOperationsTest extends TestCase
                     'instructions' => [
                         ['name' => 'numbered'],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -78,7 +78,7 @@ class SearchInstructionsOperationsTest extends TestCase
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -106,7 +106,7 @@ class SearchInstructionsOperationsTest extends TestCase
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -135,7 +135,7 @@ class SearchInstructionsOperationsTest extends TestCase
                             ],
                         ],
                     ],
-                ]
+                ],
             ],
             ['Accept' => 'application/json']
         );
