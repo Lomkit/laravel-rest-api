@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Rules;
 
 use Illuminate\Contracts\Validation\ValidationRule;
+use Closure;
 
 class ArrayWith implements ValidationRule
 {
@@ -13,7 +14,7 @@ class ArrayWith implements ValidationRule
         $this->keys = $keys;
     }
 
-    public function validate(string $attribute, mixed $value, \Closure $fail): void
+    public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (!is_array($value)) {
             $fail('The '.$attribute.' field must be an array.');

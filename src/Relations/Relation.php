@@ -140,12 +140,6 @@ class Relation implements \JsonSerializable
     {
         $rules = [];
 
-        if ($this->isRequiredOnCreation(
-            app()->make(RestRequest::class)
-        )) {
-            $rules[$prefix] = [RequiredRelationOnCreation::make()->resource($resource)];
-        }
-
         if (in_array(HasPivotFields::class, class_uses_recursive($this), true)) {
             $pivotPrefix = $prefix;
             if ($this->hasMultipleEntries()) {
