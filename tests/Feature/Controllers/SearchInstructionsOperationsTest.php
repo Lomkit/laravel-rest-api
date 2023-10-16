@@ -20,15 +20,17 @@ class SearchInstructionsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'instructions' => [
-                    ['name' => 'not_authorized_instruction'],
-                ],
+                'search' => [
+                    'instructions' => [
+                        ['name' => 'not_authorized_instruction'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['instructions.0.name']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.instructions.0.name']]);
     }
 
     public function test_getting_a_list_of_resources_instructing_numbered(): void
@@ -41,9 +43,11 @@ class SearchInstructionsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'instructions' => [
-                    ['name' => 'numbered'],
-                ],
+                'search' => [
+                    'instructions' => [
+                        ['name' => 'numbered'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -65,20 +69,22 @@ class SearchInstructionsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'instructions' => [
-                    [
-                        'name'   => 'numbered',
-                        'fields' => [
-                            ['name' => 'unauthorized_field', 'value' => 1],
+                'search' => [
+                    'instructions' => [
+                        [
+                            'name'   => 'numbered',
+                            'fields' => [
+                                ['name' => 'unauthorized_field', 'value' => 1],
+                            ],
                         ],
                     ],
-                ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['instructions.0.fields.0.name']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.instructions.0.fields.0.name']]);
     }
 
     public function test_getting_a_list_of_resources_instructing_numbered_with_unauthorized_validation(): void
@@ -91,20 +97,22 @@ class SearchInstructionsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'instructions' => [
-                    [
-                        'name'   => 'numbered',
-                        'fields' => [
-                            ['name' => 'number', 'value' => 'unauthorized_string'],
+                'search' => [
+                    'instructions' => [
+                        [
+                            'name'   => 'numbered',
+                            'fields' => [
+                                ['name' => 'number', 'value' => 'unauthorized_string'],
+                            ],
                         ],
                     ],
-                ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['instructions.0.fields.0.value']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.instructions.0.fields.0.value']]);
     }
 
     public function test_getting_a_list_of_resources_instructing_numbered_with_fields(): void
@@ -118,14 +126,16 @@ class SearchInstructionsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'instructions' => [
-                    [
-                        'name'   => 'numbered',
-                        'fields' => [
-                            ['name' => 'number', 'value' => 10],
+                'search' => [
+                    'instructions' => [
+                        [
+                            'name'   => 'numbered',
+                            'fields' => [
+                                ['name' => 'number', 'value' => 10],
+                            ],
                         ],
                     ],
-                ],
+                ]
             ],
             ['Accept' => 'application/json']
         );

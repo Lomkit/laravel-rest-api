@@ -127,7 +127,7 @@ class Response implements Responsable
                 $this->responsable->perPage(),
                 $this->responsable->currentPage(),
                 $this->responsable->getOptions(),
-                $this->resource->isAutomaticGatingEnabled() && in_array('create', $request->input('gates', [])) ? [
+                $this->resource->isAutomaticGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
                     config('rest.automatic_gates.key') => [
                         config('rest.automatic_gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
                     ],
@@ -135,20 +135,20 @@ class Response implements Responsable
             );
 
             $restLengthAwarePaginator->through(function ($model) use ($request) {
-                return $this->map($model, $this->modelToResponse($model, $this->resource, $request->input()));
+                return $this->map($model, $this->modelToResponse($model, $this->resource, $request->input('search', [])));
             });
 
             return $restLengthAwarePaginator;
         } elseif ($this->responsable instanceof Collection) {
             $data = $this->responsable->map(function ($model) use ($request) {
-                return $this->map($model, $this->modelToResponse($model, $this->resource, $request->input()));
+                return $this->map($model, $this->modelToResponse($model, $this->resource, $request->input('search', [])));
             });
         }
 
         return [
-            'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input())),
+            'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input('search', []))),
             'meta' => array_merge(
-                $this->resource->isAutomaticGatingEnabled() && in_array('create', $request->input('gates', [])) ? [
+                $this->resource->isAutomaticGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
                     config('rest.automatic_gates.key') => [
                         config('rest.automatic_gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
                     ],

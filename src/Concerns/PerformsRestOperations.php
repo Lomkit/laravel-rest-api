@@ -44,7 +44,7 @@ trait PerformsRestOperations
         $request->resource($resource = static::newResource());
 
         $query = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
-            ->search($request->all());
+            ->search($request->input('search', []));
 
         return $resource::newResponse()
             ->resource($resource)

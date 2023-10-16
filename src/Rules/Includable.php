@@ -4,136 +4,50 @@ namespace Lomkit\Rest\Rules;
 
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Lomkit\Rest\Concerns\Makeable;
+use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
+use Closure;
 
-class Includable implements Rule, DataAwareRule, ValidatorAwareRule
+class Includable implements ValidationRule, ValidatorAwareRule
 {
     use Makeable;
 
     /**
-     * The data under validation.
-     *
-     * @var array
-     */
-    protected $data;
-
-    /**
-     * The error message after validation, if any.
-     *
-     * @var array
-     */
-    protected $messages = [];
-
-    /**
-     * The resource related to.
-     *
-     * @var resource
-     */
-    protected $resource = null;
-
-    /**
-     * The validator performing the validation.
+     * The validator instance.
      *
      * @var \Illuminate\Validation\Validator
      */
-    protected $validator;
+    protected \Illuminate\Validation\Validator $validator;
 
     /**
-     * @param $resource
+     * The resource instance
      *
-     * @return $this
+     * @var Resource
      */
-    public function resource($resource)
+    protected Resource $resource;
+
+    /**
+     * If the rules is specified at root level
+     *
+     * @var bool
+     */
+    protected bool $isRootSearchRules;
+
+    public function __construct(Resource $resource)
     {
         $this->resource = $resource;
-
-        return $this;
-    }
-
-    /**
-     * Determine if the validation rule passes.
-     *
-     * @param string $attribute
-     * @param mixed  $value
-     *
-     * @return bool
-     */
-    public function passes($attribute, $value)
-    {
-        $validator = Validator::make(
-            $this->data,
-            $this->buildValidationRules($attribute, $value)
-        );
-
-        if ($validator->fails()) {
-            return $this->fail($validator->messages()->all());
-        }
-
-        return true;
-    }
-
-    /**
-     * Build the array of underlying validation rules based on the current state.
-     *
-     * @return array
-     */
-    protected function buildValidationRules($attribute, $value)
-    {
-        $relationResource = $this->resource->relationResource($value['relation']);
-
-        if (is_null($relationResource)) {
-            return [];
-        }
-
-        return (new SearchRequest())
-            ->searchRules(
-                $relationResource,
-                $attribute,
-                false
-            );
-    }
-
-    /**
-     * Get the validation error message.
-     *
-     * @return array
-     */
-    public function message()
-    {
-        return $this->messages;
-    }
-
-    /**
-     * Adds the given failures, and return false.
-     *
-     * @param array|string $messages
-     *
-     * @return bool
-     */
-    protected function fail($messages)
-    {
-        $messages = collect(Arr::wrap($messages))->map(function ($message) {
-            return $this->validator->getTranslator()->get($message);
-        })->all();
-
-        $this->messages = array_merge($this->messages, $messages);
-
-        return false;
     }
 
     /**
      * Set the current validator.
-     *
-     * @param \Illuminate\Contracts\Validation\Validator $validator
-     *
-     * @return $this
      */
-    public function setValidator($validator)
+    public function setValidator(\Illuminate\Validation\Validator $validator): static
     {
         $this->validator = $validator;
 
@@ -141,16 +55,26 @@ class Includable implements Rule, DataAwareRule, ValidatorAwareRule
     }
 
     /**
-     * Set the current data under validation.
-     *
-     * @param array $data
-     *
-     * @return $this
+     * Run the validation rule.
      */
-    public function setData($data)
+    public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $this->data = $data;
+        $relationResource = $this->resource->relationResource($value['relation']);
 
-        return $this;
+
+        if (is_null($relationResource)) {
+            return;
+        }
+
+        $this
+            ->validator
+            ->setRules(
+                is_null($relationResource) ?
+                    [] :
+                    [
+                        $attribute => [new SearchRules($relationResource, app(RestRequest::class), false)]
+                    ]
+            )
+            ->validate();
     }
 }

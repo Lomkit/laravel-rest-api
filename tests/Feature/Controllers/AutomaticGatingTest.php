@@ -34,7 +34,9 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['create', 'view', 'update', 'delete', 'forceDelete', 'restore'],
+                'search' => [
+                    'gates' => ['create', 'view', 'update', 'delete', 'forceDelete', 'restore'],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -94,7 +96,9 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['create', 'view'],
+                'search' => [
+                    'gates' => ['create', 'view'],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -126,7 +130,9 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['view', 'create'],
+                'search' => [
+                    'gates' => ['view', 'create'],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -158,7 +164,9 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['update'],
+                'search' => [
+                    'gates' => ['update'],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -190,7 +198,9 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['create', 'delete'],
+                'search' => [
+                    'gates' => ['create', 'delete'],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -222,7 +232,9 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['restore', 'view'],
+                'search' => [
+                    'gates' => ['restore', 'view'],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -255,7 +267,9 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'gates' => ['forceDelete', 'create'],
+                'search' => [
+                    'gates' => ['forceDelete', 'create'],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -292,18 +306,20 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'includes' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'gates'    => ['view'],
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'gates'    => ['view'],
+                        ],
                     ],
-                ],
-                'sorts' => [
-                    ['field' => 'id', 'direction' => 'asc'],
-                ],
-                'gates' => [
-                    'view', 'update', 'create', 'delete', 'restore', 'forceDelete',
-                ],
+                    'sorts' => [
+                        ['field' => 'id', 'direction' => 'asc'],
+                    ],
+                    'gates' => [
+                        'view', 'update', 'create', 'delete', 'restore', 'forceDelete',
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -376,12 +392,14 @@ class AutomaticGatingTest extends TestCase
         $response = $this->post(
             '/api/automatic-gating/search',
             [
-                'includes' => [
-                    [
-                        'relation' => 'hasManyRelation',
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'hasManyRelation',
+                        ],
                     ],
-                ],
-                'gates' => ['view', 'create', 'update', 'delete', 'restore', 'forceDelete'],
+                    'gates' => ['view', 'create', 'update', 'delete', 'restore', 'forceDelete'],
+                ]
             ],
             ['Accept' => 'application/json']
         );

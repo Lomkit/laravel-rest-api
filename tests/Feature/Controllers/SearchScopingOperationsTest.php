@@ -20,15 +20,17 @@ class SearchScopingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'scopes' => [
-                    ['name' => 'not_authorized_scope'],
-                ],
+                'search' => [
+                    'scopes' => [
+                        ['name' => 'not_authorized_scope'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['scopes.0.name']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.scopes.0.name']]);
     }
 
     public function test_getting_a_list_of_resources_scoping_numbered(): void
@@ -41,9 +43,11 @@ class SearchScopingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'scopes' => [
-                    ['name' => 'numbered'],
-                ],
+                'search' => [
+                    'scopes' => [
+                        ['name' => 'numbered'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -65,9 +69,11 @@ class SearchScopingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'scopes' => [
-                    ['name' => 'numbered', 'parameters' => [1]],
-                ],
+                'search' => [
+                    'scopes' => [
+                        ['name' => 'numbered', 'parameters' => [1]],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );

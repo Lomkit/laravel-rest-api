@@ -20,15 +20,17 @@ class SearchSelectingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'selects' => [
-                    ['field' => 'not_authorized_field'],
-                ],
+                'search' => [
+                    'selects' => [
+                        ['field' => 'not_authorized_field'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['selects.0.field']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.selects.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_selecting_id_field(): void
@@ -41,9 +43,11 @@ class SearchSelectingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'selects' => [
-                    ['field' => 'id'],
-                ],
+                'search' => [
+                    'selects' => [
+                        ['field' => 'id'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -67,10 +71,12 @@ class SearchSelectingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'selects' => [
-                    ['field' => 'id'],
-                    ['field' => 'number'],
-                ],
+                'search' => [
+                    'selects' => [
+                        ['field' => 'id'],
+                        ['field' => 'number'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );

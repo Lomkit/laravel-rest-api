@@ -17,6 +17,6 @@ trait Paginable
      */
     public function paginate(Builder $query, RestRequest $request)
     {
-        return $query->paginate($request->input('limit', 50));
+        return $query->paginate($request->input('search.limit', 50), ['*'], 'page', $request->input('search.page', 1));
     }
 }

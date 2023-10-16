@@ -11,7 +11,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class SearchSortingOperationsTest extends TestCase
 {
-    public function test_getting_a_list_of_resources_sorting_by_unauthorized_relation(): void
+    public function test_getting_a_list_of_resources_sorting_by_unauthorized_field(): void
     {
         ModelFactory::new()->count(2)->create();
 
@@ -20,15 +20,17 @@ class SearchSortingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'sorts' => [
-                    ['field' => 'not_authorized_field'],
-                ],
+                'search' => [
+                    'sorts' => [
+                        ['field' => 'not_authorized_field'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['sorts.0.field']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.sorts.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_sorting_by_id_field(): void
@@ -41,9 +43,11 @@ class SearchSortingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'sorts' => [
-                    ['field' => 'id'],
-                ],
+                'search' => [
+                    'sorts' => [
+                        ['field' => 'id'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -65,9 +69,11 @@ class SearchSortingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'sorts' => [
-                    ['field' => 'id', 'direction' => 'desc'],
-                ],
+                'search' => [
+                    'sorts' => [
+                        ['field' => 'id', 'direction' => 'desc'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -89,9 +95,11 @@ class SearchSortingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'sorts' => [
-                    ['field' => 'id', 'direction' => 'asc'],
-                ],
+                'search' => [
+                    'sorts' => [
+                        ['field' => 'id', 'direction' => 'asc'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -113,10 +121,12 @@ class SearchSortingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'sorts' => [
-                    ['field' => 'number', 'direction' => 'desc'],
-                    ['field' => 'id', 'direction' => 'asc'],
-                ],
+                'search' => [
+                    'sorts' => [
+                        ['field' => 'number', 'direction' => 'desc'],
+                        ['field' => 'id', 'direction' => 'asc'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -138,10 +148,12 @@ class SearchSortingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'sorts' => [
-                    ['field' => 'number', 'direction' => 'desc'],
-                    ['field' => 'id', 'direction' => 'desc'],
-                ],
+                'search' => [
+                    'sorts' => [
+                        ['field' => 'number', 'direction' => 'desc'],
+                        ['field' => 'id', 'direction' => 'desc'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -163,10 +175,12 @@ class SearchSortingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'sorts' => [
-                    ['field' => 'number', 'direction' => 'asc'],
-                    ['field' => 'id', 'direction' => 'desc'],
-                ],
+                'search' => [
+                    'sorts' => [
+                        ['field' => 'number', 'direction' => 'asc'],
+                        ['field' => 'id', 'direction' => 'desc'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
@@ -188,10 +202,12 @@ class SearchSortingOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'sorts' => [
-                    ['field' => 'number', 'direction' => 'desc'],
-                    ['field' => 'id', 'direction' => 'desc'],
-                ],
+                'search' => [
+                    'sorts' => [
+                        ['field' => 'number', 'direction' => 'desc'],
+                        ['field' => 'id', 'direction' => 'desc'],
+                    ],
+                ]
             ],
             ['Accept' => 'application/json']
         );
