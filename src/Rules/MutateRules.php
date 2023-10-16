@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Rules;
 
 use Closure;
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Http\Client\Request;
@@ -69,7 +68,7 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
 
         if ($this->relation) {
             if ($this->relation->hasMultipleEntries()) {
-                $attribute.='.*';
+                $attribute .= '.*';
             }
         }
 
@@ -84,7 +83,7 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                     $attribute.'.attributes' => [
                         'prohibited_if:'.$attribute.'.operation,attach',
                         'prohibited_if:'.$attribute.'.operation,detach',
-                        new ArrayWith($this->resource->getFields($this->request))
+                        new ArrayWith($this->resource->getFields($this->request)),
                     ],
                     $attribute.'.key' => [
                         'required_if:'.$attribute.'.operation,update',
@@ -95,7 +94,7 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                     ],
 
                     $attribute.'.relations.*' => [
-                        new MutateItemRelations($this->resource, $this->request)
+                        new MutateItemRelations($this->resource, $this->request),
                     ],
                     $attribute.'.relations' => [
                         new ArrayWith(
@@ -105,7 +104,7 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                                 })
                                 ->toArray()
                         ),
-                    ]
+                    ],
                 ]
             )
             ->validate();
@@ -138,7 +137,7 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                     })
                     ->mapWithKeys(function (Relation $relation, $key) use ($attribute) {
                         return [$attribute.'.relations.'.$relation->relation => [
-                            RequiredRelationOnCreation::make()->resource($this->resource)
+                            RequiredRelationOnCreation::make()->resource($this->resource),
                         ]];
                     })
                     ->toArray()

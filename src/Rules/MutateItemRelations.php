@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Rules;
 
 use Closure;
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Http\Client\Request;
@@ -70,7 +69,7 @@ class MutateItemRelations implements ValidationRule, ValidatorAwareRule
             ->setRules(
                 [
                     $attribute => [
-                        new MutateRules($relation->resource(), $this->request, $relation)
+                        new MutateRules($relation->resource(), $this->request, $relation),
                     ],
                 ]
             )

@@ -50,7 +50,7 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'attach'
+                        'operation'  => 'attach',
                     ],
                 ],
             ],
@@ -70,7 +70,7 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'detach'
+                        'operation'  => 'detach',
                     ],
                 ],
             ],

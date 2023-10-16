@@ -11,7 +11,6 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\Mutates;
-use Lomkit\Rest\Rules\RequiredRelationOnCreation;
 
 class Relation implements \JsonSerializable
 {
