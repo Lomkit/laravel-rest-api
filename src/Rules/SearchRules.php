@@ -260,11 +260,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
         return [
             $prefix.'.*.relation' => [
                 'required',
-                Rule::in(
-                    array_keys(
-                        $resource->nestedRelations(app()->make(RestRequest::class))
-                    )
-                ),
+                NestedRelation::make($resource),
             ],
             $prefix.'.*.includes' => [
                 'prohibited',
@@ -288,11 +284,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
         return [
             $prefix.'.*.relation' => [
                 'required',
-                Rule::in(
-                    array_keys(
-                        $resource->nestedRelations(app()->make(RestRequest::class))
-                    )
-                ),
+                NestedRelation::make($resource),
             ],
             $prefix.'.*.type' => [
                 Rule::in(['count', 'min', 'max', 'avg', 'sum', 'exists']),

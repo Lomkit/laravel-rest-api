@@ -47,39 +47,6 @@ trait Relationable
     }
 
     /**
-     * Get nested relations with their names as keys.
-     *
-     * @param RestRequest $request
-     * @param string      $prefix
-     * @param array       $loadedRelations
-     *
-     * @return array
-     */
-    public function nestedRelations(RestRequest $request, string $prefix = '', array $loadedRelations = [])
-    {
-        if ($prefix !== '') {
-            $prefix = $prefix.'.';
-        }
-
-        $relations = [];
-
-        foreach (
-            collect($this->getRelations($request))
-                ->filter(function ($relation) use ($loadedRelations) {
-                    return !in_array($relation->relation, $loadedRelations);
-                })
-            as $relation
-        ) {
-            $relations[$prefix.$relation->relation] = $relation;
-            foreach ($relation->resource()->nestedRelations($request, $prefix.$relation->relation, array_merge($loadedRelations, [$relation->relation])) as $key => $value) {
-                $relations[$key] = $value;
-            }
-        }
-
-        return $relations;
-    }
-
-    /**
      * The calculated relations if already done in this request.
      *
      * @var array

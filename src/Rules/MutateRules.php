@@ -42,11 +42,19 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
      */
     protected Relation|null $relation;
 
-    public function __construct(\Lomkit\Rest\Http\Resource $resource, RestRequest $request, Relation $relation = null)
+    /**
+     * Specify if the validation is at root level.
+     *
+     * @var bool
+     */
+    protected bool $isRootValidation;
+
+    public function __construct(\Lomkit\Rest\Http\Resource $resource, RestRequest $request, Relation $relation = null, bool $isRootValidation = false)
     {
         $this->resource = $resource;
         $this->request = $request;
         $this->relation = $relation;
+        $this->isRootValidation = $isRootValidation;
     }
 
     /**
@@ -78,7 +86,7 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                 [
                     $attribute.'.operation' => [
                         'required_with:'.$attribute,
-                        Rule::in('create', 'update', ...(preg_match('/^mutate\.\d$/', $attribute) ? [] : ['attach', 'detach'])),
+                        Rule::in('create', 'update', ...($this->isRootValidation ? [] : ['attach', 'detach'])),
                     ],
                     $attribute.'.attributes' => [
                         'prohibited_if:'.$attribute.'.operation,attach',

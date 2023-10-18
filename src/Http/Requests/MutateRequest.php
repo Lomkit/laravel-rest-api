@@ -19,7 +19,9 @@ class MutateRequest extends RestRequest
         return [
             'mutate.*' => new MutateRules(
                 $this->route()->controller::newResource(),
-                $this
+                $this,
+                null,
+                true
             ),
         ];
     }
