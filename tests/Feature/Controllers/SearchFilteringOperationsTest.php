@@ -62,6 +62,32 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
+    public function test_getting_a_list_of_resources_filtered_by_model_field_with_null_value(): void
+    {
+        $matchingModel = ModelFactory::new()->create(['string' => null])->fresh();
+        ModelFactory::new()->create(['string' => 'not match'])->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'filters' => [
+                        ['field' => 'string', 'value' => null],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel],
+            new ModelResource()
+        );
+    }
+
     public function test_getting_a_list_of_resources_filtered_by_model_field_using_in_operator(): void
     {
         $matchingModel = ModelFactory::new()->create(['name' => 'match'])->fresh();
