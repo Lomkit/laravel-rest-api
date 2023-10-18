@@ -9,7 +9,6 @@ use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\Makeable;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
 class NestedRelation implements ValidationRule, ValidatorAwareRule
