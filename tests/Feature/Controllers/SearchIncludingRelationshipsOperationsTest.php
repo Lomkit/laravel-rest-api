@@ -36,15 +36,100 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    ['relation' => 'unauthorized'],
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'unauthorized'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['includes.0.relation']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.includes.0.relation']]);
+    }
+
+    public function test_getting_a_list_of_resources_including_relation_with_unauthorized_filters(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation'   => 'hasManyRelation',
+                            'filters'    => [
+                                ['field' => 'unauthorized_field', 'value' => 10000],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['search.includes.0.filters.0.field']]);
+    }
+
+    public function test_getting_a_list_of_resources_including_relation_with_filters(): void
+    {
+        $matchingModel = ModelFactory::new()
+            ->has(
+                HasManyRelationFactory::new()
+                    ->state(['number' => 10000])
+            )
+            ->has(
+                HasManyRelationFactory::new()
+            )
+            ->create()->fresh();
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation'   => 'hasManyRelation',
+                            'filters'    => [
+                                ['field' => 'number', 'value' => 10000],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource(),
+            [
+                [
+                    'has_many_relation' => $matchingModel->hasManyRelation()
+                        ->where('number', 10000)
+                        ->orderBy('id')
+                        ->get()
+                        ->map(function ($relation) {
+                            return $relation->only(
+                                (new HasManyResource())->getFields(app()->make(RestRequest::class))
+                            );
+                        })->toArray(),
+                ],
+                [
+                    'has_many_relation' => [],
+                ],
+            ]
+        );
     }
 
     public function test_getting_a_list_of_resources_including_belongs_to_relation(): void
@@ -62,8 +147,10 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    ['relation' => 'belongsToRelation'],
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'belongsToRelation'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -99,8 +186,10 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    ['relation' => 'belongsToRelation.models'],
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'belongsToRelation.models'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -149,8 +238,10 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    ['relation' => 'hasOneRelation'],
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'hasOneRelation'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -189,8 +280,10 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    ['relation' => 'hasOneOfManyRelation'],
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'hasOneOfManyRelation'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -227,11 +320,13 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    [
-                        'relation' => 'hasManyRelation',
-                        'sorts'    => [
-                            ['field' => 'id', 'direction' => 'asc'],
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'hasManyRelation',
+                            'sorts'    => [
+                                ['field' => 'id', 'direction' => 'asc'],
+                            ],
                         ],
                     ],
                 ],
@@ -276,9 +371,11 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                        ],
                     ],
                 ],
             ],

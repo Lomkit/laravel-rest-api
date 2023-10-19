@@ -45,8 +45,10 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    ['relation' => 'morphToRelation'],
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'morphToRelation'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -83,8 +85,10 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    ['relation' => 'morphOneRelation'],
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'morphOneRelation'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -123,8 +127,10 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    ['relation' => 'morphOneOfManyRelation'],
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'morphOneOfManyRelation'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -161,11 +167,13 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    [
-                        'relation' => 'morphManyRelation',
-                        'sorts'    => [
-                            ['field' => 'id', 'direction' => 'asc'],
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'morphManyRelation',
+                            'sorts'    => [
+                                ['field' => 'id', 'direction' => 'asc'],
+                            ],
                         ],
                     ],
                 ],
@@ -210,9 +218,11 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    [
-                        'relation' => 'morphToManyRelation',
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'morphToManyRelation',
+                        ],
                     ],
                 ],
             ],
@@ -265,9 +275,11 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    [
-                        'relation' => 'morphedByManyRelation',
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'morphedByManyRelation',
+                        ],
                     ],
                 ],
             ],

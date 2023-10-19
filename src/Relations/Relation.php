@@ -11,7 +11,6 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\Mutates;
-use Lomkit\Rest\Rules\RequiredRelationOnCreation;
 
 class Relation implements \JsonSerializable
 {
@@ -139,12 +138,6 @@ class Relation implements \JsonSerializable
     public function rules(Resource $resource, string $prefix)
     {
         $rules = [];
-
-        if ($this->isRequiredOnCreation(
-            app()->make(RestRequest::class)
-        )) {
-            $rules[$prefix] = [RequiredRelationOnCreation::make()->resource($resource)];
-        }
 
         if (in_array(HasPivotFields::class, class_uses_recursive($this), true)) {
             $pivotPrefix = $prefix;

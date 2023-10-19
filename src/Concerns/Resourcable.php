@@ -18,7 +18,7 @@ trait Resourcable
      *
      * @param resource $resource
      *
-     * @return array
+     * @return self
      */
     public function resource(Resource $resource)
     {

@@ -41,6 +41,46 @@ class MutateCreateOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
     }
 
+    public function test_creating_a_resource_using_not_authorized_attach_root_operator(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'attach',
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.operation']]);
+    }
+
+    public function test_creating_a_resource_using_not_authorized_detach_root_operator(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'detach',
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.operation']]);
+    }
+
     public function test_creating_a_resource_using_field_not_following_custom_rules(): void
     {
         Gate::policy(Model::class, GreenPolicy::class);
@@ -105,6 +145,41 @@ class MutateCreateOperationsTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
+    }
+
+    public function test_creating_a_resource_with_not_authorized_relation(): void
+    {
+        $modelToCreate = ModelFactory::new()->makeOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/required-creation/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'create',
+                        'attributes' => [
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
+                        ],
+                        'relations' => [
+                            'not_authorized_relation' => [
+                                [
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations']]);
     }
 
     public function test_creating_a_resource_with_required_relation(): void

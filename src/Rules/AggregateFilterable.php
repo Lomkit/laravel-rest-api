@@ -9,7 +9,7 @@ use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Lomkit\Rest\Concerns\Makeable;
-use Lomkit\Rest\Http\Requests\SearchRequest;
+use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
 class AggregateFilterable implements ValidationRule, DataAwareRule, ValidatorAwareRule
@@ -67,7 +67,7 @@ class AggregateFilterable implements ValidationRule, DataAwareRule, ValidatorAwa
             return [];
         }
 
-        return (new SearchRequest())
+        return (new SearchRules($this->resource, app()->make(RestRequest::class), false))
             ->filtersRules(
                 $this->resource,
                 $attribute

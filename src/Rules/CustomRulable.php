@@ -3,65 +3,56 @@
 namespace Lomkit\Rest\Rules;
 
 use Closure;
-use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
-use Lomkit\Rest\Concerns\Makeable;
+use Illuminate\Validation\Rule;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
-class CustomRulable implements ValidationRule, DataAwareRule, ValidatorAwareRule
+class CustomRulable implements ValidationRule, ValidatorAwareRule
 {
-    use Makeable;
-
     /**
-     * The data under validation.
-     *
-     * @var array
-     */
-    protected $data;
-
-    /**
-     * The error message after validation, if any.
-     *
-     * @var array
-     */
-    protected $messages = [];
-
-    /**
-     * The resource related to.
-     *
-     * @var resource
-     */
-    protected $resource = null;
-
-    /**
-     * The validator performing the validation.
+     * The validator instance.
      *
      * @var \Illuminate\Validation\Validator
      */
     protected $validator;
 
     /**
-     * @param $resource
+     * The resource instance.
      *
-     * @return $this
+     * @var resource
      */
-    public function resource($resource)
+    protected Resource $resource;
+
+    /**
+     * The request instance.
+     *
+     * @var RestRequest
+     */
+    protected RestRequest $request;
+
+    public function __construct(\Lomkit\Rest\Http\Resource $resource, RestRequest $request)
     {
         $this->resource = $resource;
+        $this->request = $request;
+    }
+
+    /**
+     * Set the current validator.
+     */
+    public function setValidator(\Illuminate\Validation\Validator $validator): static
+    {
+        $this->validator = $validator;
 
         return $this;
     }
 
     /**
-     * Build the array of underlying validation rules based on the current state.
-     *
-     * @return array
+     * Run the validation rule.
      */
-    protected function buildValidationRules($attribute, $value)
+    public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if ($value['operation'] === 'create') {
             $rules = $this->resource->createRules(
@@ -77,87 +68,17 @@ class CustomRulable implements ValidationRule, DataAwareRule, ValidatorAwareRule
             $rules,
             $this->resource->rules(
                 app()->make(RestRequest::class)
+            ),
+        );
+
+        $this
+            ->validator
+            ->setRules(
+                collect($rules)
+                    ->mapWithKeys(function ($item, $key) use ($attribute) {
+                        return [$attribute.'.attributes.'.$key => $item];
+                    })->toArray()
             )
-        );
-
-        return collect($rules)
-            ->mapWithKeys(function ($item, $key) use ($attribute) {
-                return [$attribute.'.attributes.'.$key => $item];
-            })->toArray();
-    }
-
-    /**
-     * Get the validation error message.
-     *
-     * @return array
-     */
-    public function message()
-    {
-        return $this->messages;
-    }
-
-    /**
-     * Adds the given failures, and return false.
-     *
-     * @param array|string $messages
-     *
-     * @return bool
-     */
-    protected function fail($messages)
-    {
-        $messages = collect(Arr::wrap($messages))->map(function ($message) {
-            return $this->validator->getTranslator()->get($message);
-        })->all();
-
-        $this->messages = array_merge($this->messages, $messages);
-
-        return false;
-    }
-
-    /**
-     * Set the current validator.
-     *
-     * @param \Illuminate\Contracts\Validation\Validator $validator
-     *
-     * @return $this
-     */
-    public function setValidator($validator)
-    {
-        $this->validator = $validator;
-
-        return $this;
-    }
-
-    /**
-     * Set the current data under validation.
-     *
-     * @param array $data
-     *
-     * @return $this
-     */
-    public function setData($data)
-    {
-        $this->data = $data;
-
-        return $this;
-    }
-
-    /**
-     * Validate the attribute.
-     *
-     * @param string   $attribute
-     * @param mixed    $value
-     * @param \Closure $fail
-     *
-     * @return void
-     */
-    public function validate(string $attribute, mixed $value, Closure $fail): void
-    {
-        $validator = Validator::make(
-            $this->data,
-            $this->buildValidationRules($attribute, $value)
-        );
-
-        $validator->validate();
+            ->validate();
     }
 }

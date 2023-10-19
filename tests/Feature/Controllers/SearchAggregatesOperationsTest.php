@@ -23,11 +23,13 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'unauthorized_relation',
-                        'type'     => 'min',
-                        'field'    => 'id',
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'unauthorized_relation',
+                            'type'     => 'min',
+                            'field'    => 'id',
+                        ],
                     ],
                 ],
             ],
@@ -35,7 +37,7 @@ class SearchAggregatesOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['aggregates.0.relation']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.aggregates.0.relation']]);
     }
 
     public function test_getting_a_list_of_resources_aggregating_by_unauthorized_type(): void
@@ -48,11 +50,13 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'unauthorized_type',
-                        'field'    => 'id',
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'unauthorized_type',
+                            'field'    => 'id',
+                        ],
                     ],
                 ],
             ],
@@ -60,7 +64,7 @@ class SearchAggregatesOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['aggregates.0.type']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.aggregates.0.type']]);
     }
 
     public function test_getting_a_list_of_resources_aggregating_by_unauthorized_field(): void
@@ -73,11 +77,13 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'min',
-                        'field'    => 'unauthorized_field',
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'min',
+                            'field'    => 'unauthorized_field',
+                        ],
                     ],
                 ],
             ],
@@ -85,7 +91,7 @@ class SearchAggregatesOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['aggregates.0']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.aggregates.0']]);
     }
 
     public function test_getting_a_list_of_resources_aggregating_by_not_specifying_field_when_necessary(): void
@@ -98,10 +104,12 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'min',
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'min',
+                        ],
                     ],
                 ],
             ],
@@ -109,7 +117,7 @@ class SearchAggregatesOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['aggregates.0.field']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.aggregates.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_aggregating_by_specifying_field_when_not_necessary(): void
@@ -122,11 +130,13 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'exists',
-                        'field'    => 'id',
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'exists',
+                            'field'    => 'id',
+                        ],
                     ],
                 ],
             ],
@@ -134,7 +144,7 @@ class SearchAggregatesOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['aggregates.0.field']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.aggregates.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_aggregating_by_min_number(): void
@@ -158,11 +168,13 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'min',
-                        'field'    => 'number',
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'min',
+                            'field'    => 'number',
+                        ],
                     ],
                 ],
             ],
@@ -201,11 +213,13 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'max',
-                        'field'    => 'number',
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'max',
+                            'field'    => 'number',
+                        ],
                     ],
                 ],
             ],
@@ -244,11 +258,13 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'avg',
-                        'field'    => 'number',
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'avg',
+                            'field'    => 'number',
+                        ],
                     ],
                 ],
             ],
@@ -287,11 +303,13 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'sum',
-                        'field'    => 'number',
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'sum',
+                            'field'    => 'number',
+                        ],
                     ],
                 ],
             ],
@@ -330,10 +348,12 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'count',
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'count',
+                        ],
                     ],
                 ],
             ],
@@ -368,10 +388,12 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'exists',
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'exists',
+                        ],
                     ],
                 ],
             ],
@@ -410,13 +432,15 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'min',
-                        'field'    => 'number',
-                        'filters'  => [
-                            ['field' => 'number', 'operator' => '>', 'value' => 200],
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'min',
+                            'field'    => 'number',
+                            'filters'  => [
+                                ['field' => 'number', 'operator' => '>', 'value' => 200],
+                            ],
                         ],
                     ],
                 ],
@@ -456,13 +480,15 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'max',
-                        'field'    => 'number',
-                        'filters'  => [
-                            ['field' => 'number', 'operator' => '<', 'value' => 200],
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'max',
+                            'field'    => 'number',
+                            'filters'  => [
+                                ['field' => 'number', 'operator' => '<', 'value' => 200],
+                            ],
                         ],
                     ],
                 ],
@@ -502,13 +528,15 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'avg',
-                        'field'    => 'number',
-                        'filters'  => [
-                            ['field' => 'number', 'operator' => '<', 'value' => 200],
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'avg',
+                            'field'    => 'number',
+                            'filters'  => [
+                                ['field' => 'number', 'operator' => '<', 'value' => 200],
+                            ],
                         ],
                     ],
                 ],
@@ -548,13 +576,15 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'sum',
-                        'field'    => 'number',
-                        'filters'  => [
-                            ['field' => 'number', 'operator' => '<', 'value' => 200],
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'sum',
+                            'field'    => 'number',
+                            'filters'  => [
+                                ['field' => 'number', 'operator' => '<', 'value' => 200],
+                            ],
                         ],
                     ],
                 ],
@@ -594,12 +624,14 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'count',
-                        'filters'  => [
-                            ['field' => 'number', 'operator' => '<', 'value' => 200],
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'count',
+                            'filters'  => [
+                                ['field' => 'number', 'operator' => '<', 'value' => 200],
+                            ],
                         ],
                     ],
                 ],
@@ -639,12 +671,14 @@ class SearchAggregatesOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'aggregates' => [
-                    [
-                        'relation' => 'belongsToManyRelation',
-                        'type'     => 'exists',
-                        'filters'  => [
-                            ['field' => 'number', 'operator' => '<', 'value' => 200],
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'exists',
+                            'filters'  => [
+                                ['field' => 'number', 'operator' => '<', 'value' => 200],
+                            ],
                         ],
                     ],
                 ],

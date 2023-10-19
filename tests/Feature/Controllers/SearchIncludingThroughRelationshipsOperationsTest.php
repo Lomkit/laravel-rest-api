@@ -39,8 +39,10 @@ class SearchIncludingThroughRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    ['relation' => 'hasOneThroughRelation'],
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'hasOneThroughRelation'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -80,8 +82,10 @@ class SearchIncludingThroughRelationshipsOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'includes' => [
-                    ['relation' => 'hasManyThroughRelation'],
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'hasManyThroughRelation'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']

@@ -6,6 +6,7 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Rules\ActionField;
+use Lomkit\Rest\Rules\SearchRules;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OperateRequest extends RestRequest
@@ -21,13 +22,13 @@ class OperateRequest extends RestRequest
      */
     public function rules()
     {
-        return $this->operateRules($this->route()->controller::newResource());
+        return $this
+            ->resource($this->route()->controller::newResource())
+            ->operateRules();
     }
 
     /**
      * Define the validation rules for resource operations.
-     *
-     * @param resource $resource
      *
      * @return array
      *
@@ -35,13 +36,13 @@ class OperateRequest extends RestRequest
      * It checks if the requested action exists for the given resource, and if so,
      * it includes validation rules for fields associated with the operation.
      */
-    public function operateRules(Resource $resource)
+    public function operateRules()
     {
-        if (!$resource->actionExists($this, $this->route()->parameter('action'))) {
+        if (!$this->resource->actionExists($this, $this->route()->parameter('action'))) {
             throw new HttpException(404);
         }
 
-        $operatedAction = $resource->action($this, $this->route()->parameter('action'));
+        $operatedAction = $this->resource->action($this, $this->route()->parameter('action'));
 
         return array_merge(
             $operatedAction->isStandalone() ? [
@@ -49,7 +50,9 @@ class OperateRequest extends RestRequest
                     'prohibited',
                 ],
             ] : [],
-            !$operatedAction->isStandalone() ? app(SearchRequest::class)->searchRules($resource, 'search') : [],
+            !$operatedAction->isStandalone() ? [
+                'search' => [new SearchRules($this->resource, $this)],
+            ] : [],
             [
                 'fields.*.name' => [
                     Rule::in(array_keys($operatedAction->fields($this))),

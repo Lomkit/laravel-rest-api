@@ -20,13 +20,15 @@ class SearchPaginateOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'limit' => 5,
+                'search' => [
+                    'limit' => 5,
+                ],
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['limit']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.limit']]);
     }
 
     public function test_getting_a_list_of_resources_paginating_second_page(): void
@@ -40,8 +42,10 @@ class SearchPaginateOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'page'  => 2,
-                'limit' => 1,
+                'search' => [
+                    'page'  => 2,
+                    'limit' => 1,
+                ],
             ],
             ['Accept' => 'application/json']
         );
@@ -64,8 +68,10 @@ class SearchPaginateOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'page'  => 101,
-                'limit' => 1,
+                'search' => [
+                    'page'  => 101,
+                    'limit' => 1,
+                ],
             ],
             ['Accept' => 'application/json']
         );

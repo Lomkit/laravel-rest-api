@@ -7,11 +7,11 @@ use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\Makeable;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
-class Includable implements ValidationRule, ValidatorAwareRule
+class NestedRelation implements ValidationRule, ValidatorAwareRule
 {
     use Makeable;
 
@@ -56,21 +56,18 @@ class Includable implements ValidationRule, ValidatorAwareRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $relationResource = $this->resource->relationResource($value['relation']);
+        $relation = $value;
+        $relationResource = $this->resource;
 
-        if (is_null($relationResource)) {
-            return;
-        }
+        do {
+            $relationResource = $relationResource->relationResource(Str::before($relation, '.'));
 
-        $this
-            ->validator
-            ->setRules(
-                is_null($relationResource) ?
-                    [] :
-                    [
-                        $attribute => [new SearchRules($relationResource, app(RestRequest::class), false)],
-                    ]
-            )
-            ->validate();
+            if ($relationResource === null) {
+                $fail('The relation is not allowed');
+                break;
+            }
+
+            $relation = Str::after($relation, '.');
+        } while (Str::contains($relation, '.'));
     }
 }

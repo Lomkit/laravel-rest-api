@@ -23,15 +23,17 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'non_authorized_field', 'value' => 'value'],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'non_authorized_field', 'value' => 'value'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['filters.0.field']]);
+        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_filtered_by_model_field_using_default_operator(): void
@@ -44,8 +46,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'name', 'value' => 'match'],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'name', 'value' => 'match'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -69,8 +73,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'name', 'operator' => 'in', 'value' => ['match', 'match2']],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'name', 'operator' => 'in', 'value' => ['match', 'match2']],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -94,8 +100,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'name', 'operator' => 'not in', 'value' => ['not_match']],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'name', 'operator' => 'not in', 'value' => ['not_match']],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -118,8 +126,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'name', 'operator' => '!=', 'value' => 'not_match'],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'name', 'operator' => '!=', 'value' => 'not_match'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -142,8 +152,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'number', 'operator' => '>', 'value' => 1],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'number', 'operator' => '>', 'value' => 1],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -166,8 +178,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'number', 'operator' => '>=', 'value' => 2],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'number', 'operator' => '>=', 'value' => 2],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -190,8 +204,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'number', 'operator' => '<', 'value' => 2],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'number', 'operator' => '<', 'value' => 2],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -214,8 +230,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'number', 'operator' => '<=', 'value' => 1],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'number', 'operator' => '<=', 'value' => 1],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -238,8 +256,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'name', 'operator' => 'like', 'value' => '%like%'],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'name', 'operator' => 'like', 'value' => '%like%'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -263,8 +283,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'name', 'operator' => 'like', 'value' => 'like%'],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'name', 'operator' => 'like', 'value' => 'like%'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -287,8 +309,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'name', 'operator' => 'not like', 'value' => '%like%'],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'name', 'operator' => 'not like', 'value' => '%like%'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -312,8 +336,10 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'name', 'operator' => 'not like', 'value' => 'like%'],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'name', 'operator' => 'not like', 'value' => 'like%'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -337,9 +363,11 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'number', 'value' => 1],
-                    ['field' => 'number', 'value' => 3, 'type' => 'or'],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'number', 'value' => 1],
+                        ['field' => 'number', 'value' => 3, 'type' => 'or'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -362,9 +390,11 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'number', 'value' => 1],
-                    ['field' => 'name', 'value' => 'match', 'type' => 'and'],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'number', 'value' => 1],
+                        ['field' => 'name', 'value' => 'match', 'type' => 'and'],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -388,14 +418,16 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    [
-                        'nested' => [
-                            ['field' => 'number', 'value' => 1],
-                            ['field' => 'name', 'value' => 'match', 'type' => 'and'],
+                'search' => [
+                    'filters' => [
+                        [
+                            'nested' => [
+                                ['field' => 'number', 'value' => 1],
+                                ['field' => 'name', 'value' => 'match', 'type' => 'and'],
+                            ],
                         ],
+                        ['field' => 'number', 'value' => 2, 'type' => 'or'],
                     ],
-                    ['field' => 'number', 'value' => 2, 'type' => 'or'],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -419,14 +451,16 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'number', 'value' => 2],
-                    [
-                        'nested' => [
-                            ['field' => 'number', 'value' => 1],
-                            ['field' => 'name', 'value' => 'match', 'type' => 'and'],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'number', 'value' => 2],
+                        [
+                            'nested' => [
+                                ['field' => 'number', 'value' => 1],
+                                ['field' => 'name', 'value' => 'match', 'type' => 'and'],
+                            ],
+                            'type' => 'or',
                         ],
-                        'type' => 'or',
                     ],
                 ],
             ],
@@ -458,9 +492,11 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'number', 'value' => 1],
-                    ['field' => 'belongsToManyRelation.pivot.number', 'value' => 10],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'number', 'value' => 1],
+                        ['field' => 'belongsToManyRelation.pivot.number', 'value' => 10],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -491,9 +527,11 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'number', 'value' => 1],
-                    ['field' => 'morphToManyRelation.pivot.number', 'value' => 10],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'number', 'value' => 1],
+                        ['field' => 'morphToManyRelation.pivot.number', 'value' => 10],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
@@ -524,9 +562,11 @@ class SearchFilteringOperationsTest extends TestCase
         $response = $this->post(
             '/api/models/search',
             [
-                'filters' => [
-                    ['field' => 'number', 'value' => 1],
-                    ['field' => 'morphedByManyRelation.pivot.number', 'value' => 10],
+                'search' => [
+                    'filters' => [
+                        ['field' => 'number', 'value' => 1],
+                        ['field' => 'morphedByManyRelation.pivot.number', 'value' => 10],
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']

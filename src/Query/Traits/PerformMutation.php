@@ -65,7 +65,7 @@ trait PerformMutation
         }
 
         if ($mutation['operation'] === 'update') {
-            $model = $this->resource::newModel()::find($mutation['key']);
+            $model = $this->resource::newModel()::findOrFail($mutation['key']);
 
             $this->resource->authorizeTo('update', $model);
 
@@ -76,7 +76,7 @@ trait PerformMutation
             );
         }
 
-        $newModel = $this->resource::newModel()::find($mutation['key']);
+        $newModel = $this->resource::newModel()::findOrFail($mutation['key']);
 
         $newModel
             ->forceFill($allAttributes)
