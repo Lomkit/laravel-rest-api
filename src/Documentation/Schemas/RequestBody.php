@@ -3,6 +3,9 @@
 namespace Lomkit\Rest\Documentation\Schemas;
 
 use Lomkit\Rest\Http\Controllers\Controller;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Relations\Relation;
 
 class RequestBody extends Schema
 {
@@ -103,9 +106,9 @@ class RequestBody extends Schema
     /**
      * Generate and return the request body schema.
      *
-     * @return Schema
+     * @return RequestBody
      */
-    public function generate(): Schema
+    public function generate(): RequestBody
     {
         return $this;
     }
@@ -133,6 +136,8 @@ class RequestBody extends Schema
      */
     public function generateSearch(Controller $controller): RequestBody
     {
+        $request = app()->make(RestRequest::class);
+
         return $this
             ->withContent(
                 [
@@ -141,61 +146,83 @@ class RequestBody extends Schema
                             (new Example())
                                 ->withValue(
                                     [
-                                        'scopes' => [
-                                            ['name' => 'withTrashed', 'parameters' => [true]],
-                                        ],
-                                        'filters' => [
-                                            ['field' => 'id', 'operator' => '>', 'value' => 1, 'type' => 'or'],
-                                            ['nested' => [
-                                                ['field' => 'user.id', 'operator' => '<', 'value' => 2],
-                                                ['field' => 'id', 'operator' => '>', 'value' => 100, 'type' => 'or'],
-                                            ]],
-                                        ],
-                                        'sorts' => [
-                                            ['field' => 'user_id', 'direction' => 'desc'],
-                                            ['field' => 'id', 'direction' => 'asc'],
-                                        ],
-                                        'selects' => [
-                                            ['field' => 'id'],
-                                        ],
-                                        'includes' => [
+                                        'search' => array_merge(
+                                            // Scopes
                                             [
-                                                'relation' => 'posts',
-                                                'filters'  => [
-                                                    ['field' => 'id', 'operator' => 'in', 'value' => [1, 3]],
-                                                ],
-                                                'limit' => 2,
+                                                'scopes' => collect($controller::newResource()->getScopes($request))
+                                                        ->map(function ($scope) {
+                                                            return ['name' => $scope, 'parameters' => []];
+                                                        })
+                                                        ->toArray(),
                                             ],
-                                        ],
-                                        'aggregates' => [
+                                            // Filters
                                             [
-                                                'relation' => 'stars',
-                                                'type'     => 'max',
-                                                'field'    => 'rate',
-                                                'filters'  => [
-                                                    [
-                                                        'name'  => 'type',
-                                                        'value' => 'odd',
-                                                    ],
-                                                ],
+                                                'filters' => collect($controller::newResource()->getFields($request))
+                                                        ->map(function ($filter) {
+                                                            return ['field' => $filter, 'operator' => '=', 'value' => ''];
+                                                        })
+                                                        ->toArray(),
                                             ],
-                                        ],
-                                        'instructions' => [
+                                            // Sorts
                                             [
-                                                'name'   => 'odd-even-id',
-                                                'fields' => [
-                                                    [
-                                                        'name'  => 'type',
-                                                        'value' => 'odd',
-                                                    ],
+                                                'sorts' => collect($controller::newResource()->getFields($request))
+                                                        ->map(function ($sort) {
+                                                            return ['field' => $sort, 'direction' => 'desc'];
+                                                        })
+                                                        ->toArray(),
+                                            ],
+                                            // Selects
+                                            [
+                                                'selects' => collect($controller::newResource()->getFields($request))
+                                                        ->map(function ($select) {
+                                                            return ['field' => $select];
+                                                        })
+                                                        ->toArray(),
+                                            ],
+                                            // Includes
+                                            [
+                                                'includes' => collect($controller::newResource()->getRelations($request))
+                                                        ->map(function (Relation $relation) {
+                                                            return ['relation' => $relation->relation];
+                                                        })
+                                                        ->toArray(),
+                                            ],
+                                            // Aggregates
+                                            [
+                                                'aggregates' => [],
+                                            ],
+                                            // Instructions
+                                            [
+                                                'instructions' => collect($controller::newResource()->getInstructions($request))
+                                                        ->map(function (Instruction $instruction) use ($request) {
+                                                            return [
+                                                                'name'   => $instruction->name(),
+                                                                'fields' => collect($instruction->fields($request))
+                                                                    ->map(function ($field) {
+                                                                        return ['field' => $field, 'value' => ''];
+                                                                    })
+                                                                    ->toArray(),
+                                                            ];
+                                                        })
+                                                        ->toArray(),
+                                            ],
+                                            // Gates
+                                            [
+                                                'gates' => [
+                                                    'create',
+                                                    'update',
+                                                    'delete',
                                                 ],
                                             ],
-                                        ],
-                                        'gates' => [
-                                            'create',
-                                        ],
-                                        'page'  => 2,
-                                        'limit' => 10,
+                                            // Page
+                                            [
+                                                'page' => 1,
+                                            ],
+                                            // Limit
+                                            [
+                                                'limit' => $controller::newResource()->getLimits($request)[0],
+                                            ]
+                                        ),
                                     ]
                                 )
                                 ->generate()
@@ -215,6 +242,8 @@ class RequestBody extends Schema
      */
     public function generateMutate(Controller $controller): RequestBody
     {
+        $request = app()->make(RestRequest::class);
+
         return $this
             ->withContent(
                 [
@@ -226,25 +255,23 @@ class RequestBody extends Schema
                                         'mutate' => [
                                             [
                                                 'operation'  => 'create',
-                                                'attributes' => ['email' => 'me@email.com'],
-                                                'relations'  => [
-                                                    'star' => [
-                                                        'operation'  => 'create',
-                                                        'attributes' => ['number' => 2],
-                                                    ],
-                                                ],
+                                                // Attributes
+                                                'attributes' => collect($controller::newResource()->getFields($request))
+                                                        ->mapWithKeys(function ($field) {
+                                                            return [$field => ''];
+                                                        })
+                                                        ->toArray(),
+                                                // Relations
+                                                'relations'  => collect($controller::newResource()->getRelations($request))
+                                                        ->mapWithKeys(function (Relation $relation) {
+                                                            return [$relation->relation => [
+                                                                'operation' => 'update',
+                                                                'key'       => 1,
+                                                            ]];
+                                                        })
+                                                        ->toArray(),
                                             ],
-                                            [
-                                                'operation'  => 'update',
-                                                'key'        => 1,
-                                                'attributes' => ['email' => 'me@email.com'],
-                                                'relations'  => [
-                                                    'star' => [
-                                                        'operation' => 'detach',
-                                                        'key'       => 1,
-                                                    ],
-                                                ],
-                                            ]],
+                                        ],
                                     ]
                                 )
                                 ->generate()

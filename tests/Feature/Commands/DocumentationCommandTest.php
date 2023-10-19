@@ -12,4 +12,11 @@ class DocumentationCommandTest extends TestCase
 
         $this->assertFileExists('./.phpunit.cache/openapi.json');
     }
+
+    public function test_create_documentation_service_provider_class(): void
+    {
+        $this->artisan('rest:documentation-provider', ['--path' => './.phpunit.cache'])->assertOk();
+
+        $this->assertFileExists('./.phpunit.cache/RestDocumentationServiceProvider.php');
+    }
 }
