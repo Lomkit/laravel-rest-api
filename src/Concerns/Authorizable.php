@@ -3,11 +3,11 @@
 namespace Lomkit\Rest\Concerns;
 
 use Illuminate\Auth\Access\Response;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Tests\Support\Models\Model;
 
 trait Authorizable
 {
