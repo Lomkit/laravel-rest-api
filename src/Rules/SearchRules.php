@@ -120,6 +120,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
                     'string',
                 ],
                 $prefix.'.*.value' => [
+                    "exclude_if:$prefix.*.value,null",
                     "required_without:$prefix.*.nested",
                 ],
                 $prefix.'.*.type' => [
