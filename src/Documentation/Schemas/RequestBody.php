@@ -149,68 +149,62 @@ class RequestBody extends Schema
                                         'search' => array_merge(
                                             // Scopes
                                             [
-                                                'scopes' =>
-                                                    collect($controller::newResource()->getScopes($request))
+                                                'scopes' => collect($controller::newResource()->getScopes($request))
                                                         ->map(function ($scope) {
                                                             return ['name' => $scope, 'parameters' => []];
                                                         })
-                                                        ->toArray()
+                                                        ->toArray(),
                                             ],
                                             // Filters
                                             [
-                                                'filters' =>
-                                                    collect($controller::newResource()->getFields($request))
+                                                'filters' => collect($controller::newResource()->getFields($request))
                                                         ->map(function ($filter) {
                                                             return ['field' => $filter, 'operator' => '=', 'value' => ''];
                                                         })
-                                                        ->toArray()
+                                                        ->toArray(),
                                             ],
                                             // Sorts
                                             [
-                                                'sorts' =>
-                                                    collect($controller::newResource()->getFields($request))
+                                                'sorts' => collect($controller::newResource()->getFields($request))
                                                         ->map(function ($sort) {
                                                             return ['field' => $sort, 'direction' => 'desc'];
                                                         })
-                                                        ->toArray()
+                                                        ->toArray(),
                                             ],
                                             // Selects
                                             [
-                                                'selects' =>
-                                                    collect($controller::newResource()->getFields($request))
+                                                'selects' => collect($controller::newResource()->getFields($request))
                                                         ->map(function ($select) {
                                                             return ['field' => $select];
                                                         })
-                                                        ->toArray()
+                                                        ->toArray(),
                                             ],
                                             // Includes
                                             [
-                                                'includes' =>
-                                                    collect($controller::newResource()->getRelations($request))
+                                                'includes' => collect($controller::newResource()->getRelations($request))
                                                         ->map(function (Relation $relation) {
                                                             return ['relation' => $relation->relation];
                                                         })
-                                                        ->toArray()
+                                                        ->toArray(),
                                             ],
                                             // Aggregates
                                             [
-                                                'aggregates' => []
+                                                'aggregates' => [],
                                             ],
                                             // Instructions
                                             [
-                                                'instructions' =>
-                                                    collect($controller::newResource()->getInstructions($request))
+                                                'instructions' => collect($controller::newResource()->getInstructions($request))
                                                         ->map(function (Instruction $instruction) use ($request) {
                                                             return [
-                                                                'name' => $instruction->name(),
+                                                                'name'   => $instruction->name(),
                                                                 'fields' => collect($instruction->fields($request))
                                                                     ->map(function ($field) {
                                                                         return ['field' => $field, 'value' => ''];
                                                                     })
-                                                                    ->toArray()
+                                                                    ->toArray(),
                                                             ];
                                                         })
-                                                        ->toArray()
+                                                        ->toArray(),
                                             ],
                                             // Gates
                                             [
@@ -218,15 +212,15 @@ class RequestBody extends Schema
                                                     'create',
                                                     'update',
                                                     'delete',
-                                                ]
+                                                ],
                                             ],
                                             // Page
                                             [
-                                                'page' => 1
+                                                'page' => 1,
                                             ],
                                             // Limit
                                             [
-                                                'limit' => $controller::newResource()->getLimits($request)[0]
+                                                'limit' => $controller::newResource()->getLimits($request)[0],
                                             ]
                                         ),
                                     ]
@@ -262,23 +256,21 @@ class RequestBody extends Schema
                                             [
                                                 'operation'  => 'create',
                                                 // Attributes
-                                                'attributes' =>
-                                                    collect($controller::newResource()->getFields($request))
+                                                'attributes' => collect($controller::newResource()->getFields($request))
                                                         ->mapWithKeys(function ($field) {
                                                             return [$field => ''];
                                                         })
                                                         ->toArray(),
                                                 // Relations
-                                                'relations'  =>
-                                                    collect($controller::newResource()->getRelations($request))
+                                                'relations'  => collect($controller::newResource()->getRelations($request))
                                                         ->mapWithKeys(function (Relation $relation) {
                                                             return [$relation->relation => [
                                                                 'operation' => 'update',
-                                                                'key' => 1
+                                                                'key'       => 1,
                                                             ]];
                                                         })
-                                                        ->toArray()
-                                            ]
+                                                        ->toArray(),
+                                            ],
                                         ],
                                     ]
                                 )

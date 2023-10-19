@@ -96,7 +96,7 @@ class RestServiceProvider extends ServiceProvider
                 ActionCommand::class,
                 InstructionCommand::class,
                 DocumentationCommand::class,
-                DocumentationProviderCommand::class
+                DocumentationProviderCommand::class,
             ]);
         }
     }

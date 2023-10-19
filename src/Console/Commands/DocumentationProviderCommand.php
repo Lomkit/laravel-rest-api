@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Console\ResolvesStubPath;
 
 class DocumentationProviderCommand extends GeneratorCommand implements PromptsForMissingInput
