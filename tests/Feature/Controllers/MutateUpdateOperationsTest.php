@@ -22,6 +22,30 @@ class MutateUpdateOperationsTest extends TestCase
 {
     public function test_updating_a_resource_using_not_authorized_field(): void
     {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => ['not_authorized_field' => true],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
+    }
+
+    public function test_updating_a_resource_without_key(): void
+    {
         Gate::policy(Model::class, GreenPolicy::class);
 
         $response = $this->post(
@@ -38,7 +62,135 @@ class MutateUpdateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.key']]);
+    }
+
+    public function test_updating_a_resource_with_no_required_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/constrained/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
+    }
+
+    public function test_updating_a_resource_with_prohibited_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/constrained/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
+                        'relations'  => [
+                            'belongsToRelation' => [
+                                'operation'  => 'create',
+                                'attributes' => [],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToRelation']]);
+    }
+
+    public function test_updating_a_resource_with_no_required_relation_but_empty_array(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/constrained/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
+                        'relations'  => [
+                            'belongsToManyRelation' => [],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
+    }
+
+    public function test_updating_a_resource_with_required_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/constrained/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'  => 'create',
+                                    'attributes' => [],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        $this->assertDatabaseHas(
+            $modelToUpdate->getTable(),
+            [
+                'name'   => 'new name',
+                'number' => 5001,
+            ]
+        );
     }
 
     public function test_updating_a_resource_using_pivot_field_not_following_custom_pivot_rules(): void
@@ -84,44 +236,6 @@ class MutateUpdateOperationsTest extends TestCase
 
         $response = $this->post(
             '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
-                        'attributes' => [
-                            'name'   => 'new name',
-                            'number' => 5001,
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertMutatedResponse(
-            $response,
-            [],
-            [$modelToUpdate],
-        );
-
-        $this->assertDatabaseHas(
-            $modelToUpdate->getTable(),
-            [
-                'name'   => 'new name',
-                'number' => 5001,
-            ]
-        );
-    }
-
-    public function test_updating_a_resource_with_required_on_creation_resource(): void
-    {
-        $modelToUpdate = ModelFactory::new()->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/required-creation/mutate',
             [
                 'mutate' => [
                     [
