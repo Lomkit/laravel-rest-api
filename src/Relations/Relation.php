@@ -167,7 +167,10 @@ class Relation implements \JsonSerializable
             'resources'   => $this->types,
             'relation'    => $this->relation,
             'constraints' => [
-                'requiredOnCreation' => $this->isRequiredOnCreation($request),
+                'required_on_creation' => $this->isRequiredOnCreation($request),
+                'prohibited_on_creation' => $this->isProhibitedOnCreation($request),
+                'required_on_update' => $this->isRequiredOnUpdate($request),
+                'prohibited_on_update' => $this->isProhibitedOnUpdate($request),
             ],
             'name' => $this->name(),
         ];

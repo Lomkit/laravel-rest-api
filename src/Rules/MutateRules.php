@@ -136,17 +136,27 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
             )
             ->validate();
 
-        // Required relations on creation --> will be refactored soon to allow multiple requirements
+        $relations = $this->resource->getRelations($this->request);
+
         $this->validator
             ->setRules(
-                collect($this->resource->getRelations($this->request))
+                collect($relations)
                     ->filter(function (Relation $relation) {
-                        return $relation->isRequiredOnCreation($this->request);
+                        return
+                            $relation->isRequiredOnCreation($this->request) ||
+                            $relation->isProhibitedOnCreation($this->request) ||
+                            $relation->isRequiredOnUpdate($this->request) ||
+                            $relation->isProhibitedOnUpdate($this->request);
                     })
                     ->mapWithKeys(function (Relation $relation, $key) use ($attribute) {
-                        return [$attribute.'.relations.'.$relation->relation => [
-                            RequiredRelationOnCreation::make()->resource($this->resource),
-                        ]];
+                        return [$attribute.'.relations.'.$relation->relation =>
+                            array_merge(
+                                $relation->isRequiredOnCreation($this->request) ? [RequiredRelationOnCreation::make()->resource($this->resource)] : [],
+                                $relation->isProhibitedOnCreation($this->request) ? [ProhibitedRelationOnCreation::make()->resource($this->resource)] : [],
+                                $relation->isRequiredOnUpdate($this->request) ? [RequiredRelationOnUpdate::make()->resource($this->resource)] : [],
+                                $relation->isProhibitedOnUpdate($this->request) ? [ProhibitedRelationOnUpdate::make()->resource($this->resource)] : [],
+                            )
+                        ];
                     })
                     ->toArray()
             )
