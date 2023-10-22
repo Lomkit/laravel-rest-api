@@ -149,13 +149,12 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                             $relation->isProhibitedOnUpdate($this->request);
                     })
                     ->mapWithKeys(function (Relation $relation, $key) use ($attribute) {
-                        return [$attribute.'.relations.'.$relation->relation =>
-                            array_merge(
-                                $relation->isRequiredOnCreation($this->request) ? [RequiredRelationOnCreation::make()->resource($this->resource)] : [],
-                                $relation->isProhibitedOnCreation($this->request) ? [ProhibitedRelationOnCreation::make()->resource($this->resource)] : [],
-                                $relation->isRequiredOnUpdate($this->request) ? [RequiredRelationOnUpdate::make()->resource($this->resource)] : [],
-                                $relation->isProhibitedOnUpdate($this->request) ? [ProhibitedRelationOnUpdate::make()->resource($this->resource)] : [],
-                            )
+                        return [$attribute.'.relations.'.$relation->relation => array_merge(
+                            $relation->isRequiredOnCreation($this->request) ? [RequiredRelationOnCreation::make()->resource($this->resource)] : [],
+                            $relation->isProhibitedOnCreation($this->request) ? [ProhibitedRelationOnCreation::make()->resource($this->resource)] : [],
+                            $relation->isRequiredOnUpdate($this->request) ? [RequiredRelationOnUpdate::make()->resource($this->resource)] : [],
+                            $relation->isProhibitedOnUpdate($this->request) ? [ProhibitedRelationOnUpdate::make()->resource($this->resource)] : [],
+                        ),
                         ];
                     })
                     ->toArray()

@@ -95,6 +95,7 @@ trait Constrained
      * Check required on creation.
      *
      * @param RestRequest $request
+     *
      * @return bool
      */
     public function isRequiredOnCreation(RestRequest $request): bool
@@ -110,6 +111,7 @@ trait Constrained
      * Check prohibited on creation.
      *
      * @param RestRequest $request
+     *
      * @return bool
      */
     public function isProhibitedOnCreation(RestRequest $request): bool
@@ -125,6 +127,7 @@ trait Constrained
      * Check required on update.
      *
      * @param RestRequest $request
+     *
      * @return bool
      */
     public function isRequiredOnUpdate(RestRequest $request): bool
@@ -140,6 +143,7 @@ trait Constrained
      * Check prohibited on update.
      *
      * @param RestRequest $request
+     *
      * @return bool
      */
     public function isProhibitedOnUpdate(RestRequest $request): bool

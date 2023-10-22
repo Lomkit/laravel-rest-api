@@ -32,7 +32,7 @@ class MutateUpdateOperationsTest extends TestCase
                 'mutate' => [
                     [
                         'operation'  => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => ['not_authorized_field' => true],
                     ],
                 ],
@@ -77,7 +77,7 @@ class MutateUpdateOperationsTest extends TestCase
                 'mutate' => [
                     [
                         'operation'  => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
                     ],
                 ],
@@ -101,7 +101,7 @@ class MutateUpdateOperationsTest extends TestCase
                 'mutate' => [
                     [
                         'operation'  => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
                         'relations'  => [
                             'belongsToRelation' => [
@@ -131,7 +131,7 @@ class MutateUpdateOperationsTest extends TestCase
                 'mutate' => [
                     [
                         'operation'  => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
                         'relations'  => [
                             'belongsToManyRelation' => [],
@@ -159,7 +159,7 @@ class MutateUpdateOperationsTest extends TestCase
                 'mutate' => [
                     [
                         'operation'  => 'update',
-                        'key' => $modelToUpdate->getKey(),
+                        'key'        => $modelToUpdate->getKey(),
                         'attributes' => [
                             'name'   => 'new name',
                             'number' => 5001,
