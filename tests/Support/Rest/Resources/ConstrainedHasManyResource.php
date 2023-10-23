@@ -15,7 +15,7 @@ class ConstrainedHasManyResource extends Resource
     public function rules(RestRequest $request)
     {
         return [
-            'number' => 'required'
+            'number' => 'required',
         ];
     }
 

@@ -1269,11 +1269,11 @@ class MutateUpdateOperationsTest extends TestCase
                             'belongsToManyRelation' => [
                                 [
                                     'operation'  => 'update',
-                                    'key' => $belongsToManyToUpdate->getKey(),
+                                    'key'        => $belongsToManyToUpdate->getKey(),
                                     'pivot'      => [
                                         'number' => 20,
                                     ],
-                                ]
+                                ],
                             ],
                         ],
                     ],

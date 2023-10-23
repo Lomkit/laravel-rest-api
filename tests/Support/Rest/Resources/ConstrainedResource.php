@@ -22,7 +22,7 @@ class ConstrainedResource extends Resource
             BelongsTo::make('belongsToRelation', BelongsToResource::class)
                 ->prohibitedOnCreation()
                 ->prohibitedOnUpdate(),
-            HasMany::make('hasManyRelation', ConstrainedHasManyResource::class)
+            HasMany::make('hasManyRelation', ConstrainedHasManyResource::class),
         ];
     }
 
