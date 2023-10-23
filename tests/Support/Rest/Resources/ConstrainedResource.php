@@ -6,6 +6,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
+use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Tests\Support\Models\Model;
 
 class ConstrainedResource extends Resource
@@ -21,6 +22,7 @@ class ConstrainedResource extends Resource
             BelongsTo::make('belongsToRelation', BelongsToResource::class)
                 ->prohibitedOnCreation()
                 ->prohibitedOnUpdate(),
+            HasMany::make('hasManyRelation', ConstrainedHasManyResource::class)
         ];
     }
 
