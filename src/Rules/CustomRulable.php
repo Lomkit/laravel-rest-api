@@ -58,10 +58,13 @@ class CustomRulable implements ValidationRule, ValidatorAwareRule
             $rules = $this->resource->createRules(
                 app()->make(RestRequest::class)
             );
-        } else {
+        } elseif ($value['operation'] === 'update') {
             $rules = $this->resource->updateRules(
                 app()->make(RestRequest::class)
             );
+        } else {
+            // No rules needed
+            return;
         }
 
         $rules = array_merge_recursive(
