@@ -43,7 +43,7 @@ class Response implements Responsable
 
     public function modelToResponse(Model $model, Resource $resource, array $requestArray, Relation $relation = null)
     {
-        $currentRequestArray = $relation === null ? $requestArray : collect($requestArray['includes'])
+        $currentRequestArray = $relation === null ? $requestArray : collect($requestArray['includes'] ?? [])
             ->first(function ($include) use ($relation) {
                 return preg_match('/(?:\.\b)?'.$relation->relation.'\b/', $include['relation']);
             });
