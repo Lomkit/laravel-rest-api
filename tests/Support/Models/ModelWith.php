@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Support\Models;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model as BaseModel;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
@@ -17,7 +16,7 @@ class ModelWith extends BaseModel
     }
 
     protected $with = [
-        'belongsToRelation'
+        'belongsToRelation',
     ];
 
     protected $fillable = [
