@@ -64,7 +64,7 @@ trait PerformMutation
             );
         }
 
-        if ($mutation['operation'] === 'update') {
+        if (in_array($mutation['operation'], ['update', 'touch', 'sync'])) {
             $model = $this->resource::newModel()::findOrFail($mutation['key']);
 
             $this->resource->authorizeTo('update', $model);

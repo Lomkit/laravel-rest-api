@@ -86,7 +86,7 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                 [
                     $attribute.'.operation' => [
                         'required_with:'.$attribute,
-                        Rule::in('create', 'update', ...($this->isRootValidation ? [] : ['attach', 'detach'])),
+                        Rule::in('create', 'update', ...($this->isRootValidation ? [] : ['attach', 'detach', 'toggle', 'sync'])),
                     ],
                     $attribute.'.attributes' => [
                         'prohibited_if:'.$attribute.'.operation,attach',
@@ -97,10 +97,15 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                         'required_if:'.$attribute.'.operation,update',
                         'required_if:'.$attribute.'.operation,attach',
                         'required_if:'.$attribute.'.operation,detach',
+                        'required_if:'.$attribute.'.operation,toggle',
+                        'required_if:'.$attribute.'.operation,sync',
                         'prohibited_if:'.$attribute.'.operation,create',
                         'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
                     ],
-
+                    $attribute.'.without_detaching' => [
+                        'boolean',
+                        'prohibited_unless:'.$attribute.'.operation,sync',
+                    ],
                     $attribute.'.relations.*' => [
                         new MutateItemRelations($this->resource, $this->request),
                     ],
