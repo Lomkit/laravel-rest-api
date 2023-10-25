@@ -1209,11 +1209,11 @@ class MutateUpdateOperationsTest extends TestCase
                             'belongsToManyRelation' => [
                                 [
                                     'operation'  => 'toggle',
-                                    'key' => $belongsToManyToggled->getKey()
+                                    'key'        => $belongsToManyToggled->getKey(),
                                 ],
                                 [
                                     'operation'  => 'toggle',
-                                    'key' => $belongsToManyNotToggled->getKey()
+                                    'key'        => $belongsToManyNotToggled->getKey(),
                                 ],
                             ],
                         ],
@@ -1269,7 +1269,7 @@ class MutateUpdateOperationsTest extends TestCase
                             'belongsToManyRelation' => [
                                 [
                                     'operation'  => 'toggle',
-                                    'key' => $belongsToManyToggled->getKey(),
+                                    'key'        => $belongsToManyToggled->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                     'pivot'      => [
                                         'number' => 20,
@@ -1277,7 +1277,7 @@ class MutateUpdateOperationsTest extends TestCase
                                 ],
                                 [
                                     'operation'  => 'toggle',
-                                    'key' => $belongsToManyNotToggled->getKey(),
+                                    'key'        => $belongsToManyNotToggled->getKey(),
                                     'attributes' => ['number' => 5002], // 5002 because with factory it can't exceed 5000
                                     'pivot'      => [
                                         'number' => 21,
@@ -1351,12 +1351,12 @@ class MutateUpdateOperationsTest extends TestCase
                             'belongsToManyRelation' => [
                                 [
                                     'operation'  => 'sync',
-                                    'key' => $belongsToManyNotSynced->getKey(),
+                                    'key'        => $belongsToManyNotSynced->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                     'pivot'      => [
                                         'number' => 20,
                                     ],
-                                ]
+                                ],
                             ],
                         ],
                     ],
@@ -1417,21 +1417,21 @@ class MutateUpdateOperationsTest extends TestCase
                             'belongsToManyRelation' => [
                                 [
                                     'operation'  => 'sync',
-                                    'key' => $belongsToManyToSync1->getKey(),
+                                    'key'        => $belongsToManyToSync1->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                     'pivot'      => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'  => 'sync',
-                                    'key' => $belongsToManyToSync2->getKey(),
+                                    'operation'         => 'sync',
+                                    'key'               => $belongsToManyToSync2->getKey(),
                                     'without_detaching' => true,
-                                    'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot'             => [
                                         'number' => 21,
                                     ],
-                                ]
+                                ],
                             ],
                         ],
                     ],
@@ -1505,14 +1505,14 @@ class MutateUpdateOperationsTest extends TestCase
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key' => $belongsToManyNotSynced->getKey(),
+                                    'operation'         => 'sync',
+                                    'key'               => $belongsToManyNotSynced->getKey(),
                                     'without_detaching' => true,
-                                    'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot'             => [
                                         'number' => 21,
                                     ],
-                                ]
+                                ],
                             ],
                         ],
                     ],
@@ -1579,12 +1579,12 @@ class MutateUpdateOperationsTest extends TestCase
                             'belongsToManyRelation' => [
                                 [
                                     'operation'  => 'sync',
-                                    'key' => $belongsToManyNotSynced->getKey(),
+                                    'key'        => $belongsToManyNotSynced->getKey(),
                                     'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
                                     'pivot'      => [
                                         'number' => 21,
                                     ],
-                                ]
+                                ],
                             ],
                         ],
                     ],
