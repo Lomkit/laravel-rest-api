@@ -1182,6 +1182,447 @@ class MutateUpdateOperationsTest extends TestCase
         );
     }
 
+    public function test_updating_a_resource_with_toggling_belongs_to_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManyToggled = BelongsToManyRelationFactory::new()->createOne();
+        $belongsToManyNotToggled = BelongsToManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->belongsToManyRelation()
+            ->attach($belongsToManyToggled);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'  => 'toggle',
+                                    'key'        => $belongsToManyToggled->getKey(),
+                                ],
+                                [
+                                    'operation'  => 'toggle',
+                                    'key'        => $belongsToManyNotToggled->getKey(),
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            1
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->first()->getKey(),
+            $belongsToManyNotToggled->getKey()
+        );
+    }
+
+    public function test_updating_a_resource_with_toggling_belongs_to_many_relation_and_updating_attributes_and_pivot(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManyToggled = BelongsToManyRelationFactory::new()->createOne();
+        $belongsToManyNotToggled = BelongsToManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->belongsToManyRelation()
+            ->attach($belongsToManyToggled);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'  => 'toggle',
+                                    'key'        => $belongsToManyToggled->getKey(),
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
+                                ],
+                                [
+                                    'operation'  => 'toggle',
+                                    'key'        => $belongsToManyNotToggled->getKey(),
+                                    'attributes' => ['number' => 5002], // 5002 because with factory it can't exceed 5000
+                                    'pivot'      => [
+                                        'number' => 21,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            1
+        );
+
+        $this->assertDatabaseHas(
+            $belongsToManyToggled->getTable(),
+            ['number' => 5001]
+        );
+        $this->assertDatabaseHas(
+            $belongsToManyToggled->getTable(),
+            ['number' => 5002]
+        );
+
+        $this->assertDatabaseHas(
+            $modelToUpdate->belongsToManyRelation()->getTable(),
+            ['number' => 21]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->first()->getKey(),
+            $belongsToManyNotToggled->getKey()
+        );
+    }
+
+    public function test_updating_a_resource_with_syncing_belongs_to_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManySynced = BelongsToManyRelationFactory::new()->createOne();
+        $belongsToManyNotSynced = BelongsToManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->belongsToManyRelation()
+            ->attach($belongsToManySynced);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'  => 'sync',
+                                    'key'        => $belongsToManyNotSynced->getKey(),
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            1
+        );
+
+        $this->assertDatabaseHas(
+            $belongsToManySynced->getTable(),
+            ['number' => 5001]
+        );
+        $this->assertDatabaseHas(
+            $modelToUpdate->belongsToManyRelation()->getTable(),
+            ['number' => 20]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->first()->getKey(),
+            $belongsToManyNotSynced->getKey()
+        );
+    }
+
+    public function test_updating_a_resource_with_syncing_belongs_to_many_relation_without_detaching(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManyToSync1 = BelongsToManyRelationFactory::new()->createOne();
+        $belongsToManyToSync2 = BelongsToManyRelationFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'  => 'sync',
+                                    'key'        => $belongsToManyToSync1->getKey(),
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
+                                ],
+                                [
+                                    'operation'         => 'sync',
+                                    'key'               => $belongsToManyToSync2->getKey(),
+                                    'without_detaching' => true,
+                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot'             => [
+                                        'number' => 21,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            2
+        );
+
+        $this->assertDatabaseHas(
+            $belongsToManyToSync1->getTable(),
+            ['number' => 5001]
+        );
+        $this->assertDatabaseHas(
+            $belongsToManyToSync2->getTable(),
+            ['number' => 5002]
+        );
+        $this->assertDatabaseHas(
+            $modelToUpdate->belongsToManyRelation()->getTable(),
+            ['number' => 20]
+        );
+        $this->assertDatabaseHas(
+            $modelToUpdate->belongsToManyRelation()->getTable(),
+            ['number' => 21]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->pluck('id')->toArray(),
+            [
+                $belongsToManyToSync1->getKey(),
+                $belongsToManyToSync2->getKey(),
+            ]
+        );
+    }
+
+    public function test_updating_a_resource_with_syncing_belongs_to_many_relation_without_detaching_with_already_attached(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManySynced = BelongsToManyRelationFactory::new()->createOne();
+        $belongsToManyNotSynced = BelongsToManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->belongsToManyRelation()
+            ->attach($belongsToManySynced);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'         => 'sync',
+                                    'key'               => $belongsToManyNotSynced->getKey(),
+                                    'without_detaching' => true,
+                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot'             => [
+                                        'number' => 21,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            2
+        );
+
+        $this->assertDatabaseHas(
+            $belongsToManyNotSynced->getTable(),
+            ['number' => 5002]
+        );
+        $this->assertDatabaseHas(
+            $modelToUpdate->belongsToManyRelation()->getTable(),
+            ['number' => 21]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->pluck('id')->toArray(),
+            [
+                $belongsToManySynced->getKey(),
+                $belongsToManyNotSynced->getKey(),
+            ]
+        );
+    }
+
+    public function test_updating_a_resource_with_syncing_belongs_to_many_relation_with_detaching_with_already_attached(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManySynced = BelongsToManyRelationFactory::new()->createOne();
+        $belongsToManyNotSynced = BelongsToManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->belongsToManyRelation()
+            ->attach($belongsToManySynced);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'  => 'sync',
+                                    'key'        => $belongsToManyNotSynced->getKey(),
+                                    'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot'      => [
+                                        'number' => 21,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            1
+        );
+
+        $this->assertDatabaseHas(
+            $belongsToManyNotSynced->getTable(),
+            ['number' => 5002]
+        );
+        $this->assertDatabaseHas(
+            $modelToUpdate->belongsToManyRelation()->getTable(),
+            ['number' => 21]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->pluck('id')->toArray(),
+            [
+                $belongsToManyNotSynced->getKey(),
+            ]
+        );
+    }
+
     public function test_updating_a_resource_with_creating_belongs_to_many_relation_with_pivot_fields(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();

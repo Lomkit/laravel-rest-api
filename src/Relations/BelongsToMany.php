@@ -54,10 +54,41 @@ class BelongsToMany extends Relation implements RelationResource
                             ->applyMutation($mutationRelation)
                             ->getKey()
                     );
-            } else {
+            } elseif ($mutationRelation['operation'] === 'attach') {
                 $model
                     ->{$relation->relation}()
                     ->attach(
+                        [
+                            app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+                                ->applyMutation($mutationRelation)
+                                ->getKey() => $mutationRelation['pivot'] ?? [],
+                        ]
+                    );
+            } elseif ($mutationRelation['operation'] === 'toggle') {
+                $model
+                    ->{$relation->relation}()
+                    ->toggle(
+                        [
+                            app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+                                ->applyMutation($mutationRelation)
+                                ->getKey() => $mutationRelation['pivot'] ?? [],
+                        ]
+                    );
+            } elseif ($mutationRelation['operation'] === 'sync') {
+                $model
+                    ->{$relation->relation}()
+                    ->sync(
+                        [
+                            app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+                                ->applyMutation($mutationRelation)
+                                ->getKey() => $mutationRelation['pivot'] ?? [],
+                        ],
+                        !isset($mutationRelation['without_detaching']) || !$mutationRelation['without_detaching']
+                    );
+            } elseif (in_array($mutationRelation['operation'], ['create', 'update'])) {
+                $model
+                    ->{$relation->relation}()
+                    ->syncWithoutDetaching(
                         [
                             app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
                                 ->applyMutation($mutationRelation)
