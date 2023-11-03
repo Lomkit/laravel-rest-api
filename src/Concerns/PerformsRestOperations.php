@@ -5,7 +5,7 @@ namespace Lomkit\Rest\Concerns;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
-use Lomkit\Rest\Http\Requests\DetailRequest;
+use Lomkit\Rest\Http\Requests\DetailsRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\OperateRequest;
@@ -17,13 +17,15 @@ trait PerformsRestOperations
     /**
      * Retrieve details of a resource.
      *
-     * @param DetailRequest $request
+     * @param DetailsRequest $request
      *
      * @return array
      */
-    public function details(DetailRequest $request)
+    public function details(DetailsRequest $request)
     {
         $request->resource($resource = static::newResource());
+
+        $this->beforeDetails($request);
 
         $resource->authorizeTo('viewAny', $resource::$model);
 
@@ -43,13 +45,19 @@ trait PerformsRestOperations
     {
         $request->resource($resource = static::newResource());
 
+        $this->beforeSearch($request);
+
         $query = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
             ->search($request->input('search', []));
+
+        $responsable = $resource->paginate($query, $request);
+
+        $this->afterSearch($request);
 
         return $resource::newResponse()
             ->resource($resource)
             ->responsable(
-                $resource->paginate($query, $request)
+                $responsable
             );
     }
 
@@ -64,6 +72,8 @@ trait PerformsRestOperations
     {
         $request->resource($resource = static::newResource());
 
+        $this->beforeMutate($request);
+
         DB::beginTransaction();
 
         $operations = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
@@ -73,6 +83,8 @@ trait PerformsRestOperations
             ->mutate($request->all());
 
         DB::commit();
+
+        $this->afterMutate($request);
 
         return $operations;
     }
@@ -89,9 +101,13 @@ trait PerformsRestOperations
     {
         $request->resource($resource = static::newResource());
 
+        $this->beforeOperate($request);
+
         $actionInstance = $resource->action($request, $action);
 
         $modelsImpacted = $actionInstance->handleRequest($request);
+
+        $this->afterOperate($request);
 
         return response([
             'data' => [
@@ -111,6 +127,8 @@ trait PerformsRestOperations
     {
         $request->resource($resource = static::newResource());
 
+        $this->beforeDestroy($request);
+
         $query = $resource->destroyQuery($request, $resource::newModel()::query());
 
         $models = $query
@@ -122,6 +140,8 @@ trait PerformsRestOperations
 
             $resource->performDelete($request, $model);
         }
+
+        $this->afterDestroy($request);
 
         return $resource::newResponse()
             ->resource($resource)
@@ -139,6 +159,8 @@ trait PerformsRestOperations
     {
         $request->resource($resource = static::newResource());
 
+        $this->beforeRestore($request);
+
         $query = $resource->restoreQuery($request, $resource::newModel()::query());
 
         $models = $query
@@ -152,11 +174,14 @@ trait PerformsRestOperations
             $resource->performRestore($request, $model);
         }
 
+        $this->afterRestore($request);
+
         return $resource::newResponse()
             ->resource($resource)
             ->responsable($models);
     }
 
+    // @TODO: in version upgrade, rename "forceDelete" to "forceDestroy" generally
     /**
      * Force delete resources based on the given request.
      *
@@ -167,6 +192,8 @@ trait PerformsRestOperations
     public function forceDelete(ForceDestroyRequest $request)
     {
         $request->resource($resource = static::newResource());
+
+        $this->beforeForceDestroy($request);
 
         $query = $resource->forceDeleteQuery($request, $resource::newModel()::query());
 
@@ -180,6 +207,8 @@ trait PerformsRestOperations
 
             $resource->performForceDelete($request, $model);
         }
+
+        $this->afterForceDestroy($request);
 
         return $resource::newResponse()
             ->resource($resource)

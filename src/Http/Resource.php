@@ -9,6 +9,7 @@ use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
 use Lomkit\Rest\Concerns\PerformsQueries;
 use Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters;
+use Lomkit\Rest\Concerns\Resource\HasModelHooks;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
 use Lomkit\Rest\Concerns\Resource\Rulable;
@@ -26,6 +27,7 @@ class Resource implements \JsonSerializable
     use Authorizable;
     use Actionable;
     use Instructionable;
+    use HasModelHooks;
 
     /**
      * The model the entry corresponds to.
