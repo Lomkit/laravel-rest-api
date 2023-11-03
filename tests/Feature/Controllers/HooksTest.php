@@ -9,7 +9,6 @@ use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\ModelWithHooksResource;
 
 class HooksTest extends TestCase
 {
@@ -69,7 +68,7 @@ class HooksTest extends TestCase
                         'attributes' => [
                             'name'   => $modelToCreate->name,
                             'number' => $modelToCreate->number,
-                        ]
+                        ],
                     ],
                 ],
             ],

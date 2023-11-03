@@ -19,12 +19,7 @@ use Lomkit\Rest\Relations\MorphOneOfMany;
 use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Tests\Support\Models\Model;
-use Lomkit\Rest\Tests\Support\Rest\Actions\BatchableModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
-use Lomkit\Rest\Tests\Support\Rest\Actions\QueueableModifyNumberAction;
-use Lomkit\Rest\Tests\Support\Rest\Actions\StandaloneModifyNumberAction;
-use Lomkit\Rest\Tests\Support\Rest\Actions\WithMetaModifyNumberAction;
-use Lomkit\Rest\Tests\Support\Rest\Instructions\NumberedInstruction;
 
 class ModelWithHooksResource extends Resource
 {
@@ -81,7 +76,7 @@ class ModelWithHooksResource extends Resource
     public function actions(RestRequest $request): array
     {
         return [
-            ModifyNumberAction::make()
+            ModifyNumberAction::make(),
         ];
     }
 }
