@@ -19,13 +19,14 @@ use Lomkit\Rest\Relations\MorphOneOfMany;
 use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Tests\Support\Models\Model;
+use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
 
 class ModelWithHooksResource extends Resource
 {
     use DisableAutomaticGates;
 
-    public static $model = Model::class;
+    public static $model = SoftDeletedModel::class;
 
     public function relations(RestRequest $request): array
     {

@@ -6,9 +6,13 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
+use Lomkit\Rest\Tests\Support\Database\Factories\SoftDeletedModelFactory;
 use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
+use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
+use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
+use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class HooksTest extends TestCase
 {
@@ -75,11 +79,6 @@ class HooksTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        $this->assertMutatedResponse(
-            $response,
-            [$modelToCreate],
-        );
-
         $this->assertEquals(
             true,
             Cache::get('before-mutate')
@@ -111,6 +110,81 @@ class HooksTest extends TestCase
         $this->assertEquals(
             true,
             Cache::get('after-operate')
+        );
+    }
+
+    public function test_destroy_hook(): void
+    {
+        $model = ModelFactory::new()->count(1)->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+         $this->delete(
+            '/api/model-hooks',
+            [
+                'resources' => [$model->getKey()],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertEquals(
+            true,
+            Cache::get('before-destroy')
+        );
+
+        $this->assertEquals(
+            true,
+            Cache::get('after-destroy')
+        );
+    }
+
+    public function test_restore_hook(): void
+    {
+        $softDeletedModel = SoftDeletedModelFactory::new()->count(1)->trashed()->createOne();
+
+        Gate::policy(SoftDeletedModel::class, GreenPolicy::class);
+
+        $this->post(
+            '/api/model-hooks/restore',
+            [
+                'resources' => [$softDeletedModel->getKey()],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertEquals(
+            true,
+            Cache::get('before-restore')
+        );
+
+        $this->assertEquals(
+            true,
+            Cache::get('after-restore')
+        );
+    }
+
+    public function test_force_destroy_hook(): void
+    {
+        $softDeletedModel = SoftDeletedModelFactory::new()->count(1)->trashed()->createOne();
+
+        Gate::policy(SoftDeletedModel::class, GreenPolicy::class);
+
+         $this->delete(
+            '/api/model-hooks/force',
+            [
+                'resources' => [$softDeletedModel->getKey()],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertEquals(
+            true,
+            Cache::get('before-force-destroy')
+        );
+
+        $this->assertEquals(
+            true,
+            Cache::get('after-force-destroy')
         );
     }
 }

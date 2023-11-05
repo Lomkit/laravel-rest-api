@@ -5,7 +5,7 @@ namespace Lomkit\Rest\Concerns\Resource;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 
-trait HasModelHooks
+trait HasResourceHooks
 {
     public function beforeMutating(MutateRequest $request, array $requestBody, Model $model): void
     {
