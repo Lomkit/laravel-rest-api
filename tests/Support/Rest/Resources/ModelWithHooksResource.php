@@ -18,7 +18,6 @@ use Lomkit\Rest\Relations\MorphOne;
 use Lomkit\Rest\Relations\MorphOneOfMany;
 use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\MorphToMany;
-use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
 

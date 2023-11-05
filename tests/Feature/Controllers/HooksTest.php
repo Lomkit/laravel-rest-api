@@ -11,8 +11,6 @@ use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class HooksTest extends TestCase
 {
@@ -119,7 +117,7 @@ class HooksTest extends TestCase
 
         Gate::policy(Model::class, GreenPolicy::class);
 
-         $this->delete(
+        $this->delete(
             '/api/model-hooks',
             [
                 'resources' => [$model->getKey()],
@@ -169,7 +167,7 @@ class HooksTest extends TestCase
 
         Gate::policy(SoftDeletedModel::class, GreenPolicy::class);
 
-         $this->delete(
+        $this->delete(
             '/api/model-hooks/force',
             [
                 'resources' => [$softDeletedModel->getKey()],
