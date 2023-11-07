@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Query\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyWithHooksResource;
 
 trait PerformMutation
 {
@@ -55,39 +56,23 @@ trait PerformMutation
 
         if ($mutation['operation'] === 'create') {
             $model = $this->resource::newModel();
-
-            $this->resource->authorizeTo('create', $model);
-
-            return $this->mutateModel(
-                $model,
-                $allAttributes,
-                $mutation
-            );
-        }
-
-        if (in_array($mutation['operation'], ['update', 'touch', 'sync'])) {
+        } else {
             $model = $this->resource::newModel()::findOrFail($mutation['key']);
-
-            $this
-                ->resource
-                ->beforeMutating(app(MutateRequest::class), $mutation, $model);
-
-            $this->resource->authorizeTo('update', $model);
-
-            return $this->mutateModel(
-                $model,
-                $allAttributes,
-                $mutation
-            );
         }
 
-        $newModel = $this->resource::newModel()::findOrFail($mutation['key']);
+        if ($mutation['operation'] === 'create') {
+            $this->resource->authorizeTo('create', $model);
+        } elseif ($mutation['operation'] === 'update') {
+            $this->resource->authorizeTo('update', $model);
+        } else {
+            $this->resource->authorizeTo('view', $model);
+        }
 
-        $newModel
-            ->forceFill($allAttributes)
-            ->save();
-
-        return $newModel;
+        return $this->mutateModel(
+            $model,
+            $allAttributes,
+            $mutation
+        );
     }
 
     /**

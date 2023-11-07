@@ -2,7 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Lomkit\Rest\Concerns\Resource\DisableAutomaticGates;
+use Lomkit\Rest\Http\Requests\DestroyRequest;
+use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
@@ -30,28 +34,11 @@ class ModelWithHooksResource extends Resource
     public function relations(RestRequest $request): array
     {
         return [
-            HasOne::make('hasOneRelation', HasOneResource::class),
-            HasOneOfMany::make('hasOneOfManyRelation', HasOneOfManyResource::class),
-            BelongsTo::make('belongsToRelation', BelongsToResource::class),
-            HasMany::make('hasManyRelation', HasManyResource::class),
-            BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
+            BelongsTo::make('belongsToRelation', BelongsToWithHooksResource::class),
+            BelongsToMany::make('belongsToManyRelation', BelongsToManyWithHooksResource::class)
                 ->withPivotRules([
                     'number' => 'numeric',
                 ])
-                ->withPivotFields(['created_at', 'number']),
-
-            // Through relationships
-            HasOneThrough::make('hasOneThroughRelation', HasOneThroughResource::class),
-            HasManyThrough::make('hasManyThroughRelation', HasManyThroughResource::class),
-
-            // Morph relationships
-            MorphTo::make('morphToRelation', [MorphToResource::class, MorphedByManyResource::class]),
-            MorphOne::make('morphOneRelation', MorphOneResource::class),
-            MorphOneOfMany::make('morphOneOfManyRelation', MorphOneOfManyResource::class),
-            MorphMany::make('morphManyRelation', MorphManyResource::class),
-            MorphToMany::make('morphToManyRelation', MorphToManyResource::class)
-                ->withPivotFields(['created_at', 'number']),
-            MorphedByMany::make('morphedByManyRelation', MorphedByManyResource::class)
                 ->withPivotFields(['created_at', 'number']),
         ];
     }
@@ -78,5 +65,41 @@ class ModelWithHooksResource extends Resource
         return [
             ModifyNumberAction::make(),
         ];
+    }
+
+    public function beforeMutating(MutateRequest $request, array $requestBody, Model $model): void
+    {
+        Cache::put(
+            'before-mutating',
+            Cache::get('before-mutating', 0) + 1,
+            5
+        );
+    }
+
+    public function afterMutating(MutateRequest $request, array $requestBody, Model $model): void
+    {
+        Cache::put(
+            'after-mutating',
+            Cache::get('after-mutating', 0) + 1,
+            5
+        );
+    }
+
+    public function beforeDestroying(DestroyRequest $request, Model $model): void
+    {
+        Cache::put(
+            'before-destroying',
+            Cache::get('before-destroying', 0) + 1,
+            5
+        );
+    }
+
+    public function afterDestroying(DestroyRequest $request, Model $model): void
+    {
+        Cache::put(
+            'after-destroying',
+            Cache::get('after-destroying', 0) + 1,
+            5
+        );
     }
 }
