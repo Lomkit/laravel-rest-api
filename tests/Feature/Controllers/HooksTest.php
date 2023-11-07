@@ -14,7 +14,6 @@ use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class HooksTest extends TestCase
 {
@@ -279,7 +278,7 @@ class HooksTest extends TestCase
                         'attributes' => [
                             'name'   => 'new name',
                             'number' => 5001,
-                        ]
+                        ],
                     ],
                 ],
             ],
@@ -313,7 +312,7 @@ class HooksTest extends TestCase
                         'attributes' => [
                             'name'   => 'new name',
                             'number' => 5001,
-                        ]
+                        ],
                     ],
                     [
                         'operation'  => 'update',
@@ -321,7 +320,7 @@ class HooksTest extends TestCase
                         'attributes' => [
                             'name'   => 'new name',
                             'number' => 5001,
-                        ]
+                        ],
                     ],
                 ],
             ],
@@ -537,7 +536,7 @@ class HooksTest extends TestCase
             [
                 'resources' => [
                     $models[0]->getKey(),
-                    $models[1]->getKey()
+                    $models[1]->getKey(),
                 ],
             ],
             ['Accept' => 'application/json']

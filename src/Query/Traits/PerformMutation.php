@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Query\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyWithHooksResource;
 
 trait PerformMutation
 {

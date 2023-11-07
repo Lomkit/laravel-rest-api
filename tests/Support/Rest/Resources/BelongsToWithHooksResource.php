@@ -4,13 +4,8 @@ namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
-use Lomkit\Rest\Concerns\Resource\DisableAutomaticGates;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\MutateRequest;
-use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Relations\HasMany;
-use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 
 class BelongsToWithHooksResource extends BelongsToResource
 {
