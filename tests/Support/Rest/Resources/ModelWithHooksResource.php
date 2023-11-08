@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
-use Lomkit\Rest\Concerns\Resource\DisableAutomaticGates;
+use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
 use Lomkit\Rest\Http\Requests\MutateRequest;
@@ -18,7 +18,7 @@ use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
 
 class ModelWithHooksResource extends Resource
 {
-    use DisableAutomaticGates;
+    use DisableGates;
 
     public static $model = SoftDeletedModel::class;
 

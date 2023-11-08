@@ -69,7 +69,7 @@ class AutomaticGatingTest extends TestCase
 
         Gate::policy(Model::class, GreenPolicy::class);
 
-        config(['rest.automatic_gates.enabled' => false]);
+        config(['rest.gates.enabled' => false]);
 
         $response = $this->post(
             '/api/automatic-gating/search',

@@ -4,7 +4,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Rest Automatic Gates
+    | Rest Gates
     |--------------------------------------------------------------------------
     |
     | The following configuration option contains gates customisation. You might
@@ -12,7 +12,7 @@ return [
     |
     */
 
-    'automatic_gates' => [
+    'gates' => [
         'enabled' => true,
         'key'     => 'gates',
         // Here you can customize the keys for each gate

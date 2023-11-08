@@ -84,13 +84,13 @@ class Resource implements \JsonSerializable
     }
 
     /**
-     * Check if automatic gating is enabled for this resource.
+     * Check if gating is enabled for this resource.
      *
      * @return bool
      */
-    public function isAutomaticGatingEnabled(): bool
+    public function isGatingEnabled(): bool
     {
-        return config('rest.automatic_gates.enabled', true);
+        return config('rest.gates.enabled', true);
     }
 
     /**
