@@ -65,7 +65,7 @@ class RestoreOperationsTest extends TestCase
             ],
             ['Accept' => 'application/json']
         );
-        
+
         $this->assertResourceModel($response, [$softDeletedModel, $softDeletedModel2], new SoftDeletedModelResource());
         $this->assertDatabaseHas('soft_deleted_models', [
             'id'         => $softDeletedModel->getKey(),

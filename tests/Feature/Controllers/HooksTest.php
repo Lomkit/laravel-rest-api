@@ -14,7 +14,6 @@ use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class HooksTest extends TestCase
 {
@@ -560,7 +559,7 @@ class HooksTest extends TestCase
 
         Gate::policy(SoftDeletedModel::class, GreenPolicy::class);
 
-         $this->post(
+        $this->post(
             '/api/model-hooks/restore',
             [
                 'resources' => [
@@ -593,7 +592,7 @@ class HooksTest extends TestCase
             [
                 'resources' => [
                     $softDeletedModels[0]->getKey(),
-                    $softDeletedModels[1]->getKey()
+                    $softDeletedModels[1]->getKey(),
                 ],
             ],
             ['Accept' => 'application/json']
