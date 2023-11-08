@@ -9,38 +9,38 @@ use Lomkit\Rest\Http\Requests\MutateRequest;
 
 class BelongsToManyWithHooksResource extends BelongsToManyResource
 {
-    public function beforeMutating(MutateRequest $request, array $requestBody, Model $model): void
+    public function mutating(MutateRequest $request, array $requestBody, Model $model): void
     {
         Cache::put(
-            'before-mutating-belongs-to-many',
-            Cache::get('before-mutating-belongs-to-many', 0) + 1,
+            'mutating-belongs-to-many',
+            Cache::get('mutating-belongs-to-many', 0) + 1,
             5
         );
     }
 
-    public function afterMutating(MutateRequest $request, array $requestBody, Model $model): void
+    public function mutated(MutateRequest $request, array $requestBody, Model $model): void
     {
         Cache::put(
-            'after-mutating-belongs-to-many',
-            Cache::get('after-mutating-belongs-to-many', 0) + 1,
+            'mutated-belongs-to-many',
+            Cache::get('mutated-belongs-to-many', 0) + 1,
             5
         );
     }
 
-    public function beforeDestroying(DestroyRequest $request, Model $model): void
+    public function destroying(DestroyRequest $request, Model $model): void
     {
         Cache::put(
-            'before-destroying-belongs-to-many',
-            Cache::get('before-destroying-belongs-to-many', 0) + 1,
+            'destroying-belongs-to-many',
+            Cache::get('destroying-belongs-to-many', 0) + 1,
             5
         );
     }
 
-    public function afterDestroying(DestroyRequest $request, Model $model): void
+    public function destroyed(DestroyRequest $request, Model $model): void
     {
         Cache::put(
-            'after-destroying-belongs-to-many',
-            Cache::get('after-destroying-belongs-to-many', 0) + 1,
+            'destroyed-belongs-to-many',
+            Cache::get('destroyed-belongs-to-many', 0) + 1,
             5
         );
     }

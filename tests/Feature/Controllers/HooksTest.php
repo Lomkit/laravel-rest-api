@@ -14,6 +14,7 @@ use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
+use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class HooksTest extends TestCase
 {
@@ -213,12 +214,12 @@ class HooksTest extends TestCase
 
         $this->assertEquals(
             1,
-            Cache::get('before-mutating')
+            Cache::get('mutating')
         );
 
         $this->assertEquals(
             1,
-            Cache::get('after-mutating')
+            Cache::get('mutated')
         );
     }
 
@@ -253,12 +254,12 @@ class HooksTest extends TestCase
 
         $this->assertEquals(
             2,
-            Cache::get('before-mutating')
+            Cache::get('mutating')
         );
 
         $this->assertEquals(
             2,
-            Cache::get('after-mutating')
+            Cache::get('mutated')
         );
     }
 
@@ -287,12 +288,12 @@ class HooksTest extends TestCase
 
         $this->assertEquals(
             1,
-            Cache::get('before-mutating')
+            Cache::get('mutating')
         );
 
         $this->assertEquals(
             1,
-            Cache::get('after-mutating')
+            Cache::get('mutated')
         );
     }
 
@@ -329,12 +330,12 @@ class HooksTest extends TestCase
 
         $this->assertEquals(
             2,
-            Cache::get('before-mutating')
+            Cache::get('mutating')
         );
 
         $this->assertEquals(
             2,
-            Cache::get('after-mutating')
+            Cache::get('mutated')
         );
     }
 
@@ -370,12 +371,12 @@ class HooksTest extends TestCase
 
         $this->assertEquals(
             1,
-            Cache::get('before-mutating-belongs-to')
+            Cache::get('mutating-belongs-to')
         );
 
         $this->assertEquals(
             1,
-            Cache::get('after-mutating-belongs-to')
+            Cache::get('mutated-belongs-to')
         );
     }
 
@@ -416,12 +417,12 @@ class HooksTest extends TestCase
 
         $this->assertEquals(
             1,
-            Cache::get('before-mutating-belongs-to')
+            Cache::get('mutating-belongs-to')
         );
 
         $this->assertEquals(
             1,
-            Cache::get('after-mutating-belongs-to')
+            Cache::get('mutated-belongs-to')
         );
     }
 
@@ -464,12 +465,12 @@ class HooksTest extends TestCase
 
         $this->assertEquals(
             1,
-            Cache::get('before-mutating-belongs-to-many')
+            Cache::get('mutating-belongs-to-many')
         );
 
         $this->assertEquals(
             1,
-            Cache::get('after-mutating-belongs-to-many')
+            Cache::get('mutated-belongs-to-many')
         );
     }
 
@@ -516,12 +517,12 @@ class HooksTest extends TestCase
 
         $this->assertEquals(
             2,
-            Cache::get('before-mutating-belongs-to-many')
+            Cache::get('mutating-belongs-to-many')
         );
 
         $this->assertEquals(
             2,
-            Cache::get('after-mutating-belongs-to-many')
+            Cache::get('mutated-belongs-to-many')
         );
     }
 
@@ -531,7 +532,7 @@ class HooksTest extends TestCase
 
         Gate::policy(Model::class, GreenPolicy::class);
 
-        $response = $this->delete(
+        $this->delete(
             '/api/model-hooks',
             [
                 'resources' => [
@@ -544,12 +545,68 @@ class HooksTest extends TestCase
 
         $this->assertEquals(
             2,
-            Cache::get('before-destroying')
+            Cache::get('destroying')
         );
 
         $this->assertEquals(
             2,
-            Cache::get('after-destroying')
+            Cache::get('destroyed')
+        );
+    }
+
+    public function test_resource_restoring_two_models(): void
+    {
+        $softDeletedModels = SoftDeletedModelFactory::new()->count(2)->trashed()->create();
+
+        Gate::policy(SoftDeletedModel::class, GreenPolicy::class);
+
+         $this->post(
+            '/api/model-hooks/restore',
+            [
+                'resources' => [
+                    $softDeletedModels[0]->getKey(),
+                    $softDeletedModels[1]->getKey(),
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertEquals(
+            2,
+            Cache::get('restoring')
+        );
+
+        $this->assertEquals(
+            2,
+            Cache::get('restored')
+        );
+    }
+
+    public function test_resource_force_destroying_two_models(): void
+    {
+        $softDeletedModels = SoftDeletedModelFactory::new()->count(2)->create();
+
+        Gate::policy(SoftDeletedModel::class, GreenPolicy::class);
+
+        $this->delete(
+            '/api/model-hooks/force',
+            [
+                'resources' => [
+                    $softDeletedModels[0]->getKey(),
+                    $softDeletedModels[1]->getKey()
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertEquals(
+            2,
+            Cache::get('force-destroying')
+        );
+
+        $this->assertEquals(
+            2,
+            Cache::get('force-destroyed')
         );
     }
 }

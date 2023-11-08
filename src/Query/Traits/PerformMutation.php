@@ -103,7 +103,7 @@ trait PerformMutation
 
         $this
             ->resource
-            ->beforeMutating(app(MutateRequest::class), $mutation, $model);
+            ->mutating(app(MutateRequest::class), $mutation, $model);
 
         $model
             ->forceFill($attributes)
@@ -115,7 +115,7 @@ trait PerformMutation
 
         $this
             ->resource
-            ->afterMutating(app(MutateRequest::class), $mutation, $model);
+            ->mutated(app(MutateRequest::class), $mutation, $model);
 
         return $model;
     }

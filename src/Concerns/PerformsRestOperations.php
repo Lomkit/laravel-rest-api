@@ -138,11 +138,11 @@ trait PerformsRestOperations
         foreach ($models as $model) {
             self::newResource()->authorizeTo('delete', $model);
 
-            $resource->beforeDestroying($request, $model);
+            $resource->destroying($request, $model);
 
             $resource->performDelete($request, $model);
 
-            $resource->afterDestroying($request, $model);
+            $resource->destroyed($request, $model);
         }
 
         $this->afterDestroy($request);
@@ -175,11 +175,11 @@ trait PerformsRestOperations
         foreach ($models as $model) {
             self::newResource()->authorizeTo('restore', $model);
 
-            $resource->beforeRestoring($request, $model);
+            $resource->restoring($request, $model);
 
             $resource->performRestore($request, $model);
 
-            $resource->afterRestoring($request, $model);
+            $resource->restored($request, $model);
         }
 
         $this->afterRestore($request);
@@ -213,11 +213,11 @@ trait PerformsRestOperations
         foreach ($models as $model) {
             self::newResource()->authorizeTo('forceDelete', $model);
 
-            $resource->beforeForceDestroying($request, $model);
+            $resource->forceDestroying($request, $model);
 
             $resource->performForceDelete($request, $model);
 
-            $resource->afterForceDestroying($request, $model);
+            $resource->forceDestroyed($request, $model);
         }
 
         $this->afterForceDestroy($request);

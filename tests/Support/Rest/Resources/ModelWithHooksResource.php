@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Lomkit\Rest\Concerns\Resource\DisableAutomaticGates;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
+use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
 use Lomkit\Rest\Http\Requests\MutateRequest;
+use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
@@ -56,38 +58,74 @@ class ModelWithHooksResource extends Resource
         ];
     }
 
-    public function beforeMutating(MutateRequest $request, array $requestBody, Model $model): void
+    public function mutating(MutateRequest $request, array $requestBody, Model $model): void
     {
         Cache::put(
-            'before-mutating',
-            Cache::get('before-mutating', 0) + 1,
+            'mutating',
+            Cache::get('mutating', 0) + 1,
             5
         );
     }
 
-    public function afterMutating(MutateRequest $request, array $requestBody, Model $model): void
+    public function mutated(MutateRequest $request, array $requestBody, Model $model): void
     {
         Cache::put(
-            'after-mutating',
-            Cache::get('after-mutating', 0) + 1,
+            'mutated',
+            Cache::get('mutated', 0) + 1,
             5
         );
     }
 
-    public function beforeDestroying(DestroyRequest $request, Model $model): void
+    public function destroying(DestroyRequest $request, Model $model): void
     {
         Cache::put(
-            'before-destroying',
-            Cache::get('before-destroying', 0) + 1,
+            'destroying',
+            Cache::get('destroying', 0) + 1,
             5
         );
     }
 
-    public function afterDestroying(DestroyRequest $request, Model $model): void
+    public function destroyed(DestroyRequest $request, Model $model): void
     {
         Cache::put(
-            'after-destroying',
-            Cache::get('after-destroying', 0) + 1,
+            'destroyed',
+            Cache::get('destroyed', 0) + 1,
+            5
+        );
+    }
+
+    public function restoring(RestoreRequest $request, Model $model): void
+    {
+        Cache::put(
+            'restoring',
+            Cache::get('restoring', 0) + 1,
+            5
+        );
+    }
+
+    public function restored(RestoreRequest $request, Model $model): void
+    {
+        Cache::put(
+            'restored',
+            Cache::get('restored', 0) + 1,
+            5
+        );
+    }
+
+    public function forceDestroying(ForceDestroyRequest $request, Model $model): void
+    {
+        Cache::put(
+            'force-destroying',
+            Cache::get('force-destroying', 0) + 1,
+            5
+        );
+    }
+
+    public function forceDestroyed(ForceDestroyRequest $request, Model $model): void
+    {
+        Cache::put(
+            'force-destroyed',
+            Cache::get('force-destroyed', 0) + 1,
             5
         );
     }

@@ -9,38 +9,38 @@ use Lomkit\Rest\Http\Requests\MutateRequest;
 
 class BelongsToWithHooksResource extends BelongsToResource
 {
-    public function beforeMutating(MutateRequest $request, array $requestBody, Model $model): void
+    public function mutating(MutateRequest $request, array $requestBody, Model $model): void
     {
         Cache::put(
-            'before-mutating-belongs-to',
-            Cache::get('before-mutating-belongs-to', 0) + 1,
+            'mutating-belongs-to',
+            Cache::get('mutating-belongs-to', 0) + 1,
             5
         );
     }
 
-    public function afterMutating(MutateRequest $request, array $requestBody, Model $model): void
+    public function mutated(MutateRequest $request, array $requestBody, Model $model): void
     {
         Cache::put(
-            'after-mutating-belongs-to',
-            Cache::get('after-mutating-belongs-to', 0) + 1,
+            'mutated-belongs-to',
+            Cache::get('mutated-belongs-to', 0) + 1,
             5
         );
     }
 
-    public function beforeDestroying(DestroyRequest $request, Model $model): void
+    public function destroying(DestroyRequest $request, Model $model): void
     {
         Cache::put(
-            'before-destroying-belongs-to',
-            Cache::get('before-destroying-belongs-to', 0) + 1,
+            'destroying-belongs-to',
+            Cache::get('destroying-belongs-to', 0) + 1,
             5
         );
     }
 
-    public function afterDestroying(DestroyRequest $request, Model $model): void
+    public function destroyed(DestroyRequest $request, Model $model): void
     {
         Cache::put(
-            'after-destroying-belongs-to',
-            Cache::get('after-destroying-belongs-to', 0) + 1,
+            'destroyed-belongs-to',
+            Cache::get('destroyed-belongs-to', 0) + 1,
             5
         );
     }
