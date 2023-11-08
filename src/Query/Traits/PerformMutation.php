@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Query\Traits;
 
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait PerformMutation
@@ -54,48 +55,38 @@ trait PerformMutation
 
         if ($mutation['operation'] === 'create') {
             $model = $this->resource::newModel();
-
-            $this->resource->authorizeTo('create', $model);
-
-            return $this->mutateModel(
-                $model,
-                $allAttributes,
-                $mutation['relations'] ?? []
-            );
-        }
-
-        if (in_array($mutation['operation'], ['update', 'touch', 'sync'])) {
+        } else {
             $model = $this->resource::newModel()::findOrFail($mutation['key']);
-
-            $this->resource->authorizeTo('update', $model);
-
-            return $this->mutateModel(
-                $model,
-                $allAttributes,
-                $mutation['relations'] ?? []
-            );
         }
 
-        $newModel = $this->resource::newModel()::findOrFail($mutation['key']);
+        if ($mutation['operation'] === 'create') {
+            $this->resource->authorizeTo('create', $model);
+        } elseif ($mutation['operation'] === 'update') {
+            $this->resource->authorizeTo('update', $model);
+        } else {
+            $this->resource->authorizeTo('view', $model);
+        }
 
-        $newModel
-            ->forceFill($allAttributes)
-            ->save();
-
-        return $newModel;
+        return $this->mutateModel(
+            $model,
+            $allAttributes,
+            $mutation
+        );
     }
 
     /**
      * Mutate the model by applying attributes and relations.
      *
      * @param Model $model      The Eloquent model to mutate.
-     * @param array $attributes The attributes to apply to the model.
-     * @param array $relations  The relations associated with the model.
+     * @param array $attributes The attributes to mutate.
+     * @param array $mutation   The mutation array.
      *
      * @return Model The mutated model.
      */
-    public function mutateModel(Model $model, $attributes, $relations)
+    public function mutateModel(Model $model, array $attributes, array $mutation)
     {
+        $relations = $mutation['relations'] ?? [];
+
         $restRelations = array_filter(
             $this->resource
                 ->getRelations(
@@ -110,6 +101,10 @@ trait PerformMutation
             $restRelation->beforeMutating($model, $restRelation, $relations);
         }
 
+        $this
+            ->resource
+            ->mutating(app(MutateRequest::class), $mutation, $model);
+
         $model
             ->forceFill($attributes)
             ->save();
@@ -117,6 +112,10 @@ trait PerformMutation
         foreach ($restRelations as $restRelation) {
             $restRelation->afterMutating($model, $restRelation, $relations);
         }
+
+        $this
+            ->resource
+            ->mutated(app(MutateRequest::class), $mutation, $model);
 
         return $model;
     }

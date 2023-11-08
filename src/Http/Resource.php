@@ -9,6 +9,7 @@ use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
 use Lomkit\Rest\Concerns\PerformsQueries;
 use Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters;
+use Lomkit\Rest\Concerns\Resource\HasResourceHooks;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
 use Lomkit\Rest\Concerns\Resource\Rulable;
@@ -26,6 +27,7 @@ class Resource implements \JsonSerializable
     use Authorizable;
     use Actionable;
     use Instructionable;
+    use HasResourceHooks;
 
     /**
      * The model the entry corresponds to.
@@ -82,13 +84,13 @@ class Resource implements \JsonSerializable
     }
 
     /**
-     * Check if automatic gating is enabled for this resource.
+     * Check if gating is enabled for this resource.
      *
      * @return bool
      */
-    public function isAutomaticGatingEnabled(): bool
+    public function isGatingEnabled(): bool
     {
-        return config('rest.automatic_gates.enabled', true);
+        return config('rest.gates.enabled', true);
     }
 
     /**

@@ -2,14 +2,14 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
-trait DisableAutomaticGates
+trait DisableGates
 {
     /**
-     * Check if automatic gating is enabled.
+     * Check if gating is enabled.
      *
      * @return bool
      */
-    public function isAutomaticGatingEnabled(): bool
+    public function isGatingEnabled(): bool
     {
         return false;
     }

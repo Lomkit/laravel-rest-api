@@ -33,11 +33,11 @@ class Response implements Responsable
     protected function buildGatesForModel(Model $model, Resource $resource, array $gates)
     {
         return array_merge(
-            in_array('view', $gates) ? [config('rest.automatic_gates.names.authorized_to_view')         => $resource->authorizedTo('view', $model)] : [],
-            in_array('update', $gates) ? [config('rest.automatic_gates.names.authorized_to_update')         => $resource->authorizedTo('update', $model)] : [],
-            in_array('delete', $gates) ? [config('rest.automatic_gates.names.authorized_to_delete')         => $resource->authorizedTo('delete', $model)] : [],
-            in_array('restore', $gates) ? [config('rest.automatic_gates.names.authorized_to_restore')         => $resource->authorizedTo('restore', $model)] : [],
-            in_array('forceDelete', $gates) ? [config('rest.automatic_gates.names.authorized_to_force_delete')         => $resource->authorizedTo('forceDelete', $model)] : [],
+            in_array('view', $gates) ? [config('rest.gates.names.authorized_to_view')         => $resource->authorizedTo('view', $model)] : [],
+            in_array('update', $gates) ? [config('rest.gates.names.authorized_to_update')         => $resource->authorizedTo('update', $model)] : [],
+            in_array('delete', $gates) ? [config('rest.gates.names.authorized_to_delete')         => $resource->authorizedTo('delete', $model)] : [],
+            in_array('restore', $gates) ? [config('rest.gates.names.authorized_to_restore')         => $resource->authorizedTo('restore', $model)] : [],
+            in_array('forceDelete', $gates) ? [config('rest.gates.names.authorized_to_force_delete')         => $resource->authorizedTo('forceDelete', $model)] : [],
         );
     }
 
@@ -64,9 +64,9 @@ class Response implements Responsable
                             ->toArray()
                     )
                 )
-                ->when($resource->isAutomaticGatingEnabled() && isset($currentRequestArray['gates']), function ($attributes) use ($currentRequestArray, $resource, $model) {
+                ->when($resource->isGatingEnabled() && isset($currentRequestArray['gates']), function ($attributes) use ($currentRequestArray, $resource, $model) {
                     return $attributes->put(
-                        config('rest.automatic_gates.key'),
+                        config('rest.gates.key'),
                         $this->buildGatesForModel($model, $resource, $currentRequestArray['gates'])
                     );
                 })
@@ -127,9 +127,9 @@ class Response implements Responsable
                 $this->responsable->perPage(),
                 $this->responsable->currentPage(),
                 $this->responsable->getOptions(),
-                $this->resource->isAutomaticGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
-                    config('rest.automatic_gates.key') => [
-                        config('rest.automatic_gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
+                $this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
+                    config('rest.gates.key') => [
+                        config('rest.gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
                     ],
                 ] : []
             );
@@ -148,9 +148,9 @@ class Response implements Responsable
         return [
             'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input('search', []))),
             'meta' => array_merge(
-                $this->resource->isAutomaticGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
-                    config('rest.automatic_gates.key') => [
-                        config('rest.automatic_gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
+                $this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
+                    config('rest.gates.key') => [
+                        config('rest.gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
                     ],
                 ] : []
             ),

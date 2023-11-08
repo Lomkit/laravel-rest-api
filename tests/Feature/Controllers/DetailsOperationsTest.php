@@ -9,9 +9,9 @@ use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
-class DetailOperationsTest extends TestCase
+class DetailsOperationsTest extends TestCase
 {
-    public function test_operate_action(): void
+    public function test_details_operation(): void
     {
         ModelFactory::new()->count(2)->create();
 

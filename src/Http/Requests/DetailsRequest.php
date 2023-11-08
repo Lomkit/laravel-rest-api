@@ -2,6 +2,6 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-class DetailRequest extends RestRequest
+class DetailsRequest extends RestRequest
 {
 }
