@@ -17,6 +17,7 @@ return new class() extends Migration {
             $table->string('name');
             $table->bigInteger('number');
             $table->string('string')->nullable();
+            $table->string('unique')->unique()->nullable();
             $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\BelongsToRelation::class)->nullable()->constrained();
             $table->timestamps();
         });

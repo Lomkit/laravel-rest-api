@@ -284,6 +284,36 @@ class MutateCreateOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot.number']]);
     }
 
+    public function test_creating_a_resource_with_unique_validation(): void
+    {
+        $modelToCreate = ModelFactory::new()->makeOne([
+            'unique' => 'my unique string',
+        ]);
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'create',
+                        'attributes' => [
+                            'unique'   => $modelToCreate->unique,
+                            'name'     => $modelToCreate->name,
+                            'number'   => $modelToCreate->number,
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [$modelToCreate],
+        );
+    }
+
     public function test_creating_a_resource(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
