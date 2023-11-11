@@ -82,6 +82,7 @@ class ModelResource extends Resource
             'name',
             'number',
             'string',
+            'unique'
         ];
     }
 

@@ -15,6 +15,15 @@ use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceCommand;
 use Lomkit\Rest\Console\Commands\ResponseCommand;
 use Lomkit\Rest\Contracts\QueryBuilder;
+use Lomkit\Rest\Http\Requests\ActionsRequest;
+use Lomkit\Rest\Http\Requests\DestroyRequest;
+use Lomkit\Rest\Http\Requests\DetailsRequest;
+use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
+use Lomkit\Rest\Http\Requests\MutateRequest;
+use Lomkit\Rest\Http\Requests\OperateRequest;
+use Lomkit\Rest\Http\Requests\RestoreRequest;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Query\Builder;
 
 class RestServiceProvider extends ServiceProvider
@@ -124,5 +133,15 @@ class RestServiceProvider extends ServiceProvider
     {
         $this->app->singleton('lomkit-rest', Rest::class);
         $this->app->bind(QueryBuilder::class, Builder::class);
+
+        $this->app->singleton(RestRequest::class, RestRequest::class);
+        $this->app->singleton(ActionsRequest::class, ActionsRequest::class);
+        $this->app->singleton(DestroyRequest::class, DestroyRequest::class);
+        $this->app->singleton(DetailsRequest::class, DetailsRequest::class);
+        $this->app->singleton(ForceDestroyRequest::class, ForceDestroyRequest::class);
+        $this->app->singleton(MutateRequest::class, MutateRequest::class);
+        $this->app->singleton(OperateRequest::class, OperateRequest::class);
+        $this->app->singleton(RestoreRequest::class, RestoreRequest::class);
+        $this->app->singleton(SearchRequest::class, SearchRequest::class);
     }
 }
