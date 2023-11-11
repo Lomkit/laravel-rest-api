@@ -287,7 +287,7 @@ class MutateCreateOperationsTest extends TestCase
     public function test_creating_a_resource_with_unique_validation(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne([
-            'unique' => 'my unique string'
+            'unique' => 'my unique string',
         ]);
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
@@ -299,9 +299,9 @@ class MutateCreateOperationsTest extends TestCase
                         'operation'  => 'create',
                         'attributes' => [
                             'unique'   => $modelToCreate->unique,
-                            'name'   => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ]
+                            'name'     => $modelToCreate->name,
+                            'number'   => $modelToCreate->number,
+                        ],
                     ],
                 ],
             ],

@@ -22,7 +22,7 @@ class NoAuthorizationResource extends Resource
             'name',
             'number',
             'string',
-            'unique'
+            'unique',
         ];
     }
 }

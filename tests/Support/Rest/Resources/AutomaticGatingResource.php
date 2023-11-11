@@ -31,7 +31,7 @@ class AutomaticGatingResource extends Resource
             'name',
             'number',
             'string',
-            'unique'
+            'unique',
         ];
     }
 }

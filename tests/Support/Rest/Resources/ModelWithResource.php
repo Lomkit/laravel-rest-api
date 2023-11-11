@@ -18,7 +18,7 @@ class ModelWithResource extends Resource
             'name',
             'number',
             'string',
-            'unique'
+            'unique',
         ];
     }
 
