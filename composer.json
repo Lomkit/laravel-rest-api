@@ -12,14 +12,14 @@
   "require": {
     "php": "^8.0",
     "ext-json": "*",
-    "illuminate/contracts": "^8.37|^9.0|^10.0",
-    "illuminate/http": "^8.37|^9.0|^10.0",
-    "illuminate/support": "^8.37|^9.0|^10.0"
+    "illuminate/contracts": "^10.0",
+    "illuminate/http": "^10.0",
+    "illuminate/support": "^10.0"
   },
   "require-dev": {
     "guzzlehttp/guzzle": "^6.0|^7.0",
     "orchestra/testbench": "^8.5",
-    "phpunit/phpunit": "^6.0|^7.0|^8.0|^9.0|^10.0"
+    "phpunit/phpunit": "^8.0|^9.0|^10.0"
   },
   "autoload": {
     "psr-4": {
