@@ -266,7 +266,7 @@ class OpenAPI extends Schema
 
             if ($controller instanceof Controller) {
                 $path = match (Str::afterLast($route->getName(), '.')) {
-                    'detail'      => (new Path())->generateDetailAndDestroy($controller),
+                    'details'      => (new Path())->generateDetailAndDestroy($controller),
                     'search'      => (new Path())->generateSearch($controller),
                     'mutate'      => (new Path())->generateMutate($controller),
                     'operate'     => (new Path())->generateActions($controller),
