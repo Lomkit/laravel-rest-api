@@ -45,7 +45,7 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
         );
 
         $this->info('The documentation was generated successfully!');
-        $this->info('Open '.url(config('rest.documentation.routing.path')).'in a web browser.');
+        $this->info('Open '.url(config('rest.documentation.routing.path')).' in a web browser.');
     }
 
     /**
