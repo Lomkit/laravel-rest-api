@@ -266,13 +266,13 @@ class OpenAPI extends Schema
 
             if ($controller instanceof Controller) {
                 $path = match (Str::afterLast($route->getName(), '.')) {
-                    'detail'      => (new Path())->generateDetailAndDestroy($controller),
-                    'search'      => (new Path())->generateSearch($controller),
-                    'mutate'      => (new Path())->generateMutate($controller),
-                    'operate'     => (new Path())->generateActions($controller),
-                    'restore'     => (new Path())->generateRestore($controller),
-                    'forceDelete' => (new Path())->generateForceDelete($controller),
-                    default       => null
+                    'details'      => (new Path())->generateDetailAndDestroy($controller),
+                    'search'       => (new Path())->generateSearch($controller),
+                    'mutate'       => (new Path())->generateMutate($controller),
+                    'operate'      => (new Path())->generateActions($controller),
+                    'restore'      => (new Path())->generateRestore($controller),
+                    'forceDelete'  => (new Path())->generateForceDelete($controller),
+                    default        => null
                 };
 
                 if (!is_null($path)) {
