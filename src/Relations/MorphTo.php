@@ -2,12 +2,9 @@
 
 namespace Lomkit\Rest\Relations;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Validation\Rule;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
-use Lomkit\Rest\Http\Resource;
 
 class MorphTo extends MorphRelation implements RelationResource
 {

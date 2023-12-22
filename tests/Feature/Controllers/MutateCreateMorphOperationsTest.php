@@ -17,7 +17,6 @@ use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToRelation;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\MorphedByManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\MorphToResource;
 
 class MutateCreateMorphOperationsTest extends TestCase
