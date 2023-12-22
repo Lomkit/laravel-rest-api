@@ -192,7 +192,7 @@ trait PerformSearch
     public function include($include)
     {
         return $this->queryBuilder->with($include['relation'], function (Relation $query) use ($include) {
-            $resource = $this->resource->relationResource($include['relation']);
+            $resource = $this->resource->relation($include['relation'])?->resource();
 
             $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
 
@@ -220,7 +220,7 @@ trait PerformSearch
     public function aggregate($aggregate)
     {
         return $this->queryBuilder->withAggregate([$aggregate['relation'] => function (Builder $query) use ($aggregate) {
-            $resource = $this->resource->relationResource($aggregate['relation']);
+            $resource = $this->resource->relation($aggregate['relation'])?->resource();
 
             $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
 

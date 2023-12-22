@@ -64,7 +64,7 @@ class ModelResource extends Resource
             HasManyThrough::make('hasManyThroughRelation', HasManyThroughResource::class),
 
             // Morph relationships
-            MorphTo::make('morphToRelation', [MorphToResource::class, MorphedByManyResource::class]),
+            MorphTo::make('morphToRelation', MorphToResource::class),
             MorphOne::make('morphOneRelation', MorphOneResource::class),
             MorphOneOfMany::make('morphOneOfManyRelation', MorphOneOfManyResource::class),
             MorphMany::make('morphManyRelation', MorphManyResource::class),

@@ -35,18 +35,6 @@ trait Relationable
     }
 
     /**
-     * Get the resource associated with a relation by name.
-     *
-     * @param string $name
-     *
-     * @return \Lomkit\Rest\Http\Resource
-     */
-    public function relationResource($name)
-    {
-        return $this->relation($name)?->resource();
-    }
-
-    /**
      * The calculated relations if already done in this request.
      *
      * @var array

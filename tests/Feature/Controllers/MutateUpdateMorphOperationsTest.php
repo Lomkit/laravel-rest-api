@@ -17,7 +17,6 @@ use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToRelation;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\MorphToResource;
 
 class MutateUpdateMorphOperationsTest extends TestCase
 {
@@ -66,7 +65,6 @@ class MutateUpdateMorphOperationsTest extends TestCase
                         'relations' => [
                             'morphToRelation' => [
                                 'operation'  => 'create',
-                                'type'       => MorphToResource::class,
                                 'attributes' => [],
                             ],
                         ],
@@ -116,7 +114,6 @@ class MutateUpdateMorphOperationsTest extends TestCase
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'attach',
-                                'type'      => MorphToResource::class,
                                 'key'       => $morphToRelationToAttach->getKey(),
                             ],
                         ],
@@ -163,7 +160,6 @@ class MutateUpdateMorphOperationsTest extends TestCase
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'detach',
-                                'type'      => MorphToResource::class,
                                 'key'       => $morphToRelationToDetach->getKey(),
                             ],
                         ],
@@ -205,7 +201,6 @@ class MutateUpdateMorphOperationsTest extends TestCase
                         'relations' => [
                             'morphToRelation' => [
                                 'operation'  => 'update',
-                                'type'       => MorphToResource::class,
                                 'key'        => $morphToRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
