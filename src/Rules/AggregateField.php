@@ -86,7 +86,7 @@ class AggregateField implements Rule, DataAwareRule, ValidatorAwareRule
      */
     protected function buildValidationRules($attribute, $value)
     {
-        $relationResource = $this->resource->relationResource($value['relation']);
+        $relationResource = $this->resource->relation($value['relation'])?->resource();
 
         if (is_null($relationResource)) {
             return [];

@@ -56,20 +56,18 @@ class Includable implements ValidationRule, ValidatorAwareRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $relationResource = $this->resource->relationResource($value['relation']);
+        $resource = $this->resource->relation($value['relation'])?->resource();
 
-        if (is_null($relationResource)) {
+        if (is_null($resource)) {
             return;
         }
 
         $this
             ->validator
             ->setRules(
-                is_null($relationResource) ?
-                    [] :
-                    [
-                        $attribute => [new SearchRules($relationResource, app(RestRequest::class), false)],
-                    ]
+                [
+                    $attribute => [new SearchRules($resource, app(RestRequest::class), false)],
+                ]
             )
             ->validate();
     }

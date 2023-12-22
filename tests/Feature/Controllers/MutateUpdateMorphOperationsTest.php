@@ -66,7 +66,6 @@ class MutateUpdateMorphOperationsTest extends TestCase
                         'relations' => [
                             'morphToRelation' => [
                                 'operation'  => 'create',
-                                'type'       => MorphToResource::class,
                                 'attributes' => [],
                             ],
                         ],
@@ -116,7 +115,6 @@ class MutateUpdateMorphOperationsTest extends TestCase
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'attach',
-                                'type'      => MorphToResource::class,
                                 'key'       => $morphToRelationToAttach->getKey(),
                             ],
                         ],
@@ -163,7 +161,6 @@ class MutateUpdateMorphOperationsTest extends TestCase
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'detach',
-                                'type'      => MorphToResource::class,
                                 'key'       => $morphToRelationToDetach->getKey(),
                             ],
                         ],
@@ -205,7 +202,6 @@ class MutateUpdateMorphOperationsTest extends TestCase
                         'relations' => [
                             'morphToRelation' => [
                                 'operation'  => 'update',
-                                'type'       => MorphToResource::class,
                                 'key'        => $morphToRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],

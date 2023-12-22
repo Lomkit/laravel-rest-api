@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Relations;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -18,7 +19,7 @@ class Relation implements \JsonSerializable
     use Mutates;
     use Constrained;
     public string $relation;
-    protected array $types;
+    protected string $type;
 
     /**
      * The displayable name of the relation.
@@ -32,7 +33,7 @@ class Relation implements \JsonSerializable
     public function __construct($relation, $type)
     {
         $this->relation = $relation;
-        $this->types = [$type];
+        $this->type = $type;
     }
 
     /**
@@ -103,7 +104,7 @@ class Relation implements \JsonSerializable
      */
     public function resource()
     {
-        $resource = $this->types[0];
+        $resource = $this->type;
 
         // If the resource isn't registered, do it
         if (!app()->has($resource)) {
@@ -164,7 +165,7 @@ class Relation implements \JsonSerializable
         $request = app(RestRequest::class);
 
         return [
-            'resources'   => $this->types,
+            'resource'   => $this->type,
             'relation'    => $this->relation,
             'constraints' => [
                 'required_on_creation'   => $this->isRequiredOnCreation($request),

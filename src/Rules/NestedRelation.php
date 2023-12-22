@@ -60,7 +60,7 @@ class NestedRelation implements ValidationRule, ValidatorAwareRule
         $relationResource = $this->resource;
 
         do {
-            $relationResource = $relationResource->relationResource(Str::before($relation, '.'));
+            $relationResource = $relationResource->relation(Str::before($relation, '.'))?->resource();
 
             if ($relationResource === null) {
                 $fail('The relation is not allowed');

@@ -61,45 +61,6 @@ class MutateCreateMorphOperationsTest extends TestCase
         $this->assertNotNull(Model::first()->morph_to_relation_type);
     }
 
-    public function test_creating_a_resource_with_creating_second_morph_to_relation(): void
-    {
-        $modelToCreate = ModelFactory::new()->makeOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(MorphedByManyRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation'  => 'create',
-                        'attributes' => [
-                            'name'   => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'morphToRelation' => [
-                                'operation'  => 'create',
-                                'type'       => MorphedByManyResource::class,
-                                'attributes' => [],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertMutatedResponse(
-            $response,
-            [$modelToCreate],
-        );
-
-        $this->assertNotNull(Model::first()->morph_to_relation_id);
-        $this->assertNotNull(Model::first()->morph_to_relation_type);
-    }
-
     public function test_creating_a_resource_with_attaching_morph_to_relation(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
