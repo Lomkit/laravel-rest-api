@@ -12,9 +12,7 @@
   "require": {
     "php": "^8.0",
     "ext-json": "*",
-    "illuminate/contracts": "^10.0",
-    "illuminate/http": "^10.0",
-    "illuminate/support": "^10.0"
+    "laravel/framework": "^10.0"
   },
   "require-dev": {
     "guzzlehttp/guzzle": "^6.0|^7.0",
