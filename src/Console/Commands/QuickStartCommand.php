@@ -43,12 +43,12 @@ class QuickStartCommand extends Command
 
         $this->comment('Generating User Controller...');
         $this->callSilent('rest:controller', ['name' => 'UsersController']);
-        copy($this->resolveStubPath('/stubs/user-controller.stub'), app_path('Http/Controllers/UsersController.php'));
+        copy($this->resolveStubPath('/stubs/user-controller.stub'), app_path('Rest/Controllers/UsersController.php'));
 
         if (file_exists(app_path('Models/User.php'))) {
             file_put_contents(
-                app_path('Http/Controllers/UsersController.php'),
-                str_replace('App\User::class', 'App\Models\User::class', file_get_contents(app_path('Http/Controllers/UsersController.php')))
+                app_path('Rest/Controllers/UsersController.php'),
+                str_replace('App\User::class', 'App\Models\User::class', file_get_contents(app_path('Rest/Controllers/UsersController.php')))
             );
         }
 
@@ -58,7 +58,7 @@ class QuickStartCommand extends Command
             file_put_contents(
                 base_path('routes/api.php'),
                 file_get_contents(base_path('routes/api.php')).
-                '\Lomkit\Rest\Facades\Rest::resource(\'users\', \App\Http\Controllers\UsersController::class);'
+                '\Lomkit\Rest\Facades\Rest::resource(\'users\', \App\Rest\Controllers\UsersController::class);'
             );
         }
 
@@ -75,7 +75,7 @@ class QuickStartCommand extends Command
         $namespace = $this->laravel->getNamespace();
 
         $this->setAppNamespaceOn(app_path('Rest/Resources/UserResource.php'), $namespace);
-        $this->setAppNamespaceOn(app_path('Http/Controllers/UsersController.php'), $namespace);
+        $this->setAppNamespaceOn(app_path('Rest/Controllers/UsersController.php'), $namespace);
     }
 
     /**
