@@ -25,6 +25,13 @@ class Model extends BaseModel
         return $this->belongsTo(BelongsToRelation::class);
     }
 
+    public function belongsToManyQueryChangesRelation()
+    {
+        return $this->belongsToMany(BelongsToManyRelation::class)
+            ->as('belongs_to_many_pivot')
+            ->withPivot('created_at', 'updated_at', 'number');
+    }
+
     public function hasOneThroughRelation()
     {
         return $this->hasOneThrough(HasOneThroughRelation::class, HasOneRelation::class);

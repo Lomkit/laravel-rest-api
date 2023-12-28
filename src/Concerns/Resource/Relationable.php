@@ -27,7 +27,9 @@ trait Relationable
             return $relation->relation === $relationName;
         });
 
-        if ($isSubRelation && Str::contains($nestedRelation = Str::after($name, '.'), '.')) {
+        if ($isSubRelation) {
+            $nestedRelation = Str::after($name, '.');
+
             return $relation->resource()->relation($nestedRelation);
         }
 

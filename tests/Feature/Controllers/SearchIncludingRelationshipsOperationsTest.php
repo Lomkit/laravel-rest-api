@@ -2,8 +2,10 @@
 
 namespace Lomkit\Rest\Tests\Feature\Controllers;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
@@ -254,6 +256,76 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 ],
                 [
                     'belongs_to_relation' => null,
+                ],
+            ]
+        );
+    }
+
+    public function test_getting_a_list_of_resources_including_distant_relation_with_intermediary_search_query_condition(): void
+    {
+        $matchingModel = ModelFactory::new()->create(
+            ['number' => 1]
+        )->fresh();
+
+        $belongsToMany = BelongsToManyRelationFactory::new()
+            ->for($matchingModel)
+            ->create();
+
+        $matchingModel2 = ModelFactory::new()
+            ->afterCreating(function (Model $model) use ($belongsToMany) {
+                $model->belongsToManyQueryChangesRelation()
+                    ->attach($belongsToMany);
+            })
+            ->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'belongsToManyRelation.model'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $matchingModelBelongsToManyQueryChangesRelations = $matchingModel2->belongsToManyQueryChangesRelation;
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource(),
+            [
+                [
+                    'belongs_to_many_relation' => [],
+                ],
+                [
+                    'belongs_to_many_relation' => $matchingModelBelongsToManyQueryChangesRelations
+                            ->map(function (BelongsToManyRelation $belongsToManyRelation) {
+                                return array_merge(
+                                    $belongsToManyRelation
+                                        ->only((new BelongsToManyResource())->getFields(app()->make(RestRequest::class))),
+                                    [
+                                        'model'                 => null,
+                                        'belongs_to_many_pivot' => Arr::only(
+                                            $belongsToManyRelation
+                                                ->belongs_to_many_pivot
+                                                ->toArray(),
+                                            Arr::first(
+                                                (new ModelResource())->getRelations(app()->make(RestRequest::class)),
+                                                function (Relation $relation) {
+                                                    return $relation->relation === 'belongsToManyRelation';
+                                                }
+                                            )->getPivotFields()
+                                        ),
+                                    ]
+                                );
+                            })
+                            ->toArray(),
                 ],
             ]
         );
