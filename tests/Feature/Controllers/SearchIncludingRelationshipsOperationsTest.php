@@ -269,7 +269,6 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             })
             ->create()->fresh();
 
-
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
