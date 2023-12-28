@@ -12,10 +12,8 @@ return new class() extends Migration {
      */
     public function up()
     {
-        Schema::create('belongs_to_many_relations', function (Blueprint $table) {
-            $table->id();
-            $table->integer('number')->default(0);
-            $table->timestamps();
+        Schema::table('belongs_to_many_relations', function (Blueprint $table) {
+            $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\Model::class)->nullable()->constrained();
         });
     }
 };

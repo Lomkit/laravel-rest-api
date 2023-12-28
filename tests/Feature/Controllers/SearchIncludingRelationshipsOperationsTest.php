@@ -2,8 +2,10 @@
 
 namespace Lomkit\Rest\Tests\Feature\Controllers;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
@@ -20,6 +22,7 @@ use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\ModelWith;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
+use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyQueryChangesResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
@@ -261,15 +264,22 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
 
     public function test_getting_a_list_of_resources_including_distant_relation_with_intermediary_search_query_condition(): void
     {
-        $belongsToMany = BelongsToManyRelationFactory::new()->create();
-        $matchingModel = ModelFactory::new()
+        $matchingModel = ModelFactory::new()->create(
+            ['number' => 1]
+        )->fresh();
+
+        $belongsToMany = BelongsToManyRelationFactory::new()
+            ->for($matchingModel)
+            ->create();
+
+        $matchingModel2 = ModelFactory::new()
             ->afterCreating(function (Model $model) use ($belongsToMany) {
                 $model->belongsToManyQueryChangesRelation()
                     ->attach($belongsToMany);
             })
             ->create()->fresh();
 
-        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
 
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
@@ -279,16 +289,15 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             [
                 'search' => [
                     'includes' => [
-                        ['relation' => 'belongsToManyQueryChangesRelation.model'],
+                        ['relation' => 'belongsToManyRelation.model'],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
 
-        dd($response->getContent());
 
-        $matchingModelBelongsToRelation = $matchingModel->belongsToRelation;
+        $matchingModelBelongsToManyQueryChangesRelations = $matchingModel2->belongsToManyQueryChangesRelation;
 
         $this->assertResourcePaginated(
             $response,
@@ -296,20 +305,32 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             new ModelResource(),
             [
                 [
-                    'belongs_to_relation' => array_merge(
-                        $matchingModelBelongsToRelation
-                            ->only((new BelongsToResource())->getFields(app()->make(RestRequest::class))),
-                        [
-                            'models' => $matchingModelBelongsToRelation->models
-                                ->map(function ($model) {
-                                    return $model->only((new ModelResource())->getFields(app()->make(RestRequest::class)));
-                                })
-                                ->toArray(),
-                        ]
-                    ),
+                    'belongs_to_many_relation' => [],
                 ],
                 [
-                    'belongs_to_relation' => null,
+                    'belongs_to_many_relation' =>
+                        $matchingModelBelongsToManyQueryChangesRelations
+                            ->map(function (BelongsToManyRelation $belongsToManyRelation) {
+                                return array_merge(
+                                    $belongsToManyRelation
+                                        ->only((new BelongsToManyResource)->getFields(app()->make(RestRequest::class))),
+                                    [
+                                        'model' => null,
+                                        'belongs_to_many_pivot' => Arr::only(
+                                            $belongsToManyRelation
+                                                ->belongs_to_many_pivot
+                                                ->toArray(),
+                                            Arr::first(
+                                                (new ModelResource())->getRelations(app()->make(RestRequest::class)),
+                                                function (Relation $relation) {
+                                                    return $relation->relation === 'belongsToManyRelation';
+                                                }
+                                            )->getPivotFields()
+                                        )
+                                    ]
+                                );
+                            })
+                            ->toArray(),
                 ],
             ]
         );

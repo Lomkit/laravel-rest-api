@@ -58,11 +58,6 @@ class ModelResource extends Resource
                     'number' => 'numeric',
                 ])
                 ->withPivotFields(['created_at', 'number']),
-            BelongsToMany::make('belongsToManyQueryChangesRelation', BelongsToManyQueryChangesResource::class)
-                ->withPivotRules([
-                    'number' => 'numeric',
-                ])
-                ->withPivotFields(['created_at', 'number']),
 
             // Through relationships
             HasOneThrough::make('hasOneThroughRelation', HasOneThroughResource::class),

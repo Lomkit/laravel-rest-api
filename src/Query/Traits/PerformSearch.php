@@ -85,7 +85,9 @@ trait PerformSearch
 
         // Here we assume the user has asked a relation filter
         if (Str::contains($field, '.')) {
-            $relation = $this->resource->relation($field);
+            $relation = $this->resource->relation(
+                Str::beforeLast($field, '.')
+            );
 
             return $relation->filter($this->queryBuilder, $field, $operator, $value, $type, function ($query) use ($relation) {
                 $relation->applySearchQuery($query);
