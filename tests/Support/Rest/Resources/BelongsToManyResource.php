@@ -17,7 +17,7 @@ class BelongsToManyResource extends Resource
     public function relations(RestRequest $request): array
     {
         return [
-            BelongsTo::make('model', ModelQueryChangedResource::class)
+            BelongsTo::make('model', ModelQueryChangedResource::class),
         ];
     }
 

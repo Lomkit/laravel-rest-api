@@ -29,6 +29,7 @@ trait Relationable
 
         if ($isSubRelation) {
             $nestedRelation = Str::after($name, '.');
+
             return $relation->resource()->relation($nestedRelation);
         }
 

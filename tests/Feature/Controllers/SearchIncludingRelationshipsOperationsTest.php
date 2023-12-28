@@ -22,7 +22,6 @@ use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\ModelWith;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyQueryChangesResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
@@ -279,8 +278,6 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             })
             ->create()->fresh();
 
-
-
         Gate::policy(Model::class, GreenPolicy::class);
         Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
@@ -296,7 +293,6 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-
         $matchingModelBelongsToManyQueryChangesRelations = $matchingModel2->belongsToManyQueryChangesRelation;
 
         $this->assertResourcePaginated(
@@ -308,14 +304,13 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                     'belongs_to_many_relation' => [],
                 ],
                 [
-                    'belongs_to_many_relation' =>
-                        $matchingModelBelongsToManyQueryChangesRelations
+                    'belongs_to_many_relation' => $matchingModelBelongsToManyQueryChangesRelations
                             ->map(function (BelongsToManyRelation $belongsToManyRelation) {
                                 return array_merge(
                                     $belongsToManyRelation
-                                        ->only((new BelongsToManyResource)->getFields(app()->make(RestRequest::class))),
+                                        ->only((new BelongsToManyResource())->getFields(app()->make(RestRequest::class))),
                                     [
-                                        'model' => null,
+                                        'model'                 => null,
                                         'belongs_to_many_pivot' => Arr::only(
                                             $belongsToManyRelation
                                                 ->belongs_to_many_pivot
@@ -326,7 +321,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                                                     return $relation->relation === 'belongsToManyRelation';
                                                 }
                                             )->getPivotFields()
-                                        )
+                                        ),
                                     ]
                                 );
                             })
