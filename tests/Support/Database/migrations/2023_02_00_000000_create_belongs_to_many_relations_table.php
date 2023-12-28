@@ -15,6 +15,7 @@ return new class() extends Migration {
         Schema::create('belongs_to_many_relations', function (Blueprint $table) {
             $table->id();
             $table->integer('number')->default(0);
+            $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation::class)->nullable()->constrained();
             $table->timestamps();
         });
     }

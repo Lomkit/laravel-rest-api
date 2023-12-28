@@ -259,6 +259,63 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         );
     }
 
+    public function test_getting_a_list_of_resources_including_distant_relation_with_intermediary_search_query_condition(): void
+    {
+        $belongsToMany = BelongsToManyRelationFactory::new()->create();
+        $matchingModel = ModelFactory::new()
+            ->afterCreating(function (Model $model) use ($belongsToMany) {
+                $model->belongsToManyQueryChangesRelation()
+                    ->attach($belongsToMany);
+            })
+            ->create()->fresh();
+
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'belongsToManyQueryChangesRelation.model'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        dd($response->getContent());
+
+        $matchingModelBelongsToRelation = $matchingModel->belongsToRelation;
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource(),
+            [
+                [
+                    'belongs_to_relation' => array_merge(
+                        $matchingModelBelongsToRelation
+                            ->only((new BelongsToResource())->getFields(app()->make(RestRequest::class))),
+                        [
+                            'models' => $matchingModelBelongsToRelation->models
+                                ->map(function ($model) {
+                                    return $model->only((new ModelResource())->getFields(app()->make(RestRequest::class)));
+                                })
+                                ->toArray(),
+                        ]
+                    ),
+                ],
+                [
+                    'belongs_to_relation' => null,
+                ],
+            ]
+        );
+    }
+
     public function test_getting_a_list_of_resources_including_has_one_relation(): void
     {
         $matchingModel = ModelFactory::new()

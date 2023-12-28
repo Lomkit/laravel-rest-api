@@ -92,4 +92,3 @@ Here is a quick look at what you can do using API search method:
 - Refactor the response class
 - Plain text search using Laravel Scout
 - Alias for includes / aggregates
-- Add accurate examples in auto documentation
