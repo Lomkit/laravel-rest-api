@@ -46,7 +46,7 @@ trait ConfiguresRestParameters
      *
      * @return array
      */
-    public function getNestedFields(RestRequest $request, string $prefix = '', array $loadedRelations = [])
+    public function getNestedFields(RestRequest $request, int $maxDepth = 3, string $prefix = '', array $loadedRelations = [])
     {
         if ($prefix !== '') {
             $prefix = $prefix.'.';
@@ -69,7 +69,7 @@ trait ConfiguresRestParameters
             $loadedRelations[] = $relation->relation;
             array_push(
                 $fields,
-                ...$relation->resource()->getNestedFields($request, $prefix.$relation->relation, $loadedRelations),
+                ...($maxDepth > 0 ? $relation->resource()->getNestedFields($request, $maxDepth - 1, $prefix.$relation->relation, $loadedRelations) : []),
                 // We push the pivot fields if they exists
                 ...collect(method_exists($relation, 'getPivotFields') ? $relation->getPivotFields() : [])
                         ->map(function ($field) use ($relation, $prefix) { return $prefix.$relation->relation.'.pivot.'.$field; })
