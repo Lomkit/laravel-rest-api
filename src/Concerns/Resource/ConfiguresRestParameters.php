@@ -41,15 +41,15 @@ trait ConfiguresRestParameters
     }
 
     /**
-     * Verify the field is correct including nested relations
+     * Verify the field is correct including nested relations.
      *
      * @param string $field
+     *
      * @return bool
      */
     public function isNestedField(string $field, Relation $relation = null)
     {
-        if (Str::contains($field ,'.')) {
-
+        if (Str::contains($field, '.')) {
             // In case we are on a pivot we look for the relation pivot fields
             if (Str::before($field, '.') === 'pivot') {
                 return method_exists($relation, 'getPivotFields') && in_array(Str::after($field, '.'), $relation->getPivotFields());
