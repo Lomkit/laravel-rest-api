@@ -111,7 +111,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
         $rules = array_merge(
             [
                 $prefix.'.*.field' => [
-                    Rule::in($resource->getNestedFields($this->request)),
+                    new IsNestedField($resource, $this->request),
                     "required_without:$prefix.*.nested",
                     'string',
                 ],

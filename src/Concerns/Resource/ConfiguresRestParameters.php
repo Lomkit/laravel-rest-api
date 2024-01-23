@@ -2,7 +2,10 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Relations\Relation;
 
 trait ConfiguresRestParameters
 {
@@ -38,45 +41,26 @@ trait ConfiguresRestParameters
     }
 
     /**
-     * Get nested fields by prefixing them with a given prefix.
+     * Verify the field is correct including nested relations.
      *
-     * @param RestRequest $request
-     * @param string      $prefix
-     * @param array       $loadedRelations
+     * @param string $field
      *
-     * @return array
+     * @return bool
      */
-    public function getNestedFields(RestRequest $request, string $prefix = '', array $loadedRelations = [])
+    public function isNestedField(string $field, Relation $relation = null)
     {
-        if ($prefix !== '') {
-            $prefix = $prefix.'.';
+        if (Str::contains($field, '.')) {
+            // In case we are on a pivot we look for the relation pivot fields
+            if (Str::before($field, '.') === 'pivot') {
+                return method_exists($relation, 'getPivotFields') && in_array(Str::after($field, '.'), $relation->getPivotFields());
+            }
+
+            $fieldRelation = $this->relation(Str::before($field, '.'));
+
+            return $fieldRelation->resource()->isNestedField(Str::after($field, '.'), $fieldRelation);
         }
 
-        $fields = array_map(
-            function ($field) use ($prefix) {
-                return $prefix.$field;
-            },
-            $this->getFields($request)
-        );
-
-        foreach (
-            collect($this->getRelations($request))
-                ->filter(function ($relation) use ($loadedRelations) {
-                    return !in_array($relation->relation, $loadedRelations);
-                })
-            as $relation
-        ) {
-            $loadedRelations[] = $relation->relation;
-            array_push(
-                $fields,
-                ...$relation->resource()->getNestedFields($request, $prefix.$relation->relation, $loadedRelations),
-                // We push the pivot fields if they exists
-                ...collect(method_exists($relation, 'getPivotFields') ? $relation->getPivotFields() : [])
-                        ->map(function ($field) use ($relation, $prefix) { return $prefix.$relation->relation.'.pivot.'.$field; })
-            );
-        }
-
-        return $fields;
+        return in_array($field, $this->getFields(App::make(RestRequest::class)));
     }
 
     /**
