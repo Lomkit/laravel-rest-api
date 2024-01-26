@@ -36,6 +36,28 @@ class SearchFilteringOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
     }
 
+    public function test_getting_a_list_of_resources_filtered_by_not_authorized_relation_field(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'filters' => [
+                        ['field' => 'non_authorized_relation.field', 'value' => 'value'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
+    }
+
     public function test_getting_a_list_of_resources_filtered_by_model_field_using_default_operator(): void
     {
         $matchingModel = ModelFactory::new()->create(['name' => 'match'])->fresh();

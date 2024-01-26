@@ -57,7 +57,7 @@ trait ConfiguresRestParameters
 
             $fieldRelation = $this->relation(Str::before($field, '.'));
 
-            return $fieldRelation->resource()->isNestedField(Str::after($field, '.'), $fieldRelation);
+            return $fieldRelation?->resource()->isNestedField(Str::after($field, '.'), $fieldRelation) ?? false;
         }
 
         return in_array($field, $this->getFields(App::make(RestRequest::class)));
