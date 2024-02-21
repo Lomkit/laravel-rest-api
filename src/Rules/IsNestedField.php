@@ -43,4 +43,9 @@ class IsNestedField implements ValidationRule
             $fail('The '.$attribute.' field is not valid.');
         }
     }
+
+    public function __toString()
+    {
+        return 'nested_field';
+    }
 }
