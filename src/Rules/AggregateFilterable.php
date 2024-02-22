@@ -63,19 +63,17 @@ class AggregateFilterable implements ValidationRule, DataAwareRule, ValidatorAwa
      */
     protected function buildValidationRules($attribute, $value)
     {
-        $rules = [];
+        $aggregateResource = $this->resource->relation($value['relation'])?->resource();
 
-        foreach ($this->data['search']['aggregates'] as $aggregate) {
-            $resource = $this->resource->relation($aggregate['relation'])?->resource();
-
-            if (is_null($this->resource)) {
-                continue;
-            }
-
-            array_push($rules, (new SearchRules($resource, app()->make(RestRequest::class), false))->filtersRules($resource, $attribute));
+        if (is_null($aggregateResource)) {
+            return [];
         }
 
-        return $rules;
+        return (new SearchRules($this->resource, app()->make(RestRequest::class), false))
+            ->filtersRules(
+                $aggregateResource,
+                $attribute.'.filters'
+            );
     }
 
     /**

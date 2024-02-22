@@ -26,6 +26,7 @@ class BelongsToManyResource extends Resource
         return [
             'id',
             'number',
+            'other_number'
         ];
     }
 }
