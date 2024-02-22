@@ -299,7 +299,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
                     ->resource($resource),
                 AggregateFilterable::make()
                     ->resource($resource),
-            ]
+            ],
         ];
     }
 }
