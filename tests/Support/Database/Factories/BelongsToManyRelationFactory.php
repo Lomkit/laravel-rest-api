@@ -22,7 +22,8 @@ class BelongsToManyRelationFactory extends Factory
     public function definition()
     {
         return [
-            'number' => fake()->numberBetween(-5000, 5000),
+            'number'       => fake()->numberBetween(-5000, 5000),
+            'other_number' => fake()->numberBetween(-5000, 5000),
         ];
     }
 }

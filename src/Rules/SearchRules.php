@@ -297,8 +297,6 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
             $prefix.'.*' => [
                 AggregateField::make()
                     ->resource($resource),
-            ],
-            $prefix.'.*.filters' => [
                 AggregateFilterable::make()
                     ->resource($resource),
             ],

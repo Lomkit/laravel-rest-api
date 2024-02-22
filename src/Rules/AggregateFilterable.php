@@ -63,14 +63,16 @@ class AggregateFilterable implements ValidationRule, DataAwareRule, ValidatorAwa
      */
     protected function buildValidationRules($attribute, $value)
     {
-        if (is_null($this->resource)) {
+        $aggregateResource = $this->resource->relation($value['relation'])?->resource();
+
+        if (is_null($aggregateResource)) {
             return [];
         }
 
         return (new SearchRules($this->resource, app()->make(RestRequest::class), false))
             ->filtersRules(
-                $this->resource,
-                $attribute
+                $aggregateResource,
+                $attribute.'.filters'
             );
     }
 
