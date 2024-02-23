@@ -13,6 +13,7 @@ use Lomkit\Rest\Concerns\Resource\HasResourceHooks;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
 use Lomkit\Rest\Concerns\Resource\Rulable;
+use Lomkit\Rest\Concerns\Statsable;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instructionable;
 
@@ -28,6 +29,7 @@ class Resource implements \JsonSerializable
     use Actionable;
     use Instructionable;
     use HasResourceHooks;
+    use Statsable;
 
     /**
      * The model the entry corresponds to.

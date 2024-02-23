@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
 
@@ -127,11 +128,7 @@ class Response implements Responsable
                 $this->responsable->perPage(),
                 $this->responsable->currentPage(),
                 $this->responsable->getOptions(),
-                $this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
-                    config('rest.gates.key') => [
-                        config('rest.gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
-                    ],
-                ] : []
+                $this->meta($request),
             );
 
             $restLengthAwarePaginator->through(function ($model) use ($request) {
@@ -147,14 +144,26 @@ class Response implements Responsable
 
         return [
             'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input('search', []))),
-            'meta' => array_merge(
-                $this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
-                    config('rest.gates.key') => [
-                        config('rest.gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
-                    ],
-                ] : []
-            ),
+            'meta' => $this->meta($request),
         ];
+    }
+
+    protected function meta($request)
+    {
+        $meta = [];
+
+        if($this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', []))) {
+            $meta = array_merge($meta, [config('rest.gates.key') => [
+                config('rest.gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
+            ]]);
+        }
+
+        if((bool) $request->input('search.stats')) {
+            $query = app()->make(QueryBuilder::class, ['resource' => $this->resource, 'query' => null])->search($request->input('search', []));
+            $meta = array_merge($meta, ['stats' => $this->resource->stats($query)]);
+        }
+
+        return $meta;
     }
 
     /**

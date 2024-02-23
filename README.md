@@ -80,6 +80,7 @@ Here is a quick look at what you can do using API search method:
           }
         ],
         "gates": ["create", "view"],
+        "stats": true,
         "page": 2,
         "limit": 10
     }
