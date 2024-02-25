@@ -152,13 +152,13 @@ class Response implements Responsable
     {
         $meta = [];
 
-        if($this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', []))) {
+        if ($this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', []))) {
             $meta = array_merge($meta, [config('rest.gates.key') => [
                 config('rest.gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
             ]]);
         }
 
-        if((bool) $request->input('search.stats')) {
+        if ((bool) $request->input('search.stats')) {
             $query = app()->make(QueryBuilder::class, ['resource' => $this->resource, 'query' => null])->search($request->input('search', []));
             $meta = array_merge($meta, ['stats' => $this->resource->stats($query)]);
         }

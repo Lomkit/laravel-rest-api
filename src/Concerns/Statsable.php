@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Concerns;
 
-
 trait Statsable
 {
     /**
