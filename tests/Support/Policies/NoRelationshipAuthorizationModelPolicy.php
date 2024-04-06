@@ -9,23 +9,28 @@ class NoRelationshipAuthorizationModelPolicy
 {
     use HandlesAuthorization;
 
-    public function attachBelongsToRelation($user, Model $model, Model $toAttachModel) {
+    public function attachBelongsToRelation($user, Model $model, Model $toAttachModel)
+    {
         return false;
     }
 
-    public function attachHasOneRelation($user, Model $model, Model $toAttachModel) {
+    public function attachHasOneRelation($user, Model $model, Model $toAttachModel)
+    {
         return false;
     }
 
-    public function attachHasOneOfManyRelation($user, Model $model, Model $toAttachModel) {
+    public function attachHasOneOfManyRelation($user, Model $model, Model $toAttachModel)
+    {
         return false;
     }
 
-    public function attachBelongsToManyRelation($user, Model $model, Model $toAttachModel) {
+    public function attachBelongsToManyRelation($user, Model $model, Model $toAttachModel)
+    {
         return false;
     }
 
-    public function attachHasManyRelation($user, Model $model, Model $toAttachModel) {
+    public function attachHasManyRelation($user, Model $model, Model $toAttachModel)
+    {
         return false;
     }
 

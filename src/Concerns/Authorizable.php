@@ -14,12 +14,12 @@ trait Authorizable
     /**
      * Determine if the current user has a given ability.
      *
-     * @param string                   $ability
+     * @param string       $ability
      * @param Model|string $model
      *
-     * @return void
-     *@throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      *
+     * @return void
      */
     public function authorizeTo($ability, $model)
     {
@@ -55,8 +55,8 @@ trait Authorizable
     /**
      * Determine if the current user can perform an ability on the given model.
      *
-     * @param string                   $ability
-     * @param Model|string                   $model
+     * @param string       $ability
+     * @param Model|string $model
      *
      * @return bool
      */
@@ -93,12 +93,12 @@ trait Authorizable
      * Determine if the current user has a given ability.
      *
      * @param string $ability
-     * * @param Model $model
-     * * @param string $toActionModel
+     *                        * @param Model $model
+     *                        * @param string $toActionModel
      *
-     * @return void
      * @throws \Illuminate\Auth\Access\AuthorizationException
      *
+     * @return void
      */
     public function authorizeToPerformActionOnRelationship($ability, $model, $toActionModel)
     {
@@ -106,8 +106,8 @@ trait Authorizable
         $method = $ability.class_basename($toActionModel);
 
         if (!is_null($gate) && method_exists($gate, $method) && $this->isAuthorizingEnabled()) {
-            $resolver = function () use ($method, $gate, $ability, $model, $toActionModel) {
-                return ! is_null($gate) && method_exists($gate, $method)
+            $resolver = function () use ($method, $gate, $model, $toActionModel) {
+                return !is_null($gate) && method_exists($gate, $method)
                     ? Gate::authorize($method, [$model, $toActionModel])
                     : true;
             };
@@ -141,9 +141,9 @@ trait Authorizable
     /**
      * Determine if the current user can perform an ability on the given model.
      *
-     * @param string                   $ability
-     * @param Model                   $model
-     * @param string                   $toActionModel
+     * @param string $ability
+     * @param Model  $model
+     * @param string $toActionModel
      *
      * @return bool
      */
@@ -153,7 +153,7 @@ trait Authorizable
         $method = $ability.class_basename($toActionModel);
 
         if (!is_null($gate) && method_exists($gate, $method) && $this->isAuthorizingEnabled()) {
-            $resolver = function () use ($method, $gate, $toActionModel, $ability, $model) {
+            $resolver = function () use ($method, $toActionModel, $model) {
                 return Gate::check($method, [$model, $toActionModel]);
             };
 
@@ -184,8 +184,9 @@ trait Authorizable
     /**
      * Determine if the user can attach models of the given type to the base model.
      *
-     * @param  \Illuminate\Database\Eloquent\Model|string  $model
-     * @param  \Illuminate\Database\Eloquent\Model|string  $toAttachModel
+     * @param \Illuminate\Database\Eloquent\Model|string $model
+     * @param \Illuminate\Database\Eloquent\Model|string $toAttachModel
+     *
      * @return bool
      */
     public function authorizedToAttach($model, $toAttachModel)
@@ -196,8 +197,9 @@ trait Authorizable
     /**
      * Determine if the user can attach models of the given type to the base model.
      *
-     * @param  \Illuminate\Database\Eloquent\Model|string  $model
-     * @param  \Illuminate\Database\Eloquent\Model|string  $toAttachModel
+     * @param \Illuminate\Database\Eloquent\Model|string $model
+     * @param \Illuminate\Database\Eloquent\Model|string $toAttachModel
+     *
      * @return void
      */
     public function authorizeToAttach($model, $toAttachModel)
