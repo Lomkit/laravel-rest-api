@@ -31,8 +31,8 @@ class HasOneOfMany extends Relation implements RelationResource
                 $this->resource()->authorizeToAttach($model, $toPerformActionModel);
                 break;
             case 'detach':
-            $this->resource()->authorizeToDetach($model, $toPerformActionModel);
-            break;
+                $this->resource()->authorizeToDetach($model, $toPerformActionModel);
+                break;
         }
     }
 }
