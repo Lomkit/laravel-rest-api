@@ -88,7 +88,6 @@ class MorphToMany extends MorphRelation implements RelationResource
                 foreach ($results['detached'] as $detached) {
                     $this->resource()->authorizeToDetach($model, $relation->resource()::$model::find($detached));
                 }
-
             } elseif ($mutationRelation['operation'] === 'sync') {
                 $results = $model
                     ->{$relation->relation}()

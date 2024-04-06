@@ -26,9 +26,9 @@ class BelongsTo extends Relation implements RelationResource
             case 'attach':
                 $this->resource()->authorizeToAttach($model, $toPerformActionModel);
                 break;
-            case 'detach';
-                $this->resource()->authorizeToDetach($model, $toPerformActionModel);
-                break;
+            case 'detach':
+            $this->resource()->authorizeToDetach($model, $toPerformActionModel);
+            break;
         }
 
         $model

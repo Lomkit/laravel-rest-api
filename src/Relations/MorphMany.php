@@ -35,9 +35,9 @@ class MorphMany extends MorphRelation implements RelationResource
                 case 'attach':
                     $this->resource()->authorizeToAttach($model, $toPerformActionModel);
                     break;
-                case 'detach';
-                    $this->resource()->authorizeToDetach($model, $toPerformActionModel);
-                    break;
+                case 'detach':
+                $this->resource()->authorizeToDetach($model, $toPerformActionModel);
+                break;
             }
         }
     }

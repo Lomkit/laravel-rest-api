@@ -3,35 +3,22 @@
 namespace Controllers;
 
 use Illuminate\Support\Facades\Gate;
-use Lomkit\Rest\Concerns\Authorizable;
-use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Tests\Feature\TestCase;
-use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneOfManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\MorphToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\MorphToRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasOneOfManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphManyRelationFactory;
+use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneOfManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneRelationFactory;
+use Lomkit\Rest\Tests\Support\Database\Factories\MorphToManyRelationFactory;
+use Lomkit\Rest\Tests\Support\Database\Factories\MorphToRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\NoRelationshipAuthorizationModelFactory;
-use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\MorphToRelation;
-use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
-use Lomkit\Rest\Tests\Support\Models\HasOneOfManyRelation;
-use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
-use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\MorphManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneOfManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
+use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
+use Lomkit\Rest\Tests\Support\Models\MorphToRelation;
 use Lomkit\Rest\Tests\Support\Models\NoRelationshipAuthorizedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Policies\NoRelationshipAuthorizationModelPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\NoRelationshipAuthorizationModelResource;
-use Mockery;
-use Mockery\MockInterface;
 
 class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
 {
@@ -452,15 +439,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
+                            'name'   => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToRelation' => [
-                                'operation' => 'update',
-                                'key' => $morphToRelationToUpdate->getKey(),
+                                'operation'  => 'update',
+                                'key'        => $morphToRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],

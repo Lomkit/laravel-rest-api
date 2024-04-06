@@ -3,9 +3,6 @@
 namespace Controllers;
 
 use Illuminate\Support\Facades\Gate;
-use Lomkit\Rest\Concerns\Authorizable;
-use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
@@ -19,13 +16,9 @@ use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 use Lomkit\Rest\Tests\Support\Models\HasOneOfManyRelation;
 use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
-use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\NoRelationshipAuthorizedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Policies\NoRelationshipAuthorizationModelPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\NoRelationshipAuthorizationModelResource;
-use Mockery;
-use Mockery\MockInterface;
 
 class MutateNotAuthorizedRelationsOperationsTest extends TestCase
 {
@@ -446,15 +439,15 @@ class MutateNotAuthorizedRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation' => 'create',
+                        'operation'  => 'create',
                         'attributes' => [
-                            'name' => $modelToCreate->name,
+                            'name'   => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
-                                'operation' => 'update',
-                                'key' => $belongsToRelationToUpdate->getKey(),
+                                'operation'  => 'update',
+                                'key'        => $belongsToRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],

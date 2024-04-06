@@ -60,9 +60,8 @@ class NoRelationshipAuthorizationModelPolicy
     }
 
     /**
-     * MORPHS
+     * MORPHS.
      */
-
     public function attachMorphToRelation($user, Model $model, Model $toAttachModel)
     {
         return false;
