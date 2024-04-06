@@ -34,6 +34,85 @@ class NoRelationshipAuthorizationModelPolicy
         return false;
     }
 
+    public function detachBelongsToRelation($user, Model $model, Model $toDetachModel)
+    {
+        return false;
+    }
+
+    public function detachHasOneRelation($user, Model $model, Model $toDetachModel)
+    {
+        return false;
+    }
+
+    public function detachHasOneOfManyRelation($user, Model $model, Model $toDetachModel)
+    {
+        return false;
+    }
+
+    public function detachBelongsToManyRelation($user, Model $model, Model $toDetachModel)
+    {
+        return false;
+    }
+
+    public function detachHasManyRelation($user, Model $model, Model $toDetachModel)
+    {
+        return false;
+    }
+
+    /**
+     * MORPHS
+     */
+
+    public function attachMorphToRelation($user, Model $model, Model $toAttachModel)
+    {
+        return false;
+    }
+
+    public function attachMorphOneRelation($user, Model $model, Model $toAttachModel)
+    {
+        return false;
+    }
+
+    public function attachMorphOneOfManyRelation($user, Model $model, Model $toAttachModel)
+    {
+        return false;
+    }
+
+    public function attachMorphToManyRelation($user, Model $model, Model $toAttachModel)
+    {
+        return false;
+    }
+
+    public function attachMorphManyRelation($user, Model $model, Model $toAttachModel)
+    {
+        return false;
+    }
+
+    public function detachMorphToRelation($user, Model $model, Model $toAttachModel)
+    {
+        return false;
+    }
+
+    public function detachMorphOneRelation($user, Model $model, Model $toAttachModel)
+    {
+        return false;
+    }
+
+    public function detachMorphOneOfManyRelation($user, Model $model, Model $toAttachModel)
+    {
+        return false;
+    }
+
+    public function detachMorphToManyRelation($user, Model $model, Model $toAttachModel)
+    {
+        return false;
+    }
+
+    public function detachMorphManyRelation($user, Model $model, Model $toAttachModel)
+    {
+        return false;
+    }
+
     /**
      * Determine whether the user can view the list of models.
      *

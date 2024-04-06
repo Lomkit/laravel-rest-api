@@ -206,4 +206,30 @@ trait Authorizable
     {
         $this->authorizeToPerformActionOnRelationship('attach', $model, $toAttachModel);
     }
+
+    /**
+     * Determine if the user can detach models of the given type to the base model.
+     *
+     * @param \Illuminate\Database\Eloquent\Model|string $model
+     * @param \Illuminate\Database\Eloquent\Model|string $toAttachModel
+     *
+     * @return bool
+     */
+    public function authorizedToDetach($model, $toAttachModel)
+    {
+        return $this->authorizedToPerformActionOnRelationship('detach', $model, $toAttachModel);
+    }
+
+    /**
+     * Determine if the user can detach models of the given type to the base model.
+     *
+     * @param \Illuminate\Database\Eloquent\Model|string $model
+     * @param \Illuminate\Database\Eloquent\Model|string $toAttachModel
+     *
+     * @return void
+     */
+    public function authorizeToDetach($model, $toAttachModel)
+    {
+        $this->authorizeToPerformActionOnRelationship('detach', $model, $toAttachModel);
+    }
 }

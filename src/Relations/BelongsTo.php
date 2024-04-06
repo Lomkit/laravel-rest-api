@@ -21,8 +21,13 @@ class BelongsTo extends Relation implements RelationResource
             ->applyMutation($mutationRelations[$relation->relation]);
 
         switch ($mutationRelations[$relation->relation]['operation']) {
+            case 'create':
+            case 'update':
             case 'attach':
                 $this->resource()->authorizeToAttach($model, $toPerformActionModel);
+                break;
+            case 'detach';
+                $this->resource()->authorizeToDetach($model, $toPerformActionModel);
                 break;
         }
 

@@ -17,11 +17,24 @@ class MorphTo extends MorphRelation implements RelationResource
      */
     public function beforeMutating(Model $model, Relation $relation, array $mutationRelations)
     {
+        $toPerformActionModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+            ->applyMutation($mutationRelations[$relation->relation]);
+
+        switch ($mutationRelations[$relation->relation]['operation']) {
+            case 'create':
+            case 'update':
+            case 'attach':
+                $this->resource()->authorizeToAttach($model, $toPerformActionModel);
+                break;
+            case 'detach';
+                $this->resource()->authorizeToDetach($model, $toPerformActionModel);
+                break;
+        }
+
         $model
             ->{$relation->relation}()
             ->{$mutationRelations[$relation->relation]['operation'] === 'detach' ? 'dissociate' : 'associate'}(
-                app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
-                    ->applyMutation($mutationRelations[$relation->relation])
+                $toPerformActionModel
             );
     }
 }

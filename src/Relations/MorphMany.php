@@ -26,8 +26,19 @@ class MorphMany extends MorphRelation implements RelationResource
                 $model->{$relation->relation}()->getMorphType()      => $model::class,
             ];
 
-            app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+            $toPerformActionModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
                 ->applyMutation($mutationRelation, $attributes);
+
+            switch ($mutationRelation['operation']) {
+                case 'create':
+                case 'update':
+                case 'attach':
+                    $this->resource()->authorizeToAttach($model, $toPerformActionModel);
+                    break;
+                case 'detach';
+                    $this->resource()->authorizeToDetach($model, $toPerformActionModel);
+                    break;
+            }
         }
     }
 }

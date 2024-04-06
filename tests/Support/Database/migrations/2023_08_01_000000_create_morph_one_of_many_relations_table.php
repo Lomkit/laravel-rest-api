@@ -14,7 +14,7 @@ return new class() extends Migration {
     {
         Schema::create('morph_one_of_many_relations', function (Blueprint $table) {
             $table->id();
-            $table->morphs('morph_one_of_many_relation', 'morph_one_of_many_relation_index');
+            $table->nullableMorphs('morph_one_of_many_relation', 'morph_one_of_many_relation_index');
             $table->integer('number')->default(0);
             $table->timestamps();
         });

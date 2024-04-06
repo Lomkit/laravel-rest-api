@@ -29,8 +29,13 @@ class HasMany extends Relation implements RelationResource
                 ->applyMutation($mutationRelation, $attributes);
 
             switch ($mutationRelation['operation']) {
+                case 'create':
+                case 'update':
                 case 'attach':
                     $this->resource()->authorizeToAttach($model, $toPerformActionModel);
+                    break;
+                case 'detach';
+                    $this->resource()->authorizeToDetach($model, $toPerformActionModel);
                     break;
             }
         }
