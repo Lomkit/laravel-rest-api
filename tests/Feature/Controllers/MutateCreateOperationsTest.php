@@ -610,7 +610,7 @@ class MutateCreateOperationsTest extends TestCase
     public function test_creating_a_resource_with_updating_has_many_relation(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
-        $hasManyRelationToAttach = HasManyRelationFactory::new()
+        $hasManyRelationToUpdate = HasManyRelationFactory::new()
             ->for(
                 ModelFactory::new()->createOne()
             )
@@ -633,7 +633,7 @@ class MutateCreateOperationsTest extends TestCase
                             'hasManyRelation' => [
                                 [
                                     'operation'  => 'update',
-                                    'key'        => $hasManyRelationToAttach->getKey(),
+                                    'key'        => $hasManyRelationToUpdate->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -651,7 +651,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the number has been modified on the relation
         $this->assertEquals(
-            $hasManyRelationToAttach->fresh()->number,
+            $hasManyRelationToUpdate->fresh()->number,
             5001
         );
 
@@ -752,7 +752,7 @@ class MutateCreateOperationsTest extends TestCase
     public function test_creating_a_resource_with_updating_has_one_relation(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
-        $hasOneRelationToAttach = HasOneRelationFactory::new()
+        $hasOneRelationToUpdate = HasOneRelationFactory::new()
             ->for(
                 ModelFactory::new()->createOne()
             )
@@ -774,7 +774,7 @@ class MutateCreateOperationsTest extends TestCase
                         'relations' => [
                             'hasOneRelation' => [
                                 'operation'  => 'update',
-                                'key'        => $hasOneRelationToAttach->getKey(),
+                                'key'        => $hasOneRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -791,7 +791,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the number has been modified on the relation
         $this->assertEquals(
-            $hasOneRelationToAttach->fresh()->number,
+            $hasOneRelationToUpdate->fresh()->number,
             5001
         );
 
@@ -892,7 +892,7 @@ class MutateCreateOperationsTest extends TestCase
     public function test_creating_a_resource_with_updating_has_one_of_many_relation(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
-        $hasOneOfManyRelationToAttach = HasOneOfManyRelationFactory::new()
+        $hasOneOfManyRelationToUpdate = HasOneOfManyRelationFactory::new()
             ->for(
                 ModelFactory::new()->createOne()
             )
@@ -914,7 +914,7 @@ class MutateCreateOperationsTest extends TestCase
                         'relations' => [
                             'hasOneOfManyRelation' => [
                                 'operation'  => 'update',
-                                'key'        => $hasOneOfManyRelationToAttach->getKey(),
+                                'key'        => $hasOneOfManyRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -931,7 +931,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the number has been modified on the relation
         $this->assertEquals(
-            $hasOneOfManyRelationToAttach->fresh()->number,
+            $hasOneOfManyRelationToUpdate->fresh()->number,
             5001
         );
 

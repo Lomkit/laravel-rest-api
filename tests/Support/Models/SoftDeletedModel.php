@@ -15,4 +15,11 @@ class SoftDeletedModel extends Model
     {
         return SoftDeletedModelFactory::new();
     }
+
+    public function belongsToManyRelation()
+    {
+        return $this->belongsToMany(BelongsToManyRelation::class, 'belongs_to_many_relation_soft_deleted_model', 'soft_deleted_model_id', 'belongs_to_many_relation_id')
+            ->as('belongs_to_many_pivot')
+            ->withPivot('created_at', 'updated_at', 'number');
+    }
 }
