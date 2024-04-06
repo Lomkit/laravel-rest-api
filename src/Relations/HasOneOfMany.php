@@ -21,7 +21,13 @@ class HasOneOfMany extends Relation implements RelationResource
             $model->{$relation->relation}()->getForeignKeyName() => $mutationRelations[$relation->relation]['operation'] === 'detach' ? null : $model->{$relation->relation}()->getParentKey(),
         ];
 
-        app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+        $toPerformActionModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
             ->applyMutation($mutationRelations[$relation->relation], $attributes);
+
+        switch ($mutationRelations[$relation->relation]['operation']) {
+            case 'attach':
+                $this->resource()->authorizeToAttach($model, $toPerformActionModel);
+                break;
+        }
     }
 }

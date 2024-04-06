@@ -55,13 +55,16 @@ class BelongsToMany extends Relation implements RelationResource
                             ->getKey()
                     );
             } elseif ($mutationRelation['operation'] === 'attach') {
+                $toAttachModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+                    ->applyMutation($mutationRelation);
+
+                $this->resource()->authorizeToAttach($model, $toAttachModel);
+
                 $model
                     ->{$relation->relation}()
                     ->attach(
                         [
-                            app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
-                                ->applyMutation($mutationRelation)
-                                ->getKey() => $mutationRelation['pivot'] ?? [],
+                            $toAttachModel->getKey() => $mutationRelation['pivot'] ?? [],
                         ]
                     );
             } elseif ($mutationRelation['operation'] === 'toggle') {

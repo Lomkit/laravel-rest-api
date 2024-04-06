@@ -39,17 +39,17 @@ class Model extends BaseModel
 
     public function hasOneRelation()
     {
-        return $this->hasOne(HasOneRelation::class);
+        return $this->hasOne(HasOneRelation::class, 'model_id');
     }
 
     public function hasManyRelation()
     {
-        return $this->hasMany(HasManyRelation::class);
+        return $this->hasMany(HasManyRelation::class, 'model_id');
     }
 
     public function hasOneOfManyRelation()
     {
-        return $this->hasOne(HasOneOfManyRelation::class)->ofMany();
+        return $this->hasOne(HasOneOfManyRelation::class, 'model_id')->ofMany();
     }
 
     public function hasManyThroughRelation()
@@ -59,7 +59,7 @@ class Model extends BaseModel
 
     public function belongsToManyRelation()
     {
-        return $this->belongsToMany(BelongsToManyRelation::class)
+        return $this->belongsToMany(BelongsToManyRelation::class, 'belongs_to_many_relation_model', 'model_id', 'belongs_to_many_relation_id')
             ->as('belongs_to_many_pivot')
             ->withPivot('created_at', 'updated_at', 'number');
     }
