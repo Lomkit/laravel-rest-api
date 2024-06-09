@@ -17,7 +17,8 @@
   "require-dev": {
     "guzzlehttp/guzzle": "^6.0|^7.0",
     "orchestra/testbench": "^8.5|^9.0",
-    "phpunit/phpunit": "^8.0|^9.0|^10.0|^11.0"
+    "phpunit/phpunit": "^8.0|^9.0|^10.0|^11.0",
+    "laravel/scout": "^10.0|^11.0"
   },
   "autoload": {
     "psr-4": {

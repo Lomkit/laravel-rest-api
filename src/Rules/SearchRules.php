@@ -72,6 +72,8 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
             ->validator
             ->setRules(
                 array_merge(
+                    $this->isRootSearchRules ? [$attribute.'text' => ['sometimes', 'array']] : [],
+                    $this->isRootSearchRules ? $this->textRules($this->resource, $attribute.'text') : [],
                     [$attribute.'filters' => ['sometimes', 'array']],
                     $this->filtersRules($this->resource, $attribute.'filters'),
                     [$attribute.'scopes' => ['sometimes', 'array']],
@@ -94,6 +96,24 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
                 )
             )
             ->validate();
+    }
+
+    /**
+     * Define the validation rules for filters within the search request.
+     *
+     * @param \Lomkit\Rest\Http\Resource $resource
+     * @param string                     $prefix
+     * @param bool                       $isMaxDepth
+     *
+     * @return array
+     */
+    public function textRules(\Lomkit\Rest\Http\Resource $resource, string $prefix, bool $isMaxDepth = false)
+    {
+        return [
+            $prefix.'.value' => [
+                'string',
+            ]
+        ];
     }
 
     // @TODO: For now it's prohibited to have more than one nested depth, is this needed ?
