@@ -2,13 +2,8 @@
 
 namespace Lomkit\Rest\Query;
 
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Traits\Conditionable;
-use Illuminate\Support\Traits\Tappable;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Query\Traits\PerformMutation;
-use Lomkit\Rest\Query\Traits\PerformSearch;
 
 class ScoutBuilder implements QueryBuilder
 {

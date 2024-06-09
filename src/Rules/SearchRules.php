@@ -112,7 +112,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
         return [
             $prefix.'.value' => [
                 'string',
-            ]
+            ],
         ];
     }
 
