@@ -11,7 +11,6 @@ use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 class Model extends BaseModel
 {
     use HasFactory;
-    use Searchable;
 
     protected static function newFactory()
     {

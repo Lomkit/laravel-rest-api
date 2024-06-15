@@ -2,8 +2,10 @@
 
 namespace Lomkit\Rest;
 
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Lomkit\Rest\Concerns\PerformsRestOperations;
 use Lomkit\Rest\Console\Commands\ActionCommand;
 use Lomkit\Rest\Console\Commands\BaseControllerCommand;
 use Lomkit\Rest\Console\Commands\BaseResourceCommand;
@@ -25,6 +27,7 @@ use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Query\Builder;
+use Lomkit\Rest\Query\ScoutBuilder;
 
 class RestServiceProvider extends ServiceProvider
 {
@@ -132,7 +135,13 @@ class RestServiceProvider extends ServiceProvider
     protected function registerServices()
     {
         $this->app->singleton('lomkit-rest', Rest::class);
-        $this->app->bind(QueryBuilder::class, Builder::class);
+
+        $this->app->bind(QueryBuilder::class, function (Application $app, $params) {
+            if (request()->has('search.text')) {
+                return app()->make(ScoutBuilder::class, $params);
+            }
+            return app()->make(Builder::class, $params);
+        });
 
         $this->app->singleton(RestRequest::class, RestRequest::class);
         $this->app->singleton(ActionsRequest::class, ActionsRequest::class);

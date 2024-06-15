@@ -9,6 +9,7 @@ use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Http\Client\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
+use Laravel\Scout\Searchable;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
@@ -109,9 +110,11 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     public function textRules(\Lomkit\Rest\Http\Resource $resource, string $prefix, bool $isMaxDepth = false)
     {
+        $isModelSearchable = in_array(Searchable::class, class_uses_recursive($this->resource::$model));
+
         return [
             $prefix.'.value' => [
-                'string',
+                $isModelSearchable ? 'string' : 'prohibited',
             ],
         ];
     }

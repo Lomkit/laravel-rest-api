@@ -17,6 +17,7 @@ class ScoutBuilder implements QueryBuilder
     public function __construct(Resource $resource)
     {
         $this->resource = $resource;
+        $this->queryBuilder = $resource::newModel()::search();
     }
 
     /**
@@ -45,6 +46,6 @@ class ScoutBuilder implements QueryBuilder
 
     public function search(array $parameters = [])
     {
-        // TODO: Implement search() method.
+        return $this->queryBuilder;
     }
 }
