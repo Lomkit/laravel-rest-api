@@ -6,7 +6,6 @@ use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Tests\Support\Models\SearchableModel;
-use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 
 class SearchableModelResource extends Resource
 {

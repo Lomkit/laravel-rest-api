@@ -19,7 +19,6 @@ class SearchScoutOperationsTest extends TestCase
         Config::set('scout.driver', 'null');
     }
 
-
     public function test_getting_a_list_of_resources_with_scout_not_compatible_resource(): void
     {
         ModelFactory::new()->count(2)->create();
@@ -31,7 +30,7 @@ class SearchScoutOperationsTest extends TestCase
             [
                 'search' => [
                     'text' => [
-                        'value' => 'text'
+                        'value' => 'text',
                     ],
                 ],
             ],
@@ -53,7 +52,7 @@ class SearchScoutOperationsTest extends TestCase
             [
                 'search' => [
                     'text' => [
-                        'value' => 'text'
+                        'value' => 'text',
                     ],
                 ],
             ],

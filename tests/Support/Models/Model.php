@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Support\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model as BaseModel;
-use Laravel\Scout\Searchable;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 
 class Model extends BaseModel

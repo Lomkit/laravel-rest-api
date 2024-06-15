@@ -5,7 +5,6 @@ namespace Lomkit\Rest;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Lomkit\Rest\Concerns\PerformsRestOperations;
 use Lomkit\Rest\Console\Commands\ActionCommand;
 use Lomkit\Rest\Console\Commands\BaseControllerCommand;
 use Lomkit\Rest\Console\Commands\BaseResourceCommand;
@@ -140,6 +139,7 @@ class RestServiceProvider extends ServiceProvider
             if (request()->has('search.text')) {
                 return app()->make(ScoutBuilder::class, $params);
             }
+
             return app()->make(Builder::class, $params);
         });
 
