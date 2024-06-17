@@ -14,7 +14,7 @@ trait Paginable
      *
      * @return mixed
      */
-    public function paginate(Illuminate\Database\Eloquent\Builder|\Laravel\Scout\Builder $query, RestRequest $request)
+    public function paginate($query, RestRequest $request)
     {
         return $query->paginate($request->input('search.limit', 50), ['*'], 'page', $request->input('search.page', 1));
     }

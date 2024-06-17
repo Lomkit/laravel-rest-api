@@ -18,6 +18,19 @@ trait PerformsQueries
     }
 
     /**
+     * Build a "search" scout query for fetching resource.
+     *
+     * @param \Lomkit\Rest\Http\Requests\RestRequest          $request
+     * @param \Laravel\Scout\Builder $query
+     *
+     * @return \Laravel\Scout\Builder
+     */
+    public function searchScoutQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Laravel\Scout\Builder $query)
+    {
+        return $query;
+    }
+
+    /**
      * Build a query for mutating resource.
      *
      * @param \Lomkit\Rest\Http\Requests\RestRequest          $request

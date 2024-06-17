@@ -135,13 +135,7 @@ class RestServiceProvider extends ServiceProvider
     {
         $this->app->singleton('lomkit-rest', Rest::class);
 
-        $this->app->bind(QueryBuilder::class, function (Application $app, $params) {
-            if (request()->has('search.text')) {
-                return app()->make(ScoutBuilder::class, $params);
-            }
-
-            return app()->make(Builder::class, $params);
-        });
+        $this->app->bind(QueryBuilder::class, Builder::class);
 
         $this->app->singleton(RestRequest::class, RestRequest::class);
         $this->app->singleton(ActionsRequest::class, ActionsRequest::class);
