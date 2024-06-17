@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest;
 
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Lomkit\Rest\Console\Commands\ActionCommand;
@@ -26,7 +25,6 @@ use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Query\Builder;
-use Lomkit\Rest\Query\ScoutBuilder;
 
 class RestServiceProvider extends ServiceProvider
 {

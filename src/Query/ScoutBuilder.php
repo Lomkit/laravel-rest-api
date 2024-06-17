@@ -3,12 +3,10 @@
 namespace Lomkit\Rest\Query;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Conditionable;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Query\Traits\PerformSearch;
 
 class ScoutBuilder implements QueryBuilder
 {
@@ -55,7 +53,7 @@ class ScoutBuilder implements QueryBuilder
                             ->except([
                                 'filters',
                                 'instructions',
-                                'sorts'
+                                'sorts',
                             ])
                             ->all()
                     );
@@ -79,9 +77,9 @@ class ScoutBuilder implements QueryBuilder
     /**
      * Apply a filter to the query builder.
      *
-     * @param string     $field    The field to filter on.
-     * @param string     $operator The filter operator.
-     * @param mixed      $value    The filter value.
+     * @param string $field    The field to filter on.
+     * @param string $operator The filter operator.
+     * @param mixed  $value    The filter value.
      */
     public function filter($field, $operator, $value)
     {

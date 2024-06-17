@@ -20,8 +20,8 @@ trait PerformsQueries
     /**
      * Build a "search" scout query for fetching resource.
      *
-     * @param \Lomkit\Rest\Http\Requests\RestRequest          $request
-     * @param \Laravel\Scout\Builder $query
+     * @param \Lomkit\Rest\Http\Requests\RestRequest $request
+     * @param \Laravel\Scout\Builder                 $query
      *
      * @return \Laravel\Scout\Builder
      */
