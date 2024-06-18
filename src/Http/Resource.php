@@ -143,7 +143,8 @@ class Resource implements \JsonSerializable
         return now()->addMinutes(config('rest.authorizations.cache.default', 5));
     }
 
-    public function isModelSearchable() {
+    public function isModelSearchable()
+    {
         return in_array(Searchable::class, class_uses_recursive(static::$model));
     }
 

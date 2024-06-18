@@ -77,7 +77,7 @@ class Instruction
     /**
      * Perform the instruction on the scout query.
      *
-     * @param array                                 $fields
+     * @param array                  $fields
      * @param \Laravel\Scout\Builder $query
      *
      * @return void

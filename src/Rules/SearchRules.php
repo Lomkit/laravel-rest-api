@@ -9,7 +9,6 @@ use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Http\Client\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
-use Laravel\Scout\Searchable;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
@@ -37,11 +36,12 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
     protected RestRequest $request;
 
     /**
-     * Determine if scout mode is asked for the given request
+     * Determine if scout mode is asked for the given request.
      *
      * @var bool
      */
-    public function isScoutMode() {
+    public function isScoutMode()
+    {
         return $this->request->has('search.text.value');
     }
 
