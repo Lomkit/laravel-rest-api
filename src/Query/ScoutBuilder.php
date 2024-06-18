@@ -35,8 +35,6 @@ class ScoutBuilder implements QueryBuilder
             $this->applyInstructions($parameters['instructions']);
         });
 
-        // @TODO: instructions: separate query ?
-
         // @TODO: UNIT TESTS !
         // @TODO: verify filters / instructions / sorts not passed
 
@@ -124,7 +122,7 @@ class ScoutBuilder implements QueryBuilder
     public function instruction($name, $fields = [])
     {
         $this->resource->instruction(app(RestRequest::class), $name)
-            ->handle(
+            ->handleScout(
                 collect($fields)->mapWithKeys(function ($field) {return [$field['name'] => $field['value']]; })->toArray(),
                 $this->queryBuilder
             );

@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Instructions;
 
+use http\Exception\RuntimeException;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\Fieldable;
 use Lomkit\Rest\Concerns\Makeable;
@@ -71,5 +72,18 @@ class Instruction
     public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query)
     {
         // ...
+    }
+
+    /**
+     * Perform the instruction on the scout query.
+     *
+     * @param array                                 $fields
+     * @param \Laravel\Scout\Builder $query
+     *
+     * @return void
+     */
+    public function handleScout(array $fields, \Laravel\Scout\Builder $query)
+    {
+        throw new RuntimeException('Not implemented');
     }
 }

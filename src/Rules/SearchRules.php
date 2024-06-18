@@ -37,6 +37,15 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
     protected RestRequest $request;
 
     /**
+     * Determine if scout mode is asked for the given request
+     *
+     * @var bool
+     */
+    public function isScoutMode() {
+        return $this->request->has('search.text.value');
+    }
+
+    /**
      * If the rules is specified at root level.
      *
      * @var bool
@@ -104,17 +113,14 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      *
      * @param \Lomkit\Rest\Http\Resource $resource
      * @param string                     $prefix
-     * @param bool                       $isMaxDepth
      *
      * @return array
      */
-    public function textRules(\Lomkit\Rest\Http\Resource $resource, string $prefix, bool $isMaxDepth = false)
+    public function textRules(\Lomkit\Rest\Http\Resource $resource, string $prefix)
     {
-        $isModelSearchable = in_array(Searchable::class, class_uses_recursive($this->resource::$model));
-
         return [
             $prefix.'.value' => [
-                $isModelSearchable ? 'string' : 'prohibited',
+                $resource->isModelSearchable() ? 'string' : 'prohibited',
             ],
         ];
     }
@@ -131,6 +137,10 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     public function filtersRules(\Lomkit\Rest\Http\Resource $resource, string $prefix, bool $isMaxDepth = false)
     {
+        $operatorRules = $this->isScoutMode() ?
+            ['=', 'in', 'not in'] :
+            ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'];
+
         $rules = array_merge(
             [
                 $prefix.'.*.field' => [
@@ -139,7 +149,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
                     'string',
                 ],
                 $prefix.'.*.operator' => [
-                    Rule::in('=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'),
+                    Rule::in($operatorRules),
                     'string',
                 ],
                 $prefix.'.*.value' => [

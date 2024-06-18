@@ -19,7 +19,7 @@ class SearchScoutOperationsTest extends TestCase
         Config::set('scout.driver', 'null');
     }
 
-    public function test_getting_a_list_of_resources_with_scout_not_compatible_resource(): void
+    public function test_getting_a_list_of_resources_with_not_compatible_resource(): void
     {
         ModelFactory::new()->count(2)->create();
 
@@ -39,6 +39,31 @@ class SearchScoutOperationsTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJsonStructure(['message', 'errors' => ['search.text.value']]);
+    }
+
+    public function test_getting_a_list_of_resources_with_not_allowed_filter_operator(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => 'text',
+                    ],
+                    'filters' => [
+                        ['field' => 'id', 'operator' => '>=', 'value' => 2],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.operator']]);
     }
 
     public function test_getting_a_list_of_resources_with_scout(): void

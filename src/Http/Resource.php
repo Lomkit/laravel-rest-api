@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Http;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 use Lomkit\Rest\Actions\Actionable;
 use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
@@ -140,6 +141,10 @@ class Resource implements \JsonSerializable
     public function cacheAuthorizationFor()
     {
         return now()->addMinutes(config('rest.authorizations.cache.default', 5));
+    }
+
+    public function isModelSearchable() {
+        return in_array(Searchable::class, class_uses_recursive(static::$model));
     }
 
     /**
