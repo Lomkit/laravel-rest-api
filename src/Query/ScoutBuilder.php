@@ -23,6 +23,8 @@ class ScoutBuilder implements QueryBuilder
     {
         $this->resource->searchScoutQuery(app()->make(RestRequest::class), $this->queryBuilder);
 
+        $this->queryBuilder->query = request('search.text.value');
+
         $this->when(isset($parameters['filters']), function () use ($parameters) {
             $this->applyFilters($parameters['filters']);
         });
@@ -38,10 +40,7 @@ class ScoutBuilder implements QueryBuilder
         // @TODO: UNIT TESTS !
         // @TODO: verify filters / instructions / sorts not passed
 
-        // @TODO: IN REQUEST: (do it in a separate search rules ? --> good idea)
-        // @TODO: disallow filters not allowed operations (only = allowed) when scout
-        // @TODO: disallow nested filters when scout
-        // @TODO: possibility to only add scout fields ?? (hidden scout fields in resource) (to validate in request)
+        // @TODO: instructions ?
 
         $this->queryBuilder
             ->query(function (Builder $query) use ($parameters) {

@@ -66,6 +66,114 @@ class SearchScoutOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.operator']]);
     }
 
+    public function test_getting_a_list_of_resources_with_not_allowed_filter_field(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => 'text',
+                    ],
+                    'filters' => [
+                        ['field' => 'id', 'operator' => '=', 'value' => 2],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
+    }
+
+    public function test_getting_a_list_of_resources_with_allowed_filter_field(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => 'text',
+                    ],
+                    'filters' => [
+                        ['field' => 'allowed_scout_field', 'operator' => '=', 'value' => 2],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [],
+            new ModelResource()
+        );
+    }
+
+    public function test_getting_a_list_of_resources_with_not_allowed_filter_nested(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => 'text',
+                    ],
+                    'filters' => [
+                        [
+                            'nested' => [
+                                ['field' => 'allowed_scout_field', 'value' => 1],
+                                ['field' => 'allowed_scout_field', 'value' => 2],
+                            ],
+                        ],
+                    ]
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.nested']]);
+    }
+
+    public function test_getting_a_list_of_resources_with_not_allowed_filter_type(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => 'text',
+                    ],
+                    'filters' => [
+                        ['field' => 'allowed_scout_field', 'operator' => '=', 'value' => 2, 'type' => 'or'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.type']]);
+    }
+
     public function test_getting_a_list_of_resources_with_scout(): void
     {
         ModelFactory::new()->count(2)->create();

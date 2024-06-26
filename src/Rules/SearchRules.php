@@ -137,14 +137,20 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     public function filtersRules(\Lomkit\Rest\Http\Resource $resource, string $prefix, bool $isMaxDepth = false)
     {
-        $operatorRules = $this->isScoutMode() ?
+        $isScoutMode = $this->isScoutMode();
+
+        $operatorRules = $isScoutMode ?
             ['=', 'in', 'not in'] :
             ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'];
+
+        $fieldValidation = $isScoutMode ?
+            Rule::in($resource->getScoutFields($this->request)) :
+            new IsNestedField($resource, $this->request);
 
         $rules = array_merge(
             [
                 $prefix.'.*.field' => [
-                    new IsNestedField($resource, $this->request),
+                    $fieldValidation,
                     "required_without:$prefix.*.nested",
                     'string',
                 ],
@@ -156,11 +162,13 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
                     "exclude_if:$prefix.*.value,null",
                     "required_without:$prefix.*.nested",
                 ],
-                $prefix.'.*.type' => [
+                $prefix.'.*.type' => !$isScoutMode ? [
                     'sometimes',
                     Rule::in('or', 'and'),
+                ] : [
+                    'prohibited',
                 ],
-                $prefix.'.*.nested' => !$isMaxDepth ? [
+                $prefix.'.*.nested' => !$isMaxDepth && !$isScoutMode ? [
                     'sometimes',
                     "prohibits:$prefix.*.field,$prefix.*.operator,$prefix.*.value",
                     'prohibits:value',
@@ -169,7 +177,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
                     'prohibited',
                 ],
             ],
-            !$isMaxDepth ? $this->filtersRules($resource, $prefix.'.*.nested', true) : []
+            !$isMaxDepth && !$isScoutMode ? $this->filtersRules($resource, $prefix.'.*.nested', true) : []
         );
 
         return $rules;
