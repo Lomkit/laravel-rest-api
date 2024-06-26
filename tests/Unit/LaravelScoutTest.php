@@ -2,15 +2,11 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Lomkit\Rest\Contracts\QueryBuilder;
-use Lomkit\Rest\Query\Builder;
 use Lomkit\Rest\Query\ScoutBuilder;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\User;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\SearchableModelResource;
-use Mockery\MockInterface;
 
 class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
 {
@@ -19,7 +15,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
         Auth::setUser(Mockery::mock(User::class));
         Gate::policy(Model::class, GreenPolicy::class);
 
-        $scoutQueryBuilderMock = Mockery::mock(ScoutBuilder::class, [new SearchableModelResource])->makePartial();
+        $scoutQueryBuilderMock = Mockery::mock(ScoutBuilder::class, [new SearchableModelResource()])->makePartial();
 
         $scoutQueryBuilderMock->shouldReceive('applyFilters')->with([])->never();
         $scoutQueryBuilderMock->shouldReceive('applySorts')->with([])->never();
@@ -40,7 +36,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
         Auth::setUser(Mockery::mock(User::class));
         Gate::policy(Model::class, GreenPolicy::class);
 
-        $scoutQueryBuilderMock = Mockery::mock(ScoutBuilder::class, [new SearchableModelResource])->makePartial();
+        $scoutQueryBuilderMock = Mockery::mock(ScoutBuilder::class, [new SearchableModelResource()])->makePartial();
 
         $scoutQueryBuilderMock->shouldReceive('applyFilters')->with([['field' => 'test', 'value' => 1]])->once();
         $scoutQueryBuilderMock->shouldReceive('applySorts')->with([])->never();
@@ -52,8 +48,8 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
                     ['value' => 'test'],
                 ],
                 'filters' => [
-                    ['field' => 'test', 'value' => 1]
-                ]
+                    ['field' => 'test', 'value' => 1],
+                ],
             ]);
     }
 
@@ -62,7 +58,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
         Auth::setUser(Mockery::mock(User::class));
         Gate::policy(Model::class, GreenPolicy::class);
 
-        $scoutQueryBuilderMock = Mockery::mock(ScoutBuilder::class, [new SearchableModelResource])->makePartial();
+        $scoutQueryBuilderMock = Mockery::mock(ScoutBuilder::class, [new SearchableModelResource()])->makePartial();
 
         $scoutQueryBuilderMock->shouldReceive('applyFilters')->with([])->never();
         $scoutQueryBuilderMock->shouldReceive('applySorts')->with([['field' => 'id']])->once();
@@ -75,7 +71,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
                 ],
                 'sorts' => [
                     ['field' => 'id'],
-                ]
+                ],
             ]);
     }
 
@@ -84,7 +80,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
         Auth::setUser(Mockery::mock(User::class));
         Gate::policy(Model::class, GreenPolicy::class);
 
-        $scoutQueryBuilderMock = Mockery::mock(ScoutBuilder::class, [new SearchableModelResource])->makePartial();
+        $scoutQueryBuilderMock = Mockery::mock(ScoutBuilder::class, [new SearchableModelResource()])->makePartial();
 
         $scoutQueryBuilderMock->shouldReceive('applyFilters')->with([])->never();
         $scoutQueryBuilderMock->shouldReceive('applySorts')->with([])->never();

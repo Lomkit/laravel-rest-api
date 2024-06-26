@@ -252,7 +252,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
     protected function sortsRules(\Lomkit\Rest\Http\Resource $resource, string $prefix)
     {
         $fields = $this->isScoutMode() ?
-            Rule::in($resource->getScoutFields($this->request)):
+            Rule::in($resource->getScoutFields($this->request)) :
             Rule::in($resource->getFields($this->request));
 
         $rules = [

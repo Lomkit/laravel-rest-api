@@ -48,7 +48,7 @@ class ScoutBuilder implements QueryBuilder
                                 'filters',
                                 'instructions',
                                 'sorts',
-                                'text'
+                                'text',
                             ])
                             ->all()
                     );
