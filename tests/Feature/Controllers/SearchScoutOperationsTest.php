@@ -139,7 +139,7 @@ class SearchScoutOperationsTest extends TestCase
                                 ['field' => 'allowed_scout_field', 'value' => 2],
                             ],
                         ],
-                    ]
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']

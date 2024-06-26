@@ -16,14 +16,14 @@ class SearchableModelResource extends Resource
     public function fields(RestRequest $request): array
     {
         return [
-            'id'
+            'id',
         ];
     }
 
     public function scoutFields(RestRequest $request): array
     {
         return [
-            'allowed_scout_field'
+            'allowed_scout_field',
         ];
     }
 }
