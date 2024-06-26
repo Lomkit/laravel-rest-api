@@ -23,7 +23,7 @@ class ScoutBuilder implements QueryBuilder
     {
         $this->resource->searchScoutQuery(app()->make(RestRequest::class), $this->queryBuilder);
 
-        $this->queryBuilder->query = request('search.text.value');
+        $this->queryBuilder->query = $parameters['text']['value'] ?? '';
 
         $this->when(isset($parameters['filters']), function () use ($parameters) {
             $this->applyFilters($parameters['filters']);
@@ -37,10 +37,7 @@ class ScoutBuilder implements QueryBuilder
             $this->applyInstructions($parameters['instructions']);
         });
 
-        // @TODO: UNIT TESTS !
-        // @TODO: verify filters / instructions / sorts not passed
-
-        // @TODO: instructions ?
+        // @TODO: instructions scout side ????
 
         $this->queryBuilder
             ->query(function (Builder $query) use ($parameters) {
@@ -51,6 +48,7 @@ class ScoutBuilder implements QueryBuilder
                                 'filters',
                                 'instructions',
                                 'sorts',
+                                'text'
                             ])
                             ->all()
                     );

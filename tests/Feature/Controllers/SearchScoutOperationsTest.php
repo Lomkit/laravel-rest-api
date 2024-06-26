@@ -91,6 +91,31 @@ class SearchScoutOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
     }
 
+    public function test_getting_a_list_of_resources_with_not_allowed_sort_field(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => 'text',
+                    ],
+                    'sorts' => [
+                        ['field' => 'id'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['search.sorts.0.field']]);
+    }
+
     public function test_getting_a_list_of_resources_with_allowed_filter_field(): void
     {
         ModelFactory::new()->count(2)->create();
@@ -106,6 +131,34 @@ class SearchScoutOperationsTest extends TestCase
                     ],
                     'filters' => [
                         ['field' => 'allowed_scout_field', 'operator' => '=', 'value' => 2],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [],
+            new ModelResource()
+        );
+    }
+
+    public function test_getting_a_list_of_resources_with_allowed_sort_field(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => 'text',
+                    ],
+                    'sorts' => [
+                        ['field' => 'allowed_scout_field'],
                     ],
                 ],
             ],
