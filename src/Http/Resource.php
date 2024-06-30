@@ -162,6 +162,7 @@ class Resource implements \JsonSerializable
         return [
             'actions'      => collect($this->getActions($request))->map->jsonSerialize()->toArray(),
             'instructions' => collect($this->getInstructions($request))->map->jsonSerialize()->toArray(),
+            'scout_instructions' => collect($this->getScoutInstructions($request))->map->jsonSerialize()->toArray(),
             'fields'       => $this->getFields($request),
             'scout_fields' => $this->getScoutFields($request),
             'limits'       => $this->getLimits($request),

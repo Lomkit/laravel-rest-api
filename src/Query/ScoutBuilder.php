@@ -118,7 +118,7 @@ class ScoutBuilder implements QueryBuilder
      */
     public function instruction($name, $fields = [])
     {
-        $this->resource->instruction(app(RestRequest::class), $name)
+        $this->resource->scoutInstruction(app(RestRequest::class), $name)
             ->handleScout(
                 collect($fields)->mapWithKeys(function ($field) {return [$field['name'] => $field['value']]; })->toArray(),
                 $this->queryBuilder

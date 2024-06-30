@@ -193,6 +193,12 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     protected function scopesRules(\Lomkit\Rest\Http\Resource $resource, string $prefix)
     {
+        if ($this->isScoutMode()) {
+            return [
+                $prefix => 'prohibited'
+            ];
+        }
+
         $rules = [
             $prefix.'.*.name' => [
                 Rule::in($resource->getScopes($this->request)),
@@ -218,13 +224,20 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     protected function instructionsRules(\Lomkit\Rest\Http\Resource $resource, string $prefix)
     {
+        $instructionNames = Rule::in(
+            collect(
+                $this->isScoutMode() ?
+                    $resource->getScoutInstructions($this->request):
+                    $resource->getInstructions($this->request)
+            )
+                ->map(function ($instruction) { return $instruction->uriKey(); })
+                ->toArray()
+        );
+
+
         $rules = [
             $prefix.'.*.name' => [
-                Rule::in(
-                    collect($resource->getInstructions($this->request))
-                        ->map(function ($instruction) { return $instruction->uriKey(); })
-                        ->toArray()
-                ),
+                $instructionNames,
                 'required',
                 'string',
             ],

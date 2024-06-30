@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
+use Laravel\Scout\Builder;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Paginable
@@ -16,6 +17,11 @@ trait Paginable
      */
     public function paginate($query, RestRequest $request)
     {
+        // In case we have a scout builder
+        if ($query instanceof Builder) {
+            return $query->paginate($request->input('search.limit', 50), 'page', $request->input('search.page', 1));
+        }
+
         return $query->paginate($request->input('search.limit', 50), ['*'], 'page', $request->input('search.page', 1));
     }
 }

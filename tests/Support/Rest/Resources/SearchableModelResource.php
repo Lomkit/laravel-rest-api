@@ -6,6 +6,7 @@ use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Tests\Support\Models\SearchableModel;
+use Lomkit\Rest\Tests\Support\Rest\Instructions\NumberedInstruction;
 
 class SearchableModelResource extends Resource
 {
@@ -24,6 +25,13 @@ class SearchableModelResource extends Resource
     {
         return [
             'allowed_scout_field',
+        ];
+    }
+
+    public function scoutInstructions(RestRequest $request): array
+    {
+        return [
+            NumberedInstruction::make(),
         ];
     }
 }

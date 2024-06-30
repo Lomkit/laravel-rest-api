@@ -11,6 +11,11 @@ class NumberedInstruction extends Instruction
         $query->where('number', '>', $fields['number'] ?? 0);
     }
 
+    public function handleScout(array $fields, \Laravel\Scout\Builder $query)
+    {
+        //
+    }
+
     public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [
