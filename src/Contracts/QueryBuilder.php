@@ -16,7 +16,7 @@ interface QueryBuilder
     /**
      * Convert the query builder to an Eloquent query builder.
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return \Illuminate\Database\Eloquent\Builder|\Laravel\Scout\Builder
      */
     public function toBase();
 }

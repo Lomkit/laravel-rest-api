@@ -36,6 +36,16 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
     protected RestRequest $request;
 
     /**
+     * Determine if scout mode is asked for the given request.
+     *
+     * @var bool
+     */
+    public function isScoutMode()
+    {
+        return $this->request->has('search.text.value');
+    }
+
+    /**
      * If the rules is specified at root level.
      *
      * @var bool
@@ -72,6 +82,8 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
             ->validator
             ->setRules(
                 array_merge(
+                    $this->isRootSearchRules ? [$attribute.'text' => ['sometimes', 'array']] : [],
+                    $this->isRootSearchRules ? $this->textRules($this->resource, $attribute.'text') : [],
                     [$attribute.'filters' => ['sometimes', 'array']],
                     $this->filtersRules($this->resource, $attribute.'filters'),
                     [$attribute.'scopes' => ['sometimes', 'array']],
@@ -96,6 +108,23 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
             ->validate();
     }
 
+    /**
+     * Define the validation rules for filters within the search request.
+     *
+     * @param \Lomkit\Rest\Http\Resource $resource
+     * @param string                     $prefix
+     *
+     * @return array
+     */
+    public function textRules(\Lomkit\Rest\Http\Resource $resource, string $prefix)
+    {
+        return [
+            $prefix.'.value' => [
+                $resource->isModelSearchable() ? 'string' : 'prohibited',
+            ],
+        ];
+    }
+
     // @TODO: For now it's prohibited to have more than one nested depth, is this needed ?
     /**
      * Define the validation rules for filters within the search request.
@@ -108,26 +137,38 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     public function filtersRules(\Lomkit\Rest\Http\Resource $resource, string $prefix, bool $isMaxDepth = false)
     {
+        $isScoutMode = $this->isScoutMode();
+
+        $operatorRules = $isScoutMode ?
+            ['=', 'in', 'not in'] :
+            ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'];
+
+        $fieldValidation = $isScoutMode ?
+            Rule::in($resource->getScoutFields($this->request)) :
+            new IsNestedField($resource, $this->request);
+
         $rules = array_merge(
             [
                 $prefix.'.*.field' => [
-                    new IsNestedField($resource, $this->request),
+                    $fieldValidation,
                     "required_without:$prefix.*.nested",
                     'string',
                 ],
                 $prefix.'.*.operator' => [
-                    Rule::in('=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'),
+                    Rule::in($operatorRules),
                     'string',
                 ],
                 $prefix.'.*.value' => [
                     "exclude_if:$prefix.*.value,null",
                     "required_without:$prefix.*.nested",
                 ],
-                $prefix.'.*.type' => [
+                $prefix.'.*.type' => !$isScoutMode ? [
                     'sometimes',
                     Rule::in('or', 'and'),
+                ] : [
+                    'prohibited',
                 ],
-                $prefix.'.*.nested' => !$isMaxDepth ? [
+                $prefix.'.*.nested' => !$isMaxDepth && !$isScoutMode ? [
                     'sometimes',
                     "prohibits:$prefix.*.field,$prefix.*.operator,$prefix.*.value",
                     'prohibits:value',
@@ -136,7 +177,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
                     'prohibited',
                 ],
             ],
-            !$isMaxDepth ? $this->filtersRules($resource, $prefix.'.*.nested', true) : []
+            !$isMaxDepth && !$isScoutMode ? $this->filtersRules($resource, $prefix.'.*.nested', true) : []
         );
 
         return $rules;
@@ -152,6 +193,12 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     protected function scopesRules(\Lomkit\Rest\Http\Resource $resource, string $prefix)
     {
+        if ($this->isScoutMode()) {
+            return [
+                $prefix => 'prohibited',
+            ];
+        }
+
         $rules = [
             $prefix.'.*.name' => [
                 Rule::in($resource->getScopes($this->request)),
@@ -177,13 +224,19 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     protected function instructionsRules(\Lomkit\Rest\Http\Resource $resource, string $prefix)
     {
+        $instructionNames = Rule::in(
+            collect(
+                $this->isScoutMode() ?
+                    $resource->getScoutInstructions($this->request) :
+                    $resource->getInstructions($this->request)
+            )
+                ->map(function ($instruction) { return $instruction->uriKey(); })
+                ->toArray()
+        );
+
         $rules = [
             $prefix.'.*.name' => [
-                Rule::in(
-                    collect($resource->getInstructions($this->request))
-                        ->map(function ($instruction) { return $instruction->uriKey(); })
-                        ->toArray()
-                ),
+                $instructionNames,
                 'required',
                 'string',
             ],
@@ -210,9 +263,13 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     protected function sortsRules(\Lomkit\Rest\Http\Resource $resource, string $prefix)
     {
+        $fields = $this->isScoutMode() ?
+            Rule::in($resource->getScoutFields($this->request)) :
+            Rule::in($resource->getFields($this->request));
+
         $rules = [
             $prefix.'.*.field' => [
-                Rule::in($resource->getFields($this->request)),
+                $fields,
                 'required',
                 'string',
             ],

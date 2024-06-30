@@ -132,6 +132,7 @@ class RestServiceProvider extends ServiceProvider
     protected function registerServices()
     {
         $this->app->singleton('lomkit-rest', Rest::class);
+
         $this->app->bind(QueryBuilder::class, Builder::class);
 
         $this->app->singleton(RestRequest::class, RestRequest::class);

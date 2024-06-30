@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Http;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 use Lomkit\Rest\Actions\Actionable;
 use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
@@ -13,6 +14,7 @@ use Lomkit\Rest\Concerns\Resource\HasResourceHooks;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
 use Lomkit\Rest\Concerns\Resource\Rulable;
+use Lomkit\Rest\Concerns\Resource\Scoutable;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instructionable;
 
@@ -22,6 +24,7 @@ class Resource implements \JsonSerializable
     use PerformsModelOperations;
     use Relationable;
     use Paginable;
+    use Scoutable;
     use Rulable;
     use ConfiguresRestParameters;
     use Authorizable;
@@ -142,6 +145,11 @@ class Resource implements \JsonSerializable
         return now()->addMinutes(config('rest.authorizations.cache.default', 5));
     }
 
+    public function isModelSearchable()
+    {
+        return in_array(Searchable::class, class_uses_recursive(static::$model));
+    }
+
     /**
      * Serialize the resource into a JSON-serializable format.
      *
@@ -152,13 +160,15 @@ class Resource implements \JsonSerializable
         $request = app(RestRequest::class);
 
         return [
-            'actions'      => collect($this->getActions($request))->map->jsonSerialize()->toArray(),
-            'instructions' => collect($this->getInstructions($request))->map->jsonSerialize()->toArray(),
-            'fields'       => $this->getFields($request),
-            'limits'       => $this->getLimits($request),
-            'scopes'       => $this->getScopes($request),
-            'relations'    => collect($this->getRelations($request))->map->jsonSerialize()->toArray(),
-            'rules'        => [
+            'actions'            => collect($this->getActions($request))->map->jsonSerialize()->toArray(),
+            'instructions'       => collect($this->getInstructions($request))->map->jsonSerialize()->toArray(),
+            'scout_instructions' => collect($this->getScoutInstructions($request))->map->jsonSerialize()->toArray(),
+            'fields'             => $this->getFields($request),
+            'scout_fields'       => $this->getScoutFields($request),
+            'limits'             => $this->getLimits($request),
+            'scopes'             => $this->getScopes($request),
+            'relations'          => collect($this->getRelations($request))->map->jsonSerialize()->toArray(),
+            'rules'              => [
                 'all'    => $this->rules($request),
                 'create' => $this->createRules($request),
                 'update' => $this->updateRules($request),
