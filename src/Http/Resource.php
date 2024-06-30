@@ -160,15 +160,15 @@ class Resource implements \JsonSerializable
         $request = app(RestRequest::class);
 
         return [
-            'actions'      => collect($this->getActions($request))->map->jsonSerialize()->toArray(),
-            'instructions' => collect($this->getInstructions($request))->map->jsonSerialize()->toArray(),
+            'actions'            => collect($this->getActions($request))->map->jsonSerialize()->toArray(),
+            'instructions'       => collect($this->getInstructions($request))->map->jsonSerialize()->toArray(),
             'scout_instructions' => collect($this->getScoutInstructions($request))->map->jsonSerialize()->toArray(),
-            'fields'       => $this->getFields($request),
-            'scout_fields' => $this->getScoutFields($request),
-            'limits'       => $this->getLimits($request),
-            'scopes'       => $this->getScopes($request),
-            'relations'    => collect($this->getRelations($request))->map->jsonSerialize()->toArray(),
-            'rules'        => [
+            'fields'             => $this->getFields($request),
+            'scout_fields'       => $this->getScoutFields($request),
+            'limits'             => $this->getLimits($request),
+            'scopes'             => $this->getScopes($request),
+            'relations'          => collect($this->getRelations($request))->map->jsonSerialize()->toArray(),
+            'rules'              => [
                 'all'    => $this->rules($request),
                 'create' => $this->createRules($request),
                 'update' => $this->updateRules($request),

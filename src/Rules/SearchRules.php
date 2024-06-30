@@ -195,7 +195,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
     {
         if ($this->isScoutMode()) {
             return [
-                $prefix => 'prohibited'
+                $prefix => 'prohibited',
             ];
         }
 
@@ -227,13 +227,12 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
         $instructionNames = Rule::in(
             collect(
                 $this->isScoutMode() ?
-                    $resource->getScoutInstructions($this->request):
+                    $resource->getScoutInstructions($this->request) :
                     $resource->getInstructions($this->request)
             )
                 ->map(function ($instruction) { return $instruction->uriKey(); })
                 ->toArray()
         );
-
 
         $rules = [
             $prefix.'.*.name' => [
