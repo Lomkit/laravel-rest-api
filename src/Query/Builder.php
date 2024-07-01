@@ -38,6 +38,13 @@ class Builder implements QueryBuilder
     protected $resource;
 
     /**
+     * Determine if security should be disabled in case we don't want it.
+     *
+     * @var bool
+     */
+    protected bool $disableSecurity = false;
+
+    /**
      * The query builder instance.
      *
      * @var \Illuminate\Database\Eloquent\Builder|null
@@ -47,6 +54,13 @@ class Builder implements QueryBuilder
     public function newQueryBuilder($parameters)
     {
         return app()->make(QueryBuilder::class, $parameters);
+    }
+
+    public function disableSecurity($disable = true)
+    {
+        $this->disableSecurity = $disable;
+
+        return $this;
     }
 
     /**
