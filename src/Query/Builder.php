@@ -38,7 +38,7 @@ class Builder implements QueryBuilder
     protected $resource;
 
     /**
-     * Determine if security should be disabled in case we don't want it
+     * Determine if security should be disabled in case we don't want it.
      *
      * @var bool
      */
