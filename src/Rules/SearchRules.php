@@ -36,16 +36,6 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
     protected RestRequest $request;
 
     /**
-     * Determine if scout mode is asked for the given request.
-     *
-     * @var bool
-     */
-    public function isScoutMode()
-    {
-        return $this->request->has('search.text.value');
-    }
-
-    /**
      * If the rules is specified at root level.
      *
      * @var bool
@@ -137,7 +127,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     public function filtersRules(\Lomkit\Rest\Http\Resource $resource, string $prefix, bool $isMaxDepth = false)
     {
-        $isScoutMode = $this->isScoutMode();
+        $isScoutMode = $this->request->isScoutMode();
 
         $operatorRules = $isScoutMode ?
             ['=', 'in', 'not in'] :
@@ -193,7 +183,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     protected function scopesRules(\Lomkit\Rest\Http\Resource $resource, string $prefix)
     {
-        if ($this->isScoutMode()) {
+        if ($this->request->isScoutMode()) {
             return [
                 $prefix => 'prohibited',
             ];
@@ -226,7 +216,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
     {
         $instructionNames = Rule::in(
             collect(
-                $this->isScoutMode() ?
+                $this->request->isScoutMode() ?
                     $resource->getScoutInstructions($this->request) :
                     $resource->getInstructions($this->request)
             )
@@ -263,7 +253,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
      */
     protected function sortsRules(\Lomkit\Rest\Http\Resource $resource, string $prefix)
     {
-        $fields = $this->isScoutMode() ?
+        $fields = $this->request->isScoutMode() ?
             Rule::in($resource->getScoutFields($this->request)) :
             Rule::in($resource->getFields($this->request));
 

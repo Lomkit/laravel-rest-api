@@ -10,4 +10,14 @@ class RestRequest extends FormRequest
 {
     use InteractsWithRules;
     use Resourcable;
+
+    /**
+     * Determine if scout mode is asked for the given request.
+     *
+     * @var bool
+     */
+    public function isScoutMode()
+    {
+        return $this->has('search.text.value');
+    }
 }

@@ -20,7 +20,9 @@ trait PerformSearch
     {
         $this->resource->authorizeTo('viewAny', $this->resource::$model);
 
-        $this->resource->searchQuery(app()->make(RestRequest::class), $this->queryBuilder);
+        $this->when(!$this->disableSecurity, function () {
+            $this->resource->searchQuery(app()->make(RestRequest::class), $this->queryBuilder);
+        });
 
         // Here we run the filters in a subquery to avoid conflicts
         $this->when(isset($parameters['filters']), function () use ($parameters) {
@@ -57,8 +59,8 @@ trait PerformSearch
             $this->applyAggregates($parameters['aggregates']);
         });
 
-        // In case we are in a relation we don't apply the limits since we dont know how much records will be related.
-        if (!$this->queryBuilder instanceof Relation) {
+        // In case we are in a relation we don't apply the limits since we don't know how much records will be related.
+        if (!$this->queryBuilder instanceof Relation && !$this->disableSecurity) {
             $this->queryBuilder->limit($parameters['limit'] ?? 50);
         }
 

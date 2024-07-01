@@ -37,11 +37,10 @@ class ScoutBuilder implements QueryBuilder
             $this->applyInstructions($parameters['instructions']);
         });
 
-        // @TODO: instructions scout side ????
-
         $this->queryBuilder
             ->query(function (Builder $query) use ($parameters) {
                 app()->make(QueryBuilder::class, ['query' => $query, 'resource' => $this->resource])
+                    ->disableSecurity()
                     ->search(
                         collect($parameters)
                             ->except([
