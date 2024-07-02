@@ -204,7 +204,7 @@ class DispatchAction
      */
     protected function addQueuedActionJob(Collection $models)
     {
-        $job = new CallRestApiAction($this->action, $this->fields, $models);
+        $job = new CallRestApiAction($this->action, collect($this->fields)->mapWithKeys(function ($field) {return [$field['name'] => $field['value']]; })->toArray(), $models);
 
         if ($this->action instanceof BatchableAction) {
             $this->batchJob->add([$job]);
