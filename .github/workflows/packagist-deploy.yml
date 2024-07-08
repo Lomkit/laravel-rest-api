@@ -13,7 +13,7 @@ jobs:
       packages: write
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: mnavarrocarter/packagist-update@v1.0.0
       with:
         username: "GautierDele"
