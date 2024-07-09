@@ -10,9 +10,25 @@ class QuickStartCommand extends Command
 {
     use ResolvesStubPath;
 
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
     protected $signature = 'rest:quick-start';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
     protected $description = 'Demonstrate the app using user related resource registering.';
 
+    /**
+     * Execute the console command.
+     *
+     * @return void
+     */
     public function handle()
     {
         $this->comment('Generating User Resource...');
@@ -30,6 +46,11 @@ class QuickStartCommand extends Command
         $this->info('Laravel Rest Api is ready. Type \'php artisan route:list\' to see your new routes !');
     }
 
+    /**
+     * Update the User model namespace in the generated files.
+     *
+     * @return void
+     */
     protected function updateUserModelNamespace()
     {
         $files = [
@@ -47,6 +68,11 @@ class QuickStartCommand extends Command
         }
     }
 
+    /**
+     * Set the proper application namespace on the installed files.
+     *
+     * @return void
+     */
     protected function setAppNamespace()
     {
         $namespace = $this->laravel->getNamespace();
@@ -54,6 +80,14 @@ class QuickStartCommand extends Command
         $this->setAppNamespaceOn(app_path('Rest/Controllers/UsersController.php'), $namespace);
     }
 
+    /**
+     * Set the namespace on the given file.
+     *
+     * @param  string  $file
+     * @param  string  $namespace
+     *
+     * @return void
+     */
     protected function setAppNamespaceOn($file, $namespace)
     {
         file_put_contents($file, str_replace(
@@ -63,6 +97,11 @@ class QuickStartCommand extends Command
         ));
     }
 
+    /**
+     * Update the api routes file to include the new resource.
+     *
+     * @return void
+     */
     protected function updateApiRoutes()
     {
         $routesPath = base_path('routes/api.php');
