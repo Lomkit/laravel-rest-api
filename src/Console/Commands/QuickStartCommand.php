@@ -106,7 +106,7 @@ class QuickStartCommand extends Command
     {
         $routesPath = base_path('routes/api.php');
         if (! file_exists($routesPath)) {
-            return;
+            file_put_contents($routesPath, '<?php');
         }
 
         $routeContent = file_get_contents($routesPath);

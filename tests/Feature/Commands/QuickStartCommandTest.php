@@ -11,6 +11,10 @@ class QuickStartCommandTest extends TestCase
     {
         parent::setUp();
         $this->cleanUp();
+        // Ensure api.php exists for tests
+        if (! File::exists(base_path('routes/api.php'))) {
+            File::put(base_path('routes/api.php'), '<?php');
+        }
     }
 
     protected function tearDown(): void
