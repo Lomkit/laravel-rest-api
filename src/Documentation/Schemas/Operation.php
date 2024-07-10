@@ -192,7 +192,7 @@ class Operation extends Schema
      *
      * @return Operation
      */
-    public function generateDetail(Controller $controller): Operation
+    public function generateDetails(Controller $controller): Operation
     {
         return $controller->generateDocumentationDetailOperation(
             $this
@@ -267,7 +267,7 @@ class Operation extends Schema
      *
      * @return Operation
      */
-    public function generateActions(Controller $controller): Operation
+    public function generateOperate(Controller $controller): Operation
     {
         return $controller->generateDocumentationActionsOperation(
             $this
