@@ -70,12 +70,12 @@ class ResourceCommand extends GeneratorCommand implements PromptsForMissingInput
      */
     protected function buildClass($name)
     {
-        $model = $this->option('model') ?? 'App\\Models\\Model';
+        $model = $this->option('model');
 
         $modelNamespace = $this->getModelNamespace();
 
         if (is_null($model)) {
-            $resource = $modelNamespace.str_replace('/', '\\', $this->argument('name'));
+            $model = $modelNamespace.'Model';
         } elseif (!Str::startsWith($model, [
             $modelNamespace, '\\',
         ])) {

@@ -33,11 +33,9 @@ class QuickStartCommand extends Command
     {
         $this->comment('Generating User Resource...');
         $this->callSilent('rest:resource', ['name' => 'UserResource']);
-        copy($this->resolveStubPath('/stubs/user-resource.stub'), app_path('Rest/Resources/UserResource.php'));
 
         $this->comment('Generating User Controller...');
         $this->callSilent('rest:controller', ['name' => 'UsersController']);
-        copy($this->resolveStubPath('/stubs/user-controller.stub'), app_path('Rest/Controllers/UsersController.php'));
 
         $this->updateUserModelNamespace();
         $this->setAppNamespace();
@@ -53,18 +51,22 @@ class QuickStartCommand extends Command
      */
     protected function updateUserModelNamespace()
     {
-        $files = [
-            app_path('Rest/Resources/UserResource.php'),
-            app_path('Rest/Controllers/UsersController.php')
-        ];
+        $resource = app_path('Rest/Resources/UserResource.php');
 
-        foreach ($files as $file) {
-            if (file_exists(app_path('Models/User.php'))) {
-                file_put_contents(
-                    $file,
-                    str_replace('App\User::class', 'App\Models\User::class', file_get_contents($file))
-                );
-            }
+        if (file_exists(app_path('Models/User.php'))) {
+            file_put_contents(
+                $resource,
+                str_replace('App\Models\Model::class', 'App\Models\User::class', file_get_contents($resource))
+            );
+        }
+
+        $controller = app_path('Rest/Controllers/UsersController.php');
+
+        if (file_exists(app_path('Models/User.php'))) {
+            file_put_contents(
+                $controller,
+                str_replace('App\Rest\Resources\ModelResource::class', 'App\Rest\Resources\UserResource::class', file_get_contents($controller))
+            );
         }
     }
 
@@ -76,6 +78,7 @@ class QuickStartCommand extends Command
     protected function setAppNamespace()
     {
         $namespace = $this->laravel->getNamespace();
+
         $this->setAppNamespaceOn(app_path('Rest/Resources/UserResource.php'), $namespace);
         $this->setAppNamespaceOn(app_path('Rest/Controllers/UsersController.php'), $namespace);
     }
@@ -83,8 +86,8 @@ class QuickStartCommand extends Command
     /**
      * Set the namespace on the given file.
      *
-     * @param  string  $file
-     * @param  string  $namespace
+     * @param string $file
+     * @param string $namespace
      *
      * @return void
      */
