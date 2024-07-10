@@ -273,7 +273,7 @@ class OpenAPI extends Schema
                     case 'forceDelete':
                     case 'details':
                     case 'destroy':
-                        $path = $paths['/'.$route->uri()] ?? new Path;
+                        $path = $paths['/'.$route->uri()] ?? new Path();
                         $paths['/'.$route->uri()] = $path->{'generate'.Str::ucfirst($actionMethod)}($controller);
                         break;
                 }
