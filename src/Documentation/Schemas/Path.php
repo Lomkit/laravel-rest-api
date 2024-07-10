@@ -380,24 +380,35 @@ class Path extends Schema
     }
 
     /**
-     * Generates a Path schema with operations for retrieving resource details and performing resource deletion.
+     * Generates a Path schema with operations for performing resource deletion.
      *
      * @param Controller $controller The controller instance used for generating documentation.
      *
      * @return Path
      */
-    public function generateDetailAndDestroy(Controller $controller): Path
+    public function generateDestroy(Controller $controller): Path
+    {
+        return $this
+            ->withDelete(
+                (new Operation())
+                    ->generateDestroy($controller)
+            );
+    }
+
+    /**
+     * Generates a Path schema with operations for retrieving resource details.
+     *
+     * @param Controller $controller The controller instance used for generating documentation.
+     *
+     * @return Path
+     */
+    public function generateDetails(Controller $controller): Path
     {
         return $this
             ->withGet(
                 (new Operation())
-                    ->generateDetail($controller)
-            )
-            ->withDelete(
-                (new Operation())
-                    ->generateDestroy($controller)
-            )
-            ->generate();
+                    ->generateDetails($controller)
+            );
     }
 
     /**
@@ -413,8 +424,7 @@ class Path extends Schema
             ->withPost(
                 (new Operation())
                     ->generateSearch($controller)
-            )
-            ->generate();
+            );
     }
 
     /**
@@ -430,8 +440,7 @@ class Path extends Schema
             ->withPost(
                 (new Operation())
                     ->generateMutate($controller)
-            )
-            ->generate();
+            );
     }
 
     /**
@@ -441,12 +450,12 @@ class Path extends Schema
      *
      * @return Path
      */
-    public function generateActions(Controller $controller): Path
+    public function generateOperate(Controller $controller): Path
     {
         return $this
             ->withPost(
                 (new Operation())
-                    ->generateActions($controller)
+                    ->generateOperate($controller)
             )
             ->withParameters(
                 [
@@ -462,8 +471,7 @@ class Path extends Schema
                         ->withRequired()
                         ->generate(),
                 ]
-            )
-            ->generate();
+            );
     }
 
     /**
@@ -479,8 +487,7 @@ class Path extends Schema
             ->withPost(
                 (new Operation())
                     ->generateRestore($controller)
-            )
-            ->generate();
+            );
     }
 
     /**
@@ -496,7 +503,6 @@ class Path extends Schema
             ->withDelete(
                 (new Operation())
                     ->generateForceDelete($controller)
-            )
-            ->generate();
+            );
     }
 }

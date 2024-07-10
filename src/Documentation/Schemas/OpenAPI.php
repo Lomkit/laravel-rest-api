@@ -265,18 +265,17 @@ class OpenAPI extends Schema
             $controller = $route->getController();
 
             if ($controller instanceof Controller) {
-                $path = match (Str::afterLast($route->getName(), '.')) {
-                    'details'      => (new Path())->generateDetailAndDestroy($controller),
-                    'search'       => (new Path())->generateSearch($controller),
-                    'mutate'       => (new Path())->generateMutate($controller),
-                    'operate'      => (new Path())->generateActions($controller),
-                    'restore'      => (new Path())->generateRestore($controller),
-                    'forceDelete'  => (new Path())->generateForceDelete($controller),
-                    default        => null
-                };
-
-                if (!is_null($path)) {
-                    $paths['/'.$route->uri()] = $path;
+                switch ($actionMethod = $route->getActionMethod()) {
+                    case 'mutate':
+                    case 'search':
+                    case 'operate':
+                    case 'restore':
+                    case 'forceDelete':
+                    case 'details':
+                    case 'destroy':
+                        $path = $paths['/'.$route->uri()] ?? new Path;
+                        $paths['/'.$route->uri()] = $path->{'generate'.Str::ucfirst($actionMethod)}($controller);
+                        break;
                 }
             }
         }
