@@ -10,7 +10,7 @@ class QuickStartCommandTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->cleanUp();
+
         // Ensure api.php exists for tests
         if (! File::exists(base_path('routes/api.php'))) {
             File::put(base_path('routes/api.php'), '<?php');
@@ -27,9 +27,7 @@ class QuickStartCommandTest extends TestCase
     {
         File::deleteDirectory(app_path('Rest'));
         File::deleteDirectory(app_path('Models'));
-        if (File::exists(base_path('routes/api.php'))) {
-            File::put(base_path('routes/api.php'), '<?php');
-        }
+        File::delete(base_path('routes/api.php'));
     }
 
     public function test_quick_start_command_creates_necessary_files()
@@ -53,7 +51,6 @@ class QuickStartCommandTest extends TestCase
 
     public function test_quick_start_command_does_not_duplicate_routes()
     {
-        // Run the command twice
         $this->artisan('rest:quick-start')->assertExitCode(0);
         $this->artisan('rest:quick-start')->assertExitCode(0);
 
@@ -68,24 +65,18 @@ class QuickStartCommandTest extends TestCase
         File::makeDirectory(app_path('Models'), 0755, true);
         File::put(app_path('Models/User.php'), '<?php namespace App\Models; class User {}');
 
-        // Run the command
         $this->artisan('rest:quick-start')->assertExitCode(0);
 
-        // Check if the files were created
         $this->assertFileExists(app_path('Rest/Resources/UserResource.php'));
         $this->assertFileExists(app_path('Rest/Controllers/UsersController.php'));
 
         $resourceContent = File::get(app_path('Rest/Resources/UserResource.php'));
         $controllerContent = File::get(app_path('Rest/Controllers/UsersController.php'));
 
-        // Check for the updated namespace in UserResource.php
         $this->assertStringContainsString('\App\Models\User::class', $resourceContent);
 
-        // Check for the updated namespace in UsersController.php
-        // TODO: We are putting this control in the comment line for now, because UsersController may not have this change made.
-        // $this->assertStringContainsString('\App\Models\User::class', $controllerContent);
+        $this->assertStringContainsString('\App\Rest\Resources\UserResource::class', $controllerContent);
 
-        // Additional check Let's check that the User model is used correctly in UserResource
         $this->assertStringContainsString('public static $model = \App\Models\User::class;', $resourceContent);
     }
 }
