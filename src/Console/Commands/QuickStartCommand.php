@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Console\ResolvesStubPath;
 
 class QuickStartCommand extends Command
@@ -32,37 +33,41 @@ class QuickStartCommand extends Command
     {
         $this->comment('Generating User Resource...');
         $this->callSilent('rest:resource', ['name' => 'UserResource']);
-        copy($this->resolveStubPath('/stubs/user-resource.stub'), app_path('Rest/Resources/UserResource.php'));
-
-        if (file_exists(app_path('Models/User.php'))) {
-            file_put_contents(
-                app_path('Rest/Resources/UserResource.php'),
-                str_replace('App\User::class', 'App\Models\User::class', file_get_contents(app_path('Rest/Resources/UserResource.php')))
-            );
-        }
 
         $this->comment('Generating User Controller...');
         $this->callSilent('rest:controller', ['name' => 'UsersController']);
-        copy($this->resolveStubPath('/stubs/user-controller.stub'), app_path('Rest/Controllers/UsersController.php'));
+
+        $this->updateUserModelNamespace();
+        $this->setAppNamespace();
+        $this->updateApiRoutes();
+
+        $this->info('Laravel Rest Api is ready. Type \'php artisan route:list\' to see your new routes !');
+    }
+
+    /**
+     * Update the User model namespace in the generated files.
+     *
+     * @return void
+     */
+    protected function updateUserModelNamespace()
+    {
+        $resource = app_path('Rest/Resources/UserResource.php');
 
         if (file_exists(app_path('Models/User.php'))) {
             file_put_contents(
-                app_path('Rest/Controllers/UsersController.php'),
-                str_replace('App\User::class', 'App\Models\User::class', file_get_contents(app_path('Rest/Controllers/UsersController.php')))
+                $resource,
+                str_replace('App\Models\Model::class', 'App\Models\User::class', file_get_contents($resource))
             );
         }
 
-        $this->setAppNamespace();
+        $controller = app_path('Rest/Controllers/UsersController.php');
 
-        if (file_exists(base_path('routes/api.php'))) {
+        if (file_exists(app_path('Models/User.php'))) {
             file_put_contents(
-                base_path('routes/api.php'),
-                file_get_contents(base_path('routes/api.php')).
-                '\Lomkit\Rest\Facades\Rest::resource(\'users\', \App\Rest\Controllers\UsersController::class);'
+                $controller,
+                str_replace('App\Rest\Resources\ModelResource::class', 'App\Rest\Resources\UserResource::class', file_get_contents($controller))
             );
         }
-
-        $this->info('Laravel Rest Api is ready. Type \'php artisan route:list\' to see your new routes !');
     }
 
     /**
@@ -93,5 +98,25 @@ class QuickStartCommand extends Command
             $namespace,
             file_get_contents($file)
         ));
+    }
+
+    /**
+     * Update the api routes file to include the new resource.
+     *
+     * @return void
+     */
+    protected function updateApiRoutes()
+    {
+        $routesPath = base_path('routes/api.php');
+        if (!file_exists($routesPath)) {
+            file_put_contents($routesPath, '<?php');
+        }
+
+        $routeContent = file_get_contents($routesPath);
+        $newRoute = "\Lomkit\Rest\Facades\Rest::resource('users', \App\Rest\Controllers\UsersController::class);";
+
+        if (!Str::contains($routeContent, $newRoute)) {
+            file_put_contents($routesPath, $routeContent.PHP_EOL.$newRoute);
+        }
     }
 }
