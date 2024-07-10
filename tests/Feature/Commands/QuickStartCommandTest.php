@@ -12,7 +12,7 @@ class QuickStartCommandTest extends TestCase
         parent::setUp();
 
         // Ensure api.php exists for tests
-        if (! File::exists(base_path('routes/api.php'))) {
+        if (!File::exists(base_path('routes/api.php'))) {
             File::put(base_path('routes/api.php'), '<?php');
         }
     }

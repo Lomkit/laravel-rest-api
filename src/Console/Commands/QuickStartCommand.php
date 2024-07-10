@@ -3,8 +3,8 @@
 namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\Command;
-use Lomkit\Rest\Console\ResolvesStubPath;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Console\ResolvesStubPath;
 
 class QuickStartCommand extends Command
 {
@@ -108,14 +108,14 @@ class QuickStartCommand extends Command
     protected function updateApiRoutes()
     {
         $routesPath = base_path('routes/api.php');
-        if (! file_exists($routesPath)) {
+        if (!file_exists($routesPath)) {
             file_put_contents($routesPath, '<?php');
         }
 
         $routeContent = file_get_contents($routesPath);
         $newRoute = "\Lomkit\Rest\Facades\Rest::resource('users', \App\Rest\Controllers\UsersController::class);";
 
-        if (! Str::contains($routeContent, $newRoute)) {
+        if (!Str::contains($routeContent, $newRoute)) {
             file_put_contents($routesPath, $routeContent.PHP_EOL.$newRoute);
         }
     }
