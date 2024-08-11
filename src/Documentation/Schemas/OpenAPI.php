@@ -45,6 +45,13 @@ class OpenAPI extends Schema
     protected array $security = [];
 
     /**
+     * A declaration of which security schemes mechanisms can be used across the API.
+     *
+     * @var array
+     */
+    protected array $securitySchemes = [];
+
+    /**
      * Get the version number of the OpenAPI specification.
      *
      * @return string
@@ -141,6 +148,30 @@ class OpenAPI extends Schema
     }
 
     /**
+     * Get the declaration of security mechanisms for the API.
+     *
+     * @return array
+     */
+    public function securitySchemes(): array
+    {
+        return $this->securitySchemes;
+    }
+
+    /**
+     * Set the declaration of security mechanisms for the API.
+     *
+     * @param array $securitySchemes
+     *
+     * @return self
+     */
+    public function withSecuritySchemes(array $securitySchemes): self
+    {
+        $this->securitySchemes = $securitySchemes;
+
+        return $this;
+    }
+
+    /**
      * Set the Server Objects, which provide connectivity information to a target server.
      *
      * @param array $servers
@@ -178,7 +209,10 @@ class OpenAPI extends Schema
                 'paths'   => collect($this->paths())->map->jsonSerialize()->toArray(),
             ],
             isset($this->servers) ? ['servers' => collect($this->servers())->map->jsonSerialize()->toArray()] : [],
-            isset($this->security) ? ['security' => collect($this->security())->map->jsonSerialize()->toArray()] : []
+            isset($this->security) ? ['security' => $this->security] : [],
+            ['components' => array_merge(
+                isset($this->securitySchemes) ? ['securitySchemes' => collect($this->securitySchemes())->map->jsonSerialize()->toArray()] : []
+            )]
         );
     }
 
@@ -207,30 +241,30 @@ class OpenAPI extends Schema
             $servers[] = $serverInstance;
         }
 
-        $securities = [];
+        $securitySchemes = [];
 
-        foreach (config('rest.documentation.security') as $security) {
-            $securityInstance = (new SecurityScheme())
-                ->withDescription($security['description'] ?? '')
-                ->withIn($security['in'] ?? '')
-                ->withType($security['type'] ?? '')
-                ->withName($security['name'] ?? '')
-                ->withBearerFormat($security['bearerFormat'] ?? '')
-                ->withOpenIdConnectUrl($security['openIdConnectUrl'] ?? '')
-                ->withScheme($security['scheme'] ?? '')
+        foreach (config('rest.documentation.securitySchemes') as $securitySchemeKey => $securityScheme) {
+            $securitySchemeInstance = (new SecurityScheme())
+                ->withDescription($securityScheme['description'] ?? '')
+                ->withIn($securityScheme['in'] ?? '')
+                ->withType($securityScheme['type'] ?? '')
+                ->withName($securityScheme['name'] ?? '')
+                ->withBearerFormat($securityScheme['bearerFormat'] ?? '')
+                ->withOpenIdConnectUrl($securityScheme['openIdConnectUrl'] ?? '')
+                ->withScheme($securityScheme['scheme'] ?? '')
                 ->withFlows($oauthFlows = new OauthFlows());
 
-            foreach ($security['flows'] ?? [] as $key => $flow) {
+            foreach ($securityScheme['flows'] ?? [] as $key => $flow) {
                 $flowInstance = (new OauthFlow())
                     ->withScopes($flow['scopes'] ?? [])
                     ->withAuthorizationUrl($flow['authorizationUrl'] ?? '')
-                    ->withTokenUrl($flow['tokenUrl'])
-                    ->withRefreshUrl($flow['refreshUrl']);
+                    ->withTokenUrl($flow['tokenUrl'] ?? '')
+                    ->withRefreshUrl($flow['refreshUrl'] ?? '');
 
                 $oauthFlows->{'with'.Str::studly($key)}($flowInstance);
             }
 
-            $securities[] = $securityInstance;
+            $securitySchemes[$securitySchemeKey] = $securitySchemeInstance;
         }
 
         return Rest::applyDocumentationCallback(
@@ -242,7 +276,8 @@ class OpenAPI extends Schema
                 ->withPaths(
                     $this->generatePaths()
                 )
-                ->withSecurity($securities)
+                ->withSecuritySchemes($securitySchemes)
+                ->withSecurity(config('rest.documentation.security'))
                 ->withServers($servers)
         );
     }
