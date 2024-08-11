@@ -59,13 +59,13 @@ class QuickStartCommand extends Command
         $content = file_get_contents($appBootstrapPath);
 
         if (str_contains($content, '// api: ')) {
-            (new Filesystem)->replaceInFile(
+            (new Filesystem())->replaceInFile(
                 '// api: ',
                 'api: ',
                 $appBootstrapPath,
             );
         } elseif (str_contains($content, 'web: __DIR__.\'/../routes/web.php\',') && !str_contains($content, 'api: __DIR__.\'/../routes/api.php\',')) {
-            (new Filesystem)->replaceInFile(
+            (new Filesystem())->replaceInFile(
                 'web: __DIR__.\'/../routes/web.php\',',
                 'web: __DIR__.\'/../routes/web.php\','.PHP_EOL.'        api: __DIR__.\'/../routes/api.php\',',
                 $appBootstrapPath,
