@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\ResolvesStubPath;
 
@@ -41,7 +42,37 @@ class QuickStartCommand extends Command
         $this->setAppNamespace();
         $this->updateApiRoutes();
 
+        $this->uncommentApiRoutesFile();
+
         $this->info('Laravel Rest Api is ready. Type \'php artisan route:list\' to see your new routes !');
+    }
+
+    /**
+     * Uncomment the API routes file in the application bootstrap file.
+     *
+     * @return void
+     */
+    protected function uncommentApiRoutesFile()
+    {
+        $appBootstrapPath = $this->laravel->bootstrapPath('app.php');
+
+        $content = file_get_contents($appBootstrapPath);
+
+        if (str_contains($content, '// api: ')) {
+            (new Filesystem())->replaceInFile(
+                '// api: ',
+                'api: ',
+                $appBootstrapPath,
+            );
+        } elseif (str_contains($content, 'web: __DIR__.\'/../routes/web.php\',') && !str_contains($content, 'api: __DIR__.\'/../routes/api.php\',')) {
+            (new Filesystem())->replaceInFile(
+                'web: __DIR__.\'/../routes/web.php\',',
+                'web: __DIR__.\'/../routes/web.php\','.PHP_EOL.'        api: __DIR__.\'/../routes/api.php\',',
+                $appBootstrapPath,
+            );
+        } else {
+            $this->components->warn('Unable to automatically add API route definition to bootstrap file. API route file should be registered manually if you did not already run `php artisan install:api`.');
+        }
     }
 
     /**
