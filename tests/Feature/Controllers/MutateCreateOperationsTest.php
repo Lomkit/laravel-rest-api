@@ -41,6 +41,20 @@ class MutateCreateOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
     }
 
+    public function test_creating_a_resource_using_no_mutate_key(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['mutate']]);
+    }
+
     public function test_creating_a_resource_using_not_authorized_attach_root_operator(): void
     {
         Gate::policy(Model::class, GreenPolicy::class);
