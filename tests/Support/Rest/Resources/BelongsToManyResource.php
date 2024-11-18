@@ -6,6 +6,7 @@ use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
+use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 
 class BelongsToManyResource extends Resource
@@ -18,6 +19,7 @@ class BelongsToManyResource extends Resource
     {
         return [
             BelongsTo::make('model', ModelQueryChangedResource::class),
+            BelongsToMany::make('models', ModelResource::class)->withPivotFields(['number']),
         ];
     }
 
