@@ -552,16 +552,15 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'filters' => [
-                                ['field' => 'models.pivot.number', 'operator' => '>', 'value' => 2]
-                            ]
+                            'filters'  => [
+                                ['field' => 'models.pivot.number', 'operator' => '>', 'value' => 2],
+                            ],
                         ],
                     ],
                 ],
             ],
             ['Accept' => 'application/json']
         );
-
 
         $this->assertResourcePaginated(
             $response,
