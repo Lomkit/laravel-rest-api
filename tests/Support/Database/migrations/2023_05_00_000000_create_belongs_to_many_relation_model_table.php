@@ -16,7 +16,7 @@ return new class() extends Migration {
             $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation::class)->constrained(indexName: 'belongs_to_many_relation_self_id_foreign');
             $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\Model::class)->constrained();
 
-            $table->integer('number')->default(0);
+            $table->integer('number')->default(0)->nullable();
 
             $table->timestamps();
 
