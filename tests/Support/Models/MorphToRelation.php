@@ -8,6 +8,6 @@ class MorphToRelation extends BaseModel
 {
     public function model()
     {
-        return $this->morphOne(Model::class, 'morph_to');
+        return $this->morphOne(Model::class, 'morph_to_relation');
     }
 }

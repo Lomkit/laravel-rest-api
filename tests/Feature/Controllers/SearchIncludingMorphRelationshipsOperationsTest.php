@@ -69,6 +69,45 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         );
     }
 
+    public function test_getting_a_list_of_resources_including_morph_to_relation_with_concrete_relation(): void
+    {
+        $morphTo = MorphToRelationFactory::new()->create();
+        $matchingModel = ModelFactory::new()
+            ->for($morphTo, 'morphToForceModelRelation')
+            ->create()->fresh();
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(MorphToRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'morphToForceModelRelation'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource(),
+            [
+                [
+                    'morph_to_force_model_relation' => $matchingModel->morphToForceModelRelation->only((new MorphToResource())->getFields(app()->make(RestRequest::class))),
+                ],
+                [
+                    'morph_to_force_model_relation' => null,
+                ],
+            ]
+        );
+    }
+
     public function test_getting_a_list_of_resources_including_morph_one_relation(): void
     {
         $matchingModel = ModelFactory::new()

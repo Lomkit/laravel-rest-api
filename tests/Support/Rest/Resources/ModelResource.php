@@ -65,6 +65,7 @@ class ModelResource extends Resource
 
             // Morph relationships
             MorphTo::make('morphToRelation', MorphToResource::class),
+            MorphTo::make('morphToForceModelRelation', MorphToResource::class),
             MorphOne::make('morphOneRelation', MorphOneResource::class),
             MorphOneOfMany::make('morphOneOfManyRelation', MorphOneOfManyResource::class),
             MorphMany::make('morphManyRelation', MorphManyResource::class),
