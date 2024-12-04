@@ -79,6 +79,13 @@ class Model extends BaseModel
         return $this->morphTo();
     }
 
+    public function morphToForceModelRelation()
+    {
+        return $this->morphTo('morphToForceModelRelation', 'morph_to_relation_type', 'morph_to_relation_id')->whereHas('model', function (Builder $query) {
+            $query->where('morph_to_relation_type', MorphToRelation::class);
+        });
+    }
+
     public function morphManyRelation()
     {
         return $this->morphMany(MorphManyRelation::class, 'morph_many_relation');
