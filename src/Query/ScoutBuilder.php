@@ -23,11 +23,11 @@ class ScoutBuilder implements QueryBuilder
      * underlying search operation.
      *
      * @param array $parameters An associative array of search criteria, which may include:
-     *   - 'text': The search query string.
-     *   - 'filters': An array of filter conditions.
-     *   - 'sorts': An array of sorting directives.
-     *   - 'instructions': Additional query instructions.
-     *   - 'limit': Maximum number of results to return (defaults to 50 if not provided).
+     *                          - 'text': The search query string.
+     *                          - 'filters': An array of filter conditions.
+     *                          - 'sorts': An array of sorting directives.
+     *                          - 'instructions': Additional query instructions.
+     *                          - 'limit': Maximum number of results to return (defaults to 50 if not provided).
      *
      * @return \Laravel\Scout\Builder The configured Scout query builder.
      */
