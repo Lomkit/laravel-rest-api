@@ -41,6 +41,17 @@ class Response implements Responsable
         );
     }
 
+    /**
+     * Convert an Eloquent model into an array representation for the HTTP response.
+     *
+     * This method transforms the given model by selecting only the specified attributes and aggregates as defined in the request parameters or resource. If authorization gating is enabled and gate parameters are provided, it appends the corresponding authorization data. Additionally, it recursively processes any loaded relations—returning pivot data when applicable and mapping related models (or collections of models) using the resource’s configuration.
+     *
+     * @param Model $model The Eloquent model instance to be converted.
+     * @param Resource $resource The resource defining the fields and structure of the response.
+     * @param array $requestArray Request parameters that control field selection, aggregates, and authorization gates.
+     * @param Relation|null $relation Optional relation context for processing nested relationships.
+     * @return array The structured array representation of the model, including attributes and recursively processed relations.
+     */
     public function modelToResponse(Model $model, Resource $resource, array $requestArray, Relation $relation = null)
     {
         $currentRequestArray = $relation === null ? $requestArray : collect($requestArray['includes'] ?? [])
