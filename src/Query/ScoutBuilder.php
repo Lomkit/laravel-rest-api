@@ -13,11 +13,23 @@ class ScoutBuilder implements QueryBuilder
     use Conditionable;
 
     /**
-     * Perform a search operation on the query builder.
+     * Executes a search query using Laravel Scout with customizable criteria.
      *
-     * @param array $parameters An array of search parameters.
+     * This method configures the underlying search builder by setting the query text,
+     * and conditionally applying filters, sort orders, and additional instructions based
+     * on the provided parameters. It also enforces a limit on the number of results,
+     * defaulting to 50 if no limit is specified. Any extra parameters, after excluding
+     * reserved keys (filters, instructions, sorts, text, and limit), are forwarded to the
+     * underlying search operation.
      *
-     * @return \Laravel\Scout\Builder The modified query builder.
+     * @param array $parameters An associative array of search criteria, which may include:
+     *                          - 'text': The search query string.
+     *                          - 'filters': An array of filter conditions.
+     *                          - 'sorts': An array of sorting directives.
+     *                          - 'instructions': Additional query instructions.
+     *                          - 'limit': Maximum number of results to return (defaults to 50 if not provided).
+     *
+     * @return \Laravel\Scout\Builder The configured Scout query builder.
      */
     public function search(array $parameters = [])
     {

@@ -109,11 +109,16 @@ class DispatchAction
     }
 
     /**
-     * Dispatch the given action.
+     * Processes models in chunks using classic mode and dispatches an action for each set.
      *
-     * @param int $chunkCount
+     * The method builds a search query for the resource associated with the current request, applying
+     * search criteria from the request input and removing any default result limits. It then processes
+     * the query results in chunks (of size $chunkCount) by invoking the forModels method on each chunk.
+     * Finally, it returns the query limit if one is set; otherwise, it returns the total count of models.
      *
-     * @return int
+     * @param int $chunkCount The number of models to process per chunk.
+     *
+     * @return int The effective result limit if set, or the total count of models.
      */
     public function handleClassic(int $chunkCount)
     {

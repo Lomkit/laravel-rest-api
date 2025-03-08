@@ -63,6 +63,15 @@ class Builder implements QueryBuilder
         return app()->make(QueryBuilder::class, $parameters);
     }
 
+    /**
+     * Sets the security flag for the query builder.
+     *
+     * Toggling this flag disables or enables security checks during query building.
+     *
+     * @param bool $disable Set to true to disable security checks (default), or false to enable them.
+     *
+     * @return $this The current instance for method chaining.
+     */
     public function disableSecurity($disable = true)
     {
         $this->disableSecurity = $disable;
@@ -70,6 +79,16 @@ class Builder implements QueryBuilder
         return $this;
     }
 
+    /**
+     * Set whether to disable applying the default query limit.
+     *
+     * When disabled, the query will not enforce any default limit on the number of results,
+     * allowing retrieval of all matching records unless a custom limit is specified.
+     *
+     * @param bool $disable True to disable the default limit, false to enable it.
+     *
+     * @return self Returns the current instance for chaining.
+     */
     public function disableDefaultLimit($disable = true)
     {
         $this->disableDefaultLimit = $disable;

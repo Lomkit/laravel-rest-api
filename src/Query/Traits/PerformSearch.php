@@ -10,11 +10,25 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 trait PerformSearch
 {
     /**
-     * Perform a search operation on the query builder.
+     * Executes a modular search on the query builder based on provided parameters.
      *
-     * @param array $parameters An array of search parameters.
+     * This method first authorizes the view operation on the model and then, unless security is disabled,
+     * applies a security-aware search query. It conditionally processes various search parameters to:
+     * - Filter results via a nested subquery to prevent conflicts.
+     * - Sort results using custom definitions if provided, or default ordering from the resource.
+     * - Apply named scopes, instructions, includes, and aggregate functions.
+     * - Limit the result set according to a specified limit or a default value of 50.
      *
-     * @return Builder The modified query builder.
+     * @param array $parameters An associative array of search parameters that may include:
+     *                          - 'filters': Criteria for filtering the results.
+     *                          - 'sorts': Definitions for ordering the results.
+     *                          - 'scopes': Named scopes to refine the query.
+     *                          - 'instructions': Additional instructions for query customization.
+     *                          - 'includes': Related resources to include in the query.
+     *                          - 'aggregates': Aggregate functions to apply on related data.
+     *                          - 'limit': Maximum number of records to return.
+     *
+     * @return Builder The modified query builder with the applied search parameters.
      */
     public function search(array $parameters = [])
     {
