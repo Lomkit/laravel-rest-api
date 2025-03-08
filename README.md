@@ -6,7 +6,7 @@ Laravel Rest Api is an elegant way to expose your app through an API, it takes f
 
 ## Requirements
 
-PHP 8.1+ and Laravel 10.0+
+PHP 8.2+ and Laravel 11+
 
 ## Documentation, Installation, and Usage Instructions
 

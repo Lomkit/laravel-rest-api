@@ -115,6 +115,7 @@ class ModelResource extends Resource
             10,
             25,
             50,
+            150,
         ];
     }
 

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Actions;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
@@ -109,32 +110,50 @@ class DispatchAction
     }
 
     /**
-     * Dispatch the given action.
+     * Processes models in chunks using classic mode and dispatches an action for each set.
      *
-     * @param int $chunkCount
+     * The method builds a search query for the resource associated with the current request, applying
+     * search criteria from the request input and removing any default result limits. It then processes
+     * the query results in chunks (of size $chunkCount) by invoking the forModels method on each chunk.
+     * Finally, it returns the query limit if one is set; otherwise, it returns the total count of models.
      *
-     * @return int
+     * @param int $chunkCount The number of models to process per chunk.
+     *
+     * @return int The effective result limit if set, or the total count of models.
      */
     public function handleClassic(int $chunkCount)
     {
+        /**
+         * @var Builder $searchQuery
+         */
         $searchQuery =
             app()->make(QueryBuilder::class, ['resource' => $this->request->resource, 'query' => null])
+                ->disableDefaultLimit()
                 ->search($this->request->input('search', []));
+
+        $limit = $searchQuery->toBase()->limit;
 
         $searchQuery
             ->clone()
             ->chunk(
                 $chunkCount,
-                function ($chunk) {
-                    return $this->forModels(
-                        \Illuminate\Database\Eloquent\Collection::make(
-                            $chunk
-                        )
-                    );
+                function ($chunk, $page) use ($limit, $chunkCount) {
+                    $collection = \Illuminate\Database\Eloquent\Collection::make($chunk);
+
+                    // This is to remove for Laravel 12, chunking with limit does not work
+                    // in Laravel 11
+                    if (!is_null($limit) && $page * $chunkCount >= $limit) {
+                        $collection = $collection->take($limit - ($page - 1) * $chunkCount);
+                        $this->forModels($collection);
+
+                        return false;
+                    }
+
+                    return $this->forModels($collection);
                 }
             );
 
-        return $searchQuery->count();
+        return $limit ?? $searchQuery->count();
     }
 
     /**
@@ -202,7 +221,7 @@ class DispatchAction
      *
      * @return $this
      */
-    protected function addQueuedActionJob(Collection $models)
+    protected function addQueuedActionJob(Collection $models): self
     {
         $job = new CallRestApiAction($this->action, $this->fields, $models);
 

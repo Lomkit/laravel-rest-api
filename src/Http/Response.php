@@ -41,6 +41,18 @@ class Response implements Responsable
         );
     }
 
+    /**
+     * Convert an Eloquent model into an array representation for the HTTP response.
+     *
+     * This method transforms the given model by selecting only the specified attributes and aggregates as defined in the request parameters or resource. If authorization gating is enabled and gate parameters are provided, it appends the corresponding authorization data. Additionally, it recursively processes any loaded relations—returning pivot data when applicable and mapping related models (or collections of models) using the resource’s configuration.
+     *
+     * @param Model         $model        The Eloquent model instance to be converted.
+     * @param resource      $resource     The resource defining the fields and structure of the response.
+     * @param array         $requestArray Request parameters that control field selection, aggregates, and authorization gates.
+     * @param Relation|null $relation     Optional relation context for processing nested relationships.
+     *
+     * @return array The structured array representation of the model, including attributes and recursively processed relations.
+     */
     public function modelToResponse(Model $model, Resource $resource, array $requestArray, Relation $relation = null)
     {
         $currentRequestArray = $relation === null ? $requestArray : collect($requestArray['includes'] ?? [])
@@ -72,7 +84,7 @@ class Response implements Responsable
                 })
                 ->toArray(),
             collect($model->getRelations())
-                ->mapWithKeys(function ($modelRelation, $relationName) use ($requestArray, $currentRequestArray, $relation, $resource) {
+                ->mapWithKeys(function ($modelRelation, $relationName) use ($requestArray, $relation, $resource) {
                     $key = Str::snake($relationName);
 
                     if (is_null($modelRelation)) {
@@ -89,15 +101,8 @@ class Response implements Responsable
 
                     $relationConcrete = $resource->relation($relationName);
                     $relationResource = $relationConcrete->resource();
-                    $requestArrayRelation = collect($currentRequestArray['includes'] ?? [])
-                        ->first(function ($include) use ($relationName) {
-                            return preg_match('/(?:\.\b)?'.$relationName.'\b/', $include['relation']);
-                        });
 
-                    // We reapply the limits in case of BelongsToManyRelation where we can't apply limits easily
-                    if ($modelRelation instanceof Collection) {
-                        $modelRelation = $modelRelation->take($requestArrayRelation['limit'] ?? 50);
-                    } elseif ($modelRelation instanceof Model) {
+                    if ($modelRelation instanceof Model) {
                         return [
                             $key => $this->modelToResponse(
                                 $modelRelation,

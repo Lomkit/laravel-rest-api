@@ -23,12 +23,37 @@ class BelongsToManyResource extends Resource
         ];
     }
 
+    /**
+     * Returns the list of field names for the resource.
+     *
+     * This method defines the fields that are part of the resource representation.
+     *
+     * @return array Array of field names.
+     */
     public function fields(RestRequest $request): array
     {
         return [
             'id',
             'number',
             'other_number',
+        ];
+    }
+
+    /**
+     * Returns an array of predefined pagination limit values.
+     *
+     * This method provides a fixed set of integer values that can be used to control the number
+     * of items returned in paginated responses.
+     *
+     * @return int[] Array of allowed limit values.
+     */
+    public function limits(RestRequest $request): array
+    {
+        return [
+            1,
+            10,
+            25,
+            50,
         ];
     }
 }
