@@ -315,7 +315,7 @@ class ActionsOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'string', 'value' => 'match'],
                     ],
-                    'limit' => 50
+                    'limit' => 50,
                 ],
             ],
             ['Accept' => 'application/json']

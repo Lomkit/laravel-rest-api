@@ -50,7 +50,7 @@ class ScoutBuilder implements QueryBuilder
                                 'instructions',
                                 'sorts',
                                 'text',
-                                'limit'
+                                'limit',
                             ])
                             ->all()
                     );

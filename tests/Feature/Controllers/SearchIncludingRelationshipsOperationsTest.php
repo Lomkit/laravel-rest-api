@@ -541,7 +541,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'limit' => 1
+                            'limit'    => 1,
                         ],
                     ],
                 ],

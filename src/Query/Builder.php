@@ -45,7 +45,7 @@ class Builder implements QueryBuilder
     protected bool $disableSecurity = false;
 
     /**
-     * Determine if default limit should be applied
+     * Determine if default limit should be applied.
      *
      * @var bool
      */
