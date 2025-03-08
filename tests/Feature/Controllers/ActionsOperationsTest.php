@@ -295,6 +295,43 @@ class ActionsOperationsTest extends TestCase
         );
     }
 
+    public function test_operate_action_with_search_and_limit(): void
+    {
+        ModelFactory::new()
+            ->count(100)
+            ->create([
+                'string' => 'match',
+            ]);
+
+        ModelFactory::new()->count(2)
+            ->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/modify-number',
+            [
+                'search' => [
+                    'filters' => [
+                        ['field' => 'string', 'value' => 'match'],
+                    ],
+                    'limit' => 50
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertJson([
+            'data' => [
+                'impacted' => 50,
+            ],
+        ]);
+        $this->assertEquals(
+            50,
+            Model::where('number', 100000000)->count()
+        );
+    }
+
     public function test_operate_batchable_action(): void
     {
         ModelFactory::new()->count(150)->create();

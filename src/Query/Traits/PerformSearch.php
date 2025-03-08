@@ -32,7 +32,7 @@ trait PerformSearch
             });
         });
 
-        if (!isset($parameters['sorts']) || empty($parameters['sorts'])) {
+        if (empty($parameters['sorts'])) {
             foreach ($this->resource->defaultOrderBy(
                 app()->make(RestRequest::class)
             ) as $column => $order) {
@@ -59,9 +59,9 @@ trait PerformSearch
             $this->applyAggregates($parameters['aggregates']);
         });
 
-        // In case we are in a relation we don't apply the limits since we don't know how much records will be related.
-        if (!$this->queryBuilder instanceof Relation && !$this->disableSecurity) {
-            $this->queryBuilder->limit($parameters['limit'] ?? 50);
+        $limit = $this->disableDefaultLimit() && !isset($parameters['limit']) ? null : ($parameters['limit'] ?? 50);
+        if ($limit !== null) {
+            $this->queryBuilder->limit($limit);
         }
 
         return $this->queryBuilder;

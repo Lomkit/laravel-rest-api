@@ -522,6 +522,65 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         );
     }
 
+    public function test_getting_a_list_of_resources_including_belongs_to_many_relation_and_limit_results(): void
+    {
+        $matchingModel = ModelFactory::new()
+            ->has(BelongsToManyRelationFactory::new()->count(2))
+            ->create()->fresh();
+        $pivotAccessor = $matchingModel->belongsToManyRelation()->getPivotAccessor();
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'limit' => 1
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource(),
+            [
+                [
+                    'belongs_to_many_relation' => $matchingModel->belongsToManyRelation()
+                        ->orderBy('id', 'desc')
+                        ->limit(1)
+                        ->get()
+                        ->map(function ($relation) use ($pivotAccessor) {
+                            return collect($relation->only(
+                                array_merge((new BelongsToManyResource())->getFields(app()->make(RestRequest::class)), [$pivotAccessor])
+                            ))
+                                ->pipe(function ($relation) use ($pivotAccessor) {
+                                    $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
+                                        ->only(
+                                            (new ModelResource())->relation('belongsToManyRelation')->getPivotFields()
+                                        );
+
+                                    return $relation;
+                                });
+                        })
+                        ->toArray(),
+                ],
+                [
+                    'belongs_to_many_relation' => [],
+                ],
+            ]
+        );
+    }
+
     public function test_getting_a_list_of_resources_including_belongs_to_many_relation_and_filtering_on_pivot(): void
     {
         $matchingModel = ModelFactory::new()

@@ -89,15 +89,8 @@ class Response implements Responsable
 
                     $relationConcrete = $resource->relation($relationName);
                     $relationResource = $relationConcrete->resource();
-                    $requestArrayRelation = collect($currentRequestArray['includes'] ?? [])
-                        ->first(function ($include) use ($relationName) {
-                            return preg_match('/(?:\.\b)?'.$relationName.'\b/', $include['relation']);
-                        });
 
-                    // We reapply the limits in case of BelongsToManyRelation where we can't apply limits easily
-                    if ($modelRelation instanceof Collection) {
-                        $modelRelation = $modelRelation->take($requestArrayRelation['limit'] ?? 50);
-                    } elseif ($modelRelation instanceof Model) {
+                    if ($modelRelation instanceof Model) {
                         return [
                             $key => $this->modelToResponse(
                                 $modelRelation,

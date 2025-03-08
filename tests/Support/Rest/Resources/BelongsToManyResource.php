@@ -31,4 +31,14 @@ class BelongsToManyResource extends Resource
             'other_number',
         ];
     }
+
+    public function limits(RestRequest $request): array
+    {
+        return [
+            1,
+            10,
+            25,
+            50,
+        ];
+    }
 }

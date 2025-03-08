@@ -119,6 +119,7 @@ class DispatchAction
     {
         $searchQuery =
             app()->make(QueryBuilder::class, ['resource' => $this->request->resource, 'query' => null])
+                ->disableDefaultLimit()
                 ->search($this->request->input('search', []));
 
         $searchQuery
@@ -134,7 +135,7 @@ class DispatchAction
                 }
             );
 
-        return $searchQuery->count();
+        return $searchQuery->getLimit() ?? $searchQuery->count();
     }
 
     /**

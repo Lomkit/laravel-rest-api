@@ -45,6 +45,13 @@ class Builder implements QueryBuilder
     protected bool $disableSecurity = false;
 
     /**
+     * Determine if default limit should be applied
+     *
+     * @var bool
+     */
+    protected bool $disableDefaultLimit = false;
+
+    /**
      * The query builder instance.
      *
      * @var \Illuminate\Database\Eloquent\Builder|null
@@ -59,6 +66,13 @@ class Builder implements QueryBuilder
     public function disableSecurity($disable = true)
     {
         $this->disableSecurity = $disable;
+
+        return $this;
+    }
+
+    public function disableDefaultLimit($disable = true)
+    {
+        $this->disableDefaultLimit = $disable;
 
         return $this;
     }
