@@ -142,7 +142,7 @@ class DispatchAction
 
                     // This is to remove for Laravel 12, chunking with limit does not work
                     // in Laravel 11
-                    if ($page * $chunkCount >= $limit) {
+                    if (!is_null($limit) && $page * $chunkCount >= $limit) {
                         $collection = $collection->take($limit - ($page - 1) * $chunkCount);
                         $this->forModels($collection);
                         return false;
