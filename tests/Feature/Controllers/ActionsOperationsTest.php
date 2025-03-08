@@ -298,7 +298,7 @@ class ActionsOperationsTest extends TestCase
     public function test_operate_action_with_search_and_limit(): void
     {
         ModelFactory::new()
-            ->count(100)
+            ->count(300)
             ->create([
                 'string' => 'match',
             ]);
@@ -315,7 +315,7 @@ class ActionsOperationsTest extends TestCase
                     'filters' => [
                         ['field' => 'string', 'value' => 'match'],
                     ],
-                    'limit' => 50,
+                    'limit' => 150,
                 ],
             ],
             ['Accept' => 'application/json']
@@ -323,11 +323,11 @@ class ActionsOperationsTest extends TestCase
 
         $response->assertJson([
             'data' => [
-                'impacted' => 50,
+                'impacted' => 150,
             ],
         ]);
         $this->assertEquals(
-            50,
+            150,
             Model::where('number', 100000000)->count()
         );
     }
