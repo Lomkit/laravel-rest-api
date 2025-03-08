@@ -145,6 +145,7 @@ class DispatchAction
                     if ($page * $chunkCount >= $limit) {
                         $collection = $collection->take($limit - ($page - 1) * $chunkCount);
                         $this->forModels($collection);
+
                         return false;
                     }
 
