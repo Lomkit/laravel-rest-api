@@ -131,7 +131,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
 
         $operatorRules = $isScoutMode ?
             ['=', 'in', 'not in'] :
-            ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'];
+            $resource->getOperators($this->request);
 
         $fieldValidation = $isScoutMode ?
             Rule::in($resource->getScoutFields($this->request)) :
