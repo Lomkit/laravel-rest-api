@@ -11,6 +11,7 @@ use Lomkit\Rest\Tests\Support\Database\Factories\MorphToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
+use Lomkit\Rest\Tests\Support\Rest\Resources\LimitedModelResource;
 
 class SearchFilteringOperationsTest extends TestCase
 {
@@ -625,5 +626,54 @@ class SearchFilteringOperationsTest extends TestCase
             [$matchingModel],
             new ModelResource()
         );
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_limited_operators(): void
+    {
+        $matchingModel = ModelFactory::new()->create(['name' => 'match'])->fresh();
+        ModelFactory::new()->create(['name' => 'not match'])->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/limited-models/search',
+            [
+                'search' => [
+                    'filters' => [
+                        ['field' => 'name', 'operator' => '=', 'value' => 'match'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel],
+            new LimitedModelResource()
+        );
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_limited_operators_with_invalid_operator(): void
+    {
+        ModelFactory::new()->create(['name' => 'match'])->fresh();
+        ModelFactory::new()->create(['name' => 'not match'])->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/limited-models/search',
+            [
+                'search' => [
+                    'filters' => [
+                        ['field' => 'name', 'operator' => 'like', 'value' => 'match'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.operator']]);
     }
 }
