@@ -32,7 +32,7 @@ trait Operatable
             'like',
             'not like',
             'in',
-            'not in'
+            'not in',
         ];
     }
 

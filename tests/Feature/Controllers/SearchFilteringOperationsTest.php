@@ -10,8 +10,8 @@ use Lomkit\Rest\Tests\Support\Database\Factories\MorphedByManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\LimitedModelResource;
+use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 
 class SearchFilteringOperationsTest extends TestCase
 {
