@@ -14,6 +14,13 @@ class {{ class }} extends RestResource
     public static $model = \{{ namespacedModel }}::class;
 
     /**
+     * The default value for the pagination limit
+     *
+     * @var int
+     */
+    protected int $defaultLimit = 50;
+
+    /**
      * The exposed fields that could be provided
      * @param RestRequest $request
      * @return array
