@@ -71,7 +71,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
 
         $policy = Gate::getPolicyFor($this->resource::$model);
         $validGates = $policy ? get_class_methods($policy) : [];
-        $validGates = array_filter($validGates, fn($method) => !in_array($method, ['before', 'after']));
+        $validGates = array_filter($validGates, fn($method) => !in_array($method, ['before', 'after', '__call', '__construct']));
 
         $this
             ->validator
