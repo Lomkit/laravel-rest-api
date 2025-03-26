@@ -14,7 +14,7 @@ class {{ class }} extends RestResource
     public static $model = \{{ namespacedModel }}::class;
 
     /**
-     * The default value for the pagination limit
+     * The default value for the pagination limit.
      *
      * @var int
      */

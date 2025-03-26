@@ -14,7 +14,7 @@ class UserResource extends RestResource
     public static $model = \App\User::class;
 
     /**
-     * The default value for the pagination limit
+     * The default value for the pagination limit.
      *
      * @var int
      */

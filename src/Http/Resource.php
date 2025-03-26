@@ -47,7 +47,7 @@ class Resource implements \JsonSerializable
     public static $response = Response::class;
 
     /**
-     * The default value for the pagination limit
+     * The default value for the pagination limit.
      *
      * @var int
      */
