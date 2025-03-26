@@ -7,9 +7,9 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
-use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
@@ -71,7 +71,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
 
         $policy = Gate::getPolicyFor($this->resource::$model);
         $validGates = $policy ? get_class_methods($policy) : [];
-        $validGates = array_filter($validGates, fn($method) => !in_array($method, ['before', 'after', '__call', '__construct']));
+        $validGates = array_filter($validGates, fn ($method) => !in_array($method, ['before', 'after', '__call', '__construct']));
 
         $this
             ->validator

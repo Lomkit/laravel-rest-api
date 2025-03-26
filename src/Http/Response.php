@@ -33,8 +33,8 @@ class Response implements Responsable
     protected function buildGatesForModel(Model $model, Resource $resource, array $gates)
     {
         return array_combine(
-            array_map(fn($gate) => config("rest.gates.names.authorized_to_{$gate}", "authorized_to_{$gate}"), $gates),
-            array_map(fn($gate) => $resource->authorizedTo($gate, $model), $gates)
+            array_map(fn ($gate) => config("rest.gates.names.authorized_to_{$gate}", "authorized_to_{$gate}"), $gates),
+            array_map(fn ($gate) => $resource->authorizedTo($gate, $model), $gates)
         );
     }
 
