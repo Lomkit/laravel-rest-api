@@ -32,6 +32,8 @@ class ModelResource extends Resource
 
     public static $model = Model::class;
 
+    protected int $defaultLimit = 32;
+
     public function createRules(RestRequest $request)
     {
         return [

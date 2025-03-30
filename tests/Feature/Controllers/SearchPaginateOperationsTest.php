@@ -43,7 +43,7 @@ class SearchPaginateOperationsTest extends TestCase
             '/api/models/search',
             [
                 'search' => [
-                    'page'  => 2,
+                    'page' => 2,
                     'limit' => 1,
                 ],
             ],
@@ -69,7 +69,7 @@ class SearchPaginateOperationsTest extends TestCase
             '/api/models/search',
             [
                 'search' => [
-                    'page'  => 101,
+                    'page' => 101,
                     'limit' => 1,
                 ],
             ],
@@ -82,4 +82,23 @@ class SearchPaginateOperationsTest extends TestCase
             new ModelResource()
         );
     }
+
+    public function test_to_get_a_list_of_paginated_resources_from_the_default_limit(): void
+    {
+        ModelFactory::new()->count(100)->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('per_page', 32);
+        $response->assertJsonPath('last_page', 4);
+        $response->assertJsonCount(32, 'data');
+    }
+
 }
