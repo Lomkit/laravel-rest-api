@@ -32,11 +32,14 @@ class Response implements Responsable
 
     protected function buildGatesForModel(Model $model, Resource $resource, array $gates)
     {
+        $filteredGates = array_filter($gates, fn ($gate) => $gate !== 'create');
+
         return array_combine(
-            array_map(fn ($gate) => config("rest.gates.names.authorized_to_{$gate}", "authorized_to_{$gate}"), $gates),
-            array_map(fn ($gate) => $resource->authorizedTo($gate, $model), $gates)
+            array_map(fn ($gate) => config('rest.gates.names.authorized_to_' . Str::snake($gate), 'authorized_to_' . Str::snake($gate)), $filteredGates),
+            array_map(fn ($gate) => $resource->authorizedTo($gate, $model), $filteredGates)
         );
     }
+
 
     /**
      * Convert an Eloquent model into an array representation for the HTTP response.
