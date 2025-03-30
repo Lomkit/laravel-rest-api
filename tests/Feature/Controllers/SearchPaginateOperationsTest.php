@@ -43,7 +43,7 @@ class SearchPaginateOperationsTest extends TestCase
             '/api/models/search',
             [
                 'search' => [
-                    'page' => 2,
+                    'page'  => 2,
                     'limit' => 1,
                 ],
             ],
@@ -69,7 +69,7 @@ class SearchPaginateOperationsTest extends TestCase
             '/api/models/search',
             [
                 'search' => [
-                    'page' => 101,
+                    'page'  => 101,
                     'limit' => 1,
                 ],
             ],
@@ -100,5 +100,4 @@ class SearchPaginateOperationsTest extends TestCase
         $response->assertJsonPath('last_page', 4);
         $response->assertJsonCount(32, 'data');
     }
-
 }
