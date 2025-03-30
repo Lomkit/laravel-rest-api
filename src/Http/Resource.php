@@ -51,7 +51,7 @@ class Resource implements \JsonSerializable
      *
      * @var int
      */
-    protected int $defaultLimit = 50;
+    public int $defaultLimit = 50;
 
     /**
      * Get a fresh instance of the model represented by the resource.

@@ -18,7 +18,7 @@ class UserResource extends RestResource
      *
      * @var int
      */
-    protected int $defaultLimit = 50;
+    public int $defaultLimit = 50;
 
     /**
      * The exposed fields that could be provided
