@@ -40,7 +40,6 @@ class Response implements Responsable
         );
     }
 
-
     /**
      * Convert an Eloquent model into an array representation for the HTTP response.
      *
