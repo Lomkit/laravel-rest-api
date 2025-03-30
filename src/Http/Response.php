@@ -35,7 +35,7 @@ class Response implements Responsable
         $filteredGates = array_filter($gates, fn ($gate) => $gate !== 'create');
 
         return array_combine(
-            array_map(fn ($gate) => config('rest.gates.names.authorized_to_' . Str::snake($gate), 'authorized_to_' . Str::snake($gate)), $filteredGates),
+            array_map(fn ($gate) => config('rest.gates.names.authorized_to_'.Str::snake($gate), 'authorized_to_'.Str::snake($gate)), $filteredGates),
             array_map(fn ($gate) => $resource->authorizedTo($gate, $model), $filteredGates)
         );
     }
