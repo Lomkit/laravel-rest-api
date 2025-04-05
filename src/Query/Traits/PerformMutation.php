@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Query\Traits;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
@@ -33,9 +34,8 @@ trait PerformMutation
         ];
 
         foreach ($parameters['mutate'] as $parameter) {
-            $operations[
-                $this->mutateOperationsVerbose[$parameter['operation']]
-            ][] = $this->applyMutation($parameter)->getKey();
+            $model = $this->applyMutation($parameter);
+            $operations[$this->mutateOperationsVerbose[$parameter['operation']]][] = $this->formatModelResponse($model);
         }
 
         return $operations;
@@ -44,7 +44,7 @@ trait PerformMutation
     /**
      * Apply a mutation to the model based on the provided mutation parameters.
      *
-     * @param array $mutation   An array of mutation parameters.
+     * @param array $mutation An array of mutation parameters.
      * @param array $attributes Additional attributes to apply to the model.
      *
      * @return Model The mutated model.
@@ -77,9 +77,9 @@ trait PerformMutation
     /**
      * Mutate the model by applying attributes and relations.
      *
-     * @param Model $model      The Eloquent model to mutate.
+     * @param Model $model The Eloquent model to mutate.
      * @param array $attributes The attributes to mutate.
-     * @param array $mutation   The mutation array.
+     * @param array $mutation The mutation array.
      *
      * @return Model The mutated model.
      */
@@ -118,5 +118,46 @@ trait PerformMutation
             ->mutated(app(MutateRequest::class), $mutation, $model);
 
         return $model;
+    }
+
+    /**
+     * Modify the response according to $responseFields in the resource
+     *
+     * @param Model $model
+     * @return mixed|array
+     */
+
+    public function formatModelResponse(Model $model)
+    {
+        $fields = $this->resource->responseFields ?? [];
+
+        if (empty($fields)) {
+            return $model->getKey();
+        }
+
+        $attributes = collect($model->getAttributes())->only($fields);
+
+        $relationsInResource = $this->resource->getRelations(app()->make(RestRequest::class));
+        $relationsInModel = $model->getRelations();
+
+        $formattedRelations = [];
+
+        $defaultRelations = $this->resource->responseRelations ?? [];
+
+        foreach ($relationsInResource as $relation) {
+            $relationName = Str::singular($relation->resource()::newModel()->getTable());
+
+            if (empty($relationsInModel[$relationName]) ||  !in_array($relationName, $defaultRelations) || empty($relationFields)) {
+                continue;
+            }
+
+            $relationFields = $relation->resource()->responseFields ?? [];
+
+            $relationAttributes = collect($relationsInModel[$relationName])->only($relationFields);
+
+            $formattedRelations[$relationName] = $relationAttributes;
+        }
+
+        return $attributes->merge($formattedRelations)->toArray();
     }
 }
