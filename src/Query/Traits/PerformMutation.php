@@ -147,11 +147,11 @@ trait PerformMutation
         foreach ($relationsInResource as $relation) {
             $relationName = Str::singular($relation->resource()::newModel()->getTable());
 
+            $relationFields = $relation->resource()->responseFields ?? [];
+
             if (empty($relationsInModel[$relationName]) ||  !in_array($relationName, $defaultRelations) || empty($relationFields)) {
                 continue;
             }
-
-            $relationFields = $relation->resource()->responseFields ?? [];
 
             $relationAttributes = collect($relationsInModel[$relationName])->only($relationFields);
 
