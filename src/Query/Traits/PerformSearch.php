@@ -237,7 +237,13 @@ trait PerformSearch
      */
     public function aggregate($aggregate)
     {
-        return $this->queryBuilder->withAggregate([$aggregate['relation'] => function (Builder $query) use ($aggregate) {
+        $relation = $aggregate['relation'];
+
+        if (isset($aggregate['alias'])) {
+            $relation .= ' as '.$aggregate['alias'];
+        }
+
+        return $this->queryBuilder->withAggregate([$relation => function (Builder $query) use ($aggregate) {
             $resource = $this->resource->relation($aggregate['relation'])?->resource();
 
             $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
