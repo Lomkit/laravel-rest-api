@@ -130,34 +130,45 @@ trait PerformMutation
     public function formatModelResponse(Model $model)
     {
         $fields = $this->resource->responseFields ?? [];
-
         if (empty($fields)) {
             return $model->getKey();
         }
-
         $attributes = collect($model->getAttributes())->only($fields);
-
         $relationsInResource = $this->resource->getRelations(app()->make(RestRequest::class));
         $relationsInModel = $model->getRelations();
-
         $formattedRelations = [];
-
         $defaultRelations = $this->resource->responseRelations ?? [];
-
-        foreach ($relationsInResource as $relation) {
-            $relationName = Str::singular($relation->resource()::newModel()->getTable());
-
-            $relationFields = $relation->resource()->responseFields ?? [];
-
-            if (empty($relationsInModel[$relationName]) ||  !in_array($relationName, $defaultRelations) || empty($relationFields)) {
+        foreach ($defaultRelations as $relationName) {
+            if (!array_key_exists($relationName, $relationsInModel)) {
                 continue;
             }
 
-            $relationAttributes = collect($relationsInModel[$relationName])->only($relationFields);
+            $relation = collect($relationsInResource)->first(function($rel) use ($relationName) {
+                return Str::singular($rel->resource()::newModel()->getTable()) === $relationName;
+            });
 
-            $formattedRelations[$relationName] = $relationAttributes;
+            if (!$relation) {
+                continue;
+            }
+
+            $relationFields = $relation->resource()->responseFields ?? [];
+            if (empty($relationFields)) {
+                continue;
+            }
+
+            $relationModel = $relationsInModel[$relationName];
+
+            if ($relationModel instanceof \Illuminate\Database\Eloquent\Collection) {
+                $formattedRelations[$relationName] = $relationModel->map(function($model) use ($relationFields) {
+                    return collect($model->getAttributes())->only($relationFields);
+                })->toArray();
+            } else {
+                $formattedRelations[$relationName] = collect($relationModel->getAttributes())->only($relationFields);
+            }
         }
-
-        return $attributes->merge($formattedRelations)->toArray();
-    }
-}
+        $result = $attributes->toArray();
+        foreach ($formattedRelations as $relation => $value) {
+            $result[$relation] = $value;
+        }
+        return $result;
+    }}
