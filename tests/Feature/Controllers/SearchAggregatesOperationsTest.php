@@ -581,7 +581,7 @@ class SearchAggregatesOperationsTest extends TestCase
                         [
                             'relation' => 'belongsToManyRelation',
                             'type'     => 'count',
-                            'alias'     => 'count_alias',
+                            'alias'    => 'count_alias',
                         ],
                     ],
                 ],
@@ -662,7 +662,7 @@ class SearchAggregatesOperationsTest extends TestCase
                         [
                             'relation' => 'belongsToManyRelation',
                             'type'     => 'exists',
-                            'alias'     => 'exists_alias',
+                            'alias'    => 'exists_alias',
                         ],
                     ],
                 ],
