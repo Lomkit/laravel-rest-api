@@ -143,15 +143,20 @@ trait PerformMutation
             if (!array_key_exists($relationName, $relationsInModel)) {
                 continue;
             }
-
+            
+            // Skip if relation is null
+            if ($relationsInModel[$relationName] === null) {
+                continue;
+            }
+            
             $relation = collect($relationsInResource)->first(function ($rel) use ($relationName) {
                 return Str::singular($rel->resource()::newModel()->getTable()) === $relationName;
             });
-
+            
             if (!$relation) {
                 continue;
             }
-
+            
             $relationFields = $relation->resource()->responseFields ?? [];
             if (empty($relationFields)) {
                 continue;
