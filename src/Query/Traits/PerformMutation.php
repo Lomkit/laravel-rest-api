@@ -171,6 +171,7 @@ trait PerformMutation
         foreach ($formattedRelations as $relation => $value) {
             $result[$relation] = $value;
         }
+
         return $result;
     }
 }
