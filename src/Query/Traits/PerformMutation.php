@@ -169,7 +169,7 @@ trait PerformMutation
                     return collect($model->getAttributes())->only($relationFields);
                 })->toArray();
             } else {
-                $formattedRelations[$relationName] = collect($relationModel->getAttributes())->only($relationFields);
+                $formattedRelations[$relationName] = collect($relationModel->getAttributes())->only($relationFields)->toArray();
             }
         }
         $result = $attributes->toArray();
