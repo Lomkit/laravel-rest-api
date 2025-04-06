@@ -341,7 +341,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
                 'required_if:'.$prefix.'.*.type,min,max,avg,sum',
                 'prohibited_if:'.$prefix.'.*.type,count,exists',
             ],
-            $prefix.'.*.nullable' => [
+            $prefix.'.*.alias' => [
                 'nullable',
                 'string',
             ],
