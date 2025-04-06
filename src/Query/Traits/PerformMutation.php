@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Query\Traits;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\MutateRequest;
@@ -44,7 +45,7 @@ trait PerformMutation
     /**
      * Apply a mutation to the model based on the provided mutation parameters.
      *
-     * @param array $mutation An array of mutation parameters.
+     * @param array $mutation   An array of mutation parameters.
      * @param array $attributes Additional attributes to apply to the model.
      *
      * @return Model The mutated model.
@@ -77,9 +78,9 @@ trait PerformMutation
     /**
      * Mutate the model by applying attributes and relations.
      *
-     * @param Model $model The Eloquent model to mutate.
+     * @param Model $model      The Eloquent model to mutate.
      * @param array $attributes The attributes to mutate.
-     * @param array $mutation The mutation array.
+     * @param array $mutation   The mutation array.
      *
      * @return Model The mutated model.
      */
@@ -121,12 +122,12 @@ trait PerformMutation
     }
 
     /**
-     * Modify the response according to $responseFields in the resource
+     * Modify the response according to $responseFields in the resource.
      *
      * @param Model $model
+     *
      * @return mixed|array
      */
-
     public function formatModelResponse(Model $model)
     {
         $fields = $this->resource->responseFields ?? [];
@@ -143,7 +144,7 @@ trait PerformMutation
                 continue;
             }
 
-            $relation = collect($relationsInResource)->first(function($rel) use ($relationName) {
+            $relation = collect($relationsInResource)->first(function ($rel) use ($relationName) {
                 return Str::singular($rel->resource()::newModel()->getTable()) === $relationName;
             });
 
@@ -158,8 +159,8 @@ trait PerformMutation
 
             $relationModel = $relationsInModel[$relationName];
 
-            if ($relationModel instanceof \Illuminate\Database\Eloquent\Collection) {
-                $formattedRelations[$relationName] = $relationModel->map(function($model) use ($relationFields) {
+            if ($relationModel instanceof Collection) {
+                $formattedRelations[$relationName] = $relationModel->map(function ($model) use ($relationFields) {
                     return collect($model->getAttributes())->only($relationFields);
                 })->toArray();
             } else {
@@ -171,4 +172,5 @@ trait PerformMutation
             $result[$relation] = $value;
         }
         return $result;
-    }}
+    }
+}
