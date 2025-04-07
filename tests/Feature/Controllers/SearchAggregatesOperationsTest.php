@@ -208,7 +208,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -299,7 +299,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -390,7 +390,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -481,7 +481,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -571,7 +571,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -652,7 +652,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
