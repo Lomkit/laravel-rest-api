@@ -32,12 +32,11 @@ class Response implements Responsable
 
     protected function buildGatesForModel(Model $model, Resource $resource, array $gates)
     {
-        return array_merge(
-            in_array('view', $gates) ? [config('rest.gates.names.authorized_to_view')         => $resource->authorizedTo('view', $model)] : [],
-            in_array('update', $gates) ? [config('rest.gates.names.authorized_to_update')         => $resource->authorizedTo('update', $model)] : [],
-            in_array('delete', $gates) ? [config('rest.gates.names.authorized_to_delete')         => $resource->authorizedTo('delete', $model)] : [],
-            in_array('restore', $gates) ? [config('rest.gates.names.authorized_to_restore')         => $resource->authorizedTo('restore', $model)] : [],
-            in_array('forceDelete', $gates) ? [config('rest.gates.names.authorized_to_force_delete')         => $resource->authorizedTo('forceDelete', $model)] : [],
+        $filteredGates = array_filter($gates, fn ($gate) => $gate !== 'create');
+
+        return array_combine(
+            array_map(fn ($gate) => config('rest.gates.names.authorized_to_'.Str::snake($gate), 'authorized_to_'.Str::snake($gate)), $filteredGates),
+            array_map(fn ($gate) => $resource->authorizedTo($gate, $model), $filteredGates)
         );
     }
 

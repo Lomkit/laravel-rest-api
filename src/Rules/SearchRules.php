@@ -7,6 +7,7 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -68,6 +69,10 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
             $attribute .= '.';
         }
 
+        $policy = Gate::getPolicyFor($this->resource::$model);
+        $validGates = $policy ? get_class_methods($policy) : [];
+        $validGates = array_filter($validGates, fn ($method) => !in_array($method, ['before', 'after', '__call', '__construct']));
+
         $this
             ->validator
             ->setRules(
@@ -89,7 +94,7 @@ class SearchRules implements ValidationRule, ValidatorAwareRule
                     [
                         $attribute.'limit' => ['sometimes', 'integer', Rule::in($this->resource->getLimits($this->request))],
                         $attribute.'page'  => ['sometimes', 'integer'],
-                        $attribute.'gates' => ['sometimes', 'array', Rule::in(['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'])],
+                        $attribute.'gates' => ['sometimes', 'array', Rule::in($validGates)],
                     ],
                     $this->isRootSearchRules ? [$attribute.'includes' => ['sometimes', 'array']] : [],
                     $this->isRootSearchRules ? $this->includesRules($this->resource, $attribute.'includes') : [],
