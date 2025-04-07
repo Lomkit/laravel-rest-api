@@ -31,9 +31,7 @@ class ModelResource extends Resource
     use DisableGates;
 
     public static $model = Model::class;
-
-    public int $defaultLimit = 32;
-
+    
     public function createRules(RestRequest $request)
     {
         return [

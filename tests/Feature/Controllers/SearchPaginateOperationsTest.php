@@ -90,7 +90,7 @@ class SearchPaginateOperationsTest extends TestCase
         Gate::policy(Model::class, GreenPolicy::class);
 
         $response = $this->post(
-            '/api/models/search',
+            '/api/model-with-default-limit/search',
             [],
             ['Accept' => 'application/json']
         );
