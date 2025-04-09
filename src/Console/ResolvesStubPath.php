@@ -11,10 +11,21 @@ trait ResolvesStubPath
      *
      * @return string
      */
-    protected function resolveStubPath($stub)
+    protected function resolveStubPath(string $stub): string
     {
-        return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
-            ? $customPath
-            : __DIR__.str_replace('rest/', '', $stub);
+        $customPath = str_replace('rest/', '', $stub);
+        $relativePath = ltrim($customPath, '/');
+
+        $publishedPath = base_path($relativePath);
+        if (file_exists($publishedPath)) {
+            return $publishedPath;
+        }
+
+        $baseStubPath = $this->laravel->basePath(trim($stub, '/'));
+        if (file_exists($baseStubPath)) {
+            return $baseStubPath;
+        }
+
+        return __DIR__ . '/../Console/stubs/' . basename($customPath);
     }
 }

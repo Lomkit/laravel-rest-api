@@ -44,7 +44,7 @@ class ActionCommand extends GeneratorCommand implements PromptsForMissingInput
      */
     protected function getStub()
     {
-        return $this->resolveStubPath('/stubs/rest/action.stub');
+        return $this->resolveStubPath('/stubs/rest/rest-action.stub');
     }
 
     /**
