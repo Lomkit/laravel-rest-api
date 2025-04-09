@@ -91,7 +91,7 @@ class ControllerCommand extends GeneratorCommand implements PromptsForMissingInp
      */
     protected function getStub()
     {
-        return $this->resolveStubPath('/stubs/rest/controller.stub');
+        return $this->resolveStubPath('/stubs/rest/rest-controller.stub');
     }
 
     /**

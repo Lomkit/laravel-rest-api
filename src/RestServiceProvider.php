@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest;
 
+use Illuminate\Foundation\Events\PublishingStubs;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Lomkit\Rest\Console\Commands\ActionCommand;
@@ -41,6 +43,7 @@ class RestServiceProvider extends ServiceProvider
         );
 
         $this->registerServices();
+        $this->registerStubs();
     }
 
     /**
@@ -144,5 +147,21 @@ class RestServiceProvider extends ServiceProvider
         $this->app->singleton(OperateRequest::class, OperateRequest::class);
         $this->app->singleton(RestoreRequest::class, RestoreRequest::class);
         $this->app->singleton(SearchRequest::class, SearchRequest::class);
+    }
+
+    protected function registerStubs()
+    {
+        Event::listen(function (PublishingStubs $event)
+        {
+            $event->add(realpath(__DIR__ . '/Console/stubs/rest-action.stub'), 'rest-action.stub');
+            $event->add(realpath(__DIR__ . '/Console/stubs/rest-base-controller.stub'), 'rest-base-controller.stub');
+            $event->add(realpath(__DIR__ . '/Console/stubs/rest-base-resource.stub'), 'rest-base-resource.stub');
+            $event->add(realpath(__DIR__ . '/Console/stubs/rest-controller.stub'), 'rest-controller.stub');
+            $event->add(realpath(__DIR__ . '/Console/stubs/rest-instruction.stub'), 'rest-instruction.stub');
+            $event->add(realpath(__DIR__ . '/Console/stubs/rest-resource.stub'), 'rest-resource.stub');
+            $event->add(realpath(__DIR__ . '/Console/stubs/rest-response.stub'), 'response.stub');
+            $event->add(realpath(__DIR__ . '/Console/stubs/rest-user-resource.stub'), 'rest-user-resource.stub');
+            $event->add(realpath(__DIR__ . '/Console/stubs/rest-user-controller.stub'), 'rest-user-controller.stub');
+        });
     }
 }

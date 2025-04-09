@@ -62,7 +62,7 @@ class ResponseCommand extends GeneratorCommand implements PromptsForMissingInput
      */
     protected function getStub()
     {
-        return $this->resolveStubPath('/stubs/rest/response.stub');
+        return $this->resolveStubPath('/stubs/rest/rest-response.stub');
     }
 
     /**

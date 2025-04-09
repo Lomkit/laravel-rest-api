@@ -56,7 +56,7 @@ class BaseControllerCommand extends GeneratorCommand implements PromptsForMissin
      */
     protected function getStub()
     {
-        return $this->resolveStubPath('/stubs/rest/base-controller.stub');
+        return $this->resolveStubPath('/stubs/rest/rest-base-controller.stub');
     }
 
     /**
