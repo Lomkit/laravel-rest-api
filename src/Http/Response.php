@@ -53,7 +53,7 @@ class Response implements Responsable
      *
      * @return array The structured array representation of the model, including attributes and recursively processed relations.
      */
-    public function modelToResponse(Model $model, Resource $resource, array $requestArray, Relation $relation = null)
+    public function modelToResponse(Model $model, Resource $resource, array $requestArray, ?Relation $relation = null)
     {
         $currentRequestArray = $relation === null ? $requestArray : collect($requestArray['includes'] ?? [])
             ->first(function ($include) use ($relation) {
@@ -71,7 +71,7 @@ class Response implements Responsable
                         // Here we add the aggregates
                         collect($currentRequestArray['aggregates'] ?? [])
                             ->map(function ($aggregate) {
-                                return Str::snake($aggregate['relation']).'_'.$aggregate['type'].(isset($aggregate['field']) ? '_'.$aggregate['field'] : '');
+                                return $aggregate['alias'] ?? Str::snake($aggregate['relation']).'_'.$aggregate['type'].(isset($aggregate['field']) ? '_'.$aggregate['field'] : '');
                             })
                             ->toArray()
                     )

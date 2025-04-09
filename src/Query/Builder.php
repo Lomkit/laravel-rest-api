@@ -24,7 +24,7 @@ class Builder implements QueryBuilder
      *
      * @return void
      */
-    public function __construct(Resource $resource, \Illuminate\Database\Eloquent\Builder|Relation $query = null)
+    public function __construct(Resource $resource, \Illuminate\Database\Eloquent\Builder|Relation|null $query = null)
     {
         $this->resource = $resource;
         $this->queryBuilder = $query ?? $resource::newModel()->query();
