@@ -94,12 +94,19 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                         new ArrayWith($this->resource->getFields($this->request)),
                     ],
                     $attribute.'.key' => [
-                        'required_if:'.$attribute.'.operation,update',
-                        'required_if:'.$attribute.'.operation,attach',
-                        'required_if:'.$attribute.'.operation,detach',
-                        'required_if:'.$attribute.'.operation,toggle',
-                        'required_if:'.$attribute.'.operation,sync',
+                        'prohibits:'.$attribute.'.keys',
                         'prohibited_if:'.$attribute.'.operation,create',
+                        'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
+                        new RequiredKey($attribute.'.keys'),
+                    ],
+                    $attribute.'.keys' => [
+                        'array',
+                        ...(!$this->relation?->hasMultipleEntries() ? ['prohibited'] : []),
+                        'prohibits:'.$attribute.'.key',
+                        'prohibited_if:'.$attribute.'.operation,create',
+                        new RequiredKey($attribute.'.key'),
+                    ],
+                    $attribute.'.keys.*' => [
                         'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
                     ],
                     $attribute.'.without_detaching' => [

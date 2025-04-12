@@ -1393,7 +1393,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
     }
 
-    public function test_updating_a_resource_with_syncing_belongs_to_many_relation_without_detaching(): void
+    public function test_updating_a_resource_with_syncing_belongs_to_many_relatio2n_without_detaching(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
         $belongsToManyToSync1 = BelongsToManyRelationFactory::new()->createOne();
@@ -1479,7 +1479,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
     }
 
-    public function test_updating_a_resource_with_syncing_belongs_to_many_relation_without_detaching_with_already_attached(): void
+    public function test_updating_a_resource_with_syncing_belongs_to_many_relatio2n_without_detaching_with_already_attached(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
         $belongsToManySynced = BelongsToManyRelationFactory::new()->createOne();
@@ -1552,7 +1552,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
     }
 
-    public function test_updating_a_resource_with_syncing_belongs_to_many_relation_with_detaching_with_already_attached(): void
+    public function test_updating_a_resource_with_syncing_belongs_to_many_relatio2n_with_detaching_with_already_attached(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
         $belongsToManySynced = BelongsToManyRelationFactory::new()->createOne();

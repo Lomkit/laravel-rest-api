@@ -49,14 +49,14 @@ trait PerformMutation
      *
      * @return Model The mutated model.
      */
-    public function applyMutation(array $mutation = [], $attributes = [])
+    public function applyMutation(array $mutation = [], $attributes = [], $key = null)
     {
         $allAttributes = array_merge($attributes, $mutation['attributes'] ?? []);
 
         if ($mutation['operation'] === 'create') {
             $model = $this->resource::newModel();
         } else {
-            $model = $this->resource::newModel()::findOrFail($mutation['key']);
+            $model = $this->resource::newModel()::query()->findOrFail($key ?? $mutation['key']);
         }
 
         if ($mutation['operation'] === 'create') {
@@ -72,6 +72,26 @@ trait PerformMutation
             $allAttributes,
             $mutation
         );
+    }
+
+    /**
+     * Apply a mutation to the model based on the provided mutation parameters.
+     *
+     * @param array $mutation   An array of mutation parameters.
+     * @param array $attributes Additional attributes to apply to the model.
+     *
+     * @return array<Model> The mutated model.
+     */
+    public function mutations(array $mutation = [], $attributes = [])
+    {
+        $mutations = [];
+        $keys = $mutation['keys'] ?? [$mutation['key']];
+
+        foreach ($keys as $key) {
+            $mutations[] = $this->applyMutation($mutation, $attributes, $key);
+        }
+
+        return $mutations;
     }
 
     /**

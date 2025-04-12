@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
-use Lomkit\Rest\Contracts\QueryBuilder;
+use Lomkit\Rest\Concerns\Relations\PerformsRelationOperations;
 use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
@@ -14,6 +14,7 @@ class MorphedByMany extends MorphRelation implements RelationResource
 {
     use HasPivotFields;
     use HasMultipleResults;
+    use PerformsRelationOperations;
 
     /**
      * Define validation rules for the MorphedByMany relation.
@@ -46,25 +47,11 @@ class MorphedByMany extends MorphRelation implements RelationResource
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
-            if ($mutationRelation['operation'] === 'detach') {
-                $model
-                    ->{$relation->relation}()
-                    ->detach(
-                        app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
-                            ->applyMutation($mutationRelation)
-                            ->getKey()
-                    );
-            } else {
-                $model
-                    ->{$relation->relation}()
-                    ->attach(
-                        [
-                            app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
-                                ->applyMutation($mutationRelation)
-                                ->getKey() => $mutationRelation['pivot'] ?? [],
-                        ]
-                    );
-            }
+            match ($mutationRelation['operation']) {
+                'create', 'update' => $this->upsert($model, $relation, $mutationRelation),
+                'attach' => $this->attach($model, $relation, $mutationRelation),
+                'detach' => $this->detach($model, $relation, $mutationRelation),
+            };
         }
     }
 }
