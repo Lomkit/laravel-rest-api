@@ -48,13 +48,14 @@ class BelongsToMany extends Relation implements RelationResource
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
-            if (in_array($mutationRelation['operation'], ['create', 'update'])) {
-                $this->upsert($model, $relation, $mutationRelation);
+            if ($mutationRelation['operation'] === 'create') {
+                $this->create($model, $relation, $mutationRelation);
 
                 continue;
             }
 
             match ($mutationRelation['operation']) {
+                'update' => $this->update($model, $relation, $mutationRelation),
                 'attach' => $this->attach($model, $relation, $mutationRelation),
                 'detach' => $this->detach($model, $relation, $mutationRelation),
                 'toggle' => $this->toggle($model, $relation, $mutationRelation),
@@ -62,7 +63,7 @@ class BelongsToMany extends Relation implements RelationResource
                     $model,
                     $relation,
                     $mutationRelation,
-                    withoutDetaching: !isset($mutationRelation['without_detaching']) || !$mutationRelation['without_detaching']
+                    withoutDetaching: $mutationRelation['operation'] === 'update' || !isset($mutationRelation['without_detaching']) || !$mutationRelation['without_detaching']
                 ),
             };
         }

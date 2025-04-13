@@ -8,20 +8,38 @@ use Lomkit\Rest\Relations\Relation;
 
 trait PerformsRelationOperations
 {
-    public function upsert(Model $model, Relation $relation, $mutation = [], $attributes = [])
+    public function create(Model $model, Relation $relation, $mutation = [], $attributes = [])
     {
         $toPerformActionModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
-                    ->applyMutation($mutation, $attributes);
+            ->applyMutation($mutation, $attributes);
 
-                $this->resource()->authorizeToAttach($model, $toPerformActionModel);
+        $this->resource()->authorizeToAttach($model, $toPerformActionModel);
 
-                $model
-                    ->{$relation->relation}()
-                    ->syncWithoutDetaching(
-                        [
-                            $toPerformActionModel->getKey() => $mutation['pivot'] ?? [],
-                        ]
-                    );
+        $model
+            ->{$relation->relation}()
+            ->syncWithoutDetaching(
+                [
+                    $toPerformActionModel->getKey() => $mutation['pivot'] ?? [],
+                ]
+            );
+    }
+
+    public function update(Model $model, Relation $relation, $mutation = [], $attributes = [])
+    {
+        $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+            ->mutations($mutation, $attributes);
+
+        foreach ($toPerformActionModels as $toPerformActionModel) {
+            $this->resource()->authorizeToAttach($model, $toPerformActionModel);
+        }
+
+        $model->{$relation->relation}()
+            ->syncWithoutDetaching(
+                collect($toPerformActionModels)
+                    ->mapWithKeys(
+                        fn(Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
+                    )->toArray()
+            );
     }
 
     public function attach(Model $model, Relation $relation, $mutation = [], $attributes = [])

@@ -48,7 +48,8 @@ class MorphedByMany extends MorphRelation implements RelationResource
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
             match ($mutationRelation['operation']) {
-                'create', 'update' => $this->upsert($model, $relation, $mutationRelation),
+                'create' => $this->create($model, $relation, $mutationRelation),
+                'update' => $this->update($model, $relation, $mutationRelation),
                 'attach' => $this->attach($model, $relation, $mutationRelation),
                 'detach' => $this->detach($model, $relation, $mutationRelation),
             };

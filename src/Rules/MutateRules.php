@@ -7,6 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Http\Client\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\RequiredIf;
 use Illuminate\Validation\Validator;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -97,14 +98,14 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                         'prohibits:'.$attribute.'.keys',
                         'prohibited_if:'.$attribute.'.operation,create',
                         'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
-                        new RequiredKey($attribute.'.keys'),
+                        new OperationDependentRequiredKey($attribute.'.keys'),
                     ],
                     $attribute.'.keys' => [
                         'array',
                         ...(!$this->relation?->hasMultipleEntries() ? ['prohibited'] : []),
                         'prohibits:'.$attribute.'.key',
                         'prohibited_if:'.$attribute.'.operation,create',
-                        new RequiredKey($attribute.'.key'),
+                        new OperationDependentRequiredKey($attribute.'.key'),
                     ],
                     $attribute.'.keys.*' => [
                         'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
