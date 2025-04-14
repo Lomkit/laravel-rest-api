@@ -1374,7 +1374,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
     }
 
-    public function test_updating_a_resource_with_syncing_morph_by_many_relation(): void
+    public function test_updating_a_resource_with_syncing_morphed_by_many_relation(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
         $morphedByManySynced = MorphedByManyRelationFactory::new()->createOne();
@@ -1443,7 +1443,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
     }
 
-    public function test_updating_a_resource_with_syncing_morph_by_many_relation_without_detaching_with_already_attached(): void
+    public function test_updating_a_resource_with_syncing_morphed_by_many_relation_without_detaching_with_already_attached(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
         $morphedByManySynced = MorphedByManyRelationFactory::new()->createOne();
@@ -1516,7 +1516,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
     }
 
-    public function test_updating_a_resource_with_syncing_morph_by_many_relation_with_detaching_with_already_attached(): void
+    public function test_updating_a_resource_with_syncing_morphed_by_many_relation_with_detaching_with_already_attached(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
         $morphedByManySynced = MorphedByManyRelationFactory::new()->createOne();
@@ -1587,7 +1587,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
     }
 
-    public function test_updating_a_resource_with_toggling_morph_by_many_relation(): void
+    public function test_updating_a_resource_with_toggling_morphed_by_many_relation(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
         $morphedByManyToggled = MorphedByManyRelationFactory::new()->createOne();
@@ -1647,7 +1647,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
     }
 
-    public function test_updating_a_resource_with_toggling_morph_by_many_relation_and_updating_attributes_and_pivot(): void
+    public function test_updating_a_resource_with_toggling_morphed_by_many_relation_and_updating_attributes_and_pivot(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
         $morphedByManyToggled = MorphedByManyRelationFactory::new()->createOne();
