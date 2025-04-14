@@ -47,20 +47,77 @@ class MorphedByMany extends MorphRelation implements RelationResource
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
             if ($mutationRelation['operation'] === 'detach') {
+                $toDetachModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+                    ->applyMutation($mutationRelation);
+
+                $this->resource()->authorizeToDetach($model, $toDetachModel);
+
                 $model
                     ->{$relation->relation}()
                     ->detach(
-                        app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
-                            ->applyMutation($mutationRelation)
-                            ->getKey()
+                        $toDetachModel->getKey()
                     );
-            } else {
+            } elseif ($mutationRelation['operation'] === 'attach') {
+                $toAttachModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+                    ->applyMutation($mutationRelation);
+
+                $this->resource()->authorizeToAttach($model, $toAttachModel);
+
                 $model
                     ->{$relation->relation}()
                     ->attach(
                         [
+                            $toAttachModel->getKey() => $mutationRelation['pivot'] ?? [],
+                        ]
+                    );
+            } elseif ($mutationRelation['operation'] === 'toggle') {
+                $results = $model
+                    ->{$relation->relation}()
+                    ->toggle(
+                        [
                             app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
                                 ->applyMutation($mutationRelation)
+                                ->getKey() => $mutationRelation['pivot'] ?? [],
+                        ]
+                    );
+
+                foreach ($results['attached'] as $attached) {
+                    $this->resource()->authorizeToAttach($model, $relation->resource()::$model::find($attached));
+                }
+
+                foreach ($results['detached'] as $detached) {
+                    $this->resource()->authorizeToDetach($model, $relation->resource()::$model::find($detached));
+                }
+            } elseif ($mutationRelation['operation'] === 'sync') {
+                $results = $model
+                    ->{$relation->relation}()
+                    ->sync(
+                        [
+                            app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+                                ->applyMutation($mutationRelation)
+                                ->getKey() => $mutationRelation['pivot'] ?? [],
+                        ],
+                        !isset($mutationRelation['without_detaching']) || !$mutationRelation['without_detaching']
+                    );
+
+                foreach ($results['attached'] as $attached) {
+                    $this->resource()->authorizeToAttach($model, $relation->resource()::$model::find($attached));
+                }
+
+                foreach ($results['detached'] as $detached) {
+                    $this->resource()->authorizeToDetach($model, $relation->resource()::$model::find($detached));
+                }
+            } elseif (in_array($mutationRelation['operation'], ['create', 'update'])) {
+                $toAttachModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+                    ->applyMutation($mutationRelation);
+
+                $this->resource()->authorizeToAttach($model, $toAttachModel);
+
+                $model
+                    ->{$relation->relation}()
+                    ->syncWithoutDetaching(
+                        [
+                            $toAttachModel
                                 ->getKey() => $mutationRelation['pivot'] ?? [],
                         ]
                     );
