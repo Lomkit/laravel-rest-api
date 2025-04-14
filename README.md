@@ -90,4 +90,4 @@ Here is a quick look at what you can do using API search method:
 
 - Metrics support
 - Refactor the response class
-- Alias for includes / aggregates
+- Alias for includes

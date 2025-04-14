@@ -41,7 +41,7 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
      *
      * @var Relation|null
      */
-    protected Relation|null $relation;
+    protected ?Relation $relation;
 
     /**
      * Specify if the validation is at root level.
@@ -50,7 +50,7 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
      */
     protected bool $isRootValidation;
 
-    public function __construct(\Lomkit\Rest\Http\Resource $resource, RestRequest $request, Relation $relation = null, bool $isRootValidation = false)
+    public function __construct(\Lomkit\Rest\Http\Resource $resource, RestRequest $request, ?Relation $relation = null, bool $isRootValidation = false)
     {
         $this->resource = $resource;
         $this->request = $request;

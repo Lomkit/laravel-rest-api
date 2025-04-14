@@ -47,6 +47,13 @@ class Resource implements \JsonSerializable
     public static $response = Response::class;
 
     /**
+     * The default value for the pagination limit.
+     *
+     * @var int
+     */
+    public int $defaultLimit = 50;
+
+    /**
      * Get a fresh instance of the model represented by the resource.
      *
      * @return Model

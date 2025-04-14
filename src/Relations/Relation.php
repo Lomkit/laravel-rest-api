@@ -57,7 +57,7 @@ class Relation implements \JsonSerializable
      *
      * @return Builder
      */
-    public function filter(Builder $query, $relation, $operator, $value, $boolean = 'and', Closure $callback = null)
+    public function filter(Builder $query, $relation, $operator, $value, $boolean = 'and', ?Closure $callback = null)
     {
         return $query->has(Str::beforeLast(relation_without_pivot($relation), '.'), '>=', 1, $boolean, function (Builder $query) use ($value, $operator, $relation, $callback) {
             $field = (Str::contains($relation, '.pivot.') ?

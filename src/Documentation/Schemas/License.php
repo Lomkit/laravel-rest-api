@@ -23,7 +23,7 @@ class License extends Schema
      *
      * @var string
      */
-    protected string|null $url;
+    protected ?string $url;
 
     /**
      * Set the name of the license used for the API.
@@ -80,7 +80,7 @@ class License extends Schema
      *
      * @return License
      */
-    public function withUrl(string|null $url): License
+    public function withUrl(?string $url): License
     {
         $this->url = $url;
 
@@ -92,7 +92,7 @@ class License extends Schema
      *
      * @return string|null
      */
-    public function url(): string|null
+    public function url(): ?string
     {
         return $this->url;
     }
