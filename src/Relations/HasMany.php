@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Concerns\Relations\PerformsRelationOperations;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
@@ -11,7 +10,6 @@ use Lomkit\Rest\Relations\Traits\HasMultipleResults;
 class HasMany extends Relation implements RelationResource
 {
     use HasMultipleResults;
-    use PerformsRelationOperations;
 
     /**
      * Perform actions after mutating the HasMany relation.

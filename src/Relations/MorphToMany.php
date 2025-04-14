@@ -47,23 +47,13 @@ class MorphToMany extends MorphRelation implements RelationResource
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
-            if ($mutationRelation['operation'] === 'create') {
-                $this->create($model, $relation, $mutationRelation);
-
-                continue;
-            }
-
             match ($mutationRelation['operation']) {
+                'create' => $this->create($model, $relation, $mutationRelation),
                 'update' => $this->update($model, $relation, $mutationRelation),
                 'attach' => $this->attach($model, $relation, $mutationRelation),
                 'detach' => $this->detach($model, $relation, $mutationRelation),
                 'toggle' => $this->toggle($model, $relation, $mutationRelation),
-                'sync' => $this->sync(
-                    $model,
-                    $relation,
-                    $mutationRelation,
-                    withoutDetaching: $mutationRelation['operation'] === 'update' || !isset($mutationRelation['without_detaching']) || !$mutationRelation['without_detaching']
-                ),
+                'sync' => $this->sync($model, $relation, $mutationRelation, withoutDetaching: !isset($mutationRelation['without_detaching']) || !$mutationRelation['without_detaching']),
             };
         }
     }

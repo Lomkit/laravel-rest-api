@@ -95,6 +95,7 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                         new ArrayWith($this->resource->getFields($this->request)),
                     ],
                     $attribute.'.key' => [
+                        fn(string $attribute, mixed $value, Closure $fail) => is_array($value) && $fail('The key field must not be an array.'),
                         'prohibits:'.$attribute.'.keys',
                         'prohibited_if:'.$attribute.'.operation,create',
                         'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),

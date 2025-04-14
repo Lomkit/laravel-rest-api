@@ -52,6 +52,8 @@ class MorphedByMany extends MorphRelation implements RelationResource
                 'update' => $this->update($model, $relation, $mutationRelation),
                 'attach' => $this->attach($model, $relation, $mutationRelation),
                 'detach' => $this->detach($model, $relation, $mutationRelation),
+                'toggle' => $this->toggle($model, $relation, $mutationRelation),
+                'sync' => $this->sync($model, $relation, $mutationRelation, withoutDetaching: !isset($mutationRelation['without_detaching']) || !$mutationRelation['without_detaching']),
             };
         }
     }
