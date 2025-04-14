@@ -38,7 +38,8 @@ class OperationDependentRequiredKey implements DataAwareRule, ValidationRule
 
     public function __construct(
         public string $otherField
-    ) {}
+    ) {
+    }
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {

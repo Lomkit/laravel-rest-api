@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Relations;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Concerns\Relations\PerformsRelationOperations;
-use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
@@ -21,7 +20,7 @@ class BelongsToMany extends Relation implements RelationResource
      * Define validation rules for the BelongsToMany relation.
      *
      * @param resource $resource The resource associated with the relation.
-     * @param string   $prefix   The prefix used for validation rules.
+     * @param string $prefix The prefix used for validation rules.
      *
      * @return array An array of validation rules.
      */
@@ -30,8 +29,8 @@ class BelongsToMany extends Relation implements RelationResource
         return array_merge(
             parent::rules($resource, $prefix),
             [
-                $prefix.'.*.pivot' => [
-                    'prohibited_if:'.$prefix.'.*.operation,detach',
+                $prefix . '.*.pivot' => [
+                    'prohibited_if:' . $prefix . '.*.operation,detach',
                     new ArrayWith($this->getPivotFields()),
                 ],
             ]
@@ -41,9 +40,9 @@ class BelongsToMany extends Relation implements RelationResource
     /**
      * Perform actions after mutating the BelongsToMany relation.
      *
-     * @param Model    $model             The Eloquent model.
-     * @param Relation $relation          The relation being mutated.
-     * @param array    $mutationRelations An array of mutation relations.
+     * @param Model $model The Eloquent model.
+     * @param Relation $relation The relation being mutated.
+     * @param array $mutationRelations An array of mutation relations.
      */
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
@@ -54,12 +53,7 @@ class BelongsToMany extends Relation implements RelationResource
                 'attach' => $this->attach($model, $relation, $mutationRelation),
                 'detach' => $this->detach($model, $relation, $mutationRelation),
                 'toggle' => $this->toggle($model, $relation, $mutationRelation),
-                'sync' => $this->sync(
-                    $model,
-                    $relation,
-                    $mutationRelation,
-                    withoutDetaching: !isset($mutationRelation['without_detaching']) || !$mutationRelation['without_detaching']
-                ),
+                'sync'   => $this->sync($model, $relation, $mutationRelation, withoutDetaching: !isset($mutationRelation['without_detaching']) || !$mutationRelation['without_detaching']),
             };
         }
     }

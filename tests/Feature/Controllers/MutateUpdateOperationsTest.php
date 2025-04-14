@@ -772,7 +772,7 @@ class MutateUpdateOperationsTest extends TestCase
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation' => 'detach',
+                                    'operation'  => 'detach',
                                     'keys'       => [$hasManyRelationToDetach1->getKey(), $hasManyRelationToDetach2->getKey()],
                                 ],
                             ],
@@ -885,7 +885,7 @@ class MutateUpdateOperationsTest extends TestCase
                             'hasManyRelation' => [
                                 [
                                     'operation'  => 'update',
-                                    'keys'        => [$hasManyRelationToAttach1->getKey(), $hasManyRelationToAttach2->getKey()],
+                                    'keys'       => [$hasManyRelationToAttach1->getKey(), $hasManyRelationToAttach2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -1649,7 +1649,7 @@ class MutateUpdateOperationsTest extends TestCase
                             'belongsToManyRelation' => [
                                 [
                                     'operation'  => 'sync',
-                                    'keys'        => [$belongsToManyNotSynced1->getKey(), $belongsToManyNotSynced2->getKey()],
+                                    'keys'       => [$belongsToManyNotSynced1->getKey(), $belongsToManyNotSynced2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                     'pivot'      => [
                                         'number' => 20,
@@ -2067,7 +2067,7 @@ class MutateUpdateOperationsTest extends TestCase
                             'belongsToManyRelation' => [
                                 [
                                     'operation'  => 'update',
-                                    'keys'        => [$belongsToManyToUpdate1->getKey(), $belongsToManyToUpdate2->getKey()],
+                                    'keys'       => [$belongsToManyToUpdate1->getKey(), $belongsToManyToUpdate2->getKey()],
                                     'pivot'      => [
                                         'number' => 20,
                                     ],
@@ -2232,7 +2232,7 @@ class MutateUpdateOperationsTest extends TestCase
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'keys'       => [$belongsToManyRelationToAttach1->getKey(), $belongsToManyRelationToAttach2->getKey()],
+                                    'keys'      => [$belongsToManyRelationToAttach1->getKey(), $belongsToManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],

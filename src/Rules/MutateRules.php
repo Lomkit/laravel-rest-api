@@ -5,9 +5,7 @@ namespace Lomkit\Rest\Rules;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
-use Illuminate\Http\Client\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\RequiredIf;
 use Illuminate\Validation\Validator;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -95,7 +93,8 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                         new ArrayWith($this->resource->getFields($this->request)),
                     ],
                     $attribute.'.key' => [
-                        fn(string $attribute, mixed $value, Closure $fail) => is_array($value) && $fail('The key field must not be an array.'),
+                        fn(string $attribute, mixed $value, Closure $fail) =>
+                            is_array($value) && $fail('The key field must not be an array.'),
                         'prohibits:'.$attribute.'.keys',
                         'prohibited_if:'.$attribute.'.operation,create',
                         'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
