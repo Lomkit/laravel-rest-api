@@ -4,12 +4,14 @@ namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\TestCase;
+use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphedByManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphToRelationFactory;
+use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphManyRelation;
@@ -1371,6 +1373,361 @@ class MutateUpdateMorphOperationsTest extends TestCase
         $this->assertEquals(
             Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
             1
+        );
+    }
+
+    public function test_updating_a_resource_with_syncing_morph_by_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $morphedByManySynced = MorphedByManyRelationFactory::new()->createOne();
+        $morphedByManyNotSynced = MorphedByManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->morphedByManyRelation()
+            ->attach($morphedByManySynced);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(MorphedByManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'morphedByManyRelation' => [
+                                [
+                                    'operation'  => 'sync',
+                                    'key'        => $morphedByManyNotSynced->getKey(),
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
+            1
+        );
+
+        $this->assertDatabaseHas(
+            $morphedByManySynced->getTable(),
+            ['number' => 5001]
+        );
+        $this->assertDatabaseHas(
+            $modelToUpdate->morphedByManyRelation()->getTable(),
+            ['number' => 20]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->first()->getKey(),
+            $morphedByManyNotSynced->getKey()
+        );
+    }
+
+    public function test_updating_a_resource_with_syncing_morph_by_many_relation_without_detaching_with_already_attached(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $morphedByManySynced = MorphedByManyRelationFactory::new()->createOne();
+        $morphedByManyNotSynced = MorphedByManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->morphedByManyRelation()
+            ->attach($morphedByManySynced);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(MorphedByManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'morphedByManyRelation' => [
+                                [
+                                    'operation'         => 'sync',
+                                    'key'               => $morphedByManyNotSynced->getKey(),
+                                    'without_detaching' => true,
+                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot'             => [
+                                        'number' => 21,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
+            2
+        );
+
+        $this->assertDatabaseHas(
+            $morphedByManyNotSynced->getTable(),
+            ['number' => 5002]
+        );
+        $this->assertDatabaseHas(
+            $modelToUpdate->morphedByManyRelation()->getTable(),
+            ['number' => 21]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->pluck('id')->toArray(),
+            [
+                $morphedByManySynced->getKey(),
+                $morphedByManyNotSynced->getKey(),
+            ]
+        );
+    }
+
+    public function test_updating_a_resource_with_syncing_morph_by_many_relation_with_detaching_with_already_attached(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $morphedByManySynced = MorphedByManyRelationFactory::new()->createOne();
+        $morphedByManyNotSynced = MorphedByManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->morphedByManyRelation()
+            ->attach($morphedByManySynced);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(MorphedByManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'morphedByManyRelation' => [
+                                [
+                                    'operation'  => 'sync',
+                                    'key'        => $morphedByManyNotSynced->getKey(),
+                                    'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot'      => [
+                                        'number' => 21,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
+            1
+        );
+
+        $this->assertDatabaseHas(
+            $morphedByManyNotSynced->getTable(),
+            ['number' => 5002]
+        );
+        $this->assertDatabaseHas(
+            $modelToUpdate->morphedByManyRelation()->getTable(),
+            ['number' => 21]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->pluck('id')->toArray(),
+            [
+                $morphedByManyNotSynced->getKey(),
+            ]
+        );
+    }
+
+    public function test_updating_a_resource_with_toggling_morph_by_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $morphedByManyToggled = MorphedByManyRelationFactory::new()->createOne();
+        $morphedByManyNotToggled = MorphedByManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->morphedByManyRelation()
+            ->attach($morphedByManyToggled);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(MorphedByManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'morphedByManyRelation' => [
+                                [
+                                    'operation'  => 'toggle',
+                                    'key'        => $morphedByManyToggled->getKey(),
+                                ],
+                                [
+                                    'operation'  => 'toggle',
+                                    'key'        => $morphedByManyNotToggled->getKey(),
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
+            1
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->first()->getKey(),
+            $morphedByManyNotToggled->getKey()
+        );
+    }
+
+    public function test_updating_a_resource_with_toggling_morph_by_many_relation_and_updating_attributes_and_pivot(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $morphedByManyToggled = MorphedByManyRelationFactory::new()->createOne();
+        $morphedByManyNotToggled = MorphedByManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->morphedByManyRelation()
+            ->attach($morphedByManyToggled);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(MorphedByManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'morphedByManyRelation' => [
+                                [
+                                    'operation'  => 'toggle',
+                                    'key'        => $morphedByManyToggled->getKey(),
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
+                                ],
+                                [
+                                    'operation'  => 'toggle',
+                                    'key'        => $morphedByManyNotToggled->getKey(),
+                                    'attributes' => ['number' => 5002], // 5002 because with factory it can't exceed 5000
+                                    'pivot'      => [
+                                        'number' => 21,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->count(),
+            1
+        );
+
+        $this->assertDatabaseHas(
+            $morphedByManyToggled->getTable(),
+            ['number' => 5001]
+        );
+        $this->assertDatabaseHas(
+            $morphedByManyToggled->getTable(),
+            ['number' => 5002]
+        );
+
+        $this->assertDatabaseHas(
+            $modelToUpdate->morphedByManyRelation()->getTable(),
+            ['number' => 21]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->morphedByManyRelation()->first()->getKey(),
+            $morphedByManyNotToggled->getKey()
         );
     }
 
