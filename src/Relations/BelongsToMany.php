@@ -30,7 +30,7 @@ class BelongsToMany extends Relation implements RelationResource
             parent::rules($resource, $prefix),
             [
                 $prefix.'.*.pivot' => [
-                    'prohibited_if:' . $prefix . '.*.operation,detach',
+                    'prohibited_if:'.$prefix.'.*.operation,detach',
                     new ArrayWith($this->getPivotFields()),
                 ],
             ]
