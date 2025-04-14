@@ -20,7 +20,7 @@ class BelongsToMany extends Relation implements RelationResource
      * Define validation rules for the BelongsToMany relation.
      *
      * @param resource $resource The resource associated with the relation.
-     * @param string $prefix The prefix used for validation rules.
+     * @param string   $prefix   The prefix used for validation rules.
      *
      * @return array An array of validation rules.
      */
@@ -29,7 +29,7 @@ class BelongsToMany extends Relation implements RelationResource
         return array_merge(
             parent::rules($resource, $prefix),
             [
-                $prefix . '.*.pivot' => [
+                $prefix.'.*.pivot' => [
                     'prohibited_if:' . $prefix . '.*.operation,detach',
                     new ArrayWith($this->getPivotFields()),
                 ],
@@ -40,9 +40,9 @@ class BelongsToMany extends Relation implements RelationResource
     /**
      * Perform actions after mutating the BelongsToMany relation.
      *
-     * @param Model $model The Eloquent model.
-     * @param Relation $relation The relation being mutated.
-     * @param array $mutationRelations An array of mutation relations.
+     * @param Model    $model             The Eloquent model.
+     * @param Relation $relation          The relation being mutated.
+     * @param array    $mutationRelations An array of mutation relations.
      */
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
