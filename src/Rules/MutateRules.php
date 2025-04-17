@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Rules;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
-use Illuminate\Http\Client\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -94,12 +93,20 @@ class MutateRules implements ValidationRule, ValidatorAwareRule
                         new ArrayWith($this->resource->getFields($this->request)),
                     ],
                     $attribute.'.key' => [
-                        'required_if:'.$attribute.'.operation,update',
-                        'required_if:'.$attribute.'.operation,attach',
-                        'required_if:'.$attribute.'.operation,detach',
-                        'required_if:'.$attribute.'.operation,toggle',
-                        'required_if:'.$attribute.'.operation,sync',
+                        fn (string $attribute, mixed $value, Closure $fail) => is_array($value) && $fail('The key field must not be an array.'),
+                        'prohibits:'.$attribute.'.keys',
                         'prohibited_if:'.$attribute.'.operation,create',
+                        'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
+                        new OperationDependentRequiredKey($attribute.'.keys'),
+                    ],
+                    $attribute.'.keys' => [
+                        'array',
+                        ...(!$this->relation?->hasMultipleEntries() ? ['prohibited'] : []),
+                        'prohibits:'.$attribute.'.key',
+                        'prohibited_if:'.$attribute.'.operation,create',
+                        new OperationDependentRequiredKey($attribute.'.key'),
+                    ],
+                    $attribute.'.keys.*' => [
                         'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
                     ],
                     $attribute.'.without_detaching' => [
