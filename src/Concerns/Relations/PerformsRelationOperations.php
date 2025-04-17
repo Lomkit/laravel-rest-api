@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Concerns\Relations;
 
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Relations\Relation;
