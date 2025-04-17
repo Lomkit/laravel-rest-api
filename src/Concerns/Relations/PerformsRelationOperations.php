@@ -37,7 +37,7 @@ trait PerformsRelationOperations
             ->syncWithoutDetaching(
                 collect($toPerformActionModels)
                     ->mapWithKeys(
-                        fn(Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
+                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
                     )->toArray()
             );
     }
@@ -55,7 +55,7 @@ trait PerformsRelationOperations
             ->attach(
                 collect($toPerformActionModels)
                     ->mapWithKeys(
-                        fn(Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
+                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
                     )->toArray()
             );
     }
@@ -81,7 +81,7 @@ trait PerformsRelationOperations
             ->toggle(
                 collect($toPerformActionModels)
                     ->mapWithKeys(
-                        fn(Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
+                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
                     )->toArray(),
             );
 
