@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Concerns\Relations;
 
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Relations\Relation;
@@ -13,6 +14,7 @@ trait PerformsRelationOperations
      * @param Relation $relation
      * @param array    $mutation
      * @param array    $attributes
+     *
      * @return void
      */
     public function create(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
@@ -31,7 +33,15 @@ trait PerformsRelationOperations
             );
     }
 
-    public function update(Model $model, Relation $relation, $mutation = [], $attributes = [])
+    /**
+     * @param Model    $model
+     * @param Relation $relation
+     * @param array    $mutation
+     * @param array    $attributes
+     *
+     * @return void
+     */
+    public function update(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
     {
         $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
@@ -49,7 +59,15 @@ trait PerformsRelationOperations
             );
     }
 
-    public function attach(Model $model, Relation $relation, $mutation = [], $attributes = [])
+    /**
+     * @param Model    $model
+     * @param Relation $relation
+     * @param array    $mutation
+     * @param array    $attributes
+     *
+     * @return void
+     */
+    public function attach(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
     {
         $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
@@ -67,7 +85,15 @@ trait PerformsRelationOperations
             );
     }
 
-    public function detach(Model $model, Relation $relation, $mutation = [], $attributes = [])
+    /**
+     * @param Model    $model
+     * @param Relation $relation
+     * @param array    $mutation
+     * @param array    $attributes
+     *
+     * @return void
+     */
+    public function detach(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
     {
         $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
@@ -79,7 +105,15 @@ trait PerformsRelationOperations
         $model->{$relation->relation}()->detach($toPerformActionModels);
     }
 
-    public function toggle(Model $model, Relation $relation, $mutation = [], $attributes = [])
+    /**
+     * @param Model    $model
+     * @param Relation $relation
+     * @param array    $mutation
+     * @param array    $attributes
+     *
+     * @return void
+     */
+    public function toggle(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
     {
         $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
@@ -101,7 +135,16 @@ trait PerformsRelationOperations
         }
     }
 
-    public function sync(Model $model, Relation $relation, $mutation = [], $attributes = [], $withoutDetaching = false)
+    /**
+     * @param Model    $model
+     * @param Relation $relation
+     * @param array    $mutation
+     * @param array    $attributes
+     * @param bool     $withoutDetaching
+     *
+     * @return void
+     */
+    public function sync(Model $model, Relation $relation, array $mutation = [], array $attributes = [], $withoutDetaching = false)
     {
         $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);

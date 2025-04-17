@@ -55,7 +55,7 @@ class BelongsToMany extends Relation implements RelationResource
                 'detach' => $this->detach($model, $relation, $mutationRelation),
                 'toggle' => $this->toggle($model, $relation, $mutationRelation),
                 'sync'   => $this->sync($model, $relation, $mutationRelation, withoutDetaching: !isset($mutationRelation['without_detaching']) || !$mutationRelation['without_detaching']),
-                default => throw new InvalidArgumentException("Unknown operation: {$mutationRelation['operation']}"),
+                default  => throw new InvalidArgumentException("Unknown operation: {$mutationRelation['operation']}"),
             };
         }
     }
