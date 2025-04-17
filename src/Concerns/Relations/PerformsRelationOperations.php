@@ -103,7 +103,7 @@ trait PerformsRelationOperations
             ->sync(
                 collect($toPerformActionModels)
                     ->mapWithKeys(
-                        fn(Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
+                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
                     )->toArray(),
                 $withoutDetaching
             );
