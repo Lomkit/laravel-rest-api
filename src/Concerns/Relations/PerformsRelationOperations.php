@@ -8,7 +8,14 @@ use Lomkit\Rest\Relations\Relation;
 
 trait PerformsRelationOperations
 {
-    public function create(Model $model, Relation $relation, $mutation = [], $attributes = [])
+    /**
+     * @param Model    $model
+     * @param Relation $relation
+     * @param array    $mutation
+     * @param array    $attributes
+     * @return void
+     */
+    public function create(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
     {
         $toPerformActionModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
             ->applyMutation($mutation, $attributes);

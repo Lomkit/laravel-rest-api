@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Concerns\Relations\PerformsRelationOperations;
 use Lomkit\Rest\Contracts\RelationResource;
@@ -54,6 +55,7 @@ class MorphedByMany extends MorphRelation implements RelationResource
                 'detach' => $this->detach($model, $relation, $mutationRelation),
                 'toggle' => $this->toggle($model, $relation, $mutationRelation),
                 'sync'   => $this->sync($model, $relation, $mutationRelation, withoutDetaching: !isset($mutationRelation['without_detaching']) || !$mutationRelation['without_detaching']),
+                default => throw new InvalidArgumentException("Unknown operation: {$mutationRelation['operation']}"),
             };
         }
     }
