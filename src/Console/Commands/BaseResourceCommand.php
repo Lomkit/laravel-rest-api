@@ -46,7 +46,7 @@ class BaseResourceCommand extends GeneratorCommand implements PromptsForMissingI
      */
     protected function getStub()
     {
-        return $this->resolveStubPath('/stubs/rest/rest-base-resource.stub');
+        return $this->resolveStubPath('/stubs/rest-base-resource.stub');
     }
 
     /**

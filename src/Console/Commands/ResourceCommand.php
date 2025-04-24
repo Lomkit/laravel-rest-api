@@ -102,7 +102,7 @@ class ResourceCommand extends GeneratorCommand implements PromptsForMissingInput
      */
     protected function getStub()
     {
-        return $this->resolveStubPath('/stubs/rest/rest-resource.stub');
+        return $this->resolveStubPath('/stubs/rest-resource.stub');
     }
 
     /**

@@ -39,7 +39,7 @@ class DocumentationProviderCommand extends GeneratorCommand implements PromptsFo
      */
     protected function getStub()
     {
-        return $this->resolveStubPath('/stubs/rest/rest-documentation-service-provider.stub');
+        return $this->resolveStubPath('/stubs/rest-documentation-service-provider.stub');
     }
 
     /**
