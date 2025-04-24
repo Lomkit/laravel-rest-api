@@ -151,17 +151,16 @@ class RestServiceProvider extends ServiceProvider
 
     protected function registerStubs()
     {
-        Event::listen(function (PublishingStubs $event)
-        {
-            $event->add(realpath(__DIR__ . '/Console/stubs/rest-action.stub'), 'rest-action.stub');
-            $event->add(realpath(__DIR__ . '/Console/stubs/rest-base-controller.stub'), 'rest-base-controller.stub');
-            $event->add(realpath(__DIR__ . '/Console/stubs/rest-base-resource.stub'), 'rest-base-resource.stub');
-            $event->add(realpath(__DIR__ . '/Console/stubs/rest-controller.stub'), 'rest-controller.stub');
-            $event->add(realpath(__DIR__ . '/Console/stubs/rest-instruction.stub'), 'rest-instruction.stub');
-            $event->add(realpath(__DIR__ . '/Console/stubs/rest-resource.stub'), 'rest-resource.stub');
-            $event->add(realpath(__DIR__ . '/Console/stubs/rest-response.stub'), 'rest-response.stub');
-            $event->add(realpath(__DIR__ . '/Console/stubs/rest-user-resource.stub'), 'rest-user-resource.stub');
-            $event->add(realpath(__DIR__ . '/Console/stubs/rest-user-controller.stub'), 'rest-user-controller.stub');
+        Event::listen(function (PublishingStubs $event) {
+            $event->add(realpath(__DIR__.'/Console/stubs/rest-action.stub'), 'rest-action.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/rest-base-controller.stub'), 'rest-base-controller.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/rest-base-resource.stub'), 'rest-base-resource.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/rest-controller.stub'), 'rest-controller.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/rest-instruction.stub'), 'rest-instruction.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/rest-resource.stub'), 'rest-resource.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/rest-response.stub'), 'rest-response.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/rest-user-resource.stub'), 'rest-user-resource.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/rest-user-controller.stub'), 'rest-user-controller.stub');
         });
     }
 }
