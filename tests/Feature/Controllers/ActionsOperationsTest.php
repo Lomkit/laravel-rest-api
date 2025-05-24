@@ -143,7 +143,7 @@ class ActionsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['fields.0.name']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['fields.0.name']]);
     }
 
     public function test_operate_action_with_unauthorized_field_validation(): void
@@ -163,7 +163,7 @@ class ActionsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['fields.0.value']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['fields.0.value']]);
     }
 
     public function test_operate_action_with_fields(): void

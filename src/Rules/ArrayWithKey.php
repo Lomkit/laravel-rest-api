@@ -2,10 +2,10 @@
 
 namespace Lomkit\Rest\Rules;
 
-use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Closure;
 
-class ArrayWith implements ValidationRule
+class ArrayWithKey implements ValidationRule
 {
     protected array $keys;
 

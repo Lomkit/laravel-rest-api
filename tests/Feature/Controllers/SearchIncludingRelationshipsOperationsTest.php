@@ -50,7 +50,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.includes.0.relation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.0.relation']]);
     }
 
     public function test_getting_a_list_of_resources_including_relation_with_unauthorized_filters(): void
@@ -76,7 +76,36 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.includes.0.filters.0.field']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.0.filters.0.field']]);
+    }
+
+    public function test_getting_a_list_of_resources_including_relation_with_unauthorized_filters_on_multiple_includes(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation'   => 'hasManyRelation.model',
+                        ],
+                        [
+                            'relation'   => 'hasManyRelation',
+                            'filters'    => [
+                                ['field' => 'unauthorized_field', 'value' => 10000],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.1.filters.0.field', 'search.includes.0.relation']]);
     }
 
     public function test_getting_a_list_of_resources_including_relation_with_filters(): void

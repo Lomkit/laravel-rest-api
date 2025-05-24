@@ -41,7 +41,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
     }
 
     public function test_updating_a_resource_without_key(): void
@@ -54,7 +54,7 @@ class MutateUpdateOperationsTest extends TestCase
                 'mutate' => [
                     [
                         'operation'  => 'update',
-                        'attributes' => ['not_authorized_field' => true],
+                        'attributes' => ['name' => 'test'],
                     ],
                 ],
             ],
@@ -62,7 +62,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.key']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.key']]);
     }
 
     public function test_updating_a_resource_with_no_required_relation(): void
@@ -86,7 +86,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
     }
 
     public function test_updating_a_resource_with_prohibited_relation(): void
@@ -116,7 +116,10 @@ class MutateUpdateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToRelation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => [
+            'mutate.0.relations.belongsToRelation',
+            'mutate.0.relations.belongsToManyRelation'
+        ]]);
     }
 
     public function test_updating_a_resource_with_no_required_relation_but_empty_array(): void
@@ -143,7 +146,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
     }
 
     public function test_updating_a_resource_with_required_relation(): void
@@ -225,7 +228,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot.number']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot.number']]);
     }
 
     public function test_updating_a_resource(): void

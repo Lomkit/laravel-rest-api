@@ -9,6 +9,7 @@ use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
 use Lomkit\Rest\Rules\ArrayWith;
+use Lomkit\Rest\Rules\ArrayWithKey;
 
 class BelongsToMany extends Relation implements RelationResource
 {
@@ -30,7 +31,7 @@ class BelongsToMany extends Relation implements RelationResource
             [
                 $prefix.'.*.pivot' => [
                     'prohibited_if:'.$prefix.'.*.operation,detach',
-                    new ArrayWith($this->getPivotFields()),
+                    new ArrayWithKey($this->getPivotFields()),
                 ],
             ]
         );

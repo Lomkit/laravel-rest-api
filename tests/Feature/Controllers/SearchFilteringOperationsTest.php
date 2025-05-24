@@ -33,7 +33,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_filtered_by_not_authorized_relation_field(): void
@@ -55,7 +55,7 @@ class SearchFilteringOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_filtered_by_model_field_using_default_operator(): void

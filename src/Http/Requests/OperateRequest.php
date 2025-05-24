@@ -6,6 +6,8 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Rules\ActionField;
+use Lomkit\Rest\Rules\Operate\OperateField;
+use Lomkit\Rest\Rules\Search\Search;
 use Lomkit\Rest\Rules\SearchRules;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -51,7 +53,7 @@ class OperateRequest extends RestRequest
                 ],
             ] : [],
             !$operatedAction->isStandalone() ? [
-                'search' => [new SearchRules($this->resource, $this)],
+                'search' => [(new Search)->setResource($this->resource)],
             ] : [],
             [
                 'fields.*.name' => [
@@ -62,8 +64,7 @@ class OperateRequest extends RestRequest
                     'array',
                 ],
                 'fields.*' => [
-                    ActionField::make()
-                        ->action($operatedAction),
+                    (new OperateField)->setAction($operatedAction),
                 ],
             ]
         );

@@ -38,7 +38,7 @@ class MutateCreateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
     }
 
     public function test_creating_a_resource_using_no_mutate_key(): void
@@ -52,7 +52,7 @@ class MutateCreateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate']]);
     }
 
     public function test_creating_a_resource_using_not_authorized_attach_root_operator(): void
@@ -72,7 +72,7 @@ class MutateCreateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.operation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.operation', 'mutate.0.key']]);
     }
 
     public function test_creating_a_resource_using_not_authorized_detach_root_operator(): void
@@ -85,6 +85,7 @@ class MutateCreateOperationsTest extends TestCase
                 'mutate' => [
                     [
                         'operation'  => 'detach',
+                        'key' => 1
                     ],
                 ],
             ],
@@ -92,7 +93,7 @@ class MutateCreateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.operation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.operation', 'mutate.0.key']]);
     }
 
     public function test_creating_a_resource_using_field_not_following_custom_rules(): void
@@ -113,7 +114,7 @@ class MutateCreateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes.string']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.attributes.string']]);
     }
 
     public function test_creating_a_resource_with_no_required_relation(): void
@@ -185,7 +186,7 @@ class MutateCreateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
     }
 
     public function test_creating_a_resource_with_not_authorized_relation(): void
@@ -220,7 +221,7 @@ class MutateCreateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations']]);
     }
 
     public function test_creating_a_resource_with_required_relation(): void
@@ -295,7 +296,7 @@ class MutateCreateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot.number']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot.number']]);
     }
 
     public function test_creating_a_resource_with_unique_validation(): void
@@ -1034,7 +1035,7 @@ class MutateCreateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot']]);
     }
 
     public function test_creating_a_resource_with_creating_belongs_to_many_relation_with_pivot_fields(): void

@@ -28,7 +28,7 @@ class SearchPaginateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.limit']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.limit']]);
     }
 
     public function test_getting_a_list_of_resources_paginating_second_page(): void
