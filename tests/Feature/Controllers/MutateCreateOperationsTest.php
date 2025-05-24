@@ -85,7 +85,7 @@ class MutateCreateOperationsTest extends TestCase
                 'mutate' => [
                     [
                         'operation'  => 'detach',
-                        'key' => 1
+                        'key'        => 1,
                     ],
                 ],
             ],

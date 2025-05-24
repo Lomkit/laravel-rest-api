@@ -2,8 +2,8 @@
 
 namespace Lomkit\Rest\Rules;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 
 class ArrayWithKey implements ValidationRule
 {

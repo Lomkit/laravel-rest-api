@@ -2,11 +2,10 @@
 
 namespace Lomkit\Rest\Rules\Resource;
 
+use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Rules\RestRule;
-use Closure;
 
 class ResourceFieldOrNested implements ValidationRule
 {

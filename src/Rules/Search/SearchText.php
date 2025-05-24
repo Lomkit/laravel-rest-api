@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Rules\Search;
 
 use Lomkit\Rest\Rules\RestRule;
-use Lomkit\Rest\Rules\Search\Text\SearchTextValue;
 
 class SearchText extends RestRule
 {
@@ -11,12 +10,12 @@ class SearchText extends RestRule
     {
         if (!$this->resource->isModelSearchable()) {
             return [
-                $attribute => ['prohibited']
+                $attribute => ['prohibited'],
             ];
         }
 
         return [
-            $attribute => ['sometimes', 'array'],
+            $attribute          => ['sometimes', 'array'],
             $attribute.'.value' => ['string'],
         ];
     }

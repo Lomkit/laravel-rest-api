@@ -12,8 +12,9 @@ use Lomkit\Rest\Rules\RestRule;
 
 class Mutate extends RestRule
 {
-
-    public function __construct(protected int $depth = 0, protected ?Relation $relation = null) {}
+    public function __construct(protected int $depth = 0, protected ?Relation $relation = null)
+    {
+    }
 
     public function buildValidationRules(string $attribute, mixed $value): array
     {
@@ -26,12 +27,12 @@ class Mutate extends RestRule
         return array_merge(
             [
                 $attributeConsideringRelationType => [
-                    (new ResourceMutateRelationOperation)->setResource($this->resource),
-                    (new ResourceCustomRules)->setResource($this->resource)
+                    (new ResourceMutateRelationOperation())->setResource($this->resource),
+                    (new ResourceCustomRules())->setResource($this->resource),
                 ],
                 $attributeConsideringRelationType.'.operation' => [
                     'required',
-                    $operationRules
+                    $operationRules,
                 ],
                 $attributeConsideringRelationType.'.attributes' => [
                     'array',
@@ -61,7 +62,7 @@ class Mutate extends RestRule
                                 return $relation->relation;
                             })
                             ->toArray()
-                    )
+                    ),
                 ],
                 $attributeConsideringRelationType.'.relations.*' => (new MutateRelation(depth: $this->depth))->setResource($this->resource),
             ],

@@ -118,7 +118,7 @@ class MutateUpdateOperationsTest extends TestCase
         $response->assertStatus(422);
         $response->assertExactJsonStructure(['message', 'errors' => [
             'mutate.0.relations.belongsToRelation',
-            'mutate.0.relations.belongsToManyRelation'
+            'mutate.0.relations.belongsToManyRelation',
         ]]);
     }
 

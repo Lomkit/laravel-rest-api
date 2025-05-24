@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Http\Requests;
 
 use Lomkit\Rest\Rules\Search\Search;
-use Lomkit\Rest\Rules\SearchRules;
 
 class SearchRequest extends RestRequest
 {
@@ -17,7 +16,7 @@ class SearchRequest extends RestRequest
         $resource = $this->route()->controller::newResource();
 
         return [
-            'search' => (new Search)->setResource($resource),
+            'search' => (new Search())->setResource($resource),
         ];
     }
 }

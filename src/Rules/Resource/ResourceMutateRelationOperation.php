@@ -2,13 +2,9 @@
 
 namespace Lomkit\Rest\Rules\Resource;
 
-use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Rules\RestRule;
-use Closure;
 
 class ResourceMutateRelationOperation extends RestRule
 {

@@ -47,7 +47,7 @@ trait ConfiguresRestParameters
      *
      * @return bool
      */
-    public function isNestedField(string $field, Relation $relation = null)
+    public function isNestedField(string $field, ?Relation $relation = null)
     {
         if (Str::contains($field, '.')) {
             // In case we are on a pivot we look for the relation pivot fields

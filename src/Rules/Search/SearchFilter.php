@@ -9,7 +9,6 @@ use Lomkit\Rest\Rules\RestRule;
 
 class SearchFilter extends RestRule
 {
-
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = app(RestRequest::class);
@@ -17,7 +16,7 @@ class SearchFilter extends RestRule
 
         $fieldsValidation = $isScoutMode ?
             Rule::in($this->resource->getScoutFields($request)) :
-            (new ResourceFieldOrNested)->setResource($this->resource);
+            (new ResourceFieldOrNested())->setResource($this->resource);
 
         $allowedOperators = app(RestRequest::class)->isScoutMode() ?
             ['=', 'in', 'not in'] :
@@ -27,34 +26,31 @@ class SearchFilter extends RestRule
             $attribute.'.field' => [
                 'string',
                 'required_without:'.$attribute.'.nested',
-                $fieldsValidation
+                $fieldsValidation,
             ],
-            $attribute.'.nested' =>
-                !$isScoutMode ? [
-                    'sometimes',
-                    'prohibits:'.$attribute.'.field,operator,value',
-                    'array',
-                ] : [
-                    'prohibited'
-                ],
-            $attribute.'.nested.*.nested' =>
-                [
-                    'prohibited'
-                ],
+            $attribute.'.nested' => !$isScoutMode ? [
+                'sometimes',
+                'prohibits:'.$attribute.'.field,operator,value',
+                'array',
+            ] : [
+                'prohibited',
+            ],
+            $attribute.'.nested.*.nested' => [
+                'prohibited',
+            ],
             $attribute.'.nested.*' => [
-                (new SearchFilter)->setResource($this->resource),
+                (new SearchFilter())->setResource($this->resource),
             ],
             $attribute.'.operator' => [
                 'string',
                 Rule::in($allowedOperators),
             ],
-            $attribute.'.type' =>
-                !$isScoutMode ? [
-                    'sometimes',
-                    Rule::in('or', 'and'),
-                ] : [
-                    'prohibited'
-                ],
+            $attribute.'.type' => !$isScoutMode ? [
+                'sometimes',
+                Rule::in('or', 'and'),
+            ] : [
+                'prohibited',
+            ],
             $attribute.'.value' => [
                 'exclude_if:'.$attribute.'.value,null',
                 'required_without:'.$attribute.'.nested',

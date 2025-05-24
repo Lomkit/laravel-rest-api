@@ -4,12 +4,10 @@ namespace Lomkit\Rest\Rules\Search;
 
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Rules\Resource\ResourceFieldOrNested;
 use Lomkit\Rest\Rules\RestRule;
 
 class SearchInstruction extends RestRule
 {
-
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = app(RestRequest::class);
@@ -30,9 +28,9 @@ class SearchInstruction extends RestRule
                 'required',
                 'string',
             ],
-            $attribute.'.fields' => ['sometimes', 'array'],
+            $attribute.'.fields'   => ['sometimes', 'array'],
             $attribute.'.fields.*' => !is_null($instruction) ? [
-                (new SearchInstructionField)->setResource($this->resource)->setInstruction($instruction)
+                (new SearchInstructionField())->setResource($this->resource)->setInstruction($instruction),
             ] : [],
         ];
     }

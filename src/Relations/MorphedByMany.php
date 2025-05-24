@@ -8,7 +8,6 @@ use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
-use Lomkit\Rest\Rules\ArrayWith;
 use Lomkit\Rest\Rules\ArrayWithKey;
 
 class MorphedByMany extends MorphRelation implements RelationResource

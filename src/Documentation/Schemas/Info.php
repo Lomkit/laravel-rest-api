@@ -30,7 +30,7 @@ class Info extends Schema
      *
      * @var string|null
      */
-    protected string|null $termsOfService;
+    protected ?string $termsOfService;
 
     /**
      * The contact information for the exposed API.
@@ -132,7 +132,7 @@ class Info extends Schema
      *
      * @return Info
      */
-    public function withTermsOfService(string|null $termsOfService): Info
+    public function withTermsOfService(?string $termsOfService): Info
     {
         $this->termsOfService = $termsOfService;
 
@@ -144,7 +144,7 @@ class Info extends Schema
      *
      * @return string|null
      */
-    public function termsOfService(): string|null
+    public function termsOfService(): ?string
     {
         return $this->termsOfService;
     }

@@ -2,16 +2,12 @@
 
 namespace Lomkit\Rest\Rules\Operate;
 
-use Illuminate\Validation\Rule;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Rules\Resource\ResourceFieldOrNested;
-use Lomkit\Rest\Rules\Resource\ResourceRelationOrNested;
 use Lomkit\Rest\Rules\RestRule;
 
 class OperateField extends RestRule
 {
-
     protected Action $action;
 
     /**
