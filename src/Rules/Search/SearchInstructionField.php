@@ -26,7 +26,7 @@ class SearchInstructionField extends RestRule
         ];
     }
 
-    public function setInstruction(Instruction $instruction)
+    public function setInstruction(Instruction $instruction): static
     {
         $this->instruction = $instruction;
 

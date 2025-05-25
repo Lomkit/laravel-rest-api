@@ -11,14 +11,16 @@ class ResourceCustomRules extends RestRule
     {
         $request = app(RestRequest::class);
 
-        if ($value['operation'] === 'create') {
+        $operation = is_array($value) ? ($value['operation'] ?? null) : null;
+
+        if ($operation === 'create') {
             $rules = $this->resource->createRules($request);
-        } elseif ($value['operation'] === 'update') {
+        } elseif ($operation === 'update') {
             $rules = $this->resource->updateRules($request);
         } else {
-            // No rules needed
-            return [];
-        }
+             // No rules needed for unknown/missing operations
+             return [];
+         }
 
         $rules = array_merge_recursive(
             $rules,

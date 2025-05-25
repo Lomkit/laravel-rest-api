@@ -19,7 +19,7 @@ class ResourceRelationOrNested implements ValidationRule
         $relationResource = $this->resource->relation($relation)?->resource();
 
         if ($relationResource === null) {
-            $fail('The relation is not allowed');
+            $fail('The relation is not valid or allowed for this resource.');
         }
     }
 

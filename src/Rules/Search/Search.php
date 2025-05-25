@@ -15,9 +15,9 @@ class Search extends RestRule
 
         return [
             $attribute.'.limit'          => ['sometimes', 'integer', Rule::in($this->resource->getLimits($request))],
-            $attribute.'page'            => ['sometimes', 'integer'],
+            $attribute.'.page'            => ['sometimes', 'integer'],
             $attribute.'.filters'        => ['sometimes', 'array'],
-            $attribute.'gates'           => ['sometimes', 'array', Rule::in(['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'])],
+            $attribute.'.gates'           => ['sometimes', 'array', Rule::in(['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'])],
             $attribute.'.filters.*'      => (new SearchFilter())->setResource($this->resource),
             $attribute.'.scopes'         => ['sometimes', 'array', $isScoutMode ? 'prohibited' : ''],
             $attribute.'.scopes.*'       => (new SearchScope())->setResource($this->resource),

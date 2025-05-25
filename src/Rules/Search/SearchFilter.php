@@ -18,7 +18,7 @@ class SearchFilter extends RestRule
             Rule::in($this->resource->getScoutFields($request)) :
             (new ResourceFieldOrNested())->setResource($this->resource);
 
-        $allowedOperators = app(RestRequest::class)->isScoutMode() ?
+        $allowedOperators = $isScoutMode ?
             ['=', 'in', 'not in'] :
             ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'];
 
@@ -47,7 +47,7 @@ class SearchFilter extends RestRule
             ],
             $attribute.'.type' => !$isScoutMode ? [
                 'sometimes',
-                Rule::in('or', 'and'),
+                Rule::in(['or', 'and']),
             ] : [
                 'prohibited',
             ],

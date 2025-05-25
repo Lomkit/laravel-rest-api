@@ -1,6 +1,6 @@
 <?php
 
-namespace Controllers;
+namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\TestCase;
