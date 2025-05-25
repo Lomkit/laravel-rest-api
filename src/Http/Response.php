@@ -71,7 +71,7 @@ class Response implements Responsable
                         // Here we add the aggregates
                         collect($currentRequestArray['aggregates'] ?? [])
                             ->map(function ($aggregate) {
-                                return Str::snake($aggregate['relation']).'_'.$aggregate['type'].(isset($aggregate['field']) ? '_'.$aggregate['field'] : '');
+                                return $aggregate['alias'] ?? Str::snake($aggregate['relation']).'_'.$aggregate['type'].(isset($aggregate['field']) ? '_'.$aggregate['field'] : '');
                             })
                             ->toArray()
                     )

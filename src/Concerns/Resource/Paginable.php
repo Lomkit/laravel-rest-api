@@ -17,11 +17,13 @@ trait Paginable
      */
     public function paginate($query, RestRequest $request)
     {
+        $defaultLimit = $this->defaultLimit ?? 50;
+
         // In case we have a scout builder
         if ($query instanceof Builder) {
-            return $query->paginate($request->input('search.limit', 50), 'page', $request->input('search.page', 1));
+            return $query->paginate($request->input('search.limit', $defaultLimit), 'page', $request->input('search.page', 1));
         }
 
-        return $query->paginate($request->input('search.limit', 50), ['*'], 'page', $request->input('search.page', 1));
+        return $query->paginate($request->input('search.limit', $defaultLimit), ['*'], 'page', $request->input('search.page', 1));
     }
 }
