@@ -30,7 +30,7 @@ class SearchInstructionsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.instructions.0.name']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.instructions.0.name']]);
     }
 
     public function test_getting_a_list_of_resources_instructing_numbered(): void
@@ -84,12 +84,12 @@ class SearchInstructionsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.instructions.0.fields.0.name']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.instructions.0.fields.0.name']]);
     }
 
     public function test_getting_a_list_of_resources_instructing_numbered_with_unauthorized_validation(): void
     {
-        $matchingModel = ModelFactory::new()->create(['number' => 1])->fresh();
+        ModelFactory::new()->create(['number' => 1])->fresh();
         ModelFactory::new()->create(['number' => -1])->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
@@ -112,7 +112,7 @@ class SearchInstructionsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.instructions.0.fields.0.value']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.instructions.0.fields.0.value']]);
     }
 
     public function test_getting_a_list_of_resources_instructing_numbered_with_fields(): void

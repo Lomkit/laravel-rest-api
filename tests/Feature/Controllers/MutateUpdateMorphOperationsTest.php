@@ -42,7 +42,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.attributes.string']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.attributes.string']]);
     }
 
     public function test_updating_a_resource_with_creating_morph_to_relation(): void
@@ -753,7 +753,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.morphToManyRelation.0.pivot']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.morphToManyRelation.0.pivot']]);
     }
 
     public function test_updating_a_resource_with_creating_morph_to_many_relation_with_pivot_fields(): void
@@ -1104,7 +1104,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.morphedByManyRelation.0.pivot']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.morphedByManyRelation.0.pivot']]);
     }
 
     public function test_updating_a_resource_with_creating_morphed_by_many_relation_with_pivot_fields(): void

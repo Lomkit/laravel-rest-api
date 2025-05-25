@@ -28,7 +28,27 @@ class SearchPaginateOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.limit']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.limit']]);
+    }
+
+    public function test_getting_a_list_of_resources_using_string_page(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'page' => 'hello',
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.page']]);
     }
 
     public function test_getting_a_list_of_resources_paginating_second_page(): void
@@ -49,6 +69,10 @@ class SearchPaginateOperationsTest extends TestCase
             ],
             ['Accept' => 'application/json']
         );
+
+        $response->assertJsonFragment([
+            'current_page' => 2,
+        ]);
 
         $this->assertResourcePaginated(
             $response,
