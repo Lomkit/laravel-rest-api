@@ -18,9 +18,9 @@ class ResourceCustomRules extends RestRule
         } elseif ($operation === 'update') {
             $rules = $this->resource->updateRules($request);
         } else {
-             // No rules needed for unknown/missing operations
-             return [];
-         }
+            // No rules needed for unknown/missing operations
+            return [];
+        }
 
         $rules = array_merge_recursive(
             $rules,
