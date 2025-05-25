@@ -17,6 +17,10 @@ class SearchAggregate extends RestRule
 
         return array_merge(
             [
+                $attribute.'.*.alias' => [
+                    'nullable',
+                    'string',
+                ],
                 $attribute.'.relation' => [
                     'required',
                     (new ResourceRelationOrNested())->setResource($this->resource),
