@@ -90,9 +90,7 @@ class ControllerMakeCommand extends GeneratorCommand
     protected function buildClass($name): string
     {
         $rootNamespace = $this->rootNamespace();
-
-        $replace = [];
-
+        
         if ($this->option('resource')) {
             $replace = $this->buildResourceReplacements($replace);
         } else {
@@ -175,7 +173,7 @@ class ControllerMakeCommand extends GeneratorCommand
     protected function getOptions(): array
     {
         return [
-            ['resource', null, InputOption::VALUE_NONE, 'The resource associated with this resource'],
+            ['resource', null, InputOption::VALUE_REQUIRED, 'The resource associated with this resource'],
         ];
     }
 

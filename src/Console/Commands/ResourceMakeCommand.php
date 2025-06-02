@@ -170,7 +170,7 @@ class ResourceMakeCommand extends GeneratorCommand
     protected function getOptions(): array
     {
         return [
-            ['model', null, InputOption::VALUE_NONE, 'The model associated with this resource'],
+            ['model', null, InputOption::VALUE_REQUIRED, 'The model associated with this resource'],
         ];
     }
 
