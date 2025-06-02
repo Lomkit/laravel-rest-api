@@ -90,7 +90,7 @@ class ControllerMakeCommand extends GeneratorCommand
     protected function buildClass($name): string
     {
         $rootNamespace = $this->rootNamespace();
-        
+
         if ($this->option('resource')) {
             $replace = $this->buildResourceReplacements($replace);
         } else {
