@@ -91,6 +91,8 @@ class ControllerMakeCommand extends GeneratorCommand
     {
         $rootNamespace = $this->rootNamespace();
 
+        $replace = [];
+
         if ($this->option('resource')) {
             $replace = $this->buildResourceReplacements($replace);
         } else {
