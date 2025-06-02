@@ -35,7 +35,6 @@ class ControllerMakeCommandTest extends TestCase
         $this->assertStringContainsString('class TestController extends Controller', file_get_contents(app_path('Rest/Controllers/TestController.php')));
         $this->assertStringContainsString('public static $resource = \App\Rest\Resources\TestResource::class;', file_get_contents(app_path('Rest/Controllers/TestController.php')));
 
-
         unlink(app_path('Rest/Controllers/TestController.php'));
     }
 }

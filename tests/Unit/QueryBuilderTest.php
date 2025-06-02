@@ -1,4 +1,5 @@
 <?php
+
 namespace Lomkit\Rest\Tests\Unit;
 
 use Illuminate\Support\Facades\Auth;

@@ -12,10 +12,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
-use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\select;
-use function Laravel\Prompts\text;
 
 #[AsCommand(name: 'rest:controller')]
 class ControllerMakeCommand extends GeneratorCommand
@@ -54,9 +51,9 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Execute the console command.
      *
-     * @return bool|null
-     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return bool|null
      */
     public function handle(): ?bool
     {
@@ -84,10 +81,11 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Build the class with the given name.
      *
-     * @param  string  $name
-     * @return string
+     * @param string $name
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return string
      */
     protected function buildClass($name): string
     {
@@ -101,7 +99,7 @@ class ControllerMakeCommand extends GeneratorCommand
             $replace = array_merge(
                 $replace,
                 [
-                    '{{ namespacedResource }}' => 'Resource'
+                    '{{ namespacedResource }}' => 'Resource',
                 ]
             );
         }
@@ -113,14 +111,17 @@ class ControllerMakeCommand extends GeneratorCommand
         }
 
         return str_replace(
-            array_keys($replace), array_values($replace), parent::buildClass($name)
+            array_keys($replace),
+            array_values($replace),
+            parent::buildClass($name)
         );
     }
 
     /**
      * Build the resource replacement values.
      *
-     * @param  array  $replace
+     * @param array $replace
+     *
      * @return array
      */
     protected function buildResourceReplacements(array $replace): array
@@ -130,15 +131,15 @@ class ControllerMakeCommand extends GeneratorCommand
         $replace = [];
 
         return array_merge($replace, [
-            'DummyFullResourceClass' => $resourceClass,
+            'DummyFullResourceClass'   => $resourceClass,
             '{{ namespacedResource }}' => $resourceClass,
-            '{{namespacedResource}}' => $resourceClass,
-            'DummyResourceClass' => class_basename($resourceClass),
-            '{{ resource }}' => class_basename($resourceClass),
-            '{{resource}}' => class_basename($resourceClass),
-            'DummyResourceVariable' => lcfirst(class_basename($resourceClass)),
-            '{{ resourceVariable }}' => lcfirst(class_basename($resourceClass)),
-            '{{resourceVariable}}' => lcfirst(class_basename($resourceClass)),
+            '{{namespacedResource}}'   => $resourceClass,
+            'DummyResourceClass'       => class_basename($resourceClass),
+            '{{ resource }}'           => class_basename($resourceClass),
+            '{{resource}}'             => class_basename($resourceClass),
+            'DummyResourceVariable'    => lcfirst(class_basename($resourceClass)),
+            '{{ resourceVariable }}'   => lcfirst(class_basename($resourceClass)),
+            '{{resourceVariable}}'     => lcfirst(class_basename($resourceClass)),
         ]);
     }
 
@@ -209,10 +210,11 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Get the fully-qualified resource class name.
      *
-     * @param  string  $model
-     * @return string
+     * @param string $model
      *
      * @throws \InvalidArgumentException
+     *
+     * @return string
      */
     protected function parseResource($model): string
     {
@@ -226,7 +228,8 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Qualify the given resource class base name.
      *
-     * @param  string  $resource
+     * @param string $resource
+     *
      * @return string
      */
     protected function qualifyResource(string $resource): string

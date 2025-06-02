@@ -12,6 +12,7 @@ class DocumentationCommandTest extends TestCase
 
         $this->assertFileExists('./.phpunit.cache/openapi.json');
     }
+
     public function test_make_documentation_service_provider_command()
     {
         @unlink(app_path('Providers/RestDocumentationServiceProvider.php'));

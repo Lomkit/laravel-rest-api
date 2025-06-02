@@ -1,4 +1,5 @@
 <?php
+
 namespace Lomkit\Rest\Tests\Unit;
 
 use Illuminate\Events\Dispatcher;
@@ -12,13 +13,13 @@ class StubsTest extends TestCase
 
         $this->assertEquals(
             [
-                realpath(__DIR__.'/../../src/Console/stubs/action.stub')                         => 'rest.action.stub',
-                realpath(__DIR__.'/../../src/Console/stubs/base-controller.stub')               => 'rest.base-controller.stub',
-                realpath(__DIR__.'/../../src/Console/stubs/base-resource.stub')                 => 'rest.base-resource.stub',
-                realpath(__DIR__.'/../../src/Console/stubs/controller.stub')                    => 'rest.controller.stub',
-                realpath(__DIR__.'/../../src/Console/stubs/instruction.stub')                   => 'rest.instruction.stub',
-                realpath(__DIR__.'/../../src/Console/stubs/resource.stub')                      => 'rest.resource.stub',
-                realpath(__DIR__.'/../../src/Console/stubs/response.stub')                      => 'rest.response.stub',
+                realpath(__DIR__.'/../../src/Console/stubs/action.stub')                              => 'rest.action.stub',
+                realpath(__DIR__.'/../../src/Console/stubs/base-controller.stub')                     => 'rest.base-controller.stub',
+                realpath(__DIR__.'/../../src/Console/stubs/base-resource.stub')                       => 'rest.base-resource.stub',
+                realpath(__DIR__.'/../../src/Console/stubs/controller.stub')                          => 'rest.controller.stub',
+                realpath(__DIR__.'/../../src/Console/stubs/instruction.stub')                         => 'rest.instruction.stub',
+                realpath(__DIR__.'/../../src/Console/stubs/resource.stub')                            => 'rest.resource.stub',
+                realpath(__DIR__.'/../../src/Console/stubs/response.stub')                            => 'rest.response.stub',
                 realpath(__DIR__.'/../../src/Console/stubs/rest-documentation-service-provider.stub') => 'rest.rest-documentation-service-provider.stub',
             ],
             $event->stubs

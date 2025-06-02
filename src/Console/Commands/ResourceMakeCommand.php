@@ -3,18 +3,13 @@
 namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
-use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Finder\Finder;
 
-use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\select;
-use function Laravel\Prompts\text;
 
 #[AsCommand(name: 'rest:resource')]
 class ResourceMakeCommand extends GeneratorCommand
@@ -53,9 +48,9 @@ class ResourceMakeCommand extends GeneratorCommand
     /**
      * Execute the console command.
      *
-     * @return bool|null
-     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return bool|null
      */
     public function handle(): ?bool
     {
@@ -83,10 +78,11 @@ class ResourceMakeCommand extends GeneratorCommand
     /**
      * Build the class with the given name.
      *
-     * @param  string  $name
-     * @return string
+     * @param string $name
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return string
      */
     protected function buildClass($name): string
     {
@@ -100,7 +96,7 @@ class ResourceMakeCommand extends GeneratorCommand
             $replace = array_merge(
                 $replace,
                 [
-                    '{{ namespacedModel }}' => 'Model'
+                    '{{ namespacedModel }}' => 'Model',
                 ]
             );
         }
@@ -112,14 +108,17 @@ class ResourceMakeCommand extends GeneratorCommand
         }
 
         return str_replace(
-            array_keys($replace), array_values($replace), parent::buildClass($name)
+            array_keys($replace),
+            array_values($replace),
+            parent::buildClass($name)
         );
     }
 
     /**
      * Build the model replacement values.
      *
-     * @param  array  $replace
+     * @param array $replace
+     *
      * @return array
      */
     protected function buildModelReplacements(array $replace): array
@@ -127,15 +126,15 @@ class ResourceMakeCommand extends GeneratorCommand
         $modelClass = $this->parseModel($this->option('model'));
 
         return array_merge($replace, [
-            'DummyFullModelClass' => $modelClass,
+            'DummyFullModelClass'   => $modelClass,
             '{{ namespacedModel }}' => $modelClass,
-            '{{namespacedModel}}' => $modelClass,
-            'DummyModelClass' => class_basename($modelClass),
-            '{{ model }}' => class_basename($modelClass),
-            '{{model}}' => class_basename($modelClass),
-            'DummyModelVariable' => lcfirst(class_basename($modelClass)),
-            '{{ modelVariable }}' => lcfirst(class_basename($modelClass)),
-            '{{modelVariable}}' => lcfirst(class_basename($modelClass)),
+            '{{namespacedModel}}'   => $modelClass,
+            'DummyModelClass'       => class_basename($modelClass),
+            '{{ model }}'           => class_basename($modelClass),
+            '{{model}}'             => class_basename($modelClass),
+            'DummyModelVariable'    => lcfirst(class_basename($modelClass)),
+            '{{ modelVariable }}'   => lcfirst(class_basename($modelClass)),
+            '{{modelVariable}}'     => lcfirst(class_basename($modelClass)),
         ]);
     }
 
@@ -190,10 +189,11 @@ class ResourceMakeCommand extends GeneratorCommand
     /**
      * Get the fully-qualified model class name.
      *
-     * @param  string  $model
-     * @return string
+     * @param string $model
      *
      * @throws \InvalidArgumentException
+     *
+     * @return string
      */
     protected function parseModel($model): string
     {

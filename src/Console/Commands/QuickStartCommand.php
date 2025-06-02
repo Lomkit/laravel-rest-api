@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use Lomkit\Rest\Console\ResolvesStubPath;
 
 class QuickStartCommand extends Command
 {

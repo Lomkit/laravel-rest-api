@@ -3,15 +3,7 @@
 namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
-use Illuminate\Support\Collection;
 use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Finder\Finder;
-
-use function Laravel\Prompts\multiselect;
-use function Laravel\Prompts\text;
 
 #[AsCommand(name: 'rest:instruction')]
 class InstructionMakeCommand extends GeneratorCommand
