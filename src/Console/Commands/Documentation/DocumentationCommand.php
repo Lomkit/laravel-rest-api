@@ -1,8 +1,7 @@
 <?php
 
-namespace Lomkit\Rest\Console\Commands;
+namespace Lomkit\Rest\Console\Commands\Documentation;
 
-use Illuminate\Console\Command;
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
 use Lomkit\Rest\Documentation\Schemas\OpenAPI;

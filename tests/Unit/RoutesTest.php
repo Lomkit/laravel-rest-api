@@ -1,5 +1,7 @@
 <?php
 
+namespace Lomkit\Rest\Tests\Unit;
+
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Tests\Support\Http\Controllers\ModelController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\SoftDeletedModelController;
