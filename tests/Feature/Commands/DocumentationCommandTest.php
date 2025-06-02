@@ -8,15 +8,22 @@ class DocumentationCommandTest extends TestCase
 {
     public function test_create_documentation_class(): void
     {
-        $this->artisan('rest:documentation', ['--path' => './.phpunit.cache'])->assertOk();
+        $this->artisan('rest:documentation')->assertOk();
 
         $this->assertFileExists('./.phpunit.cache/openapi.json');
     }
-
-    public function test_create_documentation_service_provider_class(): void
+    public function test_make_documentation_service_provider_command()
     {
-        $this->artisan('rest:documentation-provider', ['--path' => './.phpunit.cache'])->assertOk();
+        @unlink(app_path('Providers/RestDocumentationServiceProvider.php'));
 
-        $this->assertFileExists('./.phpunit.cache/RestDocumentationServiceProvider.php');
+        $this
+            ->artisan('rest:documentation-provider', ['name' => 'RestDocumentationServiceProvider'])
+            ->assertOk()
+            ->run();
+
+        $this->assertFileExists(app_path('Providers/RestDocumentationServiceProvider.php'));
+        $this->assertStringContainsString('class RestDocumentationServiceProvider extends ServiceProvider', file_get_contents(app_path('Providers/RestDocumentationServiceProvider.php')));
+
+        unlink(app_path('Providers/RestDocumentationServiceProvider.php'));
     }
 }

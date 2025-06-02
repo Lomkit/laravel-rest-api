@@ -9,8 +9,6 @@ use Lomkit\Rest\Console\ResolvesStubPath;
 
 class QuickStartCommand extends Command
 {
-    use ResolvesStubPath;
-
     /**
      * The name and signature of the console command.
      *
@@ -33,10 +31,10 @@ class QuickStartCommand extends Command
     public function handle()
     {
         $this->comment('Generating User Resource...');
-        $this->callSilent('rest:resource', ['name' => 'UserResource']);
+        $this->callSilent('rest:resource', ['name' => 'UserResource', '--model' => 'User']);
 
         $this->comment('Generating User Controller...');
-        $this->callSilent('rest:controller', ['name' => 'UsersController']);
+        $this->callSilent('rest:controller', ['name' => 'UsersController', '--resource' => 'UserResource']);
 
         $this->updateUserModelNamespace();
         $this->setAppNamespace();
@@ -149,5 +147,19 @@ class QuickStartCommand extends Command
         if (!Str::contains($routeContent, $newRoute)) {
             file_put_contents($routesPath, $routeContent.PHP_EOL.$newRoute);
         }
+    }
+
+    /**
+     * Resolve the fully-qualified path to the stub.
+     *
+     * @param string $stub
+     *
+     * @return string
+     */
+    protected function resolveStubPath($stub)
+    {
+        return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
+            ? $customPath
+            : __DIR__.str_replace('rest/', '', $stub);
     }
 }

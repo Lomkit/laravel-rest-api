@@ -2,18 +2,28 @@
 
 namespace Lomkit\Rest;
 
+use Illuminate\Foundation\Events\PublishingStubs;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Lomkit\Rest\Console\Commands\ActionCommand;
+use Lomkit\Rest\Console\Commands\ActionMakeCommand;
 use Lomkit\Rest\Console\Commands\BaseControllerCommand;
+use Lomkit\Rest\Console\Commands\BaseControllerMakeCommand;
 use Lomkit\Rest\Console\Commands\BaseResourceCommand;
+use Lomkit\Rest\Console\Commands\BaseResourceMakeCommand;
 use Lomkit\Rest\Console\Commands\ControllerCommand;
-use Lomkit\Rest\Console\Commands\DocumentationCommand;
-use Lomkit\Rest\Console\Commands\DocumentationProviderCommand;
+use Lomkit\Rest\Console\Commands\ControllerMakeCommand;
+use Lomkit\Rest\Console\Commands\Documentation\DocumentationCommand;
+use Lomkit\Rest\Console\Commands\Documentation\DocumentationProviderCommand;
+use Lomkit\Rest\Console\Commands\Documentation\DocumentationServiceProviderMakeCommand;
 use Lomkit\Rest\Console\Commands\InstructionCommand;
+use Lomkit\Rest\Console\Commands\InstructionMakeCommand;
 use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceCommand;
+use Lomkit\Rest\Console\Commands\ResourceMakeCommand;
 use Lomkit\Rest\Console\Commands\ResponseCommand;
+use Lomkit\Rest\Console\Commands\ResponseMakeCommand;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\ActionsRequest;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
@@ -53,6 +63,8 @@ class RestServiceProvider extends ServiceProvider
         $this->registerCommands();
         $this->registerPublishing();
 
+        $this->registerStubs();
+
         $this->registerRoutes();
 
         $this->loadViewsFrom(
@@ -78,7 +90,7 @@ class RestServiceProvider extends ServiceProvider
      *
      * @return array
      */
-    private function routeConfiguration()
+    private function routeConfiguration(): array
     {
         return [
             'domain'     => config('rest.documentation.routing.domain'),
@@ -92,22 +104,39 @@ class RestServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    protected function registerCommands()
+    protected function registerCommands(): void
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                BaseControllerCommand::class,
-                ControllerCommand::class,
-                BaseResourceCommand::class,
-                ResourceCommand::class,
-                ResponseCommand::class,
+                BaseControllerMakeCommand::class,
+                ControllerMakeCommand::class,
+                BaseResourceMakeCommand::class,
+                ResourceMakeCommand::class,
+                ResponseMakeCommand::class,
                 QuickStartCommand::class,
-                ActionCommand::class,
-                InstructionCommand::class,
+                ActionMakeCommand::class,
+                InstructionMakeCommand::class,
                 DocumentationCommand::class,
-                DocumentationProviderCommand::class,
+                DocumentationServiceProviderMakeCommand::class,
             ]);
         }
+    }
+
+    /**
+     * Register the stubs on the default laravel stub publish command.
+     */
+    protected function registerStubs(): void
+    {
+        Event::listen(function (PublishingStubs $event) {
+            $event->add(realpath(__DIR__.'/Console/stubs/action.stub'), 'rest.action.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/base-controller.stub'), 'rest.base-controller.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/base-resource.stub'), 'rest.base-resource.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/controller.stub'), 'rest.controller.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/instruction.stub'), 'rest.instruction.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/resource.stub'), 'rest.resource.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/response.stub'), 'rest.response.stub');
+            $event->add(realpath(__DIR__.'/Console/stubs/rest-documentation-service-provider.stub'), 'rest.rest-documentation-service-provider.stub');
+        });
     }
 
     /**
@@ -115,7 +144,7 @@ class RestServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    private function registerPublishing()
+    private function registerPublishing(): void
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -129,7 +158,7 @@ class RestServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    protected function registerServices()
+    protected function registerServices(): void
     {
         $this->app->singleton('lomkit-rest', Rest::class);
 

@@ -1,4 +1,5 @@
 <?php
+namespace Lomkit\Rest\Tests\Unit;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -6,6 +7,7 @@ use Lomkit\Rest\Query\Builder;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
+use Mockery;
 
 class QueryBuilderTest extends \Lomkit\Rest\Tests\TestCase
 {

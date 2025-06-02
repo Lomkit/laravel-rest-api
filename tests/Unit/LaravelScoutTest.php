@@ -1,5 +1,7 @@
 <?php
 
+namespace Lomkit\Rest\Tests\Unit;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Query\ScoutBuilder;
@@ -7,6 +9,7 @@ use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\User;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\SearchableModelResource;
+use Mockery;
 
 class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
 {

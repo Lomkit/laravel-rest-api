@@ -2,9 +2,9 @@
 
 namespace {{ namespace }};
 
-use App\Rest\Resource as RestResource;
+use {{ rootNamespace }}Rest\Resources\Resource;
 
-class {{ class }} extends RestResource
+class {{ class }} extends Resource
 {
     /**
      * The model the resource corresponds to.
@@ -12,13 +12,6 @@ class {{ class }} extends RestResource
      * @var class-string<\Illuminate\Database\Eloquent\Model>
      */
     public static $model = \{{ namespacedModel }}::class;
-
-    /**
-     * The default value for the pagination limit.
-     *
-     * @var int
-     */
-    public int $defaultLimit = 50;
 
     /**
      * The exposed fields that could be provided

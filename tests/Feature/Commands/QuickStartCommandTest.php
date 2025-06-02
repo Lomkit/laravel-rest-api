@@ -61,11 +61,8 @@ class QuickStartCommandTest extends TestCase
 
     public function test_quick_start_command_updates_user_model_namespace()
     {
-        // Simulate the existence of App\Models\User
-        File::makeDirectory(app_path('Models'), 0755, true);
-        File::put(app_path('Models/User.php'), '<?php namespace App\Models; class User {}');
-
-        $this->artisan('rest:quick-start')->assertExitCode(0);
+        $this->artisan('rest:quick-start')
+            ->assertExitCode(0);
 
         $this->assertFileExists(app_path('Rest/Resources/UserResource.php'));
         $this->assertFileExists(app_path('Rest/Controllers/UsersController.php'));
@@ -73,10 +70,10 @@ class QuickStartCommandTest extends TestCase
         $resourceContent = File::get(app_path('Rest/Resources/UserResource.php'));
         $controllerContent = File::get(app_path('Rest/Controllers/UsersController.php'));
 
-        $this->assertStringContainsString('\App\Models\User::class', $resourceContent);
+        $this->assertStringContainsString('\App\User::class', $resourceContent);
 
         $this->assertStringContainsString('\App\Rest\Resources\UserResource::class', $controllerContent);
 
-        $this->assertStringContainsString('public static $model = \App\Models\User::class;', $resourceContent);
+        $this->assertStringContainsString('public static $model = \App\User::class;', $resourceContent);
     }
 }
