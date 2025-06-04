@@ -158,8 +158,7 @@ class ControllerMakeCommand extends GeneratorCommand
         }
         $resource = select(
             'What resource should this resource relies to? (Optional)',
-            $this->possibleResources(),
-            required: false
+            $this->possibleResources()
         );
 
         if ($resource) {
