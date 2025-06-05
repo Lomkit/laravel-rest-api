@@ -64,7 +64,7 @@ trait PerformMutation
         } elseif ($mutation['operation'] === 'update') {
             $this->resource->authorizeTo('update', $model);
         } else {
-            if (!$this->resource->authorizeTo('attach' . $model, $model)) {
+            if (!$this->resource->authorizeTo('attach'.$model, $model)) {
                 $this->resource->authorizeTo('view', $model);
             }
         }
