@@ -42,7 +42,7 @@ trait PerformMutation
     /**
      * Apply a mutation to the model based on the provided mutation parameters.
      *
-     * @param array $mutation An array of mutation parameters.
+     * @param array $mutation   An array of mutation parameters.
      * @param array $attributes Additional attributes to apply to the model.
      *
      * @return Model The mutated model.
