@@ -33,9 +33,7 @@ trait PerformMutation
         ];
 
         foreach ($parameters['mutate'] as $parameter) {
-            $operations[
-                $this->mutateOperationsVerbose[$parameter['operation']]
-            ][] = $this->applyMutation($parameter)->getKey();
+            $operations[$this->mutateOperationsVerbose[$parameter['operation']]][] = $this->applyMutation($parameter)->getKey();
         }
 
         return $operations;
@@ -44,7 +42,7 @@ trait PerformMutation
     /**
      * Apply a mutation to the model based on the provided mutation parameters.
      *
-     * @param array $mutation   An array of mutation parameters.
+     * @param array $mutation An array of mutation parameters.
      * @param array $attributes Additional attributes to apply to the model.
      *
      * @return Model The mutated model.
@@ -64,8 +62,10 @@ trait PerformMutation
         } elseif ($mutation['operation'] === 'update') {
             $this->resource->authorizeTo('update', $model);
         } else {
-            if (!$this->resource->authorizeTo('attach'.$model, $model)) {
+            if (!$this->resource->authorizedTo('attach' . $model, $model)) {
                 $this->resource->authorizeTo('view', $model);
+            } else {
+                $this->resource->authorizeTo('attach' . $model, $model);
             }
         }
 
@@ -79,9 +79,9 @@ trait PerformMutation
     /**
      * Mutate the model by applying attributes and relations.
      *
-     * @param Model $model      The Eloquent model to mutate.
+     * @param Model $model The Eloquent model to mutate.
      * @param array $attributes The attributes to mutate.
-     * @param array $mutation   The mutation array.
+     * @param array $mutation The mutation array.
      *
      * @return Model The mutated model.
      */
