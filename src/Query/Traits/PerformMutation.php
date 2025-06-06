@@ -33,9 +33,7 @@ trait PerformMutation
         ];
 
         foreach ($parameters['mutate'] as $parameter) {
-            $operations[
-                $this->mutateOperationsVerbose[$parameter['operation']]
-            ][] = $this->applyMutation($parameter)->getKey();
+            $operations[$this->mutateOperationsVerbose[$parameter['operation']]][] = $this->applyMutation($parameter)->getKey();
         }
 
         return $operations;
@@ -64,7 +62,11 @@ trait PerformMutation
         } elseif ($mutation['operation'] === 'update') {
             $this->resource->authorizeTo('update', $model);
         } else {
-            $this->resource->authorizeTo('view', $model);
+            if (!$this->resource->authorizedTo('attach'.$model, $model)) {
+                $this->resource->authorizeTo('view', $model);
+            } else {
+                $this->resource->authorizeTo('attach'.$model, $model);
+            }
         }
 
         return $this->mutateModel(
