@@ -62,10 +62,10 @@ trait PerformMutation
         } elseif ($mutation['operation'] === 'update') {
             $this->resource->authorizeTo('update', $model);
         } else {
-            if (!$this->resource->authorizedTo('attach' . $model, $model)) {
+            if (!$this->resource->authorizedTo('attach'.$model, $model)) {
                 $this->resource->authorizeTo('view', $model);
             } else {
-                $this->resource->authorizeTo('attach' . $model, $model);
+                $this->resource->authorizeTo('attach'.$model, $model);
             }
         }
 
@@ -79,9 +79,9 @@ trait PerformMutation
     /**
      * Mutate the model by applying attributes and relations.
      *
-     * @param Model $model The Eloquent model to mutate.
+     * @param Model $model      The Eloquent model to mutate.
      * @param array $attributes The attributes to mutate.
-     * @param array $mutation The mutation array.
+     * @param array $mutation   The mutation array.
      *
      * @return Model The mutated model.
      */
