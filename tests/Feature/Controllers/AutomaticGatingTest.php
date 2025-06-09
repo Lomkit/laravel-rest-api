@@ -48,7 +48,7 @@ class AutomaticGatingTest extends TestCase
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => true,
+                        'authorized_to_view'         => false,
                         'authorized_to_update'       => true,
                         'authorized_to_delete'       => true,
                         'authorized_to_restore'      => true,
@@ -331,11 +331,11 @@ class AutomaticGatingTest extends TestCase
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => true,
+                        'authorized_to_view'         => false,
                         'authorized_to_update'       => true,
                         'authorized_to_delete'       => true,
                         'authorized_to_restore'      => true,
-                        'authorized_to_force_delete' => true,
+                        'authorized_to_force_delete' => true
                     ],
                     'belongs_to_many_relation' => $matchingModel->belongsToManyRelation()
                         ->orderBy('id', 'desc')
@@ -357,7 +357,7 @@ class AutomaticGatingTest extends TestCase
                 ],
                 [
                     'gates' => [
-                        'authorized_to_view'         => true,
+                        'authorized_to_view'         => false,
                         'authorized_to_update'       => true,
                         'authorized_to_delete'       => true,
                         'authorized_to_restore'      => true,
