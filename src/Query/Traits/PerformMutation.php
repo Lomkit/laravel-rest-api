@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Query\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use ReflectionClass;
 
 trait PerformMutation
 {
@@ -62,10 +63,11 @@ trait PerformMutation
         } elseif ($mutation['operation'] === 'update') {
             $this->resource->authorizeTo('update', $model);
         } else {
-            if (!$this->resource->authorizedTo('attach'.$model, $model)) {
+            $attachModel = (new ReflectionClass($model))->getShortName();
+            if (!$this->resource->authorizedTo('attach'.$attachModel, $model)) {
                 $this->resource->authorizeTo('view', $model);
             } else {
-                $this->resource->authorizeTo('attach'.$model, $model);
+                $this->resource->authorizeTo('attach'.$attachModel, $model);
             }
         }
 

@@ -31,7 +31,7 @@ class GreenPolicy
      */
     public function view($user, Model $model)
     {
-        return true;
+        return false;
     }
 
     /**
@@ -94,6 +94,119 @@ class GreenPolicy
      * @return bool
      */
     public function forceDelete($user, Model $model)
+    {
+        return true;
+    }
+
+    public function attachBelongsToRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function attachHasOneRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function attachHasOneOfManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function attachBelongsToManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function attachHasManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function detachBelongsToRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function detachHasOneRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function detachHasOneOfManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function detachBelongsToManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function detachHasManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    /**
+     * MORPHS.
+     */
+    public function attachMorphToRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function attachMorphOneRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function attachMorphOneOfManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function attachMorphToManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function attachMorphManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function attachMorphedByManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function detachMorphToRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function detachMorphOneRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function detachMorphOneOfManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function detachMorphToManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function detachMorphManyRelation($user, Model $model)
+    {
+        return true;
+    }
+
+    public function detachMorphedByManyRelation($user, Model $model)
     {
         return true;
     }
