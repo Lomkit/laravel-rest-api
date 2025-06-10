@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/Lomkit/art/master/laravel-rest-api/cover.png" alt="Social Card of Laravel Permission"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/Lomkit/art/main/laravel-rest-api/cover.png" alt="Social Card of Laravel Permission"></p>
 
 # Laravel Rest Api
 
