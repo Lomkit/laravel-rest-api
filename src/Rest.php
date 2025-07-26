@@ -36,7 +36,8 @@ class Rest implements Registrar
             $controller,
             $options
         ))
-            ->middleware(EnforceExpectsJson::class);
+            ->middleware(EnforceExpectsJson::class)
+            ->middleware(HandlePrecognitiveRequests::class);
     }
 
     /**
