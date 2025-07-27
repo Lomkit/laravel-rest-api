@@ -2,7 +2,6 @@
 
 namespace Controllers;
 
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
@@ -41,7 +40,7 @@ class PrecognitionOperationsTest extends TestCase
             ],
             [
                 'Precognition' => 'true',
-                'Accept' => 'application/json'
+                'Accept'       => 'application/json'
             ]
         );
 
@@ -70,7 +69,7 @@ class PrecognitionOperationsTest extends TestCase
                 ],
             ],
             [
-                'Accept' => 'application/json',
+                'Accept'       => 'application/json',
                 'Precognition' => 'fields=aggregates.0.relation,aggregates.0.type',
             ]
         );
@@ -111,7 +110,7 @@ class PrecognitionOperationsTest extends TestCase
                 ],
             ],
             [
-                'Accept' => 'application/json',
+                'Accept'       => 'application/json',
                 'Precognition' => 'true',
             ]
         );
