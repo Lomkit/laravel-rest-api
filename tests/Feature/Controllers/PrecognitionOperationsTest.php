@@ -40,7 +40,7 @@ class PrecognitionOperationsTest extends TestCase
             ],
             [
                 'Precognition' => 'true',
-                'Accept'       => 'application/json'
+                'Accept'       => 'application/json',
             ]
         );
 
