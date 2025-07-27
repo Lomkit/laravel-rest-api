@@ -23,7 +23,7 @@ class PrecognitionOperationsTest extends TestCase
         ModelFactory::new()->count(2)->create();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -53,7 +53,7 @@ class PrecognitionOperationsTest extends TestCase
         ModelFactory::new()->count(2)->create();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -94,7 +94,7 @@ class PrecognitionOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -134,7 +134,7 @@ class PrecognitionOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
