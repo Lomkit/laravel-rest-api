@@ -45,6 +45,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Precognition Support
+    |--------------------------------------------------------------------------
+    |
+    | This option enables support for Laravel Precognition, which allows
+    | frontend applications to perform validation requests without executing
+    | controller logic. When enabled, requests containing the "Precognition"
+    | header will only trigger middleware and validation, skipping the actual
+    | controller method. This is especially useful for live form validation.
+    |
+    */
+
+    'precognition' => [
+        'enabled' => false,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Rest Documentation
     |--------------------------------------------------------------------------
     |
