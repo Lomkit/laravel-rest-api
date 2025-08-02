@@ -8,6 +8,7 @@ use Lomkit\Rest\Tests\Support\Database\Factories\SoftDeletedModelFactory;
 use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Policies\RedPolicy;
+use Lomkit\Rest\Tests\Support\Policies\RedPolicyButForModel;
 use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class ForceDeleteOperationsTest extends TestCase
@@ -28,6 +29,28 @@ class ForceDeleteOperationsTest extends TestCase
 
         $response->assertStatus(403);
         $response->assertJson(['message' => 'This action is unauthorized.']);
+    }
+
+    public function test_force_deleting_a_non_authorized_model_with_an_authorized_one(): void
+    {
+        $model = SoftDeletedModelFactory::new()->count(1)->trashed()->createOne();
+        $modelForceDeletable = SoftDeletedModelFactory::new()->count(1)->trashed()->createOne();
+
+        RedPolicyButForModel::forModel($modelForceDeletable);
+        Gate::policy(SoftDeletedModel::class, RedPolicyButForModel::class);
+
+        $response = $this->delete(
+            '/api/soft-deleted-models/force',
+            [
+                'resources' => [$model->getKey(), $modelForceDeletable->getKey()],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(403);
+        $response->assertJson(['message' => 'This action is unauthorized.']);
+        $this->assertSoftDeleted($model);
+        $this->assertSoftDeleted($modelForceDeletable);
     }
 
     public function test_force_deleting_a_soft_deleted_model(): void

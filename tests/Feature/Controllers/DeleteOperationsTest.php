@@ -10,6 +10,7 @@ use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Policies\RedPolicy;
+use Lomkit\Rest\Tests\Support\Policies\RedPolicyButForModel;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
@@ -31,6 +32,28 @@ class DeleteOperationsTest extends TestCase
 
         $response->assertStatus(403);
         $response->assertJson(['message' => 'This action is unauthorized.']);
+    }
+
+    public function test_deleting_a_non_authorized_model_with_an_authorized_one(): void
+    {
+        $model = ModelFactory::new()->count(1)->createOne();
+        $modelDeletable = ModelFactory::new()->count(1)->createOne();
+
+        RedPolicyButForModel::forModel($modelDeletable);
+        Gate::policy(Model::class, RedPolicyButForModel::class);
+
+        $response = $this->delete(
+            '/api/models',
+            [
+                'resources' => [$model->getKey(), $modelDeletable->getKey()],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(403);
+        $response->assertJson(['message' => 'This action is unauthorized.']);
+        $this->assertDatabaseHas('models', $model->only('id'));
+        $this->assertDatabaseHas('models', $modelDeletable->only('id'));
     }
 
     public function test_deleting_a_model(): void
