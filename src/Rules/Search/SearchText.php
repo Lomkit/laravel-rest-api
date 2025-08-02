@@ -16,7 +16,7 @@ class SearchText extends RestRule
 
         return [
             $attribute          => ['sometimes', 'array'],
-            $attribute.'.value' => ['string'],
+            $attribute.'.value' => ['nullable', 'string'],
         ];
     }
 }
