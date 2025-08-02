@@ -9,9 +9,10 @@ class RedPolicyButForModel
 {
     use HandlesAuthorization;
 
-    static Model $model;
+    public static Model $model;
 
-    public static function forModel(Model $model) {
+    public static function forModel(Model $model)
+    {
         static::$model = $model;
     }
 

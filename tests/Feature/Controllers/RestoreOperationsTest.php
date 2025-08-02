@@ -4,9 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\TestCase;
-use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\SoftDeletedModelFactory;
-use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Policies\RedPolicy;
