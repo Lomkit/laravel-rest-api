@@ -329,4 +329,54 @@ class SearchScoutOperationsTest extends TestCase
             new ModelResource()
         );
     }
+
+    public function test_getting_a_list_of_resources_with_empty_scout(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => '',
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [],
+            new ModelResource()
+        );
+    }
+
+    public function test_getting_a_list_of_resources_with_null_scout(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => null,
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [],
+            new ModelResource()
+        );
+    }
 }
