@@ -118,9 +118,12 @@ class ScoutBuilder implements QueryBuilder
     }
 
     /**
-     * Apply multiple sorts to the query builder.
+     * Apply multiple sort directives to the underlying query builder.
      *
-     * @param array $sorts An array of sorts to apply.
+     * Each element must be an array with a 'field' key and an optional 'direction' key
+     * (defaults to 'asc'); each directive is forwarded to sort().
+     *
+     * @param array $sorts Array of sort directives.
      */
     public function applySorts($sorts)
     {
@@ -129,6 +132,15 @@ class ScoutBuilder implements QueryBuilder
         }
     }
 
+    /**
+     * Apply soft-delete visibility to the underlying Scout query builder.
+     *
+     * Sets the query to include only soft-deleted records when `$trashed` is `"only"`,
+     * or to include both deleted and non-deleted records when `$trashed` is `"with"`.
+     * Any other value is ignored (no change).
+     *
+     * @param string $trashed One of: "only" (only trashed), "with" (include trashed), or other (no-op).
+     */
     public function applyTrashed(string $trashed): void
     {
         if ($trashed === 'only') {
