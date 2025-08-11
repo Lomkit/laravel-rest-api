@@ -444,9 +444,7 @@ class SearchScoutOperationsTest extends TestCase
             ],
             ['Accept' => 'application/json']
         );
-
-        // @TODO: test only correctly applyed
-
+        
         $this->assertResourcePaginated(
             $response,
             [],

@@ -23,7 +23,7 @@ class ScoutBuilder implements QueryBuilder
      * underlying search operation.
      *
      * @param array $parameters An associative array of search criteria, which may include:
-     *                          - 'text': The search query string.
+     *                          - 'text': An array containing 'value' (search string) and optionally 'trashed' ('with'|'only').
      *                          - 'filters': An array of filter conditions.
      *                          - 'sorts': An array of sorting directives.
      *                          - 'instructions': Additional query instructions.
