@@ -47,7 +47,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
 
         $scoutQueryBuilderMock
             ->search([
-                'text' => ['value' => 'test'],
+                'text'    => ['value' => 'test'],
                 'filters' => [
                     ['field' => 'test', 'value' => 1],
                 ],
@@ -67,7 +67,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
 
         $scoutQueryBuilderMock
             ->search([
-                'text' => ['value' => 'test'],
+                'text'  => ['value' => 'test'],
                 'sorts' => [
                     ['field' => 'id'],
                 ],
@@ -87,7 +87,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
 
         $scoutQueryBuilderMock
             ->search([
-                'text' => ['value' => 'test'],
+                'text'         => ['value' => 'test'],
                 'instructions' => [
                     ['name' => 'my_instruction'],
                 ],
@@ -110,11 +110,10 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
 
         $scoutQueryBuilderMock
             ->search([
-                'text' =>
-                    [
-                        'value' => 'test',
-                        'trashed' => 'with'
-                    ],
+                'text' => [
+                    'value'   => 'test',
+                    'trashed' => 'with',
+                ],
             ]);
 
         ($scoutQueryBuilderMock->toBase()->queryCallback)(Model::query());
@@ -134,11 +133,10 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
 
         $scoutQueryBuilderMock
             ->search([
-                'text' =>
-                    [
-                        'value' => 'test',
-                        'trashed' => 'only'
-                    ],
+                'text' => [
+                    'value'   => 'test',
+                    'trashed' => 'only',
+                ],
             ]);
 
         ($scoutQueryBuilderMock->toBase()->queryCallback)(Model::query());
