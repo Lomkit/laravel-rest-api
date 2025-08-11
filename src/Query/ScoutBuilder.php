@@ -129,6 +129,15 @@ class ScoutBuilder implements QueryBuilder
         }
     }
 
+    /**
+     * Apply soft-delete visibility to the underlying Scout query builder.
+     *
+     * Sets the query to include only soft-deleted records when `$trashed` is `"only"`,
+     * or to include both deleted and non-deleted records when `$trashed` is `"with"`.
+     * Any other value is ignored (no change).
+     *
+     * @param string $trashed One of: "only" (only trashed), "with" (include trashed), or other (no-op).
+     */
     public function applyTrashed(string $trashed): void
     {
         if ($trashed === 'only') {
