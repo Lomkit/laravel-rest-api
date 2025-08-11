@@ -17,7 +17,8 @@ class SearchText extends RestRule
      * - `<attribute>.trashed`: must be one of `'with'` or `'only'`.
      *
      * @param string $attribute The root attribute name to validate (e.g. "search").
-     * @param mixed $value Unused by this rule builder; present to match the rule interface.
+     * @param mixed  $value     Unused by this rule builder; present to match the rule interface.
+     *
      * @return array<string, array<int, mixed>> Laravel validation rules keyed by attribute path.
      */
     public function buildValidationRules(string $attribute, mixed $value): array
