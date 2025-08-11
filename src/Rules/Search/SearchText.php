@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Rules\Search;
 
+use Illuminate\Validation\Rule;
 use Lomkit\Rest\Rules\RestRule;
 
 class SearchText extends RestRule
@@ -15,8 +16,11 @@ class SearchText extends RestRule
         }
 
         return [
-            $attribute          => ['sometimes', 'array'],
-            $attribute.'.value' => ['nullable', 'string'],
+            $attribute            => ['sometimes', 'array'],
+            $attribute.'.value'   => ['nullable', 'string'],
+            $attribute.'.trashed' => [
+                Rule::in('with', 'only'),
+            ],
         ];
     }
 }

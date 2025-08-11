@@ -47,9 +47,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
 
         $scoutQueryBuilderMock
             ->search([
-                'text' => [
-                    ['value' => 'test'],
-                ],
+                'text'    => ['value' => 'test'],
                 'filters' => [
                     ['field' => 'test', 'value' => 1],
                 ],
@@ -69,9 +67,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
 
         $scoutQueryBuilderMock
             ->search([
-                'text' => [
-                    ['value' => 'test'],
-                ],
+                'text'  => ['value' => 'test'],
                 'sorts' => [
                     ['field' => 'id'],
                 ],
@@ -91,11 +87,55 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
 
         $scoutQueryBuilderMock
             ->search([
-                'text' => [
-                    ['value' => 'test'],
-                ],
+                'text'         => ['value' => 'test'],
                 'instructions' => [
                     ['name' => 'my_instruction'],
+                ],
+            ]);
+
+        ($scoutQueryBuilderMock->toBase()->queryCallback)(Model::query());
+    }
+
+    public function test_building_scout_with_trashed()
+    {
+        Auth::setUser(Mockery::mock(User::class));
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $scoutQueryBuilderMock = Mockery::mock(ScoutBuilder::class, [new SearchableModelResource()])->makePartial();
+
+        $scoutQueryBuilderMock->shouldReceive('applyFilters')->never();
+        $scoutQueryBuilderMock->shouldReceive('applySorts')->never();
+        $scoutQueryBuilderMock->shouldReceive('applyInstructions')->never();
+        $scoutQueryBuilderMock->shouldReceive('applyTrashed')->with('with')->once();
+
+        $scoutQueryBuilderMock
+            ->search([
+                'text' => [
+                    'value'   => 'test',
+                    'trashed' => 'with',
+                ],
+            ]);
+
+        ($scoutQueryBuilderMock->toBase()->queryCallback)(Model::query());
+    }
+
+    public function test_building_scout_only_trashed()
+    {
+        Auth::setUser(Mockery::mock(User::class));
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $scoutQueryBuilderMock = Mockery::mock(ScoutBuilder::class, [new SearchableModelResource()])->makePartial();
+
+        $scoutQueryBuilderMock->shouldReceive('applyFilters')->never();
+        $scoutQueryBuilderMock->shouldReceive('applySorts')->never();
+        $scoutQueryBuilderMock->shouldReceive('applyInstructions')->never();
+        $scoutQueryBuilderMock->shouldReceive('applyTrashed')->with('only')->once();
+
+        $scoutQueryBuilderMock
+            ->search([
+                'text' => [
+                    'value'   => 'test',
+                    'trashed' => 'only',
                 ],
             ]);
 

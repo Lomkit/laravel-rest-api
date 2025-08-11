@@ -379,4 +379,76 @@ class SearchScoutOperationsTest extends TestCase
             new ModelResource()
         );
     }
+
+    public function test_getting_a_list_of_resources_with_unknown_trashed(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'trashed' => 'unknown',
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.text.trashed']]);
+    }
+
+    public function test_getting_a_list_of_resources_with_trashed(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'trashed' => 'with',
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [],
+            new ModelResource()
+        );
+    }
+
+    public function test_getting_a_list_of_resources_only_trashed(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'trashed' => 'only',
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [],
+            new ModelResource()
+        );
+    }
 }

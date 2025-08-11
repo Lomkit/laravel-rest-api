@@ -23,7 +23,7 @@ class ScoutBuilder implements QueryBuilder
      * underlying search operation.
      *
      * @param array $parameters An associative array of search criteria, which may include:
-     *                          - 'text': The search query string.
+     *                          - 'text': An array containing 'value' (search string) and optionally 'trashed' ('with'|'only').
      *                          - 'filters': An array of filter conditions.
      *                          - 'sorts': An array of sorting directives.
      *                          - 'instructions': Additional query instructions.
@@ -39,6 +39,10 @@ class ScoutBuilder implements QueryBuilder
 
         $this->when(isset($parameters['filters']), function () use ($parameters) {
             $this->applyFilters($parameters['filters']);
+        });
+
+        $this->when(isset($parameters['text']['trashed']), function () use ($parameters) {
+            $this->applyTrashed($parameters['text']['trashed']);
         });
 
         $this->when(isset($parameters['sorts']), function () use ($parameters) {
@@ -122,6 +126,24 @@ class ScoutBuilder implements QueryBuilder
     {
         foreach ($sorts as $sort) {
             $this->sort($sort['field'], $sort['direction'] ?? 'asc');
+        }
+    }
+
+    /**
+     * Apply soft-delete visibility to the underlying Scout query builder.
+     *
+     * Sets the query to include only soft-deleted records when `$trashed` is `"only"`,
+     * or to include both deleted and non-deleted records when `$trashed` is `"with"`.
+     * Any other value is ignored (no change).
+     *
+     * @param string $trashed One of: "only" (only trashed), "with" (include trashed), or other (no-op).
+     */
+    public function applyTrashed(string $trashed): void
+    {
+        if ($trashed === 'only') {
+            $this->queryBuilder->onlyTrashed();
+        } elseif ($trashed === 'with') {
+            $this->queryBuilder->withTrashed();
         }
     }
 
