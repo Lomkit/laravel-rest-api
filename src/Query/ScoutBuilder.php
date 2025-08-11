@@ -41,6 +41,10 @@ class ScoutBuilder implements QueryBuilder
             $this->applyFilters($parameters['filters']);
         });
 
+        $this->when(isset($parameters['text']['trashed']), function () use ($parameters) {
+            $this->applyTrashed($parameters['text']['trashed']);
+        });
+
         $this->when(isset($parameters['sorts']), function () use ($parameters) {
             $this->applySorts($parameters['sorts']);
         });
@@ -122,6 +126,15 @@ class ScoutBuilder implements QueryBuilder
     {
         foreach ($sorts as $sort) {
             $this->sort($sort['field'], $sort['direction'] ?? 'asc');
+        }
+    }
+
+    public function applyTrashed(string $trashed): void
+    {
+        if ($trashed === 'only') {
+            $this->queryBuilder->onlyTrashed();
+        } elseif ($trashed === 'with') {
+            $this->queryBuilder->withTrashed();
         }
     }
 
