@@ -2,7 +2,9 @@
 
 namespace Lomkit\Rest\Query\Traits;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
@@ -33,9 +35,8 @@ trait PerformMutation
         ];
 
         foreach ($parameters['mutate'] as $parameter) {
-            $operations[
-                $this->mutateOperationsVerbose[$parameter['operation']]
-            ][] = $this->applyMutation($parameter)->getKey();
+            $model = $this->applyMutation($parameter);
+            $operations[$this->mutateOperationsVerbose[$parameter['operation']]][] = $this->formatModelResponse($model);
         }
 
         return $operations;
@@ -118,5 +119,64 @@ trait PerformMutation
             ->mutated(app(MutateRequest::class), $mutation, $model);
 
         return $model;
+    }
+
+    /**
+     * Modify the response according to $responseFields in the resource.
+     *
+     * @param Model $model
+     *
+     * @return mixed|array
+     */
+    public function formatModelResponse(Model $model)
+    {
+        $fields = $this->resource->responseFields ?? [];
+        if (empty($fields)) {
+            return $model->getKey();
+        }
+        $attributes = collect($model->getAttributes())->only($fields);
+        $relationsInResource = $this->resource->getRelations(app()->make(RestRequest::class));
+        $relationsInModel = $model->getRelations();
+        $formattedRelations = [];
+        $defaultRelations = $this->resource->responseRelations ?? [];
+        foreach ($defaultRelations as $relationName) {
+            if (!array_key_exists($relationName, $relationsInModel)) {
+                continue;
+            }
+            
+            // Skip if relation is null
+            if ($relationsInModel[$relationName] === null) {
+                continue;
+            }
+            
+            $relation = collect($relationsInResource)->first(function ($rel) use ($relationName) {
+                return Str::singular($rel->resource()::newModel()->getTable()) === $relationName;
+            });
+            
+            if (!$relation) {
+                continue;
+            }
+            
+            $relationFields = $relation->resource()->responseFields ?? [];
+            if (empty($relationFields)) {
+                continue;
+            }
+
+            $relationModel = $relationsInModel[$relationName];
+
+            if ($relationModel instanceof Collection) {
+                $formattedRelations[$relationName] = $relationModel->map(function ($model) use ($relationFields) {
+                    return collect($model->getAttributes())->only($relationFields);
+                })->toArray();
+            } else {
+                $formattedRelations[$relationName] = collect($relationModel->getAttributes())->only($relationFields)->toArray();
+            }
+        }
+        $result = $attributes->toArray();
+        foreach ($formattedRelations as $relation => $value) {
+            $result[$relation] = $value;
+        }
+
+        return $result;
     }
 }
