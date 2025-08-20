@@ -310,8 +310,8 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                         [
                             'relation' => 'belongsToRelation',
                             'includes' => [
-                                ['relation' => 'models']
-                            ]
+                                ['relation' => 'models'],
+                            ],
                         ],
                     ],
                 ],
