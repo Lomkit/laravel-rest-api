@@ -25,9 +25,6 @@ class SearchInclude extends RestRule
                     'required',
                     (new ResourceRelationOrNested())->setResource($this->resource),
                 ],
-                $attribute.'.includes' => [
-                    'prohibited',
-                ],
                 $attribute.'.text' => [
                     'prohibited',
                 ],
