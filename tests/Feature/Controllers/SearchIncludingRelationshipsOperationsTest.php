@@ -290,6 +290,90 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         );
     }
 
+    public function test_getting_a_list_of_resources_including_belongs_to_has_many_relation_using_nested_include(): void
+    {
+        $belongsTo = BelongsToRelationFactory::new()->create();
+        $matchingModel = ModelFactory::new()
+            ->for($belongsTo)
+            ->create()->fresh();
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'belongsToRelation',
+                            'includes' => [
+                                ['relation' => 'models'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $matchingModelBelongsToRelation = $matchingModel->belongsToRelation;
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource(),
+            [
+                [
+                    'belongs_to_relation' => array_merge(
+                        $matchingModelBelongsToRelation
+                            ->only((new BelongsToResource())->getFields(app()->make(RestRequest::class))),
+                        [
+                            'models' => $matchingModelBelongsToRelation->models()
+                                ->orderBy('id')
+                                ->get()
+                                ->map(function ($model) {
+                                    return $model->only((new ModelResource())->getFields(app()->make(RestRequest::class)));
+                                })
+                                ->toArray(),
+                        ]
+                    ),
+                ],
+                [
+                    'belongs_to_relation' => null,
+                ],
+            ]
+        );
+    }
+
+    public function test_including_unauthorized_nested_relation_returns_validation_error(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'belongsToRelation',
+                            'includes' => [
+                                ['relation' => 'unauthorized'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.0.includes.0.relation']]);
+    }
+
     public function test_getting_a_list_of_resources_including_distant_relation_with_intermediary_search_query_condition(): void
     {
         $matchingModel = ModelFactory::new()->create(
