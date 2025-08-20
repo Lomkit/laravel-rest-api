@@ -331,7 +331,9 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                         $matchingModelBelongsToRelation
                             ->only((new BelongsToResource())->getFields(app()->make(RestRequest::class))),
                         [
-                            'models' => $matchingModelBelongsToRelation->models
+                            'models' => $matchingModelBelongsToRelation->models()
+                                ->orderBy('id')
+                                ->get()
                                 ->map(function ($model) {
                                     return $model->only((new ModelResource())->getFields(app()->make(RestRequest::class)));
                                 })
@@ -344,6 +346,32 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 ],
             ]
         );
+    }
+
+    public function test_including_unauthorized_nested_relation_returns_validation_error(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'belongsToRelation',
+                            'includes' => [
+                                ['relation' => 'unauthorized'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.0.includes.0.relation']]);
     }
 
     public function test_getting_a_list_of_resources_including_distant_relation_with_intermediary_search_query_condition(): void
