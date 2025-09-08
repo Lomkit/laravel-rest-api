@@ -53,9 +53,6 @@ class ScoutBuilder implements QueryBuilder
             $this->applyInstructions($parameters['instructions']);
         });
 
-        $defaultLimit = $this->resource->defaultLimit ?? 50;
-        $this->queryBuilder->take($parameters['limit'] ?? $defaultLimit);
-
         $this->queryBuilder
             ->query(function (Builder $query) use ($parameters) {
                 app()->make(QueryBuilder::class, ['query' => $query, 'resource' => $this->resource])
@@ -68,6 +65,7 @@ class ScoutBuilder implements QueryBuilder
                                 'sorts',
                                 'text',
                                 'limit',
+                                'page'
                             ])
                             ->all()
                     );
