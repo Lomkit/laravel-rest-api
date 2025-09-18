@@ -56,6 +56,28 @@ class DeleteOperationsTest extends TestCase
         $this->assertDatabaseHas('models', $modelDeletable->only('id'));
     }
 
+    public function test_deleting_a_non_existing_model(): void
+    {
+        $model = ModelFactory::new()->count(1)->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->delete(
+            '/api/models',
+            [
+                'resources' => [
+                    999999,
+                    $model->getKey(),
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['resources.0']]);
+        $this->assertDatabaseHas('models', $model->only('id'));
+    }
+
     public function test_deleting_a_model(): void
     {
         $model = ModelFactory::new()->count(1)->createOne();
