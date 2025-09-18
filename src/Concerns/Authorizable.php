@@ -93,7 +93,7 @@ trait Authorizable
      * Determine if the current user has a given ability.
      *
      * @param string $ability
-     * @param Model $model
+     * @param Model  $model
      * @param string $toActionModel
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
