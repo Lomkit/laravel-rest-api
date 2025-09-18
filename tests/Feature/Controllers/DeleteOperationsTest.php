@@ -67,7 +67,7 @@ class DeleteOperationsTest extends TestCase
             [
                 'resources' => [
                     'undefined-id',
-                    $model->getKey()
+                    $model->getKey(),
                 ],
             ],
             ['Accept' => 'application/json']
