@@ -40,8 +40,8 @@ class DestroyRequest extends RestRequest
                 'required', 'array',
             ],
             'resources.*' => [
-                Rule::exists($model->getTable(), $model->getKeyName())
-            ]
+                Rule::exists($model->getTable(), $model->getKeyName()),
+            ],
         ];
     }
 }
