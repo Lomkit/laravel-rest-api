@@ -91,23 +91,23 @@ class AutomaticGatingTest extends TestCase
                     'gates' => [
                         'authorized_to_view'         => [
                             'allowed' => false,
-                            'message' => 'You don\'t have permission to view user'
+                            'message' => 'You don\'t have permission to view user',
                         ],
                         'authorized_to_update'       => [
                             'allowed' => false,
-                            'message' => 'You don\'t have permission to update user'
+                            'message' => 'You don\'t have permission to update user',
                         ],
                         'authorized_to_delete'       => [
                             'allowed' => false,
-                            'message' => 'You don\'t have permission to delete user'
+                            'message' => 'You don\'t have permission to delete user',
                         ],
                         'authorized_to_restore'      => [
                             'allowed' => false,
-                            'message' => 'You don\'t have permission to restore user'
+                            'message' => 'You don\'t have permission to restore user',
                         ],
                         'authorized_to_force_delete' => [
                             'allowed' => false,
-                            'message' => 'You don\'t have permission to force delete user'
+                            'message' => 'You don\'t have permission to force delete user',
                         ],
                     ],
                 ],
@@ -117,7 +117,7 @@ class AutomaticGatingTest extends TestCase
             'meta.gates.authorized_to_create',
             [
                 'allowed' => false,
-                'message' => 'You don\'t have permission to create user'
+                'message' => 'You don\'t have permission to create user',
             ]
         );
     }

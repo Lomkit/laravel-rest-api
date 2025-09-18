@@ -102,6 +102,7 @@ class Response implements Responsable
                 )
                 ->when($resource->isGatingEnabled() && isset($currentRequestArray['gates']), function ($attributes) use ($currentRequestArray, $resource, $model) {
                     $currentRequestArrayWithoutCreate = collect($currentRequestArray['gates'])->reject(fn ($value) => $value === 'create')->toArray();
+
                     return $attributes->put(
                         config('rest.gates.key'),
                         $this->buildGatesForModel($model, $resource, $currentRequestArrayWithoutCreate)
