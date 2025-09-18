@@ -58,13 +58,13 @@ trait Authorizable
      * @param string       $ability
      * @param Model|string $model
      *
-     * @return bool
+     * @return Response
      */
     public function authorizedTo($ability, $model)
     {
         if ($this->isAuthorizingEnabled()) {
             $resolver = function () use ($ability, $model) {
-                return Gate::check($ability, $model);
+                return Gate::inspect($ability, $model);
             };
 
             if ($this->isAuthorizationCacheEnabled()) {
@@ -86,15 +86,15 @@ trait Authorizable
             return $resolver();
         }
 
-        return true;
+        return Response::allow();
     }
 
     /**
      * Determine if the current user has a given ability.
      *
      * @param string $ability
-     *                        * @param Model $model
-     *                        * @param string $toActionModel
+     * @param Model  $model
+     * @param string $toActionModel
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      *
