@@ -122,6 +122,65 @@ class AutomaticGatingTest extends TestCase
         );
     }
 
+    public function test_searching_automatic_gated_resource_with_allowed_gates_and_custom_message(): void
+    {
+        $model = ModelFactory::new()
+            ->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        config(['rest.gates.message.enabled' => true]);
+
+        $response = $this->post(
+            '/api/automatic-gating/search',
+            [
+                'search' => [
+                    'gates' => ['create', 'view', 'update', 'delete', 'forceDelete', 'restore'],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$model],
+            new AutomaticGatingResource(),
+            [
+                [
+                    'gates' => [
+                        'authorized_to_view'         => [
+                            'allowed' => true,
+                            'message' => null,
+                        ],
+                        'authorized_to_update'       => [
+                            'allowed' => true,
+                            'message' => null,
+                        ],
+                        'authorized_to_delete'       => [
+                            'allowed' => true,
+                            'message' => null,
+                        ],
+                        'authorized_to_restore'      => [
+                            'allowed' => true,
+                            'message' => null,
+                        ],
+                        'authorized_to_force_delete' => [
+                            'allowed' => true,
+                            'message' => null,
+                        ],
+                    ],
+                ],
+            ]
+        );
+        $response->assertJsonPath(
+            'meta.gates.authorized_to_create',
+            [
+                'allowed' => true,
+                'message' => null,
+            ]
+        );
+    }
+
     public function test_searching_automatic_gated_resource_with_global_config_disabled(): void
     {
         $model = ModelFactory::new()

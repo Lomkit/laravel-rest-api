@@ -52,7 +52,6 @@ class Response implements Responsable
                 }
             }
         } else {
-            // TODO: put the good anchor to link to the new method (link in the string)
             trigger_deprecation('lomkit/laravel-rest-api', '2.17.0', 'In Laravel Rest Api 3 it won\'t be possible to use the old gate schema, please upgrade as quickly as possible. See: https://laravel-rest-api.lomkit.com/digging-deeper/gates#policy-message-in-gates');
             foreach ($gates as $gate) {
                 if (isset($nameMap[$gate])) {
