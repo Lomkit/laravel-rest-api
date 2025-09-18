@@ -86,15 +86,15 @@ trait Authorizable
             return $resolver();
         }
 
-        return true;
+        return Response::allow();
     }
 
     /**
      * Determine if the current user has a given ability.
      *
      * @param string $ability
-     *                        * @param Model $model
-     *                        * @param string $toActionModel
+     * @param Model $model
+     * @param string $toActionModel
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      *

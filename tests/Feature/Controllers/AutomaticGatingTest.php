@@ -96,8 +96,9 @@ class AutomaticGatingTest extends TestCase
                 ],
             ]
         );
-        $response->assertJson(
-            ['meta' => ['gates' => ['authorized_to_create' => true]]]
+        $response->assertJsonPath(
+            'meta.gates.authorized_to_create',
+            'You don\'t have permission to create user'
         );
     }
 

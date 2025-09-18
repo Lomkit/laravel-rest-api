@@ -32,19 +32,23 @@ class Response implements Responsable
 
     protected function buildGatesForModel(Model $model, Resource $resource, array $gates)
     {
-        $authorizedToView = $resource->authorizedTo('view', $model);
-        $authorizedToUpdate = $resource->authorizedTo('update', $model);
-        $authorizedToDelete = $resource->authorizedTo('delete', $model);
-        $authorizedToRestore = $resource->authorizedTo('restore', $model);
-        $authorizedToForceDelete = $resource->authorizedTo('forceDelete', $model);
+        $nameMap = [
+            'view'        => config('rest.gates.names.authorized_to_view'),
+            'update'      => config('rest.gates.names.authorized_to_update'),
+            'delete'      => config('rest.gates.names.authorized_to_delete'),
+            'restore'     => config('rest.gates.names.authorized_to_restore'),
+            'forceDelete' => config('rest.gates.names.authorized_to_force_delete'),
+        ];
 
-        return array_merge(
-            in_array('view', $gates) ? [config('rest.gates.names.authorized_to_view')         => $authorizedToView->message() ?? $authorizedToView->allowed()] : [],
-            in_array('update', $gates) ? [config('rest.gates.names.authorized_to_update')         => $authorizedToUpdate->message() ?? $authorizedToUpdate->allowed()] : [],
-            in_array('delete', $gates) ? [config('rest.gates.names.authorized_to_delete')         => $authorizedToDelete->message() ?? $authorizedToDelete->allowed()] : [],
-            in_array('restore', $gates) ? [config('rest.gates.names.authorized_to_restore')         => $authorizedToRestore->message() ?? $authorizedToRestore->allowed()] : [],
-            in_array('forceDelete', $gates) ? [config('rest.gates.names.authorized_to_force_delete')         => $authorizedToForceDelete->message() ?? $authorizedToForceDelete->allowed()] : [],
-        );
+        $result = [];
+        foreach ($gates as $gate) {
+            if (isset($nameMap[$gate])) {
+                $auth = $resource->authorizedTo($gate, $model);
+                $result[$nameMap[$gate]] = $auth->message() ?? $auth->allowed();
+            }
+        }
+
+        return $result;
     }
 
     /**
