@@ -58,13 +58,13 @@ trait Authorizable
      * @param string       $ability
      * @param Model|string $model
      *
-     * @return bool
+     * @return Response
      */
     public function authorizedTo($ability, $model)
     {
         if ($this->isAuthorizingEnabled()) {
             $resolver = function () use ($ability, $model) {
-                return Gate::check($ability, $model);
+                return Gate::inspect($ability, $model);
             };
 
             if ($this->isAuthorizationCacheEnabled()) {

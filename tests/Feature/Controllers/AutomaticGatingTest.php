@@ -15,6 +15,7 @@ use Lomkit\Rest\Tests\Support\Policies\CreatePolicy;
 use Lomkit\Rest\Tests\Support\Policies\DeletePolicy;
 use Lomkit\Rest\Tests\Support\Policies\ForceDeletePolicy;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
+use Lomkit\Rest\Tests\Support\Policies\RedPolicyWithMessage;
 use Lomkit\Rest\Tests\Support\Policies\RestorePolicy;
 use Lomkit\Rest\Tests\Support\Policies\UpdatePolicy;
 use Lomkit\Rest\Tests\Support\Policies\ViewPolicy;
@@ -53,6 +54,44 @@ class AutomaticGatingTest extends TestCase
                         'authorized_to_delete'       => true,
                         'authorized_to_restore'      => true,
                         'authorized_to_force_delete' => true,
+                    ],
+                ],
+            ]
+        );
+        $response->assertJson(
+            ['meta' => ['gates' => ['authorized_to_create' => true]]]
+        );
+    }
+
+    public function test_searching_automatic_gated_resource_and_custom_message(): void
+    {
+        $model = ModelFactory::new()
+            ->create();
+
+        Gate::policy(Model::class, RedPolicyWithMessage::class);
+
+        $response = $this->post(
+            '/api/automatic-gating/search',
+            [
+                'search' => [
+                    'gates' => ['create', 'view', 'update', 'delete', 'forceDelete', 'restore'],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$model],
+            new AutomaticGatingResource(),
+            [
+                [
+                    'gates' => [
+                        'authorized_to_view'         => 'You don\'t have permission to view user',
+                        'authorized_to_update'       => 'You don\'t have permission to update user',
+                        'authorized_to_delete'       => 'You don\'t have permission to delete user',
+                        'authorized_to_restore'      => 'You don\'t have permission to restore user',
+                        'authorized_to_force_delete' => 'You don\'t have permission to force delete user',
                     ],
                 ],
             ]

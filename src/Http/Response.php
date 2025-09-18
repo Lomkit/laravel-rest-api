@@ -32,12 +32,17 @@ class Response implements Responsable
 
     protected function buildGatesForModel(Model $model, Resource $resource, array $gates)
     {
+        $authorizedToView = $resource->authorizedTo('view', $model);
+        $authorizedToUpdate = $resource->authorizedTo('update', $model);
+        $authorizedToDelete = $resource->authorizedTo('delete', $model);
+        $authorizedToRestore = $resource->authorizedTo('restore', $model);
+        $authorizedToForceDelete = $resource->authorizedTo('forceDelete', $model);
         return array_merge(
-            in_array('view', $gates) ? [config('rest.gates.names.authorized_to_view')         => $resource->authorizedTo('view', $model)] : [],
-            in_array('update', $gates) ? [config('rest.gates.names.authorized_to_update')         => $resource->authorizedTo('update', $model)] : [],
-            in_array('delete', $gates) ? [config('rest.gates.names.authorized_to_delete')         => $resource->authorizedTo('delete', $model)] : [],
-            in_array('restore', $gates) ? [config('rest.gates.names.authorized_to_restore')         => $resource->authorizedTo('restore', $model)] : [],
-            in_array('forceDelete', $gates) ? [config('rest.gates.names.authorized_to_force_delete')         => $resource->authorizedTo('forceDelete', $model)] : [],
+            in_array('view', $gates) ? [config('rest.gates.names.authorized_to_view')         => $authorizedToView->message() ?? $authorizedToView->allowed()] : [],
+            in_array('update', $gates) ? [config('rest.gates.names.authorized_to_update')         => $authorizedToUpdate->message() ?? $authorizedToUpdate->allowed()] : [],
+            in_array('delete', $gates) ? [config('rest.gates.names.authorized_to_delete')         => $authorizedToDelete->message() ?? $authorizedToDelete->allowed()] : [],
+            in_array('restore', $gates) ? [config('rest.gates.names.authorized_to_restore')         => $authorizedToRestore->message() ?? $authorizedToRestore->allowed()] : [],
+            in_array('forceDelete', $gates) ? [config('rest.gates.names.authorized_to_force_delete')         => $authorizedToForceDelete->message() ?? $authorizedToForceDelete->allowed()] : [],
         );
     }
 
@@ -126,15 +131,19 @@ class Response implements Responsable
     public function toResponse($request)
     {
         if ($this->responsable instanceof LengthAwarePaginator) {
+            if ($this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', []))) {
+                $authorizedToCreate = $this->resource->authorizedTo('create', $this->resource::newModel()::class);
+            }
+
             $restLengthAwarePaginator = new \Lomkit\Rest\Pagination\LengthAwarePaginator(
                 $this->responsable->items(),
                 $this->responsable->total(),
                 $this->responsable->perPage(),
                 $this->responsable->currentPage(),
                 $this->responsable->getOptions(),
-                $this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
+                isset($authorizedToCreate) ? [
                     config('rest.gates.key') => [
-                        config('rest.gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
+                        config('rest.gates.names.authorized_to_create') => $authorizedToCreate->message() ?? $authorizedToCreate->allowed(),
                     ],
                 ] : []
             );
