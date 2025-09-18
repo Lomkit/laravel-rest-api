@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
+use Illuminate\Validation\Rule;
 use Lomkit\Rest\Http\Resource;
 
 class DestroyRequest extends RestRequest
@@ -32,10 +33,15 @@ class DestroyRequest extends RestRequest
      */
     public function destroyRules(Resource $resource)
     {
+        $model = $resource::newModel();
+
         return [
             'resources' => [
                 'required', 'array',
             ],
+            'resources.*' => [
+                Rule::exists($model->getTable(), $model->getKeyName())
+            ]
         ];
     }
 }
