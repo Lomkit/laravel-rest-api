@@ -70,6 +70,8 @@ class AutomaticGatingTest extends TestCase
 
         Gate::policy(Model::class, RedPolicyWithMessage::class);
 
+        config(['rest.gates.message.enabled' => true]);
+
         $response = $this->post(
             '/api/automatic-gating/search',
             [
@@ -87,18 +89,36 @@ class AutomaticGatingTest extends TestCase
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => 'You don\'t have permission to view user',
-                        'authorized_to_update'       => 'You don\'t have permission to update user',
-                        'authorized_to_delete'       => 'You don\'t have permission to delete user',
-                        'authorized_to_restore'      => 'You don\'t have permission to restore user',
-                        'authorized_to_force_delete' => 'You don\'t have permission to force delete user',
+                        'authorized_to_view'         => [
+                            'allowed' => false,
+                            'message' => 'You don\'t have permission to view user'
+                        ],
+                        'authorized_to_update'       => [
+                            'allowed' => false,
+                            'message' => 'You don\'t have permission to update user'
+                        ],
+                        'authorized_to_delete'       => [
+                            'allowed' => false,
+                            'message' => 'You don\'t have permission to delete user'
+                        ],
+                        'authorized_to_restore'      => [
+                            'allowed' => false,
+                            'message' => 'You don\'t have permission to restore user'
+                        ],
+                        'authorized_to_force_delete' => [
+                            'allowed' => false,
+                            'message' => 'You don\'t have permission to force delete user'
+                        ],
                     ],
                 ],
             ]
         );
         $response->assertJsonPath(
             'meta.gates.authorized_to_create',
-            'You don\'t have permission to create user'
+            [
+                'allowed' => false,
+                'message' => 'You don\'t have permission to create user'
+            ]
         );
     }
 

@@ -30,9 +30,10 @@ class Response implements Responsable
         });
     }
 
-    protected function buildGatesForModel(Model $model, Resource $resource, array $gates)
+    protected function buildGatesForModel(Model|string $model, Resource $resource, array $gates)
     {
         $nameMap = [
+            'create'      => config('rest.gates.names.authorized_to_create'),
             'view'        => config('rest.gates.names.authorized_to_view'),
             'update'      => config('rest.gates.names.authorized_to_update'),
             'delete'      => config('rest.gates.names.authorized_to_delete'),
@@ -41,10 +42,23 @@ class Response implements Responsable
         ];
 
         $result = [];
-        foreach ($gates as $gate) {
-            if (isset($nameMap[$gate])) {
-                $auth = $resource->authorizedTo($gate, $model);
-                $result[$nameMap[$gate]] = $auth->message() ?? $auth->allowed();
+
+        if (config('rest.gates.message.enabled', false)) {
+            foreach ($gates as $gate) {
+                if (isset($nameMap[$gate])) {
+                    $authorizedTo = $resource->authorizedTo($gate, $model);
+                    $result[$nameMap[$gate]]['allowed'] = $authorizedTo->allowed();
+                    $result[$nameMap[$gate]]['message'] = $authorizedTo->message();
+                }
+            }
+        } else {
+            // TODO: put the good anchor to link to the new method (link in the string)
+            trigger_deprecation('lomkit/laravel-rest-api', '2.17.0', 'In Laravel Rest Api 3 it won\'t be possible to use the old gate schema, please upgrade as quickly as possible. See: https://laravel-rest-api.lomkit.com/digging-deeper/gates#policy-message-in-gates');
+            foreach ($gates as $gate) {
+                if (isset($nameMap[$gate])) {
+                    $authorizedTo = $resource->authorizedTo($gate, $model);
+                    $result[$nameMap[$gate]] = $authorizedTo->allowed();
+                }
             }
         }
 
@@ -87,9 +101,10 @@ class Response implements Responsable
                     )
                 )
                 ->when($resource->isGatingEnabled() && isset($currentRequestArray['gates']), function ($attributes) use ($currentRequestArray, $resource, $model) {
+                    $currentRequestArrayWithoutCreate = collect($currentRequestArray['gates'])->reject(fn ($value) => $value === 'create')->toArray();
                     return $attributes->put(
                         config('rest.gates.key'),
-                        $this->buildGatesForModel($model, $resource, $currentRequestArray['gates'])
+                        $this->buildGatesForModel($model, $resource, $currentRequestArrayWithoutCreate)
                     );
                 })
                 ->toArray(),
@@ -136,20 +151,14 @@ class Response implements Responsable
     public function toResponse($request)
     {
         if ($this->responsable instanceof LengthAwarePaginator) {
-            if ($this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', []))) {
-                $authorizedToCreate = $this->resource->authorizedTo('create', $this->resource::newModel()::class);
-            }
-
             $restLengthAwarePaginator = new \Lomkit\Rest\Pagination\LengthAwarePaginator(
                 $this->responsable->items(),
                 $this->responsable->total(),
                 $this->responsable->perPage(),
                 $this->responsable->currentPage(),
                 $this->responsable->getOptions(),
-                isset($authorizedToCreate) ? [
-                    config('rest.gates.key') => [
-                        config('rest.gates.names.authorized_to_create') => $authorizedToCreate->message() ?? $authorizedToCreate->allowed(),
-                    ],
+                $this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
+                    config('rest.gates.key') => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
                 ] : []
             );
 
@@ -168,9 +177,7 @@ class Response implements Responsable
             'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input('search', []))),
             'meta' => array_merge(
                 $this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
-                    config('rest.gates.key') => [
-                        config('rest.gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
-                    ],
+                    config('rest.gates.key') => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
                 ] : []
             ),
         ];

@@ -14,6 +14,9 @@ return [
     'gates' => [
         'enabled' => true,
         'key'     => 'gates',
+        'message' => [
+            'enabled' => false
+        ],
         // Here you can customize the keys for each gate
         'names' => [
             'authorized_to_view'         => 'authorized_to_view',
