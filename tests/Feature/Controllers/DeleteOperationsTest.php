@@ -66,7 +66,7 @@ class DeleteOperationsTest extends TestCase
             '/api/models',
             [
                 'resources' => [
-                    'undefined-id',
+                    999999,
                     $model->getKey()
                 ],
             ],
