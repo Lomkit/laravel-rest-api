@@ -37,6 +37,7 @@ class Response implements Responsable
         $authorizedToDelete = $resource->authorizedTo('delete', $model);
         $authorizedToRestore = $resource->authorizedTo('restore', $model);
         $authorizedToForceDelete = $resource->authorizedTo('forceDelete', $model);
+
         return array_merge(
             in_array('view', $gates) ? [config('rest.gates.names.authorized_to_view')         => $authorizedToView->message() ?? $authorizedToView->allowed()] : [],
             in_array('update', $gates) ? [config('rest.gates.names.authorized_to_update')         => $authorizedToUpdate->message() ?? $authorizedToUpdate->allowed()] : [],
