@@ -15,7 +15,7 @@ return [
         'enabled' => true,
         'key'     => 'gates',
         'message' => [
-            'enabled' => false
+            'enabled' => false,
         ],
         // Here you can customize the keys for each gate
         'names' => [
