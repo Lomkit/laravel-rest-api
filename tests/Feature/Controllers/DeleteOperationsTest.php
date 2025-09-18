@@ -56,7 +56,7 @@ class DeleteOperationsTest extends TestCase
         $this->assertDatabaseHas('models', $modelDeletable->only('id'));
     }
 
-    public function test_deleting_a_not_existing_model(): void
+    public function test_deleting_a_non_existing_model(): void
     {
         $model = ModelFactory::new()->count(1)->createOne();
 

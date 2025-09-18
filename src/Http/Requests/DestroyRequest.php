@@ -23,7 +23,7 @@ class DestroyRequest extends RestRequest
     /**
      * Define the validation rules for destroying resources.
      *
-     * @param resource $resource
+     * @param Resource $resource
      *
      * @return array
      *
@@ -40,6 +40,7 @@ class DestroyRequest extends RestRequest
                 'required', 'array',
             ],
             'resources.*' => [
+                'distinct',
                 Rule::exists($model->getTable(), $model->getKeyName()),
             ],
         ];
