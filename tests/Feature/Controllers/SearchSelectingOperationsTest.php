@@ -118,7 +118,7 @@ class SearchSelectingOperationsTest extends TestCase
                                     'relation' => 'model',
                                     'selects'  => [
                                         ['field' => 'id'],
-                                    ]
+                                    ],
                                 ],
                             ],
                         ],
