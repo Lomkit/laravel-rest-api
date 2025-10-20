@@ -110,19 +110,19 @@ class SearchSelectingOperationsTest extends TestCase
                     'includes' => [
                         [
                             'relation' => 'hasManyRelation',
-                            'selects' => [
-                                ['field' => 'id']
+                            'selects'  => [
+                                ['field' => 'id'],
                             ],
                             'includes' => [
                                 [
                                     'relation' => 'model',
-                                    'selects' => [
+                                    'selects'  => [
                                         ['field' => 'id'],
                                     ]
-                                ]
-                            ]
+                                ],
+                            ],
                         ],
-                    ]
+                    ],
                 ],
             ],
             ['Accept' => 'application/json']
