@@ -140,6 +140,7 @@ class SearchSelectingOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) {
                             $relation->model = $relation->model->toArray();
+
                             return $relation->only(['id', 'model']);
                         })->toArray(),
                 ],
