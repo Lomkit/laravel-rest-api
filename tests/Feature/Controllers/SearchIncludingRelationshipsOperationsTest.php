@@ -90,7 +90,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 'search' => [
                     'includes' => [
                         [
-                            'relation'   => 'hasManyRelation.model',
+                            'relation'   => 'hasManyRelation.belongsToRelation',
                         ],
                         [
                             'relation'   => 'hasManyRelation',

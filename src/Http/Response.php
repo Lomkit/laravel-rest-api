@@ -109,7 +109,7 @@ class Response implements Responsable
                 })
                 ->toArray(),
             collect($model->getRelations())
-                ->mapWithKeys(function ($modelRelation, $relationName) use ($requestArray, $relation, $resource) {
+                ->mapWithKeys(function ($modelRelation, $relationName) use ($currentRequestArray, $relation, $resource) {
                     $key = Str::snake($relationName);
 
                     if (is_null($modelRelation)) {
@@ -132,7 +132,7 @@ class Response implements Responsable
                             $key => $this->modelToResponse(
                                 $modelRelation,
                                 $relationResource,
-                                $requestArray,
+                                $currentRequestArray,
                                 $relationConcrete
                             ),
                         ];
@@ -140,7 +140,7 @@ class Response implements Responsable
 
                     return [
                         $key => $modelRelation
-                            ->map(fn ($collectionRelation) => $this->modelToResponse($collectionRelation, $relationResource, $requestArray, $relationConcrete))
+                            ->map(fn ($collectionRelation) => $this->modelToResponse($collectionRelation, $relationResource, $currentRequestArray, $relationConcrete))
                             ->toArray(),
                     ];
                 })
