@@ -581,7 +581,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         );
     }
 
-    public function test_getting_a_list_of_resources_including_has_many_relation_with_loaded_relations_in_model(): void
+    public function test_getting_a_list_of_resources_including_has_many_relation_with_eager_loading_relations(): void
     {
         $matchingModel = ModelFactory::new()
             ->createOne()->fresh();

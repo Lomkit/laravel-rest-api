@@ -16,7 +16,7 @@ class HasManyThroughResource extends Resource
     public function relations(RestRequest $request): array
     {
         return [
-            BelongsTo::make('hasManyRelation', HasManyResource::class)
+            BelongsTo::make('hasManyRelation', HasManyResource::class),
         ];
     }
 
