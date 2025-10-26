@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Tests\Support\Models\HasManyThroughRelation;
 
 class HasManyThroughResource extends Resource
@@ -14,7 +15,9 @@ class HasManyThroughResource extends Resource
 
     public function relations(RestRequest $request): array
     {
-        return [];
+        return [
+            BelongsTo::make('hasManyRelation', HasManyResource::class)
+        ];
     }
 
     public function fields(RestRequest $request): array

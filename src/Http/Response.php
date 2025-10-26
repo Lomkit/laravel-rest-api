@@ -81,7 +81,7 @@ class Response implements Responsable
         $currentRequestArray = $relation === null ? $requestArray : collect($requestArray['includes'] ?? [])
             ->first(function ($include) use ($relation) {
                 return preg_match('/(?:\.\b)?'.$relation->relation.'\b/', $include['relation']);
-            });
+            }) ?? [];
 
         return array_merge(
             // toArray to take advantage of Laravel's logic
