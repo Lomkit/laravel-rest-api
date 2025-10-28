@@ -47,6 +47,12 @@ class Model extends BaseModel
         return $this->hasMany(HasManyRelation::class, 'model_id');
     }
 
+    public function hasManyRelationWithEagerLoadingRelation()
+    {
+        return $this->hasMany(HasManyRelation::class, 'model_id')
+            ->with('hasManyThroughRelation.hasManyRelation');
+    }
+
     public function hasOneOfManyRelation()
     {
         return $this->hasOne(HasOneOfManyRelation::class, 'model_id')->ofMany();

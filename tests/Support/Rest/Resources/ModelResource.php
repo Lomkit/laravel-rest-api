@@ -53,6 +53,7 @@ class ModelResource extends Resource
             HasOneOfMany::make('hasOneOfManyRelation', HasOneOfManyResource::class),
             BelongsTo::make('belongsToRelation', BelongsToResource::class),
             HasMany::make('hasManyRelation', HasManyResource::class),
+            HasMany::make('hasManyRelationWithEagerLoadingRelation', HasManyResource::class),
             BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
                 ->withPivotRules([
                     'number' => 'numeric',

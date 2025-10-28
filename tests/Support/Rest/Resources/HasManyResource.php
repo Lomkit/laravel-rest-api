@@ -6,6 +6,7 @@ use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
+use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 
 class HasManyResource extends Resource
@@ -17,6 +18,7 @@ class HasManyResource extends Resource
     {
         return [
             BelongsTo::make('model', ModelResource::class),
+            HasMany::make('hasManyThroughRelation', HasManyThroughResource::class),
         ];
     }
 
