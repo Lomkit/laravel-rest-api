@@ -53,7 +53,7 @@ trait PerformsRestOperations
         $query = app()->make($builder, ['resource' => $resource, 'query' => null])
             ->search($request->input('search', []));
 
-        $responsable = $resource->paginate($query, $request, $resource);
+        $responsable = $resource->paginate($query, $request);
 
         $this->afterSearch($request);
 
