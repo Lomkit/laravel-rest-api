@@ -55,7 +55,7 @@ class ScoutBuilder implements QueryBuilder
     }
 
     /**
-     *  Forwads the extra parameters after excluding reserved keys (filters, instructions, sorts, text, and limit)
+     *  Forwards the extra parameters after excluding reserved keys (filters, instructions, sorts, text, and limit)
      *  to the underlying search operation.
      *
      * @param \Laravel\Scout\Builder $query
