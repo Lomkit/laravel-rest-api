@@ -2,10 +2,16 @@
 
 namespace Lomkit\Rest\Query\Traits;
 
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Query\Operators\Aggregate;
+use Lomkit\Rest\Query\Operators\Filter;
+use Lomkit\Rest\Query\Operators\IncludeOperator;
+use Lomkit\Rest\Query\Operators\Instruction;
+use Lomkit\Rest\Query\Operators\Scope;
+use Lomkit\Rest\Query\Operators\Sort;
 
 trait PerformSearch
 {
@@ -30,7 +36,7 @@ trait PerformSearch
      *
      * @return Builder The modified query builder with the applied search parameters.
      */
-    public function search(array $parameters = [])
+    public function search(array $parameters = []): Builder
     {
         $this->resource->authorizeTo('viewAny', $this->resource::$model);
 
@@ -82,62 +88,22 @@ trait PerformSearch
     }
 
     /**
-     * Apply a filter to the query builder.
-     *
-     * @param string     $field    The field to filter on.
-     * @param string     $operator The filter operator.
-     * @param mixed      $value    The filter value.
-     * @param string     $type     The filter type (e.g., 'and' or 'or').
-     * @param array|null $nested   Nested filters.
-     */
-    public function filter($field, $operator, $value, $type = 'and', $nested = null)
-    {
-        if ($nested !== null) {
-            return $this->queryBuilder->where(function ($query) use ($nested) {
-                $this->newQueryBuilder(['resource' => $this->resource, 'query' => $query])
-                    ->applyFilters($nested);
-            }, null, null, $type);
-        }
-
-        // Here we assume the user has asked a relation filter
-        if (Str::contains($field, '.')) {
-            $relation = $this->resource->relation(
-                Str::beforeLast($field, '.')
-            );
-
-            return $relation->filter($this->queryBuilder, $field, $operator, $value, $type, function ($query) use ($relation) {
-                $relation->applySearchQuery($query);
-            });
-        } else {
-            if (in_array($operator, ['in', 'not in'])) {
-                $this->queryBuilder->whereIn($this->queryBuilder->getModel()->getTable().'.'.$field, $value, $type, $operator === 'not in');
-            } else {
-                $this->queryBuilder->where($this->queryBuilder->getModel()->getTable().'.'.$field, $operator, $value, $type);
-            }
-        }
-    }
-
-    /**
      * Apply multiple filters to the query builder.
      *
      * @param array $filters An array of filters to apply.
      */
-    public function applyFilters($filters)
+    public function applyFilters(array $filters): void
     {
         foreach ($filters as $filter) {
-            $this->filter($filter['field'] ?? null, $filter['operator'] ?? '=', $filter['value'] ?? null, $filter['type'] ?? 'and', $filter['nested'] ?? null);
+            (new Filter(
+                $filter['field'] ?? '',
+                $filter['operator'] ?? '=',
+                $filter['value'] ?? null,
+                $filter['type'] ?? 'and',
+                $filter['nested'] ?? null
+            ))
+                ->handle($this->queryBuilder, $this->resource);
         }
-    }
-
-    /**
-     * Sort the query builder by a field and direction.
-     *
-     * @param string $field     The field to sort by.
-     * @param string $direction The sort direction ('asc' or 'desc').
-     */
-    public function sort($field, $direction = 'asc')
-    {
-        return $this->queryBuilder->orderBy($field, $direction);
     }
 
     /**
@@ -145,22 +111,15 @@ trait PerformSearch
      *
      * @param array $sorts An array of sorts to apply.
      */
-    public function applySorts($sorts)
+    public function applySorts(array $sorts): void
     {
         foreach ($sorts as $sort) {
-            $this->sort($this->queryBuilder->getModel()->getTable().'.'.$sort['field'], $sort['direction'] ?? 'asc');
+            (new Sort(
+                field: $this->queryBuilder->getModel()->getTable() . '.' . $sort['field'],
+                direction: $sort['direction'] ?? 'asc',
+            ))
+                ->handle($this->queryBuilder, $this->resource);
         }
-    }
-
-    /**
-     * Apply a scope to the query builder.
-     *
-     * @param string $name       The name of the scope.
-     * @param array  $parameters The scope parameters.
-     */
-    public function scope($name, $parameters = [])
-    {
-        return $this->queryBuilder->{$name}(...$parameters);
     }
 
     /**
@@ -171,23 +130,12 @@ trait PerformSearch
     public function applyScopes($scopes)
     {
         foreach ($scopes as $scope) {
-            $this->scope($scope['name'], $scope['parameters'] ?? []);
+            (new Scope(
+                name: $scope['name'],
+                parameters: $scope['parameters'] ?? []
+            ))
+                ->handle($this->queryBuilder, $this->resource);
         }
-    }
-
-    /**
-     * Apply an instruction to the query builder.
-     *
-     * @param string $name   The name of the instruction.
-     * @param array  $fields The instruction fields.
-     */
-    public function instruction($name, $fields = [])
-    {
-        $this->resource->instruction(app(RestRequest::class), $name)
-            ->handle(
-                collect($fields)->mapWithKeys(function ($field) {return [$field['name'] => $field['value']]; })->toArray(),
-                $this->queryBuilder
-            );
     }
 
     /**
@@ -195,27 +143,15 @@ trait PerformSearch
      *
      * @param array $instructions An array of instructions to apply.
      */
-    public function applyInstructions($instructions)
+    public function applyInstructions(array $instructions): void
     {
         foreach ($instructions as $instruction) {
-            $this->instruction($instruction['name'], $instruction['fields'] ?? []);
+            (new Instruction(
+                name: $instruction['name'],
+                fields: $instruction['fields'] ?? []
+            ))
+                ->handle($this->queryBuilder, $this->resource);
         }
-    }
-
-    /**
-     * Include related resources in the query.
-     *
-     * @param array $include An array of relationships to include.
-     */
-    public function include($include)
-    {
-        return $this->queryBuilder->with($include['relation'], function (Relation $query) use ($include) {
-            $resource = $this->resource->relation($include['relation'])?->resource();
-
-            $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
-
-            return $queryBuilder->search($include);
-        });
     }
 
     /**
@@ -223,33 +159,14 @@ trait PerformSearch
      *
      * @param array $includes An array of relationships to include.
      */
-    public function applyIncludes($includes)
+    public function applyIncludes(array $includes): void
     {
         foreach ($includes as $include) {
-            $this->include($include);
+            (new IncludeOperator(
+                $include
+            ))
+                ->handle($this->queryBuilder, $this->resource);
         }
-    }
-
-    /**
-     * Apply an aggregate function to the query builder.
-     *
-     * @param array $aggregate An array defining the aggregate function.
-     */
-    public function aggregate($aggregate)
-    {
-        $relation = $aggregate['relation'];
-
-        if (isset($aggregate['alias'])) {
-            $relation .= ' as '.$aggregate['alias'];
-        }
-
-        return $this->queryBuilder->withAggregate([$relation => function (Builder $query) use ($aggregate) {
-            $resource = $this->resource->relation($aggregate['relation'])?->resource();
-
-            $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
-
-            return $queryBuilder->search(['filters' => $aggregate['filters'] ?? []]);
-        }], $aggregate['field'] ?? '*', $aggregate['type']);
     }
 
     /**
@@ -257,10 +174,19 @@ trait PerformSearch
      *
      * @param array $aggregates An array of aggregate functions to apply.
      */
-    public function applyAggregates($aggregates)
+    public function applyAggregates(array $aggregates): void
     {
         foreach ($aggregates as $aggregate) {
-            $this->aggregate($aggregate);
+            (new Aggregate(
+                relation: $aggregate['relation'],
+                alias: $aggregate['alias'] ?? null,
+                type: $aggregate['type'],
+                field: $aggregate['field'] ?? '*',
+                filters: $aggregate['filters'] ?? []
+            ))
+                ->handle($this->queryBuilder, $this->resource);
         }
     }
+
+    // @TODO: add select part ?
 }
