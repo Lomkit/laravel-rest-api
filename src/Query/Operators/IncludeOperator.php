@@ -4,17 +4,15 @@ namespace Lomkit\Rest\Query\Operators;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Resource;
 
 class IncludeOperator implements Operator
 {
-
     public function __construct(
         protected array $include,
-    )
-    {}
+    ) {
+    }
 
     public function handle(Builder $query, Resource $resource): Builder
     {

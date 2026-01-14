@@ -8,15 +8,14 @@ use Lomkit\Rest\Http\Resource;
 
 class Aggregate implements Operator
 {
-
     public function __construct(
         protected string $relation,
         protected ?string $alias,
         protected string $type,
         protected string $field = '*',
         protected array $filters = []
-    )
-    {}
+    ) {
+    }
 
     public function handle(Builder $query, Resource $resource): Builder
     {

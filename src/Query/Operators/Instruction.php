@@ -3,18 +3,16 @@
 namespace Lomkit\Rest\Query\Operators;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
 class Instruction implements Operator
 {
-
     public function __construct(
         protected string $name,
         protected array $fields = [],
-    )
-    {}
+    ) {
+    }
 
     public function handle(Builder $query, Resource $resource): Builder
     {

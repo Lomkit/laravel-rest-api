@@ -3,8 +3,6 @@
 namespace Lomkit\Rest\Query\Traits;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Query\Operators\Aggregate;
 use Lomkit\Rest\Query\Operators\Filter;
@@ -115,7 +113,7 @@ trait PerformSearch
     {
         foreach ($sorts as $sort) {
             (new Sort(
-                field: $this->queryBuilder->getModel()->getTable() . '.' . $sort['field'],
+                field: $this->queryBuilder->getModel()->getTable().'.'.$sort['field'],
                 direction: $sort['direction'] ?? 'asc',
             ))
                 ->handle($this->queryBuilder, $this->resource);

@@ -8,15 +8,14 @@ use Lomkit\Rest\Http\Resource;
 
 class Filter implements Operator
 {
-
     public function __construct(
         protected string $field,
         protected string $operator,
         protected mixed $value,
         protected string $type = 'and',
         protected ?array $nested = null
-    )
-    {}
+    ) {
+    }
 
     public function handle(Builder $query, Resource $resource): Builder
     {
