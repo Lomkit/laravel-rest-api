@@ -59,9 +59,9 @@ class ScoutBuilder implements QueryBuilder
      *  to the underlying search operation.
      *
      * @param \Laravel\Scout\Builder $query
-     * @param array $parameters
+     * @param array                  $parameters
      *
-     *  @return \Laravel\Scout\Builder The new query builder.
+     * @return \Laravel\Scout\Builder The new query builder.
      */
     public function applyQueryCallback($query, $parameters)
     {

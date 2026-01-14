@@ -24,7 +24,9 @@ trait Paginable
         if ($query instanceof Builder) {
             $paginator = $query->paginate($request->input('search.limit', $defaultLimit), 'page', $request->input('search.page', 1));
 
-            if ($paginator->isEmpty()) { return $paginator; }
+            if ($paginator->isEmpty()) {
+                return $paginator;
+            }
 
             $paginatedQuery = $paginator->getCollection()->toQuery();
             // We apply query callback to a new builder after pagination because of scout bad ids handling when mapping them to get total count and then set paginator items
