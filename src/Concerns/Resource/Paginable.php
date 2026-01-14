@@ -29,7 +29,8 @@ trait Paginable
             }
 
             $paginatedQuery = $paginator->getCollection()->toQuery();
-            // We apply query callback to a new builder after pagination because of scout bad ids handling when mapping them to get total count and then set paginator items
+            // Apply query callback after pagination to prevent Scout from mapping all IDs during total count calculation,
+            // which can cause "allowed memory size" errors with large result sets
             $scoutBuilder = (new ScoutBuilder($this))->applyQueryCallback($paginatedQuery, $request->input('search', []));
             $results = $scoutBuilder->get();
 
