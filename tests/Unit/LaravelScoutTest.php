@@ -93,7 +93,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
                 ],
             ]);
 
-        ($scoutQueryBuilderMock->toBase()->queryCallback)(Model::query());
+        $this->assertNull($scoutQueryBuilderMock->toBase()->queryCallback);
     }
 
     public function test_building_scout_with_trashed()
@@ -116,7 +116,7 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
                 ],
             ]);
 
-        ($scoutQueryBuilderMock->toBase()->queryCallback)(Model::query());
+        $this->assertNull($scoutQueryBuilderMock->toBase()->queryCallback);
     }
 
     public function test_building_scout_only_trashed()
@@ -139,6 +139,6 @@ class LaravelScoutTest extends \Lomkit\Rest\Tests\TestCase
                 ],
             ]);
 
-        ($scoutQueryBuilderMock->toBase()->queryCallback)(Model::query());
+        $this->assertNull($scoutQueryBuilderMock->toBase()->queryCallback);
     }
 }

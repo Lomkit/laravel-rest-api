@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Concerns\Resource;
 
 use Laravel\Scout\Builder;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Query\ScoutBuilder;
 
 trait Paginable
 {
@@ -21,7 +22,19 @@ trait Paginable
 
         // In case we have a scout builder
         if ($query instanceof Builder) {
-            return $query->paginate($request->input('search.limit', $defaultLimit), 'page', $request->input('search.page', 1));
+            $paginator = $query->paginate($request->input('search.limit', $defaultLimit), 'page', $request->input('search.page', 1));
+
+            if ($paginator->isEmpty()) {
+                return $paginator;
+            }
+
+            $paginatedQuery = $paginator->getCollection()->toQuery();
+            // Apply query callback after pagination to prevent Scout from mapping all IDs during total count calculation,
+            // which can cause "allowed memory size" errors with large result sets
+            $scoutBuilder = (new ScoutBuilder($this))->applyQueryCallback($paginatedQuery, $request->input('search', []));
+            $results = $scoutBuilder->get();
+
+            return $paginator->setCollection($results);
         }
 
         return $query->paginate($request->input('search.limit', $defaultLimit), ['*'], 'page', $request->input('search.page', 1));

@@ -18,9 +18,7 @@ class ScoutBuilder implements QueryBuilder
      * This method configures the underlying search builder by setting the query text,
      * and conditionally applying filters, sort orders, and additional instructions based
      * on the provided parameters. It also enforces a limit on the number of results,
-     * defaulting to 50 if no limit is specified. Any extra parameters, after excluding
-     * reserved keys (filters, instructions, sorts, text, and limit), are forwarded to the
-     * underlying search operation.
+     * defaulting to 50 if no limit is specified.
      *
      * @param array $parameters An associative array of search criteria, which may include:
      *                          - 'text': An array containing 'value' (search string) and optionally 'trashed' ('with'|'only').
@@ -53,25 +51,34 @@ class ScoutBuilder implements QueryBuilder
             $this->applyInstructions($parameters['instructions']);
         });
 
-        $this->queryBuilder
-            ->query(function (Builder $query) use ($parameters) {
-                app()->make(QueryBuilder::class, ['query' => $query, 'resource' => $this->resource])
-                    ->disableSecurity()
-                    ->search(
-                        collect($parameters)
-                            ->except([
-                                'filters',
-                                'instructions',
-                                'sorts',
-                                'text',
-                                'limit',
-                                'page',
-                            ])
-                            ->all()
-                    );
-            });
-
         return $this->queryBuilder;
+    }
+
+    /**
+     *  Forwards the extra parameters after excluding reserved keys (filters, instructions, sorts, text, and limit)
+     *  to the underlying search operation.
+     *
+     * @param \Laravel\Scout\Builder $query
+     * @param array                  $parameters
+     *
+     * @return \Laravel\Scout\Builder The new query builder.
+     */
+    public function applyQueryCallback($query, $parameters)
+    {
+        return app()->make(QueryBuilder::class, ['query' => $query, 'resource' => $this->resource])
+            ->disableSecurity()
+            ->search(
+                collect($parameters)
+                    ->except([
+                        'filters',
+                        'instructions',
+                        'sorts',
+                        'text',
+                        'limit',
+                        'page',
+                    ])
+                    ->all()
+            );
     }
 
     /**
