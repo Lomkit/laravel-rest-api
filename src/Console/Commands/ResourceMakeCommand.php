@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function Laravel\Prompts\search;
 use function Laravel\Prompts\select;
 
 #[AsCommand(name: 'rest:resource')]
@@ -152,9 +153,11 @@ class ResourceMakeCommand extends GeneratorCommand
             return;
         }
 
-        $model = select(
+        $model = search(
             'What model should this resource relies to? (Optional)',
-            $this->possibleModels(),
+            fn ($value) => strlen($value) > 0
+                ? array_filter($this->possibleModels(), fn ($model) => stripos($model, $value) !== false)
+                : $this->possibleModels()
         );
 
         if ($model) {

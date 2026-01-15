@@ -12,7 +12,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
-use function Laravel\Prompts\select;
+use function Laravel\Prompts\search;
 
 #[AsCommand(name: 'rest:controller')]
 class ControllerMakeCommand extends GeneratorCommand
@@ -156,9 +156,12 @@ class ControllerMakeCommand extends GeneratorCommand
         if ($this->didReceiveOptions($input)) {
             return;
         }
-        $resource = select(
+
+        $resource = search(
             'What resource should this resource relies to? (Optional)',
-            $this->possibleResources()
+            fn ($value) => strlen($value) > 0
+                ? array_filter($this->possibleResources(), fn ($resource) => stripos($resource, $value) !== false)
+                : $this->possibleResources()
         );
 
         if ($resource) {
