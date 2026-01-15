@@ -10,7 +10,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function Laravel\Prompts\search;
-use function Laravel\Prompts\select;
 
 #[AsCommand(name: 'rest:resource')]
 class ResourceMakeCommand extends GeneratorCommand
