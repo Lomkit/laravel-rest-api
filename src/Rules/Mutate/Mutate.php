@@ -40,22 +40,22 @@ class Mutate extends RestRule
                     'prohibited_if:'.$attributeConsideringRelationType.'.operation,detach',
                     new ArrayWithKey($this->resource->getFields($request)),
                 ],
-                $attributeConsideringRelationType.'.key' => [
-                    'prohibits:'.$attributeConsideringRelationType.'.keys',
-                    'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
-                    'required_if:'.$attributeConsideringRelationType.'.operation,update',
-                    'required_if:'.$attributeConsideringRelationType.'.operation,attach',
-                    'required_if:'.$attributeConsideringRelationType.'.operation,detach',
-                    'required_if:'.$attributeConsideringRelationType.'.operation,toggle',
-                    'required_if:'.$attributeConsideringRelationType.'.operation,sync',
-                    'prohibited_if:'.$attributeConsideringRelationType.'.operation,create',
-                ],
-
-                $attributeConsideringRelationType.'.keys' => [
+//                $attributeConsideringRelationType.'.key' => [
+//                    'prohibits:'.$attributeConsideringRelationType.'.keys',
+//                    'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
+//                    'required_if:'.$attributeConsideringRelationType.'.operation,update',
+//                    'required_if:'.$attributeConsideringRelationType.'.operation,attach',
+//                    'required_if:'.$attributeConsideringRelationType.'.operation,detach',
+//                    'required_if:'.$attributeConsideringRelationType.'.operation,toggle',
+//                    'required_if:'.$attributeConsideringRelationType.'.operation,sync',
+//                    'prohibited_if:'.$attributeConsideringRelationType.'.operation,create',
+//                ],
+//
+//                $attributeConsideringRelationType.'.keys' => [
 //                    'prohibits:'.$attributeConsideringRelationType.'.key',
-                    'array',
-                    ...(!$this->relation?->hasMultipleEntries() ? ['prohibited'] : []),
-                ],
+//                    'array',
+//                    ...(!$this->relation?->hasMultipleEntries() ? ['prohibited'] : []),
+//                ],
                 $attributeConsideringRelationType.'.without_detaching' => [
                     'boolean',
                     'prohibited_unless:'.$attributeConsideringRelationType.'.operation,sync',
