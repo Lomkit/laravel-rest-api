@@ -12,11 +12,9 @@ trait Relationable
     /**
      * Get a relation by name.
      *
-     * @param string $name
-     *
      * @return Relation|null
      */
-    public function relation($name)
+    public function relation(string $name)
     {
         $name = relation_without_pivot($name);
 

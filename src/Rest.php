@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest;
 
+use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Lomkit\Rest\Contracts\Http\Routing\Registrar;
 use Lomkit\Rest\Documentation\Schemas\OpenAPI;
 use Lomkit\Rest\Http\Controllers\Controller;
@@ -30,13 +31,20 @@ class Rest implements Registrar
             $registrar = new ResourceRegistrar(app('router'));
         }
 
-        return (new PendingResourceRegistration(
+        $pendingResourceRegistration = (new PendingResourceRegistration(
             $registrar,
             $name,
             $controller,
             $options
         ))
             ->middleware(EnforceExpectsJson::class);
+
+        return tap($pendingResourceRegistration, function ($pendingResourceRegistration) {
+            if (config('rest.precognition.enabled', false)) {
+                $pendingResourceRegistration
+                    ->middleware(HandlePrecognitiveRequests::class);
+            }
+        });
     }
 
     /**

@@ -14,6 +14,9 @@ return [
     'gates' => [
         'enabled' => true,
         'key'     => 'gates',
+        'message' => [
+            'enabled' => false,
+        ],
         // Here you can customize the keys for each gate
         'names' => [
             'authorized_to_view'         => 'authorized_to_view',
@@ -41,6 +44,23 @@ return [
             'enabled' => true,
             'default' => 5, // Cache minutes by default
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Precognition Support
+    |--------------------------------------------------------------------------
+    |
+    | This option enables support for Laravel Precognition, which allows
+    | frontend applications to perform validation requests without executing
+    | controller logic. When enabled, requests containing the "Precognition"
+    | header will only trigger middleware and validation, skipping the actual
+    | controller method. This is especially useful for live form validation.
+    |
+    */
+
+    'precognition' => [
+        'enabled' => false,
     ],
 
     /*

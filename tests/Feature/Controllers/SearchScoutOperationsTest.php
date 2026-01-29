@@ -38,7 +38,7 @@ class SearchScoutOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.text.value']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.text']]);
     }
 
     public function test_getting_a_list_of_resources_with_not_allowed_filter_operator(): void
@@ -55,7 +55,7 @@ class SearchScoutOperationsTest extends TestCase
                         'value' => 'text',
                     ],
                     'filters' => [
-                        ['field' => 'id', 'operator' => '>=', 'value' => 2],
+                        ['field' => 'allowed_scout_field', 'operator' => '>=', 'value' => 2],
                     ],
                 ],
             ],
@@ -63,7 +63,7 @@ class SearchScoutOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.operator']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.operator']]);
     }
 
     public function test_getting_a_list_of_resources_with_not_allowed_filter_field(): void
@@ -88,7 +88,7 @@ class SearchScoutOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_with_not_allowed_sort_field(): void
@@ -113,7 +113,7 @@ class SearchScoutOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.sorts.0.field']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.sorts.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_with_not_allowed_instruction(): void
@@ -138,7 +138,7 @@ class SearchScoutOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.instructions.0.name']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.instructions.0.name']]);
     }
 
     public function test_getting_a_list_of_resources_with_allowed_filter_field(): void
@@ -252,7 +252,7 @@ class SearchScoutOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.nested']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.nested']]);
     }
 
     public function test_getting_a_list_of_resources_with_not_allowed_filter_type(): void
@@ -277,7 +277,7 @@ class SearchScoutOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.filters.0.type']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.type']]);
     }
 
     public function test_getting_a_list_of_resources_with_not_allowed_scopes(): void
@@ -302,7 +302,7 @@ class SearchScoutOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.scopes']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.scopes']]);
     }
 
     public function test_getting_a_list_of_resources_with_scout(): void
@@ -317,6 +317,128 @@ class SearchScoutOperationsTest extends TestCase
                 'search' => [
                     'text' => [
                         'value' => 'text',
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [],
+            new ModelResource()
+        );
+    }
+
+    public function test_getting_a_list_of_resources_with_empty_scout(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => '',
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [],
+            new ModelResource()
+        );
+    }
+
+    public function test_getting_a_list_of_resources_with_null_scout(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => null,
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [],
+            new ModelResource()
+        );
+    }
+
+    public function test_getting_a_list_of_resources_with_unknown_trashed(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'trashed' => 'unknown',
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.text.trashed']]);
+    }
+
+    public function test_getting_a_list_of_resources_with_trashed(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'trashed' => 'with',
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [],
+            new ModelResource()
+        );
+    }
+
+    public function test_getting_a_list_of_resources_only_trashed(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'trashed' => 'only',
                     ],
                 ],
             ],

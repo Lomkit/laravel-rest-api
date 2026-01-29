@@ -10,6 +10,7 @@ use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
+use Lomkit\Rest\Tests\Support\Database\Factories\HasManyThroughRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasOneOfManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
@@ -17,6 +18,7 @@ use Lomkit\Rest\Tests\Support\Database\Factories\ModelWithFactory;
 use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
+use Lomkit\Rest\Tests\Support\Models\HasManyThroughRelation;
 use Lomkit\Rest\Tests\Support\Models\HasOneOfManyRelation;
 use Lomkit\Rest\Tests\Support\Models\HasOneRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
@@ -25,6 +27,7 @@ use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
+use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyThroughResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneOfManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
@@ -50,7 +53,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.includes.0.relation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.0.relation']]);
     }
 
     public function test_getting_a_list_of_resources_including_relation_with_unauthorized_filters(): void
@@ -76,7 +79,36 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.includes.0.filters.0.field']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.0.filters.0.field']]);
+    }
+
+    public function test_getting_a_list_of_resources_including_relation_with_unauthorized_filters_on_multiple_includes(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation'   => 'hasManyRelation.belongsToRelation',
+                        ],
+                        [
+                            'relation'   => 'hasManyRelation',
+                            'filters'    => [
+                                ['field' => 'unauthorized_field', 'value' => 10000],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.1.filters.0.field', 'search.includes.0.relation']]);
     }
 
     public function test_getting_a_list_of_resources_including_relation_with_filters(): void
@@ -259,6 +291,90 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 ],
             ]
         );
+    }
+
+    public function test_getting_a_list_of_resources_including_belongs_to_has_many_relation_using_nested_include(): void
+    {
+        $belongsTo = BelongsToRelationFactory::new()->create();
+        $matchingModel = ModelFactory::new()
+            ->for($belongsTo)
+            ->create()->fresh();
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'belongsToRelation',
+                            'includes' => [
+                                ['relation' => 'models'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $matchingModelBelongsToRelation = $matchingModel->belongsToRelation;
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource(),
+            [
+                [
+                    'belongs_to_relation' => array_merge(
+                        $matchingModelBelongsToRelation
+                            ->only((new BelongsToResource())->getFields(app()->make(RestRequest::class))),
+                        [
+                            'models' => $matchingModelBelongsToRelation->models()
+                                ->orderBy('id')
+                                ->get()
+                                ->map(function ($model) {
+                                    return $model->only((new ModelResource())->getFields(app()->make(RestRequest::class)));
+                                })
+                                ->toArray(),
+                        ]
+                    ),
+                ],
+                [
+                    'belongs_to_relation' => null,
+                ],
+            ]
+        );
+    }
+
+    public function test_including_unauthorized_nested_relation_returns_validation_error(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'belongsToRelation',
+                            'includes' => [
+                                ['relation' => 'unauthorized'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.0.includes.0.relation']]);
     }
 
     public function test_getting_a_list_of_resources_including_distant_relation_with_intermediary_search_query_condition(): void
@@ -460,6 +576,69 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 ],
                 [
                     'has_many_relation' => [],
+                ],
+            ]
+        );
+    }
+
+    public function test_getting_a_list_of_resources_including_has_many_relation_with_eager_loading_relations(): void
+    {
+        $matchingModel = ModelFactory::new()
+            ->createOne()->fresh();
+
+        $hasMany = HasManyRelationFactory::new()
+            ->for($matchingModel)
+            ->createOne();
+
+        HasManyThroughRelationFactory::new()
+            ->for($hasMany)
+            ->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+        Gate::policy(HasManyThroughRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'hasManyRelationWithEagerLoadingRelation',
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel],
+            new ModelResource(),
+            [
+                [
+                    'has_many_relation_with_eager_loading_relation' => $matchingModel->hasManyRelationWithEagerLoadingRelation()
+                        ->orderBy('id')
+                        ->get()
+                        ->map(function ($relation) {
+                            $relation->has_many_through_relation = $relation->hasManyThroughRelation
+                                ->map(function ($relation) {
+                                    $relation->has_many_relation = $relation->hasManyRelation->only(
+                                        (new HasManyResource())->getFields(app()->make(RestRequest::class))
+                                    );
+
+                                    return $relation->only(array_merge(
+                                        (new HasManyThroughResource())->getFields(app()->make(RestRequest::class)),
+                                        ['has_many_relation']
+                                    ));
+                                })->toArray();
+
+                            return $relation->only(array_merge(
+                                (new HasManyResource())->getFields(app()->make(RestRequest::class)),
+                                ['has_many_through_relation']
+                            ));
+                        })->toArray(),
                 ],
             ]
         );

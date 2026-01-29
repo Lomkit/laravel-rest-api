@@ -30,15 +30,38 @@ class Response implements Responsable
         });
     }
 
-    protected function buildGatesForModel(Model $model, Resource $resource, array $gates)
+    protected function buildGatesForModel(Model|string $model, Resource $resource, array $gates)
     {
-        return array_merge(
-            in_array('view', $gates) ? [config('rest.gates.names.authorized_to_view')         => $resource->authorizedTo('view', $model)] : [],
-            in_array('update', $gates) ? [config('rest.gates.names.authorized_to_update')         => $resource->authorizedTo('update', $model)] : [],
-            in_array('delete', $gates) ? [config('rest.gates.names.authorized_to_delete')         => $resource->authorizedTo('delete', $model)] : [],
-            in_array('restore', $gates) ? [config('rest.gates.names.authorized_to_restore')         => $resource->authorizedTo('restore', $model)] : [],
-            in_array('forceDelete', $gates) ? [config('rest.gates.names.authorized_to_force_delete')         => $resource->authorizedTo('forceDelete', $model)] : [],
-        );
+        $nameMap = [
+            'create'      => config('rest.gates.names.authorized_to_create'),
+            'view'        => config('rest.gates.names.authorized_to_view'),
+            'update'      => config('rest.gates.names.authorized_to_update'),
+            'delete'      => config('rest.gates.names.authorized_to_delete'),
+            'restore'     => config('rest.gates.names.authorized_to_restore'),
+            'forceDelete' => config('rest.gates.names.authorized_to_force_delete'),
+        ];
+
+        $result = [];
+
+        if (config('rest.gates.message.enabled', false)) {
+            foreach ($gates as $gate) {
+                if (isset($nameMap[$gate])) {
+                    $authorizedTo = $resource->authorizedTo($gate, $model);
+                    $result[$nameMap[$gate]]['allowed'] = $authorizedTo->allowed();
+                    $result[$nameMap[$gate]]['message'] = $authorizedTo->message();
+                }
+            }
+        } else {
+            trigger_deprecation('lomkit/laravel-rest-api', '2.17.0', 'In Laravel Rest Api 3 it won\'t be possible to use the old gate schema, please upgrade as quickly as possible. See: https://laravel-rest-api.lomkit.com/digging-deeper/gates#policy-message-in-gates');
+            foreach ($gates as $gate) {
+                if (isset($nameMap[$gate])) {
+                    $authorizedTo = $resource->authorizedTo($gate, $model);
+                    $result[$nameMap[$gate]] = $authorizedTo->allowed();
+                }
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -58,7 +81,7 @@ class Response implements Responsable
         $currentRequestArray = $relation === null ? $requestArray : collect($requestArray['includes'] ?? [])
             ->first(function ($include) use ($relation) {
                 return preg_match('/(?:\.\b)?'.$relation->relation.'\b/', $include['relation']);
-            });
+            }) ?? [];
 
         return array_merge(
             // toArray to take advantage of Laravel's logic
@@ -77,14 +100,16 @@ class Response implements Responsable
                     )
                 )
                 ->when($resource->isGatingEnabled() && isset($currentRequestArray['gates']), function ($attributes) use ($currentRequestArray, $resource, $model) {
+                    $currentRequestArrayWithoutCreate = collect($currentRequestArray['gates'])->reject(fn ($value) => $value === 'create')->toArray();
+
                     return $attributes->put(
                         config('rest.gates.key'),
-                        $this->buildGatesForModel($model, $resource, $currentRequestArray['gates'])
+                        $this->buildGatesForModel($model, $resource, $currentRequestArrayWithoutCreate)
                     );
                 })
                 ->toArray(),
             collect($model->getRelations())
-                ->mapWithKeys(function ($modelRelation, $relationName) use ($requestArray, $relation, $resource) {
+                ->mapWithKeys(function ($modelRelation, $relationName) use ($currentRequestArray, $relation, $resource) {
                     $key = Str::snake($relationName);
 
                     if (is_null($modelRelation)) {
@@ -107,7 +132,7 @@ class Response implements Responsable
                             $key => $this->modelToResponse(
                                 $modelRelation,
                                 $relationResource,
-                                $requestArray,
+                                $currentRequestArray,
                                 $relationConcrete
                             ),
                         ];
@@ -115,7 +140,7 @@ class Response implements Responsable
 
                     return [
                         $key => $modelRelation
-                            ->map(fn ($collectionRelation) => $this->modelToResponse($collectionRelation, $relationResource, $requestArray, $relationConcrete))
+                            ->map(fn ($collectionRelation) => $this->modelToResponse($collectionRelation, $relationResource, $currentRequestArray, $relationConcrete))
                             ->toArray(),
                     ];
                 })
@@ -133,9 +158,7 @@ class Response implements Responsable
                 $this->responsable->currentPage(),
                 $this->responsable->getOptions(),
                 $this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
-                    config('rest.gates.key') => [
-                        config('rest.gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
-                    ],
+                    config('rest.gates.key') => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
                 ] : []
             );
 
@@ -154,9 +177,7 @@ class Response implements Responsable
             'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input('search', []))),
             'meta' => array_merge(
                 $this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
-                    config('rest.gates.key') => [
-                        config('rest.gates.names.authorized_to_create') => $this->resource->authorizedTo('create', $this->resource::newModel()::class),
-                    ],
+                    config('rest.gates.key') => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
                 ] : []
             ),
         ];

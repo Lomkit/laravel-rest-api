@@ -47,7 +47,7 @@ class MutateCreateThroughOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.hasOneThroughRelation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.hasOneThroughRelation']]);
     }
 
     public function test_creating_a_resource_with_attaching_has_one_through_relation(): void
@@ -89,7 +89,7 @@ class MutateCreateThroughOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.hasOneThroughRelation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.hasOneThroughRelation']]);
     }
 
     public function test_creating_a_resource_with_updating_has_one_through_relation(): void
@@ -132,7 +132,7 @@ class MutateCreateThroughOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.hasOneThroughRelation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.hasOneThroughRelation']]);
     }
 
     public function test_creating_a_resource_with_creating_has_many_through_relation(): void
@@ -167,7 +167,7 @@ class MutateCreateThroughOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.hasManyThroughRelation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.hasManyThroughRelation']]);
     }
 
     public function test_creating_a_resource_with_creating_multiple_has_many_through_relation(): void
@@ -206,7 +206,7 @@ class MutateCreateThroughOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.hasManyThroughRelation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.hasManyThroughRelation']]);
     }
 
     public function test_creating_a_resource_with_attaching_has_many_through_relation(): void
@@ -250,7 +250,7 @@ class MutateCreateThroughOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.hasManyThroughRelation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.hasManyThroughRelation']]);
     }
 
     public function test_creating_a_resource_with_updating_has_many_through_relation(): void
@@ -295,6 +295,6 @@ class MutateCreateThroughOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.hasManyThroughRelation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.hasManyThroughRelation']]);
     }
 }

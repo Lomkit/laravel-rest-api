@@ -2,7 +2,7 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-use Lomkit\Rest\Rules\MutateRules;
+use Lomkit\Rest\Rules\Mutate\Mutate;
 
 class MutateRequest extends RestRequest
 {
@@ -16,14 +16,11 @@ class MutateRequest extends RestRequest
      */
     public function rules()
     {
+        $resource = $this->route()->controller::newResource();
+
         return [
-            'mutate'   => ['required'],
-            'mutate.*' => new MutateRules(
-                $this->route()->controller::newResource(),
-                $this,
-                null,
-                true
-            ),
+            'mutate'   => 'required',
+            'mutate.*' => (new Mutate())->setResource($resource),
         ];
     }
 }

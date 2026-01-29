@@ -2,9 +2,9 @@
 
 namespace {{ namespace }};
 
-use App\Rest\Controller as RestController;
+use {{ rootNamespace }}Rest\Controllers\Controller;
 
-class {{ class }} extends RestController
+class {{ class }} extends Controller
 {
     /**
      * The resource the controller corresponds to.

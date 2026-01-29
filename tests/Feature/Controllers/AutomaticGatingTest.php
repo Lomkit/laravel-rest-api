@@ -15,6 +15,7 @@ use Lomkit\Rest\Tests\Support\Policies\CreatePolicy;
 use Lomkit\Rest\Tests\Support\Policies\DeletePolicy;
 use Lomkit\Rest\Tests\Support\Policies\ForceDeletePolicy;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
+use Lomkit\Rest\Tests\Support\Policies\RedPolicyWithMessage;
 use Lomkit\Rest\Tests\Support\Policies\RestorePolicy;
 use Lomkit\Rest\Tests\Support\Policies\UpdatePolicy;
 use Lomkit\Rest\Tests\Support\Policies\ViewPolicy;
@@ -59,6 +60,124 @@ class AutomaticGatingTest extends TestCase
         );
         $response->assertJson(
             ['meta' => ['gates' => ['authorized_to_create' => true]]]
+        );
+    }
+
+    public function test_searching_automatic_gated_resource_and_custom_message(): void
+    {
+        $model = ModelFactory::new()
+            ->create();
+
+        Gate::policy(Model::class, RedPolicyWithMessage::class);
+
+        config(['rest.gates.message.enabled' => true]);
+
+        $response = $this->post(
+            '/api/automatic-gating/search',
+            [
+                'search' => [
+                    'gates' => ['create', 'view', 'update', 'delete', 'forceDelete', 'restore'],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$model],
+            new AutomaticGatingResource(),
+            [
+                [
+                    'gates' => [
+                        'authorized_to_view'         => [
+                            'allowed' => false,
+                            'message' => 'You don\'t have permission to view user',
+                        ],
+                        'authorized_to_update'       => [
+                            'allowed' => false,
+                            'message' => 'You don\'t have permission to update user',
+                        ],
+                        'authorized_to_delete'       => [
+                            'allowed' => false,
+                            'message' => 'You don\'t have permission to delete user',
+                        ],
+                        'authorized_to_restore'      => [
+                            'allowed' => false,
+                            'message' => 'You don\'t have permission to restore user',
+                        ],
+                        'authorized_to_force_delete' => [
+                            'allowed' => false,
+                            'message' => 'You don\'t have permission to force delete user',
+                        ],
+                    ],
+                ],
+            ]
+        );
+        $response->assertJsonPath(
+            'meta.gates.authorized_to_create',
+            [
+                'allowed' => false,
+                'message' => 'You don\'t have permission to create user',
+            ]
+        );
+    }
+
+    public function test_searching_automatic_gated_resource_with_allowed_gates_and_custom_message(): void
+    {
+        $model = ModelFactory::new()
+            ->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        config(['rest.gates.message.enabled' => true]);
+
+        $response = $this->post(
+            '/api/automatic-gating/search',
+            [
+                'search' => [
+                    'gates' => ['create', 'view', 'update', 'delete', 'forceDelete', 'restore'],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$model],
+            new AutomaticGatingResource(),
+            [
+                [
+                    'gates' => [
+                        'authorized_to_view'         => [
+                            'allowed' => true,
+                            'message' => null,
+                        ],
+                        'authorized_to_update'       => [
+                            'allowed' => true,
+                            'message' => null,
+                        ],
+                        'authorized_to_delete'       => [
+                            'allowed' => true,
+                            'message' => null,
+                        ],
+                        'authorized_to_restore'      => [
+                            'allowed' => true,
+                            'message' => null,
+                        ],
+                        'authorized_to_force_delete' => [
+                            'allowed' => true,
+                            'message' => null,
+                        ],
+                    ],
+                ],
+            ]
+        );
+        $response->assertJsonPath(
+            'meta.gates.authorized_to_create',
+            [
+                'allowed' => true,
+                'message' => null,
+            ]
         );
     }
 

@@ -30,7 +30,7 @@ class SearchSortingOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.sorts.0.field']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.sorts.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_sorting_by_id_field(): void

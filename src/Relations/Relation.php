@@ -22,10 +22,8 @@ class Relation implements \JsonSerializable
 
     /**
      * The displayable name of the relation.
-     *
-     * @var string
      */
-    public $name;
+    public string $name;
 
     protected Resource $fromResource;
 
@@ -42,7 +40,7 @@ class Relation implements \JsonSerializable
      */
     public function name()
     {
-        return $this->name ?: (new \ReflectionClass($this))->getShortName();
+        return $this->name ?? (new \ReflectionClass($this))->getShortName();
     }
 
     /**

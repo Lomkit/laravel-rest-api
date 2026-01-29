@@ -37,7 +37,7 @@ class SearchAggregatesOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.aggregates.0.relation']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.aggregates.0.relation']]);
     }
 
     public function test_getting_a_list_of_resources_aggregating_by_unauthorized_type(): void
@@ -64,7 +64,7 @@ class SearchAggregatesOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.aggregates.0.type']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.aggregates.0.type']]);
     }
 
     public function test_getting_a_list_of_resources_aggregating_by_unauthorized_field(): void
@@ -91,7 +91,7 @@ class SearchAggregatesOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.aggregates.0']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.aggregates.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_aggregating_by_not_specifying_field_when_necessary(): void
@@ -117,7 +117,7 @@ class SearchAggregatesOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.aggregates.0.field']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.aggregates.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_aggregating_by_specifying_field_when_not_necessary(): void
@@ -144,7 +144,7 @@ class SearchAggregatesOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['search.aggregates.0.field']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.aggregates.0.field']]);
     }
 
     public function test_getting_a_list_of_resources_aggregating_by_min_number(): void

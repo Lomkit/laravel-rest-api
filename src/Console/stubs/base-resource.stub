@@ -4,7 +4,7 @@ namespace {{ namespace }};
 
 use Lomkit\Rest\Http\Resource as RestResource;
 
-abstract class Resource extends RestResource
+abstract class {{ class }} extends RestResource
 {
     /**
      * Build a "search" query for fetching resource.

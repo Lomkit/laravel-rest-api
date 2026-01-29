@@ -8,7 +8,7 @@ use Lomkit\Rest\Documentation\Schemas\Operation;
 use Lomkit\Rest\Documentation\Schemas\Path;
 use Lomkit\Rest\Facades\Rest;
 
-class RestDocumentationServiceProvider extends ServiceProvider
+class {{ class }} extends ServiceProvider
 {
     /**
      * Register any application services.
