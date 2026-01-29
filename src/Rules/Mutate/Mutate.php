@@ -54,11 +54,6 @@ class Mutate extends RestRule
                     ...(!$this->relation?->hasMultipleEntries() ? ['prohibited'] : []),
                     'prohibits:'.$attributeConsideringRelationType.'.key',
                     'prohibited_if:'.$attributeConsideringRelationType.'.operation,create',
-                    'required_if:'.$attributeConsideringRelationType.'.operation,update',
-                    'required_if:'.$attributeConsideringRelationType.'.operation,attach',
-                    'required_if:'.$attributeConsideringRelationType.'.operation,detach',
-                    'required_if:'.$attributeConsideringRelationType.'.operation,toggle',
-                    'required_if:'.$attributeConsideringRelationType.'.operation,sync',
                 ],
                 $attributeConsideringRelationType.'.without_detaching' => [
                     'boolean',
