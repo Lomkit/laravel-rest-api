@@ -52,7 +52,7 @@ class Mutate extends RestRule
                 ],
 
                 $attributeConsideringRelationType.'.keys' => [
-                    'prohibits:'.$attributeConsideringRelationType.'.key',
+//                    'prohibits:'.$attributeConsideringRelationType.'.key',
                     'array',
                     ...(!$this->relation?->hasMultipleEntries() ? ['prohibited'] : []),
                 ],
