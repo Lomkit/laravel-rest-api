@@ -85,7 +85,7 @@ trait PerformMutation
     public function mutations(array $mutation = [], $attributes = [])
     {
         $mutations = [];
-        $keys = $mutation['keys'] ?? [$mutation['key']];
+        $keys = [$mutation['key']];
 
         foreach ($keys as $key) {
             $mutations[] = $this->applyMutation($mutation, $attributes, $key);

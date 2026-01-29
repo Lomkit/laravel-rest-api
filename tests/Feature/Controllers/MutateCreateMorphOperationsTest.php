@@ -329,7 +329,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'keys'      => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
+                                    'key'      => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -437,7 +437,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                             'morphManyRelation' => [
                                 [
                                     'operation'  => 'update',
-                                    'keys'       => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
+                                    'key'       => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -878,7 +878,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'keys'      => [$morphToManyRelationToAttach1->getKey(), $morphToManyRelationToAttach2->getKey()],
+                                    'key'      => [$morphToManyRelationToAttach1->getKey(), $morphToManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -986,7 +986,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                             'morphToManyRelation' => [
                                 [
                                     'operation'  => 'update',
-                                    'keys'       => [$morphToManyRelationToAttach1->getKey(), $morphToManyRelationToAttach2->getKey()],
+                                    'key'       => [$morphToManyRelationToAttach1->getKey(), $morphToManyRelationToAttach2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -1287,7 +1287,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                             'morphedByManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'keys'      => [$morphedByManyRelationToAttach1->getKey(), $morphedByManyRelationToAttach2->getKey()],
+                                    'key'      => [$morphedByManyRelationToAttach1->getKey(), $morphedByManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -1395,7 +1395,7 @@ class MutateCreateMorphOperationsTest extends TestCase
                             'morphedByManyRelation' => [
                                 [
                                     'operation'  => 'update',
-                                    'keys'       => [$morphedByManyRelationToAttach1->getKey(), $morphedByManyRelationToAttach2->getKey()],
+                                    'key'       => [$morphedByManyRelationToAttach1->getKey(), $morphedByManyRelationToAttach2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
