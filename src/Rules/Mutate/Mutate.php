@@ -41,23 +41,20 @@ class Mutate extends RestRule
                     new ArrayWithKey($this->resource->getFields($request)),
                 ],
                 $attributeConsideringRelationType.'.key' => [
-//                    'required_without:'.$attributeConsideringRelationType.'.keys',
-//                    'prohibited_if:'.$attributeConsideringRelationType.'.keys,*',
-                    'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
                     'required_if:'.$attributeConsideringRelationType.'.operation,update',
                     'required_if:'.$attributeConsideringRelationType.'.operation,attach',
                     'required_if:'.$attributeConsideringRelationType.'.operation,detach',
                     'required_if:'.$attributeConsideringRelationType.'.operation,toggle',
                     'required_if:'.$attributeConsideringRelationType.'.operation,sync',
                     'prohibited_if:'.$attributeConsideringRelationType.'.operation,create',
+                    'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
                 ],
-//                $attributeConsideringRelationType.'.keys' => [
+                //                $attributeConsideringRelationType.'.keys' => [
 //                    'array',
 //                    'required_without:'.$attributeConsideringRelationType.'.key',
 //                    'prohibited_if:'.$attributeConsideringRelationType.'.key,*',
 //                    ...(!$this->relation?->hasMultipleEntries() ? ['prohibited'] : []),
 //                ],
-
                 $attributeConsideringRelationType.'.without_detaching' => [
                     'boolean',
                     'prohibited_unless:'.$attributeConsideringRelationType.'.operation,sync',
