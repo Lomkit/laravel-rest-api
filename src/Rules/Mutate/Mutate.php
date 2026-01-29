@@ -48,6 +48,7 @@ class Mutate extends RestRule
                     'required_if:'.$attributeConsideringRelationType.'.operation,sync',
                     'prohibited_if:'.$attributeConsideringRelationType.'.operation,create',
                     'prohibited_if:'.$attributeConsideringRelationType.'.keys,*',
+                    'required_without:'.$attributeConsideringRelationType.'.keys',
                     'exists:'.$this->resource::newModel()->getTable().','.$this->resource::newModel()->getKeyName(),
                 ],
                 $attributeConsideringRelationType.'.keys' => [
@@ -59,6 +60,7 @@ class Mutate extends RestRule
                     'required_if:'.$attributeConsideringRelationType.'.operation,sync',
                     'prohibited_if:'.$attributeConsideringRelationType.'.operation,create',
                     'prohibited_if:'.$attributeConsideringRelationType.'.key,*',
+                    'required_without:'.$attributeConsideringRelationType.'.key',
                     ...(!$this->relation?->hasMultipleEntries() ? ['prohibited'] : []),
                 ],
                 $attributeConsideringRelationType.'.without_detaching' => [
