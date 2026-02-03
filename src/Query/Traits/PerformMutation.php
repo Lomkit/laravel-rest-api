@@ -42,7 +42,7 @@ trait PerformMutation
     /**
      * Apply a mutation to the model based on the provided mutation parameters.
      *
-     * @param array $mutation An array of mutation parameters.
+     * @param array $mutation   An array of mutation parameters.
      * @param array $attributes Additional attributes to apply to the model.
      *
      * @return Model The mutated model.
@@ -75,7 +75,7 @@ trait PerformMutation
     /**
      * Apply a mutation to the model based on the provided mutation parameters.
      *
-     * @param array $mutation An array of mutation parameters.
+     * @param array $mutation   An array of mutation parameters.
      * @param array $attributes Additional attributes to apply to the model.
      *
      * @return array<Model> The mutated model.
@@ -86,7 +86,7 @@ trait PerformMutation
         $keys = is_array($keys) ? $keys : [$keys];
 
         return array_map(
-            fn($key) => $this->applyMutation($mutation, $attributes, $key),
+            fn ($key) => $this->applyMutation($mutation, $attributes, $key),
             $keys
         );
     }
@@ -94,9 +94,9 @@ trait PerformMutation
     /**
      * Mutate the model by applying attributes and relations.
      *
-     * @param Model $model The Eloquent model to mutate.
+     * @param Model $model      The Eloquent model to mutate.
      * @param array $attributes The attributes to mutate.
-     * @param array $mutation The mutation array.
+     * @param array $mutation   The mutation array.
      *
      * @return Model The mutated model.
      */
