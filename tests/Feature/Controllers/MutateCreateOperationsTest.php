@@ -675,6 +675,49 @@ class MutateCreateOperationsTest extends TestCase
         );
     }
 
+    public function test_creating_a_resource_with_attaching_empty_has_many_relation(): void
+    {
+        $modelToCreate = ModelFactory::new()->makeOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'create',
+                        'attributes' => [
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
+                        ],
+                        'relations' => [
+                            'hasManyRelation' => [
+                                [
+                                    'operation' => 'attach',
+                                    'key'       => [],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [$modelToCreate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            0
+        );
+    }
+
     public function test_creating_a_resource_with_updating_has_many_relation(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();

@@ -351,6 +351,49 @@ class MutateCreateMorphOperationsTest extends TestCase
         );
     }
 
+    public function test_creating_a_resource_with_attaching_empty_morph_many_relation(): void
+    {
+        $modelToCreate = ModelFactory::new()->makeOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(MorphManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'create',
+                        'attributes' => [
+                            'name'   => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
+                        ],
+                        'relations' => [
+                            'morphManyRelation' => [
+                                [
+                                    'operation' => 'attach',
+                                    'key'       => [],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [$modelToCreate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('created.0'))->morphManyRelation()->count(),
+            0
+        );
+    }
+
     public function test_creating_a_resource_with_updating_morph_many_relation(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
