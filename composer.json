@@ -20,6 +20,9 @@
     "phpunit/phpunit": "^10|^11",
     "laravel/scout": "^10"
   },
+  "suggest": {
+    "dedoc/scramble": "Required to use LomkitOperationExtension for automatic API documentation."
+  },
   "autoload": {
     "psr-4": {
       "Lomkit\\Rest\\": "src/"
