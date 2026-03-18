@@ -20,8 +20,6 @@ jobs:
         exclude:
           - php-version: '8.2'
             laravel-version: '^13.0'
-          - php-version: '8.5'
-            laravel-version: '^11.0'
 
     name: Tests on PHP ${{ matrix.php-version }} with Laravel ${{ matrix.laravel-version }} and ${{ matrix.database }}
 
