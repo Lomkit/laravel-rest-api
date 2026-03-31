@@ -3,7 +3,7 @@
 namespace Lomkit\Rest\Concerns\Resource;
 
 use Illuminate\Pagination\Paginator;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Lomkit\Rest\Pagination\LengthAwarePaginator;
 use Laravel\Scout\Builder;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Query\ScoutBuilder;
