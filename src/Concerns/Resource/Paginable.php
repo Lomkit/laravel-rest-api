@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Laravel\Scout\Builder;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Query\ScoutBuilder;
@@ -19,10 +21,30 @@ trait Paginable
     public function paginate($query, RestRequest $request)
     {
         $defaultLimit = $this->defaultLimit ?? 50;
+        $limit = $request->input('search.limit', $defaultLimit);
 
         // In case we have a scout builder
         if ($query instanceof Builder) {
-            $paginator = $query->paginate($request->input('search.limit', $defaultLimit), 'page', $request->input('search.page', 1));
+            // No limit: retrieve all results as a single page
+            if ($this->isUnlimitedLimit($limit)) {
+                $model = $this->newModel();
+                $queryBuilder = (new ScoutBuilder($this))->applyQueryCallback(
+                    $model->newQuery(),
+                    $request->input('search', [])
+                );
+
+                $results = $queryBuilder->get();
+
+                return new LengthAwarePaginator(
+                    $results,
+                    $results->count(),
+                    $results->count() ?: 1,
+                    1,
+                    ['path' => Paginator::resolveCurrentPath()]
+                );
+            }
+
+            $paginator = $query->paginate($limit, 'page', $request->input('search.page', 1));
 
             if ($paginator->isEmpty()) {
                 return $paginator;
@@ -37,6 +59,19 @@ trait Paginable
             return $paginator->setCollection($results);
         }
 
-        return $query->paginate($request->input('search.limit', $defaultLimit), ['*'], 'page', $request->input('search.page', 1));
+        // No limit: retrieve all results as a single page
+        if ($this->isUnlimitedLimit($limit)) {
+            $results = $query->get();
+
+            return new LengthAwarePaginator(
+                $results,
+                $results->count(),
+                $results->count() ?: 1,
+                1,
+                ['path' => Paginator::resolveCurrentPath()]
+            );
+        }
+
+        return $query->paginate($limit, ['*'], 'page', $request->input('search.page', 1));
     }
 }

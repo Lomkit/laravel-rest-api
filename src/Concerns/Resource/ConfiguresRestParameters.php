@@ -118,6 +118,18 @@ trait ConfiguresRestParameters
     }
 
     /**
+     * Verify if the provided limit is the unlimited one.
+     *
+     * @param int $limit
+     *
+     * @return bool
+     */
+    public function isUnlimitedLimit(int $limit): bool
+    {
+        return $limit === -1;
+    }
+
+    /**
      * Get the resource's limits.
      *
      * @param \Lomkit\Rest\Http\Requests\RestRequest $request
