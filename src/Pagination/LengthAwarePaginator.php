@@ -32,6 +32,16 @@ class LengthAwarePaginator extends BaseLengthAwarePaginator
     }
 
     /**
+     * Get the number of items shown per page.
+     *
+     * @return int
+     */
+    public function perPage(): int
+    {
+        return $this->total() === 0 ? 0 : parent::perPage();
+    }
+
+    /**
      * Get the meta of items being paginated.
      *
      * @return array
