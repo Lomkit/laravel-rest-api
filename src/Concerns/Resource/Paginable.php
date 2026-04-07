@@ -28,17 +28,17 @@ trait Paginable
                 return $paginator;
             }
 
-            $ids = $paginator->getCollection()->modelKeys();
+            $paginatedQuery = $paginator->getCollection()->toQuery();
 
-            $paginatedQuery = $this->newModel()->whereKey($ids);
             // Apply query callback after pagination to prevent Scout from mapping all IDs during total count calculation,
             // which can cause "allowed memory size" errors with large result sets
             $scoutBuilder = (new ScoutBuilder($this))->applyQueryCallback($paginatedQuery, $request->input('search', []));
+            $results = $scoutBuilder->get();
 
             // The DB query does not guarantee order, so we rebuild the collection
             // from Scout's ID list to preserve the original sort order.
-            $keyedResults = $scoutBuilder->get()->keyBy($this->newModel()->getKeyName());
-            $ordered = collect($ids)
+            $keyedResults = $results->keyBy($this->newModel()->getKeyName());
+            $ordered = collect($paginator->getCollection()->modelKeys())
                 ->map(fn ($id) => $keyedResults->get($id))
                 ->filter()
                 ->values();
