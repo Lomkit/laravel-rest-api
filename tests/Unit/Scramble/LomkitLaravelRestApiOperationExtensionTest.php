@@ -2,15 +2,21 @@
 
 namespace Lomkit\Rest\Tests\Unit\Scramble;
 
+use Dedoc\Scramble\Extensions\OperationExtension;
+use Dedoc\Scramble\GeneratorConfig;
+use Dedoc\Scramble\Infer;
+use Dedoc\Scramble\Support\Generator\Operation;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
+use Dedoc\Scramble\Support\Generator\TypeTransformer;
 use Illuminate\Validation\Rules\In;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension;
+use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 use Lomkit\Rest\Tests\TestCase;
 use Mockery;
 
@@ -22,14 +28,14 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     {
         parent::setUp();
 
-        if (!class_exists(\Dedoc\Scramble\Extensions\OperationExtension::class)) {
+        if (! class_exists(OperationExtension::class)) {
             $this->markTestSkipped('dedoc/scramble is not installed.');
         }
 
         $this->extension = new LomkitLaravelRestApiOperationExtension(
-            Mockery::mock(\Dedoc\Scramble\Infer::class),
-            Mockery::mock(\Dedoc\Scramble\Support\Generator\TypeTransformer::class),
-            new \Dedoc\Scramble\GeneratorConfig(),
+            Mockery::mock(Infer::class),
+            Mockery::mock(TypeTransformer::class),
+            new GeneratorConfig,
         );
     }
 
@@ -106,16 +112,28 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
 
     public function test_extract_all_rules_merges_all_three_contexts(): void
     {
-        $resource = new class {
-            public function rules(RestRequest $request): array        { return ['shared' => ['string']]; }
-            public function createRules(RestRequest $request): array  { return ['create_only' => ['string']]; }
-            public function updateRules(RestRequest $request): array  { return ['update_only' => ['integer']]; }
+        $resource = new class
+        {
+            public function rules(RestRequest $request): array
+            {
+                return ['shared' => ['string']];
+            }
+
+            public function createRules(RestRequest $request): array
+            {
+                return ['create_only' => ['string']];
+            }
+
+            public function updateRules(RestRequest $request): array
+            {
+                return ['update_only' => ['integer']];
+            }
         };
 
         $request = app(RestRequest::class);
-        $result  = $this->callPrivate('extractAllRules', [$resource, $request]);
+        $result = $this->callPrivate('extractAllRules', [$resource, $request]);
 
-        $this->assertArrayHasKey('shared',      $result);
+        $this->assertArrayHasKey('shared', $result);
         $this->assertArrayHasKey('create_only', $result);
         $this->assertArrayHasKey('update_only', $result);
     }
@@ -124,14 +142,26 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     {
         // Before the fix, update-only rules were ignored and the field fell back
         // to StringType. Verify that the rules are preserved in the 'update' bucket.
-        $resource = new class {
-            public function rules(RestRequest $request): array        { return []; }
-            public function createRules(RestRequest $request): array  { return []; }
-            public function updateRules(RestRequest $request): array  { return ['age' => ['integer']]; }
+        $resource = new class
+        {
+            public function rules(RestRequest $request): array
+            {
+                return [];
+            }
+
+            public function createRules(RestRequest $request): array
+            {
+                return [];
+            }
+
+            public function updateRules(RestRequest $request): array
+            {
+                return ['age' => ['integer']];
+            }
         };
 
         $request = app(RestRequest::class);
-        $result  = $this->callPrivate('extractAllRules', [$resource, $request]);
+        $result = $this->callPrivate('extractAllRules', [$resource, $request]);
 
         $this->assertSame(['integer'], $result['age']['update']);
 
@@ -145,7 +175,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
         $resource = new class {};  // no rules() / createRules() / updateRules()
 
         $request = app(RestRequest::class);
-        $result  = $this->callPrivate('extractAllRules', [$resource, $request]);
+        $result = $this->callPrivate('extractAllRules', [$resource, $request]);
 
         $this->assertSame([], $result);
     }
@@ -169,8 +199,12 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
         // whose relations() method refers to a non-existent file path is hard to
         // force, so we verify the try/catch by passing a non-object).
         // The safest assertion is that the method never throws.
-        $resource = new class {
-            public function relations(): array { return []; }
+        $resource = new class
+        {
+            public function relations(): array
+            {
+                return [];
+            }
         };
 
         $result = $this->callPrivate('parseRelationsFromSource', [$resource]);
@@ -182,14 +216,14 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     {
         // ModelResource defines relations using Type::make('name', …) which is
         // exactly the pattern the regex targets.
-        $resource = new \Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource();
-        $result   = $this->callPrivate('parseRelationsFromSource', [$resource]);
+        $resource = new ModelResource;
+        $result = $this->callPrivate('parseRelationsFromSource', [$resource]);
 
         $this->assertNotEmpty($result);
 
         $names = array_column($result, 'name');
-        $this->assertContains('hasOneRelation',      $names);
-        $this->assertContains('hasManyRelation',     $names);
+        $this->assertContains('hasOneRelation', $names);
+        $this->assertContains('hasManyRelation', $names);
         $this->assertContains('belongsToManyRelation', $names);
 
         foreach ($result as $relation) {
@@ -225,10 +259,10 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
         $this->assertInstanceOf(ArrayType::class, $result);
 
         // The items of the array must be an ObjectType with pivot and without_detaching.
-        $items      = $result->items;
+        $items = $result->items;
         $this->assertInstanceOf(ObjectType::class, $items);
-        $this->assertArrayHasKey('pivot',              $items->properties);
-        $this->assertArrayHasKey('without_detaching',  $items->properties);
+        $this->assertArrayHasKey('pivot', $items->properties);
+        $this->assertArrayHasKey('without_detaching', $items->properties);
     }
 
     public function test_single_relation_record_has_no_pivot(): void
@@ -236,7 +270,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
         $result = $this->callPrivate('buildRelationMutationType', ['BelongsTo']);
 
         $this->assertInstanceOf(ObjectType::class, $result);
-        $this->assertArrayNotHasKey('pivot',             $result->properties);
+        $this->assertArrayNotHasKey('pivot', $result->properties);
         $this->assertArrayNotHasKey('without_detaching', $result->properties);
     }
 
@@ -268,10 +302,10 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
 
         $desc = $this->callPrivate('buildRelationsDescription', [$relations]);
 
-        $this->assertStringContainsString('posts',      $desc);
-        $this->assertStringContainsString('HasMany',    $desc);
-        $this->assertStringContainsString('category',   $desc);
-        $this->assertStringContainsString('BelongsTo',  $desc);
+        $this->assertStringContainsString('posts', $desc);
+        $this->assertStringContainsString('HasMany', $desc);
+        $this->assertStringContainsString('category', $desc);
+        $this->assertStringContainsString('BelongsTo', $desc);
     }
 
     // -------------------------------------------------------------------------
@@ -289,7 +323,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
         $operatorEnum = $filtersItems->properties['operator']->enum;
 
         $this->assertContains('not like', $operatorEnum);
-        $this->assertContains('like',     $operatorEnum);
+        $this->assertContains('like', $operatorEnum);
     }
 
     public function test_search_schema_value_is_mixed_type(): void
@@ -297,7 +331,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
         $operation = $this->makeOperation();
         $this->callPrivate('documentSearch', [$operation, ['id'], [], 'Model']);
 
-        $schema      = $this->extractSearchSchema($operation);
+        $schema = $this->extractSearchSchema($operation);
         $filterItems = $schema->properties['filters']->items;
 
         $this->assertInstanceOf(MixedType::class, $filterItems->properties['value']);
@@ -310,10 +344,10 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
 
         $schema = $this->extractSearchSchema($operation);
 
-        $this->assertArrayHasKey('text',         $schema->properties);
-        $this->assertArrayHasKey('aggregates',   $schema->properties);
+        $this->assertArrayHasKey('text', $schema->properties);
+        $this->assertArrayHasKey('aggregates', $schema->properties);
         $this->assertArrayHasKey('instructions', $schema->properties);
-        $this->assertArrayHasKey('gates',        $schema->properties);
+        $this->assertArrayHasKey('gates', $schema->properties);
     }
 
     // -------------------------------------------------------------------------
@@ -330,7 +364,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
         $operation = $this->makeOperation();
         $this->callPrivate('documentMutate', [$operation, ['age'], [], $rules, 'Model']);
 
-        $schema     = $this->extractMutateSchema($operation);
+        $schema = $this->extractMutateSchema($operation);
         $attributes = $schema->items->properties['attributes'];
 
         $this->assertArrayHasKey('age', $attributes->properties);
@@ -341,20 +375,22 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     // Private helpers for schema extraction
     // -------------------------------------------------------------------------
 
-    private function makeOperation(): \Dedoc\Scramble\Support\Generator\Operation
+    private function makeOperation(): Operation
     {
-        return new \Dedoc\Scramble\Support\Generator\Operation('post');
+        return new Operation('post');
     }
 
-    private function extractSearchSchema(\Dedoc\Scramble\Support\Generator\Operation $operation): ObjectType
+    private function extractSearchSchema(Operation $operation): ObjectType
     {
-        $body    = $operation->requestBodyObject->content['application/json']->type;
+        $body = $operation->requestBodyObject->content['application/json']->type;
+
         return $body->properties['search'];
     }
 
-    private function extractMutateSchema(\Dedoc\Scramble\Support\Generator\Operation $operation): ArrayType
+    private function extractMutateSchema(Operation $operation): ArrayType
     {
         $body = $operation->requestBodyObject->content['application/json']->type;
+
         return $body->properties['mutate'];
     }
 }
