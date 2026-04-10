@@ -597,6 +597,100 @@ class MutateUpdateOperationsTest extends TestCase
         );
     }
 
+    public function test_updating_a_resource_with_attaching_multiple_has_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $hasManyRelationToAttach1 = HasManyRelationFactory::new()
+            ->createOne();
+        $hasManyRelationToAttach2 = HasManyRelationFactory::new()
+            ->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'hasManyRelation' => [
+                                [
+                                    'operation' => 'attach',
+                                    'key'       => [$hasManyRelationToAttach1->getKey(), $hasManyRelationToAttach2->getKey()],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            2
+        );
+    }
+
+    public function test_updating_a_resource_with_attaching_empty_has_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'hasManyRelation' => [
+                                [
+                                    'operation' => 'attach',
+                                    'key'       => [],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            0
+        );
+    }
+
     public function test_updating_a_resource_with_attaching_has_many_relation_with_required_rules(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
@@ -699,6 +793,57 @@ class MutateUpdateOperationsTest extends TestCase
         );
     }
 
+    public function test_updating_a_resource_with_detaching_multiple_has_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $hasManyRelationToDetach1 = HasManyRelationFactory::new()
+            ->for($modelToUpdate)
+            ->createOne();
+        $hasManyRelationToDetach2 = HasManyRelationFactory::new()
+            ->for($modelToUpdate)
+            ->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'hasManyRelation' => [
+                                [
+                                    'operation'  => 'detach',
+                                    'key'        => [$hasManyRelationToDetach1->getKey(), $hasManyRelationToDetach2->getKey()],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            0
+        );
+    }
+
     public function test_updating_a_resource_with_updating_has_many_relation(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
@@ -753,6 +898,73 @@ class MutateUpdateOperationsTest extends TestCase
         $this->assertEquals(
             Model::find($response->json('updated.0'))->hasManyRelation()->count(),
             1
+        );
+    }
+
+    public function test_updating_a_resource_with_updating_multiple_has_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $hasManyRelationToAttach1 = HasManyRelationFactory::new()
+            ->for(
+                ModelFactory::new()->createOne()
+            )
+            ->createOne();
+        $hasManyRelationToAttach2 = HasManyRelationFactory::new()
+            ->for(
+                ModelFactory::new()->createOne()
+            )
+            ->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'hasManyRelation' => [
+                                [
+                                    'operation'  => 'update',
+                                    'key'        => [$hasManyRelationToAttach1->getKey(), $hasManyRelationToAttach2->getKey()],
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the number has been modified on the relation
+        $this->assertEquals(
+            $hasManyRelationToAttach1->fresh()->number,
+            5001
+        );
+
+        $this->assertEquals(
+            $hasManyRelationToAttach2->fresh()->number,
+            5001
+        );
+
+        // Here we test that the model is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            2
         );
     }
 
@@ -1245,6 +1457,116 @@ class MutateUpdateOperationsTest extends TestCase
         );
     }
 
+    public function test_updating_a_resource_with_toggling_empty_belongs_to_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManyToggled = BelongsToManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->belongsToManyRelation()
+            ->attach($belongsToManyToggled);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation' => 'toggle',
+                                    'key'       => [],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that toggling with empty key detaches all relations
+        $this->assertEquals(
+            1,
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count()
+        );
+    }
+
+    public function test_updating_a_resource_with_toggling_multiple_belongs_to_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManyToggled1 = BelongsToManyRelationFactory::new()->createOne();
+        $belongsToManyToggled2 = BelongsToManyRelationFactory::new()->createOne();
+        $belongsToManyNotToggled = BelongsToManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->belongsToManyRelation()
+            ->attach([$belongsToManyToggled1, $belongsToManyToggled2]);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'  => 'toggle',
+                                    'key'        => [$belongsToManyToggled1->getKey(), $belongsToManyToggled2->getKey()],
+                                ],
+                                [
+                                    'operation'  => 'toggle',
+                                    'key'        => $belongsToManyNotToggled->getKey(),
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            1
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->first()->getKey(),
+            $belongsToManyNotToggled->getKey()
+        );
+    }
+
     public function test_updating_a_resource_with_toggling_belongs_to_many_relation_and_updating_attributes_and_pivot(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
@@ -1393,6 +1715,133 @@ class MutateUpdateOperationsTest extends TestCase
         $this->assertEquals(
             Model::find($response->json('updated.0'))->belongsToManyRelation()->first()->getKey(),
             $belongsToManyNotSynced->getKey()
+        );
+    }
+
+    public function test_updating_a_resource_with_syncing_multiple_belongs_to_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManySynced = BelongsToManyRelationFactory::new()->createOne();
+        $belongsToManyNotSynced1 = BelongsToManyRelationFactory::new()->createOne();
+        $belongsToManyNotSynced2 = BelongsToManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->belongsToManyRelation()
+            ->attach([$belongsToManySynced]);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'  => 'sync',
+                                    'key'        => [$belongsToManyNotSynced1->getKey(), $belongsToManyNotSynced2->getKey()],
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            2
+        );
+
+        $this->assertDatabaseHas(
+            $belongsToManySynced->getTable(),
+            ['number' => 5001]
+        );
+        $this->assertDatabaseHas(
+            $modelToUpdate->belongsToManyRelation()->getTable(),
+            ['number' => 20]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->first()->getKey(),
+            $belongsToManyNotSynced1->getKey()
+        );
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->get()->last()->getKey(),
+            $belongsToManyNotSynced2->getKey()
+        );
+    }
+
+    public function test_updating_a_resource_with_syncing_empty_belongs_to_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManySynced = BelongsToManyRelationFactory::new()->createOne();
+
+        $modelToUpdate->belongsToManyRelation()
+            ->attach([$belongsToManySynced]);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'  => 'sync',
+                                    'key'        => [],
+                                    'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            0
         );
     }
 
@@ -1743,6 +2192,113 @@ class MutateUpdateOperationsTest extends TestCase
         );
     }
 
+    public function test_updating_a_resource_with_updating_multiple_belongs_to_many_relation_pivot_fields(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        $belongsToManyToUpdate1 = BelongsToManyRelationFactory::new()->createOne();
+        $belongsToManyToUpdate2 = BelongsToManyRelationFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'  => 'update',
+                                    'key'        => [$belongsToManyToUpdate1->getKey(), $belongsToManyToUpdate2->getKey()],
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            2
+        );
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number,
+            20
+        );
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number,
+            20
+        );
+    }
+
+    public function test_updating_a_resource_with_updating_empty_belongs_to_many_relation_pivot_fields(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation'  => 'update',
+                                    'key'        => [],
+                                    'pivot'      => [
+                                        'number' => 20,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate]
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            0
+        );
+    }
+
     public function test_updating_a_resource_with_creating_multiple_belongs_to_many_relation(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
@@ -1842,6 +2398,116 @@ class MutateUpdateOperationsTest extends TestCase
         );
     }
 
+    public function test_updating_a_resource_with_attaching_multiple_belongs_to_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManyRelationToAttach1 = BelongsToManyRelationFactory::new()
+            ->has(
+                ModelFactory::new()->count(1)
+            )
+            ->createOne();
+        $belongsToManyRelationToAttach2 = BelongsToManyRelationFactory::new()
+            ->has(
+                ModelFactory::new()->count(1)
+            )
+            ->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation' => 'attach',
+                                    'key'       => [$belongsToManyRelationToAttach1->getKey(), $belongsToManyRelationToAttach2->getKey()],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            2
+        );
+    }
+
+    public function test_updating_a_resource_with_attaching_empty_belongs_to_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManyRelationToAttach1 = BelongsToManyRelationFactory::new()
+            ->has(
+                ModelFactory::new()->count(1)
+            )
+            ->createOne();
+        $belongsToManyRelationToAttach2 = BelongsToManyRelationFactory::new()
+            ->has(
+                ModelFactory::new()->count(1)
+            )
+            ->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation' => 'attach',
+                                    'key'       => [],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            0
+        );
+    }
+
     public function test_updating_a_resource_with_detaching_belongs_to_many_relation(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
@@ -1868,6 +2534,106 @@ class MutateUpdateOperationsTest extends TestCase
                                 [
                                     'operation' => 'detach',
                                     'key'       => $belongsToManyRelationToDetach->getKey(),
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that the relation is correctly linked
+        $this->assertEquals(
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            0
+        );
+    }
+
+    public function test_updating_a_resource_with_detaching_empty_array_belongs_to_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $existingRelation = BelongsToManyRelationFactory::new()
+            ->createOne();
+
+        $modelToUpdate->belongsToManyRelation()->attach($existingRelation);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation' => 'detach',
+                                    'key'       => [],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertMutatedResponse(
+            $response,
+            [],
+            [$modelToUpdate],
+        );
+
+        // Here we test that detaching with empty array preserves existing relations
+        $this->assertEquals(
+            1,
+            Model::find($response->json('updated.0'))->belongsToManyRelation()->count()
+        );
+    }
+
+    public function test_updating_a_resource_with_detaching_multiple_belongs_to_many_relation(): void
+    {
+        $modelToUpdate = ModelFactory::new()->createOne();
+        $belongsToManyRelationToDetach1 = BelongsToManyRelationFactory::new()
+            ->recycle($modelToUpdate)
+            ->createOne();
+        $belongsToManyRelationToDetach2 = BelongsToManyRelationFactory::new()
+            ->recycle($modelToUpdate)
+            ->createOne();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/mutate',
+            [
+                'mutate' => [
+                    [
+                        'operation'  => 'update',
+                        'key'        => $modelToUpdate->getKey(),
+                        'attributes' => [
+                            'name'   => 'new name',
+                            'number' => 5001,
+                        ],
+                        'relations' => [
+                            'belongsToManyRelation' => [
+                                [
+                                    'operation' => 'detach',
+                                    'key'       => [$belongsToManyRelationToDetach1->getKey(), $belongsToManyRelationToDetach2->getKey()],
                                 ],
                             ],
                         ],

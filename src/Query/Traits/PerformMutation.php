@@ -33,9 +33,7 @@ trait PerformMutation
         ];
 
         foreach ($parameters['mutate'] as $parameter) {
-            $operations[
-                $this->mutateOperationsVerbose[$parameter['operation']]
-            ][] = $this->applyMutation($parameter)->getKey();
+            $operations[$this->mutateOperationsVerbose[$parameter['operation']]][] = $this->applyMutation($parameter)->getKey();
         }
 
         return $operations;
@@ -49,14 +47,14 @@ trait PerformMutation
      *
      * @return Model The mutated model.
      */
-    public function applyMutation(array $mutation = [], $attributes = [])
+    public function applyMutation(array $mutation = [], $attributes = [], $key = null)
     {
         $allAttributes = array_merge($attributes, $mutation['attributes'] ?? []);
 
         if ($mutation['operation'] === 'create') {
             $model = $this->resource::newModel();
         } else {
-            $model = $this->resource::newModel()::findOrFail($mutation['key']);
+            $model = $this->resource::newModel()::query()->findOrFail($key ?? $mutation['key']);
         }
 
         if ($mutation['operation'] === 'create') {
@@ -71,6 +69,25 @@ trait PerformMutation
             $model,
             $allAttributes,
             $mutation
+        );
+    }
+
+    /**
+     * Apply a mutation to the model based on the provided mutation parameters.
+     *
+     * @param array $mutation   An array of mutation parameters.
+     * @param array $attributes Additional attributes to apply to the model.
+     *
+     * @return array<Model> The mutated model.
+     */
+    public function mutations(array $mutation = [], $attributes = [])
+    {
+        $keys = $mutation['key'] ?? [];
+        $keys = is_array($keys) ? $keys : [$keys];
+
+        return array_map(
+            fn ($key) => $this->applyMutation($mutation, $attributes, $key),
+            $keys
         );
     }
 
