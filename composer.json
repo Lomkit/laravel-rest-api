@@ -16,12 +16,12 @@
   },
   "require-dev": {
     "guzzlehttp/guzzle": "^6.0|^7.0",
+    "laravel/scout": "^10",
     "orchestra/testbench": "^9|^10",
-    "phpunit/phpunit": "^10|^11",
-    "laravel/scout": "^10"
+    "phpunit/phpunit": "^10|^11"
   },
   "suggest": {
-    "dedoc/scramble": "Required to use LomkitOperationExtension for automatic API documentation."
+    "dedoc/scramble": "Required to use LomkitLaravelRestApiOperationExtension for automatic API documentation."
   },
   "autoload": {
     "psr-4": {

@@ -9,15 +9,23 @@ use Dedoc\Scramble\Support\Generator\Schema;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
+use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Dedoc\Scramble\Support\RouteInfo;
+use Illuminate\Validation\Rules\In;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
-class LomkitOperationExtension extends OperationExtension
+class LomkitLaravelRestApiOperationExtension extends OperationExtension
 {
+    /**
+     * Generate OpenAPI documentation for a REST endpoint operation.
+     *
+     * @param Operation  $operation
+     * @param RouteInfo  $routeInfo
+     */
     public function handle(Operation $operation, RouteInfo $routeInfo): void
     {
         $controller = $routeInfo->route->getController();
@@ -47,33 +55,69 @@ class LomkitOperationExtension extends OperationExtension
         };
     }
 
-    private function parseRelationsFromSource($resource): array
+    /**
+     * Parse relation definitions from the resource's source code via reflection.
+     *
+     * Falls back to an empty array if the relations() method cannot be read.
+     *
+     * @param  object  $resource
+     * @return array<int, array{name: string, type: string}>
+     */
+    private function parseRelationsFromSource(object $resource): array
     {
-        $rc = new \ReflectionClass($resource);
-        $method = $rc->getMethod('relations');
-        $lines = file($method->getFileName());
-        $source = implode('', array_slice(
-            $lines,
-            $method->getStartLine() - 1,
-            $method->getEndLine() - $method->getStartLine() + 1
-        ));
+        try {
+            $rc = new \ReflectionClass($resource);
 
-        preg_match_all(
-            '/(\w+)::make\s*\(\s*[\'"]([^\'"]+)[\'"]/',
-            $source,
-            $matches,
-            PREG_SET_ORDER
-        );
+            if (!$rc->hasMethod('relations')) {
+                return [];
+            }
 
-        return array_map(fn($m) => [
-            'name' => $m[2],
-            'type' => $m[1],
-        ], $matches);
+            $method = $rc->getMethod('relations');
+            $fileName = $method->getFileName();
+
+            if ($fileName === false) {
+                return [];
+            }
+
+            $lines = file($fileName);
+
+            if ($lines === false) {
+                return [];
+            }
+
+            $source = implode('', array_slice(
+                $lines,
+                $method->getStartLine() - 1,
+                $method->getEndLine() - $method->getStartLine() + 1
+            ));
+
+            preg_match_all(
+                '/(\w+)::make\s*\(\s*[\'"]([^\'"]+)[\'"]/',
+                $source,
+                $matches,
+                PREG_SET_ORDER
+            );
+
+            return array_map(fn ($m) => [
+                'name' => $m[2],
+                'type' => $m[1],
+            ], $matches);
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
-    private function extractAllRules($resource, RestRequest $request): array
+    /**
+     * Collect validation rules from rules(), createRules(), and updateRules()
+     * and index them by field name with per-context buckets.
+     *
+     * @param  object       $resource
+     * @param  RestRequest  $request
+     * @return array<string, array{all: array, create: array, update: array}>
+     */
+    private function extractAllRules(object $resource, RestRequest $request): array
     {
-        $all = method_exists($resource, 'rules') ? $resource->rules($request) : [];
+        $all    = method_exists($resource, 'rules')       ? $resource->rules($request)       : [];
         $create = method_exists($resource, 'createRules') ? $resource->createRules($request) : [];
         $update = method_exists($resource, 'updateRules') ? $resource->updateRules($request) : [];
 
@@ -86,25 +130,33 @@ class LomkitOperationExtension extends OperationExtension
         $result = [];
         foreach ($fields as $field) {
             $result[$field] = [
-                'all' => (array)($all[$field] ?? []),
-                'create' => (array)($create[$field] ?? []),
-                'update' => (array)($update[$field] ?? []),
+                'all'    => (array) ($all[$field]    ?? []),
+                'create' => (array) ($create[$field] ?? []),
+                'update' => (array) ($update[$field] ?? []),
             ];
         }
 
         return $result;
     }
 
+    /**
+     * Document the search endpoint: filters, sorts, selects, includes, scopes,
+     * text search, aggregates, instructions, and gates.
+     *
+     * @param  Operation  $operation
+     * @param  array      $fields
+     * @param  array      $relations
+     * @param  string     $resourceName
+     */
     private function documentSearch(
         Operation $operation,
-        array     $fields,
-        array     $relations,
-        string    $resourceName
-    ): void
-    {
+        array $fields,
+        array $relations,
+        string $resourceName
+    ): void {
         $operation->summary("Search {$resourceName}");
 
-        $fieldEnum = array_values($fields);
+        $fieldEnum    = array_values($fields);
         $relationEnum = array_column($relations, 'name');
         $relationDesc = $this->buildRelationsDescription($relations);
 
@@ -114,8 +166,11 @@ class LomkitOperationExtension extends OperationExtension
                 ->addProperty('filters', (new ArrayType)->setItems(
                     (new ObjectType)
                         ->addProperty('field', (new StringType)->enum($fieldEnum))
-                        ->addProperty('operator', (new StringType)->enum(['=', '!=', '>', '>=', '<', '<=', 'in', 'not in', 'like']))
-                        ->addProperty('value', new StringType)
+                        ->addProperty('operator', (new StringType)->enum([
+                            '=', '!=', '>', '>=', '<', '<=',
+                            'in', 'not in', 'like', 'not like',
+                        ]))
+                        ->addProperty('value', (new MixedType)->setDescription('Accepts string, integer, boolean, or array'))
                         ->addProperty('type', (new StringType)->enum(['and', 'or']))
                         ->addProperty('nested', new ArrayType)
                 ))
@@ -144,6 +199,25 @@ class LomkitOperationExtension extends OperationExtension
                         ->addProperty('name', new StringType)
                         ->addProperty('parameters', new ArrayType)
                 ))
+                ->addProperty('text', (new ObjectType)
+                    ->addProperty('value', new StringType)
+                    ->addProperty('fields', (new ArrayType)->setItems(new StringType))
+                    ->setDescription('Full-text search across specified fields')
+                )
+                ->addProperty('aggregates', (new ArrayType)->setItems(
+                    (new ObjectType)
+                        ->addProperty('relation', new StringType)
+                        ->addProperty('type', (new StringType)->enum(['count', 'min', 'max', 'avg', 'sum', 'exists']))
+                        ->addProperty('field', new StringType)
+                        ->addProperty('filters', new ArrayType)
+                )->setDescription('Aggregate values over relations'))
+                ->addProperty('instructions', (new ArrayType)->setItems(
+                    (new ObjectType)
+                        ->addProperty('name', new StringType)
+                        ->addProperty('fields', new ArrayType)
+                )->setDescription('Named query instructions defined on the resource'))
+                ->addProperty('gates', (new ArrayType)->setItems(new StringType)
+                    ->setDescription('Gates to evaluate for the current user on each result'))
                 ->addProperty('page', new IntegerType)
                 ->addProperty('limit', new IntegerType)
         );
@@ -153,21 +227,31 @@ class LomkitOperationExtension extends OperationExtension
         );
     }
 
+    /**
+     * Document the mutate endpoint: create and update operations with attributes
+     * and nested relation mutations.
+     *
+     * @param  Operation  $operation
+     * @param  array      $fields
+     * @param  array      $relations
+     * @param  array      $rules
+     * @param  string     $resourceName
+     */
     private function documentMutate(
         Operation $operation,
-        array     $fields,
-        array     $relations,
-        array     $rules,
-        string    $resourceName
-    ): void
-    {
+        array $fields,
+        array $relations,
+        array $rules,
+        string $resourceName
+    ): void {
         $operation->summary("Mutate {$resourceName}");
 
         $attributesType = new ObjectType;
         foreach ($fields as $field) {
-            $fieldRules = $rules[$field] ?? ['all' => [], 'create' => [], 'update' => []];
-            $allRules = array_merge($fieldRules['all'], $fieldRules['create']);
-            $type = $this->resolveFieldType($allRules);
+            $fieldRules  = $rules[$field] ?? ['all' => [], 'create' => [], 'update' => []];
+            // Include all three contexts so update-only rules are also reflected.
+            $allRules    = array_merge($fieldRules['all'], $fieldRules['create'], $fieldRules['update']);
+            $type        = $this->resolveFieldType($allRules);
             $description = $this->buildRuleDescription($fieldRules);
 
             if ($description) {
@@ -204,6 +288,12 @@ class LomkitOperationExtension extends OperationExtension
         );
     }
 
+    /**
+     * Document the destroy endpoint.
+     *
+     * @param  Operation  $operation
+     * @param  string     $resourceName
+     */
     private function documentDestroy(Operation $operation, string $resourceName): void
     {
         $operation->summary("Delete {$resourceName}");
@@ -215,6 +305,12 @@ class LomkitOperationExtension extends OperationExtension
         );
     }
 
+    /**
+     * Document the restore endpoint.
+     *
+     * @param  Operation  $operation
+     * @param  string     $resourceName
+     */
     private function documentRestore(Operation $operation, string $resourceName): void
     {
         $operation->summary("Restore {$resourceName}");
@@ -226,22 +322,54 @@ class LomkitOperationExtension extends OperationExtension
         );
     }
 
+    /**
+     * Infer an OpenAPI type from a flat list of Laravel validation rules.
+     *
+     * Handles both string rules (e.g. 'integer', 'boolean') and object rules
+     * such as Rule::in(), which indicate a string enum.
+     *
+     * @param  array  $rules
+     * @return Type
+     */
     private function resolveFieldType(array $rules): Type
     {
-        $flat = array_map(fn($rule) => is_string($rule) ? strtolower($rule) : '', $rules);
+        $flat = [];
+        foreach ($rules as $rule) {
+            if (is_string($rule)) {
+                $flat[] = strtolower($rule);
+            } elseif ($rule instanceof In) {
+                // Rule::in(...) constrains values but the underlying type is string.
+                $flat[] = 'string';
+            }
+            // Other Rule objects (Unique, Exists, etc.) do not affect the type.
+        }
 
-        if (array_intersect(['integer', 'numeric', 'int'], $flat)) return new IntegerType;
-        if (array_intersect(['boolean', 'bool'], $flat)) return new BooleanType;
-        if (array_intersect(['array'], $flat)) return new ArrayType;
+        if (array_intersect(['integer', 'numeric', 'int'], $flat)) {
+            return new IntegerType;
+        }
+
+        if (array_intersect(['boolean', 'bool'], $flat)) {
+            return new BooleanType;
+        }
+
+        if (array_intersect(['array'], $flat)) {
+            return new ArrayType;
+        }
 
         return new StringType;
     }
 
+    /**
+     * Build a human-readable rule description string grouped by context.
+     *
+     * @param  array  $fieldRules
+     * @return string
+     */
     private function buildRuleDescription(array $fieldRules): string
     {
         $parts = [];
         foreach (['all', 'create', 'update'] as $context) {
-            $r = array_filter($fieldRules[$context], fn($v) => is_string($v));
+            $r = array_filter($fieldRules[$context], fn ($v) => is_string($v));
             if (!empty($r)) {
                 $parts[] = "{$context}: " . implode(', ', $r);
             }
@@ -249,9 +377,17 @@ class LomkitOperationExtension extends OperationExtension
         return implode(' | ', $parts);
     }
 
+    /**
+     * Build a markdown description listing all available relations with their types.
+     *
+     * @param  array  $relations
+     * @return string
+     */
     private function buildRelationsDescription(array $relations): string
     {
-        if (empty($relations)) return '';
+        if (empty($relations)) {
+            return '';
+        }
 
         $lines = ["**Available relations:**\n"];
         foreach ($relations as $rel) {
@@ -260,21 +396,35 @@ class LomkitOperationExtension extends OperationExtension
         return implode("\n", $lines);
     }
 
+    /**
+     * Build the OpenAPI type for a relation mutation payload.
+     *
+     * Single-record relations return an ObjectType; collection relations return
+     * an ArrayType of that object. Each record exposes:
+     *   - operation  (create | update | attach | detach | sync | toggle)
+     *   - key        (integer OR array of integers for bulk operations)
+     *   - attributes (fields of the related resource)
+     *   - pivot      (optional pivot-table attributes, many-to-many only)
+     *   - without_detaching (optional, many-to-many only)
+     *
+     * @param  string  $relationType
+     * @return Type
+     */
     private function buildRelationMutationType(string $relationType): Type
     {
         $single = ['BelongsTo', 'HasOne', 'MorphOne', 'MorphTo', 'HasOneThrough', 'HasOneOfMany', 'MorphOneOfMany'];
-        $many = ['HasMany', 'BelongsToMany', 'MorphMany', 'MorphToMany', 'MorphedByMany', 'HasManyThrough'];
+        $many   = ['HasMany', 'BelongsToMany', 'MorphMany', 'MorphToMany', 'MorphedByMany', 'HasManyThrough'];
 
         $recordType = (new ObjectType)
             ->addProperty('operation', (new StringType)->enum(['create', 'update', 'attach', 'detach', 'sync', 'toggle']))
-            ->addProperty('key', (new IntegerType)->setDescription('Required for update/attach/detach'))
+            ->addProperty('key', (new MixedType)->setDescription('Integer for single operations; array of integers for bulk operations'))
             ->addProperty('attributes', (new ObjectType)->setDescription('Fields of the related resource'));
 
-        if (in_array($relationType, $single)) {
-            return $recordType;
-        }
-
         if (in_array($relationType, $many)) {
+            $recordType
+                ->addProperty('pivot', (new ObjectType)->setDescription('Pivot-table attributes (many-to-many only)'))
+                ->addProperty('without_detaching', (new BooleanType)->setDescription('When true, existing relations are kept during sync'));
+
             return (new ArrayType)->setItems($recordType);
         }
 
