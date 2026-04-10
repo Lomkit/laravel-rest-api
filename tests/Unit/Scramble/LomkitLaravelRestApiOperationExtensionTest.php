@@ -10,6 +10,7 @@ use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\MixedType;
+use Dedoc\Scramble\Support\Generator\Types\NumberType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\TypeTransformer;
@@ -60,9 +61,10 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
         $this->assertInstanceOf(IntegerType::class, $this->callPrivate('resolveFieldType', [['integer']]));
     }
 
-    public function test_resolves_integer_type_from_numeric_rule(): void
+    public function test_resolves_number_type_from_numeric_rule(): void
     {
-        $this->assertInstanceOf(IntegerType::class, $this->callPrivate('resolveFieldType', [['numeric']]));
+        // 'numeric' allows floats, so it maps to NumberType, not IntegerType.
+        $this->assertInstanceOf(NumberType::class, $this->callPrivate('resolveFieldType', [['numeric']]));
     }
 
     public function test_resolves_boolean_type_from_boolean_rule(): void
@@ -195,21 +197,11 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
 
     public function test_parse_relations_returns_empty_array_on_reflection_error(): void
     {
-        // Pass something that will cause a ReflectionException (anonymous class
-        // whose relations() method refers to a non-existent file path is hard to
-        // force, so we verify the try/catch by passing a non-object).
-        // The safest assertion is that the method never throws.
-        $resource = new class
-        {
-            public function relations(): array
-            {
-                return [];
-            }
-        };
+        // A stdClass instance has no relations() method, so ReflectionClass::getMethod()
+        // throws a ReflectionException, exercising the catch (\Throwable) branch.
+        $result = $this->callPrivate('parseRelationsFromSource', [new \stdClass]);
 
-        $result = $this->callPrivate('parseRelationsFromSource', [$resource]);
-
-        $this->assertIsArray($result);
+        $this->assertSame([], $result);
     }
 
     public function test_parse_relations_from_real_resource(): void
@@ -252,17 +244,24 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
         }
     }
 
-    public function test_many_relation_record_has_pivot_and_without_detaching(): void
+    public function test_pivot_many_relation_record_has_pivot_and_without_detaching(): void
     {
-        $result = $this->callPrivate('buildRelationMutationType', ['BelongsToMany']);
+        foreach (['BelongsToMany', 'MorphToMany', 'MorphedByMany'] as $type) {
+            $result = $this->callPrivate('buildRelationMutationType', [$type]);
+            $items = $result->items;
+            $this->assertArrayHasKey('pivot', $items->properties, "{$type} should have pivot");
+            $this->assertArrayHasKey('without_detaching', $items->properties, "{$type} should have without_detaching");
+        }
+    }
 
-        $this->assertInstanceOf(ArrayType::class, $result);
-
-        // The items of the array must be an ObjectType with pivot and without_detaching.
-        $items = $result->items;
-        $this->assertInstanceOf(ObjectType::class, $items);
-        $this->assertArrayHasKey('pivot', $items->properties);
-        $this->assertArrayHasKey('without_detaching', $items->properties);
+    public function test_non_pivot_many_relation_record_has_no_pivot(): void
+    {
+        foreach (['HasMany', 'MorphMany', 'HasManyThrough'] as $type) {
+            $result = $this->callPrivate('buildRelationMutationType', [$type]);
+            $items = $result->items;
+            $this->assertArrayNotHasKey('pivot', $items->properties, "{$type} should not have pivot");
+            $this->assertArrayNotHasKey('without_detaching', $items->properties, "{$type} should not have without_detaching");
+        }
     }
 
     public function test_single_relation_record_has_no_pivot(): void

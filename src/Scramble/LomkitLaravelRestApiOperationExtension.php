@@ -10,6 +10,7 @@ use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\MixedType;
+use Dedoc\Scramble\Support\Generator\Types\NumberType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
@@ -310,7 +311,12 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $flat = [];
         foreach ($rules as $rule) {
             if (is_string($rule)) {
-                $flat[] = strtolower($rule);
+                // Split on '|' (defensive against un-normalized input) and strip
+                // any parameter suffix after ':' (e.g. 'decimal:2' → 'decimal',
+                // 'array:name,username' → 'array').
+                foreach (explode('|', $rule) as $token) {
+                    $flat[] = strtolower(trim(explode(':', $token)[0]));
+                }
             } elseif ($rule instanceof In) {
                 // Rule::in(...) constrains values but the underlying type is string.
                 $flat[] = 'string';
@@ -318,8 +324,12 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
             // Other Rule objects (Unique, Exists, etc.) do not affect the type.
         }
 
-        if (array_intersect(['integer', 'numeric', 'int'], $flat)) {
+        if (array_intersect(['integer', 'int'], $flat)) {
             return new IntegerType;
+        }
+
+        if (array_intersect(['numeric', 'decimal'], $flat)) {
+            return new NumberType;
         }
 
         if (array_intersect(['boolean', 'bool'], $flat)) {
@@ -381,6 +391,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
     {
         $single = ['BelongsTo', 'HasOne', 'MorphOne', 'MorphTo', 'HasOneThrough', 'HasOneOfMany', 'MorphOneOfMany'];
         $many = ['HasMany', 'BelongsToMany', 'MorphMany', 'MorphToMany', 'MorphedByMany', 'HasManyThrough'];
+        $pivotMany = ['BelongsToMany', 'MorphToMany', 'MorphedByMany'];
 
         $recordType = (new ObjectType)
             ->addProperty('operation', (new StringType)->enum(['create', 'update', 'attach', 'detach', 'sync', 'toggle']))
@@ -388,9 +399,11 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
             ->addProperty('attributes', (new ObjectType)->setDescription('Fields of the related resource'));
 
         if (in_array($relationType, $many)) {
-            $recordType
-                ->addProperty('pivot', (new ObjectType)->setDescription('Pivot-table attributes (many-to-many only)'))
-                ->addProperty('without_detaching', (new BooleanType)->setDescription('When true, existing relations are kept during sync'));
+            if (in_array($relationType, $pivotMany)) {
+                $recordType
+                    ->addProperty('pivot', (new ObjectType)->setDescription('Pivot-table attributes'))
+                    ->addProperty('without_detaching', (new BooleanType)->setDescription('When true, existing relations are kept during sync'));
+            }
 
             return (new ArrayType)->setItems($recordType);
         }
