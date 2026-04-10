@@ -67,7 +67,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.composer-cache.outputs.cache-hit != 'true'
-        run: composer require laravel/framework:${{ matrix.laravel-version }} -W --prefer-dist --no-progress
+        run: composer require laravel/framework:${{ matrix.laravel-version }} dedoc/scramble -W --prefer-dist --no-progress
 
       - name: Run test suite with Sqlite
         if: matrix.database == 'sqlite'
