@@ -29,14 +29,14 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     {
         parent::setUp();
 
-        if (! class_exists(OperationExtension::class)) {
+        if (!class_exists(OperationExtension::class)) {
             $this->markTestSkipped('dedoc/scramble is not installed.');
         }
 
         $this->extension = new LomkitLaravelRestApiOperationExtension(
             Mockery::mock(Infer::class),
             Mockery::mock(TypeTransformer::class),
-            new GeneratorConfig,
+            new GeneratorConfig(),
         );
     }
 
@@ -114,8 +114,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
 
     public function test_extract_all_rules_merges_all_three_contexts(): void
     {
-        $resource = new class
-        {
+        $resource = new class() {
             public function rules(RestRequest $request): array
             {
                 return ['shared' => ['string']];
@@ -144,8 +143,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     {
         // Before the fix, update-only rules were ignored and the field fell back
         // to StringType. Verify that the rules are preserved in the 'update' bucket.
-        $resource = new class
-        {
+        $resource = new class() {
             public function rules(RestRequest $request): array
             {
                 return [];
@@ -174,7 +172,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
 
     public function test_extract_all_rules_gracefully_handles_missing_rule_methods(): void
     {
-        $resource = new class {};  // no rules() / createRules() / updateRules()
+        $resource = new class() {};  // no rules() / createRules() / updateRules()
 
         $request = app(RestRequest::class);
         $result = $this->callPrivate('extractAllRules', [$resource, $request]);
@@ -188,7 +186,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
 
     public function test_parse_relations_returns_empty_array_when_no_relations_method(): void
     {
-        $resource = new class {};
+        $resource = new class() {};
 
         $result = $this->callPrivate('parseRelationsFromSource', [$resource]);
 
@@ -199,7 +197,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     {
         // A stdClass instance has no relations() method, so ReflectionClass::getMethod()
         // throws a ReflectionException, exercising the catch (\Throwable) branch.
-        $result = $this->callPrivate('parseRelationsFromSource', [new \stdClass]);
+        $result = $this->callPrivate('parseRelationsFromSource', [new \stdClass()]);
 
         $this->assertSame([], $result);
     }
@@ -208,7 +206,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     {
         // ModelResource defines relations using Type::make('name', …) which is
         // exactly the pattern the regex targets.
-        $resource = new ModelResource;
+        $resource = new ModelResource();
         $result = $this->callPrivate('parseRelationsFromSource', [$resource]);
 
         $this->assertNotEmpty($result);

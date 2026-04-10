@@ -28,12 +28,12 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
     {
         $controller = $routeInfo->route->getController();
 
-        if (! $controller instanceof Controller) {
+        if (!$controller instanceof Controller) {
             return;
         }
 
         $resourceClass = $controller::$resource;
-        $resource = new $resourceClass;
+        $resource = new $resourceClass();
         $fakeRequest = app(RestRequest::class);
         $fields = $resource->fields($fakeRequest);
         $relations = $this->parseRelationsFromSource($resource);
@@ -44,12 +44,12 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $operation->setTags([$resourceName]);
 
         match ($action) {
-            'search' => $this->documentSearch($operation, $fields, $relations, $resourceName),
-            'mutate' => $this->documentMutate($operation, $fields, $relations, $rules, $resourceName),
+            'search'  => $this->documentSearch($operation, $fields, $relations, $resourceName),
+            'mutate'  => $this->documentMutate($operation, $fields, $relations, $rules, $resourceName),
             'details' => $operation->summary("Get {$resourceName} details"),
             'destroy' => $this->documentDestroy($operation, $resourceName),
             'restore' => $this->documentRestore($operation, $resourceName),
-            default => null,
+            default   => null,
         };
     }
 
@@ -65,7 +65,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         try {
             $rc = new \ReflectionClass($resource);
 
-            if (! $rc->hasMethod('relations')) {
+            if (!$rc->hasMethod('relations')) {
                 return [];
             }
 
@@ -125,7 +125,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $result = [];
         foreach ($fields as $field) {
             $result[$field] = [
-                'all' => (array) ($all[$field] ?? []),
+                'all'    => (array) ($all[$field] ?? []),
                 'create' => (array) ($create[$field] ?? []),
                 'update' => (array) ($update[$field] ?? []),
             ];
@@ -150,66 +150,68 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $relationEnum = array_column($relations, 'name');
         $relationDesc = $this->buildRelationsDescription($relations);
 
-        $body = (new ObjectType)->addProperty(
+        $body = (new ObjectType())->addProperty(
             'search',
-            (new ObjectType)
-                ->addProperty('filters', (new ArrayType)->setItems(
-                    (new ObjectType)
-                        ->addProperty('field', (new StringType)->enum($fieldEnum))
-                        ->addProperty('operator', (new StringType)->enum([
+            (new ObjectType())
+                ->addProperty('filters', (new ArrayType())->setItems(
+                    (new ObjectType())
+                        ->addProperty('field', (new StringType())->enum($fieldEnum))
+                        ->addProperty('operator', (new StringType())->enum([
                             '=', '!=', '>', '>=', '<', '<=',
                             'in', 'not in', 'like', 'not like',
                         ]))
-                        ->addProperty('value', (new MixedType)->setDescription('Accepts string, integer, boolean, or array'))
-                        ->addProperty('type', (new StringType)->enum(['and', 'or']))
-                        ->addProperty('nested', new ArrayType)
+                        ->addProperty('value', (new MixedType())->setDescription('Accepts string, integer, boolean, or array'))
+                        ->addProperty('type', (new StringType())->enum(['and', 'or']))
+                        ->addProperty('nested', new ArrayType())
                 ))
-                ->addProperty('sorts', (new ArrayType)->setItems(
-                    (new ObjectType)
-                        ->addProperty('field', (new StringType)->enum($fieldEnum))
-                        ->addProperty('direction', (new StringType)->enum(['asc', 'desc']))
+                ->addProperty('sorts', (new ArrayType())->setItems(
+                    (new ObjectType())
+                        ->addProperty('field', (new StringType())->enum($fieldEnum))
+                        ->addProperty('direction', (new StringType())->enum(['asc', 'desc']))
                 ))
-                ->addProperty('selects', (new ArrayType)->setItems(
-                    (new ObjectType)->addProperty('field', (new StringType)->enum($fieldEnum))
+                ->addProperty('selects', (new ArrayType())->setItems(
+                    (new ObjectType())->addProperty('field', (new StringType())->enum($fieldEnum))
                 ))
-                ->addProperty('includes', (new ArrayType)->setItems(
-                    (new ObjectType)
+                ->addProperty('includes', (new ArrayType())->setItems(
+                    (new ObjectType())
                         ->addProperty(
                             'relation',
                             empty($relationEnum)
-                                ? new StringType
-                                : (new StringType)->enum($relationEnum)->setDescription($relationDesc)
+                                ? new StringType()
+                                : (new StringType())->enum($relationEnum)->setDescription($relationDesc)
                         )
-                        ->addProperty('limit', new IntegerType)
-                        ->addProperty('filters', new ArrayType)
-                        ->addProperty('sorts', new ArrayType)
+                        ->addProperty('limit', new IntegerType())
+                        ->addProperty('filters', new ArrayType())
+                        ->addProperty('sorts', new ArrayType())
                 ))
-                ->addProperty('scopes', (new ArrayType)->setItems(
-                    (new ObjectType)
-                        ->addProperty('name', new StringType)
-                        ->addProperty('parameters', new ArrayType)
+                ->addProperty('scopes', (new ArrayType())->setItems(
+                    (new ObjectType())
+                        ->addProperty('name', new StringType())
+                        ->addProperty('parameters', new ArrayType())
                 ))
-                ->addProperty('text', (new ObjectType)
-                    ->addProperty('value', new StringType)
-                    ->addProperty('fields', (new ArrayType)->setItems(new StringType))
+                ->addProperty(
+                    'text',
+                    (new ObjectType())
+                    ->addProperty('value', new StringType())
+                    ->addProperty('fields', (new ArrayType())->setItems(new StringType()))
                     ->setDescription('Full-text search across specified fields')
                 )
-                ->addProperty('aggregates', (new ArrayType)->setItems(
-                    (new ObjectType)
-                        ->addProperty('relation', new StringType)
-                        ->addProperty('type', (new StringType)->enum(['count', 'min', 'max', 'avg', 'sum', 'exists']))
-                        ->addProperty('field', new StringType)
-                        ->addProperty('filters', new ArrayType)
+                ->addProperty('aggregates', (new ArrayType())->setItems(
+                    (new ObjectType())
+                        ->addProperty('relation', new StringType())
+                        ->addProperty('type', (new StringType())->enum(['count', 'min', 'max', 'avg', 'sum', 'exists']))
+                        ->addProperty('field', new StringType())
+                        ->addProperty('filters', new ArrayType())
                 )->setDescription('Aggregate values over relations'))
-                ->addProperty('instructions', (new ArrayType)->setItems(
-                    (new ObjectType)
-                        ->addProperty('name', new StringType)
-                        ->addProperty('fields', new ArrayType)
+                ->addProperty('instructions', (new ArrayType())->setItems(
+                    (new ObjectType())
+                        ->addProperty('name', new StringType())
+                        ->addProperty('fields', new ArrayType())
                 )->setDescription('Named query instructions defined on the resource'))
-                ->addProperty('gates', (new ArrayType)->setItems(new StringType)
+                ->addProperty('gates', (new ArrayType())->setItems(new StringType())
                     ->setDescription('Gates to evaluate for the current user on each result'))
-                ->addProperty('page', new IntegerType)
-                ->addProperty('limit', new IntegerType)
+                ->addProperty('page', new IntegerType())
+                ->addProperty('limit', new IntegerType())
         );
 
         $operation->addRequestBodyObject(
@@ -230,7 +232,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
     ): void {
         $operation->summary("Mutate {$resourceName}");
 
-        $attributesType = new ObjectType;
+        $attributesType = new ObjectType();
         foreach ($fields as $field) {
             $fieldRules = $rules[$field] ?? ['all' => [], 'create' => [], 'update' => []];
             // Include all three contexts so update-only rules are also reflected.
@@ -245,13 +247,13 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
             $attributesType->addProperty($field, $type);
         }
 
-        $recordType = (new ObjectType)
-            ->addProperty('operation', (new StringType)->enum(['create', 'update']))
-            ->addProperty('key', (new IntegerType)->setDescription('Required for update'))
+        $recordType = (new ObjectType())
+            ->addProperty('operation', (new StringType())->enum(['create', 'update']))
+            ->addProperty('key', (new IntegerType())->setDescription('Required for update'))
             ->addProperty('attributes', $attributesType);
 
-        if (! empty($relations)) {
-            $relationsType = new ObjectType;
+        if (!empty($relations)) {
+            $relationsType = new ObjectType();
             foreach ($relations as $relation) {
                 $relationsType->addProperty(
                     $relation['name'],
@@ -262,9 +264,9 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
             $recordType->addProperty('relations', $relationsType);
         }
 
-        $body = (new ObjectType)->addProperty(
+        $body = (new ObjectType())->addProperty(
             'mutate',
-            (new ArrayType)->setItems($recordType)
+            (new ArrayType())->setItems($recordType)
         );
 
         $operation->addRequestBodyObject(
@@ -281,7 +283,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
 
         $operation->addRequestBodyObject(
             RequestBodyObject::make()->setContent('application/json', Schema::fromType(
-                (new ObjectType)->addProperty('resources', (new ArrayType)->setItems(new IntegerType))
+                (new ObjectType())->addProperty('resources', (new ArrayType())->setItems(new IntegerType()))
             ))
         );
     }
@@ -295,7 +297,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
 
         $operation->addRequestBodyObject(
             RequestBodyObject::make()->setContent('application/json', Schema::fromType(
-                (new ObjectType)->addProperty('resources', (new ArrayType)->setItems(new IntegerType))
+                (new ObjectType())->addProperty('resources', (new ArrayType())->setItems(new IntegerType()))
             ))
         );
     }
@@ -325,22 +327,22 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         }
 
         if (array_intersect(['integer', 'int'], $flat)) {
-            return new IntegerType;
+            return new IntegerType();
         }
 
         if (array_intersect(['numeric', 'decimal'], $flat)) {
-            return new NumberType;
+            return new NumberType();
         }
 
         if (array_intersect(['boolean', 'bool'], $flat)) {
-            return new BooleanType;
+            return new BooleanType();
         }
 
         if (array_intersect(['array'], $flat)) {
-            return new ArrayType;
+            return new ArrayType();
         }
 
-        return new StringType;
+        return new StringType();
     }
 
     /**
@@ -351,7 +353,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $parts = [];
         foreach (['all', 'create', 'update'] as $context) {
             $r = array_filter($fieldRules[$context], fn ($v) => is_string($v));
-            if (! empty($r)) {
+            if (!empty($r)) {
                 $parts[] = "{$context}: ".implode(', ', $r);
             }
         }
@@ -393,19 +395,19 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $many = ['HasMany', 'BelongsToMany', 'MorphMany', 'MorphToMany', 'MorphedByMany', 'HasManyThrough'];
         $pivotMany = ['BelongsToMany', 'MorphToMany', 'MorphedByMany'];
 
-        $recordType = (new ObjectType)
-            ->addProperty('operation', (new StringType)->enum(['create', 'update', 'attach', 'detach', 'sync', 'toggle']))
-            ->addProperty('key', (new MixedType)->setDescription('Integer for single operations; array of integers for bulk operations'))
-            ->addProperty('attributes', (new ObjectType)->setDescription('Fields of the related resource'));
+        $recordType = (new ObjectType())
+            ->addProperty('operation', (new StringType())->enum(['create', 'update', 'attach', 'detach', 'sync', 'toggle']))
+            ->addProperty('key', (new MixedType())->setDescription('Integer for single operations; array of integers for bulk operations'))
+            ->addProperty('attributes', (new ObjectType())->setDescription('Fields of the related resource'));
 
         if (in_array($relationType, $many)) {
             if (in_array($relationType, $pivotMany)) {
                 $recordType
-                    ->addProperty('pivot', (new ObjectType)->setDescription('Pivot-table attributes'))
-                    ->addProperty('without_detaching', (new BooleanType)->setDescription('When true, existing relations are kept during sync'));
+                    ->addProperty('pivot', (new ObjectType())->setDescription('Pivot-table attributes'))
+                    ->addProperty('without_detaching', (new BooleanType())->setDescription('When true, existing relations are kept during sync'));
             }
 
-            return (new ArrayType)->setItems($recordType);
+            return (new ArrayType())->setItems($recordType);
         }
 
         return $recordType;
