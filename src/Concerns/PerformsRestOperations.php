@@ -12,6 +12,8 @@ use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Query\ScoutBuilder;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Lomkit\Rest\Http\Resource;
 
 trait PerformsRestOperations
 {
@@ -37,6 +39,7 @@ trait PerformsRestOperations
 
     /**
      * Search for resources based on the given criteria.
+     * Returns an empty paginated result if search text is provided but empty,
      *
      * @param SearchRequest $request
      *
@@ -48,20 +51,43 @@ trait PerformsRestOperations
 
         $this->beforeSearch($request);
 
-        $builder = $request->has('search.text') ? ScoutBuilder::class : QueryBuilder::class;
+        $textProvided = $request->has('search.text');
+
+        if ($textProvided && !filled($request->input('search.text.value'))) {
+            $this->afterSearch($request);
+            return $this->buildResponse(
+                $resource, 
+                new LengthAwarePaginator(
+                    [],
+                    0,
+                    $request->input('search.limit', $resource->defaultLimit)
+                )
+            );
+        }
+
+        $builder = $textProvided ? ScoutBuilder::class : QueryBuilder::class;
 
         $query = app()->make($builder, ['resource' => $resource, 'query' => null])
             ->search($request->input('search', []));
 
-        $responsable = $resource->paginate($query, $request);
-
         $this->afterSearch($request);
 
+        return $this->buildResponse($resource, $resource->paginate($query, $request));
+    }
+
+    /**
+     * Build the response for a resource operation.
+     *
+     * @param Resource $resource
+     * @param mixed $responsable
+     *
+     * @return mixed
+     */
+    private function buildResponse(Resource $resource, mixed $responsable): mixed
+    {
         return $resource::newResponse()
             ->resource($resource)
-            ->responsable(
-                $responsable
-            );
+            ->responsable($responsable);
     }
 
     /**
