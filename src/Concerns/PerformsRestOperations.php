@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Concerns;
 
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
@@ -11,9 +12,8 @@ use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
-use Lomkit\Rest\Query\ScoutBuilder;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Query\ScoutBuilder;
 
 trait PerformsRestOperations
 {
@@ -39,7 +39,7 @@ trait PerformsRestOperations
 
     /**
      * Search for resources based on the given criteria.
-     * Returns an empty paginated result if search text is provided but empty,
+     * Returns an empty paginated result if search text is provided but empty.
      *
      * @param SearchRequest $request
      *
@@ -56,7 +56,7 @@ trait PerformsRestOperations
         if ($textProvided && !filled($request->input('search.text.value'))) {
             $this->afterSearch($request);
             return $this->buildResponse(
-                $resource, 
+                $resource,
                 new LengthAwarePaginator(
                     [],
                     0,
@@ -79,7 +79,7 @@ trait PerformsRestOperations
      * Build the response for a resource operation.
      *
      * @param Resource $resource
-     * @param mixed $responsable
+     * @param mixed    $responsable
      *
      * @return mixed
      */
