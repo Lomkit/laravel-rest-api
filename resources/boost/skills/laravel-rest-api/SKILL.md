@@ -11,25 +11,56 @@ Requirements: PHP 8.2+, Laravel 11/12/13.
 
 Official documentation: https://laravel-rest-api.lomkit.com/
 
-## Detecting whether the package is installed
+## When to use this skill
 
-Before suggesting an approach for any API/CRUD work in a Laravel project, check whether `lomkit/laravel-rest-api` is present. If it is, **use it** instead of hand-rolling `Route::apiResource()` + `JsonResource` controllers — staying consistent with the existing API surface matters more than personal preference.
+Use this skill when working with the `lomkit/laravel-rest-api` package — building or modifying Resources, Controllers, Actions, Instructions, registering REST routes via `Rest::resource()`, or writing client payloads for the `search`, `mutate`, `operate`, `details`, `destroy`, `restore` and `force` endpoints. Triggers include the `Lomkit\Rest\` namespace, the `Rest` facade, the `rest:*` artisan commands, and `app/Rest/Resources` / `app/Rest/Controllers` directories.
 
-Detection (any one of these is sufficient, in order of reliability):
+## Features
 
-1. **`composer.json`** lists `"lomkit/laravel-rest-api"` under `require`:
-   ```bash
-   grep -q '"lomkit/laravel-rest-api"' composer.json && echo "installed"
-   ```
-2. **Vendor directory** exists: `vendor/lomkit/laravel-rest-api/`.
-3. **Service provider** is loaded — `Lomkit\Rest\RestServiceProvider` is auto-registered via composer, so it will appear in `php artisan about` / `php artisan package:discover` output, or:
-   ```bash
-   php artisan route:list 2>/dev/null | grep -E '/(search|mutate|actions)' && echo "rest routes registered"
-   ```
-4. **Conventional folders** are present: `app/Rest/Resources/` and/or `app/Rest/Controllers/`.
-5. **Published config** exists: `config/rest.php` with a top-level `gates`/`authorizations`/`documentation` array.
+- **Resource**: declares the shape of an Eloquent model's API (fields, relations, scopes, validation, lifecycle hooks). Generate with:
 
-If the package is installed:
+  ```bash
+  php artisan rest:resource UserResource --model=User
+  ```
+
+- **Controller**: a thin binding between a route prefix and a Resource, exposing request-level hooks (`beforeSearch`, `afterMutate`, ...). Generate with:
+
+  ```bash
+  php artisan rest:controller UsersController --resource=UserResource
+  ```
+
+- **Routing**: register all REST endpoints (`details`, `search`, `mutate`, `operate`, `destroy`, optional `restore`/`force`) for a model with a single call:
+
+  ```php
+  Rest::resource('users', \App\Rest\Controllers\UsersController::class);
+  ```
+
+- **Search**: filterable, sortable, paginated reads with nested relation includes, aggregates, scopes, and per-row policy gates via `POST /{resource}/search`.
+- **Mutate**: batched create/update plus relation operations (`attach`, `detach`, `sync`, `toggle`) in one request via `POST /{resource}/mutate`.
+- **Actions**: custom mutators exposed under `/{resource}/actions/{uriKey}`, runnable against a `search`-resolved set of models or standalone. Generate with:
+
+  ```bash
+  php artisan rest:action SendWelcomeNotificationAction
+  ```
+
+- **Instructions**: custom query refinements invoked from the `search` payload's `instructions` key. Generate with:
+
+  ```bash
+  php artisan rest:instruction OddEvenIdInstruction
+  ```
+
+- **Soft-delete endpoints**: opt-in `restore` and `force` routes via `->withSoftDeletes()` chained on `Rest::resource(...)`.
+- **Authorization**: automatic per-model Policy checks (`viewAny`, `view`, `create`, `update`, `delete`, `restore`, `forceDelete`, `attach{Model}`, `detach{Model}`) plus client-requested per-row `gates`.
+- **Custom Response**: override the output shape per Resource via `public static $response = UserResponse::class;`. Generate with:
+
+  ```bash
+  php artisan rest:response UserResponse
+  ```
+
+- **OpenAPI documentation**: native Scramble extension (`LomkitLaravelRestApiOperationExtension`) infers docs from Resources, or use the built-in Swagger UI at `/api-documentation`.
+- **Precognition**: live form validation (`Precognition: true` header) short-circuits the request after validation when `rest.precognition.enabled = true`.
+
+## If the package is installed
 
 - **Default to extending it** for new endpoints — generate a `Resource` + `Controller` and register with `Rest::resource(...)` rather than adding a plain Laravel controller for the same model.
 - **Match existing patterns** in `app/Rest/` — base classes (`app/Rest/Resources/Resource.php`), naming, hook overrides, and the project's `searchQuery` / `mutateQuery` conventions usually carry tenant or visibility constraints that you must preserve.
