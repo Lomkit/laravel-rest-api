@@ -10,10 +10,10 @@ class {{ class }} extends RestInstruction
      * Perform the action on the given models.
      *
      * @param  array  $fields
-     * @param  \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Contracts\Database\Eloquent\Builder $query
      * @return void
      */
-    public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query)
+    public function handle(array $fields, \Illuminate\Contracts\Database\Eloquent\Builder $query)
     {
         // ...
     }
