@@ -192,9 +192,9 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
                 ->addProperty(
                     'text',
                     (new ObjectType())
-                    ->addProperty('value', new StringType())
-                    ->addProperty('fields', (new ArrayType())->setItems(new StringType()))
-                    ->setDescription('Full-text search across specified fields')
+                        ->addProperty('value', new StringType())
+                        ->addProperty('fields', (new ArrayType())->setItems(new StringType()))
+                        ->setDescription('Full-text search across specified fields')
                 )
                 ->addProperty('aggregates', (new ArrayType())->setItems(
                     (new ObjectType())
