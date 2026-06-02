@@ -59,10 +59,38 @@ class RestServiceProvider extends ServiceProvider
 
         $this->registerRoutes();
 
+        $this->registerScramble();
+
         $this->loadViewsFrom(
             __DIR__.'/../resources/views',
             'rest'
         );
+    }
+
+    /**
+     * Register the Scramble integration when the package is installed.
+     *
+     * Self-registers the operation extension so consumers don't have to edit
+     * `config/scramble.php` (the call is idempotent — Scramble de-duplicates).
+     *
+     * Scramble's built-in FormRequestParametersExtractor cannot build an Infer scope
+     * for the trait-defined controller actions (search/mutate/...), which raises
+     * "Scope is not initialized for route.". LomkitLaravelRestApiOperationExtension
+     * already documents these request bodies, so the built-in extractor is told to
+     * skip Rest requests. Registered at boot so it runs before Scramble processes any
+     * route (the extension itself is appended and runs after the built-in extractor).
+     *
+     * @return void
+     */
+    private function registerScramble(): void
+    {
+        if (!class_exists(\Dedoc\Scramble\Scramble::class)) {
+            return;
+        }
+
+        \Dedoc\Scramble\Scramble::registerExtension(\Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension::class);
+
+        \Dedoc\Scramble\Support\OperationExtensions\ParameterExtractor\FormRequestParametersExtractor::ignoreInstanceOf(RestRequest::class);
     }
 
     /**
