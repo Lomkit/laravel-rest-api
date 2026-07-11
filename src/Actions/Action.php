@@ -13,6 +13,7 @@ use Lomkit\Rest\Concerns\Fieldable;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Metable;
 use Lomkit\Rest\Concerns\Resourcable;
+use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
@@ -57,6 +58,13 @@ class Action implements \JsonSerializable
     public $standalone = false;
 
     /**
+     * Indicates if the action requires a narrowing search.
+     *
+     * @var bool
+     */
+    public $restricted = false;
+
+    /**
      * The number of models that should be included in each chunk.
      *
      * @var int
@@ -86,10 +94,16 @@ class Action implements \JsonSerializable
     /**
      * Mark the action as a standalone action.
      *
+     * @throws InvalidActionStateException
+     *
      * @return $this
      */
     public function standalone()
     {
+        if ($this->restricted) {
+            throw new InvalidActionStateException('An action cannot be both standalone and restricted.');
+        }
+
         $this->standalone = true;
 
         return $this;
@@ -103,6 +117,34 @@ class Action implements \JsonSerializable
     public function isStandalone()
     {
         return $this->standalone;
+    }
+
+    /**
+     * Mark the action as a restricted action, forcing a narrowing search.
+     *
+     * @throws InvalidActionStateException
+     *
+     * @return $this
+     */
+    public function restricted()
+    {
+        if ($this->standalone) {
+            throw new InvalidActionStateException('An action cannot be both standalone and restricted.');
+        }
+
+        $this->restricted = true;
+
+        return $this;
+    }
+
+    /**
+     * Determine if the action is a restricted action.
+     *
+     * @return bool
+     */
+    public function isRestricted()
+    {
+        return $this->restricted;
     }
 
     /**
@@ -120,6 +162,7 @@ class Action implements \JsonSerializable
             'fields'     => $this->fields($request),
             'meta'       => $this->meta(),
             'standalone' => $this->isStandalone(),
+            'restricted' => $this->isRestricted(),
         ];
     }
 
