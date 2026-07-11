@@ -509,4 +509,20 @@ class ActionsOperationsTest extends TestCase
 
         $response->assertSuccessful();
     }
+
+    public function test_operate_action_with_non_string_field_name_is_rejected(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/required-field',
+            ['fields' => [['name' => ['not', 'a', 'string'], 'value' => 1]]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.0.name']);
+    }
 }

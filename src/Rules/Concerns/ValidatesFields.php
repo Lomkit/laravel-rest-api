@@ -29,7 +29,9 @@ trait ValidatesFields
 
         $pivoted = collect($submittedFields)
             ->filter(function ($field) {
-                return is_array($field) && array_key_exists('name', $field);
+                return is_array($field)
+                    && array_key_exists('name', $field)
+                    && is_string($field['name']);
             })
             ->mapWithKeys(function ($field) {
                 return [$field['name'] => $field['value'] ?? null];
