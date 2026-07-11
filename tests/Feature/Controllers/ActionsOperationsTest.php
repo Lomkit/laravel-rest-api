@@ -163,7 +163,7 @@ class ActionsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['fields.0.value']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['fields.number']]);
     }
 
     public function test_operate_action_with_fields(): void
@@ -330,6 +330,53 @@ class ActionsOperationsTest extends TestCase
             150,
             Model::where('number', 100000000)->count()
         );
+    }
+
+    public function test_operate_action_with_required_field_absent(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/required-field',
+            ['fields' => []],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.number']);
+    }
+
+    public function test_operate_action_with_required_field_and_no_fields_key(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/required-field',
+            [],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.number']);
+    }
+
+    public function test_operate_action_with_required_field_present_is_valid(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/required-field',
+            ['fields' => [['name' => 'number', 'value' => 150]]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertSuccessful();
     }
 
     public function test_operate_batchable_action(): void
