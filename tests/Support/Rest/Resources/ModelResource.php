@@ -20,6 +20,7 @@ use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Rest\Actions\BatchableModifyNumberAction;
+use Lomkit\Rest\Tests\Support\Rest\Actions\ConditionalFieldAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\QueueableModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\RequiredFieldAction;
@@ -144,6 +145,7 @@ class ModelResource extends Resource
             WithMetaModifyNumberAction::make(),
             BatchableModifyNumberAction::make(),
             RequiredFieldAction::make(),
+            ConditionalFieldAction::make(),
         ];
     }
 

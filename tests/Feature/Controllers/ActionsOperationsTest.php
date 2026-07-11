@@ -398,4 +398,84 @@ class ActionsOperationsTest extends TestCase
                 $batch->jobs->count() === 2;
         });
     }
+
+    public function test_operate_action_required_if_triggers(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => [['name' => 'type', 'value' => 'ban']]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.reason']);
+    }
+
+    public function test_operate_action_required_if_not_triggered(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => [['name' => 'type', 'value' => 'warn']]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertSuccessful();
+    }
+
+    public function test_operate_action_required_if_satisfied(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => [
+                ['name' => 'type', 'value' => 'ban'],
+                ['name' => 'reason', 'value' => 'spam'],
+            ]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertSuccessful();
+    }
+
+    public function test_operate_action_sometimes_field_absent_is_valid(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => []],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertSuccessful();
+    }
+
+    public function test_operate_action_sometimes_field_present_is_validated(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => [['name' => 'note', 'value' => 'too-long-value']]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.note']);
+    }
 }
