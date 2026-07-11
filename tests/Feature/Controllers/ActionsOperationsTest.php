@@ -478,4 +478,35 @@ class ActionsOperationsTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['fields.note']);
     }
+
+    public function test_operate_action_unknown_field_name_also_reports_required(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/required-field',
+            ['fields' => [['name' => 'bogus', 'value' => 1]]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.0.name', 'fields.number']);
+    }
+
+    public function test_operate_action_nullable_field_accepts_null(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => [['name' => 'type', 'value' => null]]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertSuccessful();
+    }
 }
