@@ -369,6 +369,25 @@ class ActionsOperationsTest extends TestCase
         $this->assertEquals(0, Model::where('number', 100000000)->count());
     }
 
+    public function test_operate_restricted_action_with_empty_resources_is_rejected(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/restricted-modify-number',
+            [
+                'resources' => [],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('resources');
+        $this->assertEquals(0, Model::where('number', 100000000)->count());
+    }
+
     public function test_operate_restricted_action_with_unknown_resource_is_rejected(): void
     {
         ModelFactory::new()->create();
