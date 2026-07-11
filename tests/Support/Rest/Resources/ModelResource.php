@@ -27,6 +27,7 @@ use Lomkit\Rest\Tests\Support\Rest\Actions\RequiredFieldAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\StandaloneModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\WithMetaModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Instructions\NumberedInstruction;
+use Lomkit\Rest\Tests\Support\Rest\Instructions\RequiredNumberedInstruction;
 
 class ModelResource extends Resource
 {
@@ -160,6 +161,7 @@ class ModelResource extends Resource
     {
         return [
             NumberedInstruction::make(),
+            RequiredNumberedInstruction::make(),
         ];
     }
 }

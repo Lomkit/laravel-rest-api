@@ -112,7 +112,7 @@ class SearchInstructionsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['search.instructions.0.fields.0.value']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.instructions.0.fields.number']]);
     }
 
     public function test_getting_a_list_of_resources_instructing_numbered_with_fields(): void
@@ -145,5 +145,27 @@ class SearchInstructionsOperationsTest extends TestCase
             [$matchingModel],
             new ModelResource(),
         );
+    }
+
+    public function test_instruction_with_required_field_absent(): void
+    {
+        ModelFactory::new()->create(['number' => 1]);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'instructions' => [
+                        ['name' => 'required-numbered'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['search.instructions.0.fields.number']);
     }
 }
