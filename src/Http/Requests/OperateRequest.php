@@ -44,15 +44,20 @@ class OperateRequest extends RestRequest
 
         $operatedAction = $this->resource->action($this, $this->route()->parameter('action'));
 
+        $model = $this->resource::newModel();
+
         return array_merge(
-            $operatedAction->isStandalone() ? [
-                'search' => [
-                    'prohibited',
-                ],
-            ] : [],
-            !$operatedAction->isStandalone() ? [
-                'search' => [(new Search())->setResource($this->resource)],
-            ] : [],
+            [
+                'search' => $operatedAction->isStandalone()
+                    ? ['prohibited']
+                    : [(new Search())->setResource($this->resource)],
+                'resources' => $operatedAction->isRestricted()
+                    ? ['required', 'array']
+                    : ['prohibited'],
+                'resources.*' => $operatedAction->isRestricted()
+                    ? [Rule::exists($model->getTable(), $model->getKeyName())]
+                    : [],
+            ],
             [
                 'fields.*.name' => [
                     Rule::in(array_keys($operatedAction->fields($this))),

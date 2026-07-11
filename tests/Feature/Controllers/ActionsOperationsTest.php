@@ -351,4 +351,134 @@ class ActionsOperationsTest extends TestCase
                 $batch->jobs->count() === 2;
         });
     }
+
+    public function test_operate_restricted_action_without_resources_is_rejected(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/restricted-modify-number',
+            [],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('resources');
+        $this->assertEquals(0, Model::where('number', 100000000)->count());
+    }
+
+    public function test_operate_restricted_action_with_unknown_resource_is_rejected(): void
+    {
+        ModelFactory::new()->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/restricted-modify-number',
+            [
+                'resources' => [999999],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('resources.0');
+        $this->assertEquals(0, Model::where('number', 100000000)->count());
+    }
+
+    public function test_operate_restricted_action_impacts_only_the_given_resources(): void
+    {
+        $first = ModelFactory::new()->create();
+        $second = ModelFactory::new()->create();
+        $third = ModelFactory::new()->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/restricted-modify-number',
+            [
+                'resources' => [$first->getKey(), $third->getKey()],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertJson([
+            'data' => [
+                'impacted' => 2,
+            ],
+        ]);
+        $this->assertEquals(100000000, $first->fresh()->number);
+        $this->assertEquals(100000000, $third->fresh()->number);
+        $this->assertNotEquals(100000000, $second->fresh()->number);
+    }
+
+    public function test_operate_restricted_action_intersects_resources_and_search(): void
+    {
+        $matchInScope = ModelFactory::new()->create(['string' => 'match']);
+        $matchOutOfScope = ModelFactory::new()->create(['string' => 'match']);
+        $noMatchInScope = ModelFactory::new()->create(['string' => 'nomatch']);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/restricted-modify-number',
+            [
+                'resources' => [$matchInScope->getKey(), $noMatchInScope->getKey()],
+                'search'    => [
+                    'filters' => [
+                        ['field' => 'string', 'value' => 'match'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertJson([
+            'data' => [
+                'impacted' => 1,
+            ],
+        ]);
+        $this->assertEquals(100000000, $matchInScope->fresh()->number);
+        $this->assertNotEquals(100000000, $noMatchInScope->fresh()->number);
+        $this->assertNotEquals(100000000, $matchOutOfScope->fresh()->number);
+    }
+
+    public function test_operate_classic_action_prohibits_resources(): void
+    {
+        $model = ModelFactory::new()->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/modify-number',
+            [
+                'resources' => [$model->getKey()],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('resources');
+    }
+
+    public function test_restricted_flag_is_exposed_in_the_resource_schema(): void
+    {
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->get(
+            '/api/models',
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertJsonFragment([
+            'uriKey'     => 'restricted-modify-number',
+            'restricted' => true,
+        ]);
+        $response->assertJsonFragment([
+            'uriKey'     => 'modify-number',
+            'restricted' => false,
+        ]);
+    }
 }
