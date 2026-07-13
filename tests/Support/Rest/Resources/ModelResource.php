@@ -20,11 +20,15 @@ use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Rest\Actions\BatchableModifyNumberAction;
+use Lomkit\Rest\Tests\Support\Rest\Actions\ConditionalFieldAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\QueueableModifyNumberAction;
+use Lomkit\Rest\Tests\Support\Rest\Actions\RequiredFieldAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\StandaloneModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\WithMetaModifyNumberAction;
+use Lomkit\Rest\Tests\Support\Rest\Instructions\ConditionalInstruction;
 use Lomkit\Rest\Tests\Support\Rest\Instructions\NumberedInstruction;
+use Lomkit\Rest\Tests\Support\Rest\Instructions\RequiredNumberedInstruction;
 
 class ModelResource extends Resource
 {
@@ -142,6 +146,8 @@ class ModelResource extends Resource
             QueueableModifyNumberAction::make(),
             WithMetaModifyNumberAction::make(),
             BatchableModifyNumberAction::make(),
+            RequiredFieldAction::make(),
+            ConditionalFieldAction::make(),
         ];
     }
 
@@ -156,6 +162,8 @@ class ModelResource extends Resource
     {
         return [
             NumberedInstruction::make(),
+            RequiredNumberedInstruction::make(),
+            ConditionalInstruction::make(),
         ];
     }
 }

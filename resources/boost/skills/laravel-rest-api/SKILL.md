@@ -346,6 +346,8 @@ POST /api/users/actions/send-welcome-notification-action
 
 Note the **`fields` payload is an array of `{name, value}` pairs**, not an object. The `search` block resolves the target models (whole `search` schema is supported). Standalone actions (`->standalone()` or `public $standalone = true`) omit `search` and receive an empty collection.
 
+**Field validation follows standard Laravel rules.** The rules declared in `fields()` are evaluated as a normal Laravel validation: presence and cross-field rules (`required`, `required_if`, `present`, …) fire even when a field is absent from the `fields` array. Validation errors are keyed by field name — `fields.{name}` (e.g. `fields.expires_at`) — while an unauthorized field name is reported positionally as `fields.{index}.name`.
+
 **Response**: `{"data": {"impacted": 150}}`.
 
 **Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models. Combine with `Lomkit\Rest\Actions\Contracts\BatchableAction` and use `withBatch()` to register `then`/`catch`/`finally` callbacks. Customise `$connection` and `$queue` properties to route jobs.
@@ -383,6 +385,8 @@ Register in `Resource::instructions()`. Clients invoke them via the `instruction
 ```
 
 `->withMeta([...])` is also available on Instructions.
+
+Instruction `fields()` are validated exactly like Action fields: full Laravel validation (including `required` on absent fields), with errors keyed by name under `search.instructions.{index}.fields.{name}`.
 
 ## Relationships
 
