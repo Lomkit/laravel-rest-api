@@ -163,7 +163,7 @@ class ActionsOperationsTest extends TestCase
         );
 
         $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['fields.0.value']]);
+        $response->assertExactJsonStructure(['message', 'errors' => ['fields.number']]);
     }
 
     public function test_operate_action_with_fields(): void
@@ -332,6 +332,53 @@ class ActionsOperationsTest extends TestCase
         );
     }
 
+    public function test_operate_action_with_required_field_absent(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/required-field',
+            ['fields' => []],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.number']);
+    }
+
+    public function test_operate_action_with_required_field_and_no_fields_key(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/required-field',
+            [],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.number']);
+    }
+
+    public function test_operate_action_with_required_field_present_is_valid(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/required-field',
+            ['fields' => [['name' => 'number', 'value' => 150]]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertSuccessful();
+    }
+
     public function test_operate_batchable_action(): void
     {
         ModelFactory::new()->count(150)->create();
@@ -350,5 +397,132 @@ class ActionsOperationsTest extends TestCase
             return $batch->name == 'batchable-modify-number' &&
                 $batch->jobs->count() === 2;
         });
+    }
+
+    public function test_operate_action_required_if_triggers(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => [['name' => 'type', 'value' => 'ban']]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.reason']);
+    }
+
+    public function test_operate_action_required_if_not_triggered(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => [['name' => 'type', 'value' => 'warn']]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertSuccessful();
+    }
+
+    public function test_operate_action_required_if_satisfied(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => [
+                ['name' => 'type', 'value' => 'ban'],
+                ['name' => 'reason', 'value' => 'spam'],
+            ]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertSuccessful();
+    }
+
+    public function test_operate_action_sometimes_field_absent_is_valid(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => []],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertSuccessful();
+    }
+
+    public function test_operate_action_sometimes_field_present_is_validated(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => [['name' => 'note', 'value' => 'too-long-value']]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.note']);
+    }
+
+    public function test_operate_action_unknown_field_name_also_reports_required(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/required-field',
+            ['fields' => [['name' => 'bogus', 'value' => 1]]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.0.name', 'fields.number']);
+    }
+
+    public function test_operate_action_nullable_field_accepts_null(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/conditional-field',
+            ['fields' => [['name' => 'type', 'value' => null]]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertSuccessful();
+    }
+
+    public function test_operate_action_with_non_string_field_name_is_rejected(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/actions/required-field',
+            ['fields' => [['name' => ['not', 'a', 'string'], 'value' => 1]]],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['fields.0.name']);
     }
 }
