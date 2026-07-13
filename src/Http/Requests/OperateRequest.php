@@ -4,8 +4,7 @@ namespace Lomkit\Rest\Http\Requests;
 
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Actions\Action;
-use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Rules\Operate\OperateField;
+use Lomkit\Rest\Rules\Operate\OperateFields;
 use Lomkit\Rest\Rules\Search\Search;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -59,18 +58,31 @@ class OperateRequest extends RestRequest
                     : [],
             ],
             [
-                'fields.*.name' => [
-                    Rule::in(array_keys($operatedAction->fields($this))),
-                ],
                 'fields' => [
                     'sometimes',
                     'array',
+                    (new OperateFields())->setAction($operatedAction),
                 ],
-                'fields.*' => [
-                    (new OperateField())->setAction($operatedAction),
+                'fields.*.name' => [
+                    Rule::in(array_keys($operatedAction->fields($this))),
                 ],
             ]
         );
+    }
+
+    /**
+     * Prepare the data for validation.
+     *
+     * Ensures the fields key is always present so the OperateFields rule runs
+     * even when the client omits it entirely, allowing required rules to fire.
+     *
+     * @return void
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'fields' => $this->input('fields', []),
+        ]);
     }
 
     /**
