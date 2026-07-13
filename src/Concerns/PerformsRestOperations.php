@@ -55,6 +55,7 @@ trait PerformsRestOperations
 
         if ($textProvided && !filled($request->input('search.text.value'))) {
             $this->afterSearch($request);
+
             return $this->buildResponse(
                 $resource,
                 new LengthAwarePaginator(
@@ -79,7 +80,7 @@ trait PerformsRestOperations
     /**
      * Build the response for a resource operation.
      *
-     * @param Resource $resource
+     * @param resource $resource
      * @param mixed    $responsable
      *
      * @return mixed
