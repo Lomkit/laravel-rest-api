@@ -23,33 +23,7 @@ trait Authorizable
      */
     public function authorizeTo($ability, $model)
     {
-        if ($this->isAuthorizingEnabled()) {
-            $resolver = function () use ($ability, $model) {
-                return Gate::authorize($ability, $model);
-            };
-
-            if ($this->isAuthorizationCacheEnabled()) {
-                $gatePasses = Cache::remember(
-                    $this->getAuthorizationCacheKey(
-                        app(RestRequest::class),
-                        sprintf(
-                            '%s.%s.%s',
-                            $ability,
-                            $model instanceof Model ? Str::snake((new \ReflectionClass($model))->getShortName()) : $model,
-                            $model instanceof Model ? $model->getKey() : null,
-                        )
-                    ),
-                    $this->cacheAuthorizationFor(),
-                    $resolver
-                );
-            } else {
-                $gatePasses = $resolver();
-            }
-
-            if (!$gatePasses) {
-                Response::deny()->authorize();
-            }
-        }
+        $this->authorizedTo($ability, $model)->authorize();
     }
 
     /**
