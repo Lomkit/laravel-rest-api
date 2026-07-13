@@ -7,7 +7,7 @@ description: Use this skill when working with the `lomkit/laravel-rest-api` pack
 
 `lomkit/laravel-rest-api` exposes Eloquent models through a small, fixed set of POST-driven endpoints. Instead of writing one controller per use case, you declare a **Resource** (what is exposed and how it can be queried/mutated) and a thin **Controller** that binds the resource to a route prefix. The package wires CRUD, search, batch mutations, custom actions, soft-delete handling, policy-based authorization and OpenAPI documentation on top of that pair.
 
-Requirements: PHP 8.2+, Laravel 11/12/13.
+Requirements: PHP 8.2+, Laravel 12/13.
 
 Official documentation: https://laravel-rest-api.lomkit.com/
 
