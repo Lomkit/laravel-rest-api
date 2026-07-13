@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Http\Requests;
 
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Actions\Action;
-use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Rules\Operate\OperateFields;
 use Lomkit\Rest\Rules\Search\Search;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -44,13 +43,19 @@ class OperateRequest extends RestRequest
 
         $operatedAction = $this->resource->action($this, $this->route()->parameter('action'));
 
+        $model = $this->resource::newModel();
+
         return array_merge(
-            $operatedAction->isStandalone() ? [
-                'search' => [
-                    'prohibited',
-                ],
-            ] : [
-                'search' => [(new Search())->setResource($this->resource)],
+            [
+                'search' => $operatedAction->isStandalone()
+                    ? ['prohibited']
+                    : [(new Search())->setResource($this->resource)],
+                'resources' => $operatedAction->isRestricted()
+                    ? ['required', 'array']
+                    : ['prohibited'],
+                'resources.*' => $operatedAction->isRestricted()
+                    ? [Rule::exists($model->getTable(), $model->getKeyName())]
+                    : [],
             ],
             [
                 'fields' => [
