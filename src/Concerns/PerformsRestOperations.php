@@ -60,7 +60,8 @@ trait PerformsRestOperations
                 new LengthAwarePaginator(
                     [],
                     0,
-                    $request->input('search.limit', $resource->defaultLimit)
+                    $request->input('search.limit', $resource->defaultLimit),
+                    $request->input('search.page', 1)
                 )
             );
         }

@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
+use Lomkit\Rest\Query\ScoutBuilder;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Models\Model;
@@ -367,6 +368,38 @@ class SearchScoutOperationsTest extends TestCase
                 'search' => [
                     'text' => [
                         'value' => null,
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [],
+            new ModelResource()
+        );
+    }
+
+    public function test_empty_scout_text_does_not_reach_the_scout_builder(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        // Reproduce the Elasticsearch "[match] unknown token [VALUE_NULL]" 400:
+        // if an empty text value ever reaches Scout, blow up. The dispatcher must
+        // short-circuit before the ScoutBuilder is ever resolved.
+        $this->app->bind(ScoutBuilder::class, function () {
+            throw new \RuntimeException('ScoutBuilder must not be resolved for empty search text.');
+        });
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text' => [
+                        'value' => '',
                     ],
                 ],
             ],
