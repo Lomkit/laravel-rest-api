@@ -180,6 +180,10 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
                                 ? new StringType()
                                 : (new StringType())->enum($relationEnum)->setDescription($relationDesc)
                         )
+                        ->addProperty(
+                            'alias',
+                            (new StringType())->setDescription('Optional output key for this include. Allows including the same relation several times under different keys.')
+                        )
                         ->addProperty('limit', new IntegerType())
                         ->addProperty('filters', new ArrayType())
                         ->addProperty('sorts', new ArrayType())

@@ -28,6 +28,10 @@ class SearchInclude extends RestRule
                 $attribute.'.text' => [
                     'prohibited',
                 ],
+                $attribute.'.alias' => [
+                    'sometimes',
+                    'string',
+                ],
             ]
         );
     }

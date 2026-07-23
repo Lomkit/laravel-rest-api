@@ -901,4 +901,236 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             ]
         );
     }
+
+    public function test_including_same_relation_twice_with_different_aliases_and_filters(): void
+    {
+        $matchingModel = ModelFactory::new()
+            ->has(
+                HasManyRelationFactory::new()
+                    ->state(['number' => 10000])
+            )
+            ->has(
+                HasManyRelationFactory::new()
+                    ->state(['number' => 20000])
+            )
+            ->create()->fresh();
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'hasManyRelation',
+                            'alias'    => 'highNumber',
+                            'filters'  => [
+                                ['field' => 'number', 'value' => 10000],
+                            ],
+                        ],
+                        [
+                            'relation' => 'hasManyRelation',
+                            'alias'    => 'lowNumber',
+                            'filters'  => [
+                                ['field' => 'number', 'value' => 20000],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $relationWithNumber = function ($number) use ($matchingModel) {
+            return $matchingModel->hasManyRelation()
+                ->where('number', $number)
+                ->orderBy('id')
+                ->get()
+                ->map(function ($relation) {
+                    return $relation->only(
+                        (new HasManyResource())->getFields(app()->make(RestRequest::class))
+                    );
+                })->toArray();
+        };
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource(),
+            [
+                [
+                    'highNumber' => $relationWithNumber(10000),
+                    'lowNumber'  => $relationWithNumber(20000),
+                ],
+                [
+                    'highNumber' => [],
+                    'lowNumber'  => [],
+                ],
+            ]
+        );
+    }
+
+    public function test_including_relation_with_alias_uses_verbatim_key(): void
+    {
+        $matchingModel = ModelFactory::new()
+            ->has(HasManyRelationFactory::new())
+            ->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(HasManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'hasManyRelation',
+                            'alias'    => 'myCamelAlias',
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(200);
+        $this->assertArrayHasKey('myCamelAlias', $response->json('data.0'));
+        $this->assertArrayNotHasKey('my_camel_alias', $response->json('data.0'));
+        $this->assertArrayNotHasKey('has_many_relation', $response->json('data.0'));
+        $this->assertCount(1, $response->json('data.0.myCamelAlias'));
+    }
+
+    public function test_including_nested_relation_with_alias(): void
+    {
+        $belongsTo = BelongsToRelationFactory::new()->create();
+        $matchingModel = ModelFactory::new()
+            ->for($belongsTo)
+            ->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        [
+                            'relation' => 'belongsToRelation',
+                            'includes' => [
+                                ['relation' => 'models', 'alias' => 'linkedModels'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(200);
+        $this->assertArrayHasKey('belongs_to_relation', $response->json('data.0'));
+        $this->assertArrayHasKey('linkedModels', $response->json('data.0.belongs_to_relation'));
+        $this->assertArrayNotHasKey('models', $response->json('data.0.belongs_to_relation'));
+    }
+
+    public function test_including_belongs_to_relation_with_alias(): void
+    {
+        $belongsTo = BelongsToRelationFactory::new()->create();
+        $matchingModel = ModelFactory::new()
+            ->for($belongsTo)
+            ->create()->fresh();
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'belongsToRelation', 'alias' => 'owner'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource(),
+            [
+                [
+                    'owner' => $matchingModel->belongsToRelation->only(
+                        (new BelongsToResource())->getFields(app()->make(RestRequest::class))
+                    ),
+                ],
+                [
+                    'owner' => null,
+                ],
+            ]
+        );
+    }
+
+    public function test_including_belongs_to_many_relation_with_alias_keeps_pivot(): void
+    {
+        $matchingModel = ModelFactory::new()
+            ->has(BelongsToManyRelationFactory::new()->count(2))
+            ->create()->fresh();
+        $pivotAccessor = $matchingModel->belongsToManyRelation()->getPivotAccessor();
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'belongsToManyRelation', 'alias' => 'tags'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource(),
+            [
+                [
+                    'tags' => $matchingModel->belongsToManyRelation()
+                        ->orderBy('id', 'desc')
+                        ->get()
+                        ->map(function ($relation) use ($pivotAccessor) {
+                            return collect($relation->only(
+                                array_merge((new BelongsToManyResource())->getFields(app()->make(RestRequest::class)), [$pivotAccessor])
+                            ))
+                                ->pipe(function ($relation) use ($pivotAccessor) {
+                                    $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
+                                        ->only(
+                                            (new ModelResource())->relation('belongsToManyRelation')->getPivotFields()
+                                        );
+
+                                    return $relation;
+                                });
+                        })
+                        ->toArray(),
+                ],
+                [
+                    'tags' => [],
+                ],
+            ]
+        );
+    }
 }

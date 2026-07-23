@@ -78,29 +78,24 @@ class Response implements Responsable
      */
     public function modelToResponse(Model $model, Resource $resource, array $requestArray, ?Relation $relation = null)
     {
-        $currentRequestArray = $relation === null ? $requestArray : collect($requestArray['includes'] ?? [])
-            ->first(function ($include) use ($relation) {
-                return preg_match('/(?:\.\b)?'.$relation->relation.'\b/', $include['relation']);
-            }) ?? [];
-
         return array_merge(
             // toArray to take advantage of Laravel's logic
             collect($model->attributesToArray())
                 ->only(
                     array_merge(
-                        isset($currentRequestArray['selects']) ?
-                                collect($currentRequestArray['selects'])->pluck('field')->toArray() :
+                        isset($requestArray['selects']) ?
+                                collect($requestArray['selects'])->pluck('field')->toArray() :
                                 $resource->getFields(app()->make(RestRequest::class)),
                         // Here we add the aggregates
-                        collect($currentRequestArray['aggregates'] ?? [])
+                        collect($requestArray['aggregates'] ?? [])
                             ->map(function ($aggregate) {
                                 return $aggregate['alias'] ?? Str::snake($aggregate['relation']).'_'.$aggregate['type'].(isset($aggregate['field']) ? '_'.$aggregate['field'] : '');
                             })
                             ->toArray()
                     )
                 )
-                ->when($resource->isGatingEnabled() && isset($currentRequestArray['gates']), function ($attributes) use ($currentRequestArray, $resource, $model) {
-                    $currentRequestArrayWithoutCreate = collect($currentRequestArray['gates'])->reject(fn ($value) => $value === 'create')->toArray();
+                ->when($resource->isGatingEnabled() && isset($requestArray['gates']), function ($attributes) use ($requestArray, $resource, $model) {
+                    $currentRequestArrayWithoutCreate = collect($requestArray['gates'])->reject(fn ($value) => $value === 'create')->toArray();
 
                     return $attributes->put(
                         config('rest.gates.key'),
@@ -109,8 +104,14 @@ class Response implements Responsable
                 })
                 ->toArray(),
             collect($model->getRelations())
-                ->mapWithKeys(function ($modelRelation, $relationName) use ($currentRequestArray, $relation, $resource) {
-                    $key = Str::snake($relationName);
+                ->mapWithKeys(function ($modelRelation, $relationName) use ($requestArray, $relation, $resource) {
+                    $currentInclude = collect($requestArray['includes'] ?? [])
+                        ->first(function ($include) use ($relationName) {
+                            return ($include['alias'] ?? $include['relation']) === $relationName;
+                        });
+
+                    $realRelation = $currentInclude['relation'] ?? $relationName;
+                    $key = $currentInclude['alias'] ?? Str::snake($realRelation);
 
                     if (is_null($modelRelation)) {
                         return [
@@ -124,7 +125,7 @@ class Response implements Responsable
                         ];
                     }
 
-                    $relationConcrete = $resource->relation($relationName);
+                    $relationConcrete = $resource->relation($realRelation);
                     $relationResource = $relationConcrete->resource();
 
                     if ($modelRelation instanceof Model) {
@@ -132,7 +133,7 @@ class Response implements Responsable
                             $key => $this->modelToResponse(
                                 $modelRelation,
                                 $relationResource,
-                                $currentRequestArray,
+                                $currentInclude ?? [],
                                 $relationConcrete
                             ),
                         ];
@@ -140,7 +141,7 @@ class Response implements Responsable
 
                     return [
                         $key => $modelRelation
-                            ->map(fn ($collectionRelation) => $this->modelToResponse($collectionRelation, $relationResource, $currentRequestArray, $relationConcrete))
+                            ->map(fn ($collectionRelation) => $this->modelToResponse($collectionRelation, $relationResource, $currentInclude ?? [], $relationConcrete))
                             ->toArray(),
                     ];
                 })

@@ -209,6 +209,14 @@ trait PerformSearch
      */
     public function include($include)
     {
+        if (isset($include['alias'])) {
+            return $this->queryBuilder->afterQuery(function ($models) use ($include) {
+                $this->includeAliased($models, $include);
+
+                return $models;
+            });
+        }
+
         return $this->queryBuilder->with($include['relation'], function (Relation $query) use ($include) {
             $resource = $this->resource->relation($include['relation'])?->resource();
 
@@ -216,6 +224,33 @@ trait PerformSearch
 
             return $queryBuilder->search($include);
         });
+    }
+
+    /**
+     * Manually eager load an include under its alias key.
+     *
+     * @param \Illuminate\Support\Collection $models  The parent models to hydrate.
+     * @param array                          $include The include definition, containing 'relation' and 'alias'.
+     */
+    protected function includeAliased($models, array $include): void
+    {
+        $models = $models->all();
+
+        if (empty($models)) {
+            return;
+        }
+
+        $relation = reset($models)->{$include['relation']}();
+        $relation->addEagerConstraints($models);
+
+        $resource = $this->resource->relation($include['relation'])?->resource();
+        $this->newQueryBuilder(['resource' => $resource, 'query' => $relation])->search($include);
+
+        $relation->match(
+            $relation->initRelation($models, $include['alias']),
+            $relation->getEager(),
+            $include['alias']
+        );
     }
 
     /**
