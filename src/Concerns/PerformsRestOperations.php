@@ -104,7 +104,7 @@ trait PerformsRestOperations
         $request->resource($resource = static::newResource());
 
         $this->beforeMutate($request);
-        
+
         $operations = DB::transaction(function () use ($request, $resource) {
             return app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
                 ->tap(function ($query) use ($request) {
