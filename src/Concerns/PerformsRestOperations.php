@@ -158,7 +158,12 @@ trait PerformsRestOperations
 
         $this->beforeDestroy($request);
 
-        $query = $resource->destroyQuery($request, $resource::newModel()::query());
+        // The perimeter runs in a subquery so that an "or" inside it cannot swallow the
+        // id allow-list appended afterwards, which binds tighter than it does
+        $query = $resource::newModel()::query()
+            ->where(function ($query) use ($request, $resource) {
+                $resource->destroyQuery($request, $query);
+            });
 
         $models = $query
             ->whereIn($resource::newModel()->getKeyName(), $request->input('resources'))
@@ -196,7 +201,12 @@ trait PerformsRestOperations
 
         $this->beforeRestore($request);
 
-        $query = $resource->restoreQuery($request, $resource::newModel()::query());
+        // The perimeter runs in a subquery so that an "or" inside it cannot swallow the
+        // id allow-list appended afterwards, which binds tighter than it does
+        $query = $resource::newModel()::query()
+            ->where(function ($query) use ($request, $resource) {
+                $resource->restoreQuery($request, $query);
+            });
 
         $models = $query
             ->withTrashed()
@@ -236,7 +246,12 @@ trait PerformsRestOperations
 
         $this->beforeForceDestroy($request);
 
-        $query = $resource->forceDeleteQuery($request, $resource::newModel()::query());
+        // The perimeter runs in a subquery so that an "or" inside it cannot swallow the
+        // id allow-list appended afterwards, which binds tighter than it does
+        $query = $resource::newModel()::query()
+            ->where(function ($query) use ($request, $resource) {
+                $resource->forceDeleteQuery($request, $query);
+            });
 
         $models = $query
             ->withTrashed()

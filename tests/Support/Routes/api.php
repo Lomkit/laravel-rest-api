@@ -15,4 +15,5 @@ Route::group(['as' => 'api.', 'prefix' => 'api'], function () {
     \Lomkit\Rest\Facades\Rest::resource('constrained', \Lomkit\Rest\Tests\Support\Http\Controllers\ConstrainedController::class);
     \Lomkit\Rest\Facades\Rest::resource('no-authorization', \Lomkit\Rest\Tests\Support\Http\Controllers\NoAuthorizationController::class);
     \Lomkit\Rest\Facades\Rest::resource('soft-deleted-models', \Lomkit\Rest\Tests\Support\Http\Controllers\SoftDeletedModelController::class)->withSoftDeletes();
+    \Lomkit\Rest\Facades\Rest::resource('or-perimeter-soft-deleted-models', \Lomkit\Rest\Tests\Support\Http\Controllers\OrPerimeterSoftDeletedModelController::class)->withSoftDeletes();
 });
