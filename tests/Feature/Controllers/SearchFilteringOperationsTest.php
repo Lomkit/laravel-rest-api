@@ -522,6 +522,81 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
+    public function test_getting_a_list_of_resources_filtered_by_model_field_using_multiple_nested_levels(): void
+    {
+        $matchingModel = ModelFactory::new()->create(['number' => 1, 'name' => 'match'])->fresh();
+        $matchingModel2 = ModelFactory::new()->create(['number' => 2, 'name' => 'match2'])->fresh();
+        ModelFactory::new()->create(['number' => 1, 'name' => 'match2'])->fresh();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'filters' => [
+                        [
+                            'nested' => [
+                                [
+                                    'nested' => [
+                                        ['field' => 'number', 'value' => 1],
+                                        ['field' => 'name', 'value' => 'match', 'type' => 'and'],
+                                    ],
+                                ],
+                                [
+                                    'type'   => 'or',
+                                    'nested' => [
+                                        ['field' => 'number', 'value' => 2],
+                                        ['field' => 'name', 'value' => 'match2', 'type' => 'and'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $this->assertResourcePaginated(
+            $response,
+            [$matchingModel, $matchingModel2],
+            new ModelResource()
+        );
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_model_field_nested_deeper_than_the_configured_maximum(): void
+    {
+        config(['rest.search.max_nesting_depth' => 1]);
+
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'filters' => [
+                        [
+                            'nested' => [
+                                [
+                                    'nested' => [
+                                        ['field' => 'number', 'value' => 1],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.nested.0.nested']]);
+    }
+
     public function test_getting_a_list_of_resources_filtered_by_belongs_to_many_pivot_operation(): void
     {
         $belongsToManyRelation = BelongsToManyRelationFactory::new()

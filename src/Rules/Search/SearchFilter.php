@@ -9,6 +9,21 @@ use Lomkit\Rest\Rules\RestRule;
 
 class SearchFilter extends RestRule
 {
+    /**
+     * How many levels of nesting this filter already sits under.
+     */
+    protected int $depth = 0;
+
+    /**
+     * Set the nesting level this filter sits at.
+     */
+    public function setDepth(int $depth): static
+    {
+        $this->depth = $depth;
+
+        return $this;
+    }
+
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = app(RestRequest::class);
@@ -22,24 +37,25 @@ class SearchFilter extends RestRule
             ['=', 'in', 'not in'] :
             ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'];
 
+        $nestingAllowed = !$isScoutMode && $this->depth < config('rest.search.max_nesting_depth', 5);
+
         return [
             $attribute.'.field' => [
                 'string',
                 'required_without:'.$attribute.'.nested',
                 $fieldsValidation,
             ],
-            $attribute.'.nested' => !$isScoutMode ? [
+            $attribute.'.nested' => $nestingAllowed ? [
                 'sometimes',
                 'prohibits:'.$attribute.'.field,operator,value',
                 'array',
             ] : [
                 'prohibited',
             ],
-            $attribute.'.nested.*.nested' => [
-                'prohibited',
-            ],
             $attribute.'.nested.*' => [
-                (new SearchFilter())->setResource($this->resource),
+                (new SearchFilter())
+                    ->setResource($this->resource)
+                    ->setDepth($this->depth + 1),
             ],
             $attribute.'.operator' => [
                 'string',
