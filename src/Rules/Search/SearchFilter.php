@@ -30,7 +30,7 @@ class SearchFilter extends RestRule
             ],
             $attribute.'.nested' => !$isScoutMode ? [
                 'sometimes',
-                'prohibits:'.$attribute.'.field,operator,value',
+                'prohibits:'.$attribute.'.field,'.$attribute.'.operator,'.$attribute.'.value',
                 'array',
             ] : [
                 'prohibited',
