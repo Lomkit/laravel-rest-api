@@ -522,6 +522,34 @@ class SearchFilteringOperationsTest extends TestCase
         );
     }
 
+    public function test_getting_a_list_of_resources_filtered_by_nested_alongside_operator_and_value_is_prohibited(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'filters' => [
+                        [
+                            'nested' => [
+                                ['field' => 'number', 'value' => 1],
+                            ],
+                            'operator' => '=',
+                            'value'    => 99,
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.nested']]);
+    }
+
     public function test_getting_a_list_of_resources_filtered_by_belongs_to_many_pivot_operation(): void
     {
         $belongsToManyRelation = BelongsToManyRelationFactory::new()
