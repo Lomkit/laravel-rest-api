@@ -47,7 +47,7 @@ class SearchFilter extends RestRule
             ],
             $attribute.'.nested' => $nestingAllowed ? [
                 'sometimes',
-                'prohibits:'.$attribute.'.field,operator,value',
+                'prohibits:'.$attribute.'.field,'.$attribute.'.operator,'.$attribute.'.value',
                 'array',
             ] : [
                 'prohibited',
