@@ -524,6 +524,8 @@ class SearchFilteringOperationsTest extends TestCase
 
     public function test_getting_a_list_of_resources_filtered_by_model_field_using_multiple_nested_levels(): void
     {
+        config(['rest.search.max_nesting_depth' => 2]);
+
         $matchingModel = ModelFactory::new()->create(['number' => 1, 'name' => 'match'])->fresh();
         $matchingModel2 = ModelFactory::new()->create(['number' => 2, 'name' => 'match2'])->fresh();
         ModelFactory::new()->create(['number' => 1, 'name' => 'match2'])->fresh();
@@ -595,6 +597,42 @@ class SearchFilteringOperationsTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.nested.0.nested']]);
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_model_field_nested_deeper_than_a_configured_maximum_above_one(): void
+    {
+        config(['rest.search.max_nesting_depth' => 2]);
+
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'filters' => [
+                        [
+                            'nested' => [
+                                [
+                                    'nested' => [
+                                        [
+                                            'nested' => [
+                                                ['field' => 'number', 'value' => 1],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.nested.0.nested.0.nested']]);
     }
 
     public function test_getting_a_list_of_resources_filtered_by_belongs_to_many_pivot_operation(): void

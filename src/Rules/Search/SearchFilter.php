@@ -37,7 +37,7 @@ class SearchFilter extends RestRule
             ['=', 'in', 'not in'] :
             ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'];
 
-        $nestingAllowed = !$isScoutMode && $this->depth < config('rest.search.max_nesting_depth', 5);
+        $nestingAllowed = !$isScoutMode && $this->depth < config('rest.search.max_nesting_depth', 1);
 
         return [
             $attribute.'.field' => [

@@ -51,15 +51,16 @@ return [
     | Rest Search
     |--------------------------------------------------------------------------
     |
-    | How deep filters are allowed to nest into each other. Each "nested" key in
-    | a filter counts as one level, so a value of 1 only allows a single group of
-    | filters, while a value of 5 allows five groups inside one another. Keep this
-    | bounded: the validation cost of a search request grows with its depth.
+    | How deep filters may nest into each other. Each "nested" key counts as one
+    | level: the default of 1 allows a single group of filters (the historical
+    | behavior), while a higher value allows that many groups nested inside one
+    | another. Nesting stays disabled in Scout mode whatever this is set to. Keep
+    | it modest, since deeply nested filters build large, complex boolean queries.
     |
     */
 
     'search' => [
-        'max_nesting_depth' => 5,
+        'max_nesting_depth' => 1,
     ],
 
     /*
