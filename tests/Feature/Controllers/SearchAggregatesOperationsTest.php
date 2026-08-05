@@ -1014,4 +1014,42 @@ class SearchAggregatesOperationsTest extends TestCase
             ]
         );
     }
+
+    public function test_getting_a_list_of_resources_aggregating_with_a_filter_nested_deeper_than_the_configured_maximum(): void
+    {
+        config(['rest.search.max_nesting_depth' => 1]);
+
+        Gate::policy(Model::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'belongsToManyRelation',
+                            'type'     => 'min',
+                            'field'    => 'number',
+                            'filters'  => [
+                                [
+                                    'nested' => [
+                                        [
+                                            'nested' => [
+                                                ['field' => 'number', 'value' => 1],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.aggregates.0.filters.0.nested.0.nested']]);
+    }
 }
