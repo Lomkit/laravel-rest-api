@@ -16,7 +16,7 @@ class SearchRequest extends RestRequest
         $resource = $this->route()->controller::newResource();
 
         return [
-            'search' => (new Search())->setResource($resource),
+            'search' => ['sometimes', 'array', (new Search())->setResource($resource)],
         ];
     }
 }
