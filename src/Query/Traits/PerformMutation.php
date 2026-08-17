@@ -57,19 +57,36 @@ trait PerformMutation
             $model = $this->resource::newModel()::query()->findOrFail($key ?? $mutation['key']);
         }
 
-        if ($mutation['operation'] === 'create') {
-            $this->resource->authorizeTo('create', $model);
-        } elseif ($mutation['operation'] === 'update') {
-            $this->resource->authorizeTo('update', $model);
-        } else {
-            $this->resource->authorizeTo('view', $model);
-        }
+        $this->resource->authorizeTo(
+            $this->mutationAbility($mutation),
+            $model
+        );
 
         return $this->mutateModel(
             $model,
             $allAttributes,
             $mutation
         );
+    }
+
+    /**
+     * Resolve the ability required to perform the given mutation.
+     *
+     * sync and toggle persist caller-supplied attributes onto the related model,
+     * so they must authorize as an update rather than a view.
+     *
+     * @param array $mutation An array of mutation parameters.
+     *
+     * @return string The ability to authorize.
+     */
+    protected function mutationAbility(array $mutation)
+    {
+        return match (true) {
+            $mutation['operation'] === 'create' => 'create',
+            $mutation['operation'] === 'update' => 'update',
+            !empty($mutation['attributes'])     => 'update',
+            default                             => 'view',
+        };
     }
 
     /**

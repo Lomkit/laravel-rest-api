@@ -11,6 +11,8 @@ Route::group(['as' => 'api.', 'prefix' => 'api'], function () {
     \Lomkit\Rest\Facades\Rest::resource('model-with-default-limit', \Lomkit\Rest\Tests\Support\Http\Controllers\ModelWithDefaultLimitController::class);
     \Lomkit\Rest\Facades\Rest::resource('no-relationship-authorization-models', \Lomkit\Rest\Tests\Support\Http\Controllers\NoRelationshipAuthorizationModelController::class);
 
+    \Lomkit\Rest\Facades\Rest::resource('gated-models', \Lomkit\Rest\Tests\Support\Http\Controllers\GatedModelController::class);
+
     \Lomkit\Rest\Facades\Rest::resource('no-exposed-fields', \Lomkit\Rest\Tests\Support\Http\Controllers\NoExposedFieldsController::class);
     \Lomkit\Rest\Facades\Rest::resource('automatic-gating', \Lomkit\Rest\Tests\Support\Http\Controllers\AutomaticGatingController::class);
     \Lomkit\Rest\Facades\Rest::resource('constrained', \Lomkit\Rest\Tests\Support\Http\Controllers\ConstrainedController::class);
