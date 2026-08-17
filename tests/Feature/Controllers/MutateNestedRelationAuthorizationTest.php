@@ -4,7 +4,6 @@ namespace Controllers;
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Support\Facades\Gate;
-use PHPUnit\Framework\Attributes\DataProvider;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
@@ -18,6 +17,7 @@ use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Policies\ViewPolicy;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class MutateNestedRelationAuthorizationTest extends TestCase
 {
