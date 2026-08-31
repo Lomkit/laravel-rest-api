@@ -6,7 +6,7 @@ use Lomkit\Rest\Instructions\Instruction;
 
 class NumberedInstruction extends Instruction
 {
-    public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query)
+    public function handle(array $fields, \Illuminate\Contracts\Database\Eloquent\Builder $query)
     {
         $query->where('number', '>', $fields['number'] ?? 0);
     }

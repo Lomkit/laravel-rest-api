@@ -69,6 +69,7 @@ class Instruction
      *
      * @return void
      */
+    // TODO(upgrade): change $query type-hint to \Illuminate\Contracts\Database\Eloquent\Builder
     public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query)
     {
         // ...
