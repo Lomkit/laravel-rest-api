@@ -159,6 +159,8 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
                         ->addProperty('operator', (new StringType())->enum([
                             '=', '!=', '>', '>=', '<', '<=',
                             'in', 'not in', 'like', 'not like',
+                            'ilike', 'not ilike', 'between', 'not between',
+                            'is null', 'is not null',
                         ]))
                         ->addProperty('value', (new MixedType())->setDescription('Accepts string, integer, boolean, or array'))
                         ->addProperty('type', (new StringType())->enum(['and', 'or']))

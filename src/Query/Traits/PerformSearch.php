@@ -104,6 +104,15 @@ trait PerformSearch
             }, null, null, $type);
         }
 
+        $filter = $this->resource->filter(app()->make(RestRequest::class), $field);
+
+        if ($filter !== null) {
+            // The filter runs in a subquery so that it behaves as a single condition
+            return $this->queryBuilder->where(function ($query) use ($filter, $operator, $value) {
+                $filter->handle($query, $operator, $value);
+            }, null, null, $type);
+        }
+
         // Here we assume the user has asked a relation filter
         if (Str::contains($field, '.')) {
             $relation = $this->resource->relation(
@@ -116,6 +125,13 @@ trait PerformSearch
         } else {
             if (in_array($operator, ['in', 'not in'])) {
                 $this->queryBuilder->whereIn($this->queryBuilder->getModel()->getTable().'.'.$field, $value, $type, $operator === 'not in');
+            } elseif (in_array($operator, ['between', 'not between'])) {
+                $this->queryBuilder->whereBetween($this->queryBuilder->getModel()->getTable().'.'.$field, $value, $type, $operator === 'not between');
+            } elseif (in_array($operator, ['is null', 'is not null'])) {
+                $this->queryBuilder->whereNull($this->queryBuilder->getModel()->getTable().'.'.$field, $type, $operator === 'is not null');
+            } elseif (in_array($operator, ['ilike', 'not ilike'])) {
+                // Compiles to the case insensitive operator of the driver
+                $this->queryBuilder->whereLike($this->queryBuilder->getModel()->getTable().'.'.$field, $value, false, $type, $operator === 'not ilike');
             } else {
                 $this->queryBuilder->where($this->queryBuilder->getModel()->getTable().'.'.$field, $operator, $value, $type);
             }

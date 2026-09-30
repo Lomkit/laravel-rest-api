@@ -2,12 +2,23 @@
 
 namespace Lomkit\Rest\Rules\Search;
 
+use Closure;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Rules\RestRule;
 
 class Search extends RestRule
 {
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
+        parent::validate($attribute, $value, $fail);
+
+        // The resource only gets to inspect a search that is already valid
+        if (is_array($value) && $this->validator->errors()->isEmpty()) {
+            $this->resource->afterSearchValidation(app(RestRequest::class), $this->validator);
+        }
+    }
+
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = app(RestRequest::class);
