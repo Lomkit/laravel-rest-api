@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
+use Illuminate\Validation\Validator;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Rulable
@@ -40,5 +41,21 @@ trait Rulable
     public function updateRules(RestRequest $request)
     {
         return [];
+    }
+
+    /**
+     * Inspect a search as a whole once it has passed its rules,
+     * errors added to the validator are returned as validation errors.
+     *
+     * This is not called for a request carrying no search.
+     *
+     * @param RestRequest $request
+     * @param Validator   $validator
+     *
+     * @return void
+     */
+    public function afterSearchValidation(RestRequest $request, Validator $validator): void
+    {
+        //
     }
 }

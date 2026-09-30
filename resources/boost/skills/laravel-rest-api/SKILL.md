@@ -241,8 +241,11 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
 }
 ```
 
-**Filter operators**: `=`, `!=`, `>`, `>=`, `<`, `<=`, `like`, `not like`, `in`, `not in`.
+**Filter operators**: `=`, `!=`, `>`, `>=`, `<`, `<=`, `like`, `not like`, `ilike`, `not ilike`, `in`, `not in`, `between`, `not between`, `is null`, `is not null`. `between` / `not between` take a two item array as `value`, `is null` / `is not null` take no `value`.
 **Filter `type`**: `and` (default) or `or`. Use `nested` to group filters with their own logical operator. `field` may traverse declared relations and pivot data (`user.posts.id`, `languages.pivot.boolean`).
+**Custom filters**: `Resource::filters()` returns `Lomkit\Rest\Filters\Filter` instances (`MyFilter::make('key')`); `key` is then accepted as a filter `field` and `handle(Builder $query, string $operator, mixed $value)` builds the condition. Not available with `text`.
+**Negated relation filters**: `posts.title != x` means "has a post whose title is not x". Declare the relation with `->negationsAsAbsence()` to read `!=`, `not in`, `not like`, `not ilike`, `not between` as "has no post matching".
+**Validating a search as a whole**: override `Resource::afterSearchValidation(RestRequest $request, Validator $validator)` and add errors to the validator; it runs once the search has passed its rules, also for the `search` of an action, and is not called when the request carries no `search`.
 **Aggregate `type`** values: `min`, `max`, `avg`, `sum`, `count`, `exists`. `field` is required for `min/max/avg/sum`, omit for `count/exists`.
 **`includes`** can recursively re-use `filters`, `sorts`, `scopes`, `limit`, `selects` — but **not nested `includes`** (load chained relations as separate include entries).
 **Include `alias`** renames the response key for that include, which lets the same relation appear several times under different constraints. It must look like an identifier (`^[A-Za-z_][A-Za-z0-9_]*$`), be unique across the includes, and not collide with a field, a relation, or the gates key of the resource. It is used verbatim — no snake_casing — and is rejected on a dotted relation path (use a nested include there).
