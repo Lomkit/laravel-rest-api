@@ -10,18 +10,19 @@
     }
   ],
   "require": {
-    "php": "^8.2",
+    "php": "^8.3",
     "ext-json": "*",
-    "laravel/framework": "^12|^13"
+    "laravel/framework": "^13.0"
   },
   "require-dev": {
-    "guzzlehttp/guzzle": "^6.0|^7.0",
-    "laravel/scout": "^10|^11",
-    "orchestra/testbench": "^10|^11",
-    "phpunit/phpunit": "^10|^11|^12|^13"
+    "dedoc/scramble": "^0.13",
+    "laravel/scout": "^11.0",
+    "orchestra/testbench": "^11.0",
+    "phpunit/phpunit": "^12.0|^13.0"
   },
   "suggest": {
-    "dedoc/scramble": "Required to use LomkitLaravelRestApiOperationExtension for automatic API documentation."
+    "dedoc/scramble": "Required to use LomkitLaravelRestApiOperationExtension for automatic API documentation.",
+    "laravel/scout": "Required to use full-text search (search.text) on searchable models."
   },
   "autoload": {
     "psr-4": {
