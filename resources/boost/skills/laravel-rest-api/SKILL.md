@@ -241,8 +241,9 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
 }
 ```
 
-**Filter operators**: `=`, `!=`, `>`, `>=`, `<`, `<=`, `like`, `not like`, `in`, `not in`.
+**Filter operators**: `=`, `!=`, `>`, `>=`, `<`, `<=`, `like`, `not like`, `ilike`, `not ilike`, `in`, `not in`, `between`, `not between`, `is null`, `is not null`. `between` / `not between` take a two item array as `value`, `is null` / `is not null` take no `value`.
 **Filter `type`**: `and` (default) or `or`. Use `nested` to group filters with their own logical operator. `field` may traverse declared relations and pivot data (`user.posts.id`, `languages.pivot.boolean`).
+**Relation filters**: `{ "relation": "posts", "exists": false, "nested": [{ "field": "status", "value": "draft" }] }` matches models with no draft post (`exists` defaults to `true`). All `nested` filters apply to the same related entry and are validated against the related resource, `pivot.*` fields included on a belongs to many. `relation` may be dotted (`posts.comments`), `nested` may be omitted ("has no posts"), `type` works as on other filters, and the group counts toward `max_nesting_depth`. Not available with `text`. A dotted `field` such as `posts.status != draft` still means "has a post that is not a draft".
 **Aggregate `type`** values: `min`, `max`, `avg`, `sum`, `count`, `exists`. `field` is required for `min/max/avg/sum`, omit for `count/exists`.
 **`includes`** can recursively re-use `filters`, `sorts`, `scopes`, `limit`, `selects` — but **not nested `includes`** (load chained relations as separate include entries).
 **Include `alias`** renames the response key for that include, which lets the same relation appear several times under different constraints. It must look like an identifier (`^[A-Za-z_][A-Za-z0-9_]*$`), be unique across the includes, and not collide with a field, a relation, or the gates key of the resource. It is used verbatim — no snake_casing — and is rejected on a dotted relation path (use a nested include there).

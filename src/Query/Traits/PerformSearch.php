@@ -100,12 +100,16 @@ trait PerformSearch
         if ($nested !== null) {
             return $this->queryBuilder->where(function ($query) use ($nested) {
                 $this->newQueryBuilder(['resource' => $this->resource, 'query' => $query])
+                    ->pivotTable($this->pivotTable)
                     ->applyFilters($nested);
             }, null, null, $type);
         }
 
+        // A pivot field of the relation this query filters through
+        $isPivotField = $this->pivotTable !== null && Str::startsWith($field, 'pivot.');
+
         // Here we assume the user has asked a relation filter
-        if (Str::contains($field, '.')) {
+        if (Str::contains($field, '.') && !$isPivotField) {
             $relation = $this->resource->relation(
                 Str::beforeLast($field, '.')
             );
@@ -114,12 +118,45 @@ trait PerformSearch
                 $relation->applySearchQuery($query);
             });
         } else {
+            $column = $isPivotField ?
+                $this->pivotTable.'.'.Str::after($field, 'pivot.') :
+                $this->queryBuilder->getModel()->getTable().'.'.$field;
+
             if (in_array($operator, ['in', 'not in'])) {
-                $this->queryBuilder->whereIn($this->queryBuilder->getModel()->getTable().'.'.$field, $value, $type, $operator === 'not in');
+                $this->queryBuilder->whereIn($column, $value, $type, $operator === 'not in');
+            } elseif (in_array($operator, ['between', 'not between'])) {
+                $this->queryBuilder->whereBetween($column, $value, $type, $operator === 'not between');
+            } elseif (in_array($operator, ['is null', 'is not null'])) {
+                $this->queryBuilder->whereNull($column, $type, $operator === 'is not null');
+            } elseif (in_array($operator, ['ilike', 'not ilike'])) {
+                // Compiles to the case insensitive operator of the driver
+                $this->queryBuilder->whereLike($column, $value, false, $type, $operator === 'not ilike');
             } else {
-                $this->queryBuilder->where($this->queryBuilder->getModel()->getTable().'.'.$field, $operator, $value, $type);
+                $this->queryBuilder->where($column, $operator, $value, $type);
             }
         }
+    }
+
+    /**
+     * Filter on the existence of related entries matching the nested filters.
+     *
+     * @param string $relation The relation path, may be dotted.
+     * @param bool   $exists   Whether a matching related entry must exist or not.
+     * @param array  $nested   The filters a related entry must match, against the related resource.
+     * @param string $type     The filter type (e.g., 'and' or 'or').
+     */
+    public function filterRelation($relation, $exists = true, $nested = [], $type = 'and')
+    {
+        $restRelation = $this->resource->relation($relation);
+
+        // Every nested filter applies to the same related entry
+        return $this->queryBuilder->has($relation, $exists ? '>=' : '<', 1, $type, function (Builder $query) use ($restRelation, $nested) {
+            $this->newQueryBuilder(['resource' => $restRelation->resource(), 'query' => $query])
+                ->pivotTable(method_exists($restRelation, 'getPivotTable') ? $restRelation->getPivotTable() : null)
+                ->applyFilters($nested);
+
+            $restRelation->applySearchQuery($query);
+        });
     }
 
     /**
@@ -130,6 +167,12 @@ trait PerformSearch
     public function applyFilters($filters)
     {
         foreach ($filters as $filter) {
+            if (isset($filter['relation'])) {
+                $this->filterRelation($filter['relation'], (bool) ($filter['exists'] ?? true), $filter['nested'] ?? [], $filter['type'] ?? 'and');
+
+                continue;
+            }
+
             $this->filter($filter['field'] ?? null, $filter['operator'] ?? '=', $filter['value'] ?? null, $filter['type'] ?? 'and', $filter['nested'] ?? null);
         }
     }

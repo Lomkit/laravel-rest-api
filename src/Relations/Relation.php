@@ -64,6 +64,13 @@ class Relation implements \JsonSerializable
 
             if (in_array($operator, ['in', 'not in'])) {
                 $query->whereIn($field, $value, 'and', $operator === 'not in');
+            } elseif (in_array($operator, ['between', 'not between'])) {
+                $query->whereBetween($field, $value, 'and', $operator === 'not between');
+            } elseif (in_array($operator, ['is null', 'is not null'])) {
+                $query->whereNull($field, 'and', $operator === 'is not null');
+            } elseif (in_array($operator, ['ilike', 'not ilike'])) {
+                // Compiles to the case insensitive operator of the driver
+                $query->whereLike($field, $value, false, 'and', $operator === 'not ilike');
             } else {
                 $query->where($field, $operator, $value);
             }

@@ -18,6 +18,16 @@ trait HasPivotFields
     }
 
     /**
+     * Get the pivot table.
+     *
+     * @return string
+     */
+    public function getPivotTable(): string
+    {
+        return $this->fromResource::newModel()->{$this->relation}()->getTable();
+    }
+
+    /**
      * Set the pivot fields.
      *
      * @param array $pivotFields
