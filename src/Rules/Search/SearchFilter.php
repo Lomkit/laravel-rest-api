@@ -5,7 +5,9 @@ namespace Lomkit\Rest\Rules\Search;
 use Closure;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Rules\Resource\ResourceFieldOrNested;
+use Lomkit\Rest\Rules\Resource\ResourceRelationOrNested;
 use Lomkit\Rest\Rules\RestRule;
 
 class SearchFilter extends RestRule
@@ -14,6 +16,11 @@ class SearchFilter extends RestRule
      * How many levels of nesting this filter already sits under.
      */
     protected int $depth = 0;
+
+    /**
+     * The relation the resource is reached through, when filtering inside a relation filter.
+     */
+    protected ?Relation $relation = null;
 
     /**
      * Set the nesting level this filter sits at.
@@ -25,6 +32,16 @@ class SearchFilter extends RestRule
         return $this;
     }
 
+    /**
+     * Set the relation the resource is reached through, giving its pivot fields.
+     */
+    public function setRelation(?Relation $relation): static
+    {
+        $this->relation = $relation;
+
+        return $this;
+    }
+
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = app(RestRequest::class);
@@ -32,7 +49,7 @@ class SearchFilter extends RestRule
 
         $fieldsValidation = $isScoutMode ?
             Rule::in($this->resource->getScoutFields($request)) :
-            (new ResourceFieldOrNested())->setResource($this->resource);
+            (new ResourceFieldOrNested())->setResource($this->resource)->setRelation($this->relation);
 
         $allowedOperators = $isScoutMode ?
             ['=', 'in', 'not in'] :
@@ -40,11 +57,45 @@ class SearchFilter extends RestRule
 
         $nestingAllowed = !$isScoutMode && $this->depth < config('rest.search.max_nesting_depth', 1);
 
+        $isRelationFilter = is_array($value) && isset($value['relation']);
+        $relation = $isRelationFilter && is_string($value['relation']) ? $this->resource->relation($value['relation']) : null;
+
+        // The nested filters of a relation filter apply to the related resource
+        $nestedRule = $isRelationFilter ?
+            ($relation === null ? [] : [
+                (new SearchFilter())
+                    ->setResource($relation->resource())
+                    ->setRelation($relation)
+                    ->setDepth($this->depth + 1),
+            ]) : [
+                (new SearchFilter())
+                    ->setResource($this->resource)
+                    ->setRelation($this->relation)
+                    ->setDepth($this->depth + 1),
+            ];
+
         $rules = [
             $attribute.'.field' => [
                 'string',
-                'required_without:'.$attribute.'.nested',
+                'required_without_all:'.$attribute.'.nested,'.$attribute.'.relation',
                 $fieldsValidation,
+            ],
+            $attribute.'.relation' => !$isScoutMode ? [
+                'bail',
+                'sometimes',
+                'string',
+                // A pivot is not a relation the query could check the existence of
+                'not_regex:/(^|\.)pivot(\.|$)/',
+                'prohibits:'.$attribute.'.field,'.$attribute.'.operator,'.$attribute.'.value',
+                (new ResourceRelationOrNested())->setResource($this->resource),
+            ] : [
+                'prohibited',
+            ],
+            $attribute.'.exists' => !$isScoutMode && $isRelationFilter ? [
+                'sometimes',
+                'boolean',
+            ] : [
+                'prohibited',
             ],
             $attribute.'.nested' => $nestingAllowed ? [
                 'sometimes',
@@ -53,11 +104,7 @@ class SearchFilter extends RestRule
             ] : [
                 'prohibited',
             ],
-            $attribute.'.nested.*' => [
-                (new SearchFilter())
-                    ->setResource($this->resource)
-                    ->setDepth($this->depth + 1),
-            ],
+            $attribute.'.nested.*' => $nestedRule,
             $attribute.'.operator' => [
                 'string',
                 Rule::in($allowedOperators),
@@ -70,20 +117,12 @@ class SearchFilter extends RestRule
             ],
             $attribute.'.value' => [
                 'exclude_if:'.$attribute.'.value,null',
-                'required_without:'.$attribute.'.nested',
+                'required_without_all:'.$attribute.'.nested,'.$attribute.'.relation',
             ],
         ];
 
         if ($isScoutMode || !is_array($value)) {
             return $rules;
-        }
-
-        // A filter declared on the resource stands for itself, it is not one of the resource fields
-        if ($this->resource->filter($request, $value['field'] ?? null) !== null) {
-            $rules[$attribute.'.field'] = [
-                'string',
-                'required_without:'.$attribute.'.nested',
-            ];
         }
 
         // Some operators expect a value of their own shape

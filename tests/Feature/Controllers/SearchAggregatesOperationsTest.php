@@ -40,6 +40,32 @@ class SearchAggregatesOperationsTest extends TestCase
         $response->assertExactJsonStructure(['message', 'errors' => ['search.aggregates.0.relation']]);
     }
 
+    public function test_getting_a_list_of_resources_aggregating_by_unknown_nested_relation(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'aggregates' => [
+                        [
+                            'relation' => 'unknown.foo',
+                            'type'     => 'min',
+                            'field'    => 'id',
+                        ],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.aggregates.0.relation']]);
+    }
+
     public function test_getting_a_list_of_resources_aggregating_by_unauthorized_type(): void
     {
         ModelFactory::new()->count(2)->create();

@@ -52,7 +52,7 @@ trait ConfiguresRestParameters
         if (Str::contains($field, '.')) {
             // In case we are on a pivot we look for the relation pivot fields
             if (Str::before($field, '.') === 'pivot') {
-                return method_exists($relation, 'getPivotFields') && in_array(Str::after($field, '.'), $relation->getPivotFields());
+                return $relation !== null && method_exists($relation, 'getPivotFields') && in_array(Str::after($field, '.'), $relation->getPivotFields());
             }
 
             $fieldRelation = $this->relation(Str::before($field, '.'));

@@ -52,6 +52,13 @@ class Builder implements QueryBuilder
     protected bool $disableDefaultLimit = false;
 
     /**
+     * The pivot table of the relation this query filters through.
+     *
+     * @var string|null
+     */
+    protected ?string $pivotTable = null;
+
+    /**
      * The query builder instance.
      *
      * @var \Illuminate\Database\Eloquent\Builder|null
@@ -92,6 +99,20 @@ class Builder implements QueryBuilder
     public function disableDefaultLimit($disable = true)
     {
         $this->disableDefaultLimit = $disable;
+
+        return $this;
+    }
+
+    /**
+     * Set the pivot table "pivot." fields are read from, when filtering through a relation having one.
+     *
+     * @param string|null $pivotTable
+     *
+     * @return $this
+     */
+    public function pivotTable(?string $pivotTable)
+    {
+        $this->pivotTable = $pivotTable;
 
         return $this;
     }

@@ -27,33 +27,10 @@ class Relation implements \JsonSerializable
 
     protected Resource $fromResource;
 
-    /**
-     * Whether a negated filter on this relation means no related entry matches.
-     */
-    public bool $negationsAsAbsence = false;
-
     public function __construct($relation, $type)
     {
         $this->relation = $relation;
         $this->type = $type;
-    }
-
-    /**
-     * Read negated filters on this relation as "no related entry matches"
-     * instead of "at least one related entry does not match".
-     *
-     * The relation holding the filtered field decides, the last one of a dotted path.
-     * "is null" and "is not null" are not negations of each other and stay as they are.
-     *
-     * @param bool $negationsAsAbsence
-     *
-     * @return $this
-     */
-    public function negationsAsAbsence(bool $negationsAsAbsence = true)
-    {
-        $this->negationsAsAbsence = $negationsAsAbsence;
-
-        return $this;
     }
 
     /**
@@ -80,14 +57,7 @@ class Relation implements \JsonSerializable
      */
     public function filter(Builder $query, $relation, $operator, $value, $boolean = 'and', ?Closure $callback = null)
     {
-        // Here the negation moves from the predicate to the existence check: no related entry may match
-        $absence = $this->negationsAsAbsence && in_array($operator, ['!=', 'not in', 'not like', 'not ilike', 'not between'], true);
-
-        if ($absence) {
-            $operator = $operator === '!=' ? '=' : Str::after($operator, 'not ');
-        }
-
-        return $query->has(Str::beforeLast(relation_without_pivot($relation), '.'), $absence ? '<' : '>=', 1, $boolean, function (Builder $query) use ($value, $operator, $relation, $callback) {
+        return $query->has(Str::beforeLast(relation_without_pivot($relation), '.'), '>=', 1, $boolean, function (Builder $query) use ($value, $operator, $relation, $callback) {
             $field = (Str::contains($relation, '.pivot.') ?
                     $this->fromResource::newModel()->{Str::of($relation)->before('.pivot.')->afterLast('.')->toString()}()->getTable() :
                     $query->getModel()->getTable()).'.'.Str::afterLast($relation, '.');

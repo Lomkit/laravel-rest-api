@@ -4,19 +4,15 @@ namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator as ValidatorFacade;
 use Illuminate\Testing\TestResponse;
-use Illuminate\Validation\Validator;
-use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Rules\Search\Search;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
+use Lomkit\Rest\Tests\Support\Database\Factories\HasManyThroughRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\ModelWithFiltersResource;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class SearchAdvancedFilteringOperationsTest extends TestCase
@@ -259,307 +255,274 @@ class SearchAdvancedFilteringOperationsTest extends TestCase
         );
     }
 
-    public function test_getting_a_list_of_resources_filtered_by_filter_class(): void
-    {
-        $matchingModel = ModelFactory::new()->create(['number' => 1, 'name' => 'match', 'string' => 'other'])->fresh();
-        $matchingModel2 = ModelFactory::new()->create(['number' => 1, 'name' => 'other', 'string' => 'match'])->fresh();
-        // Would be returned if the filter was not applied as a single condition
-        ModelFactory::new()->create(['number' => 2, 'name' => 'other', 'string' => 'match']);
-        ModelFactory::new()->create(['number' => 1, 'name' => 'other', 'string' => 'other']);
-
-        $response = $this->searchWithExtensions([
-            ['field' => 'number', 'value' => 1],
-            ['field' => 'name_or_string', 'value' => 'match'],
-        ]);
-
-        $this->assertResourcePaginated(
-            $response,
-            [$matchingModel, $matchingModel2],
-            new ModelWithFiltersResource()
-        );
-
-        $this->assertStringContainsString(
-            '(models.number = ? and (name = ? or string = ?))',
-            $this->searchStatement()
-        );
-    }
-
-    public function test_getting_a_list_of_resources_filtered_by_filter_class_using_or_type_and_operator(): void
-    {
-        $matchingModel = ModelFactory::new()->create(['number' => 1, 'name' => 'other', 'string' => 'other'])->fresh();
-        $matchingModel2 = ModelFactory::new()->create(['number' => 2, 'name' => 'other', 'string' => 'a match'])->fresh();
-        ModelFactory::new()->create(['number' => 2, 'name' => 'other', 'string' => 'other']);
-
-        $response = $this->searchWithExtensions([
-            ['field' => 'number', 'value' => 1],
-            ['field' => 'name_or_string', 'operator' => 'like', 'value' => '%match', 'type' => 'or'],
-        ]);
-
-        $this->assertResourcePaginated(
-            $response,
-            [$matchingModel, $matchingModel2],
-            new ModelWithFiltersResource()
-        );
-    }
-
-    public function test_getting_a_list_of_resources_filtered_by_filter_class_inside_nested(): void
-    {
-        $matchingModel = ModelFactory::new()->create(['number' => 1, 'name' => 'match'])->fresh();
-        ModelFactory::new()->create(['number' => 2, 'name' => 'match']);
-
-        $response = $this->searchWithExtensions([
-            [
-                'nested' => [
-                    ['field' => 'name_or_string', 'value' => 'match'],
-                    ['field' => 'number', 'value' => 1],
-                ],
-            ],
-        ]);
-
-        $this->assertResourcePaginated(
-            $response,
-            [$matchingModel],
-            new ModelWithFiltersResource()
-        );
-    }
-
-    public function test_getting_a_list_of_resources_filtered_by_filter_class_on_a_resource_not_declaring_it(): void
-    {
-        ModelFactory::new()->count(2)->create();
-
-        $response = $this->search([
-            ['field' => 'name_or_string', 'value' => 'match'],
-        ]);
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
-    }
-
-    public function test_getting_a_list_of_resources_filtered_by_unknown_field_on_a_resource_declaring_filter_classes(): void
-    {
-        ModelFactory::new()->count(2)->create();
-
-        $response = $this->searchWithExtensions([
-            ['field' => 'not_a_filter', 'value' => 'match'],
-        ]);
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.field']]);
-        $this->assertSame(
-            ['search.filters.0.field' => ['The \'field\' field is not valid.']],
-            $response->json('errors')
-        );
-    }
-
-    public function test_getting_a_list_of_resources_filtered_by_filter_class_declared_under_the_name_of_a_field(): void
-    {
-        $matchingModel = ModelFactory::new()->create(['name' => 'match'])->fresh();
-        ModelFactory::new()->create(['name' => 'other']);
-
-        $response = $this->searchWithExtensions([
-            ['field' => 'unique', 'value' => 'match'],
-        ]);
-
-        $this->assertResourcePaginated(
-            $response,
-            [$matchingModel],
-            new ModelWithFiltersResource()
-        );
-
-        $this->assertStringContainsString('((name = ? or string = ?))', $this->searchStatement());
-    }
-
-    public function test_filter_classes_are_not_exposed_as_fields(): void
-    {
-        ModelFactory::new()->count(2)->create();
-
-        $response = $this->post(
-            '/api/model-with-filters/search',
-            [
-                'search' => [
-                    'selects' => [
-                        ['field' => 'name_or_string'],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['search.selects.0.field']]);
-    }
-
-    public function test_getting_a_list_of_resources_rejected_by_the_resource_after_search_validation(): void
-    {
-        ModelFactory::new()->count(2)->create();
-
-        $response = $this->searchWithExtensions([
-            ['field' => 'name', 'value' => 'match'],
-            ['field' => 'name_or_string', 'value' => 'match'],
-        ]);
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters']]);
-        $this->assertSame(
-            ['search.filters' => ['The name and name_or_string filters cannot be combined.']],
-            $response->json('errors')
-        );
-    }
-
-    public function test_the_resource_after_search_validation_is_skipped_for_a_search_failing_its_rules(): void
-    {
-        ModelFactory::new()->count(2)->create();
-
-        // The hook of the resource reads the filters as an array and would break on this one
-        $response = $this->post(
-            '/api/model-with-filters/search',
-            ['search' => ['filters' => 'x']],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters']]);
-    }
-
-    public function test_operating_an_action_with_a_search_rejected_by_the_resource_after_search_validation(): void
-    {
-        ModelFactory::new()->count(2)->create();
-
-        $response = $this->post(
-            '/api/model-with-filters/actions/modify-number',
-            [
-                'search' => [
-                    'filters' => [
-                        ['field' => 'name', 'value' => 'match'],
-                        ['field' => 'name_or_string', 'value' => 'match'],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $this->assertSame(
-            ['search.filters' => ['The name and name_or_string filters cannot be combined.']],
-            $response->json('errors')
-        );
-    }
-
-    public function test_the_resource_after_search_validation_is_skipped_for_a_search_that_is_not_an_array(): void
-    {
-        $resource = new class() extends ModelResource {
-            public bool $inspected = false;
-
-            public function afterSearchValidation(RestRequest $request, Validator $validator): void
-            {
-                $this->inspected = true;
-            }
-        };
-
-        // An action does not require its search to be an array before handing it to the rule
-        (new Search())
-            ->setResource($resource)
-            ->setValidator(ValidatorFacade::make(['search' => 'x'], []))
-            ->validate('search', 'x', function () {});
-
-        $this->assertFalse($resource->inspected);
-    }
-
-    public function test_getting_a_list_of_resources_accepted_by_the_resource_after_search_validation(): void
-    {
-        $matchingModel = ModelFactory::new()->create(['name' => 'match'])->fresh();
-        ModelFactory::new()->create(['name' => 'other']);
-
-        $response = $this->searchWithExtensions([
-            ['field' => 'name', 'value' => 'match'],
-        ]);
-
-        $this->assertResourcePaginated(
-            $response,
-            [$matchingModel],
-            new ModelWithFiltersResource()
-        );
-    }
-
-    #[DataProvider('negatedRelationFilterProvider')]
-    public function test_getting_a_list_of_resources_filtered_by_negated_relation_field_read_as_absence(string $operator, mixed $value): void
-    {
-        // Holds a related row equal to 5, so it is excluded even though it also holds a 6
-        $mixedModel = ModelFactory::new()->create();
-        HasManyRelationFactory::new()->create(['number' => 5, 'model_id' => $mixedModel->getKey()]);
-        HasManyRelationFactory::new()->create(['number' => 6, 'model_id' => $mixedModel->getKey()]);
-
-        $matchingModel = ModelFactory::new()->create()->fresh();
-        HasManyRelationFactory::new()->create(['number' => 6, 'model_id' => $matchingModel->getKey()]);
-
-        // Holds no related row at all, so none of them equals 5
-        $matchingModel2 = ModelFactory::new()->create()->fresh();
-
-        $response = $this->searchWithExtensions([
-            ['field' => 'hasManyRelation.number', 'operator' => $operator, 'value' => $value],
-        ]);
-
-        $this->assertResourcePaginated(
-            $response,
-            [$matchingModel, $matchingModel2],
-            new ModelWithFiltersResource()
-        );
-    }
-
-    public static function negatedRelationFilterProvider(): array
-    {
-        return [
-            '!='          => ['!=', 5],
-            'not in'      => ['not in', [5]],
-            'not between' => ['not between', [5, 5]],
-        ];
-    }
-
-    public function test_getting_a_list_of_resources_filtered_by_positive_relation_field_with_negations_read_as_absence(): void
+    public function test_getting_a_list_of_resources_filtered_by_relation_filter_matching_the_same_related_entry(): void
     {
         $matchingModel = ModelFactory::new()->create()->fresh();
         HasManyRelationFactory::new()->create(['number' => 5, 'model_id' => $matchingModel->getKey()]);
-        HasManyRelationFactory::new()->create(['number' => 6, 'model_id' => $matchingModel->getKey()]);
 
-        $otherModel = ModelFactory::new()->create();
-        HasManyRelationFactory::new()->create(['number' => 6, 'model_id' => $otherModel->getKey()]);
+        // Each condition matches a different related entry, none matches both
+        $splitModel = ModelFactory::new()->create()->fresh();
+        HasManyRelationFactory::new()->create(['number' => 3, 'model_id' => $splitModel->getKey()]);
+        HasManyRelationFactory::new()->create(['number' => 8, 'model_id' => $splitModel->getKey()]);
 
         ModelFactory::new()->create();
 
-        $response = $this->searchWithExtensions([
-            ['field' => 'hasManyRelation.number', 'value' => 5],
+        $response = $this->search([
+            ['relation' => 'hasManyRelation', 'nested' => [
+                ['field' => 'number', 'operator' => '>=', 'value' => 4],
+                ['field' => 'number', 'operator' => '<=', 'value' => 6],
+            ]],
         ]);
 
-        $this->assertResourcePaginated(
-            $response,
-            [$matchingModel],
-            new ModelWithFiltersResource()
-        );
+        $this->assertResourcePaginated($response, [$matchingModel], new ModelResource());
     }
 
-    public function test_the_statement_built_for_negated_relation_field_read_as_absence(): void
+    public function test_getting_a_list_of_resources_filtered_by_dotted_fields_matching_different_related_entries(): void
     {
-        $this->searchWithExtensions([
-            ['field' => 'hasManyRelation.number', 'operator' => '!=', 'value' => 5],
-            ['field' => 'hasManyRelation.id', 'operator' => 'not in', 'value' => [1, 2], 'type' => 'or'],
-            ['field' => 'hasManyRelation.number', 'operator' => '>', 'value' => 1],
+        $matchingModel = ModelFactory::new()->create()->fresh();
+        HasManyRelationFactory::new()->create(['number' => 5, 'model_id' => $matchingModel->getKey()]);
+
+        $splitModel = ModelFactory::new()->create()->fresh();
+        HasManyRelationFactory::new()->create(['number' => 3, 'model_id' => $splitModel->getKey()]);
+        HasManyRelationFactory::new()->create(['number' => 8, 'model_id' => $splitModel->getKey()]);
+
+        ModelFactory::new()->create();
+
+        $response = $this->search([
+            ['field' => 'hasManyRelation.number', 'operator' => '>=', 'value' => 4],
+            ['field' => 'hasManyRelation.number', 'operator' => '<=', 'value' => 6],
+        ]);
+
+        $this->assertResourcePaginated($response, [$matchingModel, $splitModel], new ModelResource());
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_relation_filter_not_existing(): void
+    {
+        $model = ModelFactory::new()->create();
+        HasManyRelationFactory::new()->create(['number' => 5, 'model_id' => $model->getKey()]);
+        HasManyRelationFactory::new()->create(['number' => 8, 'model_id' => $model->getKey()]);
+
+        $matchingModel = ModelFactory::new()->create()->fresh();
+        HasManyRelationFactory::new()->create(['number' => 8, 'model_id' => $matchingModel->getKey()]);
+
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        $response = $this->search([
+            ['relation' => 'hasManyRelation', 'exists' => false, 'nested' => [
+                ['field' => 'number', 'value' => 5],
+            ]],
+        ]);
+
+        $this->assertResourcePaginated($response, [$matchingModel, $matchingModel2], new ModelResource());
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_relation_filter_without_nested(): void
+    {
+        $model = ModelFactory::new()->create();
+        HasManyRelationFactory::new()->create(['model_id' => $model->getKey()]);
+
+        $matchingModel = ModelFactory::new()->create()->fresh();
+
+        $response = $this->search([
+            ['relation' => 'hasManyRelation', 'exists' => false],
+        ]);
+
+        $this->assertResourcePaginated($response, [$matchingModel], new ModelResource());
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_relation_filter_on_a_dotted_relation(): void
+    {
+        $model = ModelFactory::new()->create();
+        $hasManyRelation = HasManyRelationFactory::new()->create(['model_id' => $model->getKey()]);
+        HasManyThroughRelationFactory::new()->create(['number' => 5, 'has_many_relation_id' => $hasManyRelation->getKey()]);
+
+        $matchingModel = ModelFactory::new()->create()->fresh();
+        $hasManyRelation = HasManyRelationFactory::new()->create(['model_id' => $matchingModel->getKey()]);
+        HasManyThroughRelationFactory::new()->create(['number' => 8, 'has_many_relation_id' => $hasManyRelation->getKey()]);
+
+        $response = $this->search([
+            ['relation' => 'hasManyRelation.hasManyThroughRelation', 'exists' => false, 'nested' => [
+                ['field' => 'number', 'value' => 5],
+            ]],
+        ]);
+
+        $this->assertResourcePaginated($response, [$matchingModel], new ModelResource());
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_relation_filter_using_or_type(): void
+    {
+        $matchingModel = ModelFactory::new()->create(['number' => 1])->fresh();
+
+        $matchingModel2 = ModelFactory::new()->create(['number' => 2])->fresh();
+        HasManyRelationFactory::new()->create(['number' => 5, 'model_id' => $matchingModel2->getKey()]);
+
+        ModelFactory::new()->create(['number' => 2]);
+
+        $response = $this->search([
+            ['field' => 'number', 'value' => 1],
+            ['relation' => 'hasManyRelation', 'type' => 'or', 'nested' => [
+                ['field' => 'number', 'value' => 5],
+            ]],
+        ]);
+
+        $this->assertResourcePaginated($response, [$matchingModel, $matchingModel2], new ModelResource());
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_relation_filter_on_a_pivot_field(): void
+    {
+        $belongsToManyRelation = BelongsToManyRelationFactory::new()->create();
+
+        ModelFactory::new()
+            ->hasAttached($belongsToManyRelation, ['number' => 10], 'belongsToManyRelation')
+            ->create();
+        $matchingModel = ModelFactory::new()
+            ->hasAttached($belongsToManyRelation, ['number' => 11], 'belongsToManyRelation')
+            ->create()->fresh();
+        $matchingModel2 = ModelFactory::new()->create()->fresh();
+
+        $response = $this->search([
+            ['relation' => 'belongsToManyRelation', 'exists' => false, 'nested' => [
+                ['field' => 'pivot.number', 'value' => 10],
+                ['field' => 'id', 'value' => $belongsToManyRelation->getKey()],
+            ]],
+        ]);
+
+        $this->assertResourcePaginated($response, [$matchingModel, $matchingModel2], new ModelResource());
+    }
+
+    public function test_the_statement_built_for_relation_filters(): void
+    {
+        $this->search([
+            ['relation' => 'hasManyRelation', 'exists' => false, 'nested' => [
+                ['field' => 'number', 'operator' => '>=', 'value' => 4],
+                ['field' => 'number', 'operator' => '<=', 'value' => 6],
+            ]],
+            ['relation' => 'belongsToManyRelation', 'type' => 'or', 'nested' => [
+                ['field' => 'pivot.number', 'value' => 10],
+            ]],
         ])->assertStatus(200);
 
         $this->assertStringContainsString(
             '(not exists (select * from has_many_relations where models.id = has_many_relations.model_id'
-            .' and has_many_relations.number = ?)'
-            .' or not exists (select * from has_many_relations where models.id = has_many_relations.model_id'
-            .' and has_many_relations.id in (?, ?))'
-            .' and exists (select * from has_many_relations where models.id = has_many_relations.model_id'
-            .' and has_many_relations.number > ?))',
+            .' and has_many_relations.number >= ? and has_many_relations.number <= ?)'
+            .' or exists (select * from belongs_to_many_relations inner join belongs_to_many_relation_model'
+            .' on belongs_to_many_relations.id = belongs_to_many_relation_model.belongs_to_many_relation_id'
+            .' where models.id = belongs_to_many_relation_model.model_id and belongs_to_many_relation_model.number = ?))',
             $this->searchStatement()
         );
     }
 
-    public function test_the_default_resource_keeps_its_details(): void
+    #[DataProvider('wrongRelationFilterProvider')]
+    public function test_getting_a_list_of_resources_filtered_by_wrong_relation_filter(array $filter, array $errors): void
     {
-        $this->assertSame([], (new ModelResource())->filters(app(RestRequest::class)));
-        $this->assertArrayNotHasKey('filters', (new ModelWithFiltersResource())->jsonSerialize());
+        ModelFactory::new()->count(2)->create();
+
+        $response = $this->search([$filter]);
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => $errors]);
+    }
+
+    public static function wrongRelationFilterProvider(): array
+    {
+        return [
+            'unknown relation' => [
+                ['relation' => 'unknown'],
+                ['search.filters.0.relation'],
+            ],
+            'unknown dotted relation' => [
+                ['relation' => 'unknown.foo', 'nested' => [['field' => 'id', 'value' => 1]]],
+                ['search.filters.0.relation'],
+            ],
+            'relation not a string' => [
+                ['relation' => ['hasManyRelation']],
+                ['search.filters.0.relation'],
+            ],
+            'pivot as relation' => [
+                ['relation' => 'belongsToManyRelation.pivot'],
+                ['search.filters.0.relation'],
+            ],
+            'relation with a field' => [
+                ['relation' => 'hasManyRelation', 'field' => 'id', 'value' => 1],
+                ['search.filters.0.relation'],
+            ],
+            'exists not a boolean' => [
+                ['relation' => 'hasManyRelation', 'exists' => 'nope'],
+                ['search.filters.0.exists'],
+            ],
+            'exists without relation' => [
+                ['field' => 'id', 'value' => 1, 'exists' => false],
+                ['search.filters.0.exists'],
+            ],
+            'field of the parent resource' => [
+                ['relation' => 'hasManyRelation', 'nested' => [['field' => 'name', 'value' => 'a']]],
+                ['search.filters.0.nested.0.field'],
+            ],
+            'unknown pivot field' => [
+                ['relation' => 'belongsToManyRelation', 'nested' => [['field' => 'pivot.unknown', 'value' => 1]]],
+                ['search.filters.0.nested.0.field'],
+            ],
+            'pivot field on a relation without pivot' => [
+                ['relation' => 'hasManyRelation', 'nested' => [['field' => 'pivot.number', 'value' => 1]]],
+                ['search.filters.0.nested.0.field'],
+            ],
+            'pivot field outside a relation filter' => [
+                ['field' => 'pivot.number', 'value' => 1],
+                ['search.filters.0.field'],
+            ],
+            'relation filter beyond the nesting depth' => [
+                ['nested' => [['relation' => 'hasManyRelation', 'nested' => [['field' => 'number', 'value' => 1]]]]],
+                ['search.filters.0.nested.0.nested'],
+            ],
+        ];
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_relation_filter_when_nesting_is_disabled(): void
+    {
+        config(['rest.search.max_nesting_depth' => 0]);
+
+        $this->search([
+            ['relation' => 'hasManyRelation', 'nested' => [['field' => 'number', 'value' => 1]]],
+        ])
+            ->assertStatus(422)
+            ->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.nested']]);
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_relation_filter_without_nested_when_nesting_is_disabled(): void
+    {
+        config(['rest.search.max_nesting_depth' => 0]);
+
+        $model = ModelFactory::new()->create();
+        HasManyRelationFactory::new()->create(['model_id' => $model->getKey()]);
+
+        $matchingModel = ModelFactory::new()->create()->fresh();
+
+        $response = $this->search([
+            ['relation' => 'hasManyRelation', 'exists' => false],
+        ]);
+
+        $this->assertResourcePaginated($response, [$matchingModel], new ModelResource());
+    }
+
+    public function test_getting_a_list_of_resources_filtered_by_relation_filter_in_scout_mode(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        $response = $this->post(
+            '/api/searchable-models/search',
+            [
+                'search' => [
+                    'text'    => ['value' => 'text'],
+                    'filters' => [
+                        ['relation' => 'hasManyRelation', 'exists' => false],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.filters.0.relation', 'search.filters.0.exists']]);
     }
 
     /**
@@ -579,18 +542,6 @@ class SearchAdvancedFilteringOperationsTest extends TestCase
             ['search' => ['filters' => $filters]],
             ['Accept' => 'application/json']
         );
-    }
-
-    /**
-     * Search the resource declaring a filter class, a validation hook and a relation reading negations as absence.
-     *
-     * @param array $filters
-     *
-     * @return TestResponse
-     */
-    protected function searchWithExtensions(array $filters): TestResponse
-    {
-        return $this->search($filters, '/api/model-with-filters/search');
     }
 
     /**

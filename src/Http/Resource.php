@@ -15,7 +15,6 @@ use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
 use Lomkit\Rest\Concerns\Resource\Rulable;
 use Lomkit\Rest\Concerns\Resource\Scoutable;
-use Lomkit\Rest\Filters\Filterable;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instructionable;
 
@@ -31,7 +30,6 @@ class Resource implements \JsonSerializable
     use Authorizable;
     use Actionable;
     use Instructionable;
-    use Filterable;
     use HasResourceHooks;
 
     /**

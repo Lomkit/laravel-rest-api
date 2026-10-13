@@ -58,6 +58,28 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.0.relation']]);
     }
 
+    public function test_getting_a_list_of_resources_including_unknown_nested_relation(): void
+    {
+        ModelFactory::new()->count(2)->create();
+
+        Gate::policy(Model::class, GreenPolicy::class);
+
+        $response = $this->post(
+            '/api/models/search',
+            [
+                'search' => [
+                    'includes' => [
+                        ['relation' => 'unknown.foo'],
+                    ],
+                ],
+            ],
+            ['Accept' => 'application/json']
+        );
+
+        $response->assertStatus(422);
+        $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.0.relation']]);
+    }
+
     public function test_getting_a_list_of_resources_including_relation_with_unauthorized_filters(): void
     {
         Gate::policy(Model::class, GreenPolicy::class);
