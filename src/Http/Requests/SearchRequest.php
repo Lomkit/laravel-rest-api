@@ -13,7 +13,7 @@ class SearchRequest extends RestRequest
      */
     public function rules()
     {
-        $resource = $this->route()->controller::newResource();
+        $resource = $this->context()->resource($this->route()->controller::$resource);
 
         return [
             'search' => ['sometimes', 'array', (new Search)->setResource($resource)],

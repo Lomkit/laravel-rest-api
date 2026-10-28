@@ -7,7 +7,6 @@ use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Relation;
 
@@ -44,7 +43,7 @@ class SearchIncludeAlias implements DataAwareRule, ValidationRule
             return;
         }
 
-        if (in_array($value, $this->resource->getFields(app()->make(RestRequest::class)), true)) {
+        if (in_array($value, $this->resource->getFields($this->resource->context()->request), true)) {
             $fail('The alias conflicts with a field of this resource.');
 
             return;
@@ -67,7 +66,7 @@ class SearchIncludeAlias implements DataAwareRule, ValidationRule
      */
     protected function relationNames(): array
     {
-        return collect($this->resource->getRelations(app()->make(RestRequest::class)))
+        return collect($this->resource->getRelations($this->resource->context()->request))
             ->map(function (Relation $relation) {
                 return $relation->relation;
             })

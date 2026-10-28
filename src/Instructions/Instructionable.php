@@ -24,7 +24,7 @@ trait Instructionable
      */
     public function getInstructions(RestRequest $request): array
     {
-        return $this->calculatedInstructions ?? ($this->calculatedInstructions = $this->instructions($request));
+        return $this->calculatedInstructions ??= array_map(fn (Instruction $instruction) => $instruction->resource($this), $this->instructions($request));
     }
 
     /**

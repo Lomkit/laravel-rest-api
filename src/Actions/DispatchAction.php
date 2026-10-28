@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Lomkit\Rest\Contracts\BatchableAction;
-use Lomkit\Rest\Contracts\QueryBuilder;
+use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
@@ -154,7 +154,7 @@ class DispatchAction
      */
     protected function modelsQuery(array $searchParameters = [])
     {
-        return app()->make(QueryBuilder::class, ['resource' => $this->request->resource, 'query' => null])
+        return app()->make(EloquentQueryBuilder::class, ['resource' => $this->request->resource, 'query' => null])
             ->disableDefaultLimit()
             ->search($searchParameters);
     }

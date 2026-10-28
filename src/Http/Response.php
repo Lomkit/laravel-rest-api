@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
 
 class Response implements Responsable
@@ -85,7 +84,7 @@ class Response implements Responsable
                     array_merge(
                         isset($requestArray['selects']) ?
                                 collect($requestArray['selects'])->pluck('field')->toArray() :
-                                $resource->getFields(app()->make(RestRequest::class)),
+                                $resource->getFields($resource->context()->request),
                         // Here we add the aggregates
                         collect($requestArray['aggregates'] ?? [])
                             ->map(function ($aggregate) {

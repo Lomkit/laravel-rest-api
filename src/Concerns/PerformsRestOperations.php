@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Concerns;
 
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\DetailsRequest;
@@ -25,7 +26,7 @@ trait PerformsRestOperations
      */
     public function details(DetailsRequest $request)
     {
-        $request->resource($resource = static::newResource());
+        $request->resource($resource = $request->context()->resource(static::$resource));
 
         $this->beforeDetails($request);
 
@@ -45,7 +46,7 @@ trait PerformsRestOperations
      */
     public function search(SearchRequest $request)
     {
-        $request->resource($resource = static::newResource());
+        $request->resource($resource = $request->context()->resource(static::$resource));
 
         $this->beforeSearch($request);
 
@@ -93,16 +94,15 @@ trait PerformsRestOperations
      */
     public function mutate(MutateRequest $request)
     {
-        $request->resource($resource = static::newResource());
+        $request->resource($resource = $request->context()->resource(static::$resource));
 
         $this->beforeMutate($request);
 
         $operations = DB::transaction(function () use ($request, $resource) {
-            return app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
-                ->tap(function ($query) use ($request) {
-                    self::newResource()->mutateQuery($request, $query->toBase());
-                })
-                ->mutate($request->all());
+            $queryBuilder = app()->make(EloquentQueryBuilder::class, ['resource' => $resource, 'query' => null]);
+            $resource->mutateQuery($request, $queryBuilder->toBase());
+
+            return $queryBuilder->mutate($request->all());
         });
 
         $this->afterMutate($request);
@@ -118,7 +118,7 @@ trait PerformsRestOperations
      */
     public function operate(OperateRequest $request, $action)
     {
-        $request->resource($resource = static::newResource());
+        $request->resource($resource = $request->context()->resource(static::$resource));
 
         $this->beforeOperate($request);
 
@@ -143,7 +143,7 @@ trait PerformsRestOperations
      */
     public function destroy(DestroyRequest $request)
     {
-        $request->resource($resource = static::newResource());
+        $request->resource($resource = $request->context()->resource(static::$resource));
 
         $this->beforeDestroy($request);
 
@@ -159,7 +159,7 @@ trait PerformsRestOperations
             ->get();
 
         foreach ($models as $model) {
-            self::newResource()->authorizeTo('delete', $model);
+            $resource->authorizeTo('delete', $model);
         }
 
         foreach ($models as $model) {
@@ -185,7 +185,7 @@ trait PerformsRestOperations
      */
     public function restore(RestoreRequest $request)
     {
-        $request->resource($resource = static::newResource());
+        $request->resource($resource = $request->context()->resource(static::$resource));
 
         $this->beforeRestore($request);
 
@@ -202,7 +202,7 @@ trait PerformsRestOperations
             ->get();
 
         foreach ($models as $model) {
-            self::newResource()->authorizeTo('restore', $model);
+            $resource->authorizeTo('restore', $model);
         }
 
         foreach ($models as $model) {
@@ -229,7 +229,7 @@ trait PerformsRestOperations
      */
     public function forceDelete(ForceDestroyRequest $request)
     {
-        $request->resource($resource = static::newResource());
+        $request->resource($resource = $request->context()->resource(static::$resource));
 
         $this->beforeForceDestroy($request);
 
@@ -246,7 +246,7 @@ trait PerformsRestOperations
             ->get();
 
         foreach ($models as $model) {
-            self::newResource()->authorizeTo('forceDelete', $model);
+            $resource->authorizeTo('forceDelete', $model);
         }
 
         foreach ($models as $model) {

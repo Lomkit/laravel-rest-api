@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
-use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Authorizable
 {
@@ -43,7 +42,7 @@ trait Authorizable
             if ($this->isAuthorizationCacheEnabled()) {
                 return Cache::remember(
                     $this->getAuthorizationCacheKey(
-                        app(RestRequest::class),
+                        $this->context()->request,
                         sprintf(
                             '%s.%s.%s',
                             $ability,
@@ -87,7 +86,7 @@ trait Authorizable
             if ($this->isAuthorizationCacheEnabled()) {
                 $gatePasses = Cache::remember(
                     $this->getAuthorizationCacheKey(
-                        app(RestRequest::class),
+                        $this->context()->request,
                         sprintf(
                             '%s.%s.%s.%s.%s',
                             $ability,
@@ -131,7 +130,7 @@ trait Authorizable
             if ($this->isAuthorizationCacheEnabled()) {
                 return Cache::remember(
                     $this->getAuthorizationCacheKey(
-                        app(RestRequest::class),
+                        $this->context()->request,
                         sprintf(
                             '%s.%s.%s.%s.%s',
                             $ability,

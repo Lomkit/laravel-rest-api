@@ -16,7 +16,7 @@ class RestoreRequest extends RestRequest
      */
     public function rules()
     {
-        return $this->restoreRules($this->route()->controller::newResource());
+        return $this->restoreRules($this->context()->resource($this->route()->controller::$resource));
     }
 
     /**

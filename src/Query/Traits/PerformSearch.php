@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait PerformSearch
 {
@@ -38,7 +37,7 @@ trait PerformSearch
         // constraints appended afterwards, which bind tighter than it does
         $this->when(! $this->disableSecurity, function () {
             $this->queryBuilder->where(function ($query) {
-                $this->resource->searchQuery(app()->make(RestRequest::class), $query);
+                $this->resource->searchQuery($this->resource->context()->request, $query);
             });
         });
 
@@ -52,7 +51,7 @@ trait PerformSearch
 
         if (empty($parameters['sorts'])) {
             foreach ($this->resource->defaultOrderBy(
-                app()->make(RestRequest::class)
+                $this->resource->context()->request
             ) as $column => $order) {
                 $this->queryBuilder->orderBy($this->queryBuilder->getModel()->getTable().'.'.$column, $order);
             }
@@ -187,7 +186,7 @@ trait PerformSearch
      */
     public function instruction($name, $fields = [])
     {
-        $this->resource->instruction(app(RestRequest::class), $name)
+        $this->resource->instruction($this->resource->context()->request, $name)
             ->handle(
                 collect($fields)->mapWithKeys(function ($field) {
                     return [$field['name'] => $field['value']];

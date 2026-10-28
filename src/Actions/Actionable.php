@@ -24,7 +24,7 @@ trait Actionable
      */
     public function getActions(RestRequest $request): array
     {
-        return $this->calculatedActions ?? ($this->calculatedActions = $this->actions($request));
+        return $this->calculatedActions ??= array_map(fn (Action $action) => $action->resource($this), $this->actions($request));
     }
 
     /**

@@ -5,12 +5,13 @@ namespace Lomkit\Rest\Query;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Tappable;
+use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Traits\PerformMutation;
 use Lomkit\Rest\Query\Traits\PerformSearch;
 
-class Builder implements QueryBuilder
+class Builder implements EloquentQueryBuilder
 {
     use Conditionable;
     use PerformMutation;
@@ -80,7 +81,7 @@ class Builder implements QueryBuilder
      * allowing retrieval of all matching records unless a custom limit is specified.
      *
      * @param  bool  $disable  True to disable the default limit, false to enable it.
-     * @return self Returns the current instance for chaining.
+     * @return $this Returns the current instance for chaining.
      */
     public function disableDefaultLimit($disable = true)
     {

@@ -16,7 +16,7 @@ class MutateRequest extends RestRequest
      */
     public function rules()
     {
-        $resource = $this->route()?->controller::newResource();
+        $resource = $this->context()->resource($this->route()?->controller::$resource);
 
         return [
             'mutate' => ['required', 'array'],

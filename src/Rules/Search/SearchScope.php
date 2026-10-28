@@ -3,14 +3,13 @@
 namespace Lomkit\Rest\Rules\Search;
 
 use Illuminate\Validation\Rule;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Rules\RestRule;
 
 class SearchScope extends RestRule
 {
     public function buildValidationRules(string $attribute, mixed $value): array
     {
-        $request = app(RestRequest::class);
+        $request = $this->resource->context()->request;
 
         if ($request->isScoutMode()) {
             return [];

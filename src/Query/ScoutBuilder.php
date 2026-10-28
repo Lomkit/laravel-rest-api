@@ -3,9 +3,10 @@
 namespace Lomkit\Rest\Query;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Traits\Conditionable;
+use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\QueryBuilder;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
 class ScoutBuilder implements QueryBuilder
@@ -30,7 +31,7 @@ class ScoutBuilder implements QueryBuilder
      */
     public function search(array $parameters = [])
     {
-        $this->resource->searchScoutQuery(app()->make(RestRequest::class), $this->queryBuilder);
+        $this->resource->searchScoutQuery($this->resource->context()->request, $this->queryBuilder);
 
         $this->queryBuilder->query = $parameters['text']['value'] ?? '';
 
@@ -59,11 +60,11 @@ class ScoutBuilder implements QueryBuilder
      *
      * @param  \Laravel\Scout\Builder  $query
      * @param  array  $parameters
-     * @return \Laravel\Scout\Builder The new query builder.
+     * @return Builder<Model> The new query builder.
      */
     public function applyQueryCallback($query, $parameters)
     {
-        return app()->make(QueryBuilder::class, ['query' => $query, 'resource' => $this->resource])
+        return app()->make(EloquentQueryBuilder::class, ['query' => $query, 'resource' => $this->resource])
             ->disableSecurity()
             ->search(
                 collect($parameters)
@@ -158,7 +159,7 @@ class ScoutBuilder implements QueryBuilder
      */
     public function instruction($name, $fields = [])
     {
-        $this->resource->scoutInstruction(app(RestRequest::class), $name)
+        $this->resource->scoutInstruction($this->resource->context()->request, $name)
             ->handleScout(
                 collect($fields)->mapWithKeys(function ($field) {
                     return [$field['name'] => $field['value']];

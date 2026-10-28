@@ -5,25 +5,18 @@ namespace Lomkit\Rest\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Http\Requests\Traits\InteractsWithRules;
-use Lomkit\Rest\Http\ResourceRegistry;
+use Lomkit\Rest\Http\RestContext;
 
 class RestRequest extends FormRequest
 {
     use InteractsWithRules;
     use Resourcable;
 
-    private ?ResourceRegistry $resources = null;
+    private ?RestContext $context = null;
 
-    public function validateResolved(): void
+    public function context(): RestContext
     {
-        $this->container->instance(self::class, $this);
-
-        parent::validateResolved();
-    }
-
-    public function resources(): ResourceRegistry
-    {
-        return $this->resources ??= new ResourceRegistry($this->container);
+        return $this->context ??= new RestContext($this, $this->container);
     }
 
     /**

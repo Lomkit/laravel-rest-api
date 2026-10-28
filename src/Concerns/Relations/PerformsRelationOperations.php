@@ -3,7 +3,7 @@
 namespace Lomkit\Rest\Concerns\Relations;
 
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Contracts\QueryBuilder;
+use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Relations\Relation;
 
 trait PerformsRelationOperations
@@ -13,7 +13,7 @@ trait PerformsRelationOperations
      */
     public function create(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
     {
-        $toPerformActionModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+        $toPerformActionModel = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->applyMutation($mutation, $attributes);
 
         $this->resource()->authorizeToAttach($model, $toPerformActionModel);
@@ -32,7 +32,7 @@ trait PerformsRelationOperations
      */
     public function update(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
     {
-        $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+        $toPerformActionModels = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
 
         foreach ($toPerformActionModels as $toPerformActionModel) {
@@ -53,7 +53,7 @@ trait PerformsRelationOperations
      */
     public function attach(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
     {
-        $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+        $toPerformActionModels = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
 
         foreach ($toPerformActionModels as $toPerformActionModel) {
@@ -74,7 +74,7 @@ trait PerformsRelationOperations
      */
     public function detach(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
     {
-        $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+        $toPerformActionModels = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
 
         foreach ($toPerformActionModels as $toPerformActionModel) {
@@ -89,7 +89,7 @@ trait PerformsRelationOperations
      */
     public function toggle(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
     {
-        $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+        $toPerformActionModels = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
 
         $results = $model->{$relation->relation}()
@@ -115,7 +115,7 @@ trait PerformsRelationOperations
      */
     public function sync(Model $model, Relation $relation, array $mutation = [], array $attributes = [], $withoutDetaching = false)
     {
-        $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+        $toPerformActionModels = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
 
         $results = $model->{$relation->relation}()

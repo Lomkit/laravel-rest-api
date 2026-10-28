@@ -10,6 +10,7 @@ use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
 use Lomkit\Rest\Concerns\PerformsQueries;
 use Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters;
+use Lomkit\Rest\Concerns\Resource\Contextual;
 use Lomkit\Rest\Concerns\Resource\HasResourceHooks;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
@@ -23,6 +24,7 @@ class Resource implements \JsonSerializable
     use Actionable;
     use Authorizable;
     use ConfiguresRestParameters;
+    use Contextual;
     use HasResourceHooks;
     use Instructionable;
     use Paginable;
@@ -149,7 +151,7 @@ class Resource implements \JsonSerializable
      */
     public function jsonSerialize(): mixed
     {
-        $request = app(RestRequest::class);
+        $request = $this->context()->request;
 
         return [
             'actions' => collect($this->getActions($request))->map->jsonSerialize()->toArray(),

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\Mutates;
@@ -79,7 +78,7 @@ class Relation implements \JsonSerializable
     {
         $resource = $this->resource();
 
-        $resource->searchQuery(app()->make(RestRequest::class), $query);
+        $resource->searchQuery($resource->context()->request, $query);
     }
 
     /**
@@ -99,7 +98,7 @@ class Relation implements \JsonSerializable
      */
     public function resource()
     {
-        return app(RestRequest::class)->resources()->get($this->type);
+        return $this->fromResource->context()->resource($this->type);
     }
 
     /**
@@ -145,7 +144,7 @@ class Relation implements \JsonSerializable
      */
     public function jsonSerialize(): mixed
     {
-        $request = app(RestRequest::class);
+        $request = $this->fromResource->context()->request;
 
         return [
             'resource' => $this->type,
