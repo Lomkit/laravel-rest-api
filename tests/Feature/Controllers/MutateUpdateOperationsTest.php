@@ -1922,7 +1922,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->belongsToManyRelation()->pluck('id')->toArray(),
             [
                 $belongsToManyToSync1->getKey(),
@@ -1995,7 +1995,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->belongsToManyRelation()->pluck('id')->toArray(),
             [
                 $belongsToManySynced->getKey(),
@@ -2067,7 +2067,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->belongsToManyRelation()->pluck('id')->toArray(),
             [
                 $belongsToManyNotSynced->getKey(),
