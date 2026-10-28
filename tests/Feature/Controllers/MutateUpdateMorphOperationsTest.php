@@ -2068,7 +2068,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->morphedByManyRelation()->pluck('id')->toArray(),
             [
                 $morphedByManyNotSynced1->getKey(),
@@ -2141,7 +2141,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->morphedByManyRelation()->pluck('id')->toArray(),
             [
                 $morphedByManySynced->getKey(),
@@ -2215,7 +2215,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->morphedByManyRelation()->pluck('id')->toArray(),
             [
                 $morphedByManySynced->getKey(),
@@ -2288,7 +2288,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->morphedByManyRelation()->pluck('id')->toArray(),
             [
                 $morphedByManyNotSynced->getKey(),
@@ -2571,7 +2571,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->morphedByManyRelation()->pluck('id')->toArray(),
             [
                 $morphedByManyNotToggled1->getKey(),
@@ -2713,7 +2713,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->morphToManyRelation()->pluck('id')->toArray(),
             [
                 $morphToManyNotSynced1->getKey(),
@@ -2799,7 +2799,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->morphToManyRelation()->pluck('id')->toArray(),
             [
                 $morphToManyToSync1->getKey(),
@@ -2886,7 +2886,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->morphToManyRelation()->pluck('id')->toArray(),
             [
                 $morphToManyToSync1->getKey(),
@@ -2960,7 +2960,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->morphToManyRelation()->pluck('id')->toArray(),
             [
                 $morphToManySynced->getKey(),
@@ -3032,7 +3032,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         );
 
         // Here we test that the relation is correctly linked
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             Model::find($response->json('updated.0'))->morphToManyRelation()->pluck('id')->toArray(),
             [
                 $morphToManyNotSynced->getKey(),
