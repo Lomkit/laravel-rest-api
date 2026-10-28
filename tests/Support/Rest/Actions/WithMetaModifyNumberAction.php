@@ -6,7 +6,7 @@ class WithMetaModifyNumberAction extends ModifyNumberAction
 {
     public function __construct()
     {
-        $this->withMeta([
+        $this->meta([
             'color' => '#FFFFFF',
         ]);
     }

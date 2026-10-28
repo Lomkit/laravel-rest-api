@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Support\Rest\Instructions;
 
 use Laravel\Scout\Builder;
+use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 
@@ -21,10 +22,7 @@ class RequiredNumberedInstruction extends Instruction
     public function fields(RestRequest $request): array
     {
         return [
-            'number' => [
-                'required',
-                'integer',
-            ],
+            Integer::make('number')->rules('required'),
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Support\Rest\Actions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 class ModifyNumberAction extends Action
@@ -34,10 +35,7 @@ class ModifyNumberAction extends Action
     public function fields(RestRequest $request): array
     {
         return [
-            'number' => [
-                'numeric',
-                'min:100',
-            ],
+            Number::make('number')->rules('min:100'),
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Support\Rest\Instructions;
 
 use Laravel\Scout\Builder;
+use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 
@@ -21,8 +22,8 @@ class ConditionalInstruction extends Instruction
     public function fields(RestRequest $request): array
     {
         return [
-            'type' => ['nullable', 'string'],
-            'reason' => ['required_if:type,ban', 'string'],
+            Text::make('type')->nullable(),
+            Text::make('reason')->rules('required_if:type,ban'),
         ];
     }
 }
