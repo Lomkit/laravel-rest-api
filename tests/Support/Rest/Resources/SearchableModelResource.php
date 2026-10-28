@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
 use Lomkit\Rest\Concerns\Resource\DisableGates;
+use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Tests\Support\Models\SearchableModel;
@@ -17,7 +18,7 @@ class SearchableModelResource extends Resource
     public function fields(RestRequest $request): array
     {
         return [
-            'id',
+            ID::make('id'),
         ];
     }
 

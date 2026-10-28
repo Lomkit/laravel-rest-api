@@ -5,6 +5,9 @@ namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Lomkit\Rest\Concerns\Resource\DisableGates;
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
 use Lomkit\Rest\Http\Requests\MutateRequest;
@@ -37,10 +40,10 @@ class ModelWithHooksResource extends Resource
     public function fields(RestRequest $request): array
     {
         return [
-            'id',
-            'name',
-            'number',
-            'string',
+            ID::make('id'),
+            Text::make('name'),
+            Integer::make('number'),
+            Text::make('string')->nullable(),
         ];
     }
 

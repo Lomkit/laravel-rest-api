@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
@@ -25,8 +27,8 @@ class GatedMorphedByManyResource extends Resource
     public function fields(RestRequest $request): array
     {
         return [
-            'id',
-            'number',
+            ID::make('id'),
+            Integer::make('number'),
         ];
     }
 }
