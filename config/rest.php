@@ -73,6 +73,8 @@ return [
     | controller logic. When enabled, requests containing the "Precognition"
     | header will only trigger middleware and validation, skipping the actual
     | controller method. This is especially useful for live form validation.
+    | The middleware is attached when the routes are registered: clear the
+    | route cache after changing this option.
     |
     */
 

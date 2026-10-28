@@ -63,12 +63,12 @@ trait PerformsQueries
     }
 
     /**
-     * Build a "forceDelete" query for the given resource.
+     * Build a "forceDestroy" query for the given resource.
      *
      *
      * @return \Illuminate\Contracts\Database\Eloquent\Builder
      */
-    public function forceDeleteQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
+    public function forceDestroyQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
     {
         return $query;
     }

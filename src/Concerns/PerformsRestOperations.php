@@ -113,16 +113,15 @@ trait PerformsRestOperations
     /**
      * Perform a specific action on the resource.
      *
-     * @param  string  $action
      * @return mixed
      */
-    public function operate(OperateRequest $request, $action)
+    public function operate(OperateRequest $request)
     {
         $request->resource($resource = $request->context()->resource(static::$resource));
 
         $this->beforeOperate($request);
 
-        $actionInstance = $resource->action($request, $action);
+        $actionInstance = $resource->action($request, $request->actionKey());
 
         $modelsImpacted = $actionInstance->handleRequest($request);
 
@@ -220,14 +219,13 @@ trait PerformsRestOperations
             ->responsable($models);
     }
 
-    // @TODO: in version upgrade, rename "forceDelete" to "forceDestroy" generally
     /**
      * Force delete resources based on the given request.
      *
      *
      * @return mixed
      */
-    public function forceDelete(ForceDestroyRequest $request)
+    public function forceDestroy(ForceDestroyRequest $request)
     {
         $request->resource($resource = $request->context()->resource(static::$resource));
 
@@ -237,7 +235,7 @@ trait PerformsRestOperations
         // id allow-list appended afterwards, which binds tighter than it does
         $query = $resource::newModel()::query()
             ->where(function ($query) use ($request, $resource) {
-                $resource->forceDeleteQuery($request, $query);
+                $resource->forceDestroyQuery($request, $query);
             });
 
         $models = $query

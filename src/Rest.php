@@ -2,42 +2,45 @@
 
 namespace Lomkit\Rest;
 
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
-use Lomkit\Rest\Contracts\Http\Routing\Registrar;
+use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
 use Lomkit\Rest\Http\Routing\ResourceRegistrar;
+use Lomkit\Rest\Http\Routing\RouteMiddleware;
+use Lomkit\Rest\Http\Routing\UriSegment;
 
-class Rest implements Registrar
+class Rest
 {
-    /**
-     * Route a resource to a controller.
-     *
-     * @param  class-string<Controller>  $controller
-     * @return PendingResourceRegistration
-     */
-    public function resource(string $name, string $controller, array $options = [])
+    public function __construct(
+        private readonly ResourceRegistrar $registrar,
+        private readonly Repository $config,
+    ) {}
+
+    /** @param class-string<Controller> $controller */
+    public function resource(string $name, string $controller): PendingResourceRegistration
     {
-        if (app()->bound(ResourceRegistrar::class)) {
-            $registrar = app()->make(ResourceRegistrar::class);
-        } else {
-            $registrar = new ResourceRegistrar(app('router'));
+        if (func_num_args() > 2) {
+            throw InvalidResourceRouteException::optionsArgumentRemoved($name);
         }
 
-        $pendingResourceRegistration = (new PendingResourceRegistration(
-            $registrar,
-            $name,
+        return new PendingResourceRegistration(
+            $this->registrar,
+            UriSegment::resourceName($name),
             $controller,
-            $options
-        ))
-            ->middleware(EnforceExpectsJson::class);
+            new RouteMiddleware($this->packageMiddleware()),
+        );
+    }
 
-        return tap($pendingResourceRegistration, function ($pendingResourceRegistration) {
-            if (config('rest.precognition.enabled', false)) {
-                $pendingResourceRegistration
-                    ->middleware(HandlePrecognitiveRequests::class);
-            }
-        });
+    /** @return list<string> */
+    private function packageMiddleware(): array
+    {
+        if (! (bool) $this->config->get('rest.precognition.enabled', false)) {
+            return [EnforceExpectsJson::class];
+        }
+
+        return [EnforceExpectsJson::class, HandlePrecognitiveRequests::class];
     }
 }

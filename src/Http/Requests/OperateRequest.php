@@ -38,11 +38,11 @@ class OperateRequest extends RestRequest
      */
     public function operateRules()
     {
-        if (! $this->resource->actionExists($this, $this->route()->parameter('action'))) {
+        if (! $this->resource->actionExists($this, $this->actionKey())) {
             throw new HttpException(404);
         }
 
-        $operatedAction = $this->resource->action($this, $this->route()->parameter('action'));
+        $operatedAction = $this->resource->action($this, $this->actionKey());
 
         if ($operatedAction->isStandalone() && $operatedAction->isTargeted()) {
             throw new InvalidActionStateException('An action cannot be both standalone and targeted.');
@@ -73,6 +73,17 @@ class OperateRequest extends RestRequest
                 ],
             ]
         );
+    }
+
+    public function actionKey(): string
+    {
+        $key = $this->route('action');
+
+        if (! is_string($key)) {
+            throw new HttpException(404);
+        }
+
+        return $key;
     }
 
     /**
