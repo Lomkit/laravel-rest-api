@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -40,8 +41,6 @@ class ControllerMakeCommand extends GeneratorCommand
 
     /**
      * Get the stub file for the generator.
-     *
-     * @return string
      */
     protected function getStub(): string
     {
@@ -51,9 +50,7 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Execute the console command.
      *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     *
-     * @return bool|null
+     * @throws FileNotFoundException
      */
     public function handle(): ?bool
     {
@@ -67,8 +64,7 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Resolve the fully-qualified path to the stub.
      *
-     * @param string $stub
-     *
+     * @param  string  $stub
      * @return string
      */
     protected function resolveStubPath($stub)
@@ -81,11 +77,9 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Build the class with the given name.
      *
-     * @param string $name
+     * @param  string  $name
      *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     *
-     * @return string
+     * @throws FileNotFoundException
      */
     protected function buildClass($name): string
     {
@@ -106,7 +100,7 @@ class ControllerMakeCommand extends GeneratorCommand
 
         $baseControllerExists = file_exists($this->getPath("{$rootNamespace}Rest\Controllers\Controller"));
 
-        if (!$baseControllerExists) {
+        if (! $baseControllerExists) {
             $replace["use {$rootNamespace}Rest\Controllers\Controller;\n"] = "use Lomkit\\Rest\\Http\\Controllers\\Controller;\n";
         }
 
@@ -119,10 +113,6 @@ class ControllerMakeCommand extends GeneratorCommand
 
     /**
      * Build the resource replacement values.
-     *
-     * @param array $replace
-     *
-     * @return array
      */
     protected function buildResourceReplacements(array $replace): array
     {
@@ -131,25 +121,20 @@ class ControllerMakeCommand extends GeneratorCommand
         $replace = [];
 
         return array_merge($replace, [
-            'DummyFullResourceClass'   => $resourceClass,
+            'DummyFullResourceClass' => $resourceClass,
             '{{ namespacedResource }}' => $resourceClass,
-            '{{namespacedResource}}'   => $resourceClass,
-            'DummyResourceClass'       => class_basename($resourceClass),
-            '{{ resource }}'           => class_basename($resourceClass),
-            '{{resource}}'             => class_basename($resourceClass),
-            'DummyResourceVariable'    => lcfirst(class_basename($resourceClass)),
-            '{{ resourceVariable }}'   => lcfirst(class_basename($resourceClass)),
-            '{{resourceVariable}}'     => lcfirst(class_basename($resourceClass)),
+            '{{namespacedResource}}' => $resourceClass,
+            'DummyResourceClass' => class_basename($resourceClass),
+            '{{ resource }}' => class_basename($resourceClass),
+            '{{resource}}' => class_basename($resourceClass),
+            'DummyResourceVariable' => lcfirst(class_basename($resourceClass)),
+            '{{ resourceVariable }}' => lcfirst(class_basename($resourceClass)),
+            '{{resourceVariable}}' => lcfirst(class_basename($resourceClass)),
         ]);
     }
 
     /**
      * Interact further with the user if they were prompted for missing arguments.
-     *
-     * @param \Symfony\Component\Console\Input\InputInterface   $input
-     * @param \Symfony\Component\Console\Output\OutputInterface $output
-     *
-     * @return void
      */
     protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output): void
     {
@@ -171,8 +156,6 @@ class ControllerMakeCommand extends GeneratorCommand
 
     /**
      * Get the console command options.
-     *
-     * @return array
      */
     protected function getOptions(): array
     {
@@ -200,9 +183,7 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Get the default namespace for the class.
      *
-     * @param string $rootNamespace
-     *
-     * @return string
+     * @param  string  $rootNamespace
      */
     protected function getDefaultNamespace($rootNamespace): string
     {
@@ -212,11 +193,9 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Get the fully-qualified resource class name.
      *
-     * @param string $model
+     * @param  string  $model
      *
-     * @throws \InvalidArgumentException
-     *
-     * @return string
+     * @throws InvalidArgumentException
      */
     protected function parseResource($model): string
     {
@@ -229,10 +208,6 @@ class ControllerMakeCommand extends GeneratorCommand
 
     /**
      * Qualify the given resource class base name.
-     *
-     * @param string $resource
-     *
-     * @return string
      */
     protected function qualifyResource(string $resource): string
     {

@@ -57,10 +57,10 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 [
-                    'morph_to_relation' => $matchingModel->morphToRelation->only((new MorphToResource())->getFields(app()->make(RestRequest::class))),
+                    'morph_to_relation' => $matchingModel->morphToRelation->only((new MorphToResource)->getFields(app()->make(RestRequest::class))),
                 ],
                 [
                     'morph_to_relation' => null,
@@ -96,10 +96,10 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 [
-                    'morph_to_force_model_relation' => $matchingModel->morphToForceModelRelation->only((new MorphToResource())->getFields(app()->make(RestRequest::class))),
+                    'morph_to_force_model_relation' => $matchingModel->morphToForceModelRelation->only((new MorphToResource)->getFields(app()->make(RestRequest::class))),
                 ],
                 [
                     'morph_to_force_model_relation' => null,
@@ -136,11 +136,11 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 [
                     'morph_one_relation' => $matchingModel->morphOneRelation->only(
-                        (new MorphOneResource())->getFields(app()->make(RestRequest::class))
+                        (new MorphOneResource)->getFields(app()->make(RestRequest::class))
                     ),
                 ],
                 [
@@ -178,11 +178,11 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 [
                     'morph_one_of_many_relation' => $matchingModel->morphOneOfManyRelation->only(
-                        (new MorphOneOfManyResource())->getFields(app()->make(RestRequest::class))
+                        (new MorphOneOfManyResource)->getFields(app()->make(RestRequest::class))
                     ),
                 ],
                 [
@@ -210,7 +210,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                     'includes' => [
                         [
                             'relation' => 'morphManyRelation',
-                            'sorts'    => [
+                            'sorts' => [
                                 ['field' => 'id', 'direction' => 'asc'],
                             ],
                         ],
@@ -223,7 +223,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 [
                     'morph_many_relation' => $matchingModel->morphManyRelation()
@@ -231,7 +231,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) {
                             return $relation->only(
-                                (new MorphManyResource())->getFields(app()->make(RestRequest::class))
+                                (new MorphManyResource)->getFields(app()->make(RestRequest::class))
                             );
                         })->toArray(),
                 ],
@@ -271,7 +271,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 [
                     'morph_to_many_relation' => $matchingModel->morphToManyRelation()
@@ -279,12 +279,12 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) use ($pivotAccessor) {
                             return collect($relation->only(
-                                array_merge((new MorphToManyResource())->getFields(app()->make(RestRequest::class)), [$pivotAccessor])
+                                array_merge((new MorphToManyResource)->getFields(app()->make(RestRequest::class)), [$pivotAccessor])
                             ))
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource())->relation('morphToManyRelation')->getPivotFields()
+                                            (new ModelResource)->relation('morphToManyRelation')->getPivotFields()
                                         );
 
                                     return $relation;
@@ -328,7 +328,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 [
                     'morphed_by_many_relation' => $matchingModel->morphedByManyRelation()
@@ -336,12 +336,12 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) use ($pivotAccessor) {
                             return collect($relation->only(
-                                array_merge((new MorphedByManyResource())->getFields(app()->make(RestRequest::class)), [$pivotAccessor])
+                                array_merge((new MorphedByManyResource)->getFields(app()->make(RestRequest::class)), [$pivotAccessor])
                             ))
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource())->relation('morphedByManyRelation')->getPivotFields()
+                                            (new ModelResource)->relation('morphedByManyRelation')->getPivotFields()
                                         );
 
                                     return $relation;

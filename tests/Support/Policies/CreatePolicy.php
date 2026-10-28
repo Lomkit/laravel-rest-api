@@ -12,7 +12,6 @@ class CreatePolicy
     /**
      * Determine whether the user can view the list of models.
      *
-     * @param $user
      *
      * @return bool
      */
@@ -24,8 +23,6 @@ class CreatePolicy
     /**
      * Determine whether the user can view the model.
      *
-     * @param       $user
-     * @param Model $model
      *
      * @return bool
      */
@@ -37,7 +34,6 @@ class CreatePolicy
     /**
      * Determine whether the user can create models.
      *
-     * @param $user
      *
      * @return bool
      */
@@ -49,8 +45,6 @@ class CreatePolicy
     /**
      * Determine whether the user can update the model.
      *
-     * @param       $user
-     * @param Model $model
      *
      * @return bool
      */
@@ -62,8 +56,6 @@ class CreatePolicy
     /**
      * Determine whether the user can delete the model.
      *
-     * @param       $user
-     * @param Model $model
      *
      * @return bool
      */
@@ -75,8 +67,6 @@ class CreatePolicy
     /**
      * Determine whether the user can restore the model.
      *
-     * @param       $user
-     * @param Model $model
      *
      * @return bool
      */
@@ -88,8 +78,6 @@ class CreatePolicy
     /**
      * Determine whether the user can permanently delete the model.
      *
-     * @param       $user
-     * @param Model $model
      *
      * @return bool
      */

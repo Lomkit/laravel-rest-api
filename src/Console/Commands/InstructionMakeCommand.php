@@ -31,8 +31,6 @@ class InstructionMakeCommand extends GeneratorCommand
 
     /**
      * Get the stub file for the generator.
-     *
-     * @return string
      */
     protected function getStub(): string
     {
@@ -42,9 +40,7 @@ class InstructionMakeCommand extends GeneratorCommand
     /**
      * Resolve the fully-qualified path to the stub.
      *
-     * @param string $stub
-     *
-     * @return string
+     * @param  string  $stub
      */
     protected function resolveStubPath($stub): string
     {
@@ -56,9 +52,7 @@ class InstructionMakeCommand extends GeneratorCommand
     /**
      * Get the default namespace for the class.
      *
-     * @param string $rootNamespace
-     *
-     * @return string
+     * @param  string  $rootNamespace
      */
     protected function getDefaultNamespace($rootNamespace): string
     {

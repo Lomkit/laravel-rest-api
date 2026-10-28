@@ -8,17 +8,11 @@ trait Instructionable
 {
     /**
      * The calculated instructions if already done in this request.
-     *
-     * @var array
      */
     protected array $calculatedInstructions;
 
     /**
      * The instructions that should be linked.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function instructions(RestRequest $request): array
     {
@@ -27,12 +21,8 @@ trait Instructionable
 
     /**
      * Get the resource's instructions.
-     *
-     * @param \Lomkit\Rest\Http\Requests\RestRequest $request
-     *
-     * @return array
      */
-    public function getInstructions(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function getInstructions(RestRequest $request): array
     {
         return $this->calculatedInstructions ?? ($this->calculatedInstructions = $this->instructions($request));
     }
@@ -40,9 +30,8 @@ trait Instructionable
     /**
      * Check if a specific instruction exists.
      *
-     * @param RestRequest $request        The REST request instance.
-     * @param string      $instructionKey The key of the instruction to check.
-     *
+     * @param  RestRequest  $request  The REST request instance.
+     * @param  string  $instructionKey  The key of the instruction to check.
      * @return bool True if the instruction exists; otherwise, false.
      */
     public function instructionExists(RestRequest $request, string $instructionKey): bool
@@ -56,9 +45,8 @@ trait Instructionable
     /**
      * Retrieve a specific instruction by its key.
      *
-     * @param RestRequest $request        The REST request instance.
-     * @param string      $instructionKey The key of the instruction to retrieve.
-     *
+     * @param  RestRequest  $request  The REST request instance.
+     * @param  string  $instructionKey  The key of the instruction to retrieve.
      * @return Instruction|null The instruction instance or null if not found.
      */
     public function instruction(RestRequest $request, string $instructionKey)
@@ -68,7 +56,7 @@ trait Instructionable
                 return $instruction->uriKey() === $instructionKey;
             });
 
-        if (!is_null($instruction)) {
+        if (! is_null($instruction)) {
             $instruction
                 ->resource($this);
         }

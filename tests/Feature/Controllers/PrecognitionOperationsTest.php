@@ -32,15 +32,15 @@ class PrecognitionOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'unauthorized_relation',
-                            'type'     => 'min',
-                            'field'    => 'id',
+                            'type' => 'min',
+                            'field' => 'id',
                         ],
                     ],
                 ],
             ],
             [
                 'Precognition' => 'true',
-                'Accept'       => 'application/json',
+                'Accept' => 'application/json',
             ]
         );
 
@@ -62,14 +62,14 @@ class PrecognitionOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'exists',
-                            'field'    => 'id',
+                            'type' => 'exists',
+                            'field' => 'id',
                         ],
                     ],
                 ],
             ],
             [
-                'Accept'       => 'application/json',
+                'Accept' => 'application/json',
                 'Precognition' => 'fields=aggregates.0.relation,aggregates.0.type',
             ]
         );
@@ -103,14 +103,14 @@ class PrecognitionOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'min',
-                            'field'    => 'number',
+                            'type' => 'min',
+                            'field' => 'number',
                         ],
                     ],
                 ],
             ],
             [
-                'Accept'       => 'application/json',
+                'Accept' => 'application/json',
                 'Precognition' => 'true',
             ]
         );
@@ -143,8 +143,8 @@ class PrecognitionOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'min',
-                            'field'    => 'number',
+                            'type' => 'min',
+                            'field' => 'number',
                         ],
                     ],
                 ],
@@ -157,7 +157,7 @@ class PrecognitionOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_min_number' => $matchingModel->belongsToManyRelation()->orderBy('number', 'asc')->first()->number],
                 ['belongs_to_many_relation_min_number' => $matchingModel2->belongsToManyRelation()->orderBy('number', 'asc')->first()->number],

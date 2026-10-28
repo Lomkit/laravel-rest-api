@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Instructions;
 
 use http\Exception\RuntimeException;
 use Illuminate\Support\Str;
+use Laravel\Scout\Builder;
 use Lomkit\Rest\Concerns\Fieldable;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Metable;
@@ -12,9 +13,9 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 class Instruction
 {
+    use Fieldable;
     use Makeable;
     use Metable;
-    use Fieldable;
     use Resourcable;
 
     /**
@@ -54,18 +55,16 @@ class Instruction
         $request = app()->make(RestRequest::class);
 
         return [
-            'name'   => $this->name(),
+            'name' => $this->name(),
             'uriKey' => $this->uriKey(),
             'fields' => $this->fields($request),
-            'meta'   => $this->meta(),
+            'meta' => $this->meta(),
         ];
     }
 
     /**
      * Perform the instruction on the given query.
      *
-     * @param array                                 $fields
-     * @param \Illuminate\Database\Eloquent\Builder $query
      *
      * @return void
      */
@@ -77,12 +76,10 @@ class Instruction
     /**
      * Perform the instruction on the scout query.
      *
-     * @param array                  $fields
-     * @param \Laravel\Scout\Builder $query
      *
      * @return void
      */
-    public function handleScout(array $fields, \Laravel\Scout\Builder $query)
+    public function handleScout(array $fields, Builder $query)
     {
         throw new RuntimeException('Not implemented');
     }

@@ -8,40 +8,30 @@ class Response extends Schema
 {
     /**
      * A description of the response. CommonMark syntax MAY be used for rich text representation.
-     *
-     * @var string
      */
     protected string $description;
 
     /**
      * Maps a header name to its definition. RFC7230 states header names are case insensitive.
      * If a response header is defined with the name "Content-Type", it SHALL be ignored.
-     *
-     * @var array
      */
     protected array $headers = [];
 
     /**
      * A map containing descriptions of potential response payloads.
      * The key is a media type or media type range and the value describes it. For responses that match multiple keys, only the most specific key is applicable. e.g. text/plain overrides text/*.
-     *
-     * @var array
      */
     protected array $content = [];
 
     /**
      * A map of operations links that can be followed from the response. The key of the map is a short name for the link, following the naming constraints of the names for Component Objects.
-     *
-     * @var array
      */
     protected array $links = [];
 
     /**
      * Set the description for the response.
      *
-     * @param string $description The description of the response.
-     *
-     * @return Response
+     * @param  string  $description  The description of the response.
      */
     public function withDescription(string $description): Response
     {
@@ -52,8 +42,6 @@ class Response extends Schema
 
     /**
      * Get the description of the response.
-     *
-     * @return string
      */
     public function description(): string
     {
@@ -63,9 +51,7 @@ class Response extends Schema
     /**
      * Set the response headers.
      *
-     * @param array $headers The response headers.
-     *
-     * @return Response
+     * @param  array  $headers  The response headers.
      */
     public function withHeaders(array $headers): Response
     {
@@ -76,8 +62,6 @@ class Response extends Schema
 
     /**
      * Get the response headers.
-     *
-     * @return array
      */
     public function headers(): array
     {
@@ -87,9 +71,7 @@ class Response extends Schema
     /**
      * Set the response content.
      *
-     * @param array $content The response content.
-     *
-     * @return Response
+     * @param  array  $content  The response content.
      */
     public function withContent(array $content): Response
     {
@@ -100,8 +82,6 @@ class Response extends Schema
 
     /**
      * Get the response content.
-     *
-     * @return array
      */
     public function content(): array
     {
@@ -111,9 +91,7 @@ class Response extends Schema
     /**
      * Set the links that can be followed from the response.
      *
-     * @param array $links The response links.
-     *
-     * @return Response
+     * @param  array  $links  The response links.
      */
     public function withLinks(array $links): Response
     {
@@ -124,8 +102,6 @@ class Response extends Schema
 
     /**
      * Get the response links.
-     *
-     * @return array
      */
     public function links(): array
     {
@@ -134,8 +110,6 @@ class Response extends Schema
 
     /**
      * Generate a JSON serializable representation of the response.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {
@@ -143,16 +117,14 @@ class Response extends Schema
             [
                 'description' => $this->description(),
             ],
-            !empty($this->headers) ? ['headers' => collect($this->headers())->map->jsonSerialize()->toArray()] : [],
-            !empty($this->content) ? ['content' => $this->content()] : [],
-            !empty($this->links) ? ['links' => $this->links()] : []
+            ! empty($this->headers) ? ['headers' => collect($this->headers())->map->jsonSerialize()->toArray()] : [],
+            ! empty($this->content) ? ['content' => $this->content()] : [],
+            ! empty($this->links) ? ['links' => $this->links()] : []
         );
     }
 
     /**
      * Generates a new instance of the Response schema.
-     *
-     * @return Response
      */
     public function generate(): Response
     {
@@ -162,9 +134,7 @@ class Response extends Schema
     /**
      * Generates a detailed response schema for a specific controller action.
      *
-     * @param Controller $controller The controller associated with the response.
-     *
-     * @return Response
+     * @param  Controller  $controller  The controller associated with the response.
      */
     public function generateDetail(Controller $controller): Response
     {
@@ -172,7 +142,7 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->generateDetail($controller),
                 ]
             )
@@ -182,9 +152,7 @@ class Response extends Schema
     /**
      * Generates a response schema for a search operation.
      *
-     * @param Controller $controller The controller associated with the response.
-     *
-     * @return Response
+     * @param  Controller  $controller  The controller associated with the response.
      */
     public function generateSearch(Controller $controller): Response
     {
@@ -192,7 +160,7 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->generateSearch($controller),
                 ]
             )
@@ -202,9 +170,7 @@ class Response extends Schema
     /**
      * Generates a response schema for a mutation operation.
      *
-     * @param Controller $controller The controller associated with the response.
-     *
-     * @return Response
+     * @param  Controller  $controller  The controller associated with the response.
      */
     public function generateMutate(Controller $controller): Response
     {
@@ -212,7 +178,7 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->generateMutate($controller),
                 ]
             )
@@ -222,9 +188,7 @@ class Response extends Schema
     /**
      * Generates a response schema for an actions operation.
      *
-     * @param Controller $controller The controller associated with the response.
-     *
-     * @return Response
+     * @param  Controller  $controller  The controller associated with the response.
      */
     public function generateActions(Controller $controller): Response
     {
@@ -232,7 +196,7 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->generateActions($controller),
                 ]
             )
@@ -242,9 +206,7 @@ class Response extends Schema
     /**
      * Generates a response schema for a destroy operation.
      *
-     * @param Controller $controller The controller associated with the response.
-     *
-     * @return Response
+     * @param  Controller  $controller  The controller associated with the response.
      */
     public function generateDestroy(Controller $controller): Response
     {
@@ -252,7 +214,7 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->generateDestroy($controller),
                 ]
             )
@@ -262,9 +224,7 @@ class Response extends Schema
     /**
      * Generates a response schema for a restore operation.
      *
-     * @param Controller $controller The controller associated with the response.
-     *
-     * @return Response
+     * @param  Controller  $controller  The controller associated with the response.
      */
     public function generateRestore(Controller $controller): Response
     {
@@ -272,7 +232,7 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->generateRestore($controller),
                 ]
             )
@@ -282,9 +242,7 @@ class Response extends Schema
     /**
      * Generates a response schema for a force delete operation.
      *
-     * @param Controller $controller The controller associated with the response.
-     *
-     * @return Response
+     * @param  Controller  $controller  The controller associated with the response.
      */
     public function generateForceDelete(Controller $controller): Response
     {
@@ -292,7 +250,7 @@ class Response extends Schema
             ->withDescription('')
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->generateForceDelete($controller),
                 ]
             )

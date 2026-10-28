@@ -92,7 +92,7 @@ class DeleteOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        $this->assertResourceModel($response, [$model], new ModelResource());
+        $this->assertResourceModel($response, [$model], new ModelResource);
         $this->assertDatabaseMissing('models', $model->only('id'));
     }
 
@@ -110,7 +110,7 @@ class DeleteOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        $this->assertResourceModel($response, [$softDeletedModel], new SoftDeletedModelResource());
+        $this->assertResourceModel($response, [$softDeletedModel], new SoftDeletedModelResource);
         $this->assertSoftDeleted($softDeletedModel);
     }
 
@@ -129,7 +129,7 @@ class DeleteOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        $this->assertResourceModel($response, [$softDeletedModel, $softDeletedModel2], new SoftDeletedModelResource());
+        $this->assertResourceModel($response, [$softDeletedModel, $softDeletedModel2], new SoftDeletedModelResource);
         $this->assertSoftDeleted($softDeletedModel);
         $this->assertSoftDeleted($softDeletedModel2);
     }

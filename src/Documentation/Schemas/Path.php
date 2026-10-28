@@ -8,87 +8,61 @@ class Path extends Schema
 {
     /**
      * An optional, string summary, intended to apply to all operations in this path.
-     *
-     * @var string
      */
     protected string $summary;
 
     /**
      * An optional, string description, intended to apply to all operations in this path. CommonMark syntax MAY be used for rich text representation.
-     *
-     * @var string
      */
     protected string $description;
 
     /**
      * A definition of a GET operation on this path.
-     *
-     * @var Operation
      */
     protected Operation $get;
 
     /**
      * A definition of a PUT operation on this path.
-     *
-     * @var Operation
      */
     protected Operation $put;
 
     /**
      * A definition of a POST operation on this path.
-     *
-     * @var Operation
      */
     protected Operation $post;
 
     /**
      * A definition of a DELETE operation on this path.
-     *
-     * @var Operation
      */
     protected Operation $delete;
 
     /**
      * A definition of a OPTIONS operation on this path.
-     *
-     * @var Operation
      */
     protected Operation $options;
 
     /**
      * A definition of a HEAD operation on this path.
-     *
-     * @var Operation
      */
     protected Operation $head;
 
     /**
      * A definition of a PATCH operation on this path.
-     *
-     * @var Operation
      */
     protected Operation $patch;
 
     /**
      * A definition of a TRACE operation on this path.
-     *
-     * @var Operation
      */
     protected Operation $trace;
 
     /**
      * A list of parameters that are applicable for all the operations described under this path.
-     *
-     * @var array
      */
     protected array $parameters = [];
 
     /**
      * Set the summary for this path.
-     *
-     * @param string $summary
-     *
-     * @return Path
      */
     public function withSummary(string $summary): Path
     {
@@ -99,8 +73,6 @@ class Path extends Schema
 
     /**
      * Get the summary for this path.
-     *
-     * @return string
      */
     public function summary(): string
     {
@@ -109,10 +81,6 @@ class Path extends Schema
 
     /**
      * Set the description for this path.
-     *
-     * @param string $description
-     *
-     * @return Path
      */
     public function withDescription(string $description): Path
     {
@@ -123,8 +91,6 @@ class Path extends Schema
 
     /**
      * Get the description for this path.
-     *
-     * @return string
      */
     public function description(): string
     {
@@ -134,9 +100,7 @@ class Path extends Schema
     /**
      * Set the GET operation for this path.
      *
-     * @param Operation $get The GET operation to set.
-     *
-     * @return Path
+     * @param  Operation  $get  The GET operation to set.
      */
     public function withGet(Operation $get): Path
     {
@@ -147,8 +111,6 @@ class Path extends Schema
 
     /**
      * Get the GET operation for this path.
-     *
-     * @return Operation
      */
     public function get(): Operation
     {
@@ -158,9 +120,7 @@ class Path extends Schema
     /**
      * Set the PUT operation for this path.
      *
-     * @param Operation $put The PUT operation to set.
-     *
-     * @return Path
+     * @param  Operation  $put  The PUT operation to set.
      */
     public function withPut(Operation $put): Path
     {
@@ -171,8 +131,6 @@ class Path extends Schema
 
     /**
      * Get the PUT operation for this path.
-     *
-     * @return Operation
      */
     public function put(): Operation
     {
@@ -182,9 +140,7 @@ class Path extends Schema
     /**
      * Set the POST operation for this path.
      *
-     * @param Operation $post The POST operation to set.
-     *
-     * @return Path
+     * @param  Operation  $post  The POST operation to set.
      */
     public function withPost(Operation $post): Path
     {
@@ -195,8 +151,6 @@ class Path extends Schema
 
     /**
      * Get the POST operation for this path.
-     *
-     * @return Operation
      */
     public function post(): Operation
     {
@@ -206,9 +160,7 @@ class Path extends Schema
     /**
      * Set the DELETE operation for this path.
      *
-     * @param Operation $delete The DELETE operation to set.
-     *
-     * @return Path
+     * @param  Operation  $delete  The DELETE operation to set.
      */
     public function withDelete(Operation $delete): Path
     {
@@ -219,8 +171,6 @@ class Path extends Schema
 
     /**
      * Get the DELETE operation for this path.
-     *
-     * @return Operation
      */
     public function delete(): Operation
     {
@@ -230,9 +180,7 @@ class Path extends Schema
     /**
      * Set the OPTIONS operation for this path.
      *
-     * @param Operation $options The OPTIONS operation to set.
-     *
-     * @return Path
+     * @param  Operation  $options  The OPTIONS operation to set.
      */
     public function withOptions(Operation $options): Path
     {
@@ -243,8 +191,6 @@ class Path extends Schema
 
     /**
      * Get the OPTIONS operation for this path.
-     *
-     * @return Operation
      */
     public function options(): Operation
     {
@@ -254,9 +200,7 @@ class Path extends Schema
     /**
      * Set the HEAD operation for this path.
      *
-     * @param Operation $head The HEAD operation to set.
-     *
-     * @return Path
+     * @param  Operation  $head  The HEAD operation to set.
      */
     public function withHead(Operation $head): Path
     {
@@ -267,8 +211,6 @@ class Path extends Schema
 
     /**
      * Get the HEAD operation for this path.
-     *
-     * @return Operation
      */
     public function head(): Operation
     {
@@ -278,9 +220,7 @@ class Path extends Schema
     /**
      * Set the PATCH operation for this path.
      *
-     * @param Operation $patch The PATCH operation to set.
-     *
-     * @return Path
+     * @param  Operation  $patch  The PATCH operation to set.
      */
     public function withPatch(Operation $patch): Path
     {
@@ -291,8 +231,6 @@ class Path extends Schema
 
     /**
      * Get the PATCH operation for this path.
-     *
-     * @return Operation
      */
     public function patch(): Operation
     {
@@ -302,9 +240,7 @@ class Path extends Schema
     /**
      * Set the TRACE operation for this path.
      *
-     * @param Operation $trace The TRACE operation to set.
-     *
-     * @return Path
+     * @param  Operation  $trace  The TRACE operation to set.
      */
     public function withTrace(Operation $trace): Path
     {
@@ -315,8 +251,6 @@ class Path extends Schema
 
     /**
      * Get the TRACE operation for this path.
-     *
-     * @return Operation
      */
     public function trace(): Operation
     {
@@ -326,9 +260,7 @@ class Path extends Schema
     /**
      * Set the parameters applicable to all operations in this path.
      *
-     * @param array $parameters An array of Parameter objects.
-     *
-     * @return Path
+     * @param  array  $parameters  An array of Parameter objects.
      */
     public function withParameters(array $parameters): Path
     {
@@ -339,8 +271,6 @@ class Path extends Schema
 
     /**
      * Get the parameters applicable to all operations in this path.
-     *
-     * @return array
      */
     public function parameters(): array
     {
@@ -349,15 +279,13 @@ class Path extends Schema
 
     /**
      * Serialize the Path instance to an array for JSON serialization.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {
         return array_merge(
             isset($this->description) ? ['description' => $this->description()] : [],
             isset($this->summary) ? ['summary' => $this->summary()] : [],
-            !empty($this->parameters) ? ['parameters' => collect($this->parameters())->map->jsonSerialize()] : [],
+            ! empty($this->parameters) ? ['parameters' => collect($this->parameters())->map->jsonSerialize()] : [],
             isset($this->get) ? ['get' => $this->get()->jsonSerialize()] : [],
             isset($this->put) ? ['put' => $this->get()->jsonSerialize()] : [],
             isset($this->post) ? ['post' => $this->post()->jsonSerialize()] : [],
@@ -371,8 +299,6 @@ class Path extends Schema
 
     /**
      * Generate a Path schema.
-     *
-     * @return Path
      */
     public function generate(): Path
     {
@@ -382,15 +308,13 @@ class Path extends Schema
     /**
      * Generates a Path schema with operations for performing resource deletion.
      *
-     * @param Controller $controller The controller instance used for generating documentation.
-     *
-     * @return Path
+     * @param  Controller  $controller  The controller instance used for generating documentation.
      */
     public function generateDestroy(Controller $controller): Path
     {
         return $this
             ->withDelete(
-                (new Operation())
+                (new Operation)
                     ->generateDestroy($controller)
             );
     }
@@ -398,15 +322,13 @@ class Path extends Schema
     /**
      * Generates a Path schema with operations for retrieving resource details.
      *
-     * @param Controller $controller The controller instance used for generating documentation.
-     *
-     * @return Path
+     * @param  Controller  $controller  The controller instance used for generating documentation.
      */
     public function generateDetails(Controller $controller): Path
     {
         return $this
             ->withGet(
-                (new Operation())
+                (new Operation)
                     ->generateDetails($controller)
             );
     }
@@ -414,15 +336,13 @@ class Path extends Schema
     /**
      * Generates a Path schema with an operation for searching resources.
      *
-     * @param Controller $controller The controller instance used for generating documentation.
-     *
-     * @return Path
+     * @param  Controller  $controller  The controller instance used for generating documentation.
      */
     public function generateSearch(Controller $controller): Path
     {
         return $this
             ->withPost(
-                (new Operation())
+                (new Operation)
                     ->generateSearch($controller)
             );
     }
@@ -430,15 +350,13 @@ class Path extends Schema
     /**
      * Generates a Path schema with an operation for mutating resources.
      *
-     * @param Controller $controller The controller instance used for generating documentation.
-     *
-     * @return Path
+     * @param  Controller  $controller  The controller instance used for generating documentation.
      */
     public function generateMutate(Controller $controller): Path
     {
         return $this
             ->withPost(
-                (new Operation())
+                (new Operation)
                     ->generateMutate($controller)
             );
     }
@@ -446,25 +364,23 @@ class Path extends Schema
     /**
      * Generates a Path schema with an operation for performing resource actions.
      *
-     * @param Controller $controller The controller instance used for generating documentation.
-     *
-     * @return Path
+     * @param  Controller  $controller  The controller instance used for generating documentation.
      */
     public function generateOperate(Controller $controller): Path
     {
         return $this
             ->withPost(
-                (new Operation())
+                (new Operation)
                     ->generateOperate($controller)
             )
             ->withParameters(
                 [
-                    (new Parameter())
+                    (new Parameter)
                         ->withName('action')
                         ->withDescription('The action uriKey')
                         ->withIn('path')
                         ->withSchema(
-                            (new SchemaConcrete())
+                            (new SchemaConcrete)
                                 ->withType('string')
                                 ->generate()
                         )
@@ -477,15 +393,13 @@ class Path extends Schema
     /**
      * Generates a Path schema with an operation for restoring soft-deleted resources.
      *
-     * @param Controller $controller The controller instance used for generating documentation.
-     *
-     * @return Path
+     * @param  Controller  $controller  The controller instance used for generating documentation.
      */
     public function generateRestore(Controller $controller): Path
     {
         return $this
             ->withPost(
-                (new Operation())
+                (new Operation)
                     ->generateRestore($controller)
             );
     }
@@ -493,15 +407,13 @@ class Path extends Schema
     /**
      * Generates a Path schema with an operation for performing force deletions of resources.
      *
-     * @param Controller $controller The controller instance used for generating documentation.
-     *
-     * @return Path
+     * @param  Controller  $controller  The controller instance used for generating documentation.
      */
     public function generateForceDelete(Controller $controller): Path
     {
         return $this
             ->withDelete(
-                (new Operation())
+                (new Operation)
                     ->generateForceDelete($controller)
             );
     }

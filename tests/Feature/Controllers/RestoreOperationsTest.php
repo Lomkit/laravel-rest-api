@@ -73,9 +73,9 @@ class RestoreOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        $this->assertResourceModel($response, [$softDeletedModel], new SoftDeletedModelResource());
+        $this->assertResourceModel($response, [$softDeletedModel], new SoftDeletedModelResource);
         $this->assertDatabaseHas('soft_deleted_models', [
-            'id'         => $softDeletedModel->getKey(),
+            'id' => $softDeletedModel->getKey(),
             'deleted_at' => null,
         ]);
     }
@@ -95,13 +95,13 @@ class RestoreOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        $this->assertResourceModel($response, [$softDeletedModel, $softDeletedModel2], new SoftDeletedModelResource());
+        $this->assertResourceModel($response, [$softDeletedModel, $softDeletedModel2], new SoftDeletedModelResource);
         $this->assertDatabaseHas('soft_deleted_models', [
-            'id'         => $softDeletedModel->getKey(),
+            'id' => $softDeletedModel->getKey(),
             'deleted_at' => null,
         ]);
         $this->assertDatabaseHas('soft_deleted_models', [
-            'id'         => $softDeletedModel2->getKey(),
+            'id' => $softDeletedModel2->getKey(),
             'deleted_at' => null,
         ]);
     }

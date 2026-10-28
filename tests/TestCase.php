@@ -4,8 +4,11 @@ namespace Lomkit\Rest\Tests;
 
 use Illuminate\Config\Repository;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Routing\Router;
+use Illuminate\Support\ServiceProvider;
 use Lomkit\Rest\RestServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
@@ -25,7 +28,7 @@ class TestCase extends BaseTestCase
      */
     protected function refreshTestDatabase()
     {
-        if (!RefreshDatabaseState::$migrated) {
+        if (! RefreshDatabaseState::$migrated) {
             $this->artisan('migrate', ['--path' => __DIR__.'/Support/Database/migrations', '--realpath' => true]);
 
             $this->app[Kernel::class]->setArtisan(null);
@@ -51,15 +54,14 @@ class TestCase extends BaseTestCase
     /**
      * Define environment setup.
      *
-     * @param \Illuminate\Foundation\Application $app
-     *
+     * @param  Application  $app
      * @return void
      */
     protected function defineEnvironment($app)
     {
         tap($app->make('config'), function (Repository $config) {
             $config->set('auth.guards.api', [
-                'driver'   => 'token',
+                'driver' => 'token',
                 'provider' => 'users',
             ]);
         });
@@ -68,8 +70,7 @@ class TestCase extends BaseTestCase
     /**
      * Define routes setup.
      *
-     * @param \Illuminate\Routing\Router $router
-     *
+     * @param  Router  $router
      * @return void
      */
     protected function defineRoutes($router)
@@ -80,9 +81,8 @@ class TestCase extends BaseTestCase
     /**
      * Get package providers.
      *
-     * @param \Illuminate\Foundation\Application $app
-     *
-     * @return array<int, class-string<\Illuminate\Support\ServiceProvider>>
+     * @param  Application  $app
+     * @return array<int, class-string<ServiceProvider>>
      */
     protected function getPackageProviders($app)
     {

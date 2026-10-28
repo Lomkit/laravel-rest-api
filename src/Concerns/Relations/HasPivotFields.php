@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Concerns\Relations;
 trait HasPivotFields
 {
     protected array $pivotFields = [];
+
     protected array $pivotRules = [];
 
     /**
@@ -20,7 +21,6 @@ trait HasPivotFields
     /**
      * Set the pivot fields.
      *
-     * @param array $pivotFields
      *
      * @return $this
      */
@@ -34,7 +34,6 @@ trait HasPivotFields
     /**
      * Set the pivot rules.
      *
-     * @param array $pivotRules
      *
      * @return $this
      */
@@ -47,8 +46,6 @@ trait HasPivotFields
 
     /**
      * Get the pivot rules.
-     *
-     * @return array
      */
     public function getPivotRules(): array
     {

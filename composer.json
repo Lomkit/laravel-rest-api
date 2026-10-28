@@ -16,6 +16,8 @@
   },
   "require-dev": {
     "dedoc/scramble": "^0.13",
+    "larastan/larastan": "^3.13",
+    "laravel/pint": "^1.32",
     "laravel/scout": "^11.0",
     "orchestra/testbench": "^11.0",
     "phpunit/phpunit": "^12.0|^13.0"
@@ -36,6 +38,12 @@
     "psr-4": {
       "Lomkit\\Rest\\Tests\\": "tests/"
     }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "analyse": "phpstan analyse --memory-limit=1G",
+    "format": "pint",
+    "lint": "pint --test"
   },
   "extra": {
     "laravel": {

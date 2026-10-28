@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Support\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 
 class BelongsToManyRelationFactory extends Factory
@@ -10,7 +11,7 @@ class BelongsToManyRelationFactory extends Factory
     /**
      * The name of the factory's corresponding model.
      *
-     * @var class-string<\Illuminate\Database\Eloquent\Model|TModel>
+     * @var class-string<Model|TModel>
      */
     protected $model = BelongsToManyRelation::class;
 
@@ -22,7 +23,7 @@ class BelongsToManyRelationFactory extends Factory
     public function definition()
     {
         return [
-            'number'       => fake()->numberBetween(-5000, 5000),
+            'number' => fake()->numberBetween(-5000, 5000),
             'other_number' => fake()->numberBetween(-5000, 5000),
         ];
     }

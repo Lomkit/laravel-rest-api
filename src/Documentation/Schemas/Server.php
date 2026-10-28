@@ -8,29 +8,22 @@ class Server extends Schema
      * A URL to the target host. This URL supports Server Variables and MAY be relative,
      * to indicate that the host location is relative to the location where the OpenAPI document is being served.
      * Variable substitutions will be made when a variable is named in {brackets}.
-     *
-     * @var string
      */
     protected string $url;
 
     /**
      * An optional string describing the host designated by the URL. CommonMark syntax MAY be used for rich text representation.
-     *
-     * @var string
      */
     protected string $description;
 
     /**
      * A map between a variable name and its value. The value is used for substitution in the server's URL template.
-     *
-     * @var array
      */
     protected array $variables = [];
 
     /**
      * Set the URL for the server.
      *
-     * @param string $url
      *
      * @return Server
      *
@@ -60,7 +53,6 @@ class Server extends Schema
     /**
      * Set a description for the server.
      *
-     * @param string $description
      *
      * @return Server
      *
@@ -89,8 +81,6 @@ class Server extends Schema
     /**
      * Add a variable to the server.
      *
-     * @param string         $key
-     * @param ServerVariable $variable
      *
      * @return Server
      *
@@ -128,7 +118,7 @@ class Server extends Schema
         return array_merge(
             isset($this->url) ? ['url' => $this->url()] : [],
             isset($this->description) ? ['description' => $this->description()] : [],
-            !empty($this->variables) ? ['variables' => collect($this->variables())->map->jsonSerialize()->toArray()] : [],
+            ! empty($this->variables) ? ['variables' => collect($this->variables())->map->jsonSerialize()->toArray()] : [],
         );
     }
 

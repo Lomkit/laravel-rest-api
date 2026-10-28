@@ -30,12 +30,12 @@ trait InteractsWithResource
                 ->map(function ($model) use ($resource) {
                     return $model->only($resource->getFields(App::make(RestRequest::class)));
                 })
-                ->when(!empty($additionalFields), function (Collection $collection) use ($additionalFields) {
+                ->when(! empty($additionalFields), function (Collection $collection) use ($additionalFields) {
                     return $collection
                         ->map(function ($item, $key) use ($additionalFields) {
                             return array_merge($item, $additionalFields[$key]);
                         });
-                })->when(!empty($onlyFields), function (Collection $collection) use ($onlyFields) {
+                })->when(! empty($onlyFields), function (Collection $collection) use ($onlyFields) {
                     return $collection
                         ->map(function ($item) use ($onlyFields) {
                             return array_intersect_key($item, array_flip($onlyFields));
@@ -66,7 +66,9 @@ trait InteractsWithResource
         $response->assertStatus(200);
 
         $this->assertEquals(
-            array_map(function ($model) { return $model->getKey(); }, $updatedModels),
+            array_map(function ($model) {
+                return $model->getKey();
+            }, $updatedModels),
             $response->json('updated')
         );
 

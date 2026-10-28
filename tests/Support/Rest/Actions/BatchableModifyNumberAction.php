@@ -8,13 +8,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Lomkit\Rest\Contracts\BatchableAction;
 use Throwable;
 
-class BatchableModifyNumberAction extends ModifyNumberAction implements ShouldQueue, BatchableAction
+class BatchableModifyNumberAction extends ModifyNumberAction implements BatchableAction, ShouldQueue
 {
     /**
      * Register callbacks on the pending batch.
      *
-     * @param array                        $fields
-     * @param \Illuminate\Bus\PendingBatch $batch
      *
      * @return void
      */

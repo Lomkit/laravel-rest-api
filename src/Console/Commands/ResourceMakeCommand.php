@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use InvalidArgumentException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -37,8 +38,6 @@ class ResourceMakeCommand extends GeneratorCommand
 
     /**
      * Get the stub file for the generator.
-     *
-     * @return string
      */
     protected function getStub(): string
     {
@@ -48,9 +47,7 @@ class ResourceMakeCommand extends GeneratorCommand
     /**
      * Execute the console command.
      *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     *
-     * @return bool|null
+     * @throws FileNotFoundException
      */
     public function handle(): ?bool
     {
@@ -64,8 +61,7 @@ class ResourceMakeCommand extends GeneratorCommand
     /**
      * Resolve the fully-qualified path to the stub.
      *
-     * @param string $stub
-     *
+     * @param  string  $stub
      * @return string
      */
     protected function resolveStubPath($stub)
@@ -78,11 +74,9 @@ class ResourceMakeCommand extends GeneratorCommand
     /**
      * Build the class with the given name.
      *
-     * @param string $name
+     * @param  string  $name
      *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     *
-     * @return string
+     * @throws FileNotFoundException
      */
     protected function buildClass($name): string
     {
@@ -103,7 +97,7 @@ class ResourceMakeCommand extends GeneratorCommand
 
         $baseResourceExists = file_exists($this->getPath("{$rootNamespace}Rest\Resources\Resource"));
 
-        if (!$baseResourceExists) {
+        if (! $baseResourceExists) {
             $replace["use {$rootNamespace}Rest\Resources\Resource;\n"] = "use Lomkit\\Rest\\Http\\Resource;\n";
         }
 
@@ -116,35 +110,26 @@ class ResourceMakeCommand extends GeneratorCommand
 
     /**
      * Build the model replacement values.
-     *
-     * @param array $replace
-     *
-     * @return array
      */
     protected function buildModelReplacements(array $replace): array
     {
         $modelClass = $this->parseModel($this->option('model'));
 
         return array_merge($replace, [
-            'DummyFullModelClass'   => $modelClass,
+            'DummyFullModelClass' => $modelClass,
             '{{ namespacedModel }}' => $modelClass,
-            '{{namespacedModel}}'   => $modelClass,
-            'DummyModelClass'       => class_basename($modelClass),
-            '{{ model }}'           => class_basename($modelClass),
-            '{{model}}'             => class_basename($modelClass),
-            'DummyModelVariable'    => lcfirst(class_basename($modelClass)),
-            '{{ modelVariable }}'   => lcfirst(class_basename($modelClass)),
-            '{{modelVariable}}'     => lcfirst(class_basename($modelClass)),
+            '{{namespacedModel}}' => $modelClass,
+            'DummyModelClass' => class_basename($modelClass),
+            '{{ model }}' => class_basename($modelClass),
+            '{{model}}' => class_basename($modelClass),
+            'DummyModelVariable' => lcfirst(class_basename($modelClass)),
+            '{{ modelVariable }}' => lcfirst(class_basename($modelClass)),
+            '{{modelVariable}}' => lcfirst(class_basename($modelClass)),
         ]);
     }
 
     /**
      * Interact further with the user if they were prompted for missing arguments.
-     *
-     * @param \Symfony\Component\Console\Input\InputInterface   $input
-     * @param \Symfony\Component\Console\Output\OutputInterface $output
-     *
-     * @return void
      */
     protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output): void
     {
@@ -166,8 +151,6 @@ class ResourceMakeCommand extends GeneratorCommand
 
     /**
      * Get the console command options.
-     *
-     * @return array
      */
     protected function getOptions(): array
     {
@@ -179,9 +162,7 @@ class ResourceMakeCommand extends GeneratorCommand
     /**
      * Get the default namespace for the class.
      *
-     * @param string $rootNamespace
-     *
-     * @return string
+     * @param  string  $rootNamespace
      */
     protected function getDefaultNamespace($rootNamespace): string
     {
@@ -191,11 +172,9 @@ class ResourceMakeCommand extends GeneratorCommand
     /**
      * Get the fully-qualified model class name.
      *
-     * @param string $model
+     * @param  string  $model
      *
-     * @throws \InvalidArgumentException
-     *
-     * @return string
+     * @throws InvalidArgumentException
      */
     protected function parseModel($model): string
     {

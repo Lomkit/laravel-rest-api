@@ -8,10 +8,6 @@ trait ExtendsDocumentationOperations
 {
     /**
      * Extend "detail" documentation operation.
-     *
-     * @param Operation $operation
-     *
-     * @return Operation
      */
     public function generateDocumentationDetailOperation(Operation $operation): Operation
     {
@@ -20,10 +16,6 @@ trait ExtendsDocumentationOperations
 
     /**
      * Extend "search" documentation operation.
-     *
-     * @param Operation $operation
-     *
-     * @return Operation
      */
     public function generateDocumentationSearchOperation(Operation $operation): Operation
     {
@@ -32,10 +24,6 @@ trait ExtendsDocumentationOperations
 
     /**
      * Extend "mutate" documentation operation.
-     *
-     * @param Operation $operation
-     *
-     * @return Operation
      */
     public function generateDocumentationMutateOperation(Operation $operation): Operation
     {
@@ -44,10 +32,6 @@ trait ExtendsDocumentationOperations
 
     /**
      * Extend "actions" documentation operation.
-     *
-     * @param Operation $operation
-     *
-     * @return Operation
      */
     public function generateDocumentationActionsOperation(Operation $operation): Operation
     {
@@ -56,10 +40,6 @@ trait ExtendsDocumentationOperations
 
     /**
      * Extend "destroy" documentation operation.
-     *
-     * @param Operation $operation
-     *
-     * @return Operation
      */
     public function generateDocumentationDestroyOperation(Operation $operation): Operation
     {
@@ -68,10 +48,6 @@ trait ExtendsDocumentationOperations
 
     /**
      * Extend "restore" documentation operation.
-     *
-     * @param Operation $operation
-     *
-     * @return Operation
      */
     public function generateDocumentationRestoreOperation(Operation $operation): Operation
     {
@@ -80,10 +56,6 @@ trait ExtendsDocumentationOperations
 
     /**
      * Extend "forceDelete" documentation operation.
-     *
-     * @param Operation $operation
-     *
-     * @return Operation
      */
     public function generateDocumentationForceDeleteOperation(Operation $operation): Operation
     {

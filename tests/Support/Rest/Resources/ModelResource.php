@@ -97,10 +97,6 @@ class ModelResource extends Resource
 
     /**
      * The scopes that could be provided.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function scopes(RestRequest $request): array
     {
@@ -111,10 +107,6 @@ class ModelResource extends Resource
 
     /**
      * The limits that could be provided.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function limits(RestRequest $request): array
     {
@@ -136,10 +128,6 @@ class ModelResource extends Resource
 
     /**
      * The actions that should be linked.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function actions(RestRequest $request): array
     {
@@ -159,10 +147,6 @@ class ModelResource extends Resource
 
     /**
      * The instructions that should be linked.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function instructions(RestRequest $request): array
     {

@@ -2,12 +2,15 @@
 
 namespace Lomkit\Rest\Http\Controllers;
 
-class DocumentationController extends \Illuminate\Routing\Controller
+use Illuminate\Contracts\View\View;
+use Illuminate\Routing\Controller;
+
+class DocumentationController extends Controller
 {
     /**
      * Display the documentation index page.
      *
-     * @return \Illuminate\Contracts\View\View
+     * @return View
      *
      * This method is responsible for rendering and returning the 'index' view,
      * which typically contains the documentation for the application.

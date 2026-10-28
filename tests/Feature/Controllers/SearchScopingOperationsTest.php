@@ -55,7 +55,7 @@ class SearchScopingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource(),
+            new ModelResource,
         );
     }
 
@@ -81,7 +81,7 @@ class SearchScopingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel2],
-            new ModelResource(),
+            new ModelResource,
         );
     }
 }

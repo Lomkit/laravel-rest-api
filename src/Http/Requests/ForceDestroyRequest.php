@@ -22,7 +22,6 @@ class ForceDestroyRequest extends RestRequest
     /**
      * Define the validation rules for force destroying resources.
      *
-     * @param resource $resource
      *
      * @return array
      *

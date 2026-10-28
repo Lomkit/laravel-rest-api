@@ -13,8 +13,6 @@ class OrPerimeterPrecedenceTest extends TestCase
 {
     /**
      * The statements captured for the request under test.
-     *
-     * @var array
      */
     protected array $statements = [];
 
@@ -119,8 +117,6 @@ class OrPerimeterPrecedenceTest extends TestCase
     /**
      * Assert the perimeter reached the database as one group, so that the id allow-list
      * appended after it binds against the whole perimeter and not just its last branch.
-     *
-     * @return void
      */
     protected function assertPerimeterIsGrouped(): void
     {
@@ -136,8 +132,6 @@ class OrPerimeterPrecedenceTest extends TestCase
     /**
      * Find the select that fetched the models to act on, with the identifier quoting of the
      * current driver removed so the assertion holds on MySQL, PostgreSQL and SQLite alike.
-     *
-     * @return string
      */
     protected function perimeterStatement(): string
     {

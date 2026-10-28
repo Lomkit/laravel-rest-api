@@ -2,6 +2,4 @@
 
 namespace Lomkit\Rest\Exceptions;
 
-class InvalidActionStateException extends \LogicException
-{
-}
+class InvalidActionStateException extends \LogicException {}

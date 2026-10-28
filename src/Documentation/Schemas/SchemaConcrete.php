@@ -35,7 +35,6 @@ class SchemaConcrete extends Schema
     /**
      * Set the data type for the schema.
      *
-     * @param string $type
      *
      * @return SchemaConcrete
      *

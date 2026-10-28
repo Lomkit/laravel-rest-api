@@ -8,20 +8,17 @@ class LengthAwarePaginator extends BaseLengthAwarePaginator
 {
     /**
      * The meta returned by the api.
-     *
-     * @var array
      */
     protected array $meta;
 
     /**
      * Create a new paginator instance.
      *
-     * @param mixed    $items
-     * @param int      $total
-     * @param int      $perPage
-     * @param int|null $currentPage
-     * @param array    $options     (path, query, fragment, pageName)
-     *
+     * @param  mixed  $items
+     * @param  int  $total
+     * @param  int  $perPage
+     * @param  int|null  $currentPage
+     * @param  array  $options  (path, query, fragment, pageName)
      * @return void
      */
     public function __construct($items, $total, $perPage, $currentPage = null, array $options = [], $meta = [])
@@ -50,13 +47,13 @@ class LengthAwarePaginator extends BaseLengthAwarePaginator
     {
         return [
             'current_page' => $this->currentPage(),
-            'data'         => $this->items->toArray(),
-            'from'         => $this->firstItem(),
-            'last_page'    => $this->lastPage(),
-            'per_page'     => $this->perPage(),
-            'to'           => $this->lastItem(),
-            'total'        => $this->total(),
-            'meta'         => $this->meta(),
+            'data' => $this->items->toArray(),
+            'from' => $this->firstItem(),
+            'last_page' => $this->lastPage(),
+            'per_page' => $this->perPage(),
+            'to' => $this->lastItem(),
+            'total' => $this->total(),
+            'meta' => $this->meta(),
         ];
     }
 }

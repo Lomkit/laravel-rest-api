@@ -11,9 +11,7 @@ trait Paginable
     /**
      * Paginate the results of a query.
      *
-     * @param Illuminate\Database\Eloquent\Builder|\Laravel\Scout\Builder $query
-     * @param RestRequest                                                 $request
-     *
+     * @param  Illuminate\Database\Eloquent\Builder|Builder  $query
      * @return mixed
      */
     public function paginate($query, RestRequest $request)

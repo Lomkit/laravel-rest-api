@@ -3,8 +3,10 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Lomkit\Rest\Tests\Support\Models\Model;
 
-return new class() extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      *
@@ -13,7 +15,7 @@ return new class() extends Migration {
     public function up()
     {
         Schema::create('inversables', function (Blueprint $table) {
-            $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\Model::class)->constrained();
+            $table->foreignIdFor(Model::class)->constrained();
             $table->morphs('inversable');
             $table->integer('number')->default(0);
 

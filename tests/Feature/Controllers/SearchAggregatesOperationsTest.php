@@ -18,7 +18,7 @@ class SearchAggregatesOperationsTest extends TestCase
         ModelFactory::new()->count(2)->create();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -27,8 +27,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'unauthorized_relation',
-                            'type'     => 'min',
-                            'field'    => 'id',
+                            'type' => 'min',
+                            'field' => 'id',
                         ],
                     ],
                 ],
@@ -45,7 +45,7 @@ class SearchAggregatesOperationsTest extends TestCase
         ModelFactory::new()->count(2)->create();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -54,8 +54,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'unauthorized_type',
-                            'field'    => 'id',
+                            'type' => 'unauthorized_type',
+                            'field' => 'id',
                         ],
                     ],
                 ],
@@ -72,7 +72,7 @@ class SearchAggregatesOperationsTest extends TestCase
         ModelFactory::new()->count(2)->create();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -81,8 +81,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'min',
-                            'field'    => 'unauthorized_field',
+                            'type' => 'min',
+                            'field' => 'unauthorized_field',
                         ],
                     ],
                 ],
@@ -99,7 +99,7 @@ class SearchAggregatesOperationsTest extends TestCase
         ModelFactory::new()->count(2)->create();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -108,7 +108,7 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'min',
+                            'type' => 'min',
                         ],
                     ],
                 ],
@@ -125,7 +125,7 @@ class SearchAggregatesOperationsTest extends TestCase
         ModelFactory::new()->count(2)->create();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -134,8 +134,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'exists',
-                            'field'    => 'id',
+                            'type' => 'exists',
+                            'field' => 'id',
                         ],
                     ],
                 ],
@@ -163,7 +163,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -172,8 +172,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'min',
-                            'field'    => 'number',
+                            'type' => 'min',
+                            'field' => 'number',
                         ],
                     ],
                 ],
@@ -184,7 +184,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_min_number' => $matchingModel->belongsToManyRelation()->orderBy('number', 'asc')->first()->number],
                 ['belongs_to_many_relation_min_number' => $matchingModel2->belongsToManyRelation()->orderBy('number', 'asc')->first()->number],
@@ -217,9 +217,9 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'min',
-                            'field'    => 'number',
-                            'alias'    => 'min_alias',
+                            'type' => 'min',
+                            'field' => 'number',
+                            'alias' => 'min_alias',
                         ],
                     ],
                 ],
@@ -230,7 +230,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['min_alias' => $matchingModel->belongsToManyRelation()->orderBy('number', 'asc')->first()->number],
                 ['min_alias' => $matchingModel2->belongsToManyRelation()->orderBy('number', 'asc')->first()->number],
@@ -254,7 +254,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -263,8 +263,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'max',
-                            'field'    => 'number',
+                            'type' => 'max',
+                            'field' => 'number',
                         ],
                     ],
                 ],
@@ -275,7 +275,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_max_number' => $matchingModel->belongsToManyRelation()->orderBy('number', 'desc')->first()->number],
                 ['belongs_to_many_relation_max_number' => $matchingModel2->belongsToManyRelation()->orderBy('number', 'desc')->first()->number],
@@ -308,9 +308,9 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'max',
-                            'field'    => 'number',
-                            'alias'    => 'max_alias',
+                            'type' => 'max',
+                            'field' => 'number',
+                            'alias' => 'max_alias',
                         ],
                     ],
                 ],
@@ -321,7 +321,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['max_alias' => $matchingModel->belongsToManyRelation()->orderBy('number', 'desc')->first()->number],
                 ['max_alias' => $matchingModel2->belongsToManyRelation()->orderBy('number', 'desc')->first()->number],
@@ -345,7 +345,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -354,8 +354,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'avg',
-                            'field'    => 'number',
+                            'type' => 'avg',
+                            'field' => 'number',
                         ],
                     ],
                 ],
@@ -366,7 +366,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_avg_number' => $matchingModel->belongsToManyRelation()->avg('belongs_to_many_relations.number')],
                 ['belongs_to_many_relation_avg_number' => $matchingModel2->belongsToManyRelation()->avg('belongs_to_many_relations.number')],
@@ -399,9 +399,9 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'avg',
-                            'field'    => 'number',
-                            'alias'    => 'avg_alias',
+                            'type' => 'avg',
+                            'field' => 'number',
+                            'alias' => 'avg_alias',
                         ],
                     ],
                 ],
@@ -412,7 +412,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['avg_alias' => $matchingModel->belongsToManyRelation()->avg('belongs_to_many_relations.number')],
                 ['avg_alias' => $matchingModel2->belongsToManyRelation()->avg('belongs_to_many_relations.number')],
@@ -436,7 +436,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -445,8 +445,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'sum',
-                            'field'    => 'number',
+                            'type' => 'sum',
+                            'field' => 'number',
                         ],
                     ],
                 ],
@@ -457,7 +457,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_sum_number' => $matchingModel->belongsToManyRelation()->sum('belongs_to_many_relations.number')],
                 ['belongs_to_many_relation_sum_number' => $matchingModel2->belongsToManyRelation()->sum('belongs_to_many_relations.number')],
@@ -490,9 +490,9 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'sum',
-                            'field'    => 'number',
-                            'alias'    => 'sum_alias',
+                            'type' => 'sum',
+                            'field' => 'number',
+                            'alias' => 'sum_alias',
                         ],
                     ],
                 ],
@@ -503,7 +503,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['sum_alias' => $matchingModel->belongsToManyRelation()->sum('belongs_to_many_relations.number')],
                 ['sum_alias' => $matchingModel2->belongsToManyRelation()->sum('belongs_to_many_relations.number')],
@@ -527,7 +527,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -536,7 +536,7 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'count',
+                            'type' => 'count',
                         ],
                     ],
                 ],
@@ -547,7 +547,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_count' => $matchingModel->belongsToManyRelation()->count()],
                 ['belongs_to_many_relation_count' => $matchingModel2->belongsToManyRelation()->count()],
@@ -580,8 +580,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'count',
-                            'alias'    => 'count_alias',
+                            'type' => 'count',
+                            'alias' => 'count_alias',
                         ],
                     ],
                 ],
@@ -592,7 +592,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['count_alias' => $matchingModel->belongsToManyRelation()->count()],
                 ['count_alias' => $matchingModel2->belongsToManyRelation()->count()],
@@ -612,7 +612,7 @@ class SearchAggregatesOperationsTest extends TestCase
             ->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/models/search',
@@ -621,7 +621,7 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'exists',
+                            'type' => 'exists',
                         ],
                     ],
                 ],
@@ -632,7 +632,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_exists' => false],
                 ['belongs_to_many_relation_exists' => true],
@@ -661,8 +661,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'exists',
-                            'alias'    => 'exists_alias',
+                            'type' => 'exists',
+                            'alias' => 'exists_alias',
                         ],
                     ],
                 ],
@@ -673,7 +673,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['exists_alias' => false],
                 ['exists_alias' => true],
@@ -706,9 +706,9 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'min',
-                            'field'    => 'number',
-                            'filters'  => [
+                            'type' => 'min',
+                            'field' => 'number',
+                            'filters' => [
                                 ['field' => 'number', 'operator' => '>', 'value' => 200],
                             ],
                         ],
@@ -721,7 +721,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_min_number' => $matchingModel->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'asc')->where('belongs_to_many_relations.number', '>', 200)->first()->number],
                 ['belongs_to_many_relation_min_number' => $matchingModel2->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'asc')->where('belongs_to_many_relations.number', '>', 200)->first()->number],
@@ -754,9 +754,9 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'max',
-                            'field'    => 'number',
-                            'filters'  => [
+                            'type' => 'max',
+                            'field' => 'number',
+                            'filters' => [
                                 ['field' => 'number', 'operator' => '<', 'value' => 200],
                             ],
                         ],
@@ -769,7 +769,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_max_number' => $matchingModel->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.number', '<', 200)->first()->number],
                 ['belongs_to_many_relation_max_number' => $matchingModel2->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.number', '<', 200)->first()->number],
@@ -802,9 +802,9 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'avg',
-                            'field'    => 'number',
-                            'filters'  => [
+                            'type' => 'avg',
+                            'field' => 'number',
+                            'filters' => [
                                 ['field' => 'number', 'operator' => '<', 'value' => 200],
                             ],
                         ],
@@ -817,7 +817,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_avg_number' => $matchingModel->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.number', '<', 200)->avg('belongs_to_many_relations.number')],
                 ['belongs_to_many_relation_avg_number' => $matchingModel2->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.number', '<', 200)->avg('belongs_to_many_relations.number')],
@@ -850,9 +850,9 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'sum',
-                            'field'    => 'number',
-                            'filters'  => [
+                            'type' => 'sum',
+                            'field' => 'number',
+                            'filters' => [
                                 ['field' => 'number', 'operator' => '<', 'value' => 200],
                             ],
                         ],
@@ -865,7 +865,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_sum_number' => $matchingModel->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.number', '<', 200)->sum('belongs_to_many_relations.number')],
                 ['belongs_to_many_relation_sum_number' => $matchingModel2->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.number', '<', 200)->sum('belongs_to_many_relations.number')],
@@ -898,9 +898,9 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'sum',
-                            'field'    => 'number',
-                            'filters'  => [
+                            'type' => 'sum',
+                            'field' => 'number',
+                            'filters' => [
                                 ['field' => 'other_number', 'operator' => '<', 'value' => 200],
                             ],
                         ],
@@ -913,7 +913,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_sum_number' => $matchingModel->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.other_number', '<', 200)->sum('belongs_to_many_relations.number')],
                 ['belongs_to_many_relation_sum_number' => $matchingModel2->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.other_number', '<', 200)->sum('belongs_to_many_relations.number')],
@@ -946,8 +946,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'count',
-                            'filters'  => [
+                            'type' => 'count',
+                            'filters' => [
                                 ['field' => 'number', 'operator' => '<', 'value' => 200],
                             ],
                         ],
@@ -960,7 +960,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_count' => $matchingModel->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.number', '<', 200)->count()],
                 ['belongs_to_many_relation_count' => $matchingModel2->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.number', '<', 200)->count()],
@@ -993,8 +993,8 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'exists',
-                            'filters'  => [
+                            'type' => 'exists',
+                            'filters' => [
                                 ['field' => 'number', 'operator' => '<', 'value' => 200],
                             ],
                         ],
@@ -1007,7 +1007,7 @@ class SearchAggregatesOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 ['belongs_to_many_relation_exists' => $matchingModel->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.number', '<', 200)->exists()],
                 ['belongs_to_many_relation_exists' => $matchingModel2->belongsToManyRelation()->orderBy('belongs_to_many_relations.number', 'desc')->where('belongs_to_many_relations.number', '<', 200)->exists()],
@@ -1029,9 +1029,9 @@ class SearchAggregatesOperationsTest extends TestCase
                     'aggregates' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'type'     => 'min',
-                            'field'    => 'number',
-                            'filters'  => [
+                            'type' => 'min',
+                            'field' => 'number',
+                            'filters' => [
                                 [
                                     'nested' => [
                                         [

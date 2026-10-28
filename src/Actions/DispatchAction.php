@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Actions;
 
+use Illuminate\Bus\PendingBatch;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -39,20 +40,17 @@ class DispatchAction
     /**
      * The pending batch instance.
      *
-     * @var \Illuminate\Bus\PendingBatch|null
+     * @var PendingBatch|null
      */
     protected $batchJob;
 
     /**
      * Create a new action dispatcher instance.
      *
-     * @param OperateRequest $request
-     * @param Action         $action
-     * @param array          $fields
      *
      * @return void
      */
-    public function __construct(OperateRequest $request, \Lomkit\Rest\Actions\Action $action, array $fields)
+    public function __construct(OperateRequest $request, Action $action, array $fields)
     {
         $this->request = $request;
         $this->action = $action;
@@ -66,20 +64,18 @@ class DispatchAction
     /**
      * Configure the batch job for the action.
      *
-     * @param \Lomkit\Rest\Actions\Action $action
-     * @param array                       $fields
      *
      * @return void
      */
-    protected function configureBatchJob(\Lomkit\Rest\Actions\Action $action, array $fields)
+    protected function configureBatchJob(Action $action, array $fields)
     {
         $batch = Bus::batch([]);
         $batch->name($action->uriKey());
 
-        if (!is_null($connection = $this->connection())) {
+        if (! is_null($connection = $this->connection())) {
             $batch->onConnection($connection);
         }
-        if (!is_null($queue = $this->queue())) {
+        if (! is_null($queue = $this->queue())) {
             $batch->onQueue($queue);
         }
 
@@ -90,9 +86,10 @@ class DispatchAction
     /**
      * Dispatch the action.
      *
-     * @throws \Throwable
      *
      * @return int The number of models impacted by the action.
+     *
+     * @throws \Throwable
      */
     public function dispatch($chunkCount)
     {
@@ -104,7 +101,7 @@ class DispatchAction
             $modelsImpacted = $this->handleClassic($chunkCount);
         }
 
-        if (!is_null($this->batchJob)) {
+        if (! is_null($this->batchJob)) {
             $this->batchJob->dispatch();
         }
 
@@ -117,8 +114,7 @@ class DispatchAction
      * The impacted models are whatever the request's search resolves, which is every model when
      * the search is omitted.
      *
-     * @param int $chunkCount The number of models to process per chunk.
-     *
+     * @param  int  $chunkCount  The number of models to process per chunk.
      * @return int The effective result limit if set, or the number of models dispatched.
      */
     public function handleClassic(int $chunkCount)
@@ -136,8 +132,7 @@ class DispatchAction
      * through the resource search pipeline, which is what applies the resource's authorization
      * perimeter and default ordering to the targeted ids.
      *
-     * @param int $chunkCount The number of models to process per chunk.
-     *
+     * @param  int  $chunkCount  The number of models to process per chunk.
      * @return int The total count of impacted models.
      */
     public function handleTargeted(int $chunkCount)
@@ -154,8 +149,7 @@ class DispatchAction
      * The resource search pipeline is how the authorization perimeter and the default ordering get
      * applied, so a targeted action goes through it too, passing no search parameters.
      *
-     * @param array $searchParameters The search parameters to apply, empty when the caller names the models.
-     *
+     * @param  array  $searchParameters  The search parameters to apply, empty when the caller names the models.
      * @return Builder
      */
     protected function modelsQuery(array $searchParameters = [])
@@ -171,9 +165,8 @@ class DispatchAction
      * The count is accumulated as the chunks are dispatched rather than re-queried afterwards,
      * because an action that mutates a column the query filters on would no longer match.
      *
-     * @param Builder $query      The query resolving the models to act on.
-     * @param int     $chunkCount The number of models to process per chunk.
-     *
+     * @param  Builder  $query  The query resolving the models to act on.
+     * @param  int  $chunkCount  The number of models to process per chunk.
      * @return int The effective result limit if set, or the number of models dispatched.
      */
     protected function dispatchInChunks(Builder $query, int $chunkCount)
@@ -190,7 +183,7 @@ class DispatchAction
 
                     // This is to remove for Laravel 12, chunking with limit does not work
                     // in Laravel 11
-                    if (!is_null($limit) && $page * $chunkCount >= $limit) {
+                    if (! is_null($limit) && $page * $chunkCount >= $limit) {
                         $collection = $collection->take($limit - ($page - 1) * $chunkCount);
                         $impacted += $collection->count();
                         $this->forModels($collection);
@@ -224,13 +217,12 @@ class DispatchAction
     /**
      * Dispatch the given action.
      *
-     * @param Collection $models
      *
      * @return mixed|void
      */
     public function forModels(Collection $models)
     {
-        if ($models->isEmpty() && !$this->action->isStandalone()) {
+        if ($models->isEmpty() && ! $this->action->isStandalone()) {
             return;
         }
 
@@ -246,17 +238,19 @@ class DispatchAction
     /**
      * Dispatch the given action synchronously for a model collection.
      *
-     * @param \Illuminate\Support\Collection $models
      *
-     * @throws \Throwable
      *
      * @return mixed
+     *
+     * @throws \Throwable
      */
     protected function dispatchSynchronouslyForCollection(Collection $models)
     {
         return DB::transaction(function () use ($models) {
             return $this->action->handle(
-                collect($this->fields)->mapWithKeys(function ($field) {return [$field['name'] => $field['value']]; })->toArray(),
+                collect($this->fields)->mapWithKeys(function ($field) {
+                    return [$field['name'] => $field['value']];
+                })->toArray(),
                 $models
             );
         });
@@ -265,12 +259,10 @@ class DispatchAction
     /**
      * Dispatch the given action to the queue for a model collection.
      *
-     * @param string                         $method
-     * @param \Illuminate\Support\Collection $models
+     * @param  string  $method
+     * @return $this
      *
      * @throws \Throwable
-     *
-     * @return $this
      */
     protected function addQueuedActionJob(Collection $models): self
     {

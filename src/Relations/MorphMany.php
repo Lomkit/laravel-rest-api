@@ -14,16 +14,16 @@ class MorphMany extends MorphRelation implements RelationResource
     /**
      * Handle actions after mutating a MorphMany relation.
      *
-     * @param Model    $model             The Eloquent model.
-     * @param Relation $relation          The relation being mutated.
-     * @param array    $mutationRelations An array of mutation relations.
+     * @param  Model  $model  The Eloquent model.
+     * @param  Relation  $relation  The relation being mutated.
+     * @param  array  $mutationRelations  An array of mutation relations.
      */
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
             $attributes = [
                 $model->{$relation->relation}()->getForeignKeyName() => $mutationRelation['operation'] === 'detach' ? null : $model->{$relation->relation}()->getParentKey(),
-                $model->{$relation->relation}()->getMorphType()      => $model::class,
+                $model->{$relation->relation}()->getMorphType() => $model::class,
             ];
 
             if ($mutationRelation['operation'] === 'create') {
@@ -31,6 +31,7 @@ class MorphMany extends MorphRelation implements RelationResource
                     ->applyMutation($mutationRelation, $attributes);
 
                 $this->resource()->authorizeToAttach($model, $toPerformActionModel);
+
                 continue;
             }
 

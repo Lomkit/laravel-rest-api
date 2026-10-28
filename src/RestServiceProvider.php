@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest;
 
+use Dedoc\Scramble\Scramble;
+use Dedoc\Scramble\Support\OperationExtensions\ParameterExtractor\FormRequestParametersExtractor;
 use Illuminate\Foundation\Events\PublishingStubs;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +29,7 @@ use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Query\Builder;
+use Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension;
 
 class RestServiceProvider extends ServiceProvider
 {
@@ -79,18 +82,16 @@ class RestServiceProvider extends ServiceProvider
      * already documents these request bodies, so the built-in extractor is told to
      * skip Rest requests. Registered at boot so it runs before Scramble processes any
      * route (the extension itself is appended and runs after the built-in extractor).
-     *
-     * @return void
      */
     private function registerScramble(): void
     {
-        if (!class_exists(\Dedoc\Scramble\Scramble::class)) {
+        if (! class_exists(Scramble::class)) {
             return;
         }
 
-        \Dedoc\Scramble\Scramble::registerExtension(\Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension::class);
+        Scramble::registerExtension(LomkitLaravelRestApiOperationExtension::class);
 
-        \Dedoc\Scramble\Support\OperationExtensions\ParameterExtractor\FormRequestParametersExtractor::ignoreInstanceOf(RestRequest::class);
+        FormRequestParametersExtractor::ignoreInstanceOf(RestRequest::class);
     }
 
     /**
@@ -107,22 +108,18 @@ class RestServiceProvider extends ServiceProvider
 
     /**
      * Get the Telescope route group configuration array.
-     *
-     * @return array
      */
     private function routeConfiguration(): array
     {
         return [
-            'domain'     => config('rest.documentation.routing.domain'),
-            'prefix'     => config('rest.documentation.routing.path'),
+            'domain' => config('rest.documentation.routing.domain'),
+            'prefix' => config('rest.documentation.routing.path'),
             'middleware' => config('rest.documentation.routing.middlewares', []),
         ];
     }
 
     /**
      * Register the Rest Artisan commands.
-     *
-     * @return void
      */
     protected function registerCommands(): void
     {
@@ -161,8 +158,6 @@ class RestServiceProvider extends ServiceProvider
 
     /**
      * Register the package's publishable resources.
-     *
-     * @return void
      */
     private function registerPublishing(): void
     {
@@ -175,8 +170,6 @@ class RestServiceProvider extends ServiceProvider
 
     /**
      * Register Rest's services in the container.
-     *
-     * @return void
      */
     protected function registerServices(): void
     {

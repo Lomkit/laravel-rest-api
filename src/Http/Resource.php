@@ -20,17 +20,17 @@ use Lomkit\Rest\Instructions\Instructionable;
 
 class Resource implements \JsonSerializable
 {
-    use PerformsQueries;
-    use PerformsModelOperations;
-    use Relationable;
-    use Paginable;
-    use Scoutable;
-    use Rulable;
-    use ConfiguresRestParameters;
-    use Authorizable;
     use Actionable;
-    use Instructionable;
+    use Authorizable;
+    use ConfiguresRestParameters;
     use HasResourceHooks;
+    use Instructionable;
+    use Paginable;
+    use PerformsModelOperations;
+    use PerformsQueries;
+    use Relationable;
+    use Rulable;
+    use Scoutable;
 
     /**
      * The model the entry corresponds to.
@@ -48,8 +48,6 @@ class Resource implements \JsonSerializable
 
     /**
      * The default value for the pagination limit.
-     *
-     * @var int
      */
     public int $defaultLimit = 50;
 
@@ -63,7 +61,7 @@ class Resource implements \JsonSerializable
         /** @var Model $model */
         $model = static::$model;
 
-        return new $model();
+        return new $model;
     }
 
     /**
@@ -76,15 +74,11 @@ class Resource implements \JsonSerializable
         /** @var Response $response */
         $response = static::$response;
 
-        return new $response();
+        return new $response;
     }
 
     /**
      * Return the default ordering for resource queries.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function defaultOrderBy(RestRequest $request): array
     {
@@ -95,8 +89,6 @@ class Resource implements \JsonSerializable
 
     /**
      * Check if gating is enabled for this resource.
-     *
-     * @return bool
      */
     public function isGatingEnabled(): bool
     {
@@ -105,8 +97,6 @@ class Resource implements \JsonSerializable
 
     /**
      * Check if authorizations are enabled for this resource.
-     *
-     * @return bool
      */
     public function isAuthorizingEnabled(): bool
     {
@@ -115,8 +105,6 @@ class Resource implements \JsonSerializable
 
     /**
      * Check if authorization cache is enabled for this resource.
-     *
-     * @return bool
      */
     public function isAuthorizationCacheEnabled(): bool
     {
@@ -126,7 +114,6 @@ class Resource implements \JsonSerializable
     /**
      * Get the authorization cache key.
      *
-     * @param RestRequest $request
      *
      * @return string
      */
@@ -159,24 +146,22 @@ class Resource implements \JsonSerializable
 
     /**
      * Serialize the resource into a JSON-serializable format.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {
         $request = app(RestRequest::class);
 
         return [
-            'actions'            => collect($this->getActions($request))->map->jsonSerialize()->toArray(),
-            'instructions'       => collect($this->getInstructions($request))->map->jsonSerialize()->toArray(),
+            'actions' => collect($this->getActions($request))->map->jsonSerialize()->toArray(),
+            'instructions' => collect($this->getInstructions($request))->map->jsonSerialize()->toArray(),
             'scout_instructions' => collect($this->getScoutInstructions($request))->map->jsonSerialize()->toArray(),
-            'fields'             => $this->getFields($request),
-            'scout_fields'       => $this->getScoutFields($request),
-            'limits'             => $this->getLimits($request),
-            'scopes'             => $this->getScopes($request),
-            'relations'          => collect($this->getRelations($request))->map->jsonSerialize()->toArray(),
-            'rules'              => [
-                'all'    => $this->rules($request),
+            'fields' => $this->getFields($request),
+            'scout_fields' => $this->getScoutFields($request),
+            'limits' => $this->getLimits($request),
+            'scopes' => $this->getScopes($request),
+            'relations' => collect($this->getRelations($request))->map->jsonSerialize()->toArray(),
+            'rules' => [
+                'all' => $this->rules($request),
                 'create' => $this->createRules($request),
                 'update' => $this->updateRules($request),
             ],

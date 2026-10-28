@@ -6,22 +6,16 @@ class Contact extends Schema
 {
     /**
      * The identifying name of the contact person/organization.
-     *
-     * @var string
      */
     protected string $name;
 
     /**
      * The URL pointing to the contact information.
-     *
-     * @var string
      */
     protected string $url;
 
     /**
      * The email address of the contact person/organization.
-     *
-     * @var string
      */
     protected string $email;
 
@@ -35,8 +29,7 @@ class Contact extends Schema
     /**
      * Set the identifying name of the contact person/organization.
      *
-     * @param string $name
-     *
+     * @param  string  $name
      * @return Contact
      */
     public function name(): string
@@ -46,10 +39,6 @@ class Contact extends Schema
 
     /**
      * Set the URL pointing to the contact information.
-     *
-     * @param string $url
-     *
-     * @return Contact
      */
     public function withUrl(string $url): Contact
     {
@@ -60,8 +49,6 @@ class Contact extends Schema
 
     /**
      * Get the URL pointing to the contact information.
-     *
-     * @return string
      */
     public function url(): string
     {
@@ -70,10 +57,6 @@ class Contact extends Schema
 
     /**
      * Set the email address of the contact person/organization.
-     *
-     * @param string $email
-     *
-     * @return Contact
      */
     public function withEmail(string $email): Contact
     {
@@ -84,8 +67,6 @@ class Contact extends Schema
 
     /**
      * Get the email address of the contact person/organization.
-     *
-     * @return string
      */
     public function email(): string
     {
@@ -94,22 +75,18 @@ class Contact extends Schema
 
     /**
      * Serialize the contact information as an array.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {
         return [
-            'name'  => $this->name(),
-            'url'   => $this->url(),
+            'name' => $this->name(),
+            'url' => $this->url(),
             'email' => $this->email(),
         ];
     }
 
     /**
      * Generate the contact information using configuration values.
-     *
-     * @return Contact
      */
     public function generate(): Contact
     {

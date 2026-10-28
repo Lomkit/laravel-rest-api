@@ -8,6 +8,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\Fieldable;
 use Lomkit\Rest\Concerns\Makeable;
@@ -19,15 +20,15 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 class Action implements \JsonSerializable
 {
-    use Makeable;
-    use Metable;
     use Batchable;
     use Dispatchable;
-    use InteractsWithQueue;
-    use Queueable;
-    use SerializesModels;
     use Fieldable;
+    use InteractsWithQueue;
+    use Makeable;
+    use Metable;
+    use Queueable;
     use Resourcable;
+    use SerializesModels;
 
     /**
      * The name of the connection the job should be sent to.
@@ -100,9 +101,10 @@ class Action implements \JsonSerializable
     /**
      * Mark the action as a standalone action.
      *
-     * @throws InvalidActionStateException
      *
      * @return $this
+     *
+     * @throws InvalidActionStateException
      */
     public function standalone()
     {
@@ -131,9 +133,10 @@ class Action implements \JsonSerializable
      * The caller names the models to act on, so a search is prohibited and the action can never
      * impact every model the way an unscoped classic action does.
      *
-     * @throws InvalidActionStateException
      *
      * @return $this
+     *
+     * @throws InvalidActionStateException
      */
     public function targeted()
     {
@@ -166,24 +169,22 @@ class Action implements \JsonSerializable
         $request = app()->make(RestRequest::class);
 
         return [
-            'name'       => $this->name(),
-            'uriKey'     => $this->uriKey(),
-            'fields'     => $this->fields($request),
-            'meta'       => $this->meta(),
+            'name' => $this->name(),
+            'uriKey' => $this->uriKey(),
+            'fields' => $this->fields($request),
+            'meta' => $this->meta(),
             'standalone' => $this->isStandalone(),
-            'targeted'   => $this->isTargeted(),
+            'targeted' => $this->isTargeted(),
         ];
     }
 
     /**
      * Perform the action on the given models.
      *
-     * @param array                          $fields
-     * @param \Illuminate\Support\Collection $models
      *
      * @return mixed
      */
-    public function handle(array $fields, \Illuminate\Support\Collection $models)
+    public function handle(array $fields, Collection $models)
     {
         //
     }
@@ -191,8 +192,6 @@ class Action implements \JsonSerializable
     /**
      * Register callbacks on the pending batch.
      *
-     * @param array                        $fields
-     * @param \Illuminate\Bus\PendingBatch $batch
      *
      * @return void
      */
@@ -204,11 +203,11 @@ class Action implements \JsonSerializable
     /**
      * Execute the action for the given request.
      *
-     * @param OperateRequest $request
      *
-     * @throws \Throwable
      *
      * @return int
+     *
+     * @throws \Throwable
      */
     public function handleRequest(OperateRequest $request)
     {

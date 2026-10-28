@@ -3,17 +3,19 @@
 namespace Lomkit\Rest\Tests\Unit;
 
 use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Support\Http\Controllers\ModelController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\SoftDeletedModelController;
+use Lomkit\Rest\Tests\TestCase;
 
-class RoutesTest extends \Lomkit\Rest\Tests\TestCase
+class RoutesTest extends TestCase
 {
     public function test_registering_resource()
     {
         Route::group(
             ['as' => 'api.', 'prefix' => 'api'],
             function () {
-                \Lomkit\Rest\Facades\Rest::resource('dummy-models', ModelController::class);
+                Rest::resource('dummy-models', ModelController::class);
             }
         );
 
@@ -30,7 +32,7 @@ class RoutesTest extends \Lomkit\Rest\Tests\TestCase
         Route::group(
             ['as' => 'api.', 'prefix' => 'api'],
             function () {
-                \Lomkit\Rest\Facades\Rest::resource('dummy-soft-deleted-models', SoftDeletedModelController::class)->withSoftDeletes();
+                Rest::resource('dummy-soft-deleted-models', SoftDeletedModelController::class)->withSoftDeletes();
             }
         );
 
@@ -40,11 +42,6 @@ class RoutesTest extends \Lomkit\Rest\Tests\TestCase
 
     /**
      * Asserts that a route with the given signature is registered.
-     *
-     * @param string $name
-     * @param array  $methods
-     * @param string $uri
-     * @param string $controller
      */
     protected function assertRouteRegistered(string $name, array $methods, string $uri, string $controller)
     {
@@ -54,7 +51,7 @@ class RoutesTest extends \Lomkit\Rest\Tests\TestCase
          */
         $route = $routes->getByName($name);
 
-        if (!$route) {
+        if (! $route) {
             $this->fail("Route \"$name\" with uri \"{$uri}\" does not exist.");
         }
         $this->assertSame($methods, $route->methods);
@@ -64,8 +61,6 @@ class RoutesTest extends \Lomkit\Rest\Tests\TestCase
 
     /**
      * Assert that a route with the given name is not registered.
-     *
-     * @param string $name
      */
     protected function assertRouteNotRegistered(string $name)
     {

@@ -14,8 +14,6 @@ class ModifyNumberAction extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param array                          $fields
-     * @param \Illuminate\Support\Collection $models
      *
      * @return mixed
      */
@@ -32,12 +30,8 @@ class ModifyNumberAction extends Action
 
     /**
      * Called in an action failed.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
-    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function fields(RestRequest $request): array
     {
         return [
             'number' => [

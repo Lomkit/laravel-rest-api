@@ -10,8 +10,8 @@ use Lomkit\Rest\Tests\Support\Models\Model;
 
 class NoAuthorizationResource extends Resource
 {
-    use DisableGates;
     use DisableAuthorizations;
+    use DisableGates;
 
     public static $model = Model::class;
 

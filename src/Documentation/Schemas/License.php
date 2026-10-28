@@ -6,31 +6,21 @@ class License extends Schema
 {
     /**
      * The license name used for the API.
-     *
-     * @var string
      */
     protected string $name;
 
     /**
      * An SPDX license expression for the API. The identifier field is mutually exclusive of the url field.
-     *
-     * @var string
      */
     protected string $identifier;
 
     /**
      * A URL to the license used for the API. This MUST be in the form of a URL. The url field is mutually exclusive of the identifier field.
-     *
-     * @var string
      */
     protected ?string $url;
 
     /**
      * Set the name of the license used for the API.
-     *
-     * @param string $name
-     *
-     * @return License
      */
     public function withName(string $name): License
     {
@@ -41,8 +31,6 @@ class License extends Schema
 
     /**
      * Get the license name used for the API.
-     *
-     * @return string
      */
     public function name(): string
     {
@@ -51,10 +39,6 @@ class License extends Schema
 
     /**
      * Set the SPDX license expression for the API.
-     *
-     * @param string $identifier
-     *
-     * @return License
      */
     public function withIdentifier(string $identifier): License
     {
@@ -65,8 +49,6 @@ class License extends Schema
 
     /**
      * Get the SPDX license expression for the API.
-     *
-     * @return string
      */
     public function identifier(): string
     {
@@ -75,10 +57,6 @@ class License extends Schema
 
     /**
      * Set the URL to the license used for the API.
-     *
-     * @param string|null $url
-     *
-     * @return License
      */
     public function withUrl(?string $url): License
     {
@@ -89,8 +67,6 @@ class License extends Schema
 
     /**
      * Get the URL to the license used for the API.
-     *
-     * @return string|null
      */
     public function url(): ?string
     {
@@ -99,24 +75,20 @@ class License extends Schema
 
     /**
      * Serialize the object to a JSON representation.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {
         return array_merge(
             [
-                'name'       => $this->name(),
+                'name' => $this->name(),
                 'identifier' => $this->identifier(),
             ],
-            !is_null($this->url()) ? ['url' => $this->url()] : []
+            ! is_null($this->url()) ? ['url' => $this->url()] : []
         );
     }
 
     /**
      * Generate a License object with default values.
-     *
-     * @return License
      */
     public function generate(): License
     {

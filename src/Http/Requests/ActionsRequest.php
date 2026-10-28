@@ -2,6 +2,4 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-class ActionsRequest extends RestRequest
-{
-}
+class ActionsRequest extends RestRequest {}

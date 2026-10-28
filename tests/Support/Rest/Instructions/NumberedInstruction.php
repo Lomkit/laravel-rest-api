@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Tests\Support\Rest\Instructions;
 
+use Laravel\Scout\Builder;
+use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 
 class NumberedInstruction extends Instruction
@@ -11,12 +13,12 @@ class NumberedInstruction extends Instruction
         $query->where('number', '>', $fields['number'] ?? 0);
     }
 
-    public function handleScout(array $fields, \Laravel\Scout\Builder $query)
+    public function handleScout(array $fields, Builder $query)
     {
         //
     }
 
-    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function fields(RestRequest $request): array
     {
         return [
             'number' => [

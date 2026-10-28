@@ -14,9 +14,9 @@ class ResourceCustomRules extends RestRule
         $operation = is_array($value) ? ($value['operation'] ?? null) : null;
 
         $rules = match ($operation) {
-            'create'                   => $this->resource->createRules($request),
+            'create' => $this->resource->createRules($request),
             'update', 'sync', 'toggle' => $this->resource->updateRules($request),
-            default                    => null,
+            default => null,
         };
 
         if (is_null($rules)) {

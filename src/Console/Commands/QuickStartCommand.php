@@ -56,13 +56,13 @@ class QuickStartCommand extends Command
         $content = file_get_contents($appBootstrapPath);
 
         if (str_contains($content, '// api: ')) {
-            (new Filesystem())->replaceInFile(
+            (new Filesystem)->replaceInFile(
                 '// api: ',
                 'api: ',
                 $appBootstrapPath,
             );
-        } elseif (str_contains($content, 'web: __DIR__.\'/../routes/web.php\',') && !str_contains($content, 'api: __DIR__.\'/../routes/api.php\',')) {
-            (new Filesystem())->replaceInFile(
+        } elseif (str_contains($content, 'web: __DIR__.\'/../routes/web.php\',') && ! str_contains($content, 'api: __DIR__.\'/../routes/api.php\',')) {
+            (new Filesystem)->replaceInFile(
                 'web: __DIR__.\'/../routes/web.php\',',
                 'web: __DIR__.\'/../routes/web.php\','.PHP_EOL.'        api: __DIR__.\'/../routes/api.php\',',
                 $appBootstrapPath,
@@ -114,9 +114,8 @@ class QuickStartCommand extends Command
     /**
      * Set the namespace on the given file.
      *
-     * @param string $file
-     * @param string $namespace
-     *
+     * @param  string  $file
+     * @param  string  $namespace
      * @return void
      */
     protected function setAppNamespaceOn($file, $namespace)
@@ -136,14 +135,14 @@ class QuickStartCommand extends Command
     protected function updateApiRoutes()
     {
         $routesPath = base_path('routes/api.php');
-        if (!file_exists($routesPath)) {
+        if (! file_exists($routesPath)) {
             file_put_contents($routesPath, '<?php');
         }
 
         $routeContent = file_get_contents($routesPath);
         $newRoute = "\Lomkit\Rest\Facades\Rest::resource('users', \App\Rest\Controllers\UsersController::class);";
 
-        if (!Str::contains($routeContent, $newRoute)) {
+        if (! Str::contains($routeContent, $newRoute)) {
             file_put_contents($routesPath, $routeContent.PHP_EOL.$newRoute);
         }
     }
@@ -151,8 +150,7 @@ class QuickStartCommand extends Command
     /**
      * Resolve the fully-qualified path to the stub.
      *
-     * @param string $stub
-     *
+     * @param  string  $stub
      * @return string
      */
     protected function resolveStubPath($stub)

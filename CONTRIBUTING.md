@@ -1,92 +1,109 @@
 # Contributing
 
-When contributing to this repository, please first discuss the change you wish to make via issue,
-email, or any other method with the owners of this repository before making a change. 
+Thank you for your help. This guide explains how to set up the project, run the checks and open a pull request.
 
-Please note we have a code of conduct, please follow it in all your interactions with the project.
+## Before you start
 
-## Pull Request Process
+- For a bug, open an issue with the bug report template.
+- For a new feature or a change of behaviour, open an issue first and wait for an answer before you write code.
+- For a documentation issue, open a pull request on [lomkit/laravel-rest-api-doc](https://github.com/Lomkit/laravel-rest-api-doc).
+- Do not report a security issue in a public issue. See [Security issues](#security-issues).
 
-1. Ensure any install or build dependencies are removed before the end of the layer when doing a 
-   build.
-2. Update the README.md with details of changes to the interface, this includes new environment 
-   variables, exposed ports, useful file locations and container parameters.
-3. Increase the version numbers in any examples files and the README.md to the new version that this
-   Pull Request would represent. The versioning scheme we use is [SemVer](http://semver.org/).
-4. You may merge the Pull Request in once you have the sign-off of two other developers, or if you 
-   do not have permission to do that, you may request the second reviewer to merge it for you.
+## Branches
 
-## Code of Conduct
+- The `3.x` branch holds the development of version 3.
+- Open your pull request against `3.x`.
 
-### Our Pledge
+## Setup
 
-In the interest of fostering an open and welcoming environment, we as
-contributors and maintainers pledge to making participation in our project and
-our community a harassment-free experience for everyone, regardless of age, body
-size, disability, ethnicity, gender identity and expression, level of experience,
-nationality, personal appearance, race, religion, or sexual identity and
-orientation.
+You need PHP 8.3 or later and Composer.
 
-### Our Standards
+```bash
+composer install
+```
 
-Examples of behavior that contributes to creating a positive environment
-include:
+## Tests
 
-* Using welcoming and inclusive language
-* Being respectful of differing viewpoints and experiences
-* Gracefully accepting constructive criticism
-* Focusing on what is best for the community
-* Showing empathy towards other community members
+The suite runs on an in-memory SQLite database by default:
 
-Examples of unacceptable behavior by participants include:
+```bash
+composer test
+```
 
-* The use of sexualized language or imagery and unwelcome sexual attention or
-advances
-* Trolling, insulting/derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others' private information, such as a physical or electronic
-  address, without explicit permission
-* Other conduct which could reasonably be considered inappropriate in a
-  professional setting
+The CI also runs the suite on MySQL 8 and PostgreSQL 16. To run it on these databases, start them with Docker:
 
-### Our Responsibilities
+```bash
+docker run -d --rm --name lrapi-mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_DATABASE=rest -p 33061:3306 mysql:8
+docker run -d --rm --name lrapi-pg -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=rest -p 54321:5432 postgres:16
+```
 
-Project maintainers are responsible for clarifying the standards of acceptable
-behavior and are expected to take appropriate and fair corrective action in
-response to any instances of unacceptable behavior.
+Then run the suite on each database:
 
-Project maintainers have the right and responsibility to remove, edit, or
-reject comments, commits, code, wiki edits, issues, and other contributions
-that are not aligned to this Code of Conduct, or to ban temporarily or
-permanently any contributor for other behaviors that they deem inappropriate,
-threatening, offensive, or harmful.
+```bash
+DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=33061 DB_DATABASE=rest DB_USERNAME=root composer test
+DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=54321 DB_DATABASE=rest DB_USERNAME=postgres DB_PASSWORD=postgres composer test
+```
 
-### Scope
+Stop the containers when you are done:
 
-This Code of Conduct applies both within project spaces and in public spaces
-when an individual is representing the project or its community. Examples of
-representing a project or community include using an official project e-mail
-address, posting via an official social media account, or acting as an appointed
-representative at an online or offline event. Representation of a project may be
-further defined and clarified by project maintainers.
+```bash
+docker stop lrapi-mysql lrapi-pg
+```
 
-### Enforcement
+The CI also tests the lowest versions allowed by `composer.json`:
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project team at [INSERT EMAIL ADDRESS]. All
-complaints will be reviewed and investigated and will result in a response that
-is deemed necessary and appropriate to the circumstances. The project team is
-obligated to maintain confidentiality with regard to the reporter of an incident.
-Further details of specific enforcement policies may be posted separately.
+```bash
+composer update --prefer-lowest --prefer-stable
+composer test
+composer update
+```
 
-Project maintainers who do not follow or enforce the Code of Conduct in good
-faith may face temporary or permanent repercussions as determined by other
-members of the project's leadership.
+Add a test for each bug fix and each new feature.
 
-### Attribution
+## Code style
 
-This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 1.4,
-available at [http://contributor-covenant.org/version/1/4][version]
+[Pint](https://laravel.com/docs/pint) checks the code style with the `laravel` preset. To fix the style:
 
-[homepage]: http://contributor-covenant.org
-[version]: http://contributor-covenant.org/version/1/4/
+```bash
+composer format
+```
+
+To check the style without changes, as the CI does:
+
+```bash
+composer lint
+```
+
+New code follows these rules:
+
+- Declare the type of every parameter, return value and property.
+- Use early returns instead of nested conditions.
+- Do not write comments that describe the code. Use PHPDoc only for types that PHP cannot declare, for example `array<string, mixed>` or `Collection<int, Model>`.
+
+## Static analysis
+
+[Larastan](https://github.com/larastan/larastan) analyses `src` at level 8:
+
+```bash
+composer analyse
+```
+
+`phpstan-baseline.neon` lists the errors that existed when the analysis was added. The baseline must only shrink:
+
+- Do not add entries to the baseline. Fix the new error instead.
+- When you fix an error that is in the baseline, remove its entry. The analysis fails when an entry no longer matches an error.
+
+## Commits
+
+Write commit messages with [Conventional Commits](https://www.conventionalcommits.org): `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `build:`, `ci:`, `chore:`. Add `!` after the type for a breaking change, for example `feat!:`.
+
+## Pull requests
+
+- Keep one subject per pull request.
+- Write `Closes #123` in the description when the pull request fixes an issue.
+- Make sure that the tests, Pint and Larastan pass. The CI runs them on each pull request.
+- Update the README when the change affects how the package is used.
+
+## Security issues
+
+Do not open a public issue for a security issue. Report it in private from the [Security tab](https://github.com/Lomkit/laravel-rest-api/security) of the repository, with "Report a vulnerability".

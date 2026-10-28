@@ -9,7 +9,6 @@ trait Rulable
     /**
      * Get the validation rules for resource requests.
      *
-     * @param RestRequest $request
      *
      * @return array
      */
@@ -21,7 +20,6 @@ trait Rulable
     /**
      * Get the validation rules for resource creation requests.
      *
-     * @param RestRequest $request
      *
      * @return array
      */
@@ -33,7 +31,6 @@ trait Rulable
     /**
      * Get the validation rules for resource update requests.
      *
-     * @param RestRequest $request
      *
      * @return array
      */

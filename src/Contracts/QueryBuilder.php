@@ -2,12 +2,13 @@
 
 namespace Lomkit\Rest\Contracts;
 
+use Laravel\Scout\Builder;
+
 interface QueryBuilder
 {
     /**
      * Build a "search" query for the given resource.
      *
-     * @param array $parameters
      *
      * @return $this
      */
@@ -16,7 +17,7 @@ interface QueryBuilder
     /**
      * Convert the query builder to an Eloquent query builder.
      *
-     * @return \Illuminate\Database\Eloquent\Builder|\Laravel\Scout\Builder
+     * @return \Illuminate\Database\Eloquent\Builder|Builder
      */
     public function toBase();
 }

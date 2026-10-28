@@ -14,10 +14,6 @@ trait HasControllerHooks
 {
     /**
      * Executed before details.
-     *
-     * @param DetailsRequest $request
-     *
-     * @return void
      */
     protected function beforeDetails(DetailsRequest $request): void
     {
@@ -26,10 +22,6 @@ trait HasControllerHooks
 
     /**
      * Executed before search.
-     *
-     * @param SearchRequest $request
-     *
-     * @return void
      */
     protected function beforeSearch(SearchRequest $request): void
     {
@@ -38,10 +30,6 @@ trait HasControllerHooks
 
     /**
      * Executed after search.
-     *
-     * @param SearchRequest $request
-     *
-     * @return void
      */
     protected function afterSearch(SearchRequest $request): void
     {
@@ -50,10 +38,6 @@ trait HasControllerHooks
 
     /**
      * Executed before mutate.
-     *
-     * @param MutateRequest $request
-     *
-     * @return void
      */
     protected function beforeMutate(MutateRequest $request): void
     {
@@ -62,10 +46,6 @@ trait HasControllerHooks
 
     /**
      * Executed after mutate.
-     *
-     * @param MutateRequest $request
-     *
-     * @return void
      */
     protected function afterMutate(MutateRequest $request): void
     {
@@ -74,10 +54,6 @@ trait HasControllerHooks
 
     /**
      * Executed before operate.
-     *
-     * @param OperateRequest $request
-     *
-     * @return void
      */
     protected function beforeOperate(OperateRequest $request): void
     {
@@ -86,10 +62,6 @@ trait HasControllerHooks
 
     /**
      * Executed after operate.
-     *
-     * @param OperateRequest $request
-     *
-     * @return void
      */
     protected function afterOperate(OperateRequest $request): void
     {
@@ -98,10 +70,6 @@ trait HasControllerHooks
 
     /**
      * Executed before destroy.
-     *
-     * @param DestroyRequest $request
-     *
-     * @return void
      */
     protected function beforeDestroy(DestroyRequest $request): void
     {
@@ -110,10 +78,6 @@ trait HasControllerHooks
 
     /**
      * Executed after destroy.
-     *
-     * @param DestroyRequest $request
-     *
-     * @return void
      */
     protected function afterDestroy(DestroyRequest $request): void
     {
@@ -122,10 +86,6 @@ trait HasControllerHooks
 
     /**
      * Executed before restore.
-     *
-     * @param RestoreRequest $request
-     *
-     * @return void
      */
     protected function beforeRestore(RestoreRequest $request): void
     {
@@ -134,10 +94,6 @@ trait HasControllerHooks
 
     /**
      * Executed after restore.
-     *
-     * @param RestoreRequest $request
-     *
-     * @return void
      */
     protected function afterRestore(RestoreRequest $request): void
     {
@@ -146,10 +102,6 @@ trait HasControllerHooks
 
     /**
      * Executed before force destroy.
-     *
-     * @param ForceDestroyRequest $request
-     *
-     * @return void
      */
     protected function beforeForceDestroy(ForceDestroyRequest $request): void
     {
@@ -158,10 +110,6 @@ trait HasControllerHooks
 
     /**
      * Executed after force destroy.
-     *
-     * @param ForceDestroyRequest $request
-     *
-     * @return void
      */
     protected function afterForceDestroy(ForceDestroyRequest $request): void
     {

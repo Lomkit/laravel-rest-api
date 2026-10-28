@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Controllers;
 use Illuminate\Bus\PendingBatch;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Queue;
 use Lomkit\Rest\Actions\CallRestApiAction;
 use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Tests\Feature\TestCase;
@@ -250,7 +251,7 @@ class ActionsOperationsTest extends TestCase
 
         Gate::policy(Model::class, GreenPolicy::class);
 
-        \Illuminate\Support\Facades\Queue::fake();
+        Queue::fake();
 
         $response = $this->post(
             '/api/models/actions/queueable-modify-number',
@@ -258,7 +259,7 @@ class ActionsOperationsTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        \Illuminate\Support\Facades\Queue::assertPushedOn('custom-queue', CallRestApiAction::class);
+        Queue::assertPushedOn('custom-queue', CallRestApiAction::class);
     }
 
     public function test_operate_action_with_search(): void
@@ -658,7 +659,7 @@ class ActionsOperationsTest extends TestCase
             '/api/models/actions/targeted-modify-number',
             [
                 'resources' => [$model->getKey()],
-                'search'    => [
+                'search' => [
                     'filters' => [
                         ['field' => 'string', 'value' => 'match'],
                     ],
@@ -792,12 +793,12 @@ class ActionsOperationsTest extends TestCase
         );
 
         $response->assertJsonFragment([
-            'uriKey'     => 'targeted-modify-number',
-            'targeted'   => true,
+            'uriKey' => 'targeted-modify-number',
+            'targeted' => true,
         ]);
         $response->assertJsonFragment([
-            'uriKey'     => 'modify-number',
-            'targeted'   => false,
+            'uriKey' => 'modify-number',
+            'targeted' => false,
         ]);
     }
 }
