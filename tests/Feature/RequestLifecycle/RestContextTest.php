@@ -22,11 +22,11 @@ class RestContextTest extends PackageTestCase
 
         $this->assertSame(
             ['id', 'name', 'price'],
-            $staffContext->resource(StaffProductResource::class)->getFields($staffContext->request),
+            $staffContext->resource(StaffProductResource::class)->getFields($staffContext->request)->names(),
         );
         $this->assertSame(
             ['id', 'name'],
-            $customerContext->resource(StaffProductResource::class)->getFields($customerContext->request),
+            $customerContext->resource(StaffProductResource::class)->getFields($customerContext->request)->names(),
         );
     }
 
@@ -71,6 +71,16 @@ class RestContextTest extends PackageTestCase
         $restored = unserialize(serialize($resource));
 
         $this->assertInstanceOf(RestRequest::class, $restored->context()->request);
+    }
+
+    #[Test]
+    public function it_checks_a_field_against_the_user_of_its_context(): void
+    {
+        $staff = $this->contextFor(User::factory()->staff()->make())->resource(StaffProductResource::class);
+        $customer = $this->contextFor(User::factory()->make())->resource(StaffProductResource::class);
+
+        $this->assertTrue($staff->isNestedField('price'));
+        $this->assertFalse($customer->isNestedField('price'));
     }
 
     private function contextFor(?User $user): RestContext

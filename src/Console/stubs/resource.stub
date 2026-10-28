@@ -16,12 +16,12 @@ class {{ class }} extends Resource
     /**
      * The exposed fields that could be provided
      * @param RestRequest $request
-     * @return array
+     * @return array<int, \Lomkit\Rest\Fields\Field>
      */
     public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [
-            'id'
+            \Lomkit\Rest\Fields\ID::make('id'),
         ];
     }
 

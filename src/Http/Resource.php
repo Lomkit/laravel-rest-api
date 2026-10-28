@@ -11,6 +11,8 @@ use Lomkit\Rest\Concerns\PerformsModelOperations;
 use Lomkit\Rest\Concerns\PerformsQueries;
 use Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters;
 use Lomkit\Rest\Concerns\Resource\Contextual;
+use Lomkit\Rest\Concerns\Resource\DeclaresFields;
+use Lomkit\Rest\Concerns\Resource\ForgetsRequestState;
 use Lomkit\Rest\Concerns\Resource\HasResourceHooks;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
@@ -25,6 +27,8 @@ class Resource implements \JsonSerializable
     use Authorizable;
     use ConfiguresRestParameters;
     use Contextual;
+    use DeclaresFields;
+    use ForgetsRequestState;
     use HasResourceHooks;
     use Instructionable;
     use Paginable;
@@ -157,7 +161,7 @@ class Resource implements \JsonSerializable
             'actions' => collect($this->getActions($request))->map->jsonSerialize()->toArray(),
             'instructions' => collect($this->getInstructions($request))->map->jsonSerialize()->toArray(),
             'scout_instructions' => collect($this->getScoutInstructions($request))->map->jsonSerialize()->toArray(),
-            'fields' => $this->getFields($request),
+            'fields' => $this->getFields($request)->names(),
             'scout_fields' => $this->getScoutFields($request),
             'limits' => $this->getLimits($request),
             'scopes' => $this->getScopes($request),

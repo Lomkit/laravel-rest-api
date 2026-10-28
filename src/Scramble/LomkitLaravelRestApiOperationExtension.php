@@ -36,7 +36,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $context = new RestContext(RestRequest::createFrom(request()), app());
         $resource = $context->resource($controller::$resource);
         $fakeRequest = $context->request;
-        $fields = $resource->fields($fakeRequest);
+        $fields = $resource->getFields($fakeRequest)->names();
         $relations = $this->parseRelationsFromSource($resource);
         $rules = $this->extractAllRules($resource, $fakeRequest);
         $resourceName = str_replace('Resource', '', class_basename($resource));

@@ -100,7 +100,16 @@ php artisan rest:resource UserResource --model=User
 
 Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $request`, so any list can be conditionally narrowed by user/permission):
 
-- `fields()` — array of column names the client may select / filter / sort / mutate on.
+- `fields()` — list of typed `Lomkit\Rest\Fields\*` objects the client may select / filter / sort / mutate on: `ID`, `Text`, `Number`, `Integer`, `Boolean`, `Date`, `DateTime`, `Enum`, `Json`, or an app type extending `Field`. Strings and duplicate names throw `InvalidFieldException`. `getFields($request)` returns a `FieldSet`; `->names()` gives the list of names.
+
+  ```php
+  use Lomkit\Rest\Fields\{ID, Integer, Text};
+
+  public function fields(RestRequest $request): array
+  {
+      return [ID::make('id'), Text::make('name'), Integer::make('price'), Text::make('note')->nullable()];
+  }
+  ```
 - `relations()` — array of `Lomkit\Rest\Relations\*` instances declared with `::make('relationName', TargetResource::class)`. Only declared relations are includable/mutatable.
 - `scopes()` — local Eloquent scopes the client is allowed to invoke by name.
 - `limits()` — allowed pagination `limit` values (default `[10, 25, 50]`; `$defaultLimit` property is `50`).

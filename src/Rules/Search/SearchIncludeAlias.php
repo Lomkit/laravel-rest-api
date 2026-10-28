@@ -43,7 +43,7 @@ class SearchIncludeAlias implements DataAwareRule, ValidationRule
             return;
         }
 
-        if (in_array($value, $this->resource->getFields($this->resource->context()->request), true)) {
+        if (in_array($value, $this->resource->getFields($this->resource->context()->request)->names(), true)) {
             $fail('The alias conflicts with a field of this resource.');
 
             return;

@@ -2,34 +2,12 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
 
 trait ConfiguresRestParameters
 {
-    /**
-     * The calculated fields if already done in this request.
-     */
-    protected array $calculatedFields;
-
-    /**
-     * The fields that could be provided.
-     */
-    public function fields(RestRequest $request): array
-    {
-        return [];
-    }
-
-    /**
-     * Get the resource's fields.
-     */
-    public function getFields(RestRequest $request): array
-    {
-        return $this->calculatedFields ?? ($this->calculatedFields = $this->fields($request));
-    }
-
     /**
      * Verify the field is correct including nested relations.
      *
@@ -49,7 +27,7 @@ trait ConfiguresRestParameters
             return $fieldRelation?->resource()->isNestedField(Str::after($field, '.'), $fieldRelation) ?? false;
         }
 
-        return in_array($field, $this->getFields(App::make(RestRequest::class)));
+        return $this->getFields($this->context()->request)->has($field);
     }
 
     /**

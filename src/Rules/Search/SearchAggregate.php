@@ -32,7 +32,7 @@ class SearchAggregate extends RestRule
                 $attribute.'.field' => [
                     'required_if:'.$attribute.'.type,min,max,avg,sum',
                     'prohibited_if:'.$attribute.'.type,count,exists',
-                    Rule::in($relationResource->getFields($request)),
+                    Rule::in($relationResource->getFields($request)->names()),
                 ],
                 $attribute.'.filters.*' => [
                     (new SearchFilter)->setResource($relationResource),
