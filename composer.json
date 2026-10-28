@@ -23,8 +23,11 @@
     "phpunit/phpunit": "^12.0|^13.0"
   },
   "suggest": {
-    "dedoc/scramble": "Required to use LomkitLaravelRestApiOperationExtension for automatic API documentation.",
+    "dedoc/scramble": "Documents the API in OpenAPI through the package's Scramble extension.",
     "laravel/scout": "Required to use full-text search (search.text) on searchable models."
+  },
+  "conflict": {
+    "dedoc/scramble": "<0.13 || >=0.14"
   },
   "autoload": {
     "psr-4": {
