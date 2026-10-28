@@ -32,7 +32,7 @@ class NoAuthorizationTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -52,7 +52,7 @@ class NoAuthorizationTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new NoAuthorizationResource()
+            new NoAuthorizationResource
         );
     }
 
@@ -67,9 +67,9 @@ class NoAuthorizationTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                     ],
@@ -97,9 +97,9 @@ class NoAuthorizationTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                     ],
@@ -128,7 +128,7 @@ class NoAuthorizationTest extends TestCase
             ['Accept' => 'application/json']
         );
 
-        $this->assertResourceModel($response, [$model], new ModelResource());
+        $this->assertResourceModel($response, [$model], new ModelResource);
         $this->assertDatabaseMissing('models', $model->only('id'));
     }
 }

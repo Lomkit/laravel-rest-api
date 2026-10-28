@@ -14,6 +14,7 @@ use Lomkit\Rest\Relations\Relation;
 class Response implements Responsable
 {
     protected $responsable;
+
     protected Resource $resource;
 
     public function responsable($responsable)
@@ -33,11 +34,11 @@ class Response implements Responsable
     protected function buildGatesForModel(Model|string $model, Resource $resource, array $gates)
     {
         $nameMap = [
-            'create'      => config('rest.gates.names.authorized_to_create'),
-            'view'        => config('rest.gates.names.authorized_to_view'),
-            'update'      => config('rest.gates.names.authorized_to_update'),
-            'delete'      => config('rest.gates.names.authorized_to_delete'),
-            'restore'     => config('rest.gates.names.authorized_to_restore'),
+            'create' => config('rest.gates.names.authorized_to_create'),
+            'view' => config('rest.gates.names.authorized_to_view'),
+            'update' => config('rest.gates.names.authorized_to_update'),
+            'delete' => config('rest.gates.names.authorized_to_delete'),
+            'restore' => config('rest.gates.names.authorized_to_restore'),
             'forceDelete' => config('rest.gates.names.authorized_to_force_delete'),
         ];
 
@@ -69,11 +70,10 @@ class Response implements Responsable
      *
      * This method transforms the given model by selecting only the specified attributes and aggregates as defined in the request parameters or resource. If authorization gating is enabled and gate parameters are provided, it appends the corresponding authorization data. Additionally, it recursively processes any loaded relations—returning pivot data when applicable and mapping related models (or collections of models) using the resource’s configuration.
      *
-     * @param Model         $model        The Eloquent model instance to be converted.
-     * @param resource      $resource     The resource defining the fields and structure of the response.
-     * @param array         $requestArray Request parameters that control field selection, aggregates, and authorization gates.
-     * @param Relation|null $relation     Optional relation context for processing nested relationships.
-     *
+     * @param  Model  $model  The Eloquent model instance to be converted.
+     * @param  resource  $resource  The resource defining the fields and structure of the response.
+     * @param  array  $requestArray  Request parameters that control field selection, aggregates, and authorization gates.
+     * @param  Relation|null  $relation  Optional relation context for processing nested relationships.
      * @return array The structured array representation of the model, including attributes and recursively processed relations.
      */
     public function modelToResponse(Model $model, Resource $resource, array $requestArray, ?Relation $relation = null)
@@ -156,10 +156,9 @@ class Response implements Responsable
      * A dotted include declares its parameters for the deepest relation of the path, the same way
      * the query applies them, so every level above only forwards the remaining path downwards.
      *
-     * @param array      $requestArray   Request parameters of the level being rendered.
-     * @param array|null $currentInclude The include matching the relation, if any.
-     * @param string     $relationName   The name the relation is loaded under.
-     *
+     * @param  array  $requestArray  Request parameters of the level being rendered.
+     * @param  array|null  $currentInclude  The include matching the relation, if any.
+     * @param  string  $relationName  The name the relation is loaded under.
      * @return array The request parameters to render the relation with.
      */
     protected function requestArrayForRelation(array $requestArray, ?array $currentInclude, string $relationName): array
@@ -177,7 +176,7 @@ class Response implements Responsable
 
         $nestedRequestArray = $currentInclude ?? [];
 
-        if (!empty($forwardedIncludes)) {
+        if (! empty($forwardedIncludes)) {
             $nestedRequestArray['includes'] = array_merge($nestedRequestArray['includes'] ?? [], $forwardedIncludes);
         }
 
@@ -222,12 +221,10 @@ class Response implements Responsable
     /**
      * This map on each model returned by the API, use it at your ease.
      *
-     * @var \Illuminate\Database\Eloquent\Model
+     * @var Model
      * @var array
-     *
-     * @return array
      */
-    protected function map(\Illuminate\Database\Eloquent\Model $model, array $responseModel): array
+    protected function map(Model $model, array $responseModel): array
     {
         return $responseModel;
     }

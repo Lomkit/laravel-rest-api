@@ -14,10 +14,12 @@ use Lomkit\Rest\Relations\Traits\Mutates;
 
 class Relation implements \JsonSerializable
 {
+    use Constrained;
     use Makeable;
     use Mutates;
-    use Constrained;
+
     public string $relation;
+
     protected string $type;
 
     /**
@@ -46,13 +48,10 @@ class Relation implements \JsonSerializable
     /**
      * Filter the query based on the relation.
      *
-     * @param Builder      $query
-     * @param mixed        $relation
-     * @param mixed        $operator
-     * @param mixed        $value
-     * @param string       $boolean
-     * @param Closure|null $callback
-     *
+     * @param  mixed  $relation
+     * @param  mixed  $operator
+     * @param  mixed  $value
+     * @param  string  $boolean
      * @return Builder
      */
     public function filter(Builder $query, $relation, $operator, $value, $boolean = 'and', ?Closure $callback = null)
@@ -74,8 +73,6 @@ class Relation implements \JsonSerializable
 
     /**
      * Apply a search query to the relation's builder.
-     *
-     * @param Builder $query
      */
     public function applySearchQuery(Builder $query)
     {
@@ -104,7 +101,7 @@ class Relation implements \JsonSerializable
         $resource = $this->type;
 
         // If the resource isn't registered, do it
-        if (!app()->has($resource)) {
+        if (! app()->has($resource)) {
             app()->singleton($resource);
         }
 
@@ -114,7 +111,6 @@ class Relation implements \JsonSerializable
     /**
      * Set the "fromResource" property of the relation.
      *
-     * @param resource $fromResource
      *
      * @return $this
      */
@@ -128,8 +124,6 @@ class Relation implements \JsonSerializable
     /**
      * Get the validation rules for this relation.
      *
-     * @param resource $resource
-     * @param string   $prefix
      *
      * @return array
      */
@@ -154,21 +148,19 @@ class Relation implements \JsonSerializable
 
     /**
      * Serialize the object to JSON.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {
         $request = app(RestRequest::class);
 
         return [
-            'resource'    => $this->type,
-            'relation'    => $this->relation,
+            'resource' => $this->type,
+            'relation' => $this->relation,
             'constraints' => [
-                'required_on_creation'   => $this->isRequiredOnCreation($request),
+                'required_on_creation' => $this->isRequiredOnCreation($request),
                 'prohibited_on_creation' => $this->isProhibitedOnCreation($request),
-                'required_on_update'     => $this->isRequiredOnUpdate($request),
-                'prohibited_on_update'   => $this->isProhibitedOnUpdate($request),
+                'required_on_update' => $this->isRequiredOnUpdate($request),
+                'prohibited_on_update' => $this->isProhibitedOnUpdate($request),
             ],
             'name' => $this->name(),
         ];

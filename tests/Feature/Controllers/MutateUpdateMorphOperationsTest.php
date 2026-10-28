@@ -32,8 +32,8 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => ['string' => true],
                     ],
                 ],
@@ -57,15 +57,15 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -84,7 +84,7 @@ class MutateUpdateMorphOperationsTest extends TestCase
         $this->assertDatabaseHas(
             $modelToUpdate->getTable(),
             [
-                'name'   => 'new name',
+                'name' => 'new name',
                 'number' => 5001,
             ]
         );
@@ -106,16 +106,16 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $morphToRelationToAttach->getKey(),
+                                'key' => $morphToRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -152,16 +152,16 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'detach',
-                                'key'       => $morphToRelationToDetach->getKey(),
+                                'key' => $morphToRelationToDetach->getKey(),
                             ],
                         ],
                     ],
@@ -193,16 +193,16 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $morphToRelationToUpdate->getKey(),
+                                'operation' => 'update',
+                                'key' => $morphToRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -243,16 +243,16 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -288,20 +288,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -342,17 +342,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $morphManyRelationToAttach->getKey(),
+                                    'key' => $morphManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -397,17 +397,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
+                                    'key' => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -442,17 +442,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [],
+                                    'key' => [],
                                 ],
                             ],
                         ],
@@ -490,17 +490,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => $morphManyRelationToDetach->getKey(),
+                                    'key' => $morphManyRelationToDetach->getKey(),
                                 ],
                             ],
                         ],
@@ -541,17 +541,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => [$morphManyRelationToDetach1->getKey(), $morphManyRelationToDetach2->getKey()],
+                                    'key' => [$morphManyRelationToDetach1->getKey(), $morphManyRelationToDetach2->getKey()],
                                 ],
                             ],
                         ],
@@ -591,17 +591,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $morphManyRelationToAttach->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $morphManyRelationToAttach->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -653,17 +653,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
+                                    'operation' => 'update',
+                                    'key' => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -709,15 +709,15 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -757,16 +757,16 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $morphOneRelationToAttach->getKey(),
+                                'key' => $morphOneRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -803,16 +803,16 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
                                 'operation' => 'detach',
-                                'key'       => $morphOneRelationToDetach->getKey(),
+                                'key' => $morphOneRelationToDetach->getKey(),
                             ],
                         ],
                     ],
@@ -851,16 +851,16 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $morphOneRelationToUpdate->getKey(),
+                                'operation' => 'update',
+                                'key' => $morphOneRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -901,16 +901,16 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -946,18 +946,18 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'unauithorized_field' => 20,
                                     ],
                                 ],
@@ -985,25 +985,25 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                 ],
@@ -1048,20 +1048,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -1102,17 +1102,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $morphToManyRelationToAttach->getKey(),
+                                    'key' => $morphToManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -1157,17 +1157,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [$morphToManyRelationToAttach1->getKey(), $morphToManyRelationToAttach2->getKey()],
+                                    'key' => [$morphToManyRelationToAttach1->getKey(), $morphToManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -1205,17 +1205,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => $morphToManyRelationToDetach->getKey(),
+                                    'key' => $morphToManyRelationToDetach->getKey(),
                                 ],
                             ],
                         ],
@@ -1256,17 +1256,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => [$morphToManyRelationToDetach1->getKey(), $morphToManyRelationToDetach2->getKey()],
+                                    'key' => [$morphToManyRelationToDetach1->getKey(), $morphToManyRelationToDetach2->getKey()],
                                 ],
                             ],
                         ],
@@ -1306,17 +1306,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $morphToManyRelationToUpdate->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $morphToManyRelationToUpdate->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -1368,17 +1368,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => [$morphToManyRelationToUpdate1->getKey(), $morphToManyRelationToUpdate2->getKey()],
+                                    'operation' => 'update',
+                                    'key' => [$morphToManyRelationToUpdate1->getKey(), $morphToManyRelationToUpdate2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -1424,16 +1424,16 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -1469,18 +1469,18 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'unauthorized_field' => 20,
                                     ],
                                 ],
@@ -1508,25 +1508,25 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                 ],
@@ -1571,20 +1571,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -1625,17 +1625,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $morphedByManyRelationToAttach->getKey(),
+                                    'key' => $morphedByManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -1680,17 +1680,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [$morphedByManyRelationToAttach1->getKey(), $morphedByManyRelationToAttach2->getKey()],
+                                    'key' => [$morphedByManyRelationToAttach1->getKey(), $morphedByManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -1728,17 +1728,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => $morphedByManyRelationToDetach->getKey(),
+                                    'key' => $morphedByManyRelationToDetach->getKey(),
                                 ],
                             ],
                         ],
@@ -1779,17 +1779,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => [$morphedByManyRelationToDetach1->getKey(), $morphedByManyRelationToDetach2->getKey()],
+                                    'key' => [$morphedByManyRelationToDetach1->getKey(), $morphedByManyRelationToDetach2->getKey()],
                                 ],
                             ],
                         ],
@@ -1829,17 +1829,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $morphedByManyRelationToUpdate->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $morphedByManyRelationToUpdate->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -1891,17 +1891,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => [$morphedByManyRelationToUpdate1->getKey(), $morphedByManyRelationToUpdate2->getKey()],
+                                    'operation' => 'update',
+                                    'key' => [$morphedByManyRelationToUpdate1->getKey(), $morphedByManyRelationToUpdate2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -1952,19 +1952,19 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $morphedByManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphedByManyNotSynced->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -2022,19 +2022,19 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => [$morphedByManyNotSynced1->getKey(), $morphedByManyNotSynced2->getKey()],
+                                    'operation' => 'sync',
+                                    'key' => [$morphedByManyNotSynced1->getKey(), $morphedByManyNotSynced2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -2094,20 +2094,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'         => 'sync',
-                                    'key'               => $morphedByManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphedByManyNotSynced->getKey(),
                                     'without_detaching' => true,
-                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'             => [
+                                    'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -2168,20 +2168,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'         => 'sync',
-                                    'key'               => [$morphedByManyNotSynced1->getKey(), $morphedByManyNotSynced2->getKey()],
+                                    'operation' => 'sync',
+                                    'key' => [$morphedByManyNotSynced1->getKey(), $morphedByManyNotSynced2->getKey()],
                                     'without_detaching' => true,
-                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'             => [
+                                    'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -2242,19 +2242,19 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $morphedByManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphedByManyNotSynced->getKey(),
                                     'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -2313,21 +2313,21 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $morphedByManyToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $morphedByManyToggled->getKey(),
                                 ],
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $morphedByManyNotToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $morphedByManyNotToggled->getKey(),
                                 ],
                             ],
                         ],
@@ -2373,17 +2373,17 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => [$morphedByManyToggled->getKey(), $morphedByManyNotToggled->getKey()],
+                                    'operation' => 'toggle',
+                                    'key' => [$morphedByManyToggled->getKey(), $morphedByManyNotToggled->getKey()],
                                 ],
                             ],
                         ],
@@ -2429,27 +2429,27 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $morphedByManyToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $morphedByManyToggled->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $morphedByManyNotToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $morphedByManyNotToggled->getKey(),
                                     'attributes' => ['number' => 5002], // 5002 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -2512,27 +2512,27 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $morphedByManyToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $morphedByManyToggled->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => [$morphedByManyNotToggled1->getKey(), $morphedByManyNotToggled2->getKey()],
+                                    'operation' => 'toggle',
+                                    'key' => [$morphedByManyNotToggled1->getKey(), $morphedByManyNotToggled2->getKey()],
                                     'attributes' => ['number' => 5002], // 5002 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -2597,19 +2597,19 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $morphToManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphToManyNotSynced->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -2667,19 +2667,19 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => [$morphToManyNotSynced1->getKey(), $morphToManyNotSynced2->getKey()],
+                                    'operation' => 'sync',
+                                    'key' => [$morphToManyNotSynced1->getKey(), $morphToManyNotSynced2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -2736,28 +2736,28 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $morphToManyToSync1->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphToManyToSync1->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'         => 'sync',
-                                    'key'               => $morphToManyToSync2->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphToManyToSync2->getKey(),
                                     'without_detaching' => true,
-                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'             => [
+                                    'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -2823,28 +2823,28 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $morphToManyToSync1->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphToManyToSync1->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'         => 'sync',
-                                    'key'               => [$morphToManyToSync2->getKey(), $morphToManyToSync3->getKey()],
+                                    'operation' => 'sync',
+                                    'key' => [$morphToManyToSync2->getKey(), $morphToManyToSync3->getKey()],
                                     'without_detaching' => true,
-                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'             => [
+                                    'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -2913,20 +2913,20 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'         => 'sync',
-                                    'key'               => $morphToManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphToManyNotSynced->getKey(),
                                     'without_detaching' => true,
-                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'             => [
+                                    'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -2986,19 +2986,19 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $morphToManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphToManyNotSynced->getKey(),
                                     'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -3052,15 +3052,15 @@ class MutateUpdateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphOneOfManyRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],

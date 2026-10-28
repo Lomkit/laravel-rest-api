@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Concerns;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -14,12 +15,11 @@ trait Authorizable
     /**
      * Determine if the current user has a given ability.
      *
-     * @param string       $ability
-     * @param Model|string $model
-     *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     *
+     * @param  string  $ability
+     * @param  Model|string  $model
      * @return void
+     *
+     * @throws AuthorizationException
      */
     public function authorizeTo($ability, $model)
     {
@@ -29,9 +29,8 @@ trait Authorizable
     /**
      * Determine if the current user can perform an ability on the given model.
      *
-     * @param string       $ability
-     * @param Model|string $model
-     *
+     * @param  string  $ability
+     * @param  Model|string  $model
      * @return Response
      */
     public function authorizedTo($ability, $model)
@@ -66,22 +65,21 @@ trait Authorizable
     /**
      * Determine if the current user has a given ability.
      *
-     * @param string $ability
-     * @param Model  $model
-     * @param string $toActionModel
-     *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     *
+     * @param  string  $ability
+     * @param  Model  $model
+     * @param  string  $toActionModel
      * @return void
+     *
+     * @throws AuthorizationException
      */
     public function authorizeToPerformActionOnRelationship($ability, $model, $toActionModel)
     {
         $gate = Gate::getPolicyFor($model);
         $method = $ability.class_basename($toActionModel);
 
-        if (!is_null($gate) && method_exists($gate, $method) && $this->isAuthorizingEnabled()) {
+        if (! is_null($gate) && method_exists($gate, $method) && $this->isAuthorizingEnabled()) {
             $resolver = function () use ($method, $gate, $model, $toActionModel) {
-                return !is_null($gate) && method_exists($gate, $method)
+                return ! is_null($gate) && method_exists($gate, $method)
                     ? Gate::authorize($method, [$model, $toActionModel])
                     : true;
             };
@@ -106,7 +104,7 @@ trait Authorizable
                 $gatePasses = $resolver();
             }
 
-            if (!$gatePasses) {
+            if (! $gatePasses) {
                 Response::deny()->authorize();
             }
         }
@@ -115,10 +113,9 @@ trait Authorizable
     /**
      * Determine if the current user can perform an ability on the given model.
      *
-     * @param string $ability
-     * @param Model  $model
-     * @param string $toActionModel
-     *
+     * @param  string  $ability
+     * @param  Model  $model
+     * @param  string  $toActionModel
      * @return bool
      */
     public function authorizedToPerformActionOnRelationship($ability, $model, $toActionModel)
@@ -126,7 +123,7 @@ trait Authorizable
         $gate = Gate::getPolicyFor($model);
         $method = $ability.class_basename($toActionModel);
 
-        if (!is_null($gate) && method_exists($gate, $method) && $this->isAuthorizingEnabled()) {
+        if (! is_null($gate) && method_exists($gate, $method) && $this->isAuthorizingEnabled()) {
             $resolver = function () use ($method, $toActionModel, $model) {
                 return Gate::check($method, [$model, $toActionModel]);
             };
@@ -158,9 +155,8 @@ trait Authorizable
     /**
      * Determine if the user can attach models of the given type to the base model.
      *
-     * @param \Illuminate\Database\Eloquent\Model|string $model
-     * @param \Illuminate\Database\Eloquent\Model|string $toAttachModel
-     *
+     * @param  Model|string  $model
+     * @param  Model|string  $toAttachModel
      * @return bool
      */
     public function authorizedToAttach($model, $toAttachModel)
@@ -171,9 +167,8 @@ trait Authorizable
     /**
      * Determine if the user can attach models of the given type to the base model.
      *
-     * @param \Illuminate\Database\Eloquent\Model|string $model
-     * @param \Illuminate\Database\Eloquent\Model|string $toAttachModel
-     *
+     * @param  Model|string  $model
+     * @param  Model|string  $toAttachModel
      * @return void
      */
     public function authorizeToAttach($model, $toAttachModel)
@@ -184,9 +179,8 @@ trait Authorizable
     /**
      * Determine if the user can detach models of the given type to the base model.
      *
-     * @param \Illuminate\Database\Eloquent\Model|string $model
-     * @param \Illuminate\Database\Eloquent\Model|string $toAttachModel
-     *
+     * @param  Model|string  $model
+     * @param  Model|string  $toAttachModel
      * @return bool
      */
     public function authorizedToDetach($model, $toAttachModel)
@@ -197,9 +191,8 @@ trait Authorizable
     /**
      * Determine if the user can detach models of the given type to the base model.
      *
-     * @param \Illuminate\Database\Eloquent\Model|string $model
-     * @param \Illuminate\Database\Eloquent\Model|string $toAttachModel
-     *
+     * @param  Model|string  $model
+     * @param  Model|string  $toAttachModel
      * @return void
      */
     public function authorizeToDetach($model, $toAttachModel)

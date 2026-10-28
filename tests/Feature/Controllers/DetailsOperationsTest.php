@@ -23,7 +23,7 @@ class DetailsOperationsTest extends TestCase
         );
 
         $response->assertJson([
-            'data' => (new ModelResource())->jsonSerialize(),
+            'data' => (new ModelResource)->jsonSerialize(),
         ]);
     }
 }

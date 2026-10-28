@@ -9,11 +9,6 @@ use Lomkit\Rest\Relations\Relation;
 trait PerformsRelationOperations
 {
     /**
-     * @param Model    $model
-     * @param Relation $relation
-     * @param array    $mutation
-     * @param array    $attributes
-     *
      * @return void
      */
     public function create(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
@@ -33,11 +28,6 @@ trait PerformsRelationOperations
     }
 
     /**
-     * @param Model    $model
-     * @param Relation $relation
-     * @param array    $mutation
-     * @param array    $attributes
-     *
      * @return void
      */
     public function update(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
@@ -59,11 +49,6 @@ trait PerformsRelationOperations
     }
 
     /**
-     * @param Model    $model
-     * @param Relation $relation
-     * @param array    $mutation
-     * @param array    $attributes
-     *
      * @return void
      */
     public function attach(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
@@ -85,11 +70,6 @@ trait PerformsRelationOperations
     }
 
     /**
-     * @param Model    $model
-     * @param Relation $relation
-     * @param array    $mutation
-     * @param array    $attributes
-     *
      * @return void
      */
     public function detach(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
@@ -105,11 +85,6 @@ trait PerformsRelationOperations
     }
 
     /**
-     * @param Model    $model
-     * @param Relation $relation
-     * @param array    $mutation
-     * @param array    $attributes
-     *
      * @return void
      */
     public function toggle(Model $model, Relation $relation, array $mutation = [], array $attributes = [])
@@ -135,12 +110,7 @@ trait PerformsRelationOperations
     }
 
     /**
-     * @param Model    $model
-     * @param Relation $relation
-     * @param array    $mutation
-     * @param array    $attributes
-     * @param bool     $withoutDetaching
-     *
+     * @param  bool  $withoutDetaching
      * @return void
      */
     public function sync(Model $model, Relation $relation, array $mutation = [], array $attributes = [], $withoutDetaching = false)

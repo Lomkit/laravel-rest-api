@@ -12,8 +12,6 @@ class RedPolicyWithMessage
 
     /**
      * Determine whether the user can view the list of models.
-     *
-     * @param $user
      */
     public function viewAny($user)
     {
@@ -22,9 +20,6 @@ class RedPolicyWithMessage
 
     /**
      * Determine whether the user can view the model.
-     *
-     * @param       $user
-     * @param Model $model
      */
     public function view($user, Model $model)
     {
@@ -33,8 +28,6 @@ class RedPolicyWithMessage
 
     /**
      * Determine whether the user can create models.
-     *
-     * @param $user
      */
     public function create($user)
     {
@@ -43,9 +36,6 @@ class RedPolicyWithMessage
 
     /**
      * Determine whether the user can update the model.
-     *
-     * @param       $user
-     * @param Model $model
      */
     public function update($user, Model $model)
     {
@@ -54,9 +44,6 @@ class RedPolicyWithMessage
 
     /**
      * Determine whether the user can delete the model.
-     *
-     * @param       $user
-     * @param Model $model
      */
     public function delete($user, Model $model)
     {
@@ -65,9 +52,6 @@ class RedPolicyWithMessage
 
     /**
      * Determine whether the user can restore the model.
-     *
-     * @param       $user
-     * @param Model $model
      */
     public function restore($user, Model $model)
     {
@@ -76,9 +60,6 @@ class RedPolicyWithMessage
 
     /**
      * Determine whether the user can permanently delete the model.
-     *
-     * @param       $user
-     * @param Model $model
      */
     public function forceDelete($user, Model $model)
     {

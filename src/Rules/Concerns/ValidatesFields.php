@@ -12,10 +12,10 @@ trait ValidatesFields
      * and validate it against the declared field rules, pushing any resulting
      * errors into the main validator under the given attribute prefix.
      *
-     * @param Validator $validator       The main validator receiving the errors.
-     * @param string    $attribute       The prefix for error keys (e.g. "fields").
-     * @param mixed     $submittedFields The raw submitted fields list.
-     * @param array     $declaredRules   The field rules keyed by field name.
+     * @param  Validator  $validator  The main validator receiving the errors.
+     * @param  string  $attribute  The prefix for error keys (e.g. "fields").
+     * @param  mixed  $submittedFields  The raw submitted fields list.
+     * @param  array  $declaredRules  The field rules keyed by field name.
      */
     protected function validateFields(
         Validator $validator,
@@ -23,7 +23,7 @@ trait ValidatesFields
         mixed $submittedFields,
         array $declaredRules
     ): void {
-        if (!is_array($submittedFields)) {
+        if (! is_array($submittedFields)) {
             return;
         }
 

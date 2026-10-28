@@ -69,9 +69,9 @@ class HooksTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                     ],
@@ -200,9 +200,9 @@ class HooksTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                     ],
@@ -233,16 +233,16 @@ class HooksTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelsToCreate[0]->name,
+                            'name' => $modelsToCreate[0]->name,
                             'number' => $modelsToCreate[0]->number,
                         ],
                     ],
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelsToCreate[1]->name,
+                            'name' => $modelsToCreate[1]->name,
                             'number' => $modelsToCreate[1]->number,
                         ],
                     ],
@@ -273,10 +273,10 @@ class HooksTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                     ],
@@ -307,18 +307,18 @@ class HooksTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelsToUpdate[0]->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelsToUpdate[0]->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                     ],
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelsToUpdate[1]->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelsToUpdate[1]->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                     ],
@@ -351,15 +351,15 @@ class HooksTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $belongsToRelationToAttach->getKey(),
+                                'key' => $belongsToRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -396,16 +396,16 @@ class HooksTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
                                 'operation' => 'detach',
-                                'key'       => $belongsToRelationToDetach->getKey(),
+                                'key' => $belongsToRelationToDetach->getKey(),
                             ],
                         ],
                     ],
@@ -438,19 +438,19 @@ class HooksTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $belongsToManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $belongsToManyNotSynced->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -490,21 +490,21 @@ class HooksTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $belongsToManyToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $belongsToManyToggled->getKey(),
                                 ],
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $belongsToManyNotToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $belongsToManyNotToggled->getKey(),
                                 ],
                             ],
                         ],

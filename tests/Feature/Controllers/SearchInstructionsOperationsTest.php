@@ -55,7 +55,7 @@ class SearchInstructionsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource(),
+            new ModelResource,
         );
     }
 
@@ -72,7 +72,7 @@ class SearchInstructionsOperationsTest extends TestCase
                 'search' => [
                     'instructions' => [
                         [
-                            'name'   => 'numbered',
+                            'name' => 'numbered',
                             'fields' => [
                                 ['name' => 'unauthorized_field', 'value' => 1],
                             ],
@@ -100,7 +100,7 @@ class SearchInstructionsOperationsTest extends TestCase
                 'search' => [
                     'instructions' => [
                         [
-                            'name'   => 'numbered',
+                            'name' => 'numbered',
                             'fields' => [
                                 ['name' => 'number', 'value' => 'unauthorized_string'],
                             ],
@@ -129,7 +129,7 @@ class SearchInstructionsOperationsTest extends TestCase
                 'search' => [
                     'instructions' => [
                         [
-                            'name'   => 'numbered',
+                            'name' => 'numbered',
                             'fields' => [
                                 ['name' => 'number', 'value' => 10],
                             ],
@@ -143,7 +143,7 @@ class SearchInstructionsOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource(),
+            new ModelResource,
         );
     }
 

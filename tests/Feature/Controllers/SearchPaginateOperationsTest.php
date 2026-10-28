@@ -63,7 +63,7 @@ class SearchPaginateOperationsTest extends TestCase
             '/api/models/search',
             [
                 'search' => [
-                    'page'  => 2,
+                    'page' => 2,
                     'limit' => 1,
                 ],
             ],
@@ -77,7 +77,7 @@ class SearchPaginateOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel2],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -93,7 +93,7 @@ class SearchPaginateOperationsTest extends TestCase
             '/api/models/search',
             [
                 'search' => [
-                    'page'  => 101,
+                    'page' => 101,
                     'limit' => 1,
                 ],
             ],
@@ -103,7 +103,7 @@ class SearchPaginateOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel],
-            new ModelResource()
+            new ModelResource
         );
     }
 

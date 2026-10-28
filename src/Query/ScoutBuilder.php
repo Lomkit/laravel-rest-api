@@ -20,13 +20,12 @@ class ScoutBuilder implements QueryBuilder
      * on the provided parameters. It also enforces a limit on the number of results,
      * defaulting to 50 if no limit is specified.
      *
-     * @param array $parameters An associative array of search criteria, which may include:
-     *                          - 'text': An array containing 'value' (search string) and optionally 'trashed' ('with'|'only').
-     *                          - 'filters': An array of filter conditions.
-     *                          - 'sorts': An array of sorting directives.
-     *                          - 'instructions': Additional query instructions.
-     *                          - 'limit': Maximum number of results to return (defaults to 50 if not provided).
-     *
+     * @param  array  $parameters  An associative array of search criteria, which may include:
+     *                             - 'text': An array containing 'value' (search string) and optionally 'trashed' ('with'|'only').
+     *                             - 'filters': An array of filter conditions.
+     *                             - 'sorts': An array of sorting directives.
+     *                             - 'instructions': Additional query instructions.
+     *                             - 'limit': Maximum number of results to return (defaults to 50 if not provided).
      * @return \Laravel\Scout\Builder The configured Scout query builder.
      */
     public function search(array $parameters = [])
@@ -58,9 +57,8 @@ class ScoutBuilder implements QueryBuilder
      *  Forwards the extra parameters after excluding reserved keys (filters, instructions, sorts, text, and limit)
      *  to the underlying search operation.
      *
-     * @param \Laravel\Scout\Builder $query
-     * @param array                  $parameters
-     *
+     * @param  \Laravel\Scout\Builder  $query
+     * @param  array  $parameters
      * @return \Laravel\Scout\Builder The new query builder.
      */
     public function applyQueryCallback($query, $parameters)
@@ -84,7 +82,7 @@ class ScoutBuilder implements QueryBuilder
     /**
      * Apply multiple filters to the query builder.
      *
-     * @param array $filters An array of filters to apply.
+     * @param  array  $filters  An array of filters to apply.
      */
     public function applyFilters($filters)
     {
@@ -96,9 +94,9 @@ class ScoutBuilder implements QueryBuilder
     /**
      * Apply a filter to the query builder.
      *
-     * @param string $field    The field to filter on.
-     * @param string $operator The filter operator.
-     * @param mixed  $value    The filter value.
+     * @param  string  $field  The field to filter on.
+     * @param  string  $operator  The filter operator.
+     * @param  mixed  $value  The filter value.
      */
     public function filter($field, $operator, $value)
     {
@@ -114,8 +112,8 @@ class ScoutBuilder implements QueryBuilder
     /**
      * Sort the query builder by a field and direction.
      *
-     * @param string $field     The field to sort by.
-     * @param string $direction The sort direction ('asc' or 'desc').
+     * @param  string  $field  The field to sort by.
+     * @param  string  $direction  The sort direction ('asc' or 'desc').
      */
     public function sort($field, $direction = 'asc')
     {
@@ -125,7 +123,7 @@ class ScoutBuilder implements QueryBuilder
     /**
      * Apply multiple sorts to the query builder.
      *
-     * @param array $sorts An array of sorts to apply.
+     * @param  array  $sorts  An array of sorts to apply.
      */
     public function applySorts($sorts)
     {
@@ -141,7 +139,7 @@ class ScoutBuilder implements QueryBuilder
      * or to include both deleted and non-deleted records when `$trashed` is `"with"`.
      * Any other value is ignored (no change).
      *
-     * @param string $trashed One of: "only" (only trashed), "with" (include trashed), or other (no-op).
+     * @param  string  $trashed  One of: "only" (only trashed), "with" (include trashed), or other (no-op).
      */
     public function applyTrashed(string $trashed): void
     {
@@ -155,14 +153,16 @@ class ScoutBuilder implements QueryBuilder
     /**
      * Apply an instruction to the query builder.
      *
-     * @param string $name   The name of the instruction.
-     * @param array  $fields The instruction fields.
+     * @param  string  $name  The name of the instruction.
+     * @param  array  $fields  The instruction fields.
      */
     public function instruction($name, $fields = [])
     {
         $this->resource->scoutInstruction(app(RestRequest::class), $name)
             ->handleScout(
-                collect($fields)->mapWithKeys(function ($field) {return [$field['name'] => $field['value']]; })->toArray(),
+                collect($fields)->mapWithKeys(function ($field) {
+                    return [$field['name'] => $field['value']];
+                })->toArray(),
                 $this->queryBuilder
             );
     }
@@ -170,7 +170,7 @@ class ScoutBuilder implements QueryBuilder
     /**
      * Apply multiple instructions to the query builder.
      *
-     * @param array $instructions An array of instructions to apply.
+     * @param  array  $instructions  An array of instructions to apply.
      */
     public function applyInstructions($instructions)
     {
@@ -182,7 +182,6 @@ class ScoutBuilder implements QueryBuilder
     /**
      * Construct a new query builder for a resource.
      *
-     * @param resource $resource
      *
      * @return void
      */

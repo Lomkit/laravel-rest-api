@@ -11,50 +11,36 @@ class OpenAPI extends Schema
 {
     /**
      * The version number of the OpenAPI specification.
-     *
-     * @var string
      */
     protected string $openapi = '3.1.0';
 
     /**
      * Provides metadata about the API. The metadata MAY be used by tooling as required.
-     *
-     * @var Info
      */
     protected Info $info;
 
     /**
      * The available paths and operations for the API.
-     *
-     * @var array
      */
     protected array $paths = [];
 
     /**
      * An array of Server Objects, which provide connectivity information to a target server.
-     *
-     * @var array
      */
     protected array $servers = [];
 
     /**
      * A declaration of which security mechanisms can be used across the API.
-     *
-     * @var array
      */
     protected array $security = [];
 
     /**
      * A declaration of which security schemes mechanisms can be used across the API.
-     *
-     * @var array
      */
     protected array $securitySchemes = [];
 
     /**
      * Get the version number of the OpenAPI specification.
-     *
-     * @return string
      */
     public function openapi(): string
     {
@@ -63,10 +49,6 @@ class OpenAPI extends Schema
 
     /**
      * Set the version number of the OpenAPI specification.
-     *
-     * @param string $openapi
-     *
-     * @return self
      */
     public function withOpenapi(string $openapi): self
     {
@@ -77,8 +59,6 @@ class OpenAPI extends Schema
 
     /**
      * Get the metadata about the API.
-     *
-     * @return Info
      */
     public function info(): Info
     {
@@ -87,10 +67,6 @@ class OpenAPI extends Schema
 
     /**
      * Set the metadata about the API.
-     *
-     * @param Info $info
-     *
-     * @return self
      */
     public function withInfo(Info $info): self
     {
@@ -101,8 +77,6 @@ class OpenAPI extends Schema
 
     /**
      * Get the available paths and operations for the API.
-     *
-     * @return array
      */
     public function paths(): array
     {
@@ -111,10 +85,6 @@ class OpenAPI extends Schema
 
     /**
      * Set the available paths and operations for the API.
-     *
-     * @param array $paths
-     *
-     * @return self
      */
     public function withPaths(array $paths): self
     {
@@ -125,8 +95,6 @@ class OpenAPI extends Schema
 
     /**
      * Get the declaration of security mechanisms for the API.
-     *
-     * @return array
      */
     public function security(): array
     {
@@ -135,10 +103,6 @@ class OpenAPI extends Schema
 
     /**
      * Set the declaration of security mechanisms for the API.
-     *
-     * @param array $security
-     *
-     * @return self
      */
     public function withSecurity(array $security): self
     {
@@ -149,8 +113,6 @@ class OpenAPI extends Schema
 
     /**
      * Get the declaration of security mechanisms for the API.
-     *
-     * @return array
      */
     public function securitySchemes(): array
     {
@@ -159,10 +121,6 @@ class OpenAPI extends Schema
 
     /**
      * Set the declaration of security mechanisms for the API.
-     *
-     * @param array $securitySchemes
-     *
-     * @return self
      */
     public function withSecuritySchemes(array $securitySchemes): self
     {
@@ -173,10 +131,6 @@ class OpenAPI extends Schema
 
     /**
      * Set the Server Objects, which provide connectivity information to a target server.
-     *
-     * @param array $servers
-     *
-     * @return OpenAPI
      */
     public function withServers(array $servers): OpenAPI
     {
@@ -187,8 +141,6 @@ class OpenAPI extends Schema
 
     /**
      * Get the Server Objects.
-     *
-     * @return array
      */
     public function servers(): array
     {
@@ -197,16 +149,14 @@ class OpenAPI extends Schema
 
     /**
      * Serialize the OpenAPI object to JSON format.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {
         return array_merge(
             [
                 'openapi' => $this->openapi(),
-                'info'    => $this->info()->jsonSerialize(),
-                'paths'   => collect($this->paths())->map->jsonSerialize()->toArray(),
+                'info' => $this->info()->jsonSerialize(),
+                'paths' => collect($this->paths())->map->jsonSerialize()->toArray(),
             ],
             isset($this->servers) ? ['servers' => collect($this->servers())->map->jsonSerialize()->toArray()] : [],
             isset($this->security) ? ['security' => $this->security] : [],
@@ -218,21 +168,19 @@ class OpenAPI extends Schema
 
     /**
      * Generate and return the OpenAPI object.
-     *
-     * @return OpenAPI
      */
     public function generate(): OpenAPI
     {
         $servers = [];
 
         foreach (config('rest.documentation.servers') as $server) {
-            $serverInstance = (new Server())
+            $serverInstance = (new Server)
                 ->withDescription($server['description'] ?? '')
                 ->withUrl($server['url']);
 
             foreach ($server['variables'] ?? [] as $key => $variable) {
                 $serverInstance
-                    ->withVariable($key, (new ServerVariable())
+                    ->withVariable($key, (new ServerVariable)
                         ->withDescription($variable['description'] ?? '')
                         ->withDefault($variable['default'] ?? '')
                         ->withEnum($variable['enum'] ?? []));
@@ -244,7 +192,7 @@ class OpenAPI extends Schema
         $securitySchemes = [];
 
         foreach (config('rest.documentation.securitySchemes') as $securitySchemeKey => $securityScheme) {
-            $securitySchemeInstance = (new SecurityScheme())
+            $securitySchemeInstance = (new SecurityScheme)
                 ->withDescription($securityScheme['description'] ?? '')
                 ->withIn($securityScheme['in'] ?? '')
                 ->withType($securityScheme['type'] ?? '')
@@ -252,10 +200,10 @@ class OpenAPI extends Schema
                 ->withBearerFormat($securityScheme['bearerFormat'] ?? '')
                 ->withOpenIdConnectUrl($securityScheme['openIdConnectUrl'] ?? '')
                 ->withScheme($securityScheme['scheme'] ?? '')
-                ->withFlows($oauthFlows = new OauthFlows());
+                ->withFlows($oauthFlows = new OauthFlows);
 
             foreach ($securityScheme['flows'] ?? [] as $key => $flow) {
-                $flowInstance = (new OauthFlow())
+                $flowInstance = (new OauthFlow)
                     ->withScopes($flow['scopes'] ?? [])
                     ->withAuthorizationUrl($flow['authorizationUrl'] ?? '')
                     ->withTokenUrl($flow['tokenUrl'] ?? '')
@@ -270,7 +218,7 @@ class OpenAPI extends Schema
         return Rest::applyDocumentationCallback(
             $this
                 ->withInfo(
-                    (new Info())
+                    (new Info)
                         ->generate()
                 )
                 ->withPaths(
@@ -308,7 +256,7 @@ class OpenAPI extends Schema
                     case 'forceDelete':
                     case 'details':
                     case 'destroy':
-                        $path = $paths['/'.$route->uri()] ?? new Path();
+                        $path = $paths['/'.$route->uri()] ?? new Path;
                         $paths['/'.$route->uri()] = $path->{'generate'.Str::ucfirst($actionMethod)}($controller);
                         break;
                 }

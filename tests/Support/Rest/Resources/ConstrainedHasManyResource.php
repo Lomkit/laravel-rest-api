@@ -10,6 +10,7 @@ use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 class ConstrainedHasManyResource extends Resource
 {
     use DisableGates;
+
     public static $model = HasManyRelation::class;
 
     public function rules(RestRequest $request)

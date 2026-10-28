@@ -2,17 +2,18 @@
 
 namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use Lomkit\Rest\Http\Requests\RestRequest;
+
 class OrPerimeterSoftDeletedModelResource extends SoftDeletedModelResource
 {
     /**
      * A destroy perimeter shaped like the common "mine or shared" tenant rule.
      *
-     * @param \Lomkit\Rest\Http\Requests\RestRequest          $request
-     * @param \Illuminate\Contracts\Database\Eloquent\Builder $query
      *
-     * @return \Illuminate\Contracts\Database\Eloquent\Builder
+     * @return Builder
      */
-    public function destroyQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
+    public function destroyQuery(RestRequest $request, Builder $query)
     {
         $query = parent::destroyQuery($request, $query);
 
@@ -24,12 +25,10 @@ class OrPerimeterSoftDeletedModelResource extends SoftDeletedModelResource
     /**
      * A restore perimeter shaped like the common "mine or shared" tenant rule.
      *
-     * @param \Lomkit\Rest\Http\Requests\RestRequest          $request
-     * @param \Illuminate\Contracts\Database\Eloquent\Builder $query
      *
-     * @return \Illuminate\Contracts\Database\Eloquent\Builder
+     * @return Builder
      */
-    public function restoreQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
+    public function restoreQuery(RestRequest $request, Builder $query)
     {
         $query = parent::restoreQuery($request, $query);
 
@@ -41,12 +40,10 @@ class OrPerimeterSoftDeletedModelResource extends SoftDeletedModelResource
     /**
      * A forceDelete perimeter shaped like the common "mine or shared" tenant rule.
      *
-     * @param \Lomkit\Rest\Http\Requests\RestRequest          $request
-     * @param \Illuminate\Contracts\Database\Eloquent\Builder $query
      *
-     * @return \Illuminate\Contracts\Database\Eloquent\Builder
+     * @return Builder
      */
-    public function forceDeleteQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
+    public function forceDeleteQuery(RestRequest $request, Builder $query)
     {
         $query = parent::forceDeleteQuery($request, $query);
 

@@ -19,11 +19,11 @@ class SearchInclude extends RestRule
         }
 
         return array_merge(
-            is_null($relationResource) ? [] : (new Search())->setResource($relationResource)->buildValidationRules($attribute, $value),
+            is_null($relationResource) ? [] : (new Search)->setResource($relationResource)->buildValidationRules($attribute, $value),
             [
                 $attribute.'.relation' => [
                     'required',
-                    (new ResourceRelationOrNested())->setResource($this->resource),
+                    (new ResourceRelationOrNested)->setResource($this->resource),
                 ],
                 $attribute.'.text' => [
                     'prohibited',
@@ -35,7 +35,7 @@ class SearchInclude extends RestRule
                     // The alias is used verbatim as a model relation key and as a response key,
                     // so it is restricted to what a relation name could have been.
                     'regex:/^[A-Za-z_][A-Za-z0-9_]*$/',
-                    (new SearchIncludeAlias())
+                    (new SearchIncludeAlias)
                         ->setResource($this->resource)
                         ->setRelation($value['relation'] ?? ''),
                 ],

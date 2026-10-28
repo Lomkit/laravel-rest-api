@@ -55,7 +55,7 @@ class SearchSortingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -81,7 +81,7 @@ class SearchSortingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel2, $matchingModel],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -107,7 +107,7 @@ class SearchSortingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -134,7 +134,7 @@ class SearchSortingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -161,7 +161,7 @@ class SearchSortingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel2, $matchingModel],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -188,7 +188,7 @@ class SearchSortingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -215,7 +215,7 @@ class SearchSortingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel2, $matchingModel],
-            new ModelResource()
+            new ModelResource
         );
     }
 }

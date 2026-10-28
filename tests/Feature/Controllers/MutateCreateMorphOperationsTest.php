@@ -33,15 +33,15 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToRelation' => [
-                                'operation'  => 'create',
-                                'type'       => MorphToResource::class,
+                                'operation' => 'create',
+                                'type' => MorphToResource::class,
                                 'attributes' => [],
                             ],
                         ],
@@ -73,16 +73,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'attach',
-                                'type'      => MorphToResource::class,
-                                'key'       => $morphToRelationToAttach->getKey(),
+                                'type' => MorphToResource::class,
+                                'key' => $morphToRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -119,16 +119,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $morphToRelationToUpdate->getKey(),
-                                'type'       => MorphToResource::class,
+                                'operation' => 'update',
+                                'key' => $morphToRelationToUpdate->getKey(),
+                                'type' => MorphToResource::class,
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -172,15 +172,15 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -215,19 +215,19 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -267,16 +267,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $morphManyRelationToAttach->getKey(),
+                                    'key' => $morphManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -320,16 +320,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
+                                    'key' => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -363,16 +363,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [],
+                                    'key' => [],
                                 ],
                             ],
                         ],
@@ -411,16 +411,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $morphManyRelationToAttach->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $morphManyRelationToAttach->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -471,16 +471,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
+                                    'operation' => 'update',
+                                    'key' => [$morphManyRelationToAttach1->getKey(), $morphManyRelationToAttach2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -525,14 +525,14 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -571,15 +571,15 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $morphOneRelationToAttach->getKey(),
+                                'key' => $morphOneRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -617,15 +617,15 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $morphOneRelationToAttach->getKey(),
+                                'operation' => 'update',
+                                'key' => $morphOneRelationToAttach->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -665,17 +665,17 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'unauthorized_field' => 20,
                                     ],
                                 ],
@@ -703,24 +703,24 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                 ],
@@ -764,15 +764,15 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -807,19 +807,19 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -859,16 +859,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $morphToManyRelationToAttach->getKey(),
+                                    'key' => $morphToManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -912,16 +912,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [$morphToManyRelationToAttach1->getKey(), $morphToManyRelationToAttach2->getKey()],
+                                    'key' => [$morphToManyRelationToAttach1->getKey(), $morphToManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -960,16 +960,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $morphToManyRelationToAttach->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $morphToManyRelationToAttach->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -1020,16 +1020,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => [$morphToManyRelationToAttach1->getKey(), $morphToManyRelationToAttach2->getKey()],
+                                    'operation' => 'update',
+                                    'key' => [$morphToManyRelationToAttach1->getKey(), $morphToManyRelationToAttach2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -1074,15 +1074,15 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -1117,17 +1117,17 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'unauthorized_field' => 20,
                                     ],
                                 ],
@@ -1155,24 +1155,24 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                 ],
@@ -1216,19 +1216,19 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -1268,16 +1268,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $morphedByManyRelationToAttach->getKey(),
+                                    'key' => $morphedByManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -1321,16 +1321,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [$morphedByManyRelationToAttach1->getKey(), $morphedByManyRelationToAttach2->getKey()],
+                                    'key' => [$morphedByManyRelationToAttach1->getKey(), $morphedByManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -1369,16 +1369,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $morphedByManyRelationToAttach->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $morphedByManyRelationToAttach->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -1429,16 +1429,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphedByManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => [$morphedByManyRelationToAttach1->getKey(), $morphedByManyRelationToAttach2->getKey()],
+                                    'operation' => 'update',
+                                    'key' => [$morphedByManyRelationToAttach1->getKey(), $morphedByManyRelationToAttach2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],

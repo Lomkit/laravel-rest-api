@@ -12,7 +12,7 @@ class ModelWith extends BaseModel
 
     protected static function newFactory()
     {
-        return new ModelFactory();
+        return new ModelFactory;
     }
 
     protected $with = [

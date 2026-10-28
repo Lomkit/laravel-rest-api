@@ -57,7 +57,7 @@ class SearchSelectingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [],
             ['id']
         );
@@ -86,7 +86,7 @@ class SearchSelectingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [],
             ['id', 'number']
         );
@@ -110,13 +110,13 @@ class SearchSelectingOperationsTest extends TestCase
                     'includes' => [
                         [
                             'relation' => 'hasManyRelation',
-                            'selects'  => [
+                            'selects' => [
                                 ['field' => 'id'],
                             ],
                             'includes' => [
                                 [
                                     'relation' => 'model',
-                                    'selects'  => [
+                                    'selects' => [
                                         ['field' => 'id'],
                                     ],
                                 ],
@@ -131,7 +131,7 @@ class SearchSelectingOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 [
                     'has_many_relation' => $matchingModel->hasManyRelation()

@@ -29,7 +29,7 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => ['not_authorized_field' => true],
                     ],
                 ],
@@ -64,7 +64,7 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'attach',
+                        'operation' => 'attach',
                     ],
                 ],
             ],
@@ -84,8 +84,8 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'detach',
-                        'key'        => 1,
+                        'operation' => 'detach',
+                        'key' => 1,
                     ],
                 ],
             ],
@@ -105,7 +105,7 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => ['string' => true],
                     ],
                 ],
@@ -126,7 +126,7 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
                     ],
                 ],
@@ -147,11 +147,11 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
-                        'relations'  => [
+                        'relations' => [
                             'belongsToRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -174,9 +174,9 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
-                        'relations'  => [
+                        'relations' => [
                             'belongsToManyRelation' => [],
                         ],
                     ],
@@ -201,15 +201,15 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'not_authorized_relation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -236,15 +236,15 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -273,17 +273,17 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => true,
                                     ],
                                 ],
@@ -311,11 +311,11 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'unique'   => $modelToCreate->unique,
-                            'name'     => $modelToCreate->name,
-                            'number'   => $modelToCreate->number,
+                            'unique' => $modelToCreate->unique,
+                            'name' => $modelToCreate->name,
+                            'number' => $modelToCreate->number,
                         ],
                     ],
                 ],
@@ -340,9 +340,9 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                     ],
@@ -369,14 +369,14 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -407,15 +407,15 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $belongsToRelationToAttach->getKey(),
+                                'key' => $belongsToRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -448,15 +448,15 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $belongsToRelationToUpdate->getKey(),
+                                'operation' => 'update',
+                                'key' => $belongsToRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -496,15 +496,15 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -539,19 +539,19 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -591,16 +591,16 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $hasManyRelationToAttach->getKey(),
+                                    'key' => $hasManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -644,16 +644,16 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [$hasManyRelationToAttach1->getKey(), $hasManyRelationToAttach2->getKey()],
+                                    'key' => [$hasManyRelationToAttach1->getKey(), $hasManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -687,16 +687,16 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [],
+                                    'key' => [],
                                 ],
                             ],
                         ],
@@ -735,16 +735,16 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $hasManyRelationToUpdate->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $hasManyRelationToUpdate->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -795,16 +795,16 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => [$hasManyRelationToUpdate1->getKey(), $hasManyRelationToUpdate2->getKey()],
+                                    'operation' => 'update',
+                                    'key' => [$hasManyRelationToUpdate1->getKey(), $hasManyRelationToUpdate2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -849,14 +849,14 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -895,15 +895,15 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $hasOneRelationToAttach->getKey(),
+                                'key' => $hasOneRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -941,15 +941,15 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $hasOneRelationToUpdate->getKey(),
+                                'operation' => 'update',
+                                'key' => $hasOneRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -989,14 +989,14 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -1035,15 +1035,15 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $hasOneOfManyRelationToAttach->getKey(),
+                                'key' => $hasOneOfManyRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -1081,15 +1081,15 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $hasOneOfManyRelationToUpdate->getKey(),
+                                'operation' => 'update',
+                                'key' => $hasOneOfManyRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -1129,15 +1129,15 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -1172,17 +1172,17 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'unauthorized_field' => 20,
                                     ],
                                 ],
@@ -1210,24 +1210,24 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                 ],
@@ -1271,19 +1271,19 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -1323,16 +1323,16 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $belongsToManyRelationToAttach->getKey(),
+                                    'key' => $belongsToManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -1376,16 +1376,16 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [$belongsToManyRelationToAttach1->getKey(), $belongsToManyRelationToAttach2->getKey()],
+                                    'key' => [$belongsToManyRelationToAttach1->getKey(), $belongsToManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -1429,24 +1429,24 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $belongsToManyRelationToAttach1->getKey(),
-                                    'pivot'     => [
+                                    'key' => $belongsToManyRelationToAttach1->getKey(),
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $belongsToManyRelationToAttach2->getKey(),
-                                    'pivot'     => [
+                                    'key' => $belongsToManyRelationToAttach2->getKey(),
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                 ],
@@ -1505,24 +1505,24 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [$belongsToManyRelationToAttach1->getKey(), $belongsToManyRelationToAttach3->getKey()],
-                                    'pivot'     => [
+                                    'key' => [$belongsToManyRelationToAttach1->getKey(), $belongsToManyRelationToAttach3->getKey()],
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $belongsToManyRelationToAttach2->getKey(),
-                                    'pivot'     => [
+                                    'key' => $belongsToManyRelationToAttach2->getKey(),
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                 ],
@@ -1575,16 +1575,16 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $belongsToManyRelationToUpdate->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $belongsToManyRelationToUpdate->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -1635,16 +1635,16 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => [$belongsToManyRelationToUpdate1->getKey(), $belongsToManyRelationToUpdate2->getKey()],
+                                    'operation' => 'update',
+                                    'key' => [$belongsToManyRelationToUpdate1->getKey(), $belongsToManyRelationToUpdate2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -1699,25 +1699,25 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'update',
-                                    'key'       => $belongsToManyRelationToUpdate1->getKey(),
-                                    'pivot'     => [
+                                    'key' => $belongsToManyRelationToUpdate1->getKey(),
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                                 [
                                     'operation' => 'update',
-                                    'key'       => $belongsToManyRelationToUpdate2->getKey(),
-                                    'pivot'     => [
+                                    'key' => $belongsToManyRelationToUpdate2->getKey(),
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
@@ -1787,25 +1787,25 @@ class MutateCreateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'update',
-                                    'key'       => [$belongsToManyRelationToUpdate1->getKey(), $belongsToManyRelationToUpdate3->getKey()],
-                                    'pivot'     => [
+                                    'key' => [$belongsToManyRelationToUpdate1->getKey(), $belongsToManyRelationToUpdate3->getKey()],
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                                 [
                                     'operation' => 'update',
-                                    'key'       => $belongsToManyRelationToUpdate2->getKey(),
-                                    'pivot'     => [
+                                    'key' => $belongsToManyRelationToUpdate2->getKey(),
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000

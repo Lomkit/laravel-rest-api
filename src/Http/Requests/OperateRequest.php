@@ -38,7 +38,7 @@ class OperateRequest extends RestRequest
      */
     public function operateRules()
     {
-        if (!$this->resource->actionExists($this, $this->route()->parameter('action'))) {
+        if (! $this->resource->actionExists($this, $this->route()->parameter('action'))) {
             throw new HttpException(404);
         }
 
@@ -54,7 +54,7 @@ class OperateRequest extends RestRequest
             [
                 'search' => $operatedAction->isStandalone() || $operatedAction->isTargeted()
                     ? ['prohibited']
-                    : [(new Search())->setResource($this->resource)],
+                    : [(new Search)->setResource($this->resource)],
                 'resources' => $operatedAction->isTargeted()
                     ? ['required', 'array', 'max:'.$operatedAction->maxResources]
                     : ['prohibited'],
@@ -66,7 +66,7 @@ class OperateRequest extends RestRequest
                 'fields' => [
                     'sometimes',
                     'array',
-                    (new OperateFields())->setAction($operatedAction),
+                    (new OperateFields)->setAction($operatedAction),
                 ],
                 'fields.*.name' => [
                     Rule::in(array_keys($operatedAction->fields($this))),
@@ -80,8 +80,6 @@ class OperateRequest extends RestRequest
      *
      * Ensures the fields key is always present so the OperateFields rule runs
      * even when the client omits it entirely, allowing required rules to fire.
-     *
-     * @return void
      */
     protected function prepareForValidation(): void
     {

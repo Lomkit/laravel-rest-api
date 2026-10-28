@@ -36,17 +36,11 @@ trait Relationable
 
     /**
      * The calculated relations if already done in this request.
-     *
-     * @var array
      */
     protected array $calculatedRelations;
 
     /**
      * The relations that could be provided.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function relations(RestRequest $request): array
     {
@@ -56,7 +50,6 @@ trait Relationable
     /**
      * Get the relations for the resource.
      *
-     * @param RestRequest $request
      *
      * @return array
      */

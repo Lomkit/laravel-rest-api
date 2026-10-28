@@ -13,8 +13,6 @@ class Example extends Schema
 
     /**
      * Serialize the example as an array.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {
@@ -23,8 +21,6 @@ class Example extends Schema
 
     /**
      * Generate the example.
-     *
-     * @return Example
      */
     public function generate(): Example
     {
@@ -33,10 +29,6 @@ class Example extends Schema
 
     /**
      * Set the value associated with this example.
-     *
-     * @param array $value
-     *
-     * @return Example
      */
     public function withValue(array $value): Example
     {
@@ -47,8 +39,6 @@ class Example extends Schema
 
     /**
      * Get the value associated with this example.
-     *
-     * @return array
      */
     public function value(): array
     {

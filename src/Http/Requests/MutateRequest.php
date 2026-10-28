@@ -19,8 +19,8 @@ class MutateRequest extends RestRequest
         $resource = $this->route()->controller::newResource();
 
         return [
-            'mutate'   => ['required', 'array'],
-            'mutate.*' => (new Mutate())->setResource($resource),
+            'mutate' => ['required', 'array'],
+            'mutate.*' => (new Mutate)->setResource($resource),
         ];
     }
 }

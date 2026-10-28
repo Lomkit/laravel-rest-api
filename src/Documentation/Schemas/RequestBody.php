@@ -11,32 +11,24 @@ class RequestBody extends Schema
 {
     /**
      * A brief description of the request body. This could contain examples of use. CommonMark syntax MAY be used for rich text representation.
-     *
-     * @var string
      */
     protected string $description;
 
     /**
      * The content of the request body. The key is a media type or media type range and the value describes it.
      * For requests that match multiple keys, only the most specific key is applicable. e.g. text/plain overrides text/*.
-     *
-     * @var array
      */
     protected array $content = [];
 
     /**
      * Determines if the request body is required in the request. Defaults to false.
-     *
-     * @var bool
      */
     protected bool $required;
 
     /**
      * Set a brief description for the request body.
      *
-     * @param string $description The description to set.
-     *
-     * @return RequestBody
+     * @param  string  $description  The description to set.
      */
     public function withDescription(string $description): RequestBody
     {
@@ -47,8 +39,6 @@ class RequestBody extends Schema
 
     /**
      * Get the description of the request body.
-     *
-     * @return string
      */
     public function description(): string
     {
@@ -58,9 +48,7 @@ class RequestBody extends Schema
     /**
      * Set the content of the request body.
      *
-     * @param array $content The content to set.
-     *
-     * @return RequestBody
+     * @param  array  $content  The content to set.
      */
     public function withContent(array $content): RequestBody
     {
@@ -71,8 +59,6 @@ class RequestBody extends Schema
 
     /**
      * Get the content of the request body.
-     *
-     * @return array
      */
     public function content(): array
     {
@@ -82,9 +68,7 @@ class RequestBody extends Schema
     /**
      * Set whether the request body is required.
      *
-     * @param bool $required The required flag to set.
-     *
-     * @return RequestBody
+     * @param  bool  $required  The required flag to set.
      */
     public function withRequired(bool $required = true): RequestBody
     {
@@ -95,8 +79,6 @@ class RequestBody extends Schema
 
     /**
      * Check if the request body is required.
-     *
-     * @return bool
      */
     public function required(): bool
     {
@@ -105,8 +87,6 @@ class RequestBody extends Schema
 
     /**
      * Generate and return the request body schema.
-     *
-     * @return RequestBody
      */
     public function generate(): RequestBody
     {
@@ -115,8 +95,6 @@ class RequestBody extends Schema
 
     /**
      * Serialize the request body to JSON format for documentation.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {
@@ -130,9 +108,7 @@ class RequestBody extends Schema
     /**
      * Generate and return a request body schema for a search operation.
      *
-     * @param Controller $controller The controller for which to generate the request body.
-     *
-     * @return RequestBody
+     * @param  Controller  $controller  The controller for which to generate the request body.
      */
     public function generateSearch(Controller $controller): RequestBody
     {
@@ -141,51 +117,51 @@ class RequestBody extends Schema
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->withExample(
-                            (new Example())
+                            (new Example)
                                 ->withValue(
                                     [
                                         'search' => array_merge(
                                             // Scopes
                                             [
                                                 'scopes' => collect($controller::newResource()->getScopes($request))
-                                                        ->map(function ($scope) {
-                                                            return ['name' => $scope, 'parameters' => []];
-                                                        })
-                                                        ->toArray(),
+                                                    ->map(function ($scope) {
+                                                        return ['name' => $scope, 'parameters' => []];
+                                                    })
+                                                    ->toArray(),
                                             ],
                                             // Filters
                                             [
                                                 'filters' => collect($controller::newResource()->getFields($request))
-                                                        ->map(function ($filter) {
-                                                            return ['field' => $filter, 'operator' => '=', 'value' => ''];
-                                                        })
-                                                        ->toArray(),
+                                                    ->map(function ($filter) {
+                                                        return ['field' => $filter, 'operator' => '=', 'value' => ''];
+                                                    })
+                                                    ->toArray(),
                                             ],
                                             // Sorts
                                             [
                                                 'sorts' => collect($controller::newResource()->getFields($request))
-                                                        ->map(function ($sort) {
-                                                            return ['field' => $sort, 'direction' => 'desc'];
-                                                        })
-                                                        ->toArray(),
+                                                    ->map(function ($sort) {
+                                                        return ['field' => $sort, 'direction' => 'desc'];
+                                                    })
+                                                    ->toArray(),
                                             ],
                                             // Selects
                                             [
                                                 'selects' => collect($controller::newResource()->getFields($request))
-                                                        ->map(function ($select) {
-                                                            return ['field' => $select];
-                                                        })
-                                                        ->toArray(),
+                                                    ->map(function ($select) {
+                                                        return ['field' => $select];
+                                                    })
+                                                    ->toArray(),
                                             ],
                                             // Includes
                                             [
                                                 'includes' => collect($controller::newResource()->getRelations($request))
-                                                        ->map(function (Relation $relation) {
-                                                            return ['relation' => $relation->relation];
-                                                        })
-                                                        ->toArray(),
+                                                    ->map(function (Relation $relation) {
+                                                        return ['relation' => $relation->relation];
+                                                    })
+                                                    ->toArray(),
                                             ],
                                             // Aggregates
                                             [
@@ -194,17 +170,17 @@ class RequestBody extends Schema
                                             // Instructions
                                             [
                                                 'instructions' => collect($controller::newResource()->getInstructions($request))
-                                                        ->map(function (Instruction $instruction) use ($request) {
-                                                            return [
-                                                                'name'   => $instruction->name(),
-                                                                'fields' => collect($instruction->fields($request))
-                                                                    ->map(function ($field) {
-                                                                        return ['field' => $field, 'value' => ''];
-                                                                    })
-                                                                    ->toArray(),
-                                                            ];
-                                                        })
-                                                        ->toArray(),
+                                                    ->map(function (Instruction $instruction) use ($request) {
+                                                        return [
+                                                            'name' => $instruction->name(),
+                                                            'fields' => collect($instruction->fields($request))
+                                                                ->map(function ($field) {
+                                                                    return ['field' => $field, 'value' => ''];
+                                                                })
+                                                                ->toArray(),
+                                                        ];
+                                                    })
+                                                    ->toArray(),
                                             ],
                                             // Gates
                                             [
@@ -236,9 +212,7 @@ class RequestBody extends Schema
     /**
      * Generate and return a request body schema for a mutate operation.
      *
-     * @param Controller $controller The controller for which to generate the request body.
-     *
-     * @return RequestBody
+     * @param  Controller  $controller  The controller for which to generate the request body.
      */
     public function generateMutate(Controller $controller): RequestBody
     {
@@ -247,29 +221,29 @@ class RequestBody extends Schema
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->withExample(
-                            (new Example())
+                            (new Example)
                                 ->withValue(
                                     [
                                         'mutate' => [
                                             [
-                                                'operation'  => 'create',
+                                                'operation' => 'create',
                                                 // Attributes
                                                 'attributes' => collect($controller::newResource()->getFields($request))
-                                                        ->mapWithKeys(function ($field) {
-                                                            return [$field => ''];
-                                                        })
-                                                        ->toArray(),
+                                                    ->mapWithKeys(function ($field) {
+                                                        return [$field => ''];
+                                                    })
+                                                    ->toArray(),
                                                 // Relations
-                                                'relations'  => collect($controller::newResource()->getRelations($request))
-                                                        ->mapWithKeys(function (Relation $relation) {
-                                                            return [$relation->relation => [
-                                                                'operation' => 'update',
-                                                                'key'       => 1,
-                                                            ]];
-                                                        })
-                                                        ->toArray(),
+                                                'relations' => collect($controller::newResource()->getRelations($request))
+                                                    ->mapWithKeys(function (Relation $relation) {
+                                                        return [$relation->relation => [
+                                                            'operation' => 'update',
+                                                            'key' => 1,
+                                                        ]];
+                                                    })
+                                                    ->toArray(),
                                             ],
                                         ],
                                     ]
@@ -285,18 +259,16 @@ class RequestBody extends Schema
     /**
      * Generate and return a request body schema for an "Actions" operation.
      *
-     * @param Controller $controller The controller for which to generate the request body.
-     *
-     * @return RequestBody
+     * @param  Controller  $controller  The controller for which to generate the request body.
      */
     public function generateActions(Controller $controller): RequestBody
     {
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->withExample(
-                            (new Example())
+                            (new Example)
                                 ->withValue(
                                     [
                                         'search' => [
@@ -321,18 +293,16 @@ class RequestBody extends Schema
     /**
      * Generate and return a request body schema for a "Destroy" operation.
      *
-     * @param Controller $controller The controller for which to generate the request body.
-     *
-     * @return RequestBody
+     * @param  Controller  $controller  The controller for which to generate the request body.
      */
     public function generateDestroy(Controller $controller): RequestBody
     {
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->withExample(
-                            (new Example())
+                            (new Example)
                                 ->withValue(
                                     [
                                         'resources' => [1, 5, 6],
@@ -349,18 +319,16 @@ class RequestBody extends Schema
     /**
      * Generate and return a request body schema for a "Restore" operation.
      *
-     * @param Controller $controller The controller for which to generate the request body.
-     *
-     * @return RequestBody
+     * @param  Controller  $controller  The controller for which to generate the request body.
      */
     public function generateRestore(Controller $controller): RequestBody
     {
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->withExample(
-                            (new Example())
+                            (new Example)
                                 ->withValue(
                                     [
                                         'resources' => [1, 5, 6],
@@ -377,18 +345,16 @@ class RequestBody extends Schema
     /**
      * Generate and return a request body schema for a "Force Delete" operation.
      *
-     * @param Controller $controller The controller for which to generate the request body.
-     *
-     * @return RequestBody
+     * @param  Controller  $controller  The controller for which to generate the request body.
      */
     public function generateForceDelete(Controller $controller): RequestBody
     {
         return $this
             ->withContent(
                 [
-                    'application/json' => (new MediaType())
+                    'application/json' => (new MediaType)
                         ->withExample(
-                            (new Example())
+                            (new Example)
                                 ->withValue(
                                     [
                                         'resources' => [1, 5, 6],

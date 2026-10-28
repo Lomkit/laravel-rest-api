@@ -20,15 +20,14 @@ trait PerformSearch
      * - Apply named scopes, instructions, includes, and aggregate functions.
      * - Limit the result set according to a specified limit or a default value of 50.
      *
-     * @param array $parameters An associative array of search parameters that may include:
-     *                          - 'filters': Criteria for filtering the results.
-     *                          - 'sorts': Definitions for ordering the results.
-     *                          - 'scopes': Named scopes to refine the query.
-     *                          - 'instructions': Additional instructions for query customization.
-     *                          - 'includes': Related resources to include in the query.
-     *                          - 'aggregates': Aggregate functions to apply on related data.
-     *                          - 'limit': Maximum number of records to return.
-     *
+     * @param  array  $parameters  An associative array of search parameters that may include:
+     *                             - 'filters': Criteria for filtering the results.
+     *                             - 'sorts': Definitions for ordering the results.
+     *                             - 'scopes': Named scopes to refine the query.
+     *                             - 'instructions': Additional instructions for query customization.
+     *                             - 'includes': Related resources to include in the query.
+     *                             - 'aggregates': Aggregate functions to apply on related data.
+     *                             - 'limit': Maximum number of records to return.
      * @return Builder The modified query builder with the applied search parameters.
      */
     public function search(array $parameters = [])
@@ -37,7 +36,7 @@ trait PerformSearch
 
         // The perimeter runs in a subquery so that an "or" inside it cannot swallow the
         // constraints appended afterwards, which bind tighter than it does
-        $this->when(!$this->disableSecurity, function () {
+        $this->when(! $this->disableSecurity, function () {
             $this->queryBuilder->where(function ($query) {
                 $this->resource->searchQuery(app()->make(RestRequest::class), $query);
             });
@@ -78,7 +77,7 @@ trait PerformSearch
             $this->applyAggregates($parameters['aggregates']);
         });
 
-        $limit = $this->disableDefaultLimit() && !isset($parameters['limit']) ? null : ($parameters['limit'] ?? 50);
+        $limit = $this->disableDefaultLimit() && ! isset($parameters['limit']) ? null : ($parameters['limit'] ?? 50);
         if ($limit !== null) {
             $this->queryBuilder->limit($limit);
         }
@@ -89,11 +88,11 @@ trait PerformSearch
     /**
      * Apply a filter to the query builder.
      *
-     * @param string     $field    The field to filter on.
-     * @param string     $operator The filter operator.
-     * @param mixed      $value    The filter value.
-     * @param string     $type     The filter type (e.g., 'and' or 'or').
-     * @param array|null $nested   Nested filters.
+     * @param  string  $field  The field to filter on.
+     * @param  string  $operator  The filter operator.
+     * @param  mixed  $value  The filter value.
+     * @param  string  $type  The filter type (e.g., 'and' or 'or').
+     * @param  array|null  $nested  Nested filters.
      */
     public function filter($field, $operator, $value, $type = 'and', $nested = null)
     {
@@ -125,7 +124,7 @@ trait PerformSearch
     /**
      * Apply multiple filters to the query builder.
      *
-     * @param array $filters An array of filters to apply.
+     * @param  array  $filters  An array of filters to apply.
      */
     public function applyFilters($filters)
     {
@@ -137,8 +136,8 @@ trait PerformSearch
     /**
      * Sort the query builder by a field and direction.
      *
-     * @param string $field     The field to sort by.
-     * @param string $direction The sort direction ('asc' or 'desc').
+     * @param  string  $field  The field to sort by.
+     * @param  string  $direction  The sort direction ('asc' or 'desc').
      */
     public function sort($field, $direction = 'asc')
     {
@@ -148,7 +147,7 @@ trait PerformSearch
     /**
      * Apply multiple sorts to the query builder.
      *
-     * @param array $sorts An array of sorts to apply.
+     * @param  array  $sorts  An array of sorts to apply.
      */
     public function applySorts($sorts)
     {
@@ -160,8 +159,8 @@ trait PerformSearch
     /**
      * Apply a scope to the query builder.
      *
-     * @param string $name       The name of the scope.
-     * @param array  $parameters The scope parameters.
+     * @param  string  $name  The name of the scope.
+     * @param  array  $parameters  The scope parameters.
      */
     public function scope($name, $parameters = [])
     {
@@ -171,7 +170,7 @@ trait PerformSearch
     /**
      * Apply multiple scopes to the query builder.
      *
-     * @param array $scopes An array of scopes to apply.
+     * @param  array  $scopes  An array of scopes to apply.
      */
     public function applyScopes($scopes)
     {
@@ -183,14 +182,16 @@ trait PerformSearch
     /**
      * Apply an instruction to the query builder.
      *
-     * @param string $name   The name of the instruction.
-     * @param array  $fields The instruction fields.
+     * @param  string  $name  The name of the instruction.
+     * @param  array  $fields  The instruction fields.
      */
     public function instruction($name, $fields = [])
     {
         $this->resource->instruction(app(RestRequest::class), $name)
             ->handle(
-                collect($fields)->mapWithKeys(function ($field) {return [$field['name'] => $field['value']]; })->toArray(),
+                collect($fields)->mapWithKeys(function ($field) {
+                    return [$field['name'] => $field['value']];
+                })->toArray(),
                 $this->queryBuilder
             );
     }
@@ -198,7 +199,7 @@ trait PerformSearch
     /**
      * Apply multiple instructions to the query builder.
      *
-     * @param array $instructions An array of instructions to apply.
+     * @param  array  $instructions  An array of instructions to apply.
      */
     public function applyInstructions($instructions)
     {
@@ -210,7 +211,7 @@ trait PerformSearch
     /**
      * Include related resources in the query.
      *
-     * @param array $include An array of relationships to include.
+     * @param  array  $include  An array of relationships to include.
      */
     public function include($include)
     {
@@ -234,8 +235,8 @@ trait PerformSearch
     /**
      * Manually eager load an include under its alias key.
      *
-     * @param Collection $models  The parent models to hydrate.
-     * @param array      $include The include definition, containing 'relation' and 'alias'.
+     * @param  Collection  $models  The parent models to hydrate.
+     * @param  array  $include  The include definition, containing 'relation' and 'alias'.
      */
     protected function includeAliased(Collection $models, array $include): void
     {
@@ -292,7 +293,7 @@ trait PerformSearch
     /**
      * Apply includes to the query builder.
      *
-     * @param array $includes An array of relationships to include.
+     * @param  array  $includes  An array of relationships to include.
      */
     public function applyIncludes($includes)
     {
@@ -304,7 +305,7 @@ trait PerformSearch
     /**
      * Apply an aggregate function to the query builder.
      *
-     * @param array $aggregate An array defining the aggregate function.
+     * @param  array  $aggregate  An array defining the aggregate function.
      */
     public function aggregate($aggregate)
     {
@@ -326,7 +327,7 @@ trait PerformSearch
     /**
      * Apply aggregate functions to the query builder.
      *
-     * @param array $aggregates An array of aggregate functions to apply.
+     * @param  array  $aggregates  An array of aggregate functions to apply.
      */
     public function applyAggregates($aggregates)
     {

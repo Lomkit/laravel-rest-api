@@ -23,7 +23,7 @@ class ModelWithFactory extends Factory
     public function definition()
     {
         return [
-            'name'   => fake()->name(),
+            'name' => fake()->name(),
             'number' => fake()->numberBetween(-9999999, 9999999),
         ];
     }

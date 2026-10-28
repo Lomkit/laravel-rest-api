@@ -20,31 +20,24 @@ class CallRestApiAction
     /**
      * Models collection.
      *
-     * @var \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection
+     * @var \Illuminate\Database\Eloquent\Collection|Collection
      */
     protected $models;
 
     /**
      * The action instance.
-     *
-     * @var \Lomkit\Rest\Actions\Action
      */
-    protected \Lomkit\Rest\Actions\Action $action;
+    protected Action $action;
 
     /**
      * The fields for the action instance.
-     *
-     * @var array
      */
     protected array $fields;
 
     /**
      * Create a new job instance.
      *
-     * @param \Lomkit\Rest\Actions\Action                                             $action
-     * @param array                                                                   $fields
-     * @param \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection $models
-     *
+     * @param  \Illuminate\Database\Eloquent\Collection|Collection  $models
      * @return void
      */
     public function __construct(Action $action, array $fields, Collection $models)

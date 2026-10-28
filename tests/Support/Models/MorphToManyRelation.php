@@ -8,6 +8,6 @@ class MorphToManyRelation extends BaseModel
 {
     public function models()
     {
-        return $this->morphedByMany(\Lomkit\Rest\Tests\Support\Models\Model::class, 'morphable');
+        return $this->morphedByMany(Model::class, 'morphable');
     }
 }

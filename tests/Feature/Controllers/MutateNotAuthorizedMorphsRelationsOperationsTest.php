@@ -41,15 +41,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $morphToRelationToAttach->getKey(),
+                                'key' => $morphToRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -77,16 +77,16 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $morphManyRelationToAttach->getKey(),
+                                    'key' => $morphManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -115,15 +115,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $morphOneRelationToAttach->getKey(),
+                                'key' => $morphOneRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -151,15 +151,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphOneOfManyRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $morphOneOfManyRelationToAttach->getKey(),
+                                'key' => $morphOneOfManyRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -187,16 +187,16 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $morphToManyRelationToAttach->getKey(),
+                                    'key' => $morphToManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -230,24 +230,24 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $morphToManyRelationToAttach1->getKey(),
-                                    'pivot'     => [
+                                    'key' => $morphToManyRelationToAttach1->getKey(),
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $morphToManyRelationToAttach2->getKey(),
-                                    'pivot'     => [
+                                    'key' => $morphToManyRelationToAttach2->getKey(),
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                 ],
@@ -273,15 +273,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -306,14 +306,14 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -337,14 +337,14 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphOneOfManyRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -368,15 +368,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -401,19 +401,19 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -439,15 +439,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $morphToRelationToUpdate->getKey(),
+                                'operation' => 'update',
+                                'key' => $morphToRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -476,16 +476,16 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $morphManyRelationToUpdate->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $morphManyRelationToUpdate->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -515,15 +515,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $morphOneRelationToUpdate->getKey(),
+                                'operation' => 'update',
+                                'key' => $morphOneRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -552,15 +552,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphOneOfManyRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $morphOneOfManyRelationToUpdate->getKey(),
+                                'operation' => 'update',
+                                'key' => $morphOneOfManyRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -589,16 +589,16 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $morphToManyRelationToUpdate->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $morphToManyRelationToUpdate->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -633,25 +633,25 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'update',
-                                    'key'       => $morphToManyRelationToUpdate1->getKey(),
-                                    'pivot'     => [
+                                    'key' => $morphToManyRelationToUpdate1->getKey(),
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                                 [
                                     'operation' => 'update',
-                                    'key'       => $morphToManyRelationToUpdate2->getKey(),
-                                    'pivot'     => [
+                                    'key' => $morphToManyRelationToUpdate2->getKey(),
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
@@ -679,15 +679,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToRelation' => [
                                 'operation' => 'detach',
-                                'key'       => $morphToRelationToDetach->getKey(),
+                                'key' => $morphToRelationToDetach->getKey(),
                             ],
                         ],
                     ],
@@ -715,16 +715,16 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => $morphManyRelationToDetach->getKey(),
+                                    'key' => $morphManyRelationToDetach->getKey(),
                                 ],
                             ],
                         ],
@@ -753,15 +753,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphOneRelation' => [
                                 'operation' => 'detach',
-                                'key'       => $morphOneRelationToDetach->getKey(),
+                                'key' => $morphOneRelationToDetach->getKey(),
                             ],
                         ],
                     ],
@@ -789,15 +789,15 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphOneOfManyRelation' => [
                                 'operation' => 'detach',
-                                'key'       => $morphOneOfManyRelationToDetach->getKey(),
+                                'key' => $morphOneOfManyRelationToDetach->getKey(),
                             ],
                         ],
                     ],
@@ -825,16 +825,16 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'create',
+                        'operation' => 'create',
                         'attributes' => [
-                            'name'   => $modelToCreate->name,
+                            'name' => $modelToCreate->name,
                             'number' => $modelToCreate->number,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => $morphToManyRelationToDetach->getKey(),
+                                    'key' => $morphToManyRelationToDetach->getKey(),
                                 ],
                             ],
                         ],
@@ -862,17 +862,17 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $morphToManyToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $morphToManyToggled->getKey(),
                                 ],
                             ],
                         ],
@@ -897,17 +897,17 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $morphToManyNotToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $morphToManyNotToggled->getKey(),
                                 ],
                             ],
                         ],
@@ -936,19 +936,19 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $morphToManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphToManyNotSynced->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -975,19 +975,19 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $morphToManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphToManyNotSynced->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -1017,19 +1017,19 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'morphToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $morphToManySynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $morphToManySynced->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],

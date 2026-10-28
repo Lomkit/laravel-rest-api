@@ -8,17 +8,11 @@ class Examples extends Schema
 {
     /**
      * Examples.
-     *
-     * @var array
      */
     protected array $examples = [];
 
     /**
      * Set multiple examples.
-     *
-     * @param array $examples
-     *
-     * @return Examples
      */
     public function withExamples(array $examples): Examples
     {
@@ -29,8 +23,6 @@ class Examples extends Schema
 
     /**
      * Get the array of examples.
-     *
-     * @return array
      */
     public function examples(): array
     {
@@ -39,8 +31,6 @@ class Examples extends Schema
 
     /**
      * Serialize the examples as an array.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {
@@ -49,8 +39,6 @@ class Examples extends Schema
 
     /**
      * Generate the examples.
-     *
-     * @return Examples
      */
     public function generate(): Examples
     {
@@ -59,17 +47,13 @@ class Examples extends Schema
 
     /**
      * Generate example details for a specific controller.
-     *
-     * @param Controller $controller
-     *
-     * @return Examples
      */
     public function generateDetail(Controller $controller): Examples
     {
         return $this
             ->withExamples(
                 [
-                    'application/json' => (new Example())
+                    'application/json' => (new Example)
                         ->withExample(
                             json_encode(
                                 ['test1234' => 'OAZEOOEZAOEOAZ']

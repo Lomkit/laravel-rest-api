@@ -12,15 +12,14 @@ use Lomkit\Rest\Query\Traits\PerformSearch;
 
 class Builder implements QueryBuilder
 {
-    use Tappable;
     use Conditionable;
-    use PerformSearch;
     use PerformMutation;
+    use PerformSearch;
+    use Tappable;
 
     /**
      * Construct a new query builder for a resource.
      *
-     * @param resource $resource
      *
      * @return void
      */
@@ -39,15 +38,11 @@ class Builder implements QueryBuilder
 
     /**
      * Determine if security should be disabled in case we don't want it.
-     *
-     * @var bool
      */
     protected bool $disableSecurity = false;
 
     /**
      * Determine if default limit should be applied.
-     *
-     * @var bool
      */
     protected bool $disableDefaultLimit = false;
 
@@ -68,8 +63,7 @@ class Builder implements QueryBuilder
      *
      * Toggling this flag disables or enables security checks during query building.
      *
-     * @param bool $disable Set to true to disable security checks (default), or false to enable them.
-     *
+     * @param  bool  $disable  Set to true to disable security checks (default), or false to enable them.
      * @return $this The current instance for method chaining.
      */
     public function disableSecurity($disable = true)
@@ -85,8 +79,7 @@ class Builder implements QueryBuilder
      * When disabled, the query will not enforce any default limit on the number of results,
      * allowing retrieval of all matching records unless a custom limit is specified.
      *
-     * @param bool $disable True to disable the default limit, false to enable it.
-     *
+     * @param  bool  $disable  True to disable the default limit, false to enable it.
      * @return self Returns the current instance for chaining.
      */
     public function disableDefaultLimit($disable = true)

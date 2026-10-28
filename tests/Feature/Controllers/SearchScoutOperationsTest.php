@@ -166,7 +166,7 @@ class SearchScoutOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -194,7 +194,7 @@ class SearchScoutOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -222,7 +222,7 @@ class SearchScoutOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -327,7 +327,7 @@ class SearchScoutOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -352,7 +352,7 @@ class SearchScoutOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -377,7 +377,7 @@ class SearchScoutOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -409,7 +409,7 @@ class SearchScoutOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -456,7 +456,7 @@ class SearchScoutOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [],
-            new ModelResource()
+            new ModelResource
         );
     }
 
@@ -481,7 +481,7 @@ class SearchScoutOperationsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [],
-            new ModelResource()
+            new ModelResource
         );
     }
 }

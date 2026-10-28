@@ -6,38 +6,26 @@ class OauthFlows extends Schema
 {
     /**
      * Configuration for the OAuth Implicit flow.
-     *
-     * @var OauthFlow
      */
     protected OauthFlow $implicit;
 
     /**
      * Configuration for the OAuth Resource Owner Password flow.
-     *
-     * @var OauthFlow
      */
     protected OauthFlow $password;
 
     /**
      * Configuration for the OAuth Client Credentials flow. Previously called application in OpenAPI 2.0.
-     *
-     * @var OauthFlow
      */
     protected OauthFlow $clientCredentials;
 
     /**
      * Configuration for the OAuth Authorization Code flow. Previously called accessCode in OpenAPI 2.0.
-     *
-     * @var OauthFlow
      */
     protected OauthFlow $authorizationCode;
 
     /**
      * Set the configuration for the OAuth Implicit flow.
-     *
-     * @param OauthFlow $implicit
-     *
-     * @return OauthFlows
      */
     public function withImplicit(OauthFlow $implicit): OauthFlows
     {
@@ -48,8 +36,6 @@ class OauthFlows extends Schema
 
     /**
      * Get the configuration for the OAuth Implicit flow.
-     *
-     * @return OauthFlow
      */
     public function implicit(): OauthFlow
     {
@@ -58,10 +44,6 @@ class OauthFlows extends Schema
 
     /**
      * Set the configuration for the OAuth Resource Owner Password flow.
-     *
-     * @param OauthFlow $password
-     *
-     * @return OauthFlows
      */
     public function withPassword(OauthFlow $password): OauthFlows
     {
@@ -72,8 +54,6 @@ class OauthFlows extends Schema
 
     /**
      * Get the configuration for the OAuth Resource Owner Password flow.
-     *
-     * @return OauthFlow
      */
     public function password(): OauthFlow
     {
@@ -82,10 +62,6 @@ class OauthFlows extends Schema
 
     /**
      * Set the configuration for the OAuth Client Credentials flow.
-     *
-     * @param OauthFlow $clientCredentials
-     *
-     * @return OauthFlows
      */
     public function withClientCredentials(OauthFlow $clientCredentials): OauthFlows
     {
@@ -96,8 +72,6 @@ class OauthFlows extends Schema
 
     /**
      * Get the configuration for the OAuth Client Credentials flow.
-     *
-     * @return OauthFlow
      */
     public function clientCredentials(): OauthFlow
     {
@@ -106,10 +80,6 @@ class OauthFlows extends Schema
 
     /**
      * Set the configuration for the OAuth Authorization Code flow.
-     *
-     * @param OauthFlow $authorizationCode
-     *
-     * @return OauthFlows
      */
     public function withAuthorizationCode(OauthFlow $authorizationCode): OauthFlows
     {
@@ -120,8 +90,6 @@ class OauthFlows extends Schema
 
     /**
      * Get the configuration for the OAuth Authorization Code flow.
-     *
-     * @return OauthFlow
      */
     public function authorizationCode(): OauthFlow
     {
@@ -130,8 +98,6 @@ class OauthFlows extends Schema
 
     /**
      * Generate and return the OauthFlows object.
-     *
-     * @return OauthFlows
      */
     public function generate(): OauthFlows
     {
@@ -140,8 +106,6 @@ class OauthFlows extends Schema
 
     /**
      * Serialize the OauthFlows object to JSON format.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {

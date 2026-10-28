@@ -11,17 +11,11 @@ trait ConfiguresRestParameters
 {
     /**
      * The calculated fields if already done in this request.
-     *
-     * @var array
      */
     protected array $calculatedFields;
 
     /**
      * The fields that could be provided.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function fields(RestRequest $request): array
     {
@@ -30,12 +24,8 @@ trait ConfiguresRestParameters
 
     /**
      * Get the resource's fields.
-     *
-     * @param \Lomkit\Rest\Http\Requests\RestRequest $request
-     *
-     * @return array
      */
-    public function getFields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function getFields(RestRequest $request): array
     {
         return $this->calculatedFields ?? ($this->calculatedFields = $this->fields($request));
     }
@@ -43,7 +33,6 @@ trait ConfiguresRestParameters
     /**
      * Verify the field is correct including nested relations.
      *
-     * @param string $field
      *
      * @return bool
      */
@@ -65,17 +54,11 @@ trait ConfiguresRestParameters
 
     /**
      * The calculated scopes if already done in this request.
-     *
-     * @var array
      */
     protected array $calculatedScopes;
 
     /**
      * The scopes that could be provided.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function scopes(RestRequest $request): array
     {
@@ -84,29 +67,19 @@ trait ConfiguresRestParameters
 
     /**
      * Get the resource's scopes.
-     *
-     * @param \Lomkit\Rest\Http\Requests\RestRequest $request
-     *
-     * @return array
      */
-    public function getScopes(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function getScopes(RestRequest $request): array
     {
         return $this->calculatedScopes ?? ($this->calculatedScopes = $this->scopes($request));
     }
 
     /**
      * The calculated limits if already done in this request.
-     *
-     * @var array
      */
     protected array $calculatedLimits;
 
     /**
      * The limits that could be provided.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function limits(RestRequest $request): array
     {
@@ -119,12 +92,8 @@ trait ConfiguresRestParameters
 
     /**
      * Get the resource's limits.
-     *
-     * @param \Lomkit\Rest\Http\Requests\RestRequest $request
-     *
-     * @return array
      */
-    public function getLimits(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function getLimits(RestRequest $request): array
     {
         return $this->calculatedLimits ?? ($this->calculatedLimits = $this->limits($request));
     }

@@ -45,14 +45,14 @@ class AutomaticGatingTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new AutomaticGatingResource(),
+            new AutomaticGatingResource,
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => true,
-                        'authorized_to_update'       => true,
-                        'authorized_to_delete'       => true,
-                        'authorized_to_restore'      => true,
+                        'authorized_to_view' => true,
+                        'authorized_to_update' => true,
+                        'authorized_to_delete' => true,
+                        'authorized_to_restore' => true,
                         'authorized_to_force_delete' => true,
                     ],
                 ],
@@ -85,23 +85,23 @@ class AutomaticGatingTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new AutomaticGatingResource(),
+            new AutomaticGatingResource,
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => [
+                        'authorized_to_view' => [
                             'allowed' => false,
                             'message' => 'You don\'t have permission to view user',
                         ],
-                        'authorized_to_update'       => [
+                        'authorized_to_update' => [
                             'allowed' => false,
                             'message' => 'You don\'t have permission to update user',
                         ],
-                        'authorized_to_delete'       => [
+                        'authorized_to_delete' => [
                             'allowed' => false,
                             'message' => 'You don\'t have permission to delete user',
                         ],
-                        'authorized_to_restore'      => [
+                        'authorized_to_restore' => [
                             'allowed' => false,
                             'message' => 'You don\'t have permission to restore user',
                         ],
@@ -144,23 +144,23 @@ class AutomaticGatingTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new AutomaticGatingResource(),
+            new AutomaticGatingResource,
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => [
+                        'authorized_to_view' => [
                             'allowed' => true,
                             'message' => null,
                         ],
-                        'authorized_to_update'       => [
+                        'authorized_to_update' => [
                             'allowed' => true,
                             'message' => null,
                         ],
-                        'authorized_to_delete'       => [
+                        'authorized_to_delete' => [
                             'allowed' => true,
                             'message' => null,
                         ],
-                        'authorized_to_restore'      => [
+                        'authorized_to_restore' => [
                             'allowed' => true,
                             'message' => null,
                         ],
@@ -201,7 +201,7 @@ class AutomaticGatingTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new AutomaticGatingResource()
+            new AutomaticGatingResource
         );
     }
 
@@ -225,11 +225,11 @@ class AutomaticGatingTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new AutomaticGatingResource(),
+            new AutomaticGatingResource,
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => false,
+                        'authorized_to_view' => false,
                     ],
                 ],
             ]
@@ -259,11 +259,11 @@ class AutomaticGatingTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new AutomaticGatingResource(),
+            new AutomaticGatingResource,
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => true,
+                        'authorized_to_view' => true,
                     ],
                 ],
             ]
@@ -293,11 +293,11 @@ class AutomaticGatingTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new AutomaticGatingResource(),
+            new AutomaticGatingResource,
             [
                 [
                     'gates' => [
-                        'authorized_to_update'       => true,
+                        'authorized_to_update' => true,
                     ],
                 ],
             ]
@@ -327,11 +327,11 @@ class AutomaticGatingTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new AutomaticGatingResource(),
+            new AutomaticGatingResource,
             [
                 [
                     'gates' => [
-                        'authorized_to_delete'       => true,
+                        'authorized_to_delete' => true,
                     ],
                 ],
             ]
@@ -361,12 +361,12 @@ class AutomaticGatingTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new AutomaticGatingResource(),
+            new AutomaticGatingResource,
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => false,
-                        'authorized_to_restore'      => true,
+                        'authorized_to_view' => false,
+                        'authorized_to_restore' => true,
                     ],
                 ],
             ]
@@ -396,7 +396,7 @@ class AutomaticGatingTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new AutomaticGatingResource(),
+            new AutomaticGatingResource,
             [
                 [
                     'gates' => [
@@ -420,7 +420,7 @@ class AutomaticGatingTest extends TestCase
         $matchingModel2 = ModelFactory::new()->create()->fresh();
 
         Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(belongsToManyRelation::class, GreenPolicy::class);
+        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
 
         $response = $this->post(
             '/api/automatic-gating/search',
@@ -429,7 +429,7 @@ class AutomaticGatingTest extends TestCase
                     'includes' => [
                         [
                             'relation' => 'belongsToManyRelation',
-                            'gates'    => ['view'],
+                            'gates' => ['view'],
                         ],
                     ],
                     'sorts' => [
@@ -446,14 +446,14 @@ class AutomaticGatingTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$matchingModel, $matchingModel2],
-            new ModelResource(),
+            new ModelResource,
             [
                 [
                     'gates' => [
-                        'authorized_to_view'         => true,
-                        'authorized_to_update'       => true,
-                        'authorized_to_delete'       => true,
-                        'authorized_to_restore'      => true,
+                        'authorized_to_view' => true,
+                        'authorized_to_update' => true,
+                        'authorized_to_delete' => true,
+                        'authorized_to_restore' => true,
                         'authorized_to_force_delete' => true,
                     ],
                     'belongs_to_many_relation' => $matchingModel->belongsToManyRelation()
@@ -461,12 +461,12 @@ class AutomaticGatingTest extends TestCase
                         ->get()
                         ->map(function ($relation) use ($pivotAccessor) {
                             return collect($relation->only(
-                                array_merge((new BelongsToManyResource())->getFields(app()->make(RestRequest::class)), [$pivotAccessor])
+                                array_merge((new BelongsToManyResource)->getFields(app()->make(RestRequest::class)), [$pivotAccessor])
                             ))
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource())->relation('belongsToManyRelation')->getPivotFields()
+                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()
                                         );
 
                                     return $relation;
@@ -476,10 +476,10 @@ class AutomaticGatingTest extends TestCase
                 ],
                 [
                     'gates' => [
-                        'authorized_to_view'         => true,
-                        'authorized_to_update'       => true,
-                        'authorized_to_delete'       => true,
-                        'authorized_to_restore'      => true,
+                        'authorized_to_view' => true,
+                        'authorized_to_update' => true,
+                        'authorized_to_delete' => true,
+                        'authorized_to_restore' => true,
                         'authorized_to_force_delete' => true,
                     ],
                     'belongs_to_many_relation' => [],

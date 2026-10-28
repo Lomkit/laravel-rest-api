@@ -6,54 +6,38 @@ class Parameter extends Schema
 {
     /**
      * The name of the parameter.
-     *
-     * @var string
      */
     protected string $name;
 
     /**
      * The location of the parameter. Possible values are "query", "header", "path" or "cookie".
-     *
-     * @var string
      */
     protected string $in;
 
     /**
      * A brief description of the parameter. This could contain examples of use.
      * CommonMark syntax MAY be used for rich text representation.
-     *
-     * @var string
      */
     protected string $description;
 
     /**
      * Determines whether this parameter is mandatory. If the parameter location is "path", this property is REQUIRED and its value MUST be true.
      * Otherwise, the property MAY be included and its default value is false.
-     *
-     * @var bool
      */
     protected bool $required;
 
     /**
      * Specifies that a parameter is deprecated and SHOULD be transitioned out of usage. Default value is false.
-     *
-     * @var bool
      */
     protected bool $deprecated;
 
     /**
      * Schema for the parameter.
-     *
-     * @var SchemaConcrete
      */
     protected SchemaConcrete $schema;
 
     /**
      * Set the name of the parameter.
-     *
-     * @param string $name
-     *
-     * @return Parameter
      */
     public function withName(string $name): Parameter
     {
@@ -64,8 +48,6 @@ class Parameter extends Schema
 
     /**
      * Get the name of the parameter.
-     *
-     * @return string
      */
     public function name(): string
     {
@@ -74,10 +56,6 @@ class Parameter extends Schema
 
     /**
      * Set the location of the parameter.
-     *
-     * @param string $in
-     *
-     * @return Parameter
      */
     public function withIn(string $in): Parameter
     {
@@ -88,8 +66,6 @@ class Parameter extends Schema
 
     /**
      * Get the location of the parameter.
-     *
-     * @return string
      */
     public function in(): string
     {
@@ -98,10 +74,6 @@ class Parameter extends Schema
 
     /**
      * Set the description of the parameter.
-     *
-     * @param string $description
-     *
-     * @return Parameter
      */
     public function withDescription(string $description): Parameter
     {
@@ -112,8 +84,6 @@ class Parameter extends Schema
 
     /**
      * Get the description of the parameter.
-     *
-     * @return string
      */
     public function description(): string
     {
@@ -122,10 +92,6 @@ class Parameter extends Schema
 
     /**
      * Set whether the parameter is required.
-     *
-     * @param bool $required
-     *
-     * @return Parameter
      */
     public function withRequired(bool $required = true): Parameter
     {
@@ -136,8 +102,6 @@ class Parameter extends Schema
 
     /**
      * Check if the parameter is required.
-     *
-     * @return bool
      */
     public function required(): bool
     {
@@ -146,10 +110,6 @@ class Parameter extends Schema
 
     /**
      * Set whether the parameter is deprecated.
-     *
-     * @param bool $deprecated
-     *
-     * @return Parameter
      */
     public function withDeprecated(bool $deprecated): Parameter
     {
@@ -160,8 +120,6 @@ class Parameter extends Schema
 
     /**
      * Check if the parameter is deprecated.
-     *
-     * @return bool
      */
     public function deprecated(): bool
     {
@@ -170,8 +128,6 @@ class Parameter extends Schema
 
     /**
      * Serialize the Parameter instance to an array for JSON serialization.
-     *
-     * @return mixed
      */
     public function jsonSerialize(): mixed
     {
@@ -187,8 +143,6 @@ class Parameter extends Schema
 
     /**
      * Generate a Parameter schema.
-     *
-     * @return Schema
      */
     public function generate(): Schema
     {
@@ -197,10 +151,6 @@ class Parameter extends Schema
 
     /**
      * Set the schema for the parameter.
-     *
-     * @param SchemaConcrete $schema
-     *
-     * @return Parameter
      */
     public function withSchema(SchemaConcrete $schema): Parameter
     {
@@ -211,8 +161,6 @@ class Parameter extends Schema
 
     /**
      * Get the schema for the parameter.
-     *
-     * @return SchemaConcrete
      */
     public function schema(): SchemaConcrete
     {

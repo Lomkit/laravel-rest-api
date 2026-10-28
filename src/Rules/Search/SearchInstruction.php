@@ -21,7 +21,9 @@ class SearchInstruction extends RestRule
                 $this->resource->getScoutInstructions($request) :
                 $this->resource->getInstructions($request)
         )
-            ->map(function ($instruction) { return $instruction->uriKey(); })
+            ->map(function ($instruction) {
+                return $instruction->uriKey();
+            })
             ->toArray();
 
         $instruction = $this->resource->instruction($request, is_array($value) ? ($value['name'] ?? '') : '');
@@ -32,8 +34,8 @@ class SearchInstruction extends RestRule
                 'required',
                 'string',
             ],
-            $attribute.'.fields'        => ['sometimes', 'array'],
-            $attribute.'.fields.*.name' => !is_null($instruction) ? [
+            $attribute.'.fields' => ['sometimes', 'array'],
+            $attribute.'.fields.*.name' => ! is_null($instruction) ? [
                 'required',
                 'string',
                 Rule::in(array_keys($instruction->fields($request))),
@@ -50,7 +52,7 @@ class SearchInstruction extends RestRule
         $request = app(RestRequest::class);
         $instruction = $this->resource->instruction($request, $value['name'] ?? '');
 
-        if (!is_null($instruction)) {
+        if (! is_null($instruction)) {
             $this->validateFields(
                 $this->validator,
                 $attribute.'.fields',

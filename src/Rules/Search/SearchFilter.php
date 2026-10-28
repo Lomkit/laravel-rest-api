@@ -31,13 +31,13 @@ class SearchFilter extends RestRule
 
         $fieldsValidation = $isScoutMode ?
             Rule::in($this->resource->getScoutFields($request)) :
-            (new ResourceFieldOrNested())->setResource($this->resource);
+            (new ResourceFieldOrNested)->setResource($this->resource);
 
         $allowedOperators = $isScoutMode ?
             ['=', 'in', 'not in'] :
             ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'];
 
-        $nestingAllowed = !$isScoutMode && $this->depth < config('rest.search.max_nesting_depth', 1);
+        $nestingAllowed = ! $isScoutMode && $this->depth < config('rest.search.max_nesting_depth', 1);
 
         return [
             $attribute.'.field' => [
@@ -53,7 +53,7 @@ class SearchFilter extends RestRule
                 'prohibited',
             ],
             $attribute.'.nested.*' => [
-                (new SearchFilter())
+                (new SearchFilter)
                     ->setResource($this->resource)
                     ->setDepth($this->depth + 1),
             ],
@@ -61,7 +61,7 @@ class SearchFilter extends RestRule
                 'string',
                 Rule::in($allowedOperators),
             ],
-            $attribute.'.type' => !$isScoutMode ? [
+            $attribute.'.type' => ! $isScoutMode ? [
                 'sometimes',
                 Rule::in(['or', 'and']),
             ] : [

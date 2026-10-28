@@ -9,9 +9,9 @@ use Lomkit\Rest\Http\Resource;
 
 abstract class Controller extends \Illuminate\Routing\Controller
 {
-    use PerformsRestOperations;
     use ExtendsDocumentationOperations;
     use HasControllerHooks;
+    use PerformsRestOperations;
 
     /**
      * The resource the entry corresponds to.
@@ -22,15 +22,13 @@ abstract class Controller extends \Illuminate\Routing\Controller
 
     /**
      * Get a fresh instance of the resource represented by the entry.
-     *
-     * @return resource
      */
     public static function newResource(): Resource
     {
         $resource = static::$resource;
 
         // If the resource isn't registered, do it
-        if (!app()->has($resource)) {
+        if (! app()->has($resource)) {
             app()->singleton($resource);
         }
 

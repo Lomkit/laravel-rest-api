@@ -20,7 +20,6 @@ trait PerformsRestOperations
     /**
      * Retrieve details of a resource.
      *
-     * @param DetailsRequest $request
      *
      * @return array
      */
@@ -41,7 +40,6 @@ trait PerformsRestOperations
      * Search for resources based on the given criteria.
      * Returns an empty paginated result if search text is provided but empty.
      *
-     * @param SearchRequest $request
      *
      * @return mixed
      */
@@ -53,7 +51,7 @@ trait PerformsRestOperations
 
         $textProvided = $request->has('search.text');
 
-        if ($textProvided && !filled($request->input('search.text.value'))) {
+        if ($textProvided && ! filled($request->input('search.text.value'))) {
             $this->afterSearch($request);
 
             return $this->buildResponse(
@@ -79,11 +77,6 @@ trait PerformsRestOperations
 
     /**
      * Build the response for a resource operation.
-     *
-     * @param resource $resource
-     * @param mixed    $responsable
-     *
-     * @return mixed
      */
     private function buildResponse(Resource $resource, mixed $responsable): mixed
     {
@@ -95,7 +88,6 @@ trait PerformsRestOperations
     /**
      * Mutate resources based on the given request data.
      *
-     * @param MutateRequest $request
      *
      * @return mixed
      */
@@ -121,9 +113,7 @@ trait PerformsRestOperations
     /**
      * Perform a specific action on the resource.
      *
-     * @param OperateRequest $request
-     * @param string         $action
-     *
+     * @param  string  $action
      * @return mixed
      */
     public function operate(OperateRequest $request, $action)
@@ -148,7 +138,6 @@ trait PerformsRestOperations
     /**
      * Delete resources based on the given request.
      *
-     * @param DestroyRequest $request
      *
      * @return mixed
      */
@@ -191,7 +180,6 @@ trait PerformsRestOperations
     /**
      * Restore resources based on the given request.
      *
-     * @param RestoreRequest $request
      *
      * @return mixed
      */
@@ -236,7 +224,6 @@ trait PerformsRestOperations
     /**
      * Force delete resources based on the given request.
      *
-     * @param ForceDestroyRequest $request
      *
      * @return mixed
      */

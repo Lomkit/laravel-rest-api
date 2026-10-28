@@ -16,9 +16,9 @@ class ConditionalFieldAction extends Action
     public function fields(RestRequest $request): array
     {
         return [
-            'type'   => ['nullable', 'string'],
+            'type' => ['nullable', 'string'],
             'reason' => ['required_if:type,ban', 'string'],
-            'note'   => ['sometimes', 'string', 'max:5'],
+            'note' => ['sometimes', 'string', 'max:5'],
         ];
     }
 }

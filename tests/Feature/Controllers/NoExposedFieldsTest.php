@@ -29,7 +29,7 @@ class NoExposedFieldsTest extends TestCase
         $this->assertResourcePaginated(
             $response,
             [$model],
-            new NoExposedFieldsResource()
+            new NoExposedFieldsResource
         );
     }
 }

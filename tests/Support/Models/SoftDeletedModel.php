@@ -8,8 +8,8 @@ use Lomkit\Rest\Tests\Support\Database\Factories\SoftDeletedModelFactory;
 
 class SoftDeletedModel extends Model
 {
-    use SoftDeletes;
     use HasFactory;
+    use SoftDeletes;
 
     protected static function newFactory()
     {

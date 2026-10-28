@@ -8,7 +8,7 @@ class BelongsToManyRelation extends BaseModel
 {
     public function models()
     {
-        return $this->belongsToMany(\Lomkit\Rest\Tests\Support\Models\Model::class);
+        return $this->belongsToMany(Model::class);
     }
 
     public function model()

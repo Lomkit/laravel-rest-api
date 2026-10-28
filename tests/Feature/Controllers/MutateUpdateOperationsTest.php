@@ -31,8 +31,8 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => ['not_authorized_field' => true],
                     ],
                 ],
@@ -53,7 +53,7 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
+                        'operation' => 'update',
                         'attributes' => ['name' => 'test'],
                     ],
                 ],
@@ -76,8 +76,8 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
                     ],
                 ],
@@ -100,12 +100,12 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
-                        'relations'  => [
+                        'relations' => [
                             'belongsToRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -133,10 +133,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
-                        'relations'  => [
+                        'relations' => [
                             'belongsToManyRelation' => [],
                         ],
                     ],
@@ -161,16 +161,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -190,7 +190,7 @@ class MutateUpdateOperationsTest extends TestCase
         $this->assertDatabaseHas(
             $modelToUpdate->getTable(),
             [
-                'name'   => 'new name',
+                'name' => 'new name',
                 'number' => 5001,
             ]
         );
@@ -209,13 +209,13 @@ class MutateUpdateOperationsTest extends TestCase
                 'mutate' => [
                     [
                         'operation' => 'update',
-                        'key'       => $modelToUpdate->getKey(),
+                        'key' => $modelToUpdate->getKey(),
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => true,
                                     ],
                                 ],
@@ -242,10 +242,10 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                     ],
@@ -263,7 +263,7 @@ class MutateUpdateOperationsTest extends TestCase
         $this->assertDatabaseHas(
             $modelToUpdate->getTable(),
             [
-                'name'   => 'new name',
+                'name' => 'new name',
                 'number' => 5001,
             ]
         );
@@ -281,15 +281,15 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -308,7 +308,7 @@ class MutateUpdateOperationsTest extends TestCase
         $this->assertDatabaseHas(
             $modelToUpdate->getTable(),
             [
-                'name'   => 'new name',
+                'name' => 'new name',
                 'number' => 5001,
             ]
         );
@@ -329,16 +329,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $belongsToRelationToAttach->getKey(),
+                                'key' => $belongsToRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -376,16 +376,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
                                 'operation' => 'detach',
-                                'key'       => $belongsToRelationToDetach->getKey(),
+                                'key' => $belongsToRelationToDetach->getKey(),
                             ],
                         ],
                     ],
@@ -418,16 +418,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $belongsToRelationToUpdate->getKey(),
+                                'operation' => 'update',
+                                'key' => $belongsToRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -468,16 +468,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -513,20 +513,20 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -564,17 +564,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $hasManyRelationToAttach->getKey(),
+                                    'key' => $hasManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -613,17 +613,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [$hasManyRelationToAttach1->getKey(), $hasManyRelationToAttach2->getKey()],
+                                    'key' => [$hasManyRelationToAttach1->getKey(), $hasManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -658,17 +658,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [],
+                                    'key' => [],
                                 ],
                             ],
                         ],
@@ -706,23 +706,23 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
                             'hasManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $hasManyRelationToAttach->getKey(),
+                                    'key' => $hasManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -760,17 +760,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => $hasManyRelationToDetach->getKey(),
+                                    'key' => $hasManyRelationToDetach->getKey(),
                                 ],
                             ],
                         ],
@@ -811,17 +811,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation'  => 'detach',
-                                    'key'        => [$hasManyRelationToDetach1->getKey(), $hasManyRelationToDetach2->getKey()],
+                                    'operation' => 'detach',
+                                    'key' => [$hasManyRelationToDetach1->getKey(), $hasManyRelationToDetach2->getKey()],
                                 ],
                             ],
                         ],
@@ -861,17 +861,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $hasManyRelationToAttach->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $hasManyRelationToAttach->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -923,17 +923,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => [$hasManyRelationToAttach1->getKey(), $hasManyRelationToAttach2->getKey()],
+                                    'operation' => 'update',
+                                    'key' => [$hasManyRelationToAttach1->getKey(), $hasManyRelationToAttach2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],
@@ -980,15 +980,15 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasOneRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -1028,16 +1028,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasOneRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $hasOneRelationToAttach->getKey(),
+                                'key' => $hasOneRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -1074,16 +1074,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasOneRelation' => [
                                 'operation' => 'detach',
-                                'key'       => $hasOneRelationToDetach->getKey(),
+                                'key' => $hasOneRelationToDetach->getKey(),
                             ],
                         ],
                     ],
@@ -1122,16 +1122,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasOneRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $hasOneRelationToAttach->getKey(),
+                                'operation' => 'update',
+                                'key' => $hasOneRelationToAttach->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -1172,15 +1172,15 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
-                                'operation'  => 'create',
+                                'operation' => 'create',
                                 'attributes' => [],
                             ],
                         ],
@@ -1220,16 +1220,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
                                 'operation' => 'attach',
-                                'key'       => $hasOneOfManyRelationToAttach->getKey(),
+                                'key' => $hasOneOfManyRelationToAttach->getKey(),
                             ],
                         ],
                     ],
@@ -1266,16 +1266,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
                                 'operation' => 'detach',
-                                'key'       => $hasOneOfManyRelationToDetach->getKey(),
+                                'key' => $hasOneOfManyRelationToDetach->getKey(),
                             ],
                         ],
                     ],
@@ -1314,16 +1314,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'hasOneOfManyRelation' => [
-                                'operation'  => 'update',
-                                'key'        => $hasOneOfManyRelationToUpdate->getKey(),
+                                'operation' => 'update',
+                                'key' => $hasOneOfManyRelationToUpdate->getKey(),
                                 'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                             ],
                         ],
@@ -1364,16 +1364,16 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -1414,21 +1414,21 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $belongsToManyToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $belongsToManyToggled->getKey(),
                                 ],
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $belongsToManyNotToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $belongsToManyNotToggled->getKey(),
                                 ],
                             ],
                         ],
@@ -1473,17 +1473,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'toggle',
-                                    'key'       => [],
+                                    'key' => [],
                                 ],
                             ],
                         ],
@@ -1524,21 +1524,21 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => [$belongsToManyToggled1->getKey(), $belongsToManyToggled2->getKey()],
+                                    'operation' => 'toggle',
+                                    'key' => [$belongsToManyToggled1->getKey(), $belongsToManyToggled2->getKey()],
                                 ],
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $belongsToManyNotToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $belongsToManyNotToggled->getKey(),
                                 ],
                             ],
                         ],
@@ -1584,27 +1584,27 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $belongsToManyToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $belongsToManyToggled->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'  => 'toggle',
-                                    'key'        => $belongsToManyNotToggled->getKey(),
+                                    'operation' => 'toggle',
+                                    'key' => $belongsToManyNotToggled->getKey(),
                                     'attributes' => ['number' => 5002], // 5002 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -1666,19 +1666,19 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $belongsToManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $belongsToManyNotSynced->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -1736,19 +1736,19 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => [$belongsToManyNotSynced1->getKey(), $belongsToManyNotSynced2->getKey()],
+                                    'operation' => 'sync',
+                                    'key' => [$belongsToManyNotSynced1->getKey(), $belongsToManyNotSynced2->getKey()],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -1808,19 +1808,19 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => [],
+                                    'operation' => 'sync',
+                                    'key' => [],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -1859,28 +1859,28 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $belongsToManyToSync1->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $belongsToManyToSync1->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'         => 'sync',
-                                    'key'               => $belongsToManyToSync2->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $belongsToManyToSync2->getKey(),
                                     'without_detaching' => true,
-                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'             => [
+                                    'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -1948,20 +1948,20 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'         => 'sync',
-                                    'key'               => $belongsToManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $belongsToManyNotSynced->getKey(),
                                     'without_detaching' => true,
-                                    'attributes'        => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'             => [
+                                    'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -2021,19 +2021,19 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'sync',
-                                    'key'        => $belongsToManyNotSynced->getKey(),
+                                    'operation' => 'sync',
+                                    'key' => $belongsToManyNotSynced->getKey(),
                                     'attributes' => ['number' => 5002], // 5001 because with factory it can't exceed 5000
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 21,
                                     ],
                                 ],
@@ -2087,25 +2087,25 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
-                                    'pivot'      => [
+                                    'pivot' => [
                                         'number' => 30,
                                     ],
                                 ],
@@ -2152,18 +2152,18 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $belongsToManyToUpdate->getKey(),
-                                    'pivot'      => [
+                                    'operation' => 'update',
+                                    'key' => $belongsToManyToUpdate->getKey(),
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -2207,18 +2207,18 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => [$belongsToManyToUpdate1->getKey(), $belongsToManyToUpdate2->getKey()],
-                                    'pivot'      => [
+                                    'operation' => 'update',
+                                    'key' => [$belongsToManyToUpdate1->getKey(), $belongsToManyToUpdate2->getKey()],
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -2263,18 +2263,18 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => [],
-                                    'pivot'      => [
+                                    'operation' => 'update',
+                                    'key' => [],
+                                    'pivot' => [
                                         'number' => 20,
                                     ],
                                 ],
@@ -2311,20 +2311,20 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                                 [
-                                    'operation'  => 'create',
+                                    'operation' => 'create',
                                     'attributes' => [],
                                 ],
                             ],
@@ -2365,17 +2365,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => $belongsToManyRelationToAttach->getKey(),
+                                    'key' => $belongsToManyRelationToAttach->getKey(),
                                 ],
                             ],
                         ],
@@ -2420,17 +2420,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [$belongsToManyRelationToAttach1->getKey(), $belongsToManyRelationToAttach2->getKey()],
+                                    'key' => [$belongsToManyRelationToAttach1->getKey(), $belongsToManyRelationToAttach2->getKey()],
                                 ],
                             ],
                         ],
@@ -2475,17 +2475,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'attach',
-                                    'key'       => [],
+                                    'key' => [],
                                 ],
                             ],
                         ],
@@ -2523,17 +2523,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => $belongsToManyRelationToDetach->getKey(),
+                                    'key' => $belongsToManyRelationToDetach->getKey(),
                                 ],
                             ],
                         ],
@@ -2572,17 +2572,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => [],
+                                    'key' => [],
                                 ],
                             ],
                         ],
@@ -2623,17 +2623,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
                                     'operation' => 'detach',
-                                    'key'       => [$belongsToManyRelationToDetach1->getKey(), $belongsToManyRelationToDetach2->getKey()],
+                                    'key' => [$belongsToManyRelationToDetach1->getKey(), $belongsToManyRelationToDetach2->getKey()],
                                 ],
                             ],
                         ],
@@ -2673,17 +2673,17 @@ class MutateUpdateOperationsTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $modelToUpdate->getKey(),
+                        'operation' => 'update',
+                        'key' => $modelToUpdate->getKey(),
                         'attributes' => [
-                            'name'   => 'new name',
+                            'name' => 'new name',
                             'number' => 5001,
                         ],
                         'relations' => [
                             'belongsToManyRelation' => [
                                 [
-                                    'operation'  => 'update',
-                                    'key'        => $belongsToManyRelationToUpdate->getKey(),
+                                    'operation' => 'update',
+                                    'key' => $belongsToManyRelationToUpdate->getKey(),
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
                             ],

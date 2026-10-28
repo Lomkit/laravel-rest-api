@@ -9,24 +9,16 @@ trait Scoutable
 {
     /**
      * The calculated scout fields if already done in this request.
-     *
-     * @var array
      */
     protected array $calculatedScoutFields;
 
     /**
      * The calculated scout instructions if already done in this request.
-     *
-     * @var array
      */
     protected array $calculatedScoutInstructions;
 
     /**
      * The scout fields that could be provided.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function scoutFields(RestRequest $request): array
     {
@@ -35,10 +27,6 @@ trait Scoutable
 
     /**
      * The scout instructions that could be provided.
-     *
-     * @param RestRequest $request
-     *
-     * @return array
      */
     public function scoutInstructions(RestRequest $request): array
     {
@@ -47,24 +35,16 @@ trait Scoutable
 
     /**
      * Get the resource's scout fields.
-     *
-     * @param \Lomkit\Rest\Http\Requests\RestRequest $request
-     *
-     * @return array
      */
-    public function getScoutFields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function getScoutFields(RestRequest $request): array
     {
         return $this->calculatedScoutFields ?? ($this->calculatedScoutFields = $this->scoutFields($request));
     }
 
     /**
      * Get the resource's scout instructions.
-     *
-     * @param \Lomkit\Rest\Http\Requests\RestRequest $request
-     *
-     * @return array
      */
-    public function getScoutInstructions(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function getScoutInstructions(RestRequest $request): array
     {
         return $this->calculatedScoutInstructions ?? ($this->calculatedScoutInstructions = $this->scoutInstructions($request));
     }
@@ -72,9 +52,8 @@ trait Scoutable
     /**
      * Retrieve a specific scout instruction by its key.
      *
-     * @param RestRequest $request        The REST request instance.
-     * @param string      $instructionKey The key of the instruction to retrieve.
-     *
+     * @param  RestRequest  $request  The REST request instance.
+     * @param  string  $instructionKey  The key of the instruction to retrieve.
      * @return Instruction|null The instruction instance or null if not found.
      */
     public function scoutInstruction(RestRequest $request, string $instructionKey)
@@ -84,7 +63,7 @@ trait Scoutable
                 return $instruction->uriKey() === $instructionKey;
             });
 
-        if (!is_null($instruction)) {
+        if (! is_null($instruction)) {
             $instruction
                 ->resource($this);
         }

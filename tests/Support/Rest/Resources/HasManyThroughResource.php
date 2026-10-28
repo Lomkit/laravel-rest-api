@@ -11,6 +11,7 @@ use Lomkit\Rest\Tests\Support\Models\HasManyThroughRelation;
 class HasManyThroughResource extends Resource
 {
     use DisableGates;
+
     public static $model = HasManyThroughRelation::class;
 
     public function relations(RestRequest $request): array

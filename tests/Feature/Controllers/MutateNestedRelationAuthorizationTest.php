@@ -4,6 +4,7 @@ namespace Controllers;
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
@@ -31,10 +32,10 @@ class MutateNestedRelationAuthorizationTest extends TestCase
     public static function writableRelationProvider(): array
     {
         return [
-            'belongsToMany'  => ['belongsToManyRelation', BelongsToManyRelation::class],
-            'hasMany'        => ['hasManyRelation', HasManyRelation::class],
-            'morphToMany'    => ['morphToManyRelation', MorphToManyRelation::class],
-            'morphedByMany'  => ['morphedByManyRelation', MorphedByManyRelation::class],
+            'belongsToMany' => ['belongsToManyRelation', BelongsToManyRelation::class],
+            'hasMany' => ['hasManyRelation', HasManyRelation::class],
+            'morphToMany' => ['morphToManyRelation', MorphToManyRelation::class],
+            'morphedByMany' => ['morphedByManyRelation', MorphedByManyRelation::class],
         ];
     }
 
@@ -42,13 +43,13 @@ class MutateNestedRelationAuthorizationTest extends TestCase
     {
         return match ($relation) {
             'belongsToManyRelation' => BelongsToManyRelationFactory::new()->createOne(['number' => 1]),
-            'hasManyRelation'       => HasManyRelationFactory::new()->createOne(['number' => 1]),
-            'morphToManyRelation'   => MorphToManyRelationFactory::new()->createOne(['number' => 1]),
+            'hasManyRelation' => HasManyRelationFactory::new()->createOne(['number' => 1]),
+            'morphToManyRelation' => MorphToManyRelationFactory::new()->createOne(['number' => 1]),
             'morphedByManyRelation' => MorphedByManyRelationFactory::new()->createOne(['number' => 1]),
         };
     }
 
-    protected function mutateNested(string $relation, array $nested): \Illuminate\Testing\TestResponse
+    protected function mutateNested(string $relation, array $nested): TestResponse
     {
         $model = ModelFactory::new()->createOne();
 
@@ -57,10 +58,10 @@ class MutateNestedRelationAuthorizationTest extends TestCase
             [
                 'mutate' => [
                     [
-                        'operation'  => 'update',
-                        'key'        => $model->getKey(),
+                        'operation' => 'update',
+                        'key' => $model->getKey(),
                         'attributes' => [],
-                        'relations'  => [$relation => [$nested]],
+                        'relations' => [$relation => [$nested]],
                     ],
                 ],
             ],
@@ -75,8 +76,8 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $victim = $this->makeRelated($relation);
 
         $response = $this->mutateNested($relation, [
-            'operation'  => 'sync',
-            'key'        => $victim->getKey(),
+            'operation' => 'sync',
+            'key' => $victim->getKey(),
             'attributes' => ['number' => 5],
         ]);
 
@@ -91,8 +92,8 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $victim = $this->makeRelated($relation);
 
         $response = $this->mutateNested($relation, [
-            'operation'  => 'toggle',
-            'key'        => $victim->getKey(),
+            'operation' => 'toggle',
+            'key' => $victim->getKey(),
             'attributes' => ['number' => 5],
         ]);
 
@@ -107,8 +108,8 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $victim = $this->makeRelated($relation);
 
         $response = $this->mutateNested($relation, [
-            'operation'  => 'update',
-            'key'        => $victim->getKey(),
+            'operation' => 'update',
+            'key' => $victim->getKey(),
             'attributes' => ['number' => 5],
         ]);
 
@@ -123,8 +124,8 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $victim = $this->makeRelated($relation);
 
         $response = $this->mutateNested($relation, [
-            'operation'  => 'sync',
-            'key'        => $victim->getKey(),
+            'operation' => 'sync',
+            'key' => $victim->getKey(),
             'attributes' => ['number' => 999999],
         ]);
 
@@ -139,8 +140,8 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $victim = $this->makeRelated($relation);
 
         $response = $this->mutateNested($relation, [
-            'operation'  => 'toggle',
-            'key'        => $victim->getKey(),
+            'operation' => 'toggle',
+            'key' => $victim->getKey(),
             'attributes' => ['number' => 999999],
         ]);
 
@@ -155,8 +156,8 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $target = $this->makeRelated($relation);
 
         $response = $this->mutateNested($relation, [
-            'operation'  => 'sync',
-            'key'        => $target->getKey(),
+            'operation' => 'sync',
+            'key' => $target->getKey(),
             'attributes' => ['number' => 9],
         ]);
 
@@ -172,7 +173,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
 
         $response = $this->mutateNested($relation, [
             'operation' => 'sync',
-            'key'       => $target->getKey(),
+            'key' => $target->getKey(),
         ]);
 
         $response->assertStatus(200);
@@ -187,7 +188,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
 
         $response = $this->mutateNested($relation, [
             'operation' => 'toggle',
-            'key'       => $target->getKey(),
+            'key' => $target->getKey(),
         ]);
 
         $response->assertStatus(200);
@@ -202,7 +203,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
 
         $response = $this->mutateNested($relation, [
             'operation' => 'attach',
-            'key'       => $target->getKey(),
+            'key' => $target->getKey(),
         ]);
 
         $response->assertStatus(200);
@@ -216,7 +217,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
 
         $response = $this->mutateNested($relation, [
             'operation' => 'detach',
-            'key'       => $target->getKey(),
+            'key' => $target->getKey(),
         ]);
 
         $response->assertStatus(200);

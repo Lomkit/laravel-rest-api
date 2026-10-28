@@ -8,15 +8,12 @@ trait Resourcable
 {
     /**
      * The resource.
-     *
-     * @var resource
      */
     public Resource $resource;
 
     /**
      * Set the resource.
      *
-     * @param resource $resource
      *
      * @return self
      */

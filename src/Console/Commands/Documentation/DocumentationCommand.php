@@ -31,7 +31,7 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
      */
     public function handle()
     {
-        $openApi = (new OpenAPI())
+        $openApi = (new OpenAPI)
             ->generate();
 
         $path = $this->getPath('openapi');
@@ -50,21 +50,21 @@ class DocumentationCommand extends GeneratorCommand implements PromptsForMissing
     /**
      * Get the documentation path.
      *
-     * @param string $name
-     *
+     * @param  string  $name
      * @return string
      */
     protected function getPath($name)
     {
-        return !is_null($this->option('path')) ? $this->option('path').'/'.$name.'.json' : public_path('vendor/rest/'.$name.'.json');
+        return ! is_null($this->option('path')) ? $this->option('path').'/'.$name.'.json' : public_path('vendor/rest/'.$name.'.json');
     }
 
     /**
      * Get the stub file for the generator.
      *
-     * @throws RuntimeException
      *
      * @return string
+     *
+     * @throws RuntimeException
      */
     protected function getStub()
     {

@@ -3,8 +3,10 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 
-return new class() extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      *
@@ -17,7 +19,7 @@ return new class() extends Migration {
             $table->string('name');
             $table->bigInteger('number');
             $table->string('string')->nullable();
-            $table->foreignIdFor(\Lomkit\Rest\Tests\Support\Models\BelongsToRelation::class)->nullable()->constrained();
+            $table->foreignIdFor(BelongsToRelation::class)->nullable()->constrained();
             $table->nullableMorphs('morph_to_relation', 'morph_to_relation_soft_index');
             $table->timestamps();
             $table->softDeletes();

@@ -13,7 +13,7 @@ class Model extends BaseModel
 
     protected static function newFactory()
     {
-        return new ModelFactory();
+        return new ModelFactory;
     }
 
     protected $fillable = [

@@ -10,8 +10,6 @@ class NoRelationshipAuthorizationModelResource extends ModelResource
 
     /**
      * Check if gating is enabled.
-     *
-     * @return bool
      */
     public function isGatingEnabled(): bool
     {

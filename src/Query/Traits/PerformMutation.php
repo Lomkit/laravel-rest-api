@@ -21,8 +21,7 @@ trait PerformMutation
     /**
      * Mutate the model based on the provided parameters.
      *
-     * @param array $parameters An array of mutation parameters.
-     *
+     * @param  array  $parameters  An array of mutation parameters.
      * @return array An array containing 'created' and 'updated' operations with affected model keys.
      */
     public function mutate(array $parameters = [])
@@ -42,9 +41,8 @@ trait PerformMutation
     /**
      * Apply a mutation to the model based on the provided mutation parameters.
      *
-     * @param array $mutation   An array of mutation parameters.
-     * @param array $attributes Additional attributes to apply to the model.
-     *
+     * @param  array  $mutation  An array of mutation parameters.
+     * @param  array  $attributes  Additional attributes to apply to the model.
      * @return Model The mutated model.
      */
     public function applyMutation(array $mutation = [], $attributes = [], $key = null)
@@ -75,8 +73,7 @@ trait PerformMutation
      * sync and toggle persist caller-supplied attributes onto the related model,
      * so they must authorize as an update rather than a view.
      *
-     * @param array $mutation An array of mutation parameters.
-     *
+     * @param  array  $mutation  An array of mutation parameters.
      * @return string The ability to authorize.
      */
     protected function mutationAbility(array $mutation)
@@ -84,17 +81,16 @@ trait PerformMutation
         return match (true) {
             $mutation['operation'] === 'create' => 'create',
             $mutation['operation'] === 'update' => 'update',
-            !empty($mutation['attributes'])     => 'update',
-            default                             => 'view',
+            ! empty($mutation['attributes']) => 'update',
+            default => 'view',
         };
     }
 
     /**
      * Apply a mutation to the model based on the provided mutation parameters.
      *
-     * @param array $mutation   An array of mutation parameters.
-     * @param array $attributes Additional attributes to apply to the model.
-     *
+     * @param  array  $mutation  An array of mutation parameters.
+     * @param  array  $attributes  Additional attributes to apply to the model.
      * @return array<Model> The mutated model.
      */
     public function mutations(array $mutation = [], $attributes = [])
@@ -111,10 +107,9 @@ trait PerformMutation
     /**
      * Mutate the model by applying attributes and relations.
      *
-     * @param Model $model      The Eloquent model to mutate.
-     * @param array $attributes The attributes to mutate.
-     * @param array $mutation   The mutation array.
-     *
+     * @param  Model  $model  The Eloquent model to mutate.
+     * @param  array  $attributes  The attributes to mutate.
+     * @param  array  $mutation  The mutation array.
      * @return Model The mutated model.
      */
     public function mutateModel(Model $model, array $attributes, array $mutation)

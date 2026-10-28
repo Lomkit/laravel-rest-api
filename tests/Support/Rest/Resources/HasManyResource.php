@@ -12,6 +12,7 @@ use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 class HasManyResource extends Resource
 {
     use DisableGates;
+
     public static $model = HasManyRelation::class;
 
     public function relations(RestRequest $request): array
