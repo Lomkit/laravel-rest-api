@@ -118,7 +118,7 @@ The Resource also has static properties:
 - `public static $response = \Lomkit\Rest\Http\Response::class` — override to customise output (see "Custom Response").
 
 Resources extending `app/Rest/Resources/Resource.php` (generated via `rest:base-resource`) may override:
-- `searchQuery`, `mutateQuery`, `destroyQuery`, `restoreQuery`, `forceDeleteQuery` — return a modified `Builder` to apply baseline constraints (tenant scoping, soft-visibility, etc.).
+- `searchQuery`, `mutateQuery`, `destroyQuery`, `restoreQuery`, `forceDestroyQuery` — return a modified `Builder` to apply baseline constraints (tenant scoping, soft-visibility, etc.).
 - `performDelete`, `performRestore`, `performForceDelete` — override the actual operation on a model.
 
 **Anything not declared in `fields()` / `relations()` / `scopes()` / `actions()` / `instructions()` is rejected.** This is the security model — don't bypass it.
@@ -168,11 +168,11 @@ Rest::resource('posts', \App\Rest\Controllers\PostsController::class)
 
 The name must be one URI segment (letters, digits, `-`, `_`). Dotted names (`users.posts`) and slashed names (`admin/users`) throw `InvalidResourceRouteException`: wrap the call in `Route::prefix('admin')` instead. `Rest::resource()` takes two arguments.
 
-`Rest::resource()` returns a builder with these options. Endpoint keys are `details`, `search`, `mutate`, `operate`, `destroy`, `restore` and `forceDelete` (or the `Lomkit\Rest\Http\Routing\Endpoint` cases); an unknown key throws. The result does not depend on the call order.
+`Rest::resource()` returns a builder with these options. Endpoint keys are `details`, `search`, `mutate`, `operate`, `destroy`, `restore` and `forceDestroy` (or the `Lomkit\Rest\Http\Routing\Endpoint` cases); an unknown key throws. The result does not depend on the call order.
 
 ```php
 Rest::resource('posts', PostsController::class)
-    ->withSoftDeletes('restore')                 // restore and/or forceDelete; none = both
+    ->withSoftDeletes('restore')                 // restore and/or forceDestroy; none = both
     ->except('destroy')                          // or ->only('details', 'search')
     ->names('blog.posts')                        // name prefix; ->names([...]) or ->name('search', 'posts.find') for exact names
     ->middleware('verified')                     // added after the package middleware
@@ -181,7 +181,7 @@ Rest::resource('posts', PostsController::class)
     ->register();                                // optional: routes register when the builder is released
 ```
 
-`Rest::resource()` registers these routes. `Route::resourceVerbs()` changes the verbs through the keys `search`, `mutate`, `actions`, `restore` and `forceDelete` (each must be one URI segment):
+`Rest::resource()` registers these routes. `Route::resourceVerbs()` changes the verbs through the keys `search`, `mutate`, `actions`, `restore` and `forceDestroy` (each must be one URI segment):
 
 | Method | URI | Endpoint | Purpose |
 | --- | --- | --- | --- |
@@ -191,7 +191,7 @@ Rest::resource('posts', PostsController::class)
 | `POST` | `/users/actions/{action}` | `operate` | Run a custom action (`{action}` is its `uriKey`) |
 | `DELETE` | `/users` | `destroy` | Batch (soft-)delete |
 | `POST` | `/users/restore` | `restore` | Opt-in via `withSoftDeletes()` |
-| `DELETE` | `/users/force` | `forceDelete` | Opt-in via `withSoftDeletes()` |
+| `DELETE` | `/users/force` | `forceDestroy` | Opt-in via `withSoftDeletes()` |
 
 Every route carries the `EnforceExpectsJson` middleware, which adds `application/json` to the `Accept` header, so errors come back as JSON. Group middleware runs before it. Route names only have to be unique within one resource; two resources with the same name or URI still overwrite each other, as with Laravel routes. Laravel Precognition is supported when `rest.precognition.enabled = true` — clients send `Precognition: true` and the request returns `204` after validation without touching the controller body, or `422` with errors.
 
@@ -481,7 +481,7 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 | `replicate` | `mutate` create when duplicating from existing data |
 | `delete` | `destroy` |
 | `restore` | `restore` |
-| `forceDelete` | `forceDelete` |
+| `forceDelete` | `forceDestroy` |
 | `attach{Model}($user, $parent, $related)` | attach/sync on a relation (e.g. `attachRole`) |
 | `detach{Model}($user, $parent, $related)` | detach/sync on a relation (e.g. `detachRole`) |
 

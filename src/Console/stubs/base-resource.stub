@@ -53,13 +53,13 @@ abstract class {{ class }} extends RestResource
     }
 
     /**
-     * Build a "forceDelete" query for the given resource.
+     * Build a "forceDestroy" query for the given resource.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest  $request
      * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
      * @return \Illuminate\Contracts\Database\Eloquent\Builder
      */
-    public function forceDeleteQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
+    public function forceDestroyQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
     {
         return $query;
     }

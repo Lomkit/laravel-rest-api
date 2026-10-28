@@ -38,7 +38,7 @@ class ResourceRoutesTest extends PackageTestCase
         );
 
         $this->assertSame(array_map(fn (string $method): string => DocumentController::class.'@'.$method, [
-            'details', 'search', 'mutate', 'operate', 'destroy', 'restore', 'forceDelete',
+            'details', 'search', 'mutate', 'operate', 'destroy', 'restore', 'forceDestroy',
         ]), $actions);
     }
 
@@ -48,7 +48,7 @@ class ResourceRoutesTest extends PackageTestCase
         $table = $this->table($this->registerDocuments(fn (PendingResourceRegistration $pending) => $pending->withSoftDeletes()));
 
         $this->assertSame('POST documents/restore', $table['documents.restore']);
-        $this->assertSame('DELETE documents/force', $table['documents.forceDelete']);
+        $this->assertSame('DELETE documents/force', $table['documents.forceDestroy']);
         $this->assertCount(7, $table);
     }
 
@@ -58,7 +58,7 @@ class ResourceRoutesTest extends PackageTestCase
         $table = $this->table($this->registerDocuments(fn (PendingResourceRegistration $pending) => $pending->withSoftDeletes('restore')));
 
         $this->assertArrayHasKey('documents.restore', $table);
-        $this->assertArrayNotHasKey('documents.forceDelete', $table);
+        $this->assertArrayNotHasKey('documents.forceDestroy', $table);
     }
 
     #[Test]
@@ -113,8 +113,8 @@ class ResourceRoutesTest extends PackageTestCase
             ['documents.search'],
         ];
         yield 'only with endpoint cases' => [
-            fn (PendingResourceRegistration $pending) => $pending->withSoftDeletes()->only(Endpoint::Search, Endpoint::ForceDelete),
-            ['documents.search', 'documents.forceDelete'],
+            fn (PendingResourceRegistration $pending) => $pending->withSoftDeletes()->only(Endpoint::Search, Endpoint::ForceDestroy),
+            ['documents.search', 'documents.forceDestroy'],
         ];
     }
 }

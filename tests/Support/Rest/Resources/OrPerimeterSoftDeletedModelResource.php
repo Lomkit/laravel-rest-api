@@ -38,14 +38,14 @@ class OrPerimeterSoftDeletedModelResource extends SoftDeletedModelResource
     }
 
     /**
-     * A forceDelete perimeter shaped like the common "mine or shared" tenant rule.
+     * A forceDestroy perimeter shaped like the common "mine or shared" tenant rule.
      *
      *
      * @return Builder
      */
-    public function forceDeleteQuery(RestRequest $request, Builder $query)
+    public function forceDestroyQuery(RestRequest $request, Builder $query)
     {
-        $query = parent::forceDeleteQuery($request, $query);
+        $query = parent::forceDestroyQuery($request, $query);
 
         $query->where('string', 'owned')->orWhere('string', 'shared');
 

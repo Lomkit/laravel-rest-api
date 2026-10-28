@@ -12,7 +12,7 @@ enum Endpoint: string
     case Operate = 'operate';
     case Destroy = 'destroy';
     case Restore = 'restore';
-    case ForceDelete = 'forceDelete';
+    case ForceDestroy = 'forceDestroy';
 
     public static function fromKey(self|string $key): self
     {
@@ -52,7 +52,7 @@ enum Endpoint: string
         return match ($this) {
             self::Details => ['GET', 'HEAD'],
             self::Search, self::Mutate, self::Operate, self::Restore => ['POST'],
-            self::Destroy, self::ForceDelete => ['DELETE'],
+            self::Destroy, self::ForceDestroy => ['DELETE'],
         };
     }
 
@@ -60,7 +60,7 @@ enum Endpoint: string
     {
         return match ($this) {
             self::Details, self::Destroy => null,
-            self::Search, self::Mutate, self::Restore, self::ForceDelete => $this->value,
+            self::Search, self::Mutate, self::Restore, self::ForceDestroy => $this->value,
             self::Operate => 'actions',
         };
     }
@@ -71,7 +71,7 @@ enum Endpoint: string
             self::Details, self::Destroy => null,
             self::Search, self::Mutate, self::Restore => $this->value,
             self::Operate => 'actions',
-            self::ForceDelete => 'force',
+            self::ForceDestroy => 'force',
         };
     }
 
@@ -79,14 +79,14 @@ enum Endpoint: string
     {
         return match ($this) {
             self::Operate => 'action',
-            self::Details, self::Search, self::Mutate, self::Destroy, self::Restore, self::ForceDelete => null,
+            self::Details, self::Search, self::Mutate, self::Destroy, self::Restore, self::ForceDestroy => null,
         };
     }
 
     public function isOptIn(): bool
     {
         return match ($this) {
-            self::Restore, self::ForceDelete => true,
+            self::Restore, self::ForceDestroy => true,
             self::Details, self::Search, self::Mutate, self::Operate, self::Destroy => false,
         };
     }

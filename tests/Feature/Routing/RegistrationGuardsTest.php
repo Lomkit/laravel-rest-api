@@ -80,7 +80,7 @@ class RegistrationGuardsTest extends PackageTestCase
     {
         $this->assertRejected(
             fn () => $change(Rest::resource('documents', DocumentController::class)),
-            'Unknown endpoint [force]. The endpoints are: details, search, mutate, operate, destroy, restore, forceDelete.',
+            'Unknown endpoint [force]. The endpoints are: details, search, mutate, operate, destroy, restore, forceDestroy.',
         );
     }
 
@@ -101,7 +101,7 @@ class RegistrationGuardsTest extends PackageTestCase
     {
         $this->assertRejected(
             fn () => Rest::resource('documents', DocumentController::class)->withSoftDeletes('search'),
-            'The endpoint [search] is not a soft delete endpoint. withSoftDeletes() accepts: restore, forceDelete.',
+            'The endpoint [search] is not a soft delete endpoint. withSoftDeletes() accepts: restore, forceDestroy.',
         );
     }
 

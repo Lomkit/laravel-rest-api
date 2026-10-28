@@ -35,7 +35,7 @@ class ResourceVerbsTest extends PackageTestCase
     #[Test]
     public function it_uses_the_verbs_set_with_route_resource_verbs(): void
     {
-        Route::resourceVerbs(['search' => 'find', 'mutate' => 'write', 'actions' => 'run', 'restore' => 'undelete', 'forceDelete' => 'purge']);
+        Route::resourceVerbs(['search' => 'find', 'mutate' => 'write', 'actions' => 'run', 'restore' => 'undelete', 'forceDestroy' => 'purge']);
 
         $this->assertSame([
             'documents.details' => 'GET|HEAD documents',
@@ -44,7 +44,7 @@ class ResourceVerbsTest extends PackageTestCase
             'documents.operate' => 'POST documents/run/{action}',
             'documents.destroy' => 'DELETE documents',
             'documents.restore' => 'POST documents/undelete',
-            'documents.forceDelete' => 'DELETE documents/purge',
+            'documents.forceDestroy' => 'DELETE documents/purge',
         ], $this->table($this->registerDocuments(fn (PendingResourceRegistration $pending) => $pending->withSoftDeletes())));
     }
 
