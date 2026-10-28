@@ -113,16 +113,15 @@ trait PerformsRestOperations
     /**
      * Perform a specific action on the resource.
      *
-     * @param  string  $action
      * @return mixed
      */
-    public function operate(OperateRequest $request, $action)
+    public function operate(OperateRequest $request)
     {
         $request->resource($resource = $request->context()->resource(static::$resource));
 
         $this->beforeOperate($request);
 
-        $actionInstance = $resource->action($request, $action);
+        $actionInstance = $resource->action($request, $request->actionKey());
 
         $modelsImpacted = $actionInstance->handleRequest($request);
 
