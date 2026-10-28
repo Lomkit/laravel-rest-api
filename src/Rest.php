@@ -4,7 +4,6 @@ namespace Lomkit\Rest;
 
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Lomkit\Rest\Contracts\Http\Routing\Registrar;
-use Lomkit\Rest\Documentation\Schemas\OpenAPI;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
@@ -12,8 +11,6 @@ use Lomkit\Rest\Http\Routing\ResourceRegistrar;
 
 class Rest implements Registrar
 {
-    protected \Closure $documentationCallback;
-
     /**
      * Route a resource to a controller.
      *
@@ -42,27 +39,5 @@ class Rest implements Registrar
                     ->middleware(HandlePrecognitiveRequests::class);
             }
         });
-    }
-
-    /**
-     * Set the documentation callback for OpenAPI.
-     */
-    public function withDocumentationCallback(\Closure $documentationCallback): Rest
-    {
-        $this->documentationCallback = $documentationCallback;
-
-        return $this;
-    }
-
-    /**
-     * Apply the documentation callback to the OpenAPI instance.
-     */
-    public function applyDocumentationCallback(OpenAPI $openAPI): OpenAPI
-    {
-        if (! isset($this->documentationCallback)) {
-            return $openAPI;
-        }
-
-        return call_user_func($this->documentationCallback, $openAPI);
     }
 }
