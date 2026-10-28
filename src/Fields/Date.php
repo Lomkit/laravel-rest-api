@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Fields;
 
+use DateTimeInterface;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
@@ -28,10 +29,19 @@ class Date extends Field
             return array_map(fn (mixed $item): mixed => $this->filterValue($query, $item), $value);
         }
 
-        if ($value === null) {
-            return null;
+        if ($value instanceof DateTimeInterface) {
+            return $query->getModel()->fromDateTime($this->normalize(Carbon::instance($value)));
         }
 
-        return $query->getModel()->fromDateTime(is_string($value) ? Carbon::parse($value) : $value);
+        if (! is_scalar($value)) {
+            return $value;
+        }
+
+        return $query->getModel()->fromDateTime($this->normalize(Carbon::parse((string) $value)));
+    }
+
+    protected function normalize(Carbon $date): Carbon
+    {
+        return $date->startOfDay();
     }
 }

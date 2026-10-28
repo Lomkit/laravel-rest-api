@@ -55,6 +55,16 @@ class DeclaredCapabilitiesTest extends PackageTestCase
         ];
     }
 
+    /** @param Closure(): Field $field */
+    #[Test]
+    #[DataProvider('undeclaredOperators')]
+    public function it_gives_no_value_rules_for_an_operator_the_field_does_not_declare(Closure $field, string $operator, string $message): void
+    {
+        $this->expectExceptionObject(new InvalidFieldException($message));
+
+        $field()->filterValueRules($operator, 'search.filters.0.value');
+    }
+
     #[Test]
     public function it_refuses_an_undeclared_operator_before_running_a_custom_filter(): void
     {

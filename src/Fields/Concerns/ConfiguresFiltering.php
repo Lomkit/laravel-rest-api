@@ -55,12 +55,8 @@ trait ConfiguresFiltering
 
     public function filter(Builder $query, FilterOperator|string $operator, mixed $value, string $boolean = 'and', ?string $column = null): void
     {
-        $operator = FilterOperator::parse($operator);
+        $operator = $this->declaredOperator($operator);
         $filter = $this->filterUsing;
-
-        if (! in_array($operator, $this->filterOperators(), true)) {
-            throw InvalidFieldException::unsupportedOperator($this->name, $operator->value);
-        }
 
         if ($filter === null) {
             $this->applyFilter($query, $operator, $value, $boolean, $column);
@@ -78,7 +74,18 @@ trait ConfiguresFiltering
     /** @return array<string, list<mixed>> */
     public function filterValueRules(FilterOperator|string $operator, string $attribute): array
     {
-        return FilterOperator::parse($operator)->condition()->valueRules($this->baseRules())->for($attribute);
+        return $this->declaredOperator($operator)->condition()->valueRules($this->baseRules())->for($attribute);
+    }
+
+    private function declaredOperator(FilterOperator|string $operator): FilterOperator
+    {
+        $parsed = FilterOperator::parse($operator);
+
+        if (! in_array($parsed, $this->filterOperators(), true)) {
+            throw InvalidFieldException::unsupportedOperator($this->name, $parsed->value);
+        }
+
+        return $parsed;
     }
 
     private function supportedOperator(string $operator): FilterOperator

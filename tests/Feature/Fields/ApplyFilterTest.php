@@ -143,6 +143,9 @@ class ApplyFilterTest extends PackageTestCase
         yield 'date <=' => [fn (): Field => Date::make('published_on'), '<=', '2026-02-10', ['Alpha launch', 'Beta Notes']];
         yield 'date between' => [fn (): Field => Date::make('published_on'), 'between', ['2026-02-10', '2026-03-15'], ['Beta Notes', 'Gamma release']];
         yield 'datetime >= with a T separator' => [fn (): Field => DateTime::make('published_at'), '>=', '2026-03-15T14:00:00', ['Gamma release', 'DELTA Recap']];
+        yield 'date = with a time part' => [fn (): Field => Date::make('published_on'), '=', '2026-02-10 15:45', ['Beta Notes']];
+        yield 'date between with time parts' => [fn (): Field => Date::make('published_on'), 'between', ['2026-02-10 23:00', '2026-03-15 01:00'], ['Beta Notes', 'Gamma release']];
+        yield 'datetime keeps the time part' => [fn (): Field => DateTime::make('published_at'), '>', '2026-02-10 10:00', ['Gamma release', 'DELTA Recap']];
         yield 'date = written without separators' => [fn (): Field => Date::make('published_on'), '=', '20260210', ['Beta Notes']];
     }
 
