@@ -13,7 +13,7 @@ class SearchSort extends RestRule
 
         $fields = $request->isScoutMode() ?
             Rule::in($this->resource->getScoutFields($request)) :
-            Rule::in($this->resource->getFields($request));
+            Rule::in($this->resource->getFields($request)->names());
 
         return [
             $attribute.'.field' => [

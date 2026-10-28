@@ -54,3 +54,24 @@ These items change:
 - Two endpoints of one resource cannot share a URI or a route name: the registration throws.
 - `Lomkit\Rest\Http\Routing\ResourceRegistrar` is final, no longer extends Laravel's class and has a new API. `Rest` receives it from the container, so remove any container binding of `ResourceRegistrar` to your own class. The `Lomkit\Rest\Contracts\Http\Routing\Registrar` interface is removed.
 - The force delete endpoint is renamed `forceDestroy`, like `destroy`, `ForceDestroyRequest` and the `forceDestroying` hooks: the controller method is `forceDestroy()`, the route name is `{name}.forceDestroy`, and the endpoint key and the `Route::resourceVerbs()` key are `forceDestroy`. The URI stays `{name}/force`. On resources, `forceDeleteQuery()` is renamed `forceDestroyQuery()`. The policy ability stays `forceDelete`, like Laravel's, and so does `performForceDelete()`, which calls Eloquent's `forceDelete()`.
+
+### Typed fields
+
+`fields()` returns `Lomkit\Rest\Fields\Field` objects instead of column names. A string, or a name declared twice, throws `Lomkit\Rest\Exceptions\InvalidFieldException` with the name of the resource. Pick the type that matches the column, and add `->nullable()` to nullable columns:
+
+| Column | Field |
+| --- | --- |
+| primary key | `ID::make('id')` |
+| string, text | `Text::make('name')` |
+| integer | `Integer::make('views')` |
+| decimal, float | `Number::make('price')` |
+| boolean | `Boolean::make('featured')` |
+| date | `Date::make('published_on')` |
+| datetime, timestamp | `DateTime::make('published_at')` |
+| enum cast | `Enum::make('status')`, which reads the enum class from the model cast |
+| json, array cast | `Json::make('metadata')` |
+
+- `getFields()` returns a `Lomkit\Rest\Fields\FieldSet` instead of an array of names. Call `->names()` to get the old list.
+- `rest:resource` generates `ID::make('id')`.
+- `Lomkit\Rest\Fields\DateTime` has the same short name as PHP's `\DateTime`. In a file that uses both, alias one of them.
+- `Resource` defines `__sleep()`, which leaves out the memoized fields, because fields can hold closures. A queued action's resource therefore rebuilds its fields in the worker, where the request has no user: `fields()` that depend on the user see a guest there. A resource that overrides `__sleep()` must declare `: array` and merge `parent::__sleep()`.

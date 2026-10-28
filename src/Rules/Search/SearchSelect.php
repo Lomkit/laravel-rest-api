@@ -13,7 +13,7 @@ class SearchSelect extends RestRule
 
         return [
             $attribute.'.field' => [
-                Rule::in($this->resource->getFields($request)),
+                Rule::in($this->resource->getFields($request)->names()),
                 'required',
                 'string',
             ],

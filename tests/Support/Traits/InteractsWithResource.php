@@ -28,7 +28,7 @@ trait InteractsWithResource
         $this->assertEquals(
             collect($models)
                 ->map(function ($model) use ($resource) {
-                    return $model->only($resource->getFields(App::make(RestRequest::class)));
+                    return $model->only($resource->getFields(App::make(RestRequest::class))->names());
                 })
                 ->when(! empty($additionalFields), function (Collection $collection) use ($additionalFields) {
                     return $collection
@@ -53,7 +53,7 @@ trait InteractsWithResource
         $this->assertEquals(
             array_map(
                 function ($model) use ($resource) {
-                    return $model->only($resource->getFields(App::make(RestRequest::class)));
+                    return $model->only($resource->getFields(App::make(RestRequest::class))->names());
                 },
                 $models
             ),

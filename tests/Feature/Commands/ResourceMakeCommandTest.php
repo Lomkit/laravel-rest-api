@@ -18,6 +18,7 @@ class ResourceMakeCommandTest extends TestCase
         $this->assertFileExists(app_path('Rest/Resources/TestResource.php'));
         $this->assertStringContainsString('class TestResource extends Resource', file_get_contents(app_path('Rest/Resources/TestResource.php')));
         $this->assertStringContainsString('public static $model = \Model::class;', file_get_contents(app_path('Rest/Resources/TestResource.php')));
+        $this->assertStringContainsString('\Lomkit\Rest\Fields\ID::make(\'id\')', file_get_contents(app_path('Rest/Resources/TestResource.php')));
 
         unlink(app_path('Rest/Resources/TestResource.php'));
     }

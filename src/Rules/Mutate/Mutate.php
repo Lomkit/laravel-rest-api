@@ -35,7 +35,7 @@ class Mutate extends RestRule
                     'array',
                     'prohibited_if:'.$attributeConsideringRelationType.'.operation,attach',
                     'prohibited_if:'.$attributeConsideringRelationType.'.operation,detach',
-                    new ArrayWithKey($this->resource->getFields($request)),
+                    new ArrayWithKey($this->resource->getFields($request)->names()),
                 ],
                 $attributeConsideringRelationType.'.key' => [
                     'present_if:'.$attributeConsideringRelationType.'.operation,update',

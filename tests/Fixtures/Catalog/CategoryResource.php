@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Catalog;
 
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
@@ -11,6 +13,6 @@ class CategoryResource extends Resource
 
     public function fields(RestRequest $request): array
     {
-        return ['id', 'name'];
+        return [ID::make('id'), Text::make('name')];
     }
 }
