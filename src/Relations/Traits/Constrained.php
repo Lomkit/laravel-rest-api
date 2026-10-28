@@ -93,10 +93,10 @@ trait Constrained
     public function isRequiredOnCreation(RestRequest $request): bool
     {
         if (is_callable($this->relationRequiredOnCreationCallback)) {
-            $this->relationRequiredOnCreationCallback = call_user_func($this->relationRequiredOnCreationCallback, $request, $this->resource());
+            return (bool) call_user_func($this->relationRequiredOnCreationCallback, $request, $this->resource());
         }
 
-        return $this->relationRequiredOnCreationCallback;
+        return (bool) $this->relationRequiredOnCreationCallback;
     }
 
     /**
@@ -105,10 +105,10 @@ trait Constrained
     public function isProhibitedOnCreation(RestRequest $request): bool
     {
         if (is_callable($this->relationProhibitedOnCreationCallback)) {
-            $this->relationProhibitedOnCreationCallback = call_user_func($this->relationProhibitedOnCreationCallback, $request, $this->resource());
+            return (bool) call_user_func($this->relationProhibitedOnCreationCallback, $request, $this->resource());
         }
 
-        return $this->relationProhibitedOnCreationCallback;
+        return (bool) $this->relationProhibitedOnCreationCallback;
     }
 
     /**
@@ -117,10 +117,10 @@ trait Constrained
     public function isRequiredOnUpdate(RestRequest $request): bool
     {
         if (is_callable($this->relationRequiredOnUpdateCallback)) {
-            $this->relationRequiredOnUpdateCallback = call_user_func($this->relationRequiredOnUpdateCallback, $request, $this->resource());
+            return (bool) call_user_func($this->relationRequiredOnUpdateCallback, $request, $this->resource());
         }
 
-        return $this->relationRequiredOnUpdateCallback;
+        return (bool) $this->relationRequiredOnUpdateCallback;
     }
 
     /**
@@ -129,9 +129,9 @@ trait Constrained
     public function isProhibitedOnUpdate(RestRequest $request): bool
     {
         if (is_callable($this->relationProhibitedOnUpdateCallback)) {
-            $this->relationProhibitedOnUpdateCallback = call_user_func($this->relationProhibitedOnUpdateCallback, $request, $this->resource());
+            return (bool) call_user_func($this->relationProhibitedOnUpdateCallback, $request, $this->resource());
         }
 
-        return $this->relationProhibitedOnUpdateCallback;
+        return (bool) $this->relationProhibitedOnUpdateCallback;
     }
 }
