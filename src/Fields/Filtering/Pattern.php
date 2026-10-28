@@ -1,0 +1,20 @@
+<?php
+
+namespace Lomkit\Rest\Fields\Filtering;
+
+use Illuminate\Contracts\Database\Eloquent\Builder;
+
+final readonly class Pattern implements Condition
+{
+    public function __construct(private bool $not) {}
+
+    public function apply(Builder $query, string $column, mixed $value, string $boolean): void
+    {
+        $query->where($column, $this->not ? 'not like' : 'like', $value, $boolean);
+    }
+
+    public function valueRules(array $typeRules): ValueRules
+    {
+        return new ValueRules(['required', 'string']);
+    }
+}
