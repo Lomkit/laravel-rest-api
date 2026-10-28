@@ -6,14 +6,11 @@ use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\OperationExtensions\ParameterExtractor\FormRequestParametersExtractor;
 use Illuminate\Foundation\Events\PublishingStubs;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Lomkit\Rest\Console\Commands\ActionMakeCommand;
 use Lomkit\Rest\Console\Commands\BaseControllerMakeCommand;
 use Lomkit\Rest\Console\Commands\BaseResourceMakeCommand;
 use Lomkit\Rest\Console\Commands\ControllerMakeCommand;
-use Lomkit\Rest\Console\Commands\Documentation\DocumentationCommand;
-use Lomkit\Rest\Console\Commands\Documentation\DocumentationServiceProviderMakeCommand;
 use Lomkit\Rest\Console\Commands\InstructionMakeCommand;
 use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceMakeCommand;
@@ -52,14 +49,7 @@ class RestServiceProvider extends ServiceProvider
 
         $this->registerStubs();
 
-        $this->registerRoutes();
-
         $this->registerScramble();
-
-        $this->loadViewsFrom(
-            __DIR__.'/../resources/views',
-            'rest'
-        );
     }
 
     /**
@@ -87,30 +77,6 @@ class RestServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register the package routes.
-     *
-     * @return void
-     */
-    private function registerRoutes()
-    {
-        Route::group($this->routeConfiguration(), function () {
-            $this->loadRoutesFrom(__DIR__.'/Http/routes.php');
-        });
-    }
-
-    /**
-     * Get the Telescope route group configuration array.
-     */
-    private function routeConfiguration(): array
-    {
-        return [
-            'domain' => config('rest.documentation.routing.domain'),
-            'prefix' => config('rest.documentation.routing.path'),
-            'middleware' => config('rest.documentation.routing.middlewares', []),
-        ];
-    }
-
-    /**
      * Register the Rest Artisan commands.
      */
     protected function registerCommands(): void
@@ -125,8 +91,6 @@ class RestServiceProvider extends ServiceProvider
                 QuickStartCommand::class,
                 ActionMakeCommand::class,
                 InstructionMakeCommand::class,
-                DocumentationCommand::class,
-                DocumentationServiceProviderMakeCommand::class,
             ]);
         }
     }
@@ -144,7 +108,6 @@ class RestServiceProvider extends ServiceProvider
             $event->add(realpath(__DIR__.'/Console/stubs/instruction.stub'), 'rest.instruction.stub');
             $event->add(realpath(__DIR__.'/Console/stubs/resource.stub'), 'rest.resource.stub');
             $event->add(realpath(__DIR__.'/Console/stubs/response.stub'), 'rest.response.stub');
-            $event->add(realpath(__DIR__.'/Console/stubs/rest-documentation-service-provider.stub'), 'rest.rest-documentation-service-provider.stub');
         });
     }
 

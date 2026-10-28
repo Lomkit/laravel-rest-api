@@ -21,7 +21,6 @@ class StubsTest extends TestCase
                 realpath(__DIR__.'/../../src/Console/stubs/instruction.stub') => 'rest.instruction.stub',
                 realpath(__DIR__.'/../../src/Console/stubs/resource.stub') => 'rest.resource.stub',
                 realpath(__DIR__.'/../../src/Console/stubs/response.stub') => 'rest.response.stub',
-                realpath(__DIR__.'/../../src/Console/stubs/rest-documentation-service-provider.stub') => 'rest.rest-documentation-service-provider.stub',
             ],
             $event->stubs
         );

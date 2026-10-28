@@ -57,7 +57,7 @@ Use this skill when working with the `lomkit/laravel-rest-api` package — build
   php artisan rest:response UserResponse
   ```
 
-- **OpenAPI documentation**: native Scramble extension (`LomkitLaravelRestApiOperationExtension`) infers docs from Resources, or use the built-in Swagger UI at `/api-documentation`.
+- **OpenAPI documentation**: native Scramble extension (`LomkitLaravelRestApiOperationExtension`) infers docs from Resources.
 - **Precognition**: live form validation (`Precognition: true` header) short-circuits the request after validation when `rest.precognition.enabled = true`.
 
 ## If the package is installed
@@ -492,9 +492,7 @@ Use sparingly — overriding the response can bypass authorization shaping and f
 
 ## OpenAPI documentation
 
-Two paths are supported. **Prefer Scramble** for new projects.
-
-### Scramble (recommended)
+The package documents its endpoints through a Scramble extension.
 
 ```bash
 composer require dedoc/scramble
@@ -509,18 +507,6 @@ Add the extension to `config/scramble.php`:
 ```
 
 Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources.
-
-### Legacy (built-in)
-
-With `rest.documentation.routing.enabled = true` (default), the package serves a Swagger-style UI at `/api-documentation`. Customise the OpenAPI document with:
-
-```php
-\Lomkit\Rest\Facades\Rest::withDocumentationCallback(function (\Lomkit\Rest\Documentation\Schemas\OpenAPI $openAPI) {
-    return $openAPI; // mutate as needed
-});
-```
-
-The legacy path is being superseded by Scramble — don't add new customisation here for greenfield work.
 
 ## Precognition
 
