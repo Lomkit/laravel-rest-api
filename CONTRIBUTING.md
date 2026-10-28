@@ -60,6 +60,23 @@ composer update
 
 Add a test for each bug fix and each new feature.
 
+### Writing tests
+
+Write new tests in `tests/Feature` or `tests/Unit`:
+
+- Feature tests extend `Lomkit\Rest\Tests\PackageTestCase` and declare the fixtures they need in `fixtures()`.
+- A fixture is a small domain in `tests/Fixtures/<Domain>`: models, factories, migrations, resources and routes. It implements `Lomkit\Rest\Tests\Fixtures\Fixture`.
+- Test methods use the `#[Test]` attribute and are named `it_...`.
+- Use fixed values, not Faker, and write the expected responses by hand.
+
+Pure unit tests that need neither the container nor the database extend PHPUnit's `TestCase`.
+
+The legacy suite is every test that extends `Lomkit\Rest\Tests\TestCase`, directly or through `tests/Feature/TestCase.php`, with its helpers in `tests/Support`. It is being replaced and must only shrink:
+
+- Do not add tests, resources or helpers to the legacy suite.
+- When you change an area, rewrite its legacy tests in the new suite, then delete them.
+- The legacy suite, `tests/Support` and `tests/TestCase.php` are removed before the 3.0 release.
+
 ## Code style
 
 [Pint](https://laravel.com/docs/pint) checks the code style with the `laravel` preset. To fix the style:
