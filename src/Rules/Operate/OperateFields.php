@@ -13,19 +13,10 @@ class OperateFields implements ValidationRule, ValidatorAwareRule
 {
     use ValidatesFields;
 
-    /**
-     * The validator instance.
-     */
     protected Validator $validator;
 
-    /**
-     * The action being operated.
-     */
     protected Action $action;
 
-    /**
-     * Set the current action.
-     */
     public function setAction(Action $action): static
     {
         $this->action = $action;
@@ -33,9 +24,6 @@ class OperateFields implements ValidationRule, ValidatorAwareRule
         return $this;
     }
 
-    /**
-     * Set the current validator.
-     */
     public function setValidator(Validator $validator): static
     {
         $this->validator = $validator;
@@ -43,16 +31,8 @@ class OperateFields implements ValidationRule, ValidatorAwareRule
         return $this;
     }
 
-    /**
-     * Run the validation rule.
-     */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $this->validateFields(
-            $this->validator,
-            $attribute,
-            $value,
-            $this->action->fields($this->action->resource->context()->request)
-        );
+        $this->validateFields($this->validator, $attribute, $value, $this->action->getFields($this->action->resource->context()->request));
     }
 }

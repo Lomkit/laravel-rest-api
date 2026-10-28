@@ -30,13 +30,16 @@ class CallRestApiAction
     protected Action $action;
 
     /**
-     * The fields for the action instance.
+     * The resolved field values, keyed by field name.
+     *
+     * @var array<string, mixed>
      */
     protected array $fields;
 
     /**
      * Create a new job instance.
      *
+     * @param  array<string, mixed>  $fields
      * @param  \Illuminate\Database\Eloquent\Collection|Collection  $models
      * @return void
      */

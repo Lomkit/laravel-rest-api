@@ -1,66 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:field\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Actions/Action.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:fields\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Actions/Action.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:handle\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Actions/Action.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:handle\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Actions/Action.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:make\(\) has parameter \$arguments with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/Actions/Action.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:meta\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Actions/Action.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:withBatch\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Actions/Action.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:withMeta\(\) has parameter \$meta with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Actions/Action.php
-
-		-
-			message: '#^Unsafe usage of new static\(\)\.$#'
-			identifier: new.static
-			count: 1
-			path: src/Actions/Action.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\CallRestApiAction\:\:__construct\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Actions/CallRestApiAction.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Actions\\CallRestApiAction\:\:__construct\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
 			identifier: missingType.generics
 			count: 1
@@ -69,12 +9,6 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$job of method Lomkit\\Rest\\Actions\\Action\:\:setJob\(\) expects Illuminate\\Contracts\\Queue\\Job, Illuminate\\Contracts\\Queue\\Job\|null given\.$#'
 			identifier: argument.type
-			count: 1
-			path: src/Actions/CallRestApiAction.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Actions\\CallRestApiAction\:\:\$fields type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: src/Actions/CallRestApiAction.php
 
@@ -103,20 +37,8 @@ parameters:
 			path: src/Actions/DispatchAction.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:__construct\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:addQueuedActionJob\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
 			identifier: missingType.generics
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:configureBatchJob\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: src/Actions/DispatchAction.php
 
@@ -165,12 +87,6 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$queue of method Illuminate\\Contracts\\Queue\\Queue\:\:pushOn\(\) expects string, string\|null given\.$#'
 			identifier: argument.type
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Actions\\DispatchAction\:\:\$fields type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: src/Actions/DispatchAction.php
 
@@ -275,12 +191,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Console/Commands/ResourceMakeCommand.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Contracts\\BatchableAction\:\:withBatch\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Contracts/BatchableAction.php
 
 		-
 			message: '#^Method Lomkit\\Rest\\Contracts\\RelationResource\:\:filter\(\) has no return type specified\.$#'
@@ -392,12 +302,6 @@ parameters:
 
 		-
 			message: '#^Method Lomkit\\Rest\\Http\\Requests\\OperateRequest\:\:operateRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/OperateRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\OperateRequest\:\:resolveFields\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Http/Requests/OperateRequest.php
@@ -517,12 +421,6 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getScopes\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getScoutFields\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -572,12 +470,6 @@ parameters:
 
 		-
 			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:scopes\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Http/Resource.php
@@ -662,12 +554,6 @@ parameters:
 
 		-
 			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedRelations type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedScopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Http/Resource.php
@@ -829,66 +715,6 @@ parameters:
 			path: src/Http/Response.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:field\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Instructions/Instruction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:fields\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Instructions/Instruction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:handle\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Instructions/Instruction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:handle\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Instructions/Instruction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:handleScout\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Instructions/Instruction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:handleScout\(\) has parameter \$query with generic class Laravel\\Scout\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Instructions/Instruction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:make\(\) has parameter \$arguments with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/Instructions/Instruction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:meta\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Instructions/Instruction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:withMeta\(\) has parameter \$meta with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Instructions/Instruction.php
-
-		-
-			message: '#^Unsafe usage of new static\(\)\.$#'
-			identifier: new.static
-			count: 1
-			path: src/Instructions/Instruction.php
-
-		-
 			message: '#^Class Lomkit\\Rest\\Pagination\\LengthAwarePaginator extends generic class Illuminate\\Pagination\\LengthAwarePaginator but does not specify its types\: TKey, TValue$#'
 			identifier: missingType.generics
 			count: 1
@@ -946,12 +772,6 @@ parameters:
 			message: '#^Cannot call method getModel\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
 			identifier: method.nonObject
 			count: 4
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method handle\(\) on Lomkit\\Rest\\Instructions\\Instruction\|null\.$#'
-			identifier: method.nonObject
-			count: 1
 			path: src/Query/Builder.php
 
 		-
@@ -1147,12 +967,6 @@ parameters:
 			path: src/Query/Builder.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:instruction\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/Builder.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutate\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1203,12 +1017,6 @@ parameters:
 		-
 			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:scope\(\) has no return type specified\.$#'
 			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:scope\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: src/Query/Builder.php
 
@@ -1279,12 +1087,6 @@ parameters:
 			path: src/Query/ScoutBuilder.php
 
 		-
-			message: '#^Cannot call method handleScout\(\) on Lomkit\\Rest\\Instructions\\Instruction\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyFilters\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -1347,12 +1149,6 @@ parameters:
 		-
 			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:instruction\(\) has no return type specified\.$#'
 			identifier: missingType.return
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:instruction\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: src/Query/ScoutBuilder.php
 
@@ -1649,12 +1445,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Relations/MorphOneOfMany.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphRelation\:\:make\(\) has parameter \$arguments with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/Relations/MorphRelation.php
 
 		-
 			message: '#^Unsafe usage of new static\(\)\.$#'
@@ -2023,12 +1813,6 @@ parameters:
 			path: src/Relations/Relation.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:make\(\) has parameter \$arguments with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/Relations/Relation.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:prohibitedOnCreation\(\) has invalid return type Lomkit\\Rest\\Relations\\Traits\\Constrained\.$#'
 			identifier: return.trait
 			count: 1
@@ -2107,12 +1891,6 @@ parameters:
 			path: src/Rules/Mutate/MutateRelation.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Operate\\OperateFields\:\:validateFields\(\) has parameter \$declaredRules with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Operate/OperateFields.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Rules\\Resource\\ResourceCustomRules\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -2183,24 +1961,6 @@ parameters:
 			identifier: argument.templateType
 			count: 1
 			path: src/Rules/Search/SearchIncludeAlias.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchInstruction\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchInstruction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchInstruction\:\:validateFields\(\) has parameter \$declaredRules with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchInstruction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchScope\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchScope.php
 
 		-
 			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchSelect\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'

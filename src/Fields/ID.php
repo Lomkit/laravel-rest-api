@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
+use Stringable;
 
 class ID extends Field
 {
@@ -44,7 +45,7 @@ class ID extends Field
 
     public function baseRules(): array
     {
-        return match ($this->declaredKeyType ?? $this->boundKeyType) {
+        return match ($this->resolvedKeyType()) {
             'int' => ['integer'],
             'string' => ['string'],
             'uuid' => ['uuid'],
@@ -57,8 +58,23 @@ class ID extends Field
         return 'id';
     }
 
+    protected function castValue(mixed $value): mixed
+    {
+        if ($this->resolvedKeyType() === 'int') {
+            return filter_var($value, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE) ?? $value;
+        }
+
+        return is_scalar($value) || $value instanceof Stringable ? (string) $value : $value;
+    }
+
     protected function writableByDefault(): bool
     {
         return false;
+    }
+
+    /** @return 'int'|'string'|'uuid'|'ulid' */
+    private function resolvedKeyType(): string
+    {
+        return $this->declaredKeyType ?? $this->boundKeyType;
     }
 }

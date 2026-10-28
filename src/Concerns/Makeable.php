@@ -9,7 +9,7 @@ trait Makeable
      *
      * @return static
      */
-    public static function make(...$arguments)
+    public static function make(mixed ...$arguments)
     {
         return new static(...$arguments);
     }

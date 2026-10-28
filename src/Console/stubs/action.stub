@@ -9,7 +9,7 @@ class {{ class }} extends RestAction
     /**
      * Perform the action on the given models.
      *
-     * @param  array  $fields
+     * @param  array<string, mixed>  $fields
      * @param  \Illuminate\Support\Collection  $models
      * @return mixed
      */
@@ -24,14 +24,12 @@ class {{ class }} extends RestAction
      * The action fields.
      *
      * @param  \Lomkit\Rest\Http\Requests\RestRequest $request
-     * @return array
+     * @return array<int, \Lomkit\Rest\Fields\Field>
      */
     public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [
-            'id' => [
-                'required'
-            ]
+            \Lomkit\Rest\Fields\ID::make('id')->rules('required'),
         ];
     }
 }

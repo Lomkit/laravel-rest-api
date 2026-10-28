@@ -2,84 +2,65 @@
 
 namespace Lomkit\Rest\Instructions;
 
-use http\Exception\RuntimeException;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Laravel\Scout\Builder;
-use Lomkit\Rest\Concerns\Fieldable;
+use Laravel\Scout\Builder as ScoutBuilder;
+use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Concerns\Makeable;
-use Lomkit\Rest\Concerns\Metable;
 use Lomkit\Rest\Concerns\Resourcable;
+use Lomkit\Rest\Exceptions\InvalidInstructionException;
+use Lomkit\Rest\Fields\Concerns\HasInputFields;
+use Lomkit\Rest\Fields\Details\InputFieldDetails;
 
+/** @phpstan-consistent-constructor */
 class Instruction
 {
-    use Fieldable;
+    use HasInputFields;
+    use HasMeta;
     use Makeable;
-    use Metable;
     use Resourcable;
 
-    /**
-     * The displayable name of the instruction.
-     *
-     * @var string
-     */
+    /** @var string|null */
     public $name;
 
-    /**
-     * Get the name of the instruction.
-     *
-     * @return string
-     */
+    /** @return string */
     public function name()
     {
-        return $this->name ?: Str::of(class_basename(get_class($this)))->beforeLast('Instruction')->snake(' ')->title()->toString();
+        return $this->name ?: Str::of(class_basename(static::class))->beforeLast('Instruction')->snake(' ')->title()->toString();
     }
 
-    /**
-     * Get the URI key for the instruction.
-     *
-     * @return string
-     */
+    /** @return string */
     public function uriKey()
     {
         return Str::slug($this->name(), '-', null);
     }
 
-    /**
-     * Prepare the action for JSON serialization.
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: array<string, mixed>} */
     public function jsonSerialize(): array
     {
-        $request = $this->resource->context()->request;
-
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
-            'fields' => $this->fields($request),
-            'meta' => $this->meta(),
+            'fields' => InputFieldDetails::forFields($this->getFields($this->resource->context()->request)),
+            'meta' => $this->getMeta(),
         ];
     }
 
     /**
-     * Perform the instruction on the given query.
-     *
-     *
+     * @param  array<string, mixed>  $fields
+     * @param  Builder<Model>  $query
      * @return void
      */
-    public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query)
-    {
-        // ...
-    }
+    public function handle(array $fields, Builder $query) {}
 
     /**
-     * Perform the instruction on the scout query.
-     *
-     *
+     * @param  array<string, mixed>  $fields
+     * @param  ScoutBuilder<Model>  $query
      * @return void
      */
-    public function handleScout(array $fields, Builder $query)
+    public function handleScout(array $fields, ScoutBuilder $query)
     {
-        throw new RuntimeException('Not implemented');
+        throw InvalidInstructionException::scoutNotSupported(static::class);
     }
 }

@@ -111,7 +111,20 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
   }
   ```
 - `relations()` — array of `Lomkit\Rest\Relations\*` instances declared with `::make('relationName', TargetResource::class)`. Only declared relations are includable/mutatable.
-- `scopes()` — local Eloquent scopes the client is allowed to invoke by name.
+- `scopes()` — `Lomkit\Rest\Scopes\Scope` objects naming the model's local scopes (`scopeX()` methods or `#[Scope]` methods) the client may invoke. Builder methods and macros such as `withTrashed` cannot be called as scopes. `fields()` declares the scope parameters, in the order of the scope method's arguments; strings throw `InvalidScopeException`.
+
+  ```php
+  use Lomkit\Rest\Fields\{Date, Integer};
+  use Lomkit\Rest\Scopes\Scope;
+
+  public function scopes(RestRequest $request): array
+  {
+      return [
+          Scope::make('publishedSince')->fields([Date::make('since')]),           // scopePublishedSince(Builder $query, CarbonImmutable $since)
+          Scope::make('popular')->fields([Integer::make('min_views')->default(100)])->meta(['label' => 'Popular']),
+      ];
+  }
+  ```
 - `limits()` — allowed pagination `limit` values (default `[10, 25, 50]`; `$defaultLimit` property is `50`).
 - `actions()` — `Lomkit\Rest\Actions\Action` instances exposed under `/actions/{uriKey}`.
 - `instructions()` — `Lomkit\Rest\Instructions\Instruction` instances exposed under the `instructions` search key.
@@ -211,17 +224,25 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
 ```json
 {
   "data": {
-    "actions":      [{"uriKey": "publish-posts", "name": "...", "fields": {...}, "meta": {...}, "standalone": false, "targeted": false}],
-    "instructions": [{"uriKey": "odd-even-id",   "name": "...", "fields": {...}, "meta": {...}}],
+    "actions":      [{"uriKey": "publish-posts", "name": "...", "fields": [...], "meta": {...}, "standalone": false, "targeted": false}],
+    "instructions": [{"uriKey": "odd-even-id",   "name": "...", "fields": [...], "meta": {...}}],
     "fields":       ["id", "name", ...],
     "scout_fields": [...],
     "limits":       [10, 25, 50],
-    "scopes":       ["withTrashed", ...],
+    "scopes":       [{"name": "publishedSince", "fields": [...], "meta": {...}}],
     "relations":    [{"resource": "PostResource", "relation": "posts", "constraints": {...}}, ...],
     "rules":        {"all": {...}, "create": {...}, "update": {...}}
   }
 }
 ```
+
+The `fields` of actions, instructions and scopes are input entries, which a frontend can render as a form:
+
+```json
+{"name": "since", "type": "date", "nullable": false, "default": null, "rules": ["date"], "meta": []}
+```
+
+`Enum` entries add `values`. Rules are strings: pipe strings are split, `Stringable` rules are cast to string, other rule objects are named by their snake class name (`enum`, `password`), and closures are left out.
 
 Frontends typically call `details` once to drive form rendering, then `search`/`mutate` based on it.
 
@@ -233,7 +254,7 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
 {
   "search": {
     "text":   {"value": "needle"},
-    "scopes": [{"name": "withTrashed", "parameters": [true]}],
+    "scopes": [{"name": "publishedSince", "parameters": ["2026-01-01"]}],
     "filters": [
       {"field": "id", "operator": ">", "value": 1, "type": "or"},
       {"nested": [
@@ -267,6 +288,7 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
 
 **Filter operators**: `=`, `!=`, `>`, `>=`, `<`, `<=`, `like`, `not like`, `in`, `not in`.
 **Filter `type`**: `and` (default) or `or`. Use `nested` to group filters with their own logical operator. `field` may traverse declared relations and pivot data (`user.posts.id`, `languages.pivot.boolean`).
+**Scope `parameters`** is a positional list: each value binds to the scope field at the same position, is validated by its rules, cast to its type and filled from its `default()`. A position is required unless its field has a default; a missing, extra or wrongly typed parameter is a `422` under `search.scopes.{index}.parameters`. Scopes are prohibited with `text` (Scout).
 **Aggregate `type`** values: `min`, `max`, `avg`, `sum`, `count`, `exists`. `field` is required for `min/max/avg/sum`, omit for `count/exists`.
 **`includes`** can recursively re-use `filters`, `sorts`, `scopes`, `limit`, `selects` — but **not nested `includes`** (load chained relations as separate include entries).
 **Include `alias`** renames the response key for that include, which lets the same relation appear several times under different constraints. It must look like an identifier (`^[A-Za-z_][A-Za-z0-9_]*$`), be unique across the includes, and not collide with a field, a relation, or the gates key of the resource. It is used verbatim — no snake_casing — and is rejected on a dotted relation path (use a nested include there).
@@ -346,12 +368,16 @@ class SendWelcomeNotificationAction extends \Lomkit\Rest\Actions\Action
 
     public function handle(array $fields, \Illuminate\Support\Collection $models)
     {
+        // $fields['expires_at'] is a CarbonImmutable; $fields['notify'] is a bool, true when not sent
         foreach ($models as $model) { /* ... */ }
     }
 
     public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
-        return ['expires_at' => ['required', 'date']];
+        return [
+            \Lomkit\Rest\Fields\Date::make('expires_at')->rules('required'),
+            \Lomkit\Rest\Fields\Boolean::make('notify')->default(true),
+        ];
     }
 }
 ```
@@ -363,7 +389,7 @@ public function actions(RestRequest $request): array
 {
     return [
         SendWelcomeNotificationAction::make()
-            ->withMeta(['color' => '#FFFFFF']),
+            ->meta(['color' => '#FFFFFF']),     // merges; getMeta() reads
     ];
 }
 ```
@@ -400,11 +426,13 @@ smaller.
 { "resources": [1, 5, 9], "fields": [{ "name": "reason", "value": "spam" }] }
 ```
 
-**Field validation follows standard Laravel rules.** The rules declared in `fields()` are evaluated as a normal Laravel validation: presence and cross-field rules (`required`, `required_if`, `present`, …) fire even when a field is absent from the `fields` array. Validation errors are keyed by field name — `fields.{name}` (e.g. `fields.expires_at`) — while an unauthorized field name is reported positionally as `fields.{index}.name`.
+**Fields are typed `Lomkit\Rest\Fields\*` objects.** Each field is validated with its type rules, `nullable()` and `rules()` as a normal Laravel validation: presence and cross-field rules (`required`, `required_if:status,published`, `present`, …) fire even when a field is absent from the `fields` array. Validation errors are keyed by field name — `fields.{name}` (e.g. `fields.expires_at`) — while an unknown or missing field name is reported positionally as `fields.{index}.name`. An `Enum` field must name its enum class (`Enum::make('status', PostStatus::class)`), because action fields are not bound to a model.
+
+**`handle()` receives a name => value map**: each value cast to its field type (`Date`/`DateTime` → `CarbonImmutable`, `Integer` → `int`, `Boolean` → `bool`, `Enum` → the enum case), with `default()` values filled in. A field that is absent and has no default is missing from the array, so read optional fields with `$fields['name'] ?? null`; an entry sent without `value` counts as absent.
 
 **Response**: `{"data": {"impacted": 150}}`.
 
-**Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models. Combine with `Lomkit\Rest\Actions\Contracts\BatchableAction` and use `withBatch()` to register `then`/`catch`/`finally` callbacks. Customise `$connection` and `$queue` properties to route jobs.
+**Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models. Combine with `Lomkit\Rest\Contracts\BatchableAction` and use `withBatch(array $fields, PendingBatch $batch)` to register `then`/`catch`/`finally` callbacks. The synchronous `handle()`, `withBatch()` and the queued jobs all receive the same cast map. Customise `$connection` and `$queue` properties to route jobs.
 
 ## Instructions (custom search refinements)
 
@@ -424,10 +452,11 @@ class OddEvenIdInstruction extends \Lomkit\Rest\Instructions\Instruction
 
     public function fields(RestRequest $request): array
     {
-        return ['type' => ['required', 'in:odd,even']];
+        return [\Lomkit\Rest\Fields\Text::make('type')->rules('required', 'in:odd,even')];
     }
 
     // Scout variant — implement when this Instruction must also work under full-text search.
+    // The base handleScout() throws InvalidInstructionException (a LogicException).
     // public function handleScout(array $fields, ScoutBuilder $builder) { ... }
 }
 ```
@@ -438,9 +467,9 @@ Register in `Resource::instructions()`. Clients invoke them via the `instruction
 "instructions": [{"name": "odd-even-id-instruction", "fields": [{"name": "type", "value": "odd"}]}]
 ```
 
-`->withMeta([...])` is also available on Instructions.
+`->meta([...])` (which merges) and `getMeta()` are also available on Instructions.
 
-Instruction `fields()` are validated exactly like Action fields: full Laravel validation (including `required` on absent fields), with errors keyed by name under `search.instructions.{index}.fields.{name}`.
+Instruction `fields()` are typed and validated exactly like Action fields: full Laravel validation (including `required` on absent fields), with errors keyed by name under `search.instructions.{index}.fields.{name}`. The fields of Scout instructions (`scoutInstructions()`) are validated the same way. `handle()` and `handleScout()` receive the same cast name => value map as an action, with defaults filled in.
 
 ## Relationships
 
@@ -550,6 +579,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - **`mutate` is one batch but per-item-authorized.** A single denied item fails the whole batch.
 - **`includes` are not recursive** — they accept `filters`/`sorts`/`scopes`/`limit`/`selects` but not nested `includes`. To go deeper, register chained relations on the intermediate resource and add an entry per level.
 - **Action `fields` payload is an array of `{name, value}` pairs**, not an object — easy mistake.
+- **Scope `parameters` are positional.** They bind to the scope's fields in declared order, so reordering a scope's fields changes what clients must send. Only model local scopes run: `withTrashed`, `latest` and other Builder methods or macros cannot be called as scopes.
 - **`HasOneThrough` / `HasManyThrough` can be searched/included but not mutated.**
 - **Cache invalidation.** The authorization cache is keyed per user and per resource; when debugging policy changes, disable the cache via config or use the `DisableAuthorizationsCache` trait.
 
@@ -559,7 +589,8 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Concerns/Resource/*` (`DisableGates`, `DisableAuthorizationsCache`, hooks, ...)
 - Query layer — `src/Query/Builder.php`, `src/Query/ScoutBuilder.php`
-- Actions / Instructions — `src/Actions/{Action,Actionable}.php`, `src/Instructions/{Instruction,Instructionable}.php`
+- Actions / Instructions / Scopes — `src/Actions/{Action,Actionable}.php`, `src/Instructions/{Instruction,Instructionable}.php`, `src/Scopes/Scope.php`
+- Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `InputValues`, `Details/InputFieldDetails`), clauses in `src/Query/Clauses/`
 - Relations — `src/Relations/*.php`
 - Validation rules used to validate the request bodies — `src/Rules/{Search,Mutate,Operate,Resource}/*`
 - Scramble extension — `src/Scramble/LomkitLaravelRestApiOperationExtension.php`

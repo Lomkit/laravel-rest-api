@@ -12,6 +12,28 @@ trait ConfiguresWriting
 
     private bool $writeOnly = false;
 
+    private bool $hasDefault = false;
+
+    private mixed $default = null;
+
+    public function default(mixed $value): static
+    {
+        $this->default = $value;
+        $this->hasDefault = true;
+
+        return $this;
+    }
+
+    public function hasDefault(): bool
+    {
+        return $this->hasDefault;
+    }
+
+    public function defaultValue(): mixed
+    {
+        return $this->default;
+    }
+
     public function readonly(bool $readonly = true): static
     {
         $this->creatable = ! $readonly;
