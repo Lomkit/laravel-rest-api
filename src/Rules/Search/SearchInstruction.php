@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Rules\Search;
 
 use Closure;
 use Illuminate\Validation\Rule;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Rules\Concerns\ValidatesFields;
 use Lomkit\Rest\Rules\RestRule;
 
@@ -14,7 +13,7 @@ class SearchInstruction extends RestRule
 
     public function buildValidationRules(string $attribute, mixed $value): array
     {
-        $request = app(RestRequest::class);
+        $request = $this->resource->context()->request;
 
         $instructionUriKeys = collect(
             $request->isScoutMode() ?
@@ -49,7 +48,7 @@ class SearchInstruction extends RestRule
 
         $value = is_array($value) ? $value : [];
 
-        $request = app(RestRequest::class);
+        $request = $this->resource->context()->request;
         $instruction = $this->resource->instruction($request, $value['name'] ?? '');
 
         if (! is_null($instruction)) {

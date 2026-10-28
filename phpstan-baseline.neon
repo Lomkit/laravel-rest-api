@@ -85,12 +85,6 @@ parameters:
 			path: src/Actions/CallRestApiAction.php
 
 		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:disableDefaultLimit\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
 			message: '#^Call to function property_exists\(\) with Lomkit\\Rest\\Actions\\Action and ''connection'' will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
@@ -301,24 +295,6 @@ parameters:
 			path: src/Contracts/Http/Routing/Registrar.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:search\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Contracts/QueryBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:toBase\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Contracts/QueryBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:toBase\(\) return type with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Contracts/QueryBuilder.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Contracts\\RelationResource\:\:filter\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -367,20 +343,8 @@ parameters:
 			path: src/Http/Controllers/Controller.php
 
 		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:tap\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:details\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Parameter \#1 \$query of method Lomkit\\Rest\\Http\\Resource\:\:paginate\(\) expects Laravel\\Scout\\Builder\|Lomkit\\Rest\\Concerns\\Resource\\Illuminate\\Database\\Eloquent\\Builder, Lomkit\\Rest\\Contracts\\QueryBuilder given\.$#'
-			identifier: argument.type
 			count: 1
 			path: src/Http/Controllers/Controller.php
 
@@ -547,12 +511,6 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			message: '#^Call to method paginate\(\) on an unknown class Lomkit\\Rest\\Concerns\\Resource\\Illuminate\\Database\\Eloquent\\Builder\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:actions\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -655,12 +613,6 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:paginate\(\) has parameter \$query with generic class Laravel\\Scout\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:relations\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -736,12 +688,6 @@ parameters:
 			message: '#^Parameter \#2 \$model of method Lomkit\\Rest\\Http\\Resource\:\:authorizedToPerformActionOnRelationship\(\) expects Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Model\|string given\.$#'
 			identifier: argument.type
 			count: 2
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Parameter \$query of method Lomkit\\Rest\\Http\\Resource\:\:paginate\(\) has invalid type Lomkit\\Rest\\Concerns\\Resource\\Illuminate\\Database\\Eloquent\\Builder\.$#'
-			identifier: class.notFound
-			count: 1
 			path: src/Http/Resource.php
 
 		-
@@ -1327,12 +1273,6 @@ parameters:
 			path: src/Query/Builder.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutate\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/Builder.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutateModel\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1447,18 +1387,6 @@ parameters:
 			path: src/Query/Builder.php
 
 		-
-			message: '#^Return type \(Illuminate\\Database\\Eloquent\\Builder\) of method Lomkit\\Rest\\Query\\Builder\:\:search\(\) should be compatible with return type \(\$this\(Lomkit\\Rest\\Contracts\\QueryBuilder\)\) of method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:search\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:disableSecurity\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
 			message: '#^Call to an undefined static method Illuminate\\Database\\Eloquent\\Model\:\:search\(\)\.$#'
 			identifier: staticMethod.notFound
 			count: 1
@@ -1502,12 +1430,6 @@ parameters:
 
 		-
 			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyQueryCallback\(\) has parameter \$query with generic class Laravel\\Scout\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyQueryCallback\(\) return type with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: src/Query/ScoutBuilder.php
@@ -1579,22 +1501,10 @@ parameters:
 			path: src/Query/ScoutBuilder.php
 
 		-
-			message: '#^Return type \(Laravel\\Scout\\Builder\) of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:search\(\) should be compatible with return type \(\$this\(Lomkit\\Rest\\Contracts\\QueryBuilder\)\) of method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:search\(\)$#'
-			identifier: method.childReturnType
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
 			message: '#^Left side of && is always true\.$#'
 			identifier: booleanAnd.leftAlwaysTrue
 			count: 1
 			path: src/Query/Traits/PerformSearch.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/BelongsTo.php
 
 		-
 			message: '#^Method Lomkit\\Rest\\Relations\\BelongsTo\:\:beforeMutating\(\) has no return type specified\.$#'
@@ -1607,18 +1517,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Relations/BelongsTo.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/BelongsToMany.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:mutations\(\)\.$#'
-			identifier: method.notFound
-			count: 5
-			path: src/Relations/BelongsToMany.php
 
 		-
 			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:afterMutating\(\) has no return type specified\.$#'
@@ -1759,30 +1657,6 @@ parameters:
 			path: src/Relations/BelongsToMany.php
 
 		-
-			message: '#^Unable to resolve the template type TKey in call to function collect$#'
-			identifier: argument.templateType
-			count: 4
-			path: src/Relations/BelongsToMany.php
-
-		-
-			message: '#^Unable to resolve the template type TValue in call to function collect$#'
-			identifier: argument.templateType
-			count: 4
-			path: src/Relations/BelongsToMany.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/HasMany.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:mutations\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/HasMany.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\HasMany\:\:afterMutating\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -1813,12 +1687,6 @@ parameters:
 			path: src/Relations/HasManyThrough.php
 
 		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/HasOne.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\HasOne\:\:afterMutating\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -1829,12 +1697,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Relations/HasOne.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/HasOneOfMany.php
 
 		-
 			message: '#^Method Lomkit\\Rest\\Relations\\HasOneOfMany\:\:afterMutating\(\) has no return type specified\.$#'
@@ -1867,18 +1729,6 @@ parameters:
 			path: src/Relations/HasOneThrough.php
 
 		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/MorphMany.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:mutations\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/MorphMany.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\MorphMany\:\:afterMutating\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -1891,12 +1741,6 @@ parameters:
 			path: src/Relations/MorphMany.php
 
 		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/MorphOne.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\MorphOne\:\:afterMutating\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -1907,12 +1751,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Relations/MorphOne.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/MorphOneOfMany.php
 
 		-
 			message: '#^Method Lomkit\\Rest\\Relations\\MorphOneOfMany\:\:afterMutating\(\) has no return type specified\.$#'
@@ -1939,12 +1777,6 @@ parameters:
 			path: src/Relations/MorphRelation.php
 
 		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/MorphTo.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\MorphTo\:\:beforeMutating\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -1955,18 +1787,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Relations/MorphTo.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/MorphToMany.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:mutations\(\)\.$#'
-			identifier: method.notFound
-			count: 5
-			path: src/Relations/MorphToMany.php
 
 		-
 			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:afterMutating\(\) has no return type specified\.$#'
@@ -2107,30 +1927,6 @@ parameters:
 			path: src/Relations/MorphToMany.php
 
 		-
-			message: '#^Unable to resolve the template type TKey in call to function collect$#'
-			identifier: argument.templateType
-			count: 4
-			path: src/Relations/MorphToMany.php
-
-		-
-			message: '#^Unable to resolve the template type TValue in call to function collect$#'
-			identifier: argument.templateType
-			count: 4
-			path: src/Relations/MorphToMany.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Relations/MorphedByMany.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:mutations\(\)\.$#'
-			identifier: method.notFound
-			count: 5
-			path: src/Relations/MorphedByMany.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:afterMutating\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -2266,18 +2062,6 @@ parameters:
 			message: '#^Property Lomkit\\Rest\\Relations\\MorphedByMany\:\:\$pivotRules type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
-			path: src/Relations/MorphedByMany.php
-
-		-
-			message: '#^Unable to resolve the template type TKey in call to function collect$#'
-			identifier: argument.templateType
-			count: 4
-			path: src/Relations/MorphedByMany.php
-
-		-
-			message: '#^Unable to resolve the template type TValue in call to function collect$#'
-			identifier: argument.templateType
-			count: 4
 			path: src/Relations/MorphedByMany.php
 
 		-

@@ -2,14 +2,13 @@
 
 namespace Lomkit\Rest\Rules\Resource;
 
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Rules\RestRule;
 
 class ResourceCustomRules extends RestRule
 {
     public function buildValidationRules(string $attribute, mixed $value): array
     {
-        $request = app(RestRequest::class);
+        $request = $this->resource->context()->request;
 
         $operation = is_array($value) ? ($value['operation'] ?? null) : null;
 

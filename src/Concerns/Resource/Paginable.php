@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
+use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Query\ScoutBuilder;
@@ -11,7 +12,7 @@ trait Paginable
     /**
      * Paginate the results of a query.
      *
-     * @param  Illuminate\Database\Eloquent\Builder|Builder  $query
+     * @param  \Illuminate\Database\Eloquent\Builder<Model>|Builder<Model>  $query
      * @return mixed
      */
     public function paginate($query, RestRequest $request)

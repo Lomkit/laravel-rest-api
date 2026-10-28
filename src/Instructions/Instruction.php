@@ -9,7 +9,6 @@ use Lomkit\Rest\Concerns\Fieldable;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Metable;
 use Lomkit\Rest\Concerns\Resourcable;
-use Lomkit\Rest\Http\Requests\RestRequest;
 
 class Instruction
 {
@@ -52,7 +51,7 @@ class Instruction
      */
     public function jsonSerialize(): array
     {
-        $request = app()->make(RestRequest::class);
+        $request = $this->resource->context()->request;
 
         return [
             'name' => $this->name(),

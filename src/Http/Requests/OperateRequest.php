@@ -23,7 +23,7 @@ class OperateRequest extends RestRequest
     public function rules()
     {
         return $this
-            ->resource($this->route()->controller::newResource())
+            ->resource($this->context()->resource($this->route()->controller::$resource))
             ->operateRules();
     }
 

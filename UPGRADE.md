@@ -29,3 +29,13 @@ To upgrade:
 2. Remove the calls to `Rest::withDocumentationCallback()`, and the service provider that `rest:documentation-provider` created.
 3. Remove the `generateDocumentation*Operation()` methods from your controllers.
 4. Install `dedoc/scramble` and add `Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension` to the `extensions` of `config/scramble.php`.
+
+### Request context
+
+Each package request now owns a `RestContext`. The context holds the request and one instance of each resource for that request. Resources read the request from their context, not from the container.
+
+These items change:
+
+- `Controller::newResource()` is removed. In a controller action, use `$request->context()->resource(static::$resource)`.
+- `app(RestRequest::class)` no longer returns the request in progress. It builds a new request. In a resource, read the request from the method parameter or from `$this->context()->request`.
+- The query builder methods that only exist on Eloquent (`mutate()`, `mutations()`, `applyMutation()`, `disableSecurity()`, `disableDefaultLimit()`) are declared on a new contract, `Lomkit\Rest\Contracts\EloquentQueryBuilder`. If you bind your own `QueryBuilder` implementation, it must implement `EloquentQueryBuilder`. The package resolves `EloquentQueryBuilder` through your `QueryBuilder` binding.

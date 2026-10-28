@@ -21,7 +21,7 @@ trait Relationable
         $isSubRelation = Str::contains($name, '.');
         $relationName = $isSubRelation ? Str::before($name, '.') : $name;
 
-        $relation = Arr::first($this->getRelations(app()->make(RestRequest::class)), function ($relation) use ($relationName) {
+        $relation = Arr::first($this->getRelations($this->context()->request), function ($relation) use ($relationName) {
             return $relation->relation === $relationName;
         });
 

@@ -46,7 +46,7 @@ trait Scoutable
      */
     public function getScoutInstructions(RestRequest $request): array
     {
-        return $this->calculatedScoutInstructions ?? ($this->calculatedScoutInstructions = $this->scoutInstructions($request));
+        return $this->calculatedScoutInstructions ??= array_map(fn (Instruction $instruction) => $instruction->resource($this), $this->scoutInstructions($request));
     }
 
     /**

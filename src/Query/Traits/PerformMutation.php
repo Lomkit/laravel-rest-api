@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Query\Traits;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Requests\MutateRequest;
-use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait PerformMutation
 {
@@ -22,7 +21,7 @@ trait PerformMutation
      * Mutate the model based on the provided parameters.
      *
      * @param  array  $parameters  An array of mutation parameters.
-     * @return array An array containing 'created' and 'updated' operations with affected model keys.
+     * @return array<string, mixed> An array containing 'created' and 'updated' operations with affected model keys.
      */
     public function mutate(array $parameters = [])
     {
@@ -91,7 +90,7 @@ trait PerformMutation
      *
      * @param  array  $mutation  An array of mutation parameters.
      * @param  array  $attributes  Additional attributes to apply to the model.
-     * @return array<Model> The mutated model.
+     * @return array<int, Model> The mutated model.
      */
     public function mutations(array $mutation = [], $attributes = [])
     {
@@ -115,7 +114,7 @@ trait PerformMutation
     public function mutateModel(Model $model, array $attributes, array $mutation)
     {
         /** @var MutateRequest $request */
-        $request = app(RestRequest::class);
+        $request = $this->resource->context()->request;
         $relations = $mutation['relations'] ?? [];
 
         $restRelations = array_filter(

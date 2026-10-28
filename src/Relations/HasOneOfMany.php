@@ -3,7 +3,7 @@
 namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Contracts\QueryBuilder;
+use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
 
 class HasOneOfMany extends Relation implements RelationResource
@@ -21,7 +21,7 @@ class HasOneOfMany extends Relation implements RelationResource
             $model->{$relation->relation}()->getForeignKeyName() => $mutationRelations[$relation->relation]['operation'] === 'detach' ? null : $model->{$relation->relation}()->getParentKey(),
         ];
 
-        $toPerformActionModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+        $toPerformActionModel = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->applyMutation($mutationRelations[$relation->relation], $attributes);
 
         switch ($mutationRelations[$relation->relation]['operation']) {

@@ -7,7 +7,6 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Validation\Validator;
 use Lomkit\Rest\Actions\Action;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Rules\Concerns\ValidatesFields;
 
 class OperateFields implements ValidationRule, ValidatorAwareRule
@@ -53,7 +52,7 @@ class OperateFields implements ValidationRule, ValidatorAwareRule
             $this->validator,
             $attribute,
             $value,
-            $this->action->fields(app(RestRequest::class))
+            $this->action->fields($this->action->resource->context()->request)
         );
     }
 }

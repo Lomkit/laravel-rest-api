@@ -16,7 +16,6 @@ use Lomkit\Rest\Concerns\Metable;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Http\Requests\OperateRequest;
-use Lomkit\Rest\Http\Requests\RestRequest;
 
 class Action implements \JsonSerializable
 {
@@ -166,7 +165,7 @@ class Action implements \JsonSerializable
      */
     public function jsonSerialize(): array
     {
-        $request = app()->make(RestRequest::class);
+        $request = $this->resource->context()->request;
 
         return [
             'name' => $this->name(),

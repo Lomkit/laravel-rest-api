@@ -18,6 +18,7 @@ use Dedoc\Scramble\Support\RouteInfo;
 use Illuminate\Validation\Rules\In;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
 
 class LomkitLaravelRestApiOperationExtension extends OperationExtension
 {
@@ -32,9 +33,9 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
             return;
         }
 
-        $resourceClass = $controller::$resource;
-        $resource = new $resourceClass;
-        $fakeRequest = app(RestRequest::class);
+        $context = new RestContext(RestRequest::createFrom(request()), app());
+        $resource = $context->resource($controller::$resource);
+        $fakeRequest = $context->request;
         $fields = $resource->fields($fakeRequest);
         $relations = $this->parseRelationsFromSource($resource);
         $rules = $this->extractAllRules($resource, $fakeRequest);

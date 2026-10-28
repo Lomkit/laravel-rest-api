@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Rules\Mutate;
 
 use Illuminate\Validation\Rule;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Rules\ArrayWithKey;
 use Lomkit\Rest\Rules\Resource\ResourceCustomRules;
@@ -16,7 +15,7 @@ class Mutate extends RestRule
 
     public function buildValidationRules(string $attribute, mixed $value): array
     {
-        $request = app(RestRequest::class);
+        $request = $this->resource->context()->request;
 
         $operationRules = Rule::in('create', 'update', ...($this->depth === 0 ? [] : ['attach', 'detach', 'toggle', 'sync']));
 

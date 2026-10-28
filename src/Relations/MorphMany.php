@@ -3,7 +3,7 @@
 namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Contracts\QueryBuilder;
+use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
 
@@ -27,7 +27,7 @@ class MorphMany extends MorphRelation implements RelationResource
             ];
 
             if ($mutationRelation['operation'] === 'create') {
-                $toPerformActionModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+                $toPerformActionModel = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
                     ->applyMutation($mutationRelation, $attributes);
 
                 $this->resource()->authorizeToAttach($model, $toPerformActionModel);
@@ -35,7 +35,7 @@ class MorphMany extends MorphRelation implements RelationResource
                 continue;
             }
 
-            $toPerformActionModels = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+            $toPerformActionModels = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
                 ->mutations($mutationRelation, $attributes);
 
             foreach ($toPerformActionModels as $toPerformActionModel) {

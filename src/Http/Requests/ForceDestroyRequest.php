@@ -16,7 +16,7 @@ class ForceDestroyRequest extends RestRequest
      */
     public function rules()
     {
-        return $this->forceDestroyRules($this->route()->controller::newResource());
+        return $this->forceDestroyRules($this->context()->resource($this->route()->controller::$resource));
     }
 
     /**

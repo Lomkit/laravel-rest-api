@@ -3,7 +3,7 @@
 namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Contracts\QueryBuilder;
+use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
 
 class MorphTo extends MorphRelation implements RelationResource
@@ -17,7 +17,7 @@ class MorphTo extends MorphRelation implements RelationResource
      */
     public function beforeMutating(Model $model, Relation $relation, array $mutationRelations)
     {
-        $toPerformActionModel = app()->make(QueryBuilder::class, ['resource' => $relation->resource()])
+        $toPerformActionModel = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->applyMutation($mutationRelations[$relation->relation]);
 
         switch ($mutationRelations[$relation->relation]['operation']) {

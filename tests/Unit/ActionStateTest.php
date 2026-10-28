@@ -4,13 +4,14 @@ namespace Lomkit\Rest\Tests\Unit;
 
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Exceptions\InvalidActionStateException;
+use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 use Lomkit\Rest\Tests\TestCase;
 
 class ActionStateTest extends TestCase
 {
     public function test_action_is_not_targeted_by_default(): void
     {
-        $action = Action::make();
+        $action = Action::make()->resource(new ModelResource);
 
         $this->assertFalse($action->isTargeted());
         $this->assertFalse($action->jsonSerialize()['targeted']);
@@ -18,7 +19,7 @@ class ActionStateTest extends TestCase
 
     public function test_action_can_be_marked_targeted(): void
     {
-        $action = Action::make()->targeted();
+        $action = Action::make()->resource(new ModelResource)->targeted();
 
         $this->assertTrue($action->isTargeted());
         $this->assertTrue($action->jsonSerialize()['targeted']);
