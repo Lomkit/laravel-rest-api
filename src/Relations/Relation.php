@@ -20,6 +20,7 @@ class Relation implements \JsonSerializable
 
     public string $relation;
 
+    /** @var class-string<Resource> */
     protected string $type;
 
     /**
@@ -98,14 +99,7 @@ class Relation implements \JsonSerializable
      */
     public function resource()
     {
-        $resource = $this->type;
-
-        // If the resource isn't registered, do it
-        if (! app()->has($resource)) {
-            app()->singleton($resource);
-        }
-
-        return app()->make($resource);
+        return app(RestRequest::class)->resources()->get($this->type);
     }
 
     /**
