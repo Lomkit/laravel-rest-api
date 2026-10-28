@@ -45,7 +45,7 @@ final class PendingResourceRegistration
     public function withSoftDeletes(Endpoint|string|array ...$endpoints): self
     {
         return $this->apply(function () use ($endpoints): void {
-            $softDeletes = $endpoints === [] ? Endpoint::optIns() : Endpoint::list(...$endpoints);
+            $softDeletes = Endpoint::list(...$endpoints) ?: Endpoint::optIns();
 
             foreach ($softDeletes as $endpoint) {
                 if (! $endpoint->isOptIn()) {

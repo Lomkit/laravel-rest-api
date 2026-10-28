@@ -75,9 +75,6 @@ class OperateRequest extends RestRequest
         );
     }
 
-    /**
-     * Get the key of the action named by the route.
-     */
     public function actionKey(): string
     {
         $key = $this->route('action');

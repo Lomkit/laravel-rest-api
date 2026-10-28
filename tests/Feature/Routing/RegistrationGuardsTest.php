@@ -52,6 +52,7 @@ class RegistrationGuardsTest extends PackageTestCase
         yield 'space' => ['my documents'];
         yield 'question mark' => ['a?b'];
         yield 'colon' => ['a:b'];
+        yield 'trailing newline' => ["documents\n"];
     }
 
     #[Test]
@@ -122,9 +123,12 @@ class RegistrationGuardsTest extends PackageTestCase
             $registration();
             $this->fail('The registration was not rejected.');
         } catch (InvalidResourceRouteException $exception) {
-            $this->assertSame($message, $exception->getMessage());
+            $thrown = $exception->getMessage();
         }
 
+        unset($exception);
+
+        $this->assertSame($message, $thrown);
         $this->assertSame($before, $this->routeCount());
     }
 }

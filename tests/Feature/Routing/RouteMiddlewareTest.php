@@ -45,6 +45,14 @@ class RouteMiddlewareTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_adds_up_repeated_resource_middleware(): void
+    {
+        $routes = $this->registerDocuments(fn (PendingResourceRegistration $pending) => $pending->middleware('auth')->middleware('verified'));
+
+        $this->assertSame([EnforceExpectsJson::class, 'auth', 'verified'], $this->route($routes->getRoutes(), 'documents.details')->middleware());
+    }
+
+    #[Test]
     #[DefineEnvironment('enablePrecognition')]
     public function it_keeps_both_package_middleware_when_precognition_is_enabled(): void
     {

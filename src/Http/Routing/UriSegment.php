@@ -6,7 +6,7 @@ use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
 
 final readonly class UriSegment
 {
-    private const PATTERN = '/^[\p{L}\p{N}_-]+$/u';
+    private const PATTERN = '/^[\p{L}\p{N}_-]+$/Du';
 
     private function __construct(public string $value) {}
 

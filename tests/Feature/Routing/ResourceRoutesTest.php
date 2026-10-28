@@ -116,5 +116,21 @@ class ResourceRoutesTest extends PackageTestCase
             fn (PendingResourceRegistration $pending) => $pending->withSoftDeletes()->only(Endpoint::Search, Endpoint::ForceDestroy),
             ['documents.search', 'documents.forceDestroy'],
         ];
+        yield 'only before except' => [
+            fn (PendingResourceRegistration $pending) => $pending->only('search', 'mutate')->except('mutate'),
+            ['documents.search'],
+        ];
+        yield 'except before only' => [
+            fn (PendingResourceRegistration $pending) => $pending->except('mutate')->only('search', 'mutate'),
+            ['documents.search'],
+        ];
+        yield 'soft deletes with an empty list' => [
+            fn (PendingResourceRegistration $pending) => $pending->withSoftDeletes([])->only('restore', 'forceDestroy'),
+            ['documents.restore', 'documents.forceDestroy'],
+        ];
+        yield 'soft deletes added up' => [
+            fn (PendingResourceRegistration $pending) => $pending->withSoftDeletes('restore')->withSoftDeletes('forceDestroy')->only('restore', 'forceDestroy'),
+            ['documents.restore', 'documents.forceDestroy'],
+        ];
     }
 }
