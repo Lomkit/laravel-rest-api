@@ -16,6 +16,7 @@
   },
   "require-dev": {
     "dedoc/scramble": "^0.13",
+    "larastan/larastan": "^3.13",
     "laravel/pint": "^1.32",
     "laravel/scout": "^11.0",
     "orchestra/testbench": "^11.0",
@@ -40,6 +41,7 @@
   },
   "scripts": {
     "test": "phpunit",
+    "analyse": "phpstan analyse --memory-limit=1G",
     "format": "pint",
     "lint": "pint --test"
   },

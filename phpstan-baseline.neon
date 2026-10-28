@@ -1,0 +1,3079 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:field\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Action.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:fields\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Action.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:handle\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Action.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:handle\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Actions/Action.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:make\(\) has parameter \$arguments with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Actions/Action.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:meta\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Action.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:withBatch\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Action.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\Action\:\:withMeta\(\) has parameter \$meta with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/Action.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Actions/Action.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\CallRestApiAction\:\:__construct\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/CallRestApiAction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\CallRestApiAction\:\:__construct\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Actions/CallRestApiAction.php
+
+		-
+			message: '#^Parameter \#1 \$job of method Lomkit\\Rest\\Actions\\Action\:\:setJob\(\) expects Illuminate\\Contracts\\Queue\\Job, Illuminate\\Contracts\\Queue\\Job\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Actions/CallRestApiAction.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Actions\\CallRestApiAction\:\:\$fields type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/CallRestApiAction.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Actions\\CallRestApiAction\:\:\$models with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Actions/CallRestApiAction.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:disableDefaultLimit\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Call to function property_exists\(\) with Lomkit\\Rest\\Actions\\Action and ''connection'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Call to function property_exists\(\) with Lomkit\\Rest\\Actions\\Action and ''queue'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Cannot call method add\(\) on Illuminate\\Bus\\PendingBatch\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:__construct\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:addQueuedActionJob\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:configureBatchJob\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:dispatch\(\) has parameter \$chunkCount with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:dispatchInChunks\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:dispatchSynchronouslyForCollection\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:forModels\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:modelsQuery\(\) has parameter \$searchParameters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:modelsQuery\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$method$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Parameter \#1 \$queue of method Illuminate\\Contracts\\Queue\\Queue\:\:pushOn\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Actions\\DispatchAction\:\:\$fields type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Actions/DispatchAction.php
+
+		-
+			message: '#^Call to function is_null\(\) with mixed will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: src/Concerns/Authorizable.php
+
+		-
+			message: '#^Instanceof between Illuminate\\Database\\Eloquent\\Model and Illuminate\\Database\\Eloquent\\Model will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 4
+			path: src/Concerns/Authorizable.php
+
+		-
+			message: '#^Instanceof between string and Illuminate\\Database\\Eloquent\\Model will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
+			count: 4
+			path: src/Concerns/Authorizable.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: src/Concerns/Authorizable.php
+
+		-
+			message: '#^Trait Lomkit\\Rest\\Concerns\\Resource\\DisableAuthorizations is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Concerns/Resource/DisableAuthorizations.php
+
+		-
+			message: '#^Trait Lomkit\\Rest\\Concerns\\Resource\\DisableAuthorizationsCache is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Concerns/Resource/DisableAuthorizationsCache.php
+
+		-
+			message: '#^Trait Lomkit\\Rest\\Concerns\\Resource\\DisableGates is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Concerns/Resource/DisableGates.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$defaultLimit \(int\) on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.property
+			count: 1
+			path: src/Concerns/Resource/Paginable.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Console\\Commands\\ControllerMakeCommand\:\:buildResourceReplacements\(\) has parameter \$replace with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Console/Commands/ControllerMakeCommand.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Console\\Commands\\ControllerMakeCommand\:\:buildResourceReplacements\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Console/Commands/ControllerMakeCommand.php
+
+		-
+			message: '#^Parameter \#1 \$model of method Lomkit\\Rest\\Console\\Commands\\ControllerMakeCommand\:\:parseResource\(\) expects string, array\|bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Console/Commands/ControllerMakeCommand.php
+
+		-
+			message: '#^Binary operation "\." between ''Open '' and Illuminate\\Contracts\\Routing\\UrlGenerator\|string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Console/Commands/Documentation/DocumentationCommand.php
+
+		-
+			message: '#^Binary operation "\." between array\|bool\|float\|int\|string and ''/'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Console/Commands/Documentation/DocumentationCommand.php
+
+		-
+			message: '#^Parameter \#2 \$contents of method Illuminate\\Filesystem\\Filesystem\:\:put\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Console/Commands/Documentation/DocumentationCommand.php
+
+		-
+			message: '#^Return type \(void\) of method Lomkit\\Rest\\Console\\Commands\\Documentation\\DocumentationCommand\:\:handle\(\) should be compatible with return type \(bool\|null\) of method Illuminate\\Console\\GeneratorCommand\:\:handle\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: src/Console/Commands/Documentation/DocumentationCommand.php
+
+		-
+			message: '#^Parameter \#1 \$haystack of function str_contains expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Console/Commands/QuickStartCommand.php
+
+		-
+			message: '#^Parameter \#1 \$haystack of static method Illuminate\\Support\\Str\:\:contains\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Console/Commands/QuickStartCommand.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|false given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Console/Commands/QuickStartCommand.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Console\\Commands\\ResourceMakeCommand\:\:buildModelReplacements\(\) has parameter \$replace with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Console/Commands/ResourceMakeCommand.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Console\\Commands\\ResourceMakeCommand\:\:buildModelReplacements\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Console/Commands/ResourceMakeCommand.php
+
+		-
+			message: '#^Parameter \#1 \$model of method Lomkit\\Rest\\Console\\Commands\\ResourceMakeCommand\:\:parseModel\(\) expects string, array\|bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Console/Commands/ResourceMakeCommand.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\BatchableAction\:\:withBatch\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Contracts/BatchableAction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\Http\\Routing\\Registrar\:\:resource\(\) has invalid return type Lomkit\\Rest\\Contracts\\Http\\Routing\\Lomkit\\Rest\\Http\\Routing\\PendingResourceRegistration\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Contracts/Http/Routing/Registrar.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\Http\\Routing\\Registrar\:\:resource\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Contracts/Http/Routing/Registrar.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:search\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Contracts/QueryBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:toBase\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Contracts/QueryBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:toBase\(\) return type with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Contracts/QueryBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\RelationResource\:\:filter\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Contracts/RelationResource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\RelationResource\:\:filter\(\) has parameter \$boolean with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Contracts/RelationResource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\RelationResource\:\:filter\(\) has parameter \$operator with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Contracts/RelationResource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\RelationResource\:\:filter\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Contracts/RelationResource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\RelationResource\:\:filter\(\) has parameter \$relation with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Contracts/RelationResource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Contracts\\RelationResource\:\:filter\(\) has parameter \$value with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Contracts/RelationResource.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$name$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Documentation/Schemas/Contact.php
+
+		-
+			message: '#^PHPDoc tag @return with type Lomkit\\Rest\\Documentation\\Schemas\\Contact is incompatible with native type string\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: src/Documentation/Schemas/Contact.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Example\:\:value\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Example.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Example\:\:withValue\(\) has parameter \$value with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Example.php
+
+		-
+			message: '#^PHPDoc tag @var for property Lomkit\\Rest\\Documentation\\Schemas\\Example\:\:\$value with type string is incompatible with native type array\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Documentation/Schemas/Example.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\Example\:\:\$value type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Example.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Documentation\\Schemas\\Example\:\:withExample\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Documentation/Schemas/Examples.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Examples\:\:examples\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Examples.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Examples\:\:withExamples\(\) has parameter \$examples with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Examples.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\Examples\:\:\$examples type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Examples.php
+
+		-
+			message: '#^Call to an undefined method \$this\(Lomkit\\Rest\\Documentation\\Schemas\\MediaType\)\:\:schema\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Documentation/Schemas/MediaType.php
+
+		-
+			message: '#^Call to an undefined static method Illuminate\\Database\\Eloquent\\Model\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 4
+			path: src/Documentation/Schemas/MediaType.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\OauthFlow\:\:scopes\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OauthFlow.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\OauthFlow\:\:withScopes\(\) has parameter \$scopes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OauthFlow.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\OauthFlow\:\:\$scopes type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OauthFlow.php
+
+		-
+			message: '#^Argument of an invalid type Illuminate\\Routing\\RouteCollectionInterface supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Call to an undefined static method Lomkit\\Rest\\Facades\\Rest\:\:applyDocumentationCallback\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:generatePaths\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:paths\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:security\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:securitySchemes\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:servers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:withPaths\(\) has parameter \$paths with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:withSecurity\(\) has parameter \$security with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:withSecuritySchemes\(\) has parameter \$securitySchemes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:withServers\(\) has parameter \$servers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:\$paths type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:\$security \(array\) in isset\(\) is not nullable\.$#'
+			identifier: isset.property
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:\$security type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:\$securitySchemes \(array\) in isset\(\) is not nullable\.$#'
+			identifier: isset.property
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:\$securitySchemes type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:\$servers \(array\) in isset\(\) is not nullable\.$#'
+			identifier: isset.property
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\OpenAPI\:\:\$servers type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/OpenAPI.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Operation\:\:tags\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Operation\:\:withTags\(\) has parameter \$tags with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$tags$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^PHPDoc tag @return with type Lomkit\\Rest\\Documentation\\Schemas\\Operation is incompatible with native type array\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^Parameter \#1 \$operation of method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:generateDocumentationActionsOperation\(\) expects Lomkit\\Rest\\Documentation\\Schemas\\Operation, Lomkit\\Rest\\Documentation\\Schemas\\Schema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^Parameter \#1 \$operation of method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:generateDocumentationDestroyOperation\(\) expects Lomkit\\Rest\\Documentation\\Schemas\\Operation, Lomkit\\Rest\\Documentation\\Schemas\\Schema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^Parameter \#1 \$operation of method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:generateDocumentationDetailOperation\(\) expects Lomkit\\Rest\\Documentation\\Schemas\\Operation, Lomkit\\Rest\\Documentation\\Schemas\\Schema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^Parameter \#1 \$operation of method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:generateDocumentationForceDeleteOperation\(\) expects Lomkit\\Rest\\Documentation\\Schemas\\Operation, Lomkit\\Rest\\Documentation\\Schemas\\Schema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^Parameter \#1 \$operation of method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:generateDocumentationMutateOperation\(\) expects Lomkit\\Rest\\Documentation\\Schemas\\Operation, Lomkit\\Rest\\Documentation\\Schemas\\Schema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^Parameter \#1 \$operation of method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:generateDocumentationRestoreOperation\(\) expects Lomkit\\Rest\\Documentation\\Schemas\\Operation, Lomkit\\Rest\\Documentation\\Schemas\\Schema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^Parameter \#1 \$operation of method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:generateDocumentationSearchOperation\(\) expects Lomkit\\Rest\\Documentation\\Schemas\\Operation, Lomkit\\Rest\\Documentation\\Schemas\\Schema given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\Operation\:\:\$tags \(array\) in isset\(\) is not nullable\.$#'
+			identifier: isset.property
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\Operation\:\:\$tags type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Operation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Path\:\:parameters\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Path.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Path\:\:withParameters\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Path.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\Path\:\:\$parameters type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Path.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\RequestBody\:\:content\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/RequestBody.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\RequestBody\:\:withContent\(\) has parameter \$content with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/RequestBody.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\RequestBody\:\:\$content type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/RequestBody.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Response\:\:content\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Response\:\:headers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Response\:\:links\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Response\:\:withContent\(\) has parameter \$content with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Response\:\:withHeaders\(\) has parameter \$headers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Response\:\:withLinks\(\) has parameter \$links with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Response.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\Response\:\:\$content type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Response.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\Response\:\:\$headers type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Response.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\Response\:\:\$links type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Responses\:\:others\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Responses.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Responses\:\:withOthers\(\) has parameter \$others with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Responses.php
+
+		-
+			message: '#^PHPDoc tag @var for property Lomkit\\Rest\\Documentation\\Schemas\\Responses\:\:\$others with type object is incompatible with native type array\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Documentation/Schemas/Responses.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\Responses\:\:\$others type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Responses.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\Server\:\:variables\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Server.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\Server\:\:\$variables type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/Server.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\ServerVariable\:\:enum\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/ServerVariable.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Documentation\\Schemas\\ServerVariable\:\:withEnum\(\) has parameter \$enum with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/ServerVariable.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Documentation\\Schemas\\ServerVariable\:\:\$enum type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Documentation/Schemas/ServerVariable.php
+
+		-
+			message: '#^Class Lomkit\\Rest\\Facades\\Rest has PHPDoc tag @method for method resource\(\) parameter \#3 \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Facades/Rest.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:withTrashed\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/Http/Controllers/Controller.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:tap\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Http/Controllers/Controller.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:details\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Controllers/Controller.php
+
+		-
+			message: '#^Parameter \#1 \$query of method Lomkit\\Rest\\Http\\Resource\:\:paginate\(\) expects Laravel\\Scout\\Builder\|Lomkit\\Rest\\Concerns\\Resource\\Illuminate\\Database\\Eloquent\\Builder, Lomkit\\Rest\\Contracts\\QueryBuilder given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/Controller.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Controllers/DocumentationController.php
+
+		-
+			message: '#^Parameter \#1 \$haystack of static method Illuminate\\Support\\Str\:\:contains\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Middleware/EnforceExpectsJson.php
+
+		-
+			message: '#^Cannot access property \$controller on Illuminate\\Routing\\Route\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Http/Requests/DestroyRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\DestroyRequest\:\:destroyRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/DestroyRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\DestroyRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/DestroyRequest.php
+
+		-
+			message: '#^Cannot access property \$controller on Illuminate\\Routing\\Route\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Http/Requests/ForceDestroyRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\ForceDestroyRequest\:\:forceDestroyRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/ForceDestroyRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\ForceDestroyRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/ForceDestroyRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\MutateRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/MutateRequest.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Http\\Requests\\RestRequest\:\:operateRules\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Http/Requests/OperateRequest.php
+
+		-
+			message: '#^Cannot access property \$controller on Illuminate\\Routing\\Route\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Http/Requests/OperateRequest.php
+
+		-
+			message: '#^Cannot call method parameter\(\) on Illuminate\\Routing\\Route\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Http/Requests/OperateRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\OperateRequest\:\:operateRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/OperateRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\OperateRequest\:\:resolveFields\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/OperateRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\OperateRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/OperateRequest.php
+
+		-
+			message: '#^Parameter \#2 \$actionKey of method Lomkit\\Rest\\Http\\Resource\:\:action\(\) expects string, object\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Requests/OperateRequest.php
+
+		-
+			message: '#^Parameter \#2 \$actionKey of method Lomkit\\Rest\\Http\\Resource\:\:actionExists\(\) expects string, object\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Requests/OperateRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\RestRequest\:\:isScoutMode\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Http/Requests/RestRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\RestRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/RestRequest.php
+
+		-
+			message: '#^PHPDoc tag @var above a method has no effect\.$#'
+			identifier: varTag.misplaced
+			count: 1
+			path: src/Http/Requests/RestRequest.php
+
+		-
+			message: '#^Cannot access property \$controller on Illuminate\\Routing\\Route\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Http/Requests/RestoreRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\RestoreRequest\:\:restoreRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/RestoreRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\RestoreRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/RestoreRequest.php
+
+		-
+			message: '#^Cannot access property \$controller on Illuminate\\Routing\\Route\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Http/Requests/SearchRequest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Requests\\SearchRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Requests/SearchRequest.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:getCollection\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:setCollection\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:restore\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Call to method paginate\(\) on an unknown class Lomkit\\Rest\\Concerns\\Resource\\Illuminate\\Database\\Eloquent\\Builder\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:actions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:createRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:defaultOrderBy\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:fields\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getActions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getFields\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getInstructions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getLimits\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getRelations\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getScopes\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getScoutFields\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getScoutInstructions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:instructions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:isModelSearchable\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:limits\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:mutated\(\) has parameter \$requestBody with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:mutating\(\) has parameter \$requestBody with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:paginate\(\) has parameter \$query with generic class Laravel\\Scout\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:relations\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:scopes\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:scoutFields\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:scoutInstructions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:searchScoutQuery\(\) has parameter \$query with generic class Laravel\\Scout\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:searchScoutQuery\(\) return type with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:updateRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$query$#'
+			identifier: parameter.notFound
+			count: 3
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Parameter \#1 \$objectOrClass of class ReflectionClass constructor contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Parameter \#1 \$object_or_class of function method_exists expects object\|string, Lomkit\\Rest\\Relations\\Relation\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Parameter \#2 \$model of method Lomkit\\Rest\\Http\\Resource\:\:authorizeToPerformActionOnRelationship\(\) expects Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Model\|string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Parameter \#2 \$model of method Lomkit\\Rest\\Http\\Resource\:\:authorizedToPerformActionOnRelationship\(\) expects Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Model\|string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Parameter \$query of method Lomkit\\Rest\\Http\\Resource\:\:paginate\(\) has invalid type Lomkit\\Rest\\Concerns\\Resource\\Illuminate\\Database\\Eloquent\\Builder\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedActions type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedFields type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedInstructions type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedLimits type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedRelations type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedScopes type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedScoutFields type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedScoutInstructions type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: src/Http/Resource.php
+
+		-
+			message: '#^Cannot call method getPivotFields\(\) on Lomkit\\Rest\\Relations\\Relation\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Cannot call method resource\(\) on Lomkit\\Rest\\Relations\\Relation\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Class Lomkit\\Rest\\Http\\Resource referenced with incorrect case\: Lomkit\\Rest\\Http\\resource\.$#'
+			identifier: class.nameCase
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:buildGatesForModel\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:buildGatesForModel\(\) has parameter \$gates with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:map\(\) has parameter \$responseModel with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:map\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:modelToResponse\(\) has parameter \$requestArray with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:modelToResponse\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:requestArrayForRelation\(\) has parameter \$currentInclude with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:requestArrayForRelation\(\) has parameter \$requestArray with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:requestArrayForRelation\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:resource\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:responsable\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:responsable\(\) has parameter \$responsable with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:toResponse\(\) should return Symfony\\Component\\HttpFoundation\\Response but returns Lomkit\\Rest\\Pagination\\LengthAwarePaginator\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:toResponse\(\) should return Symfony\\Component\\HttpFoundation\\Response but returns array\<string, array\|Illuminate\\Support\\Collection\<\(int\|string\), array\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^PHPDoc tag @var above a method has no effect\.$#'
+			identifier: varTag.misplaced
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^PHPDoc tag @var has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Http\\Response\:\:\$responsable has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/Http/Response.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 5
+			path: src/Http/Response.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 5
+			path: src/Http/Response.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Routing\\PendingResourceRegistration\:\:withSoftDeletes\(\) has parameter \$methods with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Routing/PendingResourceRegistration.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Routing\\ResourceRegistrar\:\:addResourceDestroy\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Routing/ResourceRegistrar.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Routing\\ResourceRegistrar\:\:addResourceDetails\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Routing/ResourceRegistrar.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Routing\\ResourceRegistrar\:\:addResourceForceDelete\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Routing/ResourceRegistrar.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Routing\\ResourceRegistrar\:\:addResourceMutate\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Routing/ResourceRegistrar.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Routing\\ResourceRegistrar\:\:addResourceOperate\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Routing/ResourceRegistrar.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Routing\\ResourceRegistrar\:\:addResourceRestore\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Routing/ResourceRegistrar.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Routing\\ResourceRegistrar\:\:addResourceSearch\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Routing/ResourceRegistrar.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Http\\Routing\\ResourceRegistrar\:\:register\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Routing/ResourceRegistrar.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Http\\Routing\\ResourceRegistrar\:\:\$verbs type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Http/Routing/ResourceRegistrar.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:field\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Instructions/Instruction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:fields\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Instructions/Instruction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:handle\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Instructions/Instruction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:handle\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Instructions/Instruction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:handleScout\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Instructions/Instruction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:handleScout\(\) has parameter \$query with generic class Laravel\\Scout\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Instructions/Instruction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:make\(\) has parameter \$arguments with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Instructions/Instruction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:meta\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Instructions/Instruction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Instructions\\Instruction\:\:withMeta\(\) has parameter \$meta with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Instructions/Instruction.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Instructions/Instruction.php
+
+		-
+			message: '#^Class Lomkit\\Rest\\Pagination\\LengthAwarePaginator extends generic class Illuminate\\Pagination\\LengthAwarePaginator but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Pagination/LengthAwarePaginator.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Pagination\\LengthAwarePaginator\:\:__construct\(\) has parameter \$meta with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Pagination/LengthAwarePaginator.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Pagination\\LengthAwarePaginator\:\:__construct\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Pagination/LengthAwarePaginator.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Pagination\\LengthAwarePaginator\:\:meta\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Pagination/LengthAwarePaginator.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Pagination\\LengthAwarePaginator\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Pagination/LengthAwarePaginator.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Pagination\\LengthAwarePaginator\:\:\$meta type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Pagination/LengthAwarePaginator.php
+
+		-
+			message: '#^Cannot call method afterQuery\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Cannot call method applySearchQuery\(\) on Lomkit\\Rest\\Relations\\Relation\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Cannot call method filter\(\) on Lomkit\\Rest\\Relations\\Relation\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Cannot call method getModel\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Cannot call method handle\(\) on Lomkit\\Rest\\Instructions\\Instruction\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Cannot call method limit\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Cannot call method orderBy\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Cannot call method where\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Cannot call method whereIn\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Cannot call method with\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Cannot call method withAggregate\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:__construct\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:__construct\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Relations\\Relation but does not specify its types\: TRelatedModel, TDeclaringModel, TResult$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:aggregate\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:aggregate\(\) has parameter \$aggregate with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyAggregates\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyAggregates\(\) has parameter \$aggregates with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyFilters\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyFilters\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyIncludes\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyIncludes\(\) has parameter \$includes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyInstructions\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyInstructions\(\) has parameter \$instructions with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyMutation\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyMutation\(\) has parameter \$key with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyMutation\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyScopes\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyScopes\(\) has parameter \$scopes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applySorts\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applySorts\(\) has parameter \$sorts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:filter\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:filter\(\) has parameter \$nested with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:include\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:include\(\) has parameter \$include with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:includeAliased\(\) has parameter \$include with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:includeAliased\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:instruction\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:instruction\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutate\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutate\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutateModel\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutateModel\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutationAbility\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutations\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutations\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:newQueryBuilder\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:newQueryBuilder\(\) has parameter \$parameters with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:scope\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:scope\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:search\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:search\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:search\(\) should return Illuminate\\Database\\Eloquent\\Builder but returns Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:sort\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:toBase\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:toBase\(\) should return Illuminate\\Database\\Eloquent\\Builder but returns Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Parameter \#1 \$model of method Lomkit\\Rest\\Query\\Builder\:\:mutateModel\(\) expects Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Query\\Builder\:\:\$mutateOperationsVerbose type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Query\\Builder\:\:\$queryBuilder \(Illuminate\\Database\\Eloquent\\Builder\|null\) does not accept Illuminate\\Database\\Eloquent\\Builder\|Illuminate\\Database\\Eloquent\\Relations\\Relation\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Query\\Builder\:\:\$queryBuilder with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Return type \(Illuminate\\Database\\Eloquent\\Builder\) of method Lomkit\\Rest\\Query\\Builder\:\:search\(\) should be compatible with return type \(\$this\(Lomkit\\Rest\\Contracts\\QueryBuilder\)\) of method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:search\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: src/Query/Builder.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:disableSecurity\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Call to an undefined static method Illuminate\\Database\\Eloquent\\Model\:\:search\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Cannot call method handleScout\(\) on Lomkit\\Rest\\Instructions\\Instruction\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyFilters\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyFilters\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyInstructions\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyInstructions\(\) has parameter \$instructions with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyQueryCallback\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyQueryCallback\(\) has parameter \$query with generic class Laravel\\Scout\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyQueryCallback\(\) return type with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applySorts\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applySorts\(\) has parameter \$sorts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:filter\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:filter\(\) invoked with 4 parameters, 3 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:instruction\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:instruction\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:search\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:search\(\) return type with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:sort\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:toBase\(\) return type with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Query\\ScoutBuilder\:\:\$queryBuilder with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Return type \(Laravel\\Scout\\Builder\) of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:search\(\) should be compatible with return type \(\$this\(Lomkit\\Rest\\Contracts\\QueryBuilder\)\) of method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:search\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: src/Query/ScoutBuilder.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: src/Query/Traits/PerformSearch.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/BelongsTo.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsTo\:\:beforeMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/BelongsTo.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsTo\:\:beforeMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsTo.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:mutations\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:attach\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:attach\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:create\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:create\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:detach\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:detach\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:getPivotFields\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:getPivotRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:sync\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:sync\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:toggle\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:toggle\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:update\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:update\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:withPivotFields\(\) has parameter \$pivotFields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:withPivotRules\(\) has parameter \$pivotRules with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Parameter \#2 \$toAttachModel of method Lomkit\\Rest\\Http\\Resource\:\:authorizeToAttach\(\) expects Illuminate\\Database\\Eloquent\\Model\|string, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Parameter \#2 \$toAttachModel of method Lomkit\\Rest\\Http\\Resource\:\:authorizeToDetach\(\) expects Illuminate\\Database\\Eloquent\\Model\|string, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Relations\\BelongsToMany\:\:\$pivotFields type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Relations\\BelongsToMany\:\:\$pivotRules type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 4
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 4
+			path: src/Relations/BelongsToMany.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/HasMany.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:mutations\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/HasMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasMany\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/HasMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasMany\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/HasMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasManyThrough\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/HasManyThrough.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasManyThrough\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/HasManyThrough.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasManyThrough\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/HasManyThrough.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/HasOne.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasOne\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/HasOne.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasOne\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/HasOne.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/HasOneOfMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasOneOfMany\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/HasOneOfMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasOneOfMany\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/HasOneOfMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasOneThrough\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/HasOneThrough.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasOneThrough\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/HasOneThrough.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\HasOneThrough\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/HasOneThrough.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/MorphMany.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:mutations\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/MorphMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphMany\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/MorphMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphMany\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphMany.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/MorphOne.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphOne\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/MorphOne.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphOne\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphOne.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/MorphOneOfMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphOneOfMany\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/MorphOneOfMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphOneOfMany\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphOneOfMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphRelation\:\:make\(\) has parameter \$arguments with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Relations/MorphRelation.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Relations/MorphRelation.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/MorphTo.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphTo\:\:beforeMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/MorphTo.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphTo\:\:beforeMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphTo.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:mutations\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:attach\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:attach\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:create\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:create\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:detach\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:detach\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:getPivotFields\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:getPivotRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:sync\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:sync\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:toggle\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:toggle\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:update\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:update\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:withPivotFields\(\) has parameter \$pivotFields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:withPivotRules\(\) has parameter \$pivotRules with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Parameter \#2 \$toAttachModel of method Lomkit\\Rest\\Http\\Resource\:\:authorizeToAttach\(\) expects Illuminate\\Database\\Eloquent\\Model\|string, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Parameter \#2 \$toAttachModel of method Lomkit\\Rest\\Http\\Resource\:\:authorizeToDetach\(\) expects Illuminate\\Database\\Eloquent\\Model\|string, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Relations\\MorphToMany\:\:\$pivotFields type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Relations\\MorphToMany\:\:\$pivotRules type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 4
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 4
+			path: src/Relations/MorphToMany.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:applyMutation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:mutations\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:attach\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:attach\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:create\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:create\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:detach\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:detach\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:getPivotFields\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:getPivotRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:sync\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:sync\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:toggle\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:toggle\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:update\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:update\(\) has parameter \$mutation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:withPivotFields\(\) has parameter \$pivotFields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:withPivotRules\(\) has parameter \$pivotRules with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Parameter \#2 \$toAttachModel of method Lomkit\\Rest\\Http\\Resource\:\:authorizeToAttach\(\) expects Illuminate\\Database\\Eloquent\\Model\|string, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Parameter \#2 \$toAttachModel of method Lomkit\\Rest\\Http\\Resource\:\:authorizeToDetach\(\) expects Illuminate\\Database\\Eloquent\\Model\|string, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Relations\\MorphedByMany\:\:\$pivotFields type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Relations\\MorphedByMany\:\:\$pivotRules type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 4
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 4
+			path: src/Relations/MorphedByMany.php
+
+		-
+			message: '#^Call to an undefined method Lomkit\\Rest\\Relations\\Relation\:\:getPivotRules\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Callable passed to call_user_func\(\) invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 4
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:__construct\(\) has parameter \$relation with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:__construct\(\) has parameter \$type with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:afterMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:afterMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:applySearchQuery\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:applySearchQuery\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:beforeMutating\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:beforeMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:filter\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:filter\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:make\(\) has parameter \$arguments with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:prohibitedOnCreation\(\) has invalid return type Lomkit\\Rest\\Relations\\Traits\\Constrained\.$#'
+			identifier: return.trait
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:prohibitedOnUpdate\(\) has invalid return type Lomkit\\Rest\\Relations\\Traits\\Constrained\.$#'
+			identifier: return.trait
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:requiredOnCreation\(\) has invalid return type Lomkit\\Rest\\Relations\\Traits\\Constrained\.$#'
+			identifier: return.trait
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:requiredOnUpdate\(\) has invalid return type Lomkit\\Rest\\Relations\\Traits\\Constrained\.$#'
+			identifier: return.trait
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^PHPDoc tag @return with type Lomkit\\Rest\\Relations\\Relation\|Lomkit\\Rest\\Relations\\Traits\\Constrained is not subtype of native type Lomkit\\Rest\\Relations\\Relation\.$#'
+			identifier: return.phpDocType
+			count: 4
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Trying to invoke Closure\|null but it might not be a callable\.$#'
+			identifier: callable.nonCallable
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Relations/Relation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rest\:\:resource\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rest\:\:resource\(\) should return Lomkit\\Rest\\Http\\Routing\\PendingResourceRegistration but returns Illuminate\\Routing\\PendingResourceRegistration\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Rest.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\RestServiceProvider\:\:routeConfiguration\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/RestServiceProvider.php
+
+		-
+			message: '#^Parameter \#1 \$path of method Illuminate\\Foundation\\Events\\PublishingStubs\:\:add\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 8
+			path: src/RestServiceProvider.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\ArrayWithKey\:\:__construct\(\) has parameter \$keys with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/ArrayWithKey.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Rules\\ArrayWithKey\:\:\$keys type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/ArrayWithKey.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Mutate\\Mutate\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Mutate/Mutate.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Mutate\\MutateRelation\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Mutate/MutateRelation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Operate\\OperateFields\:\:validateFields\(\) has parameter \$declaredRules with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Operate/OperateFields.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Resource\\ResourceCustomRules\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Resource/ResourceCustomRules.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Resource\\ResourceMutateRelationOperation\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Resource/ResourceMutateRelationOperation.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\RestRule\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/RestRule.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\Search\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/Search.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchAggregate\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchAggregate.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchFilter\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchFilter.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchInclude\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchInclude.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchIncludeAlias\:\:relationNames\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchIncludeAlias.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchIncludeAlias\:\:setData\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchIncludeAlias.php
+
+		-
+			message: '#^Property Lomkit\\Rest\\Rules\\Search\\SearchIncludeAlias\:\:\$data type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchIncludeAlias.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: src/Rules/Search/SearchIncludeAlias.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: src/Rules/Search/SearchIncludeAlias.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchInstruction\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchInstruction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchInstruction\:\:validateFields\(\) has parameter \$declaredRules with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchInstruction.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchScope\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchScope.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchSelect\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchSelect.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchSort\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchSort.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchText\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Rules/Search/SearchText.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:buildRelationsDescription\(\) has parameter \$relations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:buildRuleDescription\(\) has parameter \$fieldRules with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:documentMutate\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:documentMutate\(\) has parameter \$relations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:documentMutate\(\) has parameter \$rules with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:documentSearch\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:documentSearch\(\) has parameter \$relations with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:extractAllRules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:extractAllRules\(\) should return array\<string, array\{all\: array, create\: array, update\: array\}\> but returns array\<int\|string, array\{all\: array, create\: array, update\: array\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
+
+		-
+			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:resolveFieldType\(\) has parameter \$rules with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
