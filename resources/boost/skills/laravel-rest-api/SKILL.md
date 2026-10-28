@@ -495,16 +495,10 @@ Use sparingly — overriding the response can bypass authorization shaping and f
 The package documents its endpoints through a Scramble extension.
 
 ```bash
-composer require dedoc/scramble
+composer require dedoc/scramble:^0.13
 ```
 
-Add the extension to `config/scramble.php`:
-
-```php
-'extensions' => [
-    \Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension::class,
-],
-```
+The package registers the extension itself: `config/scramble.php` needs no change.
 
 Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources.
 
