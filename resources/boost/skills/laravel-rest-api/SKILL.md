@@ -163,10 +163,25 @@ Rest::resource('posts', \App\Rest\Controllers\PostsController::class)
     ->withSoftDeletes();                       // both restore + force
 // or selectively:
 Rest::resource('posts', \App\Rest\Controllers\PostsController::class)
-    ->withSoftDeletes(['restore']);
+    ->withSoftDeletes('restore');
 ```
 
-`Rest::resource()` registers these routes (verbs and paths are fixed):
+The name must be one URI segment (letters, digits, `-`, `_`). Dotted names (`users.posts`) and slashed names (`admin/users`) throw `InvalidResourceRouteException`: wrap the call in `Route::prefix('admin')` instead. `Rest::resource()` takes two arguments.
+
+`Rest::resource()` returns a builder with these options. Endpoint keys are `details`, `search`, `mutate`, `operate`, `destroy`, `restore` and `forceDelete` (or the `Lomkit\Rest\Http\Routing\Endpoint` cases); an unknown key throws. The result does not depend on the call order.
+
+```php
+Rest::resource('posts', PostsController::class)
+    ->withSoftDeletes('restore')                 // restore and/or forceDelete; none = both
+    ->except('destroy')                          // or ->only('details', 'search')
+    ->names('blog.posts')                        // name prefix; ->names([...]) or ->name('search', 'posts.find') for exact names
+    ->middleware('verified')                     // added after the package middleware
+    ->middlewareFor('operate', 'throttle:5,1')   // added after the resource middleware
+    ->withoutMiddleware('verified')              // or ->withoutMiddlewareFor('details', 'verified')
+    ->register();                                // optional: routes register when the builder is released
+```
+
+`Rest::resource()` registers these routes. `Route::resourceVerbs()` changes the verbs through the keys `search`, `mutate`, `actions`, `restore` and `forceDelete` (each must be one URI segment):
 
 | Method | URI | Endpoint | Purpose |
 | --- | --- | --- | --- |
@@ -178,7 +193,7 @@ Rest::resource('posts', \App\Rest\Controllers\PostsController::class)
 | `POST` | `/users/restore` | `restore` | Opt-in via `withSoftDeletes()` |
 | `DELETE` | `/users/force` | `forceDelete` | Opt-in via `withSoftDeletes()` |
 
-All endpoints require `Accept: application/json` (enforced by `EnforceExpectsJson` middleware). Laravel Precognition is supported when `rest.precognition.enabled = true` — clients send `Precognition: true` and the request returns `204` after validation without touching the controller body, or `422` with errors.
+Every route carries the `EnforceExpectsJson` middleware, which adds `application/json` to the `Accept` header, so errors come back as JSON. Group middleware runs before it. Route names only have to be unique within one resource; two resources with the same name or URI still overwrite each other, as with Laravel routes. Laravel Precognition is supported when `rest.precognition.enabled = true` — clients send `Precognition: true` and the request returns `204` after validation without touching the controller body, or `422` with errors.
 
 ## `details` endpoint
 
@@ -531,7 +546,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 
 ## Pointers into the codebase
 
-- Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/{ResourceRegistrar,PendingResourceRegistration}.php`
+- Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `ResourceRegistrar` and the route value objects)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Concerns/Resource/*` (`DisableGates`, `DisableAuthorizationsCache`, hooks, ...)
 - Query layer — `src/Query/Builder.php`, `src/Query/ScoutBuilder.php`
