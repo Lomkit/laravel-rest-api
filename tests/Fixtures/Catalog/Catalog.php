@@ -18,6 +18,7 @@ class Catalog implements Fixture
         Route::prefix('api')->group(function (): void {
             Rest::resource('categories', CategoryController::class);
             Rest::resource('products', ProductController::class);
+            Rest::resource('staff-products', StaffProductController::class);
         });
     }
 }

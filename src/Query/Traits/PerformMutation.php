@@ -114,13 +114,12 @@ trait PerformMutation
      */
     public function mutateModel(Model $model, array $attributes, array $mutation)
     {
+        /** @var MutateRequest $request */
+        $request = app(RestRequest::class);
         $relations = $mutation['relations'] ?? [];
 
         $restRelations = array_filter(
-            $this->resource
-                ->getRelations(
-                    app()->make(RestRequest::class)
-                ),
+            $this->resource->getRelations($request),
             function ($relation) use ($relations) {
                 return isset($relations[$relation->relation]);
             }
@@ -132,7 +131,7 @@ trait PerformMutation
 
         $this
             ->resource
-            ->mutating(app(MutateRequest::class), $mutation, $model);
+            ->mutating($request, $mutation, $model);
 
         $model
             ->forceFill($attributes)
@@ -144,7 +143,7 @@ trait PerformMutation
 
         $this
             ->resource
-            ->mutated(app(MutateRequest::class), $mutation, $model);
+            ->mutated($request, $mutation, $model);
 
         return $model;
     }

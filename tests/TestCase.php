@@ -29,7 +29,7 @@ class TestCase extends BaseTestCase
     protected function refreshTestDatabase()
     {
         if (! RefreshDatabaseState::$migrated) {
-            $this->artisan('migrate', ['--path' => __DIR__.'/Support/Database/migrations', '--realpath' => true]);
+            $this->artisan('migrate:fresh', ['--path' => __DIR__.'/Support/Database/migrations', '--realpath' => true]);
 
             $this->app[Kernel::class]->setArtisan(null);
 
