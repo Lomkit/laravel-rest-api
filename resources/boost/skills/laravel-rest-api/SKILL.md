@@ -247,7 +247,7 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
 }
 ```
 
-The `fields` of actions, instructions and scopes are input entries, which a frontend can render as a form:
+The `fields` of actions, instructions and scopes take `rules()` only: declaring `creationRules()` or `updateRules()` on them throws `InvalidFieldException` when the fields are built. They are described as input entries, which a frontend can render as a form:
 
 ```json
 {"name": "since", "type": "date", "nullable": false, "default": null, "rules": ["date"], "meta": []}

@@ -2,7 +2,7 @@
 
 namespace Lomkit\Rest\Fields\Concerns;
 
-use Lomkit\Rest\Fields\WriteOperation;
+use Lomkit\Rest\Fields\FieldRules;
 
 trait ConfiguresRules
 {
@@ -50,20 +50,9 @@ trait ConfiguresRules
         return $this->nullable;
     }
 
-    /** @return list<mixed> */
-    public function rulesFor(WriteOperation $operation): array
+    public function getRules(): FieldRules
     {
-        return [...$this->ruleSets()['all'], ...$this->ruleSets()[$operation->value]];
-    }
-
-    /** @return array{all: list<mixed>, create: list<mixed>, update: list<mixed>} */
-    public function ruleSets(): array
-    {
-        return [
-            'all' => [...($this->nullable ? ['nullable'] : []), ...$this->baseRules(), ...$this->rules],
-            'create' => $this->creationRules,
-            'update' => $this->updateRules,
-        ];
+        return new FieldRules([...($this->nullable ? ['nullable'] : []), ...$this->baseRules(), ...$this->rules], $this->creationRules, $this->updateRules);
     }
 
     /**

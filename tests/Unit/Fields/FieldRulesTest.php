@@ -26,14 +26,16 @@ class FieldRulesTest extends TestCase
     #[Test]
     public function it_orders_rules_as_nullable_base_rules_shared_rules_then_operation_rules(): void
     {
-        $field = Text::make('title')
+        $rules = Text::make('title')
             ->updateRules('sometimes')
             ->creationRules('required')
             ->rules('max:255')
-            ->nullable();
+            ->nullable()
+            ->getRules();
 
-        $this->assertSame(['nullable', 'string', 'max:255', 'required'], $field->rulesFor(WriteOperation::Create));
-        $this->assertSame(['nullable', 'string', 'max:255', 'sometimes'], $field->rulesFor(WriteOperation::Update));
+        $this->assertSame(['nullable', 'string', 'max:255'], $rules->shared());
+        $this->assertSame(['nullable', 'string', 'max:255', 'required'], $rules->forWrite(WriteOperation::Create));
+        $this->assertSame(['nullable', 'string', 'max:255', 'sometimes'], $rules->forWrite(WriteOperation::Update));
     }
 
     /** @return iterable<string, array{Field, string}> */
@@ -53,10 +55,10 @@ class FieldRulesTest extends TestCase
     #[DataProvider('fieldTypes')]
     public function it_puts_the_base_rule_of_each_type_between_nullable_and_the_declared_rules(Field $field, string $baseRule): void
     {
-        $field->nullable()->rules('sometimes')->creationRules('required')->updateRules('filled');
+        $rules = $field->nullable()->rules('sometimes')->creationRules('required')->updateRules('filled')->getRules();
 
-        $this->assertSame(['nullable', $baseRule, 'sometimes', 'required'], $field->rulesFor(WriteOperation::Create));
-        $this->assertSame(['nullable', $baseRule, 'sometimes', 'filled'], $field->rulesFor(WriteOperation::Update));
+        $this->assertSame(['nullable', $baseRule, 'sometimes', 'required'], $rules->forWrite(WriteOperation::Create));
+        $this->assertSame(['nullable', $baseRule, 'sometimes', 'filled'], $rules->forWrite(WriteOperation::Update));
     }
 
     #[Test]
@@ -65,37 +67,35 @@ class FieldRulesTest extends TestCase
         $field = Number::make('rating')->nullable()->nullable(false);
 
         $this->assertFalse($field->isNullable());
-        $this->assertSame(['numeric'], $field->rulesFor(WriteOperation::Create));
+        $this->assertSame(['numeric'], $field->getRules()->shared());
     }
 
     #[Test]
     public function it_splits_pipe_separated_rules(): void
     {
-        $field = Text::make('title')
+        $rules = Text::make('title')
             ->rules('required|max:255')
             ->creationRules('min:3|alpha_dash')
-            ->updateRules('sometimes|filled');
+            ->updateRules('sometimes|filled')
+            ->getRules();
 
-        $this->assertSame([
-            'all' => ['string', 'required', 'max:255'],
-            'create' => ['min:3', 'alpha_dash'],
-            'update' => ['sometimes', 'filled'],
-        ], $field->ruleSets());
+        $this->assertSame(['string', 'required', 'max:255'], $rules->shared());
+        $this->assertSame(['min:3', 'alpha_dash'], $rules->declaredFor(WriteOperation::Create));
+        $this->assertSame(['sometimes', 'filled'], $rules->declaredFor(WriteOperation::Update));
     }
 
     #[Test]
     public function it_keeps_array_form_rules_inside_a_rule_list(): void
     {
-        $field = Text::make('title')
+        $rules = Text::make('title')
             ->rules(['required', ['max', 3]], 'distinct')
             ->creationRules(['unique:posts,title'])
-            ->updateRules([['in', 'draft', 'review']]);
+            ->updateRules([['in', 'draft', 'review']])
+            ->getRules();
 
-        $this->assertSame([
-            'all' => ['string', 'required', ['max', 3], 'distinct'],
-            'create' => ['unique:posts,title'],
-            'update' => [['in', 'draft', 'review']],
-        ], $field->ruleSets());
+        $this->assertSame(['string', 'required', ['max', 3], 'distinct'], $rules->shared());
+        $this->assertSame(['unique:posts,title'], $rules->declaredFor(WriteOperation::Create));
+        $this->assertSame([['in', 'draft', 'review']], $rules->declaredFor(WriteOperation::Update));
     }
 
     #[Test]
@@ -103,7 +103,7 @@ class FieldRulesTest extends TestCase
     {
         $field = Text::make('status')->rules(['required', 'regex:/^(draft|review)$/']);
 
-        $this->assertSame(['string', 'required', 'regex:/^(draft|review)$/'], $field->rulesFor(WriteOperation::Create));
+        $this->assertSame(['string', 'required', 'regex:/^(draft|review)$/'], $field->getRules()->shared());
     }
 
     #[Test]
@@ -116,63 +116,61 @@ class FieldRulesTest extends TestCase
         };
         $closure = function (string $attribute, mixed $value, Closure $fail): void {};
 
-        $field = Text::make('status')->rules($in, ['max:20', $custom])->creationRules($closure);
+        $rules = Text::make('status')->rules($in, ['max:20', $custom])->creationRules($closure)->getRules();
 
-        $this->assertSame(['string', $in, 'max:20', $custom, $closure], $field->rulesFor(WriteOperation::Create));
-        $this->assertSame(['string', $in, 'max:20', $custom], $field->rulesFor(WriteOperation::Update));
+        $this->assertSame(['string', $in, 'max:20', $custom, $closure], $rules->forWrite(WriteOperation::Create));
+        $this->assertSame(['string', $in, 'max:20', $custom], $rules->forWrite(WriteOperation::Update));
     }
 
     #[Test]
     public function it_adds_up_repeated_rules_calls_in_call_order(): void
     {
-        $field = Text::make('title')
+        $rules = Text::make('title')
             ->rules('required')
             ->creationRules('min:3')
             ->rules('max:255')
             ->updateRules('sometimes')
             ->creationRules('alpha_dash')
-            ->updateRules('filled');
+            ->updateRules('filled')
+            ->getRules();
 
-        $this->assertSame([
-            'all' => ['string', 'required', 'max:255'],
-            'create' => ['min:3', 'alpha_dash'],
-            'update' => ['sometimes', 'filled'],
-        ], $field->ruleSets());
-    }
-
-    #[Test]
-    public function it_describes_a_nullable_number_with_shared_rules_only(): void
-    {
-        $this->assertSame(
-            ['all' => ['nullable', 'numeric'], 'create' => [], 'update' => []],
-            Number::make('price')->nullable()->ruleSets(),
-        );
+        $this->assertSame(['string', 'required', 'max:255'], $rules->shared());
+        $this->assertSame(['min:3', 'alpha_dash'], $rules->declaredFor(WriteOperation::Create));
+        $this->assertSame(['sometimes', 'filled'], $rules->declaredFor(WriteOperation::Update));
     }
 
     #[Test]
     public function it_applies_creation_rules_to_creation_only(): void
     {
-        $field = Text::make('title')->rules('max:255')->creationRules('required');
+        $rules = Text::make('title')->rules('max:255')->creationRules('required')->getRules();
 
-        $this->assertSame(['all' => ['string', 'max:255'], 'create' => ['required'], 'update' => []], $field->ruleSets());
-        $this->assertSame(['string', 'max:255', 'required'], $field->rulesFor(WriteOperation::Create));
-        $this->assertSame(['string', 'max:255'], $field->rulesFor(WriteOperation::Update));
+        $this->assertSame(['required'], $rules->declaredFor(WriteOperation::Create));
+        $this->assertSame([], $rules->declaredFor(WriteOperation::Update));
+        $this->assertSame(['string', 'max:255', 'required'], $rules->forWrite(WriteOperation::Create));
+        $this->assertSame(['string', 'max:255'], $rules->forWrite(WriteOperation::Update));
+    }
+
+    #[Test]
+    public function it_has_write_rules_only_when_creation_or_update_rules_are_declared(): void
+    {
+        $this->assertFalse(Number::make('price')->nullable()->rules('min:0')->getRules()->hasWriteRules());
+        $this->assertTrue(Number::make('price')->creationRules('required')->getRules()->hasWriteRules());
+        $this->assertTrue(Number::make('price')->updateRules('sometimes')->getRules()->hasWriteRules());
     }
 
     #[Test]
     public function it_places_the_enum_rule_object_after_nullable(): void
     {
-        $rules = Enum::make('status', PostStatus::class)->nullable()->rules('required')->rulesFor(WriteOperation::Create);
+        $rules = Enum::make('status', PostStatus::class)->nullable()->rules('required')->getRules();
 
-        $this->assertEquals(['nullable', Rule::enum(PostStatus::class), 'required'], $rules);
+        $this->assertEquals(['nullable', Rule::enum(PostStatus::class), 'required'], $rules->forWrite(WriteOperation::Create));
     }
 
     #[Test]
-    public function it_returns_the_same_rules_on_every_call(): void
+    public function it_returns_equal_rules_on_every_call(): void
     {
         $field = Text::make('title')->nullable()->rules('max:255')->creationRules('required');
 
-        $this->assertSame($field->rulesFor(WriteOperation::Create), $field->rulesFor(WriteOperation::Create));
-        $this->assertSame($field->ruleSets(), $field->ruleSets());
+        $this->assertEquals($field->getRules(), $field->getRules());
     }
 }

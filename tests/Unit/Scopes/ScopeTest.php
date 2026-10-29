@@ -71,4 +71,13 @@ class ScopeTest extends TestCase
 
         Scope::make('between')->fields([Date::make('from'), Date::make('from')]);
     }
+
+    #[Test]
+    public function it_names_the_scope_when_a_field_declares_write_rules(): void
+    {
+        $this->expectException(InvalidFieldException::class);
+        $this->expectExceptionMessage("Scope::make('between')->fields() declares creation or update rules on the input field [from]. Input fields take rules() only.");
+
+        Scope::make('between')->fields([Date::make('from')->creationRules('required')]);
+    }
 }

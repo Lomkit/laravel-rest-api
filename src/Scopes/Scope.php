@@ -27,7 +27,7 @@ final class Scope implements JsonSerializable
     /** @param list<Field> $fields */
     public function fields(array $fields): self
     {
-        $this->fields = FieldSet::of($fields, "Scope::make('{$this->name}')->fields()");
+        $this->fields = FieldSet::forInputs($fields, "Scope::make('{$this->name}')->fields()");
 
         return $this;
     }
