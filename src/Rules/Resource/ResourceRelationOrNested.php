@@ -15,10 +15,7 @@ class ResourceRelationOrNested implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $relation = $value;
-        $relationResource = $this->resource->relation($relation)?->resource();
-
-        if ($relationResource === null) {
+        if (! is_string($value) || $this->resource->relation($value)?->resource() === null) {
             $fail('The relation is not valid or allowed for this resource.');
         }
     }

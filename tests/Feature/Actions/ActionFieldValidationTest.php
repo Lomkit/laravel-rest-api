@@ -64,6 +64,13 @@ class ActionFieldValidationTest extends PackageTestCase
             'an entry that is not an object' => ['publish-posts', ['fields' => ['notify']], [
                 'fields.0.name' => ['The fields.0.name field is required.'],
             ]],
+            'a field name given twice' => ['publish-posts', ['fields' => [['name' => 'notify', 'value' => true], ['name' => 'notify', 'value' => false]]], [
+                'fields.0.name' => ['The fields.0.name field has a duplicate value.'],
+                'fields.1.name' => ['The fields.1.name field has a duplicate value.'],
+            ]],
+            'a search that is not an array' => ['publish-posts', ['search' => 'drafts'], [
+                'search' => ['The search field must be an array.'],
+            ]],
             'a required_if condition met by another field' => ['change-status', ['fields' => [['name' => 'status', 'value' => 'published']]], [
                 'fields.at' => ['The at field is required when status is published.'],
             ]],

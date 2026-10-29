@@ -19,6 +19,7 @@ use Illuminate\Validation\Rules\In;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Rules\OneOf;
 
 class LomkitLaravelRestApiOperationExtension extends OperationExtension
 {
@@ -324,7 +325,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
                 foreach (explode('|', $rule) as $token) {
                     $flat[] = strtolower(trim(explode(':', $token)[0]));
                 }
-            } elseif ($rule instanceof In) {
+            } elseif ($rule instanceof In || $rule instanceof OneOf) {
                 // Rule::in(...) constrains values but the underlying type is string.
                 $flat[] = 'string';
             }

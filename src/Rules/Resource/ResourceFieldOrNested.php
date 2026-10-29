@@ -16,7 +16,7 @@ class ResourceFieldOrNested implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! $this->resource->isNestedField($value)) {
+        if (! is_string($value) || ! $this->resource->isNestedField($value)) {
             $fail('The \''.Str::afterLast($attribute, '.').'\' field is not valid.');
         }
     }

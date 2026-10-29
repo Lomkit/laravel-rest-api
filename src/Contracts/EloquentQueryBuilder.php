@@ -17,9 +17,6 @@ interface EloquentQueryBuilder extends QueryBuilder
     public function toBase();
 
     /** @return $this */
-    public function disableSecurity(bool $disable = true);
-
-    /** @return $this */
     public function disableDefaultLimit(bool $disable = true);
 
     /**

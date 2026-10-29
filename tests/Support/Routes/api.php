@@ -14,13 +14,11 @@ use Lomkit\Rest\Tests\Support\Http\Controllers\NoExposedFieldsController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\NoRelationshipAuthorizationModelController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\OrPerimeterModelController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\OrPerimeterSoftDeletedModelController;
-use Lomkit\Rest\Tests\Support\Http\Controllers\SearchableModelController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\SoftDeletedModelController;
 
 Route::group(['as' => 'api.', 'prefix' => 'api'], function () {
     Rest::resource('models', ModelController::class);
     Rest::resource('or-perimeter-models', OrPerimeterModelController::class);
-    Rest::resource('searchable-models', SearchableModelController::class);
     Rest::resource('model-hooks', ModelHooksController::class)->withSoftDeletes();
     Rest::resource('model-withs', ModelWithController::class);
     Rest::resource('model-with-default-limit', ModelWithDefaultLimitController::class);

@@ -1669,18 +1669,6 @@ parameters:
 			path: src/RestServiceProvider.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Rules\\ArrayWithKey\:\:__construct\(\) has parameter \$keys with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/ArrayWithKey.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Rules\\ArrayWithKey\:\:\$keys type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/ArrayWithKey.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Rules\\Mutate\\Mutate\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1711,30 +1699,6 @@ parameters:
 			path: src/Rules/RestRule.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\Search\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/Search.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchAggregate\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchAggregate.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchFilter\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchFilter.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchInclude\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchInclude.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchIncludeAlias\:\:relationNames\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1763,24 +1727,6 @@ parameters:
 			identifier: argument.templateType
 			count: 1
 			path: src/Rules/Search/SearchIncludeAlias.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchSelect\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchSelect.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchSort\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchSort.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchText\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchText.php
 
 		-
 			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:buildRelationsDescription\(\) has parameter \$relations with no value type specified in iterable type array\.$#'

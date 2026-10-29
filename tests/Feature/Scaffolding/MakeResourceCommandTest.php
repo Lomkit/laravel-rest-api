@@ -6,6 +6,7 @@ use App\Rest\Resources\Resource as BaseResource;
 use App\Rest\Resources\ScaffoldedPlaceholderResource;
 use App\Rest\Resources\ScaffoldedProductResource;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Laravel\Scout\Builder as ScoutBuilder;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -64,5 +65,25 @@ class MakeResourceCommandTest extends ScaffoldingTestCase
             $this->assertSame(Builder::class, (string) (new ReflectionMethod(BaseResource::class, $hook))->getReturnType());
             $this->assertSame($query, $resource->{$hook}($request, $query));
         }
+    }
+
+    #[Test]
+    public function it_writes_a_base_resource_that_declares_search_scout_query_next_to_search_query(): void
+    {
+        $this->artisan('rest:base-resource', ['name' => 'Resource'])->assertSuccessful();
+
+        $this->loadGeneratedClass(BaseResource::class);
+        $resource = new class extends BaseResource
+        {
+            public static string $model = Product::class;
+        };
+        $searchQuery = new ReflectionMethod(BaseResource::class, 'searchQuery');
+        $searchScoutQuery = new ReflectionMethod(BaseResource::class, 'searchScoutQuery');
+        $query = Product::search('lamp');
+
+        $this->assertSame(BaseResource::class, $searchQuery->getDeclaringClass()->getName());
+        $this->assertSame(BaseResource::class, $searchScoutQuery->getDeclaringClass()->getName());
+        $this->assertSame(ScoutBuilder::class, (string) $searchScoutQuery->getReturnType());
+        $this->assertSame($query, $resource->searchScoutQuery(new RestRequest, $query));
     }
 }

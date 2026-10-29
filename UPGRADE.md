@@ -38,7 +38,7 @@ These items change:
 
 - `Controller::newResource()` is removed. In a controller action, use `$request->context()->resource(static::resourceClass())`.
 - `app(RestRequest::class)` no longer returns the request in progress. It builds a new request. In a resource, read the request from the method parameter or from `$this->context()->request`.
-- The query builder methods that only exist on Eloquent (`mutate()`, `mutations()`, `applyMutation()`, `disableSecurity()`, `disableDefaultLimit()`) are declared on a new contract, `Lomkit\Rest\Contracts\EloquentQueryBuilder`. If you bind your own `QueryBuilder` implementation, it must implement `EloquentQueryBuilder`. The package resolves `EloquentQueryBuilder` through your `QueryBuilder` binding.
+- The query builder methods that only exist on Eloquent (`mutate()`, `mutations()`, `applyMutation()`, `disableDefaultLimit()`) are declared on a new contract, `Lomkit\Rest\Contracts\EloquentQueryBuilder`. If you bind your own `QueryBuilder` implementation, it must implement `EloquentQueryBuilder`. The package resolves `EloquentQueryBuilder` through your `QueryBuilder` binding.
 
 ### Routing
 
@@ -207,9 +207,59 @@ Controller endpoints:
 Requests:
 
 - `authorize()` returns `bool|Illuminate\Auth\Access\Response`, so it can still return `Response::deny()`.
-- `rules()`, `destroyRules()`, `forceDestroyRules()`, `restoreRules()`, `operateRules()` and `resolveFields()` return `array`, and `isScoutMode()` returns `bool`.
+- `rules()`, `destroyRules()`, `forceDestroyRules()`, `restoreRules()`, `operateRules()` and `resolveFields()` return `array`.
 - `Lomkit\Rest\Http\Requests\ActionsRequest` is removed. Nothing used it: the operate hooks receive an `OperateRequest`.
 
 Service provider and facade:
 
 - `RestServiceProvider::register()` and `boot()` return `void`, and the `Rest` facade's `getFacadeAccessor()` returns `string`.
+
+### Search
+
+Text search (`search.text`):
+
+- A request runs a text search when `search.text.value` is filled. A blank, `null` or missing value runs the normal search and returns the normal list, and the rest of the payload is validated as a normal search. Before, a blank or `null` value returned an empty page.
+- `search.text.value` accepts at most 255 characters.
+- `search.text.trashed` needs a filled `search.text.value`. Without one it gives a 422.
+- `viewAny` is checked before any search runs, including a text search without hits and a page past the last one.
+- With a text search, `searchQuery()` also applies to the loaded page: a row that the index returns outside `searchQuery()` is left out of `data`. The order of the page, `total` and `last_page` stay the index's.
+- A resource that overrides `searchQuery()` must declare `searchScoutQuery()` in the same class, or in a subclass of it, to run a text search. Otherwise a text search throws `Lomkit\Rest\Exceptions\InvalidResourceException`, which names the resource. A resource that overrides neither keeps working. Put the same constraints in both hooks, and write them in `searchScoutQuery()` as `where()` conditions on attributes that the index stores and can filter on, not as a `query()` callback:
+
+  ```php
+  use Illuminate\Contracts\Database\Eloquent\Builder;
+  use Laravel\Scout\Builder as ScoutBuilder;
+
+  public function searchQuery(RestRequest $request, Builder $query): Builder
+  {
+      return $query->where('team_id', $request->user()->team_id);
+  }
+
+  public function searchScoutQuery(RestRequest $request, ScoutBuilder $query): ScoutBuilder
+  {
+      return $query->where('team_id', $request->user()->team_id);
+  }
+  ```
+
+- `rest:base-resource` generates `searchScoutQuery()` next to `searchQuery()`. If your base resource (`app/Rest/Resources/Resource.php`) declares `searchQuery()`, add `searchScoutQuery()` to it, otherwise a text search on the resources that extend it throws.
+- Includes and aggregates are validated as in a search without text, also next to a text search, because they run in SQL on the loaded page: their filters, sorts, selects and scopes use the fields and operators of the related resource, not its scout fields. An include or an aggregate whose `relation` is missing or not declared gives a 422.
+- Actions refuse `search.text` with a 422 under `search.text`: "Text search is not available for actions."
+
+Validation:
+
+- `search.page` must be an integer of at least 1, with or without text. Before, a page below 1 was accepted.
+- `search.aggregates.*.type` is required, and `search.aggregates.*.alias` must be a string when it is sent.
+- An include or an aggregate whose `relation` is a dotted path with an unknown first relation (`suppliers.country`) gives a 422 under its `relation` key.
+- A filter whose `field` is not a string gives a 422 under its `field` key, in `search.filters`, in nested filters and in the filters of includes and aggregates.
+- On an action, `search` must be an object (a JSON array of keys and values) when it is sent.
+- A name repeated in the `fields` of an action or an instruction gives a 422 under each repeated entry: `fields.{index}.name` for an action, `search.instructions.{index}.fields.{position}.name` for an instruction. Before, the last value won.
+- Each entry of `resources` on `destroy`, `restore` and `forceDestroy` must be a key typed like the resource's `ID` field: an integer for integer keys, and a string, a UUID or a ULID for the other key types (a resource without an `ID` field uses the model's key type). A list, an object or `null` gives a 422 under `resources.{index}`. On `restore` and `forceDestroy`, a key of the wrong type (`"abc"` for an integer key) gives a 422 instead of matching no record.
+- In `mutate`, an `attributes`, `relations` or `pivot` value that is not an object gives one 422 message under its key.
+- The checks of field, scout field, scope, instruction and action field names use a new rule, `Lomkit\Rest\Rules\OneOf`, instead of `Rule::in()`. The message is still `validation.in` ("The selected :attribute is invalid."), but a custom message written for the `in` rule of these attributes no longer applies.
+
+Query builder and requests:
+
+- `disableSecurity()` is removed from `Lomkit\Rest\Query\Builder` and from the `EloquentQueryBuilder` contract. `searchQuery()` applies to every search.
+- `RestRequest::isScoutMode()` is removed. Use `$request->context()->isTextSearch()`, which is true when `search.text.value` is filled.
+- `Lomkit\Rest\Rules\Search\Search` no longer validates `text`. `SearchRequest` validates it with `SearchText`, and includes and actions prohibit it.
+- `Resource::relation()` returns `null` for a dotted path whose first relation is not declared. Before, it failed with an error.
+- `Lomkit\Rest\Rules\ArrayWithKey` stops after reporting that a value is not an array.

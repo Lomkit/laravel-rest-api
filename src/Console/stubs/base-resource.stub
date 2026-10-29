@@ -11,6 +11,11 @@ abstract class {{ class }} extends RestResource
         return $query;
     }
 
+    public function searchScoutQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Laravel\Scout\Builder $query): \Laravel\Scout\Builder
+    {
+        return $query;
+    }
+
     public function mutateQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query): \Illuminate\Contracts\Database\Eloquent\Builder
     {
         return $query;

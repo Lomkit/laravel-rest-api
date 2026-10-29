@@ -20,11 +20,6 @@ class RestRequest extends FormRequest
         return $this->context ??= new RestContext($this, $this->container);
     }
 
-    public function isScoutMode(): bool
-    {
-        return $this->has('search.text.value');
-    }
-
     /** @return class-string<Resource> */
     protected function controllerResourceClass(): string
     {

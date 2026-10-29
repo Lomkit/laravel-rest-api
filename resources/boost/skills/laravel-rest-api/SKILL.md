@@ -134,13 +134,14 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
 
 For Scout-backed models (`Laravel\Scout\Searchable`), additionally:
 - `scoutFields()`, `scoutInstructions()`, `searchScoutQuery(RestRequest $request, \Laravel\Scout\Builder $query): \Laravel\Scout\Builder`.
+- A resource that overrides `searchQuery()` must declare `searchScoutQuery()` in the same class or in a subclass of it, with the same constraints written as `where()` conditions on attributes the index stores and can filter on (not a `query()` callback). Otherwise a text search throws `InvalidResourceException`. `searchQuery()` also applies to the page loaded after a text search.
 
 The Resource also has typed static properties (PHP requires the `string` type when you redeclare them):
 - `public static string $model = Post::class;` — the Eloquent class (required: a resource without it throws `InvalidResourceException`). Read it with `PostResource::modelClass()`.
 - `public static string $response = \Lomkit\Rest\Http\Response::class;` — override with a subclass of `Lomkit\Rest\Http\Response` to customise output (see "Custom Response").
 
 Resources extending `app/Rest/Resources/Resource.php` (generated via `rest:base-resource`) may override:
-- `searchQuery`, `mutateQuery`, `destroyQuery`, `restoreQuery`, `forceDestroyQuery` — apply baseline constraints (tenant scoping, soft-visibility, etc.) to `$query` itself and return it; the package ignores the returned builder:
+- `searchQuery`, `searchScoutQuery`, `mutateQuery`, `destroyQuery`, `restoreQuery`, `forceDestroyQuery` — apply baseline constraints (tenant scoping, soft-visibility, etc.) to `$query` itself and return it; the package ignores the returned builder:
 
   ```php
   use Illuminate\Contracts\Database\Eloquent\Builder;
@@ -300,11 +301,12 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
 **Filter operators**: `=`, `!=`, `>`, `>=`, `<`, `<=`, `like`, `not like`, `in`, `not in`.
 **Filter `type`**: `and` (default) or `or`. Use `nested` to group filters with their own logical operator. `field` may traverse declared relations and pivot data (`user.posts.id`, `languages.pivot.boolean`).
 **Scope `parameters`** is a positional list: each value binds to the scope field at the same position, is validated by its rules, cast to its type and filled from its `default()`. A position is required unless its field has a default; a missing, extra or wrongly typed parameter is a `422` under `search.scopes.{index}.parameters`. Scopes are prohibited with `text` (Scout).
-**Aggregate `type`** values: `min`, `max`, `avg`, `sum`, `count`, `exists`. `field` is required for `min/max/avg/sum`, omit for `count/exists`.
-**`includes`** can recursively re-use `filters`, `sorts`, `scopes`, `limit`, `selects` — but **not nested `includes`** (load chained relations as separate include entries).
+**Aggregate `type`** is required, one of `min`, `max`, `avg`, `sum`, `count`, `exists`. `field` is required for `min/max/avg/sum`, omit for `count/exists`. An optional `alias` (a string) renames the response key, which is `{relation}_{type}_{field}` otherwise (`stars_max_rate`, `stars_count`).
+**`page`** is an integer of at least `1`; `limit` must be one of the resource's `limits()`.
+**`includes`** can recursively re-use `filters`, `sorts`, `scopes`, `limit`, `selects` — but **not nested `includes`** (load chained relations as separate include entries). Includes and aggregates always run in SQL, so they are validated against the related resource's fields and operators, also next to `text`; a missing or undeclared `relation` is a `422`.
 **Include `alias`** renames the response key for that include, which lets the same relation appear several times under different constraints. It must look like an identifier (`^[A-Za-z_][A-Za-z0-9_]*$`), be unique across the includes, and not collide with a field, a relation, or the gates key of the resource. It is used verbatim — no snake_casing — and is rejected on a dotted relation path (use a nested include there).
 **`gates`** asks the server to evaluate the listed policy abilities per row and embed the result under the configured key (default `gates`); with `rest.gates.message.enabled = true` the value becomes `{allowed: bool, message: string}`.
-**`text`** triggers the Scout path; only models using `Laravel\Scout\Searchable` accept it, and some standard search features become Scout-driver-dependent.
+**`text`** triggers the Scout path when `text.value` is filled (at most 255 characters); only models using `Laravel\Scout\Searchable` accept it, and some standard search features become Scout-driver-dependent. A blank, `null` or missing `text.value` runs the normal search and returns the normal list. `text.trashed` (`with`/`only`) needs a filled `text.value`. `viewAny` is checked before any search runs, and with a text search `searchQuery()` also applies to the loaded page, while its order and `total` stay the index's.
 
 **Response** is Laravel's paginator JSON:
 
@@ -415,7 +417,7 @@ POST /api/users/actions/send-welcome-notification-action
 }
 ```
 
-Note the **`fields` payload is an array of `{name, value}` pairs**, not an object. The `search` block resolves the target models (whole `search` schema is supported). Standalone actions (`->standalone()` or `public bool $standalone = true`) omit `search` and receive an empty collection.
+Note the **`fields` payload is an array of `{name, value}` pairs**, not an object, and each name may appear only once (a repeated name is a `422` under `fields.{index}.name`). The `search` block resolves the target models (whole `search` schema is supported, except `text`: a text search on an action is a `422`); when sent, it must be an object. Standalone actions (`->standalone()` or `public bool $standalone = true`) omit `search` and receive an empty collection.
 
 An action has exactly one of three targeting states, which decides what the request body may carry:
 
@@ -480,7 +482,7 @@ Register in `Resource::instructions()`. Clients invoke them via the `instruction
 
 `->meta([...])` (which merges) and `getMeta()` are also available on Instructions.
 
-Instruction `fields()` are typed and validated exactly like Action fields: full Laravel validation (including `required` on absent fields), with errors keyed by name under `search.instructions.{index}.fields.{name}`. The fields of Scout instructions (`scoutInstructions()`) are validated the same way. `handle()` and `handleScout()` receive the same cast name => value map as an action, with defaults filled in.
+Instruction `fields()` are typed and validated exactly like Action fields: full Laravel validation (including `required` on absent fields), with errors keyed by name under `search.instructions.{index}.fields.{name}`; a name repeated in `fields` is a `422` under `search.instructions.{index}.fields.{position}.name`. The fields of Scout instructions (`scoutInstructions()`) are validated the same way. `handle()` and `handleScout()` receive the same cast name => value map as an action, with defaults filled in.
 
 ## Relationships
 
@@ -511,7 +513,7 @@ POST   /api/users/restore  body: {"resources": [5, 6]}      // requires withSoft
 DELETE /api/users/force    body: {"resources": [5, 6]}      // requires withSoftDeletes()
 ```
 
-All three return the affected records: `{"data": [{...}], "meta": {"gates": {...}}}`.
+All three return the affected records: `{"data": [{...}], "meta": {"gates": {...}}}`. Each entry of `resources` is a key typed like the resource's `ID` field (an integer for integer keys; a string, UUID or ULID otherwise), so a list or an object in `resources` is a `422` under `resources.{index}`.
 
 ## Authorization model
 

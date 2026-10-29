@@ -52,6 +52,10 @@ class InstructionValidationTest extends PackageTestCase
             'an entry without a name' => ['highlight-posts', [['value' => true]], [
                 'search.instructions.0.fields.0.name' => ['The search.instructions.0.fields.0.name field is required.'],
             ]],
+            'a field name given twice' => ['highlight-posts', [['name' => 'featured', 'value' => true], ['name' => 'featured', 'value' => false]], [
+                'search.instructions.0.fields.0.name' => ['The search.instructions.0.fields.0.name field has a duplicate value.'],
+                'search.instructions.0.fields.1.name' => ['The search.instructions.0.fields.1.name field has a duplicate value.'],
+            ]],
             'a missing required field' => ['in-status', [], [
                 'search.instructions.0.fields.status' => ['The status field is required.'],
             ]],

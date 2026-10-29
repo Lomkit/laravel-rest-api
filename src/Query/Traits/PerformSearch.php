@@ -14,8 +14,8 @@ trait PerformSearch
     /**
      * Executes a modular search on the query builder based on provided parameters.
      *
-     * This method first authorizes the view operation on the model and then, unless security is disabled,
-     * applies a security-aware search query. It conditionally processes various search parameters to:
+     * This method first authorizes the view operation on the model and then applies the resource's
+     * searchQuery(). It conditionally processes various search parameters to:
      * - Filter results via a nested subquery to prevent conflicts.
      * - Sort results using custom definitions if provided, or default ordering from the resource.
      * - Apply named scopes, instructions, includes, and aggregate functions.
@@ -37,10 +37,8 @@ trait PerformSearch
 
         // The perimeter runs in a subquery so that an "or" inside it cannot swallow the
         // constraints appended afterwards, which bind tighter than it does
-        $this->when(! $this->disableSecurity, function () {
-            $this->queryBuilder->where(function ($query) {
-                $this->resource->searchQuery($this->resource->context()->request, $query);
-            });
+        $this->queryBuilder->where(function ($query) {
+            $this->resource->searchQuery($this->resource->context()->request, $query);
         });
 
         // Here we run the filters in a subquery to avoid conflicts

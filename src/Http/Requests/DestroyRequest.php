@@ -3,10 +3,13 @@
 namespace Lomkit\Rest\Http\Requests;
 
 use Illuminate\Validation\Rule;
+use Lomkit\Rest\Http\Requests\Traits\ValidatesResourceKeys;
 use Lomkit\Rest\Http\Resource;
 
 class DestroyRequest extends RestRequest
 {
+    use ValidatesResourceKeys;
+
     /** @return array<string, mixed> */
     public function rules(): array
     {
@@ -24,6 +27,7 @@ class DestroyRequest extends RestRequest
             ],
             'resources.*' => [
                 'distinct',
+                ...$this->keyRules($resource),
                 Rule::exists($model->getTable(), $model->getKeyName()),
             ],
         ];
