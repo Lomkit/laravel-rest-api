@@ -22,7 +22,7 @@ Here is a quick look at what you can do using API search method:
 {
     "search": {
         "scopes": [
-            {"name": "withTrashed", "parameters": [true]}
+            {"name": "publishedSince", "parameters": ["2026-01-01"]}
         ],
         "filters": [
             {

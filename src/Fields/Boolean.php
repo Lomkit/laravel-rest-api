@@ -18,4 +18,9 @@ class Boolean extends Field
     {
         return 'boolean';
     }
+
+    protected function castValue(mixed $value): mixed
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $value;
+    }
 }

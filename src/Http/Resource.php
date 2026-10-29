@@ -20,6 +20,7 @@ use Lomkit\Rest\Concerns\Resource\Rulable;
 use Lomkit\Rest\Concerns\Resource\Scoutable;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instructionable;
+use Lomkit\Rest\Scopes\Scope;
 
 class Resource implements \JsonSerializable
 {
@@ -164,7 +165,7 @@ class Resource implements \JsonSerializable
             'fields' => $this->getFields($request)->names(),
             'scout_fields' => $this->getScoutFields($request),
             'limits' => $this->getLimits($request),
-            'scopes' => $this->getScopes($request),
+            'scopes' => array_map(fn (Scope $scope): array => $scope->jsonSerialize(), $this->getScopes($request)),
             'relations' => collect($this->getRelations($request))->map->jsonSerialize()->toArray(),
             'rules' => [
                 'all' => $this->rules($request),

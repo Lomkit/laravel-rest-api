@@ -4,12 +4,7 @@ namespace Lomkit\Rest\Concerns;
 
 trait Makeable
 {
-    /**
-     * Create a new element.
-     *
-     * @return static
-     */
-    public static function make(...$arguments)
+    public static function make(mixed ...$arguments): static
     {
         return new static(...$arguments);
     }

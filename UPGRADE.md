@@ -75,3 +75,69 @@ These items change:
 - `rest:resource` generates `ID::make('id')`.
 - `Lomkit\Rest\Fields\DateTime` has the same short name as PHP's `\DateTime`. In a file that uses both, alias one of them.
 - `Resource` defines `__sleep()`, which leaves out the memoized fields, because fields can hold closures. A queued action's resource therefore rebuilds its fields in the worker, where the request has no user: `fields()` that depend on the user see a guest there. A resource that overrides `__sleep()` must declare `: array` and merge `parent::__sleep()`.
+
+### Typed inputs
+
+Scopes, instructions and actions declare their inputs with the same `Field` objects as resources. The payload does not change: scope parameters stay a positional list, and instruction and action fields stay a list of `{name, value}` entries.
+
+```php
+public function scopes(RestRequest $request): array
+{
+    return [
+        Scope::make('publishedSince')->fields([Date::make('since')]),
+        Scope::make('popular')->fields([Integer::make('min_views')->default(100)]),
+    ];
+}
+
+public function fields(RestRequest $request): array // in an instruction or an action
+{
+    return [Boolean::make('featured')->default(true), Integer::make('min_views')->nullable()];
+}
+```
+
+Scopes:
+
+- `scopes()` returns `Lomkit\Rest\Scopes\Scope` objects instead of names. A string throws `Lomkit\Rest\Exceptions\InvalidScopeException` with the name of the resource.
+- Each parameter binds to the field at the same position, in declared order. Reordering a scope's fields changes the positions clients must send.
+- Parameters are validated against the field rules, cast to the field type and filled from `default()`. A position is required unless its field declares `default()`, and a nullable field accepts an explicit `null`. A missing or wrongly typed parameter now gives a 422 instead of a 500. Extra positions used to be ignored and named parameters used to bind by PHP argument name; both are now rejected with a 422, so clients that send them must switch to an exact positional list. The errors are under `search.scopes.<i>.parameters` or `search.scopes.<i>.parameters.<p>`.
+- The model scope receives the cast values: a `Date` arrives as a `CarbonImmutable` at the start of the day, an `Integer` as an `int`. Update the scope's parameter types.
+- Scopes run through Eloquent's `Builder::scopes()`, so the name must be a local scope of the model (a `scopeX()` method or a `#[Scope]` method). Builder methods and macros can no longer be called as scopes.
+- `Lomkit\Rest\Query\Builder::scope()` returns the query builder instead of the scope's return value.
+- `Resource::__sleep()` also leaves out the memoized scopes.
+
+Instructions:
+
+- `fields()` returns `Field` objects instead of a map of rules: `['min_views' => ['integer']]` becomes `[Integer::make('min_views')]`. The field rules are the type rules, `nullable` and `rules()`; rules that compare fields, such as `required_if:status,published`, keep working.
+- `handle()` and `handleScout()` receive a name-to-value map, with each value cast to its field type and defaults filled in. A field that is absent and has no default is missing from the array, so read optional fields with `$fields['name'] ?? null`. An entry sent without `value` counts as absent.
+- The fields of Scout instructions are validated now.
+- The base `handleScout()` throws `Lomkit\Rest\Exceptions\InvalidInstructionException`, a `\LogicException`, instead of `http\Exception\RuntimeException`.
+- `Builder::instruction()` and `ScoutBuilder::instruction()` throw `InvalidInstructionException` for a name the resource does not declare.
+- An instruction applied to an include receives the relation's Eloquent builder.
+
+Actions:
+
+- `fields()` returns `Field` objects instead of a map of rules.
+- `handle()`, `withBatch()` and queued jobs all receive the same cast name-to-value map, with defaults filled in. Before, queued and batched actions received the raw list of `{name, value}` entries.
+- `OperateRequest::resolveFields()` returns that map.
+
+Instructions and actions:
+
+- `Lomkit\Rest\Concerns\Fieldable` and its `field()` helper are removed. Use `getFields($request)->find($name)`, which returns the `Field` or `null`. `getFields()` returns a `FieldSet` built on each call.
+- The fields are not bound to a model, so an `Enum` field names its enum class: `Enum::make('status', PostStatus::class)`.
+- For actions and Scout instructions, an entry without a name, or that is not an object, now gives a 422 under `fields.<i>.name` instead of a 500, as it already did for instructions. A name that is not a string fails with `must be a string`.
+- `rest:action` and `rest:instruction` generate `ID::make('id')->rules('required')`.
+- `Action`, `Instruction` and `BatchableAction` declare native types, and PHP requires subclasses to match them:
+  - a redeclared property keeps its type: `public ?string $name`, `public bool $standalone`, `public bool $targeted`, `public int $chunkCount`;
+  - an override declares its return type: `handle(): void`, `handleScout(): void`, `withBatch(): void`, `name(): string`, `uriKey(): string`, `standalone(): static`, `targeted(): static`, `isStandalone(): bool`, `isTargeted(): bool`, `handleRequest(): int`.
+- An action's `handle()` returns `void`. Before, a synchronous action that returned `false` stopped the remaining chunks; the chunks now always run.
+
+Meta:
+
+- `Lomkit\Rest\Concerns\Metable` is removed. Actions, instructions and scopes use `Lomkit\Rest\Concerns\HasMeta`: `withMeta([...])` becomes `meta([...])`, which merges, and the `meta()` getter becomes `getMeta()`. The `$meta` property is private.
+
+Details:
+
+- `scopes` is a list of `{name, fields, meta}` instead of a list of names.
+- The `fields` of actions, instructions and scopes are input entries `{name, type, nullable, default, rules, meta}`. `Enum` entries add `values`.
+- Rules are described as strings: pipe strings are split, `Stringable` rules are cast to string, other rule objects are named by their snake class name (`enum`, `password`), and closures are left out.
+- The resource `fields` stay a list of names.

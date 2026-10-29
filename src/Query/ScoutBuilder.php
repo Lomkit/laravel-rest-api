@@ -8,6 +8,7 @@ use Illuminate\Support\Traits\Conditionable;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Query\Clauses\InstructionClause;
 
 class ScoutBuilder implements QueryBuilder
 {
@@ -155,17 +156,11 @@ class ScoutBuilder implements QueryBuilder
      * Apply an instruction to the query builder.
      *
      * @param  string  $name  The name of the instruction.
-     * @param  array  $fields  The instruction fields.
+     * @param  list<array{name: string, value?: mixed}>  $fields  The instruction fields.
      */
     public function instruction($name, $fields = [])
     {
-        $this->resource->scoutInstruction($this->resource->context()->request, $name)
-            ->handleScout(
-                collect($fields)->mapWithKeys(function ($field) {
-                    return [$field['name'] => $field['value']];
-                })->toArray(),
-                $this->queryBuilder
-            );
+        (new InstructionClause($this->resource, $name, $fields))->applyToScout($this->queryBuilder);
     }
 
     /**

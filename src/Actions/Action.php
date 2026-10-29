@@ -5,107 +5,55 @@ namespace Lomkit\Rest\Actions;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\PendingBatch;
 use Illuminate\Bus\Queueable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Lomkit\Rest\Concerns\Fieldable;
+use JsonSerializable;
+use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Concerns\Makeable;
-use Lomkit\Rest\Concerns\Metable;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Exceptions\InvalidActionStateException;
+use Lomkit\Rest\Fields\Concerns\HasInputFields;
+use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 
-class Action implements \JsonSerializable
+/** @phpstan-consistent-constructor */
+class Action implements JsonSerializable
 {
     use Batchable;
     use Dispatchable;
-    use Fieldable;
+    use HasInputFields;
+    use HasMeta;
     use InteractsWithQueue;
     use Makeable;
-    use Metable;
     use Queueable;
     use Resourcable;
     use SerializesModels;
 
-    /**
-     * The name of the connection the job should be sent to.
-     *
-     * @var string|null
-     */
-    public $connection;
+    public ?string $name = null;
 
-    /**
-     * The name of the queue the job should be sent to.
-     *
-     * @var string|null
-     */
-    public $queue;
+    public bool $standalone = false;
 
-    /**
-     * The displayable name of the action.
-     *
-     * @var string
-     */
-    public $name;
+    public bool $targeted = false;
 
-    /**
-     * Indicates if the action can be run with no model.
-     *
-     * @var bool
-     */
-    public $standalone = false;
+    public int $chunkCount = 100;
 
-    /**
-     * Indicates if the action requires an explicit list of resource ids and prohibits a search.
-     *
-     * @var bool
-     */
-    public $targeted = false;
-
-    /**
-     * The number of models that should be included in each chunk.
-     *
-     * @var int
-     */
-    public $chunkCount = 100;
-
-    /**
-     * Each id is validated with its own existence query, so this bounds the work a single request
-     * can ask for. Lower it on an action whose blast radius should stay small.
-     */
     public int $maxResources = 1000;
 
-    /**
-     * Get the name of the action.
-     *
-     * @return string
-     */
-    public function name()
+    public function name(): string
     {
-        return $this->name ?: Str::of(class_basename(get_class($this)))->beforeLast('Action')->snake(' ')->title()->toString();
+        return $this->name ?: Str::of(class_basename(static::class))->beforeLast('Action')->snake(' ')->title()->toString();
     }
 
-    /**
-     * Get the URI key for the action.
-     *
-     * @return string
-     */
-    public function uriKey()
+    public function uriKey(): string
     {
         return Str::slug($this->name(), '-', null);
     }
 
-    /**
-     * Mark the action as a standalone action.
-     *
-     *
-     * @return $this
-     *
-     * @throws InvalidActionStateException
-     */
-    public function standalone()
+    public function standalone(): static
     {
         if ($this->targeted) {
             throw new InvalidActionStateException('An action cannot be both standalone and targeted.');
@@ -116,28 +64,12 @@ class Action implements \JsonSerializable
         return $this;
     }
 
-    /**
-     * Determine if the action is a standalone action.
-     *
-     * @return bool
-     */
-    public function isStandalone()
+    public function isStandalone(): bool
     {
         return $this->standalone;
     }
 
-    /**
-     * Mark the action as a targeted action, requiring an explicit list of resource ids.
-     *
-     * The caller names the models to act on, so a search is prohibited and the action can never
-     * impact every model the way an unscoped classic action does.
-     *
-     *
-     * @return $this
-     *
-     * @throws InvalidActionStateException
-     */
-    public function targeted()
+    public function targeted(): static
     {
         if ($this->standalone) {
             throw new InvalidActionStateException('An action cannot be both standalone and targeted.');
@@ -148,74 +80,35 @@ class Action implements \JsonSerializable
         return $this;
     }
 
-    /**
-     * Determine if the action is a targeted action.
-     *
-     * @return bool
-     */
-    public function isTargeted()
+    public function isTargeted(): bool
     {
         return $this->targeted;
     }
 
-    /**
-     * Prepare the action for JSON serialization.
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: array<string, mixed>, standalone: bool, targeted: bool} */
     public function jsonSerialize(): array
     {
-        $request = $this->resource->context()->request;
-
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
-            'fields' => $this->fields($request),
-            'meta' => $this->meta(),
+            'fields' => InputFieldDetails::forFields($this->getFields($this->resource->context()->request)),
+            'meta' => $this->getMeta(),
             'standalone' => $this->isStandalone(),
             'targeted' => $this->isTargeted(),
         ];
     }
 
     /**
-     * Perform the action on the given models.
-     *
-     *
-     * @return mixed
+     * @param  array<string, mixed>  $fields
+     * @param  Collection<array-key, Model>  $models
      */
-    public function handle(array $fields, Collection $models)
+    public function handle(array $fields, Collection $models): void {}
+
+    /** @param array<string, mixed> $fields */
+    public function withBatch(array $fields, PendingBatch $batch): void {}
+
+    public function handleRequest(OperateRequest $request): int
     {
-        //
-    }
-
-    /**
-     * Register callbacks on the pending batch.
-     *
-     *
-     * @return void
-     */
-    public function withBatch(array $fields, PendingBatch $batch)
-    {
-        //
-    }
-
-    /**
-     * Execute the action for the given request.
-     *
-     *
-     *
-     * @return int
-     *
-     * @throws \Throwable
-     */
-    public function handleRequest(OperateRequest $request)
-    {
-        $fields = $request->resolveFields($this);
-
-        $dispatcher = new DispatchAction($request, $this, $fields);
-
-        $count = $dispatcher->dispatch($this->chunkCount);
-
-        return $count;
+        return (new DispatchAction($request, $this, $request->resolveFields($this)))->dispatch($this->chunkCount);
     }
 }

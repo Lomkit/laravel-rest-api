@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Http\Requests;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Exceptions\InvalidActionStateException;
+use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Rules\Operate\OperateFields;
 use Lomkit\Rest\Rules\Search\Search;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -69,7 +70,9 @@ class OperateRequest extends RestRequest
                     (new OperateFields)->setAction($operatedAction),
                 ],
                 'fields.*.name' => [
-                    Rule::in(array_keys($operatedAction->fields($this))),
+                    'required',
+                    'string',
+                    Rule::in($operatedAction->getFields($this)->names()),
                 ],
             ]
         );
@@ -100,14 +103,12 @@ class OperateRequest extends RestRequest
     }
 
     /**
-     * Resolve the request's fields for a specific action.
+     * Resolve the request's field values for a specific action, cast by type and defaulted.
      *
-     * @return array
-     *
-     * This method resolves the fields for the current request based on the action being performed.
+     * @return array<string, mixed>
      */
     public function resolveFields(Action $action)
     {
-        return $this->input('fields', []);
+        return InputValues::fromNamed($action->getFields($this), $this->input('fields', []))->toArray();
     }
 }

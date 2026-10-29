@@ -24,4 +24,14 @@ class ProductResource extends Resource
             BelongsTo::make('category', CategoryResource::class),
         ];
     }
+
+    public function instructions(RestRequest $request): array
+    {
+        return [PricedAt::make()];
+    }
+
+    public function scoutInstructions(RestRequest $request): array
+    {
+        return [PricedAt::make(), PricedBetween::make()];
+    }
 }

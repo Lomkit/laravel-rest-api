@@ -7,31 +7,21 @@ use Lomkit\Rest\Actions\Action as RestAction;
 class {{ class }} extends RestAction
 {
     /**
-     * Perform the action on the given models.
-     *
-     * @param  array  $fields
-     * @param  \Illuminate\Support\Collection  $models
-     * @return mixed
+     * @param  array<string, mixed>  $fields
+     * @param  \Illuminate\Support\Collection<int, \Illuminate\Database\Eloquent\Model>  $models
      */
-    public function handle(array $fields, \Illuminate\Support\Collection $models)
+    public function handle(array $fields, \Illuminate\Support\Collection $models): void
     {
         foreach ($models as $model) {
             // ...
         }
     }
 
-    /**
-     * The action fields.
-     *
-     * @param  \Lomkit\Rest\Http\Requests\RestRequest $request
-     * @return array
-     */
+    /** @return list<\Lomkit\Rest\Fields\Field> */
     public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
     {
         return [
-            'id' => [
-                'required'
-            ]
+            \Lomkit\Rest\Fields\ID::make('id')->rules('required'),
         ];
     }
 }

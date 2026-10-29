@@ -10,13 +10,7 @@ use Throwable;
 
 class BatchableModifyNumberAction extends ModifyNumberAction implements BatchableAction, ShouldQueue
 {
-    /**
-     * Register callbacks on the pending batch.
-     *
-     *
-     * @return void
-     */
-    public function withBatch(array $fields, PendingBatch $batch)
+    public function withBatch(array $fields, PendingBatch $batch): void
     {
         $batch->then(function (Batch $batch) {
             // ...

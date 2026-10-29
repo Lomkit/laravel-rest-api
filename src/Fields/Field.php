@@ -50,6 +50,15 @@ abstract class Field
 
     public function bind(Model $model): void {}
 
+    public function cast(mixed $value): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return $this->castValue($value);
+    }
+
     public function applyFilter(Builder $query, FilterOperator|string $operator, mixed $value, string $boolean = 'and', ?string $column = null): void
     {
         $operator = FilterOperator::parse($operator);
@@ -71,6 +80,11 @@ abstract class Field
         }
 
         return array_values(array_unique($operators, SORT_REGULAR));
+    }
+
+    protected function castValue(mixed $value): mixed
+    {
+        return $value;
     }
 
     protected function filterValue(Builder $query, mixed $value): mixed

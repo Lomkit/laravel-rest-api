@@ -60,4 +60,13 @@ class Enum extends Field
     {
         return 'enum';
     }
+
+    protected function castValue(mixed $value): mixed
+    {
+        return match (true) {
+            is_int($value), is_string($value) => $this->enumClass()::from($value),
+            is_bool($value), is_float($value) => $this->enumClass()::from((int) $value),
+            default => $value,
+        };
+    }
 }

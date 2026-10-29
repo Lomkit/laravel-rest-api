@@ -21,6 +21,7 @@ use Lomkit\Rest\Relations\MorphOne;
 use Lomkit\Rest\Relations\MorphOneOfMany;
 use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\MorphToMany;
+use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Rest\Actions\BatchableModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ConditionalFieldAction;
@@ -104,7 +105,7 @@ class ModelResource extends Resource
     public function scopes(RestRequest $request): array
     {
         return [
-            'numbered',
+            Scope::make('numbered')->fields([Integer::make('number')->default(0)]),
         ];
     }
 

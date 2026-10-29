@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Query\Clauses\InstructionClause;
+use Lomkit\Rest\Query\Clauses\ScopeClause;
 
 trait PerformSearch
 {
@@ -159,11 +161,13 @@ trait PerformSearch
      * Apply a scope to the query builder.
      *
      * @param  string  $name  The name of the scope.
-     * @param  array  $parameters  The scope parameters.
+     * @param  list<mixed>  $parameters  The scope parameters, by position.
      */
     public function scope($name, $parameters = [])
     {
-        return $this->queryBuilder->{$name}(...$parameters);
+        (new ScopeClause($this->resource, $name, $parameters))->apply($this->toBase());
+
+        return $this->queryBuilder;
     }
 
     /**
@@ -182,17 +186,11 @@ trait PerformSearch
      * Apply an instruction to the query builder.
      *
      * @param  string  $name  The name of the instruction.
-     * @param  array  $fields  The instruction fields.
+     * @param  list<array{name: string, value?: mixed}>  $fields  The instruction fields.
      */
     public function instruction($name, $fields = [])
     {
-        $this->resource->instruction($this->resource->context()->request, $name)
-            ->handle(
-                collect($fields)->mapWithKeys(function ($field) {
-                    return [$field['name'] => $field['value']];
-                })->toArray(),
-                $this->queryBuilder
-            );
+        (new InstructionClause($this->resource, $name, $fields))->apply($this->toBase());
     }
 
     /**

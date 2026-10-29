@@ -9,7 +9,7 @@ trait ForgetsRequestState
     {
         return array_values(array_filter(
             array_keys((array) $this),
-            fn (string $property): bool => self::unmangledName($property) !== 'calculatedFields',
+            fn (string $property): bool => ! in_array(self::unmangledName($property), ['calculatedFields', 'calculatedScopes'], true),
         ));
     }
 

@@ -4,46 +4,45 @@ namespace Lomkit\Rest\Rules\Concerns;
 
 use Illuminate\Support\Facades\Validator as ValidatorFactory;
 use Illuminate\Validation\Validator;
+use Lomkit\Rest\Fields\FieldSet;
 
 trait ValidatesFields
 {
-    /**
-     * Pivot a positional [{name, value}] field list into an associative map
-     * and validate it against the declared field rules, pushing any resulting
-     * errors into the main validator under the given attribute prefix.
-     *
-     * @param  Validator  $validator  The main validator receiving the errors.
-     * @param  string  $attribute  The prefix for error keys (e.g. "fields").
-     * @param  mixed  $submittedFields  The raw submitted fields list.
-     * @param  array  $declaredRules  The field rules keyed by field name.
-     */
-    protected function validateFields(
-        Validator $validator,
-        string $attribute,
-        mixed $submittedFields,
-        array $declaredRules
-    ): void {
-        if (! is_array($submittedFields)) {
+    protected function validateFields(Validator $validator, string $attribute, mixed $submitted, FieldSet $fields): void
+    {
+        if (! is_array($submitted)) {
             return;
         }
 
-        $pivoted = collect($submittedFields)
-            ->filter(function ($field) {
-                return is_array($field)
-                    && array_key_exists('name', $field)
-                    && is_string($field['name']);
-            })
-            ->mapWithKeys(function ($field) {
-                return [$field['name'] => $field['value'] ?? null];
-            })
-            ->toArray();
+        $rules = [];
 
-        $fieldsValidator = ValidatorFactory::make($pivoted, $declaredRules);
+        foreach ($fields as $field) {
+            $rules[$field->name] = $field->ruleSets()['all'];
+        }
+
+        $fieldsValidator = ValidatorFactory::make(self::pivot($submitted), $rules);
 
         foreach ($fieldsValidator->errors()->messages() as $name => $messages) {
             foreach ($messages as $message) {
                 $validator->errors()->add($attribute.'.'.$name, $message);
             }
         }
+    }
+
+    /**
+     * @param  array<mixed>  $submitted
+     * @return array<string, mixed>
+     */
+    private static function pivot(array $submitted): array
+    {
+        $values = [];
+
+        foreach ($submitted as $entry) {
+            if (is_array($entry) && is_string($entry['name'] ?? null) && array_key_exists('value', $entry)) {
+                $values[$entry['name']] = $entry['value'];
+            }
+        }
+
+        return $values;
     }
 }

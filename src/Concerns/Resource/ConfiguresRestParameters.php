@@ -3,8 +3,10 @@
 namespace Lomkit\Rest\Concerns\Resource;
 
 use Illuminate\Support\Str;
+use Lomkit\Rest\Exceptions\InvalidScopeException;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Scopes\Scope;
 
 trait ConfiguresRestParameters
 {
@@ -30,25 +32,49 @@ trait ConfiguresRestParameters
         return $this->getFields($this->context()->request)->has($field);
     }
 
-    /**
-     * The calculated scopes if already done in this request.
-     */
+    /** @var list<Scope> */
     protected array $calculatedScopes;
 
-    /**
-     * The scopes that could be provided.
-     */
+    /** @return list<Scope> */
     public function scopes(RestRequest $request): array
     {
         return [];
     }
 
-    /**
-     * Get the resource's scopes.
-     */
+    /** @return list<Scope> */
     public function getScopes(RestRequest $request): array
     {
-        return $this->calculatedScopes ?? ($this->calculatedScopes = $this->scopes($request));
+        return $this->calculatedScopes ??= self::ensureScopes($this->scopes($request), static::class.'::scopes()');
+    }
+
+    public function scope(RestRequest $request, string $name): ?Scope
+    {
+        foreach ($this->getScopes($request) as $scope) {
+            if ($scope->name === $name) {
+                return $scope;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<mixed>  $scopes
+     * @return list<Scope>
+     */
+    private static function ensureScopes(array $scopes, string $owner): array
+    {
+        $declared = [];
+
+        foreach (array_values($scopes) as $index => $scope) {
+            if (! $scope instanceof Scope) {
+                throw InvalidScopeException::notAScope($owner, $index, $scope);
+            }
+
+            $declared[] = $scope;
+        }
+
+        return $declared;
     }
 
     /**
