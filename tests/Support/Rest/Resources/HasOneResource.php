@@ -13,7 +13,7 @@ class HasOneResource extends Resource
 {
     use DisableGates;
 
-    public static $model = HasOneRelation::class;
+    public static string $model = HasOneRelation::class;
 
     public function relations(RestRequest $request): array
     {

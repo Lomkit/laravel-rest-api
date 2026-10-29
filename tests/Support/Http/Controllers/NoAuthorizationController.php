@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\NoAuthorizationResource;
 
 class NoAuthorizationController extends Controller
 {
-    public static $resource = NoAuthorizationResource::class;
+    public static string $resource = NoAuthorizationResource::class;
 }

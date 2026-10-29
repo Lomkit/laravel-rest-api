@@ -13,9 +13,9 @@ class ConstrainedHasManyResource extends Resource
 {
     use DisableGates;
 
-    public static $model = HasManyRelation::class;
+    public static string $model = HasManyRelation::class;
 
-    public function rules(RestRequest $request)
+    public function rules(RestRequest $request): array
     {
         return [
             'number' => 'required',

@@ -6,30 +6,14 @@ use Lomkit\Rest\Http\Resource;
 
 class RestoreRequest extends RestRequest
 {
-    /**
-     * Define the validation rules for the restore request.
-     *
-     * @return array
-     *
-     * This method defines the validation rules for restoring resources.
-     * It requires an array of resources to be restored.
-     */
-    public function rules()
+    /** @return array<string, mixed> */
+    public function rules(): array
     {
-        return $this->restoreRules($this->context()->resource($this->route()->controller::$resource));
+        return $this->restoreRules($this->context()->resource($this->controllerResourceClass()));
     }
 
-    /**
-     * Define the validation rules for restoring resources.
-     *
-     *
-     * @return array
-     *
-     * This method specifies the validation rules for the restoration process.
-     * It expects an instance of the resource being restored and requires an array
-     * containing the resources to be restored.
-     */
-    public function restoreRules(Resource $resource)
+    /** @return array<string, mixed> */
+    public function restoreRules(Resource $resource): array
     {
         return [
             'resources' => [

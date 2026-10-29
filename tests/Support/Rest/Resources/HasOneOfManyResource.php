@@ -13,7 +13,7 @@ class HasOneOfManyResource extends Resource
 {
     use DisableGates;
 
-    public static $model = HasOneOfManyRelation::class;
+    public static string $model = HasOneOfManyRelation::class;
 
     public function relations(RestRequest $request): array
     {

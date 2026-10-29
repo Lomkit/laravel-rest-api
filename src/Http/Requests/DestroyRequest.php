@@ -7,30 +7,14 @@ use Lomkit\Rest\Http\Resource;
 
 class DestroyRequest extends RestRequest
 {
-    /**
-     * Define the validation rules for the destroy request.
-     *
-     * @return array
-     *
-     * This method defines the validation rules for destroying resources.
-     * It requires an array of resources to be destroyed.
-     */
-    public function rules()
+    /** @return array<string, mixed> */
+    public function rules(): array
     {
-        return $this->destroyRules($this->context()->resource($this->route()->controller::$resource));
+        return $this->destroyRules($this->context()->resource($this->controllerResourceClass()));
     }
 
-    /**
-     * Define the validation rules for destroying resources.
-     *
-     *
-     * @return array
-     *
-     * This method specifies the validation rules for destroying resources.
-     * It expects an instance of the resource being destroyed and requires an array
-     * containing the resources to be destroyed.
-     */
-    public function destroyRules(Resource $resource)
+    /** @return array<string, mixed> */
+    public function destroyRules(Resource $resource): array
     {
         $model = $resource::newModel();
 

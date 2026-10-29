@@ -26,6 +26,10 @@ class Rest
             throw InvalidResourceRouteException::optionsArgumentRemoved($name);
         }
 
+        if (is_subclass_of($controller, Controller::class)) {
+            $controller::resourceClass();
+        }
+
         return new PendingResourceRegistration(
             $this->registrar,
             UriSegment::resourceName($name),

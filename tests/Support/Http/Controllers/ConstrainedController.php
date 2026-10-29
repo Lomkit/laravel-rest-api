@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ConstrainedResource;
 
 class ConstrainedController extends Controller
 {
-    public static $resource = ConstrainedResource::class;
+    public static string $resource = ConstrainedResource::class;
 }

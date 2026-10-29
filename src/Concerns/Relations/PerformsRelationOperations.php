@@ -101,11 +101,11 @@ trait PerformsRelationOperations
             );
 
         foreach ($results['attached'] as $attached) {
-            $this->resource()->authorizeToAttach($model, $relation->resource()::$model::find($attached));
+            $this->resource()->authorizeToAttach($model, $relation->resource()::modelClass()::find($attached));
         }
 
         foreach ($results['detached'] as $detached) {
-            $this->resource()->authorizeToDetach($model, $relation->resource()::$model::find($detached));
+            $this->resource()->authorizeToDetach($model, $relation->resource()::modelClass()::find($detached));
         }
     }
 
@@ -128,11 +128,11 @@ trait PerformsRelationOperations
             );
 
         foreach ($results['attached'] as $attached) {
-            $this->resource()->authorizeToAttach($model, $relation->resource()::$model::find($attached));
+            $this->resource()->authorizeToAttach($model, $relation->resource()::modelClass()::find($attached));
         }
 
         foreach ($results['detached'] as $detached) {
-            $this->resource()->authorizeToDetach($model, $relation->resource()::$model::find($detached));
+            $this->resource()->authorizeToDetach($model, $relation->resource()::modelClass()::find($detached));
         }
     }
 }

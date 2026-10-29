@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\SoftDeletedModelResource;
 
 class SoftDeletedModelController extends Controller
 {
-    public static $resource = SoftDeletedModelResource::class;
+    public static string $resource = SoftDeletedModelResource::class;
 }

@@ -23,7 +23,7 @@ class ModelWithHooksResource extends Resource
 {
     use DisableGates;
 
-    public static $model = SoftDeletedModel::class;
+    public static string $model = SoftDeletedModel::class;
 
     public function relations(RestRequest $request): array
     {

@@ -9,12 +9,7 @@ use Lomkit\Rest\Relations\Relation;
 
 trait Relationable
 {
-    /**
-     * Get a relation by name.
-     *
-     * @return Relation|null
-     */
-    public function relation(string $name)
+    public function relation(string $name): ?Relation
     {
         $name = relation_without_pivot($name);
 
@@ -34,26 +29,16 @@ trait Relationable
         return $relation;
     }
 
-    /**
-     * The calculated relations if already done in this request.
-     */
+    /** @var array<int, Relation> */
     protected array $calculatedRelations;
 
-    /**
-     * The relations that could be provided.
-     */
+    /** @return array<int, Relation> */
     public function relations(RestRequest $request): array
     {
         return [];
     }
 
-    /**
-     * Get the relations for the resource.
-     *
-     *
-     * @return array
-     */
-    public function getRelations(RestRequest $request)
+    public function getRelations(RestRequest $request): array
     {
         return $this->calculatedRelations ??
             (

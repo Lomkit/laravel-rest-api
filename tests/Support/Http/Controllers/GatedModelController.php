@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\GatedModelResource;
 
 class GatedModelController extends Controller
 {
-    public static $resource = GatedModelResource::class;
+    public static string $resource = GatedModelResource::class;
 }

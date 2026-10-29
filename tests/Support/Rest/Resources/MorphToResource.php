@@ -13,7 +13,7 @@ class MorphToResource extends Resource
 {
     use DisableGates;
 
-    public static $model = MorphToRelation::class;
+    public static string $model = MorphToRelation::class;
 
     public function relations(RestRequest $request): array
     {

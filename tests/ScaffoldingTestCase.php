@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests;
 
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
 
 abstract class ScaffoldingTestCase extends PackageTestCase
 {
@@ -30,6 +31,16 @@ abstract class ScaffoldingTestCase extends PackageTestCase
         self::$skeletonPath = null;
     }
 
+    protected function loadGeneratedClass(string $class): void
+    {
+        $path = app_path(str_replace('\\', '/', Str::after($class, 'App\\')).'.php');
+        $this->assertFileExists($path);
+
+        if (! class_exists($class, false)) {
+            require $path;
+        }
+    }
+
     private function copySkeleton(string $from, string $to): void
     {
         $files = new Filesystem;
@@ -44,5 +55,8 @@ abstract class ScaffoldingTestCase extends PackageTestCase
         foreach ($files->files($from, true) as $file) {
             $files->copy($file->getPathname(), $to.'/'.$file->getFilename());
         }
+
+        $files->deleteDirectory($to.'/app/Rest');
+        $files->ensureDirectoryExists($to.'/app/Models');
     }
 }

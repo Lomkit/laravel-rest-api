@@ -23,12 +23,7 @@ use Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension;
 
 class RestServiceProvider extends ServiceProvider
 {
-    /**
-     * Register the service provider.
-     *
-     * @return void
-     */
-    public function register()
+    public function register(): void
     {
         $this->mergeConfigFrom(
             __DIR__.'/../config/rest.php',
@@ -40,12 +35,7 @@ class RestServiceProvider extends ServiceProvider
         $this->registerScramble();
     }
 
-    /**
-     * Bootstrap any package services.
-     *
-     * @return void
-     */
-    public function boot()
+    public function boot(): void
     {
         $this->registerCommands();
         $this->registerPublishing();
@@ -53,10 +43,6 @@ class RestServiceProvider extends ServiceProvider
         $this->registerStubs();
     }
 
-    /**
-     * Register the Scramble extension before Scramble boots and reads its extension list.
-     * Scramble's form request extractor fails on the trait actions, so it skips the package requests.
-     */
     private function registerScramble(): void
     {
         if (! class_exists(Scramble::class)) {
@@ -68,9 +54,6 @@ class RestServiceProvider extends ServiceProvider
         FormRequestParametersExtractor::ignoreInstanceOf(RestRequest::class);
     }
 
-    /**
-     * Register the Rest Artisan commands.
-     */
     protected function registerCommands(): void
     {
         if ($this->app->runningInConsole()) {
@@ -87,9 +70,6 @@ class RestServiceProvider extends ServiceProvider
         }
     }
 
-    /**
-     * Register the stubs on the default laravel stub publish command.
-     */
     protected function registerStubs(): void
     {
         Event::listen(function (PublishingStubs $event) {
@@ -103,9 +83,6 @@ class RestServiceProvider extends ServiceProvider
         });
     }
 
-    /**
-     * Register the package's publishable resources.
-     */
     private function registerPublishing(): void
     {
         if ($this->app->runningInConsole()) {
@@ -115,9 +92,6 @@ class RestServiceProvider extends ServiceProvider
         }
     }
 
-    /**
-     * Register Rest's services in the container.
-     */
     protected function registerServices(): void
     {
         $this->app->singleton('lomkit-rest', Rest::class);

@@ -12,32 +12,16 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OperateRequest extends RestRequest
 {
-    /**
-     * Define the validation rules for the operate request.
-     *
-     * @return array
-     *
-     * This method defines the validation rules for resource operations.
-     * It checks if the requested action exists for the given resource and
-     * includes validation for fields related to the operation.
-     */
-    public function rules()
+    /** @return array<string, mixed> */
+    public function rules(): array
     {
         return $this
-            ->resource($this->context()->resource($this->route()->controller::$resource))
+            ->resource($this->context()->resource($this->controllerResourceClass()))
             ->operateRules();
     }
 
-    /**
-     * Define the validation rules for resource operations.
-     *
-     * @return array
-     *
-     * This method specifies the validation rules for resource operations.
-     * It checks if the requested action exists for the given resource, and if so,
-     * it includes validation rules for fields associated with the operation.
-     */
-    public function operateRules()
+    /** @return array<string, mixed> */
+    public function operateRules(): array
     {
         if (! $this->resource->actionExists($this, $this->actionKey())) {
             throw new HttpException(404);
@@ -89,12 +73,6 @@ class OperateRequest extends RestRequest
         return $key;
     }
 
-    /**
-     * Prepare the data for validation.
-     *
-     * Ensures the fields key is always present so the OperateFields rule runs
-     * even when the client omits it entirely, allowing required rules to fire.
-     */
     protected function prepareForValidation(): void
     {
         $this->merge([
@@ -102,12 +80,8 @@ class OperateRequest extends RestRequest
         ]);
     }
 
-    /**
-     * Resolve the request's field values for a specific action, cast by type and defaulted.
-     *
-     * @return array<string, mixed>
-     */
-    public function resolveFields(Action $action)
+    /** @return array<string, mixed> */
+    public function resolveFields(Action $action): array
     {
         return InputValues::fromNamed($action->getFields($this), $this->input('fields', []))->toArray();
     }

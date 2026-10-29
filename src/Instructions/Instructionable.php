@@ -6,34 +6,21 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Instructionable
 {
-    /**
-     * The calculated instructions if already done in this request.
-     */
+    /** @var array<int, Instruction> */
     protected array $calculatedInstructions;
 
-    /**
-     * The instructions that should be linked.
-     */
+    /** @return array<int, Instruction> */
     public function instructions(RestRequest $request): array
     {
         return [];
     }
 
-    /**
-     * Get the resource's instructions.
-     */
+    /** @return array<int, Instruction> */
     public function getInstructions(RestRequest $request): array
     {
         return $this->calculatedInstructions ??= array_map(fn (Instruction $instruction) => $instruction->resource($this), $this->instructions($request));
     }
 
-    /**
-     * Check if a specific instruction exists.
-     *
-     * @param  RestRequest  $request  The REST request instance.
-     * @param  string  $instructionKey  The key of the instruction to check.
-     * @return bool True if the instruction exists; otherwise, false.
-     */
     public function instructionExists(RestRequest $request, string $instructionKey): bool
     {
         return collect($this->getInstructions($request))
@@ -42,14 +29,7 @@ trait Instructionable
             });
     }
 
-    /**
-     * Retrieve a specific instruction by its key.
-     *
-     * @param  RestRequest  $request  The REST request instance.
-     * @param  string  $instructionKey  The key of the instruction to retrieve.
-     * @return Instruction|null The instruction instance or null if not found.
-     */
-    public function instruction(RestRequest $request, string $instructionKey)
+    public function instruction(RestRequest $request, string $instructionKey): ?Instruction
     {
         $instruction = collect($this->getInstructions($request))
             ->first(function (Instruction $instruction) use ($instructionKey) {

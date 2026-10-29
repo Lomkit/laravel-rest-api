@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\SearchableModelResource;
 
 class SearchableModelController extends Controller
 {
-    public static $resource = SearchableModelResource::class;
+    public static string $resource = SearchableModelResource::class;
 }

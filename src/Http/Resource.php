@@ -18,6 +18,7 @@ use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
 use Lomkit\Rest\Concerns\Resource\Rulable;
 use Lomkit\Rest\Concerns\Resource\Scoutable;
+use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instructionable;
 use Lomkit\Rest\Scopes\Scope;
@@ -39,54 +40,39 @@ class Resource implements \JsonSerializable
     use Rulable;
     use Scoutable;
 
-    /**
-     * The model the entry corresponds to.
-     *
-     * @var class-string<Model>
-     */
-    public static $model;
+    /** @var class-string<Model> */
+    public static string $model;
 
-    /**
-     * The reponse the entry corresponds to.
-     *
-     * @var class-string<Response>
-     */
-    public static $response = Response::class;
+    /** @var class-string<Response> */
+    public static string $response = Response::class;
 
-    /**
-     * The default value for the pagination limit.
-     */
     public int $defaultLimit = 50;
 
-    /**
-     * Get a fresh instance of the model represented by the resource.
-     *
-     * @return Model
-     */
-    public static function newModel()
+    /** @return class-string<Model> */
+    public static function modelClass(): string
     {
-        /** @var Model $model */
-        $model = static::$model;
+        if (! isset(static::$model)) {
+            throw InvalidResourceException::missingModel(static::class);
+        }
+
+        return static::$model;
+    }
+
+    public static function newModel(): Model
+    {
+        $model = static::modelClass();
 
         return new $model;
     }
 
-    /**
-     * Get a fresh instance of the model represented by the resource.
-     *
-     * @return Response
-     */
-    public static function newResponse()
+    public static function newResponse(): Response
     {
-        /** @var Response $response */
         $response = static::$response;
 
         return new $response;
     }
 
-    /**
-     * Return the default ordering for resource queries.
-     */
+    /** @return array<string, string> */
     public function defaultOrderBy(RestRequest $request): array
     {
         return [
@@ -94,36 +80,22 @@ class Resource implements \JsonSerializable
         ];
     }
 
-    /**
-     * Check if gating is enabled for this resource.
-     */
     public function isGatingEnabled(): bool
     {
         return config('rest.gates.enabled', true);
     }
 
-    /**
-     * Check if authorizations are enabled for this resource.
-     */
     public function isAuthorizingEnabled(): bool
     {
         return config('rest.authorizations.enabled', true);
     }
 
-    /**
-     * Check if authorization cache is enabled for this resource.
-     */
     public function isAuthorizationCacheEnabled(): bool
     {
         return config('rest.authorizations.cache.enabled', true);
     }
 
-    /**
-     * Get the authorization cache key.
-     *
-     *
-     * @return string
-     */
+    /** @return string */
     public function getAuthorizationCacheKey(RestRequest $request, string $identifier)
     {
         $class = Str::snake((new \ReflectionClass($this))->getShortName());
@@ -136,24 +108,17 @@ class Resource implements \JsonSerializable
         );
     }
 
-    /**
-     * Determine for how much time the authorization cache should be keeped.
-     *
-     * @return \DateTimeInterface|\DateInterval
-     */
+    /** @return \DateTimeInterface|\DateInterval */
     public function cacheAuthorizationFor()
     {
         return now()->addMinutes(config('rest.authorizations.cache.default', 5));
     }
 
-    public function isModelSearchable()
+    public function isModelSearchable(): bool
     {
-        return in_array(Searchable::class, class_uses_recursive(static::$model));
+        return in_array(Searchable::class, class_uses_recursive(static::modelClass()));
     }
 
-    /**
-     * Serialize the resource into a JSON-serializable format.
-     */
     public function jsonSerialize(): mixed
     {
         $request = $this->context()->request;

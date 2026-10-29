@@ -51,7 +51,7 @@ Use this skill when working with the `lomkit/laravel-rest-api` package — build
 
 - **Soft-delete endpoints**: opt-in `restore` and `force` routes via `->withSoftDeletes()` chained on `Rest::resource(...)`.
 - **Authorization**: automatic per-model Policy checks (`viewAny`, `view`, `create`, `update`, `delete`, `restore`, `forceDelete`, `attach{Model}`, `detach{Model}`) plus client-requested per-row `gates`.
-- **Custom Response**: override the output shape per Resource via `public static $response = UserResponse::class;`. Generate with:
+- **Custom Response**: override the output shape per Resource via `public static string $response = UserResponse::class;`. Generate with:
 
   ```bash
   php artisan rest:response UserResponse
@@ -128,20 +128,29 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
 - `limits()` — allowed pagination `limit` values (default `[10, 25, 50]`; `$defaultLimit` property is `50`).
 - `actions()` — `Lomkit\Rest\Actions\Action` instances exposed under `/actions/{uriKey}`.
 - `instructions()` — `Lomkit\Rest\Instructions\Instruction` instances exposed under the `instructions` search key.
-- `rules()`, `createRules()`, `updateRules()` — validation rules applied during mutate (`createRules`/`updateRules` are merged with `rules`).
+- `rules(RestRequest $request): array`, `createRules(...): array`, `updateRules(...): array` — validation rules applied during mutate (`createRules`/`updateRules` are merged with `rules`).
 - `defaultOrderBy()` — default sort (defaults to `['id' => 'desc']`).
-- Resource hooks (model-lifecycle): `mutating`, `mutated`, `destroying`, `destroyed`, `forceDestroying`, `forceDestroyed`, `restoring`, `restored`. Signatures: `mutating(MutateRequest $request, array $requestBody, Model $model): void`; lifecycle ones take just `Model $model`.
+- Resource hooks (model-lifecycle): `mutating`, `mutated`, `destroying`, `destroyed`, `forceDestroying`, `forceDestroyed`, `restoring`, `restored`. Signatures: `mutating(MutateRequest $request, array $requestBody, Model $model): void`; the others take the endpoint's request and the model, e.g. `destroying(DestroyRequest $request, Model $model): void`.
 
 For Scout-backed models (`Laravel\Scout\Searchable`), additionally:
-- `scoutFields()`, `scoutInstructions()`, `searchScoutQuery(RestRequest $request, ScoutBuilder $builder)`.
+- `scoutFields()`, `scoutInstructions()`, `searchScoutQuery(RestRequest $request, \Laravel\Scout\Builder $query): \Laravel\Scout\Builder`.
 
-The Resource also has static properties:
-- `public static $model` — the Eloquent class (required).
-- `public static $response = \Lomkit\Rest\Http\Response::class` — override to customise output (see "Custom Response").
+The Resource also has typed static properties (PHP requires the `string` type when you redeclare them):
+- `public static string $model = Post::class;` — the Eloquent class (required: a resource without it throws `InvalidResourceException`). Read it with `PostResource::modelClass()`.
+- `public static string $response = \Lomkit\Rest\Http\Response::class;` — override with a subclass of `Lomkit\Rest\Http\Response` to customise output (see "Custom Response").
 
 Resources extending `app/Rest/Resources/Resource.php` (generated via `rest:base-resource`) may override:
-- `searchQuery`, `mutateQuery`, `destroyQuery`, `restoreQuery`, `forceDestroyQuery` — return a modified `Builder` to apply baseline constraints (tenant scoping, soft-visibility, etc.).
-- `performDelete`, `performRestore`, `performForceDelete` — override the actual operation on a model.
+- `searchQuery`, `mutateQuery`, `destroyQuery`, `restoreQuery`, `forceDestroyQuery` — apply baseline constraints (tenant scoping, soft-visibility, etc.) to `$query` itself and return it; the package ignores the returned builder:
+
+  ```php
+  use Illuminate\Contracts\Database\Eloquent\Builder;
+
+  public function searchQuery(RestRequest $request, Builder $query): Builder
+  {
+      return $query->where('team_id', $request->user()->team_id);
+  }
+  ```
+- `performDelete(RestRequest $request, Model $model): void`, `performRestore(...): void`, `performForceDelete(...): void` — override the actual operation on a model.
 
 **Anything not declared in `fields()` / `relations()` / `scopes()` / `actions()` / `instructions()` is rejected.** This is the security model — don't bypass it.
 
@@ -156,17 +165,19 @@ Generated controllers are intentionally tiny:
 ```php
 class UsersController extends Controller
 {
-    public static $resource = \App\Rest\Resources\UserResource::class;
+    public static string $resource = \App\Rest\Resources\UserResource::class;
 }
 ```
 
-Controllers expose **request-level hooks** (override as `protected` methods):
+`$resource` keeps its `string` type. A controller without it throws `InvalidControllerException` when `Rest::resource()` registers its routes; read it with `UsersController::resourceClass()`.
+
+Controllers expose **request-level hooks** (override as `protected` methods returning `void`):
 - `beforeDetails(DetailsRequest)`
 - `beforeSearch(SearchRequest)`, `afterSearch(SearchRequest)`
 - `beforeMutate(MutateRequest)`, `afterMutate(MutateRequest)`
-- `beforeOperate(ActionsRequest)`, `afterOperate(ActionsRequest)`
+- `beforeOperate(OperateRequest)`, `afterOperate(OperateRequest)`
 - `beforeDestroy(DestroyRequest)`, `afterDestroy(DestroyRequest)`
-- `beforeForceDestroy(DestroyRequest)`, `afterForceDestroy(DestroyRequest)`
+- `beforeForceDestroy(ForceDestroyRequest)`, `afterForceDestroy(ForceDestroyRequest)`
 - `beforeRestore(RestoreRequest)`, `afterRestore(RestoreRequest)`
 
 Use these for request-shaped concerns (preprocessing the request payload, logging the call). Use **resource hooks** (above) for model-lifecycle concerns — they fire regardless of which endpoint hit them.
@@ -538,7 +549,7 @@ When the client passes `"gates": [...]` in `search`, the listed abilities are ev
 `php artisan rest:response UserResponse` scaffolds a class with a `map($model, $responseModel)` method that returns the array shape sent to the client. Assign on the Resource:
 
 ```php
-public static $response = \App\Rest\Responses\UserResponse::class;
+public static string $response = \App\Rest\Responses\UserResponse::class;
 ```
 
 Use sparingly — overriding the response can bypass authorization shaping and field whitelisting if you reference the model directly.

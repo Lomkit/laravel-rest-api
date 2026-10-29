@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\OrPerimeterSoftDeletedModelResource
 
 class OrPerimeterSoftDeletedModelController extends Controller
 {
-    public static $resource = OrPerimeterSoftDeletedModelResource::class;
+    public static string $resource = OrPerimeterSoftDeletedModelResource::class;
 }

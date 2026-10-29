@@ -17,7 +17,7 @@ use Lomkit\Rest\Scopes\Scope;
 
 class PostResource extends Resource
 {
-    public static $model = Post::class;
+    public static string $model = Post::class;
 
     public function fields(RestRequest $request): array
     {

@@ -11,7 +11,7 @@ class NoExposedFieldsResource extends Resource
 {
     use DisableGates;
 
-    public static $model = Model::class;
+    public static string $model = Model::class;
 
     public function fields(RestRequest $request): array
     {

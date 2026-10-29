@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\NoExposedFieldsResource;
 
 class NoExposedFieldsController extends Controller
 {
-    public static $resource = NoExposedFieldsResource::class;
+    public static string $resource = NoExposedFieldsResource::class;
 }

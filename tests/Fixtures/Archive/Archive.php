@@ -17,6 +17,7 @@ class Archive implements Fixture
     {
         Route::prefix('api')->group(function (): void {
             Rest::resource('documents', DocumentController::class)->withSoftDeletes();
+            Rest::resource('current-documents', CurrentDocumentController::class)->withSoftDeletes();
         });
     }
 }

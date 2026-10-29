@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\AutomaticGatingResource;
 
 class AutomaticGatingController extends Controller
 {
-    public static $resource = AutomaticGatingResource::class;
+    public static string $resource = AutomaticGatingResource::class;
 }

@@ -10,14 +10,14 @@ use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 
 class GatedHasManyResource extends Resource
 {
-    public static $model = HasManyRelation::class;
+    public static string $model = HasManyRelation::class;
 
     public function isGatingEnabled(): bool
     {
         return true;
     }
 
-    public function updateRules(RestRequest $request)
+    public function updateRules(RestRequest $request): array
     {
         return [
             'number' => 'numeric|max:10',

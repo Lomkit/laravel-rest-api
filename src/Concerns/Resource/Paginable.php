@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -10,12 +11,10 @@ use Lomkit\Rest\Query\ScoutBuilder;
 trait Paginable
 {
     /**
-     * Paginate the results of a query.
-     *
      * @param  \Illuminate\Database\Eloquent\Builder<Model>|Builder<Model>  $query
-     * @return mixed
+     * @return LengthAwarePaginator<int, Model>
      */
-    public function paginate($query, RestRequest $request)
+    public function paginate($query, RestRequest $request): LengthAwarePaginator
     {
         $defaultLimit = $this->defaultLimit ?? 50;
 

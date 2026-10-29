@@ -13,7 +13,7 @@ use Lomkit\Rest\Tests\Support\Models\Model;
 
 class AutomaticGatingResource extends Resource
 {
-    public static $model = Model::class;
+    public static string $model = Model::class;
 
     public function relations(RestRequest $request): array
     {

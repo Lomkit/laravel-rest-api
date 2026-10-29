@@ -6,14 +6,10 @@ use Lomkit\Rest\Rules\Search\Search;
 
 class SearchRequest extends RestRequest
 {
-    /**
-     * Define the validation rules for the search request.
-     *
-     * @return array
-     */
-    public function rules()
+    /** @return array<string, mixed> */
+    public function rules(): array
     {
-        $resource = $this->context()->resource($this->route()->controller::$resource);
+        $resource = $this->context()->resource($this->controllerResourceClass());
 
         return [
             'search' => ['sometimes', 'array', (new Search)->setResource($resource)],

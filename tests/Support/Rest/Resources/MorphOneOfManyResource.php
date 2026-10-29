@@ -13,7 +13,7 @@ class MorphOneOfManyResource extends Resource
 {
     use DisableGates;
 
-    public static $model = MorphOneOfManyRelation::class;
+    public static string $model = MorphOneOfManyRelation::class;
 
     public function relations(RestRequest $request): array
     {

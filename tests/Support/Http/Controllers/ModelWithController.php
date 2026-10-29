@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ModelWithResource;
 
 class ModelWithController extends Controller
 {
-    public static $resource = ModelWithResource::class;
+    public static string $resource = ModelWithResource::class;
 }

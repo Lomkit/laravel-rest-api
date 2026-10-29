@@ -7,7 +7,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 class ModelQueryChangedResource extends ModelResource
 {
-    public function searchQuery(RestRequest $request, Builder $query)
+    public function searchQuery(RestRequest $request, Builder $query): Builder
     {
         $query = parent::searchQuery($request, $query);
 
