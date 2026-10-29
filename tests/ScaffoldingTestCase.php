@@ -57,5 +57,6 @@ abstract class ScaffoldingTestCase extends PackageTestCase
         }
 
         $files->deleteDirectory($to.'/app/Rest');
+        $files->ensureDirectoryExists($to.'/app/Models');
     }
 }

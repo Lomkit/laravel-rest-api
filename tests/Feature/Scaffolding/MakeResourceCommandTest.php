@@ -29,7 +29,7 @@ class MakeResourceCommandTest extends ScaffoldingTestCase
 
         $this->assertInstanceOf(BaseResource::class, $resource);
         $this->assertSame('string', (string) (new ReflectionProperty(ScaffoldedProductResource::class, 'model'))->getType());
-        $this->assertSame('App\Product', ScaffoldedProductResource::modelClass());
+        $this->assertSame('App\Models\Product', ScaffoldedProductResource::modelClass());
         $this->assertEquals([ID::make('id')], $resource->fields(new RestRequest));
         $this->assertSame([10, 25, 50], $resource->limits(new RestRequest));
     }

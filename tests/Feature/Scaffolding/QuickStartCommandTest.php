@@ -21,7 +21,7 @@ class QuickStartCommandTest extends ScaffoldingTestCase
         $this->loadGeneratedClass(BaseController::class);
         $this->loadGeneratedClass(UsersController::class);
 
-        $this->assertSame('App\User', UserResource::modelClass());
+        $this->assertSame('App\Models\User', UserResource::modelClass());
         $this->assertSame(UserResource::class, UsersController::resourceClass());
     }
 
