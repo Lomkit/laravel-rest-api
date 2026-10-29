@@ -8,6 +8,12 @@ use Lomkit\Rest\Relations\Relation;
 
 trait PerformsRelationOperations
 {
+    /** @return list<string> */
+    public function mutationOperations(): array
+    {
+        return ['create', 'update', 'attach', 'detach', 'toggle', 'sync'];
+    }
+
     /**
      * @return void
      */

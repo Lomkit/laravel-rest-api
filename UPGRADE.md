@@ -38,6 +38,7 @@ These items change:
 
 - `Controller::newResource()` is removed. In a controller action, use `$request->context()->resource(static::resourceClass())`.
 - `app(RestRequest::class)` no longer returns the request in progress. It builds a new request. In a resource, read the request from the method parameter or from `$this->context()->request`.
+- A package request reads its resource from the class of the route controller, which must extend `Lomkit\Rest\Http\Controllers\Controller`. On another route, such as a closure route, the request throws `Lomkit\Rest\Exceptions\InvalidControllerException`. Before, it failed with a PHP error.
 - The query builder methods that only exist on Eloquent (`mutate()`, `mutations()`, `applyMutation()`, `disableDefaultLimit()`) are declared on a new contract, `Lomkit\Rest\Contracts\EloquentQueryBuilder`. If you bind your own `QueryBuilder` implementation, it must implement `EloquentQueryBuilder`. The package resolves `EloquentQueryBuilder` through your `QueryBuilder` binding.
 
 ### Routing
@@ -107,7 +108,7 @@ Scopes:
 
 Instructions:
 
-- `fields()` returns `Field` objects instead of a map of rules: `['min_views' => ['integer']]` becomes `[Integer::make('min_views')]`. The field rules are the type rules, `nullable` and `rules()`; rules that compare fields, such as `required_if:status,published`, keep working.
+- `fields()` returns `Field` objects instead of a map of rules: `['min_views' => ['integer']]` becomes `[Integer::make('min_views')]`. The field rules are the type rules, `nullable` and `rules()`; rules that compare fields, such as `required_if:status,published`, `date_equals:since` or `Rule::date()->after('since')`, compare with the other inputs of the instruction, as described under Validation engine.
 - `handle()` and `handleScout()` receive a name-to-value map, with each value cast to its field type and defaults filled in. A field that is absent and has no default is missing from the array, so read optional fields with `$fields['name'] ?? null`. An entry sent without `value` counts as absent.
 - The fields of Scout instructions are validated now.
 - The base `handleScout()` throws `Lomkit\Rest\Exceptions\InvalidInstructionException`, a `\LogicException`, instead of `http\Exception\RuntimeException`.
@@ -263,3 +264,39 @@ Query builder and requests:
 - `Lomkit\Rest\Rules\Search\Search` no longer validates `text`. `SearchRequest` validates it with `SearchText`, and includes and actions prohibit it.
 - `Resource::relation()` returns `null` for a dotted path whose first relation is not declared. Before, it failed with an error.
 - `Lomkit\Rest\Rules\ArrayWithKey` stops after reporting that a value is not an array.
+
+### Validation engine
+
+Each package request validates its payload with one Laravel validator, in one pass. Before validating, the request compiles its rules against the payload: each node of the rule tree, a `Lomkit\Rest\Rules\RestRule`, becomes rules on explicit keys such as `search.filters.0.field`, and the validator checks those keys.
+
+Custom rules:
+
+- `RestRule` no longer implements Laravel's `ValidationRule` and `ValidatorAwareRule`: `validate()`, `setValidator()` and the `$validator` property are removed. A node only works in the rules of a package request, which compiles it.
+- A custom node implements `buildValidationRules(string $attribute, mixed $value): array`, which returns rules keyed under `$attribute` and may hold other nodes. To add rules in another way, override `compile(RuleCompiler $into, string $attribute, mixed $value): void` (`Lomkit\Rest\Validation\RuleCompiler`), which adds `buildValidationRules()` by default.
+- A node is compiled with the value at its key, and only when Laravel would have run a rule there: the key is present, is not an empty string, and is not `null` under `nullable`. When the value is not an array, the key gets the `array` rule and nothing under it is compiled.
+- `Lomkit\Rest\Rules\Concerns\ValidatesFields` and `Lomkit\Rest\Rules\Operate\OperateFields` are removed. `Lomkit\Rest\Rules\Input\InputFields` validates the fields of actions and instructions and takes a `FieldSet`. Their error keys do not change. A `validation.custom.<name>.<rule>` translation line no longer applies to an input field: key it by the full key, `validation.custom.fields.<name>.<rule>` for an action or `validation.custom.search.instructions.*.fields.<name>.<rule>` for an instruction. The `validation.attributes.<name>` line still names the field.
+- Laravel replaces `*` in the parameters of its own dependent rules, such as `required_if`. A rule registered with `Validator::extendDependent()` does not get this replacement on the keys the request expands.
+- The rules of action fields, instruction fields and scope parameters run in the request's validator. A rule that names another input of the same action, instruction or scope compares with that input: this covers the field parameters of Laravel's dependent rules (`required_if`, `gte`, `after`, `same`, …), `date_equals` and `in_array`, written as strings or arrays, in `Rule::date()`, `Rule::numeric()`, `Rule::string()` and `Rule::array()` objects, and inside `Rule::when()`.
+- Other rule objects and closures on these inputs see the whole request: a `DataAwareRule` receives the whole payload, where each input value sits under `<attribute>.<name>` (`fields.min`), a `ValidatorAwareRule` receives the request's validator, a `Rule::when()` condition receives the whole payload, and the attribute passed to `validate()` or to a closure is the full key, such as `fields.min` or `search.instructions.0.fields.min`.
+
+Requests:
+
+- `withValidator()` and `after()` on a package request run once, and their validator holds every error of the payload, including those of nested filters, includes, instructions and relations.
+- `RestRequest` overrides four methods of `FormRequest` and declares their return types: `validationData(): array`, `validationRules(): array`, `createDefaultValidator(ValidationFactory $factory): Validator` (the `Illuminate\Contracts\Validation\Validator` contract) and `shouldValidatePrecognitiveAttribute($attribute, $validateOnly): bool`. An override must declare the same type, and should call the parent method.
+- `validationRules()` returns the compiled rules, and `validationData()` returns the payload with each input value added under `<attribute>.<name>`, such as `fields.status`.
+- `rules()` still returns the rule tree, which Laravel cannot run on its own. To adjust the validator, use `withValidator()`, or override `createDefaultValidator()` and call the parent. A request that defines `validator()` builds the validator itself: it must use `validationData()` and `validationRules()`, and its messages then name input fields and expanded keys by their full key, such as `fields.status`.
+- A key that the request expands from a wildcard, such as an entry of a to-many relation (`mutate.0.relations.lineItems.0.operation`), is named as written in messages, as Laravel names wildcard keys, unless the request's `attributes()` or a `validation.attributes` translation line names it. `Validator::setImplicitAttributesFormatter()` does not apply to these keys.
+- The input values added by `validationData()` also appear in `validated()` and `safe()`, under `fields.<name>` for an action. `resolveFields()` and the values that `handle()` receives do not change.
+- The request's `messages()` and `attributes()` now apply to the fields of actions and instructions, under `fields.<name>` and `search.instructions.<i>.fields.<name>`. Without them, such a field is still named by the `validation.attributes.<name>` translation, or else by its name.
+- Package requests declare `#[FailOnUnknownFields(false)]`, so `FormRequest::failOnUnknownFields()` does not apply to them. The attribute takes effect from Laravel 13.4: the attribute class does not exist in earlier 13.x versions, where PHP ignores it.
+- With Precognition enabled, a name in `Precognition-Validate-Only` also covers the keys under it: `search` validates `search.limit` and `search.filters.0.field`. Before, a payload with invalid nested values could return `204`.
+
+Payloads:
+
+- A rule of a scope parameter that names another field of the same scope, such as `gte:min`, compares with the parameter at that field's position, `search.scopes.<i>.parameters.<p>`. Before, it read the key of that name at the root of the payload.
+- An input field with a numeric name, such as `Integer::make('2')`, throws `InvalidFieldException` when the fields are built, because its value is validated under `<attribute>.<name>`, next to the entry positions.
+- The `fields` of an action or an instruction must be a list of `{name, value}` entries. An object keyed by input name gives a 422: `The fields field must be a list.`
+- An entry key that holds `*`, such as `"filters": {"*": {...}}`, gives a 422 on its container: `The * key is not valid for the search.filters field.`
+- A list entry that is not an object, such as `"includes": ["category"]` or `"mutate": ["create"]`, gives a 422 on that entry: `The search.includes.0 field must be an array.` A to-one relation given a list or `null` in `mutate` also gives a 422. Some of these payloads gave a 500 before.
+- Under a to-many relation in `mutate`, the errors are listed entry by entry.
+- `sync` and `toggle` are accepted on many-to-many relations only: `BelongsToMany`, `MorphToMany` and `MorphedByMany`. On another relation they give a 422 under the `operation` key of the entry, such as `The selected mutate.0.relations.author.operation is invalid.` Send `attach` there instead. A relation lists the operations it accepts in `mutationOperations()`.

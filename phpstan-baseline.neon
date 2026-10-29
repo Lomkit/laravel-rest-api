@@ -1669,36 +1669,6 @@ parameters:
 			path: src/RestServiceProvider.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Mutate\\Mutate\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Mutate/Mutate.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Mutate\\MutateRelation\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Mutate/MutateRelation.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Resource\\ResourceCustomRules\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Resource/ResourceCustomRules.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Resource\\ResourceMutateRelationOperation\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Resource/ResourceMutateRelationOperation.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\RestRule\:\:buildValidationRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/RestRule.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchIncludeAlias\:\:relationNames\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1

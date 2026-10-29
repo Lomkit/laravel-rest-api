@@ -2,23 +2,19 @@
 
 namespace Lomkit\Rest\Rules\Resource;
 
-use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Rules\RestRule;
 
 class ResourceMutateRelationOperation extends RestRule
 {
+    /** @return array<string, string> */
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = $this->resource->context()->request;
-        $resourceRelations = $this->resource->getRelations($request);
-
+        $operation = is_array($value) ? ($value['operation'] ?? null) : null;
         $rules = [];
 
-        /**
-         * @var Relation $relation
-         */
-        foreach ($resourceRelations as $relation) {
-            if ($value['operation'] === 'update') {
+        foreach ($this->resource->getRelations($request) as $relation) {
+            if ($operation === 'update') {
                 if ($relation->isProhibitedOnUpdate($request)) {
                     $rules[$attribute.'.relations.'.$relation->relation] = 'prohibited';
                 }
@@ -28,7 +24,7 @@ class ResourceMutateRelationOperation extends RestRule
                 }
             }
 
-            if ($value['operation'] === 'create') {
+            if ($operation === 'create') {
                 if ($relation->isProhibitedOnCreation($request)) {
                     $rules[$attribute.'.relations.'.$relation->relation] = 'prohibited';
                 }

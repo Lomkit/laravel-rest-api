@@ -7,6 +7,7 @@ use Lomkit\Rest\Rules\Concerns\DependsOnTextSearch;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\RestRule;
 use Lomkit\Rest\Scopes\Scope;
+use Lomkit\Rest\Validation\RuleReferences;
 
 class SearchScope extends RestRule
 {
@@ -31,9 +32,14 @@ class SearchScope extends RestRule
         }
 
         $rules[$attribute.'.parameters'] = ['sometimes', 'array', 'list', 'max:'.count($scope->getFields())];
+        $paths = [];
 
         foreach ($scope->getFields() as $position => $field) {
-            $rules[$attribute.'.parameters.'.$position] = [...self::presenceRules($field), ...$field->getRules()->shared()];
+            $paths[$field->name] = $attribute.'.parameters.'.$position;
+        }
+
+        foreach ($scope->getFields() as $position => $field) {
+            $rules[$attribute.'.parameters.'.$position] = [...self::presenceRules($field), ...RuleReferences::rewrite($field->getRules()->shared(), $paths)];
         }
 
         return $rules;

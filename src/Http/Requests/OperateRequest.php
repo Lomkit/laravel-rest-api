@@ -6,8 +6,9 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Fields\InputValues;
+use Lomkit\Rest\Rules\Distinct;
+use Lomkit\Rest\Rules\Input\InputFields;
 use Lomkit\Rest\Rules\OneOf;
-use Lomkit\Rest\Rules\Operate\OperateFields;
 use Lomkit\Rest\Rules\Search\Search;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -35,6 +36,7 @@ class OperateRequest extends RestRequest
         }
 
         $model = $this->resource::newModel();
+        $fields = $operatedAction->getFields($this);
         $searchable = ! $operatedAction->isStandalone() && ! $operatedAction->isTargeted();
 
         return array_merge(
@@ -54,13 +56,13 @@ class OperateRequest extends RestRequest
                 'fields' => [
                     'sometimes',
                     'array',
-                    (new OperateFields)->setAction($operatedAction),
+                    new InputFields($fields),
                 ],
                 'fields.*.name' => [
                     'required',
                     'string',
-                    'distinct',
-                    new OneOf($operatedAction->getFields($this)->names()),
+                    Distinct::among($this->input('fields'), 'name'),
+                    new OneOf($fields->names()),
                 ],
             ]
         );
