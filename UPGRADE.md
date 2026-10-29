@@ -36,7 +36,7 @@ Each package request now owns a `RestContext`. The context holds the request and
 
 These items change:
 
-- `Controller::newResource()` is removed. In a controller action, use `$request->context()->resource(static::$resource)`.
+- `Controller::newResource()` is removed. In a controller action, use `$request->context()->resource(static::resourceClass())`.
 - `app(RestRequest::class)` no longer returns the request in progress. It builds a new request. In a resource, read the request from the method parameter or from `$this->context()->request`.
 - The query builder methods that only exist on Eloquent (`mutate()`, `mutations()`, `applyMutation()`, `disableSecurity()`, `disableDefaultLimit()`) are declared on a new contract, `Lomkit\Rest\Contracts\EloquentQueryBuilder`. If you bind your own `QueryBuilder` implementation, it must implement `EloquentQueryBuilder`. The package resolves `EloquentQueryBuilder` through your `QueryBuilder` binding.
 
@@ -126,10 +126,6 @@ Instructions and actions:
 - The fields are not bound to a model, so an `Enum` field names its enum class: `Enum::make('status', PostStatus::class)`.
 - For actions and Scout instructions, an entry without a name, or that is not an object, now gives a 422 under `fields.<i>.name` instead of a 500, as it already did for instructions. A name that is not a string fails with `must be a string`.
 - `rest:action` and `rest:instruction` generate `ID::make('id')->rules('required')`.
-- `Action`, `Instruction` and `BatchableAction` declare native types, and PHP requires subclasses to match them:
-  - a redeclared property keeps its type: `public ?string $name`, `public bool $standalone`, `public bool $targeted`, `public int $chunkCount`;
-  - an override declares its return type: `handle(): void`, `handleScout(): void`, `withBatch(): void`, `name(): string`, `uriKey(): string`, `standalone(): static`, `targeted(): static`, `isStandalone(): bool`, `isTargeted(): bool`, `handleRequest(): int`.
-- An action's `handle()` returns `void`. Before, a synchronous action that returned `false` stopped the remaining chunks; the chunks now always run.
 
 Meta:
 
@@ -141,3 +137,79 @@ Details:
 - The `fields` of actions, instructions and scopes are input entries `{name, type, nullable, default, rules, meta}`. `Enum` entries add `values`.
 - Rules are described as strings: pipe strings are split, `Stringable` rules are cast to string, other rule objects are named by their snake class name (`enum`, `password`), and closures are left out.
 - The resource `fields` stay a list of names.
+
+### Native types
+
+The members that applications redeclare or override declare native PHP types. PHP checks a subclass when it loads it: a redeclared property must keep the parent's type, and an overriding method must declare a compatible return type. A class that does not match stops with a fatal error.
+
+Resources and controllers:
+
+- `$model` and `$resource` are declared `public static string`. Redeclare them with the type:
+
+  ```php
+  class PostResource extends Resource
+  {
+      public static string $model = Post::class;
+  }
+
+  class PostsController extends Controller
+  {
+      public static string $resource = PostResource::class;
+  }
+  ```
+
+- A resource without `$model` throws `Lomkit\Rest\Exceptions\InvalidResourceException`, and a controller without `$resource` throws `Lomkit\Rest\Exceptions\InvalidControllerException`. Both messages name your class. Read the values with `Resource::modelClass()` and `Controller::resourceClass()`, which throw these exceptions, instead of `static::$model` and `static::$resource`.
+- `Rest::resource()` loads the controller class and checks its resource when the routes register. A controller that PHP cannot load, such as one that still declares an untyped `$resource`, now stops the route files and every Artisan command, not only its own endpoints. Routes served from the route cache skip this check: their controller throws on its first request instead.
+- `rest:resource` and `rest:controller` generate the typed properties, and `rest:base-resource` generates the typed query hooks.
+
+Query hooks:
+
+- `searchQuery()`, `mutateQuery()`, `destroyQuery()`, `restoreQuery()` and `forceDestroyQuery()` return `Illuminate\Contracts\Database\Eloquent\Builder`, and `searchScoutQuery()` returns `Laravel\Scout\Builder`. Add the return type to every override, including the five hooks of the base resource that `rest:base-resource` wrote in `app/Rest/Resources/Resource.php`. The parameter keeps the contract type, and the return type may be the Eloquent `Builder` instead of the contract:
+
+  ```php
+  use Illuminate\Contracts\Database\Eloquent\Builder;
+
+  public function searchQuery(RestRequest $request, Builder $query): Builder
+  {
+      return $query->where('team_id', $request->user()->team_id);
+  }
+  ```
+
+- An override must return the builder: one that changes `$query` and returns nothing now throws a `TypeError`. The package ignores the returned builder, so apply the constraints to `$query` itself, as before.
+
+Responses:
+
+- `$response` is declared `public static string`, and `newResponse()` returns `Lomkit\Rest\Http\Response`. The class it names must extend `Lomkit\Rest\Http\Response`, otherwise the endpoints throw a `TypeError`.
+
+Validation rules:
+
+- `rules()`, `createRules()` and `updateRules()` return `array`.
+
+Actions, instructions and relations:
+
+- `Action`, `Instruction` and `BatchableAction` declare native types:
+  - a redeclared property keeps its type: `public ?string $name`, `public bool $standalone`, `public bool $targeted`, `public int $chunkCount`;
+  - an override declares its return type: `handle(): void`, `handleScout(): void`, `withBatch(): void`, `name(): string`, `uriKey(): string`, `standalone(): static`, `targeted(): static`, `isStandalone(): bool`, `isTargeted(): bool`, `handleRequest(): int`.
+- An action's `handle()` returns `void`. Before, a synchronous action that returned `false` stopped the remaining chunks; the chunks now always run.
+- `make()` returns `static`. An action, instruction or relation that redefines it must declare `: static`.
+- `resource(Resource $resource)` returns `static` on actions, instructions and requests.
+
+Other resource methods:
+
+- `newModel(): Model`, `isModelSearchable(): bool`, `relation(): ?Relation`, `getRelations(): array` and `instruction(): ?Instruction`.
+- `performDelete()`, `performRestore()` and `performForceDelete()` return `void`.
+- `paginate()` returns `Illuminate\Contracts\Pagination\LengthAwarePaginator`, so an override cannot return a simple or a cursor paginator.
+
+Controller endpoints:
+
+- `details()` and `mutate()` return `array`, `operate()` returns `Illuminate\Http\Response`, and `search()`, `destroy()`, `restore()` and `forceDestroy()` return `Lomkit\Rest\Http\Response`.
+
+Requests:
+
+- `authorize()` returns `bool|Illuminate\Auth\Access\Response`, so it can still return `Response::deny()`.
+- `rules()`, `destroyRules()`, `forceDestroyRules()`, `restoreRules()`, `operateRules()` and `resolveFields()` return `array`, and `isScoutMode()` returns `bool`.
+- `Lomkit\Rest\Http\Requests\ActionsRequest` is removed. Nothing used it: the operate hooks receive an `OperateRequest`.
+
+Service provider and facade:
+
+- `RestServiceProvider::register()` and `boot()` return `void`, and the `Rest` facade's `getFacadeAccessor()` returns `string`.

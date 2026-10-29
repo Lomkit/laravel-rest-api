@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Concerns;
 
+use Illuminate\Http\Response as IlluminateResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
@@ -14,39 +15,28 @@ use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\Response;
 use Lomkit\Rest\Query\ScoutBuilder;
 
 trait PerformsRestOperations
 {
-    /**
-     * Retrieve details of a resource.
-     *
-     *
-     * @return array
-     */
-    public function details(DetailsRequest $request)
+    /** @return array{data: mixed} */
+    public function details(DetailsRequest $request): array
     {
-        $request->resource($resource = $request->context()->resource(static::$resource));
+        $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
         $this->beforeDetails($request);
 
-        $resource->authorizeTo('viewAny', $resource::$model);
+        $resource->authorizeTo('viewAny', $resource::modelClass());
 
         return [
             'data' => $resource->jsonSerialize(),
         ];
     }
 
-    /**
-     * Search for resources based on the given criteria.
-     * Returns an empty paginated result if search text is provided but empty.
-     *
-     *
-     * @return mixed
-     */
-    public function search(SearchRequest $request)
+    public function search(SearchRequest $request): Response
     {
-        $request->resource($resource = $request->context()->resource(static::$resource));
+        $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
         $this->beforeSearch($request);
 
@@ -76,25 +66,17 @@ trait PerformsRestOperations
         return $this->buildResponse($resource, $resource->paginate($query, $request));
     }
 
-    /**
-     * Build the response for a resource operation.
-     */
-    private function buildResponse(Resource $resource, mixed $responsable): mixed
+    private function buildResponse(Resource $resource, mixed $responsable): Response
     {
         return $resource::newResponse()
             ->resource($resource)
             ->responsable($responsable);
     }
 
-    /**
-     * Mutate resources based on the given request data.
-     *
-     *
-     * @return mixed
-     */
-    public function mutate(MutateRequest $request)
+    /** @return array<string, mixed> */
+    public function mutate(MutateRequest $request): array
     {
-        $request->resource($resource = $request->context()->resource(static::$resource));
+        $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
         $this->beforeMutate($request);
 
@@ -110,14 +92,9 @@ trait PerformsRestOperations
         return $operations;
     }
 
-    /**
-     * Perform a specific action on the resource.
-     *
-     * @return mixed
-     */
-    public function operate(OperateRequest $request)
+    public function operate(OperateRequest $request): IlluminateResponse
     {
-        $request->resource($resource = $request->context()->resource(static::$resource));
+        $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
         $this->beforeOperate($request);
 
@@ -134,15 +111,9 @@ trait PerformsRestOperations
         ]);
     }
 
-    /**
-     * Delete resources based on the given request.
-     *
-     *
-     * @return mixed
-     */
-    public function destroy(DestroyRequest $request)
+    public function destroy(DestroyRequest $request): Response
     {
-        $request->resource($resource = $request->context()->resource(static::$resource));
+        $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
         $this->beforeDestroy($request);
 
@@ -176,15 +147,9 @@ trait PerformsRestOperations
             ->responsable($models);
     }
 
-    /**
-     * Restore resources based on the given request.
-     *
-     *
-     * @return mixed
-     */
-    public function restore(RestoreRequest $request)
+    public function restore(RestoreRequest $request): Response
     {
-        $request->resource($resource = $request->context()->resource(static::$resource));
+        $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
         $this->beforeRestore($request);
 
@@ -219,15 +184,9 @@ trait PerformsRestOperations
             ->responsable($models);
     }
 
-    /**
-     * Force delete resources based on the given request.
-     *
-     *
-     * @return mixed
-     */
-    public function forceDestroy(ForceDestroyRequest $request)
+    public function forceDestroy(ForceDestroyRequest $request): Response
     {
-        $request->resource($resource = $request->context()->resource(static::$resource));
+        $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
         $this->beforeForceDestroy($request);
 

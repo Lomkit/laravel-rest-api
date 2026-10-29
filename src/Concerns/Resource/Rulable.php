@@ -6,35 +6,20 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Rulable
 {
-    /**
-     * Get the validation rules for resource requests.
-     *
-     *
-     * @return array
-     */
-    public function rules(RestRequest $request)
+    /** @return array<string, mixed> */
+    public function rules(RestRequest $request): array
     {
         return [];
     }
 
-    /**
-     * Get the validation rules for resource creation requests.
-     *
-     *
-     * @return array
-     */
-    public function createRules(RestRequest $request)
+    /** @return array<string, mixed> */
+    public function createRules(RestRequest $request): array
     {
         return [];
     }
 
-    /**
-     * Get the validation rules for resource update requests.
-     *
-     *
-     * @return array
-     */
-    public function updateRules(RestRequest $request)
+    /** @return array<string, mixed> */
+    public function updateRules(RestRequest $request): array
     {
         return [];
     }

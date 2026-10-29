@@ -33,7 +33,7 @@ trait PerformSearch
      */
     public function search(array $parameters = [])
     {
-        $this->resource->authorizeTo('viewAny', $this->resource::$model);
+        $this->resource->authorizeTo('viewAny', $this->resource::modelClass());
 
         // The perimeter runs in a subquery so that an "or" inside it cannot swallow the
         // constraints appended afterwards, which bind tighter than it does

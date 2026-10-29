@@ -26,7 +26,7 @@ trait DeclaresFields
     {
         $fields = FieldSet::of($this->fields($request), static::class.'::fields()');
 
-        if (! (new ReflectionClass(static::$model))->isInstantiable()) {
+        if (! (new ReflectionClass(static::modelClass()))->isInstantiable()) {
             return $fields;
         }
 

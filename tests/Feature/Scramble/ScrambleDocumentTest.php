@@ -5,7 +5,10 @@ namespace Lomkit\Rest\Tests\Feature\Scramble;
 use Dedoc\Scramble\Generator;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\ScrambleServiceProvider;
+use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\UndeclaredResourceController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -60,6 +63,19 @@ class ScrambleDocumentTest extends PackageTestCase
 
         $this->assertSame('Delete Product', $operation['summary']);
         $this->assertSame('integer', $this->body($operation)['properties']['resources']['items']['type']);
+    }
+
+    #[Test]
+    public function it_names_the_controller_without_a_resource_when_it_documents_its_route(): void
+    {
+        Route::post('api/drafts/search', [UndeclaredResourceController::class, 'search']);
+        $this->app['config']->set('app.debug', false);
+
+        $this->expectExceptionObject(new InvalidControllerException(
+            'The controller ['.UndeclaredResourceController::class.'] does not declare its resource. Add public static string $resource = YourResource::class; to it.',
+        ));
+
+        app(Generator::class)();
     }
 
     /** @return array<string, mixed> */

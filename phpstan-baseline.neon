@@ -235,130 +235,10 @@ parameters:
 			path: src/Http/Controllers/Controller.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:details\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
 			message: '#^Parameter \#1 \$haystack of static method Illuminate\\Support\\Str\:\:contains\(\) expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Http/Middleware/EnforceExpectsJson.php
-
-		-
-			message: '#^Cannot access property \$controller on Illuminate\\Routing\\Route\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: src/Http/Requests/DestroyRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\DestroyRequest\:\:destroyRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/DestroyRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\DestroyRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/DestroyRequest.php
-
-		-
-			message: '#^Cannot access property \$controller on Illuminate\\Routing\\Route\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: src/Http/Requests/ForceDestroyRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\ForceDestroyRequest\:\:forceDestroyRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/ForceDestroyRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\ForceDestroyRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/ForceDestroyRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\MutateRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/MutateRequest.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Http\\Requests\\RestRequest\:\:operateRules\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Http/Requests/OperateRequest.php
-
-		-
-			message: '#^Cannot access property \$controller on Illuminate\\Routing\\Route\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: src/Http/Requests/OperateRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\OperateRequest\:\:operateRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/OperateRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\OperateRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/OperateRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\RestRequest\:\:isScoutMode\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Http/Requests/RestRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\RestRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/RestRequest.php
-
-		-
-			message: '#^PHPDoc tag @var above a method has no effect\.$#'
-			identifier: varTag.misplaced
-			count: 1
-			path: src/Http/Requests/RestRequest.php
-
-		-
-			message: '#^Cannot access property \$controller on Illuminate\\Routing\\Route\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: src/Http/Requests/RestoreRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\RestoreRequest\:\:restoreRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/RestoreRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\RestoreRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/RestoreRequest.php
-
-		-
-			message: '#^Cannot access property \$controller on Illuminate\\Routing\\Route\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: src/Http/Requests/SearchRequest.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Requests\\SearchRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Requests/SearchRequest.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:getCollection\(\)\.$#'
@@ -385,25 +265,7 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:createRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:defaultOrderBy\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getActions\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:getInstructions\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Http/Resource.php
@@ -433,18 +295,6 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:instructions\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:isModelSearchable\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:limits\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -463,18 +313,6 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:relations\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:scoutFields\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -484,30 +322,6 @@ parameters:
 			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:scoutInstructions\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:searchScoutQuery\(\) has parameter \$query with generic class Laravel\\Scout\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:searchScoutQuery\(\) return type with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:updateRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^PHPDoc tag @param references unknown parameter\: \$query$#'
-			identifier: parameter.notFound
-			count: 3
 			path: src/Http/Resource.php
 
 		-
@@ -541,19 +355,7 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedInstructions type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedLimits type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$calculatedRelations type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Http/Resource.php

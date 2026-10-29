@@ -6,21 +6,12 @@ use Lomkit\Rest\Http\Resource;
 
 trait Resourcable
 {
-    /**
-     * The resource.
-     */
     public Resource $resource;
 
-    /**
-     * Set the resource.
-     *
-     *
-     * @return self
-     */
-    public function resource(Resource $resource)
+    public function resource(Resource $resource): static
     {
-        return tap($this, function () use ($resource) {
-            $this->resource = $resource;
-        });
+        $this->resource = $resource;
+
+        return $this;
     }
 }

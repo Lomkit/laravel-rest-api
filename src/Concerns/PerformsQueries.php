@@ -2,73 +2,43 @@
 
 namespace Lomkit\Rest\Concerns;
 
-use Laravel\Scout\Builder;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Laravel\Scout\Builder as ScoutBuilder;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait PerformsQueries
 {
-    /**
-     * Build a "search" query for fetching resource.
-     *
-     *
-     * @return \Illuminate\Contracts\Database\Eloquent\Builder
-     */
-    public function searchQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
+    public function searchQuery(RestRequest $request, Builder $query): Builder
     {
         return $query;
     }
 
     /**
-     * Build a "search" scout query for fetching resource.
-     *
-     *
-     * @return Builder
+     * @param  ScoutBuilder<Model>  $query
+     * @return ScoutBuilder<Model>
      */
-    public function searchScoutQuery(RestRequest $request, Builder $query)
+    public function searchScoutQuery(RestRequest $request, ScoutBuilder $query): ScoutBuilder
     {
         return $query;
     }
 
-    /**
-     * Build a query for mutating resource.
-     *
-     *
-     * @return \Illuminate\Contracts\Database\Eloquent\Builder
-     */
-    public function mutateQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
+    public function mutateQuery(RestRequest $request, Builder $query): Builder
     {
         return $query;
     }
 
-    /**
-     * Build a "destroy" query for the given resource.
-     *
-     *
-     * @return \Illuminate\Contracts\Database\Eloquent\Builder
-     */
-    public function destroyQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
+    public function destroyQuery(RestRequest $request, Builder $query): Builder
     {
         return $query;
     }
 
-    /**
-     * Build a "restore" query for the given resource.
-     *
-     *
-     * @return \Illuminate\Contracts\Database\Eloquent\Builder
-     */
-    public function restoreQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
+    public function restoreQuery(RestRequest $request, Builder $query): Builder
     {
         return $query;
     }
 
-    /**
-     * Build a "forceDestroy" query for the given resource.
-     *
-     *
-     * @return \Illuminate\Contracts\Database\Eloquent\Builder
-     */
-    public function forceDestroyQuery(RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query)
+    public function forceDestroyQuery(RestRequest $request, Builder $query): Builder
     {
         return $query;
     }
