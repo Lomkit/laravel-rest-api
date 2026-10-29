@@ -24,7 +24,7 @@ final readonly class InputFieldDetails
             'type' => $this->field->type(),
             'nullable' => $this->field->isNullable(),
             'default' => $this->field->defaultValue(),
-            'rules' => (new RuleDescriptions($this->field->ruleSets()['all']))->toArray(),
+            'rules' => (new RuleDescriptions($this->field->getRules()->shared()))->toArray(),
             'meta' => $this->field->getMeta(),
         ];
 

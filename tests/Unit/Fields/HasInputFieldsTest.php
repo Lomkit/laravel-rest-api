@@ -66,4 +66,22 @@ class HasInputFieldsTest extends TestCase
 
         $owner->getFields(new RestRequest);
     }
+
+    #[Test]
+    public function it_names_its_owner_when_an_input_field_declares_write_rules(): void
+    {
+        $owner = new class
+        {
+            use HasInputFields;
+
+            public function fields(RestRequest $request): array
+            {
+                return [Text::make('title')->updateRules('max:1')];
+            }
+        };
+
+        $this->expectExceptionObject(InvalidFieldException::writeRulesOnInput($owner::class.'::fields()', 'title'));
+
+        $owner->getFields(new RestRequest);
+    }
 }

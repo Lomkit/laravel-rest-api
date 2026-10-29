@@ -16,6 +16,6 @@ trait HasInputFields
 
     public function getFields(RestRequest $request): FieldSet
     {
-        return FieldSet::of($this->fields($request), static::class.'::fields()');
+        return FieldSet::forInputs($this->fields($request), static::class.'::fields()');
     }
 }

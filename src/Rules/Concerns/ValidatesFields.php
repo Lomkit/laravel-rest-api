@@ -17,7 +17,7 @@ trait ValidatesFields
         $rules = [];
 
         foreach ($fields as $field) {
-            $rules[$field->name] = $field->ruleSets()['all'];
+            $rules[$field->name] = $field->getRules()->shared();
         }
 
         $fieldsValidator = ValidatorFactory::make(self::pivot($submitted), $rules);

@@ -35,6 +35,20 @@ final readonly class FieldSet implements Countable, IteratorAggregate
         return new self(array_values($declared));
     }
 
+    /** @param array<mixed> $fields */
+    public static function forInputs(array $fields, string $owner): self
+    {
+        $set = self::of($fields, $owner);
+
+        foreach ($set->fields as $field) {
+            if ($field->getRules()->hasWriteRules()) {
+                throw InvalidFieldException::writeRulesOnInput($owner, $field->name);
+            }
+        }
+
+        return $set;
+    }
+
     public function bindTo(Model $model): self
     {
         foreach ($this->fields as $field) {
@@ -97,7 +111,7 @@ final readonly class FieldSet implements Countable, IteratorAggregate
         $rules = [];
 
         foreach ($this->writableOn($operation) as $field) {
-            $rules[$field->name] = $field->rulesFor($operation);
+            $rules[$field->name] = $field->getRules()->forWrite($operation);
         }
 
         return $rules;

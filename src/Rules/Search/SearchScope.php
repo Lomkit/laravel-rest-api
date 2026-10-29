@@ -30,7 +30,7 @@ class SearchScope extends RestRule
         $rules[$attribute.'.parameters'] = ['sometimes', 'array', 'list', 'max:'.count($scope->getFields())];
 
         foreach ($scope->getFields() as $position => $field) {
-            $rules[$attribute.'.parameters.'.$position] = [...self::presenceRules($field), ...$field->ruleSets()['all']];
+            $rules[$attribute.'.parameters.'.$position] = [...self::presenceRules($field), ...$field->getRules()->shared()];
         }
 
         return $rules;
