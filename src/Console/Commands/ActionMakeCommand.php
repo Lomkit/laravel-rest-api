@@ -5,28 +5,9 @@ namespace Lomkit\Rest\Console\Commands;
 use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-#[AsCommand(name: 'rest:action')]
+#[AsCommand(name: 'rest:action', description: 'Create a new action class')]
 class ActionMakeCommand extends GeneratorCommand
 {
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'rest:action';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a new action class';
-
-    /**
-     * The type of class being generated.
-     *
-     * @var string
-     */
     protected $type = 'Action';
 
     /**

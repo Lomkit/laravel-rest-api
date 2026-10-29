@@ -5,28 +5,9 @@ namespace Lomkit\Rest\Console\Commands;
 use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-#[AsCommand(name: 'rest:response')]
+#[AsCommand(name: 'rest:response', description: 'Create a new response class')]
 class ResponseMakeCommand extends GeneratorCommand
 {
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'rest:response';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a new response class';
-
-    /**
-     * The type of class being generated.
-     *
-     * @var string
-     */
     protected $type = 'Response';
 
     /**

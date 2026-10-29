@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest;
 
+use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
@@ -12,6 +13,7 @@ use Lomkit\Rest\Http\Routing\ResourceRegistrar;
 use Lomkit\Rest\Http\Routing\RouteMiddleware;
 use Lomkit\Rest\Http\Routing\UriSegment;
 
+#[Singleton]
 class Rest
 {
     public function __construct(

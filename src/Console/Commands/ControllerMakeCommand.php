@@ -13,30 +13,11 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
-use function Laravel\Prompts\search;
+use function Laravel\Prompts\suggest;
 
-#[AsCommand(name: 'rest:controller')]
+#[AsCommand(name: 'rest:controller', description: 'Create a new controller class')]
 class ControllerMakeCommand extends GeneratorCommand
 {
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'rest:controller';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a new controller class';
-
-    /**
-     * The type of class being generated.
-     *
-     * @var string
-     */
     protected $type = 'Controller';
 
     /**
@@ -112,44 +93,28 @@ class ControllerMakeCommand extends GeneratorCommand
     }
 
     /**
-     * Build the resource replacement values.
+     * @param  array<string, string>  $replace
+     * @return array<string, string>
      */
     protected function buildResourceReplacements(array $replace): array
     {
         $resourceClass = $this->parseResource($this->option('resource'));
 
-        $replace = [];
-
         return array_merge($replace, [
-            'DummyFullResourceClass' => $resourceClass,
             '{{ namespacedResource }}' => $resourceClass,
             '{{namespacedResource}}' => $resourceClass,
-            'DummyResourceClass' => class_basename($resourceClass),
-            '{{ resource }}' => class_basename($resourceClass),
-            '{{resource}}' => class_basename($resourceClass),
-            'DummyResourceVariable' => lcfirst(class_basename($resourceClass)),
-            '{{ resourceVariable }}' => lcfirst(class_basename($resourceClass)),
-            '{{resourceVariable}}' => lcfirst(class_basename($resourceClass)),
         ]);
     }
 
-    /**
-     * Interact further with the user if they were prompted for missing arguments.
-     */
     protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output): void
     {
         if ($this->didReceiveOptions($input)) {
             return;
         }
 
-        $resource = search(
-            'What resource should this resource relies to? (Optional)',
-            fn ($value) => strlen($value) > 0
-                ? array_filter($this->possibleResources(), fn ($resource) => stripos($resource, $value) !== false)
-                : $this->possibleResources()
-        );
+        $resource = suggest('What resource should this controller rely on? (Optional)', $this->possibleResources());
 
-        if ($resource) {
+        if ($resource !== '') {
             $input->setOption('resource', $resource);
         }
     }
@@ -160,18 +125,18 @@ class ControllerMakeCommand extends GeneratorCommand
     protected function getOptions(): array
     {
         return [
-            ['resource', null, InputOption::VALUE_REQUIRED, 'The resource associated with this resource'],
+            ['resource', null, InputOption::VALUE_REQUIRED, 'The resource associated with this controller'],
         ];
     }
 
-    /**
-     * Get a list of possible model names.
-     *
-     * @return array<int, string>
-     */
+    /** @return array<int, string> */
     protected function possibleResources(): array
     {
         $resourcePath = app_path('Rest/Resources');
+
+        if (! is_dir($resourcePath)) {
+            return [];
+        }
 
         return (new Collection(Finder::create()->files()->depth(0)->in($resourcePath)))
             ->map(fn ($file) => $file->getBasename('.php'))

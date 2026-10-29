@@ -25,10 +25,7 @@ class RestServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(
-            __DIR__.'/../config/rest.php',
-            'rest'
-        );
+        $this->replaceConfigRecursivelyFrom(__DIR__.'/../config/rest.php', 'rest');
 
         $this->registerServices();
 
@@ -94,8 +91,6 @@ class RestServiceProvider extends ServiceProvider
 
     protected function registerServices(): void
     {
-        $this->app->singleton('lomkit-rest', Rest::class);
-
         $this->app->bind(QueryBuilder::class, Builder::class);
         $this->app->bind(EloquentQueryBuilder::class, fn ($app, array $parameters) => $app->make(QueryBuilder::class, $parameters));
     }

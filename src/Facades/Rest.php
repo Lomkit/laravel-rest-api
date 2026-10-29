@@ -13,6 +13,6 @@ class Rest extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return 'lomkit-rest';
+        return \Lomkit\Rest\Rest::class;
     }
 }

@@ -191,26 +191,26 @@ class Response implements Responsable
                 $this->responsable->perPage(),
                 $this->responsable->currentPage(),
                 $this->responsable->getOptions(),
-                $this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
+                $this->resource->isGatingEnabled() && in_array('create', $request->array('search.gates')) ? [
                     config('rest.gates.key') => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
                 ] : []
             );
 
             $restLengthAwarePaginator->through(function ($model) use ($request) {
-                return $this->map($model, $this->modelToResponse($model, $this->resource, $request->input('search', [])));
+                return $this->map($model, $this->modelToResponse($model, $this->resource, $request->array('search')));
             });
 
             return $restLengthAwarePaginator;
         } elseif ($this->responsable instanceof Collection) {
             $data = $this->responsable->map(function ($model) use ($request) {
-                return $this->map($model, $this->modelToResponse($model, $this->resource, $request->input('search', [])));
+                return $this->map($model, $this->modelToResponse($model, $this->resource, $request->array('search')));
             });
         }
 
         return [
-            'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->input('search', []))),
+            'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->array('search'))),
             'meta' => array_merge(
-                $this->resource->isGatingEnabled() && in_array('create', $request->input('search.gates', [])) ? [
+                $this->resource->isGatingEnabled() && in_array('create', $request->array('search.gates')) ? [
                     config('rest.gates.key') => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
                 ] : []
             ),

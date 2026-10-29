@@ -115,18 +115,6 @@ parameters:
 			path: src/Concerns/Resource/Paginable.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Console\\Commands\\ControllerMakeCommand\:\:buildResourceReplacements\(\) has parameter \$replace with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Console/Commands/ControllerMakeCommand.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Console\\Commands\\ControllerMakeCommand\:\:buildResourceReplacements\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Console/Commands/ControllerMakeCommand.php
-
-		-
 			message: '#^Parameter \#1 \$model of method Lomkit\\Rest\\Console\\Commands\\ControllerMakeCommand\:\:parseResource\(\) expects string, array\|bool\|float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
@@ -149,18 +137,6 @@ parameters:
 			identifier: argument.type
 			count: 3
 			path: src/Console/Commands/QuickStartCommand.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Console\\Commands\\ResourceMakeCommand\:\:buildModelReplacements\(\) has parameter \$replace with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Console/Commands/ResourceMakeCommand.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Console\\Commands\\ResourceMakeCommand\:\:buildModelReplacements\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Console/Commands/ResourceMakeCommand.php
 
 		-
 			message: '#^Parameter \#1 \$model of method Lomkit\\Rest\\Console\\Commands\\ResourceMakeCommand\:\:parseModel\(\) expects string, array\|bool\|float\|int\|string\|null given\.$#'
@@ -1453,12 +1429,6 @@ parameters:
 			path: src/Relations/Relation.php
 
 		-
-			message: '#^Callable passed to call_user_func\(\) invoked with 2 parameters, 1 required\.$#'
-			identifier: arguments.count
-			count: 4
-			path: src/Relations/Relation.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:__construct\(\) has parameter \$relation with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -1519,39 +1489,9 @@ parameters:
 			path: src/Relations/Relation.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:prohibitedOnCreation\(\) has invalid return type Lomkit\\Rest\\Relations\\Traits\\Constrained\.$#'
-			identifier: return.trait
-			count: 1
-			path: src/Relations/Relation.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:prohibitedOnUpdate\(\) has invalid return type Lomkit\\Rest\\Relations\\Traits\\Constrained\.$#'
-			identifier: return.trait
-			count: 1
-			path: src/Relations/Relation.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:requiredOnCreation\(\) has invalid return type Lomkit\\Rest\\Relations\\Traits\\Constrained\.$#'
-			identifier: return.trait
-			count: 1
-			path: src/Relations/Relation.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:requiredOnUpdate\(\) has invalid return type Lomkit\\Rest\\Relations\\Traits\\Constrained\.$#'
-			identifier: return.trait
-			count: 1
-			path: src/Relations/Relation.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
-			path: src/Relations/Relation.php
-
-		-
-			message: '#^PHPDoc tag @return with type Lomkit\\Rest\\Relations\\Relation\|Lomkit\\Rest\\Relations\\Traits\\Constrained is not subtype of native type Lomkit\\Rest\\Relations\\Relation\.$#'
-			identifier: return.phpDocType
-			count: 4
 			path: src/Relations/Relation.php
 
 		-

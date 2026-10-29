@@ -5,35 +5,9 @@ namespace Lomkit\Rest\Console\Commands;
 use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-#[AsCommand(name: 'rest:base-resource')]
+#[AsCommand(name: 'rest:base-resource', description: 'Create a new base resource class', hidden: true)]
 class BaseResourceMakeCommand extends GeneratorCommand
 {
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'rest:base-resource';
-
-    /**
-     * Indicates whether the command should be shown in the Artisan command list.
-     *
-     * @var bool
-     */
-    protected $hidden = true;
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a new base resource class';
-
-    /**
-     * The type of class being generated.
-     *
-     * @var string
-     */
     protected $type = 'Base Resource';
 
     /**

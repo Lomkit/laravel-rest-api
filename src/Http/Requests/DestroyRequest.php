@@ -34,7 +34,7 @@ class DestroyRequest extends RestRequest
             'resources.*' => [
                 'distinct',
                 ...$this->keyRules($resource),
-                Rule::exists($model->getTable(), $model->getKeyName()),
+                Rule::exists($model::class, $model->getKeyName()),
             ],
             'search' => ['bail', 'prohibited', 'array'],
         ];

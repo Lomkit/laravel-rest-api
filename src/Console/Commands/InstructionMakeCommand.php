@@ -5,28 +5,9 @@ namespace Lomkit\Rest\Console\Commands;
 use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-#[AsCommand(name: 'rest:instruction')]
+#[AsCommand(name: 'rest:instruction', description: 'Create a new instruction class')]
 class InstructionMakeCommand extends GeneratorCommand
 {
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'rest:instruction';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a new instruction class';
-
-    /**
-     * The type of class being generated.
-     *
-     * @var string
-     */
     protected $type = 'Instruction';
 
     /**
