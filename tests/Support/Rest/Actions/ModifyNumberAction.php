@@ -12,13 +12,7 @@ class ModifyNumberAction extends Action
 {
     public $queue = 'custom-queue';
 
-    /**
-     * Perform the action on the given models.
-     *
-     *
-     * @return mixed
-     */
-    public function handle(array $fields, Collection $models)
+    public function handle(array $fields, Collection $models): void
     {
         foreach ($models as $model) {
             /** @var Model $model */

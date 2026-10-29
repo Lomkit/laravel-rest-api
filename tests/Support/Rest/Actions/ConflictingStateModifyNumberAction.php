@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Tests\Support\Rest\Actions;
 
 class ConflictingStateModifyNumberAction extends ModifyNumberAction
 {
-    public $standalone = true;
+    public bool $standalone = true;
 
-    public $targeted = true;
+    public bool $targeted = true;
 }

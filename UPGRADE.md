@@ -126,6 +126,10 @@ Instructions and actions:
 - The fields are not bound to a model, so an `Enum` field names its enum class: `Enum::make('status', PostStatus::class)`.
 - For actions and Scout instructions, an entry without a name, or that is not an object, now gives a 422 under `fields.<i>.name` instead of a 500, as it already did for instructions. A name that is not a string fails with `must be a string`.
 - `rest:action` and `rest:instruction` generate `ID::make('id')->rules('required')`.
+- `Action`, `Instruction` and `BatchableAction` declare native types, and PHP requires subclasses to match them:
+  - a redeclared property keeps its type: `public ?string $name`, `public bool $standalone`, `public bool $targeted`, `public int $chunkCount`;
+  - an override declares its return type: `handle(): void`, `handleScout(): void`, `withBatch(): void`, `name(): string`, `uriKey(): string`, `standalone(): static`, `targeted(): static`, `isStandalone(): bool`, `isTargeted(): bool`, `handleRequest(): int`.
+- An action's `handle()` returns `void`. Before, a synchronous action that returned `false` stopped the remaining chunks; the chunks now always run.
 
 Meta:
 

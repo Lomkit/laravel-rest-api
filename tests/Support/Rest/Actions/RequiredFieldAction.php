@@ -9,7 +9,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 class RequiredFieldAction extends Action
 {
-    public function handle(array $fields, Collection $models)
+    public function handle(array $fields, Collection $models): void
     {
         //
     }

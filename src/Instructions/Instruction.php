@@ -21,17 +21,14 @@ class Instruction
     use Makeable;
     use Resourcable;
 
-    /** @var string|null */
-    public $name;
+    public ?string $name = null;
 
-    /** @return string */
-    public function name()
+    public function name(): string
     {
         return $this->name ?: Str::of(class_basename(static::class))->beforeLast('Instruction')->snake(' ')->title()->toString();
     }
 
-    /** @return string */
-    public function uriKey()
+    public function uriKey(): string
     {
         return Str::slug($this->name(), '-', null);
     }
@@ -50,16 +47,14 @@ class Instruction
     /**
      * @param  array<string, mixed>  $fields
      * @param  Builder<Model>  $query
-     * @return void
      */
-    public function handle(array $fields, Builder $query) {}
+    public function handle(array $fields, Builder $query): void {}
 
     /**
      * @param  array<string, mixed>  $fields
      * @param  ScoutBuilder<Model>  $query
-     * @return void
      */
-    public function handleScout(array $fields, ScoutBuilder $query)
+    public function handleScout(array $fields, ScoutBuilder $query): void
     {
         throw InvalidInstructionException::scoutNotSupported(static::class);
     }

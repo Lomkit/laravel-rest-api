@@ -6,11 +6,6 @@ use Illuminate\Bus\PendingBatch;
 
 interface BatchableAction
 {
-    /**
-     * Register callbacks on the pending batch.
-     *
-     * @param  array<string, mixed>  $fields
-     * @return void
-     */
-    public function withBatch(array $fields, PendingBatch $batch);
+    /** @param array<string, mixed> $fields */
+    public function withBatch(array $fields, PendingBatch $batch): void;
 }

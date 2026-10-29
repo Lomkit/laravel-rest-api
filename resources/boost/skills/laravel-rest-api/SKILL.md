@@ -354,19 +354,19 @@ php artisan rest:action SendWelcomeNotificationAction   # → app/Rest/Actions/
 class SendWelcomeNotificationAction extends \Lomkit\Rest\Actions\Action
 {
     // Optional. Set to true if the action operates without targeting models.
-    // public $standalone = true;
+    // public bool $standalone = true;
 
     // Optional. Set to true to require the caller to name the models by id.
     // Mutually exclusive with $standalone.
-    // public $targeted = true;
+    // public bool $targeted = true;
 
     // Optional. Cap on how many ids a targeted action accepts (default 1000).
     // public int $maxResources = 1000;
 
     // Optional. Batch size when processing models (default 100).
-    // public $chunkCount = 100;
+    // public int $chunkCount = 100;
 
-    public function handle(array $fields, \Illuminate\Support\Collection $models)
+    public function handle(array $fields, \Illuminate\Support\Collection $models): void
     {
         // $fields['expires_at'] is a CarbonImmutable; $fields['notify'] is a bool, true when not sent
         foreach ($models as $model) { /* ... */ }
@@ -404,7 +404,7 @@ POST /api/users/actions/send-welcome-notification-action
 }
 ```
 
-Note the **`fields` payload is an array of `{name, value}` pairs**, not an object. The `search` block resolves the target models (whole `search` schema is supported). Standalone actions (`->standalone()` or `public $standalone = true`) omit `search` and receive an empty collection.
+Note the **`fields` payload is an array of `{name, value}` pairs**, not an object. The `search` block resolves the target models (whole `search` schema is supported). Standalone actions (`->standalone()` or `public bool $standalone = true`) omit `search` and receive an empty collection.
 
 An action has exactly one of three targeting states, which decides what the request body may carry:
 
@@ -432,7 +432,7 @@ smaller.
 
 **Response**: `{"data": {"impacted": 150}}`.
 
-**Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models. Combine with `Lomkit\Rest\Contracts\BatchableAction` and use `withBatch(array $fields, PendingBatch $batch)` to register `then`/`catch`/`finally` callbacks. The synchronous `handle()`, `withBatch()` and the queued jobs all receive the same cast map. Customise `$connection` and `$queue` properties to route jobs.
+**Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models. Combine with `Lomkit\Rest\Contracts\BatchableAction` and use `withBatch(array $fields, PendingBatch $batch): void` to register `then`/`catch`/`finally` callbacks. The synchronous `handle()`, `withBatch()` and the queued jobs all receive the same cast map. Customise `$connection` and `$queue` properties to route jobs.
 
 ## Instructions (custom search refinements)
 
@@ -445,7 +445,7 @@ php artisan rest:instruction OddEvenIdInstruction   # → app/Rest/Instructions/
 ```php
 class OddEvenIdInstruction extends \Lomkit\Rest\Instructions\Instruction
 {
-    public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query)
+    public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query): void
     {
         $query->whereRaw('MOD(id, 2) = ?', [$fields['type'] === 'odd' ? 1 : 0]);
     }
@@ -457,7 +457,7 @@ class OddEvenIdInstruction extends \Lomkit\Rest\Instructions\Instruction
 
     // Scout variant — implement when this Instruction must also work under full-text search.
     // The base handleScout() throws InvalidInstructionException (a LogicException).
-    // public function handleScout(array $fields, ScoutBuilder $builder) { ... }
+    // public function handleScout(array $fields, ScoutBuilder $builder): void { ... }
 }
 ```
 

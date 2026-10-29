@@ -193,7 +193,7 @@ class DispatchAction
 
                     $impacted += $collection->count();
 
-                    return $this->forModels($collection);
+                    $this->forModels($collection);
                 }
             );
 
@@ -216,11 +216,8 @@ class DispatchAction
 
     /**
      * Dispatch the given action.
-     *
-     *
-     * @return mixed|void
      */
-    public function forModels(Collection $models)
+    public function forModels(Collection $models): void
     {
         if ($models->isEmpty() && ! $this->action->isStandalone()) {
             return;
@@ -232,22 +229,18 @@ class DispatchAction
             return;
         }
 
-        return $this->dispatchSynchronouslyForCollection($models);
+        $this->dispatchSynchronouslyForCollection($models);
     }
 
     /**
      * Dispatch the given action synchronously for a model collection.
      *
-     *
-     *
-     * @return mixed
-     *
      * @throws \Throwable
      */
-    protected function dispatchSynchronouslyForCollection(Collection $models)
+    protected function dispatchSynchronouslyForCollection(Collection $models): void
     {
-        return DB::transaction(function () use ($models) {
-            return $this->action->handle($this->fields, $models);
+        DB::transaction(function () use ($models) {
+            $this->action->handle($this->fields, $models);
         });
     }
 

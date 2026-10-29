@@ -33,34 +33,27 @@ class Action implements JsonSerializable
     use Resourcable;
     use SerializesModels;
 
-    /** @var string|null */
-    public $name;
+    public ?string $name = null;
 
-    /** @var bool */
-    public $standalone = false;
+    public bool $standalone = false;
 
-    /** @var bool */
-    public $targeted = false;
+    public bool $targeted = false;
 
-    /** @var int */
-    public $chunkCount = 100;
+    public int $chunkCount = 100;
 
     public int $maxResources = 1000;
 
-    /** @return string */
-    public function name()
+    public function name(): string
     {
         return $this->name ?: Str::of(class_basename(static::class))->beforeLast('Action')->snake(' ')->title()->toString();
     }
 
-    /** @return string */
-    public function uriKey()
+    public function uriKey(): string
     {
         return Str::slug($this->name(), '-', null);
     }
 
-    /** @return $this */
-    public function standalone()
+    public function standalone(): static
     {
         if ($this->targeted) {
             throw new InvalidActionStateException('An action cannot be both standalone and targeted.');
@@ -71,14 +64,12 @@ class Action implements JsonSerializable
         return $this;
     }
 
-    /** @return bool */
-    public function isStandalone()
+    public function isStandalone(): bool
     {
         return $this->standalone;
     }
 
-    /** @return $this */
-    public function targeted()
+    public function targeted(): static
     {
         if ($this->standalone) {
             throw new InvalidActionStateException('An action cannot be both standalone and targeted.');
@@ -89,8 +80,7 @@ class Action implements JsonSerializable
         return $this;
     }
 
-    /** @return bool */
-    public function isTargeted()
+    public function isTargeted(): bool
     {
         return $this->targeted;
     }
@@ -111,21 +101,13 @@ class Action implements JsonSerializable
     /**
      * @param  array<string, mixed>  $fields
      * @param  Collection<array-key, Model>  $models
-     * @return mixed
      */
-    public function handle(array $fields, Collection $models)
-    {
-        return null;
-    }
+    public function handle(array $fields, Collection $models): void {}
 
-    /**
-     * @param  array<string, mixed>  $fields
-     * @return void
-     */
-    public function withBatch(array $fields, PendingBatch $batch) {}
+    /** @param array<string, mixed> $fields */
+    public function withBatch(array $fields, PendingBatch $batch): void {}
 
-    /** @return int */
-    public function handleRequest(OperateRequest $request)
+    public function handleRequest(OperateRequest $request): int
     {
         return (new DispatchAction($request, $this, $request->resolveFields($this)))->dispatch($this->chunkCount);
     }

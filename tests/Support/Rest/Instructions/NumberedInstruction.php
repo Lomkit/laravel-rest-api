@@ -9,12 +9,12 @@ use Lomkit\Rest\Instructions\Instruction;
 
 class NumberedInstruction extends Instruction
 {
-    public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query)
+    public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query): void
     {
         $query->where('number', '>', $fields['number'] ?? 0);
     }
 
-    public function handleScout(array $fields, Builder $query)
+    public function handleScout(array $fields, Builder $query): void
     {
         //
     }
