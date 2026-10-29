@@ -300,3 +300,34 @@ Payloads:
 - A list entry that is not an object, such as `"includes": ["category"]` or `"mutate": ["create"]`, gives a 422 on that entry: `The search.includes.0 field must be an array.` A to-one relation given a list or `null` in `mutate` also gives a 422. Some of these payloads gave a 500 before.
 - Under a to-many relation in `mutate`, the errors are listed entry by entry.
 - `sync` and `toggle` are accepted on many-to-many relations only: `BelongsToMany`, `MorphToMany` and `MorphedByMany`. On another relation they give a 422 under the `operation` key of the entry, such as `The selected mutate.0.relations.author.operation is invalid.` Send `attach` there instead. A relation lists the operations it accepts in `mutationOperations()`.
+
+### Authorization
+
+Each request now has one authorizer, which the resources of the request share: `$request->context()->authorizer()`, a `Lomkit\Rest\Authorization\Authorizer`.
+
+Within a request:
+
+- Each distinct check runs once. A check is an ability on a resource for a model, or for a model class, plus the related model of an attach or detach check. The policy runs on the first check, and the later checks of the request reuse its decision.
+- `GateEvaluated` listeners and `Gate::after()` callbacks see one evaluation per distinct check per request, not one per call.
+- After each write the package performs (mutate creates and updates, relation writes, destroy, restore and force destroy), the decisions on the written model are dropped, so a later check in the same request sees the new state. If a hook of yours writes a model and a later check in the request depends on it, call `$request->context()->authorizer()->forget($model)` after the write.
+- Policies run with `Gate::forUser($request->user())`, or with the authenticated user when the request has none. `Gate::before()` and `Gate::after()` callbacks receive that user.
+- The authorizer belongs to one user. When the user or the default guard changes, for example in a test or a long-running process that reuses a resource, the next check starts a new authorizer for the current user, and the decisions of the previous user are not reused.
+
+Cache:
+
+- The cache is off by default: `authorizations.cache.enabled` is `false`. A published `config/rest.php` keeps its own value, so set it to `false` there unless you want the cache.
+- When the cache is on, a decision is stored as an array of scalars (`allowed`, `message`, `code` and `status`), not as a `Response` object, so it reads back with any store, including the `file` and `database` stores with `cache.serializable_classes` set to `false`. A `code` that is not an integer or a string is not kept.
+- The cache key holds the guard, the user class and key, the resource class, the ability, and the class and key of each model. Entries written under the previous keys are not read anymore and expire on their own.
+- A model whose key is cast to an enum is keyed by the value of the enum. Checks on a model that is not saved yet, such as the `create` check of a mutation, or whose key is not a string, an integer or an enum, are neither cached nor shared with another check of the request.
+- A cached decision stays for `authorizations.cache.default` minutes, or the duration that `cacheAuthorizationFor()` returns: a change to a policy, to the user or to the model shows once the entry expires.
+- `Resource::getAuthorizationCacheKey()` is removed: the package builds the key.
+- `isAuthorizationCacheEnabled()` and the `DisableAuthorizationsCache` trait turn the cache off for one resource. When `authorizations.cache.enabled` is `false`, no resource uses the cache.
+
+Resource methods:
+
+- The authorization methods declare native types. An override must declare compatible types:
+  - `authorizeTo(string $ability, Model|string $model): void` and `authorizedTo(string $ability, Model|string $model): Response`;
+  - `authorizeToAttach(Model $model, Model $toAttachModel): void`, `authorizedToAttach(Model $model, Model $toAttachModel): bool`, and the same for `authorizeToDetach()` and `authorizedToDetach()`;
+  - `authorizeToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): void` and `authorizedToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): bool`.
+- `authorizeTo()` calls `authorizedTo()`, so an override of `authorizedTo()` applies to the endpoints as well as to the gates.
+- `authorizedTo()` returns a new `Illuminate\Auth\Access\Response` built from the decision. It keeps the result, the message, the code and the status of the policy's response, but not an instance of your own `Response` subclass.

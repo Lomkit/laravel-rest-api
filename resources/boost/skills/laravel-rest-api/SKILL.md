@@ -542,7 +542,9 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 
 **Define a policy for every model you expose**, including the attach/detach methods for many-to-many relations you allow mutating. Missing methods will block the operation.
 
-Results cache for `authorizations.cache.default` minutes (default `5`) per `(resource, identifier, user)`. Override `getAuthorizationCacheKey()` / `cacheAuthorizationFor()` on the resource, or use the `\Lomkit\Rest\Concerns\Resource\DisableAuthorizationsCache` trait, to tweak behaviour. Global toggle: `authorizations.cache.enabled`.
+Within a request, each distinct check (ability, resource, model or model class) runs the policy once and the later checks reuse its decision, so `GateEvaluated` listeners and `Gate::after()` see one evaluation per distinct check. Policies run with `Gate::forUser($request->user())`, and a change of user starts a new set of decisions. The package drops the decisions on a model after writing it; a hook that writes a model itself calls `$request->context()->authorizer()->forget($model)`.
+
+The cross-request cache is off by default (`authorizations.cache.enabled = false`). When on, it stores each decision as scalars for `authorizations.cache.default` minutes (default `5`), keyed by guard, user class and key, resource, ability and model class and key; checks on unsaved models are not cached. Override `cacheAuthorizationFor()` on the resource, or use the `\Lomkit\Rest\Concerns\Resource\DisableAuthorizationsCache` trait, to tweak behaviour.
 
 ### 2. Gates (`gates.enabled`, default `true`)
 
@@ -599,13 +601,14 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - **One validator per request.** A package request compiles its rule tree (`Lomkit\Rest\Rules\RestRule` nodes) against the payload into rules on explicit keys, then validates them in one pass, so `withValidator()` and `after()` on a request subclass run once and see every error. A `RestRule` is not a Laravel rule: a custom node implements `buildValidationRules(string $attribute, mixed $value): array` and only works in the `rules()` of a package request. To adjust the validator, use `withValidator()` or override `createDefaultValidator()` and call the parent: a request that defines `validator()` must build it from `validationData()` and `validationRules()`, and loses the names the package gives to input fields. Overrides of `validationData()`, `validationRules()`, `createDefaultValidator()` and `shouldValidatePrecognitiveAttribute()` must keep the parent's return types.
 - **Scope `parameters` are positional.** They bind to the scope's fields in declared order, so reordering a scope's fields changes what clients must send. Only model local scopes run: `withTrashed`, `latest` and other Builder methods or macros cannot be called as scopes.
 - **`HasOneThrough` / `HasManyThrough` can be searched/included but not mutated.**
-- **Cache invalidation.** The authorization cache is keyed per user and per resource; when debugging policy changes, disable the cache via config or use the `DisableAuthorizationsCache` trait.
+- **Cache invalidation.** The authorization cache is off by default. Once turned on, a decision stays cached for `authorizations.cache.default` minutes, so policy changes show after that delay; keep it off while debugging policies, or use the `DisableAuthorizationsCache` trait on a resource.
 
 ## Pointers into the codebase
 
 - Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `ResourceRegistrar` and the route value objects)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Concerns/Resource/*` (`DisableGates`, `DisableAuthorizationsCache`, hooks, ...)
+- Authorization — `src/Authorization/*` (`Authorizer`, `Check`, `Decision`, `DecisionMemo` and the decision stores), `src/Concerns/Authorizable.php`
 - Query layer — `src/Query/Builder.php`, `src/Query/ScoutBuilder.php`
 - Actions / Instructions / Scopes — `src/Actions/{Action,Actionable}.php`, `src/Instructions/{Instruction,Instructionable}.php`, `src/Scopes/Scope.php`
 - Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `InputValues`, `Details/InputFieldDetails`), clauses in `src/Query/Clauses/`

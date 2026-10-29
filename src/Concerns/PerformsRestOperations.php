@@ -120,6 +120,8 @@ trait PerformsRestOperations
 
             $resource->performDelete($request, $model);
 
+            $request->context()->authorizer()->forget($model);
+
             $resource->destroyed($request, $model);
         }
 
@@ -157,6 +159,8 @@ trait PerformsRestOperations
 
             $resource->performRestore($request, $model);
 
+            $request->context()->authorizer()->forget($model);
+
             $resource->restored($request, $model);
         }
 
@@ -193,6 +197,8 @@ trait PerformsRestOperations
             $resource->forceDestroying($request, $model);
 
             $resource->performForceDelete($request, $model);
+
+            $request->context()->authorizer()->forget($model);
 
             $resource->forceDestroyed($request, $model);
         }

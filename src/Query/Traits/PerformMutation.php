@@ -136,9 +136,13 @@ trait PerformMutation
             ->forceFill($attributes)
             ->save();
 
+        $this->resource->context()->authorizer()->forget($model);
+
         foreach ($restRelations as $restRelation) {
             $restRelation->afterMutating($model, $restRelation, $relations);
         }
+
+        $this->resource->context()->authorizer()->forget($model);
 
         $this
             ->resource

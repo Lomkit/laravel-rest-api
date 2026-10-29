@@ -31,6 +31,8 @@ trait PerformsRelationOperations
                     $toPerformActionModel->getKey() => $mutation['pivot'] ?? [],
                 ]
             );
+
+        $this->resource()->context()->authorizer()->forget($model);
     }
 
     /**
@@ -52,6 +54,8 @@ trait PerformsRelationOperations
                         fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
                     )->toArray()
             );
+
+        $this->resource()->context()->authorizer()->forget($model);
     }
 
     /**
@@ -73,6 +77,8 @@ trait PerformsRelationOperations
                         fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
                     )->toArray()
             );
+
+        $this->resource()->context()->authorizer()->forget($model);
     }
 
     /**
@@ -88,6 +94,8 @@ trait PerformsRelationOperations
         }
 
         $model->{$relation->relation}()->detach($toPerformActionModels);
+
+        $this->resource()->context()->authorizer()->forget($model);
     }
 
     /**
@@ -106,13 +114,9 @@ trait PerformsRelationOperations
                     )->toArray(),
             );
 
-        foreach ($results['attached'] as $attached) {
-            $this->resource()->authorizeToAttach($model, $relation->resource()::modelClass()::find($attached));
-        }
+        $this->resource()->context()->authorizer()->forget($model);
 
-        foreach ($results['detached'] as $detached) {
-            $this->resource()->authorizeToDetach($model, $relation->resource()::modelClass()::find($detached));
-        }
+        $this->authorizeChanges($model, $relation, $results);
     }
 
     /**
@@ -133,12 +137,28 @@ trait PerformsRelationOperations
                 $withoutDetaching
             );
 
-        foreach ($results['attached'] as $attached) {
-            $this->resource()->authorizeToAttach($model, $relation->resource()::modelClass()::find($attached));
+        $this->resource()->context()->authorizer()->forget($model);
+
+        $this->authorizeChanges($model, $relation, $results);
+    }
+
+    /** @param array{attached: list<int|string>, detached: list<int|string>} $changes */
+    private function authorizeChanges(Model $model, Relation $relation, array $changes): void
+    {
+        foreach ($changes['attached'] as $attached) {
+            $related = $relation->resource()::modelClass()::find($attached);
+
+            if ($related instanceof Model) {
+                $this->resource()->authorizeToAttach($model, $related);
+            }
         }
 
-        foreach ($results['detached'] as $detached) {
-            $this->resource()->authorizeToDetach($model, $relation->resource()::modelClass()::find($detached));
+        foreach ($changes['detached'] as $detached) {
+            $related = $relation->resource()::modelClass()::find($detached);
+
+            if ($related instanceof Model) {
+                $this->resource()->authorizeToDetach($model, $related);
+            }
         }
     }
 }

@@ -36,12 +36,15 @@ return [
     | This is the feature that automatically binds to policies to validate incoming requests.
     | Laravel Rest Api will validate each models searched / mutated / deleted to avoid leaks in your API.
     |
+    | Within a request, each distinct check runs once. The cache keeps the
+    | decisions across requests for "default" minutes; it is off by default.
+    |
     */
 
     'authorizations' => [
         'enabled' => true,
         'cache' => [
-            'enabled' => true,
+            'enabled' => false,
             'default' => 5, // Cache minutes by default
         ],
     ],
