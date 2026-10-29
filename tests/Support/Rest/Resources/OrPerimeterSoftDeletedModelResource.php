@@ -7,13 +7,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 class OrPerimeterSoftDeletedModelResource extends SoftDeletedModelResource
 {
-    /**
-     * A destroy perimeter shaped like the common "mine or shared" tenant rule.
-     *
-     *
-     * @return Builder
-     */
-    public function destroyQuery(RestRequest $request, Builder $query)
+    public function destroyQuery(RestRequest $request, Builder $query): Builder
     {
         $query = parent::destroyQuery($request, $query);
 
@@ -22,13 +16,7 @@ class OrPerimeterSoftDeletedModelResource extends SoftDeletedModelResource
         return $query;
     }
 
-    /**
-     * A restore perimeter shaped like the common "mine or shared" tenant rule.
-     *
-     *
-     * @return Builder
-     */
-    public function restoreQuery(RestRequest $request, Builder $query)
+    public function restoreQuery(RestRequest $request, Builder $query): Builder
     {
         $query = parent::restoreQuery($request, $query);
 
@@ -37,13 +25,7 @@ class OrPerimeterSoftDeletedModelResource extends SoftDeletedModelResource
         return $query;
     }
 
-    /**
-     * A forceDestroy perimeter shaped like the common "mine or shared" tenant rule.
-     *
-     *
-     * @return Builder
-     */
-    public function forceDestroyQuery(RestRequest $request, Builder $query)
+    public function forceDestroyQuery(RestRequest $request, Builder $query): Builder
     {
         $query = parent::forceDestroyQuery($request, $query);
 

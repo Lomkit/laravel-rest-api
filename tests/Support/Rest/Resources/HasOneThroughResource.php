@@ -13,7 +13,7 @@ class HasOneThroughResource extends Resource
 {
     use DisableGates;
 
-    public static $model = HasOneThroughRelation::class;
+    public static string $model = HasOneThroughRelation::class;
 
     public function relations(RestRequest $request): array
     {

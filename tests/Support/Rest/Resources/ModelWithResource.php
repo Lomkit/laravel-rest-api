@@ -12,7 +12,7 @@ use Lomkit\Rest\Tests\Support\Models\ModelWith;
 
 class ModelWithResource extends Resource
 {
-    public static $model = ModelWith::class;
+    public static string $model = ModelWith::class;
 
     public function fields(RestRequest $request): array
     {

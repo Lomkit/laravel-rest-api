@@ -14,7 +14,7 @@ class BelongsToResource extends Resource
 {
     use DisableGates;
 
-    public static $model = BelongsToRelation::class;
+    public static string $model = BelongsToRelation::class;
 
     public function relations(RestRequest $request): array
     {

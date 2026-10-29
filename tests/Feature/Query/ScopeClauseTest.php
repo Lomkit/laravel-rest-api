@@ -60,7 +60,7 @@ class ScopeClauseTest extends PackageTestCase
     {
         $resource = new class extends Resource
         {
-            public static $model = Post::class;
+            public static string $model = Post::class;
 
             public function scopes(RestRequest $request): array
             {
@@ -99,7 +99,7 @@ class ScopeClauseTest extends PackageTestCase
     {
         $resource = new class extends Resource
         {
-            public static $model = Post::class;
+            public static string $model = Post::class;
 
             public function scopes(RestRequest $request): array
             {

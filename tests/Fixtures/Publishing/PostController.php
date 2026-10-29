@@ -6,5 +6,5 @@ use Lomkit\Rest\Http\Controllers\Controller;
 
 class PostController extends Controller
 {
-    public static $resource = PostResource::class;
+    public static string $resource = PostResource::class;
 }

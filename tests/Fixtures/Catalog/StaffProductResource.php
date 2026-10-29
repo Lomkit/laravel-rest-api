@@ -10,7 +10,7 @@ use Lomkit\Rest\Http\Resource;
 
 class StaffProductResource extends Resource
 {
-    public static $model = Product::class;
+    public static string $model = Product::class;
 
     public function fields(RestRequest $request): array
     {

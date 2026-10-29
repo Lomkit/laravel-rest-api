@@ -10,14 +10,14 @@ use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
 
 class GatedMorphToManyResource extends Resource
 {
-    public static $model = MorphToManyRelation::class;
+    public static string $model = MorphToManyRelation::class;
 
     public function isGatingEnabled(): bool
     {
         return true;
     }
 
-    public function updateRules(RestRequest $request)
+    public function updateRules(RestRequest $request): array
     {
         return [
             'number' => 'numeric|max:10',

@@ -15,7 +15,7 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ModelWithHooksResource;
 
 class ModelHooksController extends Controller
 {
-    public static $resource = ModelWithHooksResource::class;
+    public static string $resource = ModelWithHooksResource::class;
 
     protected function beforeDetails(DetailsRequest $request): void
     {

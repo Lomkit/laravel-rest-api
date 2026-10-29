@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\NoRelationshipAuthorizationModelRes
 
 class NoRelationshipAuthorizationModelController extends Controller
 {
-    public static $resource = NoRelationshipAuthorizationModelResource::class;
+    public static string $resource = NoRelationshipAuthorizationModelResource::class;
 }

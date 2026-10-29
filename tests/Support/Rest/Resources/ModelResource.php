@@ -41,16 +41,16 @@ class ModelResource extends Resource
 {
     use DisableGates;
 
-    public static $model = Model::class;
+    public static string $model = Model::class;
 
-    public function createRules(RestRequest $request)
+    public function createRules(RestRequest $request): array
     {
         return [
             'string' => 'string',
         ];
     }
 
-    public function updateRules(RestRequest $request)
+    public function updateRules(RestRequest $request): array
     {
         return [
             'string' => 'string',

@@ -9,7 +9,7 @@ use Lomkit\Rest\Http\Resource;
 
 class CategoryResource extends Resource
 {
-    public static $model = Category::class;
+    public static string $model = Category::class;
 
     public function fields(RestRequest $request): array
     {

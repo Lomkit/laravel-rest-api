@@ -6,5 +6,5 @@ use Lomkit\Rest\Http\Controllers\Controller;
 
 class ProductController extends Controller
 {
-    public static $resource = ProductResource::class;
+    public static string $resource = ProductResource::class;
 }

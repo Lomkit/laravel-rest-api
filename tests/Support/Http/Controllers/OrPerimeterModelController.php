@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\OrPerimeterModelResource;
 
 class OrPerimeterModelController extends Controller
 {
-    public static $resource = OrPerimeterModelResource::class;
+    public static string $resource = OrPerimeterModelResource::class;
 }

@@ -6,5 +6,5 @@ use Lomkit\Rest\Http\Controllers\Controller;
 
 class DocumentController extends Controller
 {
-    public static $resource = DocumentResource::class;
+    public static string $resource = DocumentResource::class;
 }

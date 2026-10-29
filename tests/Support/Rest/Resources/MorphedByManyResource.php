@@ -13,7 +13,7 @@ class MorphedByManyResource extends Resource
 {
     use DisableGates;
 
-    public static $model = MorphedByManyRelation::class;
+    public static string $model = MorphedByManyRelation::class;
 
     public function relations(RestRequest $request): array
     {

@@ -13,7 +13,7 @@ class MorphOneResource extends Resource
 {
     use DisableGates;
 
-    public static $model = MorphOneRelation::class;
+    public static string $model = MorphOneRelation::class;
 
     public function relations(RestRequest $request): array
     {

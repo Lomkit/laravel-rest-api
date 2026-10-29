@@ -6,7 +6,7 @@ use Lomkit\Rest\Tests\Support\Models\NoRelationshipAuthorizedModel;
 
 class NoRelationshipAuthorizationModelResource extends ModelResource
 {
-    public static $model = NoRelationshipAuthorizedModel::class;
+    public static string $model = NoRelationshipAuthorizedModel::class;
 
     /**
      * Check if gating is enabled.

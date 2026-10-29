@@ -40,7 +40,7 @@ class DeclaredFieldsTest extends PackageTestCase
     {
         $resource = new class extends Resource
         {
-            public static $model = Post::class;
+            public static string $model = Post::class;
 
             public function fields(RestRequest $request): array
             {
@@ -56,7 +56,7 @@ class DeclaredFieldsTest extends PackageTestCase
     {
         $resource = new class extends Resource
         {
-            public static $model = Listing::class;
+            public static string $model = Listing::class;
 
             public function fields(RestRequest $request): array
             {
@@ -72,7 +72,7 @@ class DeclaredFieldsTest extends PackageTestCase
     {
         $resource = new class extends Resource
         {
-            public static $model = Product::class;
+            public static string $model = Product::class;
 
             public function fields(RestRequest $request): array
             {
@@ -92,7 +92,7 @@ class DeclaredFieldsTest extends PackageTestCase
     {
         $resource = new class extends Resource
         {
-            public static $model = Product::class;
+            public static string $model = Product::class;
 
             public function fields(RestRequest $request): array
             {

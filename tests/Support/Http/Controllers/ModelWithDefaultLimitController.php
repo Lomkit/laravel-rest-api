@@ -7,5 +7,5 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\ModelWithDefaultLimitResource;
 
 class ModelWithDefaultLimitController extends Controller
 {
-    public static $resource = ModelWithDefaultLimitResource::class;
+    public static string $resource = ModelWithDefaultLimitResource::class;
 }

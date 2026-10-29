@@ -14,7 +14,7 @@ class HasManyThroughResource extends Resource
 {
     use DisableGates;
 
-    public static $model = HasManyThroughRelation::class;
+    public static string $model = HasManyThroughRelation::class;
 
     public function relations(RestRequest $request): array
     {

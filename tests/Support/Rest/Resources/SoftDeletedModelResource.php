@@ -12,7 +12,7 @@ class SoftDeletedModelResource extends Resource
 {
     use DisableGates;
 
-    public static $model = SoftDeletedModel::class;
+    public static string $model = SoftDeletedModel::class;
 
     public function fields(RestRequest $request): array
     {

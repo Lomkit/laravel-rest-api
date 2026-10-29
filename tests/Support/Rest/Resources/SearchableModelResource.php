@@ -13,7 +13,7 @@ class SearchableModelResource extends Resource
 {
     use DisableGates;
 
-    public static $model = SearchableModel::class;
+    public static string $model = SearchableModel::class;
 
     public function fields(RestRequest $request): array
     {

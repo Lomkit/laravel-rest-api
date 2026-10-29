@@ -14,7 +14,7 @@ use Lomkit\Rest\Tests\Support\Models\Model;
 
 class ConstrainedResource extends Resource
 {
-    public static $model = Model::class;
+    public static string $model = Model::class;
 
     public function relations(RestRequest $request): array
     {

@@ -11,7 +11,7 @@ use Lomkit\Rest\Http\Resource;
 
 class DocumentResource extends Resource
 {
-    public static $model = Document::class;
+    public static string $model = Document::class;
 
     public function fields(RestRequest $request): array
     {
