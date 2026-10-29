@@ -39,6 +39,15 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         ];
     }
 
+    public static function manyToManyRelationProvider(): array
+    {
+        return [
+            'belongsToMany' => ['belongsToManyRelation', BelongsToManyRelation::class],
+            'morphToMany' => ['morphToManyRelation', MorphToManyRelation::class],
+            'morphedByMany' => ['morphedByManyRelation', MorphedByManyRelation::class],
+        ];
+    }
+
     protected function makeRelated(string $relation): EloquentModel
     {
         return match ($relation) {
@@ -69,7 +78,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         );
     }
 
-    #[DataProvider('writableRelationProvider')]
+    #[DataProvider('manyToManyRelationProvider')]
     public function test_sync_cannot_write_attributes_without_the_update_ability(string $relation, string $relatedModel): void
     {
         Gate::policy($relatedModel, ViewPolicy::class);
@@ -85,7 +94,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $this->assertEquals(1, $victim->fresh()->number);
     }
 
-    #[DataProvider('writableRelationProvider')]
+    #[DataProvider('manyToManyRelationProvider')]
     public function test_toggle_cannot_write_attributes_without_the_update_ability(string $relation, string $relatedModel): void
     {
         Gate::policy($relatedModel, ViewPolicy::class);
@@ -117,7 +126,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $this->assertEquals(1, $victim->fresh()->number);
     }
 
-    #[DataProvider('writableRelationProvider')]
+    #[DataProvider('manyToManyRelationProvider')]
     public function test_sync_applies_update_rules_to_nested_attributes(string $relation, string $relatedModel): void
     {
         Gate::policy($relatedModel, GreenPolicy::class);
@@ -133,7 +142,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $this->assertEquals(1, $victim->fresh()->number);
     }
 
-    #[DataProvider('writableRelationProvider')]
+    #[DataProvider('manyToManyRelationProvider')]
     public function test_toggle_applies_update_rules_to_nested_attributes(string $relation, string $relatedModel): void
     {
         Gate::policy($relatedModel, GreenPolicy::class);
@@ -149,7 +158,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $this->assertEquals(1, $victim->fresh()->number);
     }
 
-    #[DataProvider('writableRelationProvider')]
+    #[DataProvider('manyToManyRelationProvider')]
     public function test_sync_still_writes_attributes_when_update_is_allowed(string $relation, string $relatedModel): void
     {
         Gate::policy($relatedModel, GreenPolicy::class);
@@ -165,7 +174,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $this->assertEquals(9, $target->fresh()->number);
     }
 
-    #[DataProvider('writableRelationProvider')]
+    #[DataProvider('manyToManyRelationProvider')]
     public function test_sync_without_attributes_only_requires_the_view_ability(string $relation, string $relatedModel): void
     {
         Gate::policy($relatedModel, ViewPolicy::class);
@@ -180,7 +189,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $this->assertEquals(1, $target->fresh()->number);
     }
 
-    #[DataProvider('writableRelationProvider')]
+    #[DataProvider('manyToManyRelationProvider')]
     public function test_toggle_without_attributes_only_requires_the_view_ability(string $relation, string $relatedModel): void
     {
         Gate::policy($relatedModel, ViewPolicy::class);
