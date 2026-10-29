@@ -18,7 +18,9 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
 use Lomkit\Rest\Tests\PackageTestCase;
+use Orchestra\Testbench\Attributes\WithConfig;
 
+#[WithConfig('app.debug', false)]
 abstract class HelpdeskTestCase extends PackageTestCase
 {
     protected TicketPolicy $tickets;
@@ -45,13 +47,6 @@ abstract class HelpdeskTestCase extends PackageTestCase
     protected function fixtures(): array
     {
         return [new Helpdesk];
-    }
-
-    protected function defineEnvironment($app): void
-    {
-        parent::defineEnvironment($app);
-
-        $app['config']->set('app.debug', false);
     }
 
     /** @return array<string, Ticket> */

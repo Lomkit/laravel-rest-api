@@ -2,12 +2,13 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Accounts;
 
+use Illuminate\Database\Eloquent\Factories\Attributes\UseModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<User> */
+#[UseModel(User::class)]
 class UserFactory extends Factory
 {
-    protected $model = User::class;
-
     public function definition(): array
     {
         return [

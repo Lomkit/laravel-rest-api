@@ -2,10 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Authorization;
 
-use Illuminate\Foundation\Application;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
-use Orchestra\Testbench\Attributes\DefineEnvironment;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
 class WriteFreshnessTest extends HelpdeskTestCase
@@ -24,7 +23,7 @@ class WriteFreshnessTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[DefineEnvironment('enableCache')]
+    #[WithConfig('rest.authorizations.cache.enabled', true)]
     public function it_checks_a_second_update_against_the_new_state_with_the_cache_on(): void
     {
         $jam = $this->seedTickets()['Printer jam'];
@@ -54,11 +53,6 @@ class WriteFreshnessTest extends HelpdeskTestCase
         $this->assertTrue($remembered->allowed());
         $this->assertSame([false, 'Closed tickets are read-only.', 423], [$after->allowed(), $after->message(), $after->status()]);
         $this->assertSame($this->calls('update', $jam, $jam), $this->tickets->calls);
-    }
-
-    protected function enableCache(Application $app): void
-    {
-        $app['config']->set('rest.authorizations.cache.enabled', true);
     }
 
     /** @return array<string, list<array<string, mixed>>> */

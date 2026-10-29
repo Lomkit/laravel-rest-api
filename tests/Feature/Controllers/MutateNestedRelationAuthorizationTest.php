@@ -1,6 +1,6 @@
 <?php
 
-namespace Controllers;
+namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Support\Facades\Gate;

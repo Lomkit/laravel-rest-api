@@ -10,8 +10,11 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Event;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
+#[WithConfig('cache.serializable_classes', false)]
+#[WithConfig('rest.authorizations.cache.enabled', true)]
 class DecisionStoreTest extends HelpdeskTestCase
 {
     /** @var list<mixed> */
@@ -34,7 +37,8 @@ class DecisionStoreTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[DefineEnvironment('useDatabaseStore')]
+    #[WithConfig('cache.default', 'database')]
+    #[WithConfig('cache.stores.database.connection', null)]
     public function it_serves_a_second_request_from_the_database_store(): void
     {
         $this->assertSecondRequestServedFromTheStore(DatabaseStore::class);
@@ -49,7 +53,8 @@ class DecisionStoreTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[DefineEnvironment('useDatabaseStore')]
+    #[WithConfig('cache.default', 'database')]
+    #[WithConfig('cache.stores.database.connection', null)]
     public function it_keeps_the_message_and_status_of_a_denial_in_the_database_store(): void
     {
         $this->assertDenialServedFromTheStore(DatabaseStore::class);
@@ -97,20 +102,6 @@ class DecisionStoreTest extends HelpdeskTestCase
 
         $app['config']->set('cache.default', 'file');
         $app['config']->set('cache.stores.file.path', $directory);
-        $this->enableSerializingCache($app);
-    }
-
-    protected function useDatabaseStore(Application $app): void
-    {
-        $app['config']->set('cache.default', 'database');
-        $app['config']->set('cache.stores.database.connection', null);
-        $this->enableSerializingCache($app);
-    }
-
-    private function enableSerializingCache(Application $app): void
-    {
-        $app['config']->set('cache.serializable_classes', false);
-        $app['config']->set('rest.authorizations.cache.enabled', true);
     }
 
     /** @param class-string $store */

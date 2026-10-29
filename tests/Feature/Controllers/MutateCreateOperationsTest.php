@@ -1518,15 +1518,15 @@ class MutateCreateOperationsTest extends TestCase
             3
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number,
+            Model::find($response->json('created.0'))->belongsToManyRelation->find($belongsToManyRelationToAttach1)->belongs_to_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[2]->belongs_to_many_pivot->number,
+            Model::find($response->json('created.0'))->belongsToManyRelation->find($belongsToManyRelationToAttach3)->belongs_to_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number,
+            Model::find($response->json('created.0'))->belongsToManyRelation->find($belongsToManyRelationToAttach2)->belongs_to_many_pivot->number,
             30
         );
     }

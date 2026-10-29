@@ -5,20 +5,15 @@ namespace Lomkit\Rest\Tests\Feature\Validation;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\PackageTestCase;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
+#[WithConfig('rest.precognition.enabled', true)]
 class PrecognitionValidateOnlyTest extends PackageTestCase
 {
     protected function fixtures(): array
     {
         return [new Catalog];
-    }
-
-    protected function defineEnvironment($app): void
-    {
-        parent::defineEnvironment($app);
-
-        $app['config']->set('rest.precognition.enabled', true);
     }
 
     #[Test]

@@ -2,7 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Archive;
 
-class SearchableDocumentFactory extends DocumentFactory
-{
-    protected $model = SearchableDocument::class;
-}
+use Illuminate\Database\Eloquent\Factories\Attributes\UseModel;
+
+#[UseModel(SearchableDocument::class)]
+class SearchableDocumentFactory extends DocumentFactory {}

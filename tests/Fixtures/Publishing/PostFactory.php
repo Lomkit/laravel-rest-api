@@ -2,12 +2,13 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Publishing;
 
+use Illuminate\Database\Eloquent\Factories\Attributes\UseModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<Post> */
+#[UseModel(Post::class)]
 class PostFactory extends Factory
 {
-    protected $model = Post::class;
-
     public function definition(): array
     {
         return [

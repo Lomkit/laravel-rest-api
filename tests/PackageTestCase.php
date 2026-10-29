@@ -6,9 +6,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Fixtures\Fixture;
 use Orchestra\Testbench\Attributes\ResetRefreshDatabaseState;
+use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\TestCase;
 
 #[ResetRefreshDatabaseState]
+#[WithConfig('scout.driver', 'collection')]
+#[WithConfig('rest.authorizations.strict', true)]
 abstract class PackageTestCase extends TestCase
 {
     use RefreshDatabase;
@@ -22,12 +25,6 @@ abstract class PackageTestCase extends TestCase
     protected function getPackageProviders($app): array
     {
         return [RestServiceProvider::class];
-    }
-
-    protected function defineEnvironment($app): void
-    {
-        $app['config']->set('scout.driver', 'collection');
-        $app['config']->set('rest.authorizations.strict', true);
     }
 
     protected function defineDatabaseMigrations(): void
