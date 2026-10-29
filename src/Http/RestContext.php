@@ -10,6 +10,8 @@ final class RestContext
 {
     private readonly ResourceRegistry $resources;
 
+    private ?bool $textSearch = null;
+
     public function __construct(
         public readonly RestRequest $request,
         Container $container,
@@ -21,6 +23,11 @@ final class RestContext
     public function resource(string $class): Resource
     {
         return $this->resources->get($class)->withinContext($this);
+    }
+
+    public function isTextSearch(): bool
+    {
+        return $this->textSearch ??= filled($this->request->input('search.text.value'));
     }
 
     public function __serialize(): array

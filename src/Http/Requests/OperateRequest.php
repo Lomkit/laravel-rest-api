@@ -6,6 +6,7 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Fields\InputValues;
+use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\Operate\OperateFields;
 use Lomkit\Rest\Rules\Search\Search;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -34,12 +35,14 @@ class OperateRequest extends RestRequest
         }
 
         $model = $this->resource::newModel();
+        $searchable = ! $operatedAction->isStandalone() && ! $operatedAction->isTargeted();
 
         return array_merge(
             [
-                'search' => $operatedAction->isStandalone() || $operatedAction->isTargeted()
-                    ? ['prohibited']
-                    : [(new Search)->setResource($this->resource)],
+                'search' => $searchable
+                    ? ['array', (new Search)->setResource($this->resource)]
+                    : ['prohibited'],
+                'search.text' => $searchable ? ['prohibited'] : [],
                 'resources' => $operatedAction->isTargeted()
                     ? ['required', 'array', 'max:'.$operatedAction->maxResources]
                     : ['prohibited'],
@@ -56,10 +59,17 @@ class OperateRequest extends RestRequest
                 'fields.*.name' => [
                     'required',
                     'string',
-                    Rule::in($operatedAction->getFields($this)->names()),
+                    'distinct',
+                    new OneOf($operatedAction->getFields($this)->names()),
                 ],
             ]
         );
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return ['search.text.prohibited' => 'Text search is not available for actions.'];
     }
 
     public function actionKey(): string

@@ -30,6 +30,11 @@ class ProductResource extends Resource
         return [PricedAt::make()];
     }
 
+    public function scoutFields(RestRequest $request): array
+    {
+        return ['category_id', 'price'];
+    }
+
     public function scoutInstructions(RestRequest $request): array
     {
         return [PricedAt::make(), PricedBetween::make()];

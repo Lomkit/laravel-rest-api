@@ -164,7 +164,7 @@ class ResourceDetailsTest extends PackageTestCase
                 ],
             ],
             'fields' => ['id', 'category_id', 'name', 'price'],
-            'scout_fields' => [],
+            'scout_fields' => ['category_id', 'price'],
             'limits' => [10, 25, 50],
             'scopes' => [],
             'relations' => [

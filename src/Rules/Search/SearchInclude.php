@@ -7,15 +7,11 @@ use Lomkit\Rest\Rules\RestRule;
 
 class SearchInclude extends RestRule
 {
+    /** @return array<string, mixed> */
     public function buildValidationRules(string $attribute, mixed $value): array
     {
-        $request = $this->resource->context()->request;
-
-        $relationResource = $this->resource->relation($value['relation'])?->resource();
-
-        if ($request->isScoutMode()) {
-            return [];
-        }
+        $relation = is_array($value) ? ($value['relation'] ?? null) : null;
+        $relationResource = is_string($relation) ? $this->resource->relation($relation)?->resource() : null;
 
         return array_merge(
             is_null($relationResource) ? [] : (new Search)->setResource($relationResource)->buildValidationRules($attribute, $value),
@@ -36,7 +32,7 @@ class SearchInclude extends RestRule
                     'regex:/^[A-Za-z_][A-Za-z0-9_]*$/',
                     (new SearchIncludeAlias)
                         ->setResource($this->resource)
-                        ->setRelation($value['relation'] ?? ''),
+                        ->setRelation(is_string($relation) ? $relation : ''),
                 ],
             ]
         );

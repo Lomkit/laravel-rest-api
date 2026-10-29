@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Traits\Conditionable;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\QueryBuilder;
+use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Clauses\InstructionClause;
+use ReflectionMethod;
 
 class ScoutBuilder implements QueryBuilder
 {
@@ -32,6 +34,10 @@ class ScoutBuilder implements QueryBuilder
      */
     public function search(array $parameters = [])
     {
+        $this->ensureIndexPerimeter();
+
+        $this->resource->authorizeTo('viewAny', $this->resource::modelClass());
+
         $this->resource->searchScoutQuery($this->resource->context()->request, $this->queryBuilder);
 
         $this->queryBuilder->query = $parameters['text']['value'] ?? '';
@@ -66,7 +72,6 @@ class ScoutBuilder implements QueryBuilder
     public function applyQueryCallback($query, $parameters)
     {
         return app()->make(EloquentQueryBuilder::class, ['query' => $query, 'resource' => $this->resource])
-            ->disableSecurity()
             ->search(
                 collect($parameters)
                     ->except([
@@ -209,5 +214,17 @@ class ScoutBuilder implements QueryBuilder
     public function toBase()
     {
         return $this->queryBuilder;
+    }
+
+    private function ensureIndexPerimeter(): void
+    {
+        $perimeter = (new ReflectionMethod($this->resource, 'searchQuery'))->getDeclaringClass();
+        $indexPerimeter = (new ReflectionMethod($this->resource, 'searchScoutQuery'))->getDeclaringClass();
+
+        if ($indexPerimeter->getName() === $perimeter->getName() || $indexPerimeter->isSubclassOf($perimeter)) {
+            return;
+        }
+
+        throw InvalidResourceException::missingIndexPerimeter($this->resource::class);
     }
 }

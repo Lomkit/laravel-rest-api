@@ -2,10 +2,13 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
+use Lomkit\Rest\Http\Requests\Traits\ValidatesResourceKeys;
 use Lomkit\Rest\Http\Resource;
 
 class RestoreRequest extends RestRequest
 {
+    use ValidatesResourceKeys;
+
     /** @return array<string, mixed> */
     public function rules(): array
     {
@@ -19,6 +22,7 @@ class RestoreRequest extends RestRequest
             'resources' => [
                 'required', 'array',
             ],
+            'resources.*' => $this->keyRules($resource),
         ];
     }
 }

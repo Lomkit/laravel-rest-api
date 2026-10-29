@@ -38,11 +38,6 @@ class Builder implements EloquentQueryBuilder
     protected $resource;
 
     /**
-     * Determine if security should be disabled in case we don't want it.
-     */
-    protected bool $disableSecurity = false;
-
-    /**
      * Determine if default limit should be applied.
      */
     protected bool $disableDefaultLimit = false;
@@ -57,21 +52,6 @@ class Builder implements EloquentQueryBuilder
     public function newQueryBuilder($parameters)
     {
         return app()->make(QueryBuilder::class, $parameters);
-    }
-
-    /**
-     * Sets the security flag for the query builder.
-     *
-     * Toggling this flag disables or enables security checks during query building.
-     *
-     * @param  bool  $disable  Set to true to disable security checks (default), or false to enable them.
-     * @return $this The current instance for method chaining.
-     */
-    public function disableSecurity($disable = true)
-    {
-        $this->disableSecurity = $disable;
-
-        return $this;
     }
 
     /**

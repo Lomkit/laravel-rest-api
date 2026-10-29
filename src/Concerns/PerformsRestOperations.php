@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Concerns;
 
 use Illuminate\Http\Response as IlluminateResponse;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\QueryBuilder;
@@ -40,23 +39,7 @@ trait PerformsRestOperations
 
         $this->beforeSearch($request);
 
-        $textProvided = $request->has('search.text');
-
-        if ($textProvided && ! filled($request->input('search.text.value'))) {
-            $this->afterSearch($request);
-
-            return $this->buildResponse(
-                $resource,
-                new LengthAwarePaginator(
-                    [],
-                    0,
-                    $request->input('search.limit', $resource->defaultLimit),
-                    $request->input('search.page', 1)
-                )
-            );
-        }
-
-        $builder = $textProvided ? ScoutBuilder::class : QueryBuilder::class;
+        $builder = $request->context()->isTextSearch() ? ScoutBuilder::class : QueryBuilder::class;
 
         $query = app()->make($builder, ['resource' => $resource, 'query' => null])
             ->search($request->input('search', []));
