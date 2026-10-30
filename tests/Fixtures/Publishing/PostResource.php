@@ -25,14 +25,14 @@ class PostResource extends Resource
     {
         return [
             ID::make('id'),
-            Text::make('title'),
+            Text::make('title')->rules('max:60')->creationRules('required')->updateRules('filled'),
             Text::make('summary')->nullable(),
-            Enum::make('status'),
+            Enum::make('status')->creationRules('required'),
             Boolean::make('featured'),
-            Integer::make('views'),
+            Integer::make('views')->rules('min:0'),
             Number::make('rating')->nullable(),
-            Date::make('published_on'),
-            DateTime::make('published_at')->nullable(),
+            Date::make('published_on')->creationRules('required'),
+            DateTime::make('published_at')->nullable()->rules('after_or_equal:published_on'),
             Json::make('metadata')->nullable(),
         ];
     }

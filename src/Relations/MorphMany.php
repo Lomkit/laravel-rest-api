@@ -24,7 +24,7 @@ class MorphMany extends MorphRelation implements RelationResource
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
             $attributes = [
                 $model->{$relation->relation}()->getForeignKeyName() => $mutationRelation['operation'] === 'detach' ? null : $model->{$relation->relation}()->getParentKey(),
-                $model->{$relation->relation}()->getMorphType() => $model::class,
+                $model->{$relation->relation}()->getMorphType() => $model->getMorphClass(),
             ];
 
             if ($mutationRelation['operation'] === 'create') {

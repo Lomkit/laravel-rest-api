@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Mutate;
 
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
+use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -41,8 +42,49 @@ class MutatePayloadValidationTest extends PackageTestCase
                 'mutate.0.relations' => ['The mutate.0.relations field must be an array.'],
             ]],
             'an undeclared attribute' => [['operation' => 'create', 'attributes' => ['name' => 'Desk lamp', 'stock' => 3]], [
-                'mutate.0.attributes' => ['The stock key is not valid for the mutate.0.attributes field.'],
+                'mutate.0.attributes' => ['The stock attribute is not writable on create.'],
             ]],
         ];
+    }
+
+    #[Test]
+    public function it_refuses_a_key_on_create(): void
+    {
+        $lighting = Category::factory()->create(['name' => 'Lighting']);
+        $deskLamp = Product::factory()->create(['category_id' => $lighting->id, 'name' => 'Desk lamp']);
+
+        $response = $this->postJson('/api/products/mutate', ['mutate' => [
+            ['operation' => 'create', 'key' => $deskLamp->id, 'attributes' => ['name' => 'Floor lamp', 'price' => 89, 'category_id' => $lighting->id]],
+        ]]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', [
+            'mutate.0.key' => ['The mutate.0.key field is prohibited when mutate.0.operation is create.'],
+        ]);
+        $this->assertSame(['Desk lamp'], Product::query()->pluck('name')->all());
+    }
+
+    #[Test]
+    #[DataProvider('relationOperations')]
+    public function it_refuses_attributes_on_attach_and_detach(string $operation): void
+    {
+        $lighting = Category::factory()->create(['name' => 'Lighting']);
+        $deskLamp = Product::factory()->create(['category_id' => $lighting->id, 'name' => 'Desk lamp']);
+
+        $response = $this->postJson('/api/categories/mutate', ['mutate' => [[
+            'operation' => 'update',
+            'key' => $lighting->id,
+            'relations' => ['products' => [['operation' => $operation, 'key' => $deskLamp->id, 'attributes' => ['name' => 'Floor lamp']]]],
+        ]]]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', [
+            'mutate.0.relations.products.0.attributes' => ['The mutate.0.relations.products.0.attributes field is prohibited when mutate.0.relations.products.0.operation is '.$operation.'.'],
+        ]);
+        $this->assertSame('Desk lamp', $deskLamp->fresh()?->name);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function relationOperations(): array
+    {
+        return ['attach' => ['attach'], 'detach' => ['detach']];
     }
 }

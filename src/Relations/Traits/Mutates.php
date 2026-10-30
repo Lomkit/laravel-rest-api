@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Relations\Traits;
 
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Relations\Relation;
 
 trait Mutates
@@ -25,9 +26,15 @@ trait Mutates
      */
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations) {}
 
-    /** @return list<string> */
+    /** @return array<string, mixed> */
+    public function ownedAttributes(Model $model): array
+    {
+        return [];
+    }
+
+    /** @return list<MutationOperation> */
     public function mutationOperations(): array
     {
-        return ['create', 'update', 'attach', 'detach'];
+        return [MutationOperation::Create, MutationOperation::Update, MutationOperation::Attach, MutationOperation::Detach];
     }
 }

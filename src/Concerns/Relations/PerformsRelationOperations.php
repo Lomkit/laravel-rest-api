@@ -4,14 +4,15 @@ namespace Lomkit\Rest\Concerns\Relations;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Relations\Relation;
 
 trait PerformsRelationOperations
 {
-    /** @return list<string> */
+    /** @return list<MutationOperation> */
     public function mutationOperations(): array
     {
-        return ['create', 'update', 'attach', 'detach', 'toggle', 'sync'];
+        return MutationOperation::cases();
     }
 
     /**

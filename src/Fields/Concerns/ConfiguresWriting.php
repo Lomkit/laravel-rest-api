@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Fields\Concerns;
 
+use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\WriteOperation;
 
 trait ConfiguresWriting
@@ -15,6 +17,9 @@ trait ConfiguresWriting
     private bool $hasDefault = false;
 
     private mixed $default = null;
+
+    /** @var (Closure(Model, mixed): void)|null */
+    private ?Closure $fillUsing = null;
 
     public function default(mixed $value): static
     {
@@ -63,9 +68,33 @@ trait ConfiguresWriting
         return $this;
     }
 
+    /** @param Closure(Model, mixed): void $callback */
+    public function fillUsing(Closure $callback): static
+    {
+        $this->fillUsing = $callback;
+
+        return $this;
+    }
+
+    public function fillsThroughCallback(): bool
+    {
+        return $this->fillUsing !== null;
+    }
+
+    public function fill(Model $model, mixed $value): void
+    {
+        if ($this->fillUsing === null) {
+            $model->forceFill([$this->name => $value]);
+
+            return;
+        }
+
+        ($this->fillUsing)($model, $value);
+    }
+
     public function isWritableOn(WriteOperation $operation): bool
     {
-        if ($this->isVirtual()) {
+        if ($this->isVirtual() && $this->fillUsing === null) {
             return false;
         }
 

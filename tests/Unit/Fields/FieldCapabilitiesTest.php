@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Unit\Fields;
 
 use Closure;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Json;
@@ -107,6 +108,9 @@ class FieldCapabilitiesTest extends TestCase
             'write only text' => [Text::make('title')->writeOnly(), true, true],
             'virtual text' => [Text::make('title')->virtual(), false, false],
             'virtual text marked creatable and updatable' => [Text::make('title')->virtual()->creatable()->updatable(), false, false],
+            'virtual text with a fill callback' => [Text::make('title')->virtual()->fillUsing(self::fillNothing(...)), true, true],
+            'readonly virtual text with a fill callback' => [Text::make('title')->virtual()->fillUsing(self::fillNothing(...))->readonly(), false, false],
+            'virtual text with a fill callback not updatable' => [Text::make('title')->virtual()->fillUsing(self::fillNothing(...))->updatable(false), true, false],
             'id by default' => [ID::make('id'), false, false],
             'creatable id' => [ID::make('id')->creatable(), true, false],
             'updatable id' => [ID::make('id')->updatable(), false, true],
@@ -168,6 +172,7 @@ class FieldCapabilitiesTest extends TestCase
             'creatable' => [fn (Field $field): Field => $field->creatable(false)],
             'updatable' => [fn (Field $field): Field => $field->updatable(false)],
             'writeOnly' => [fn (Field $field): Field => $field->writeOnly()],
+            'fillUsing' => [fn (Field $field): Field => $field->fillUsing(self::fillNothing(...))],
             'filterable' => [fn (Field $field): Field => $field->filterable(['='])],
             'filterUsing' => [fn (Field $field): Field => $field->filterUsing(fn (Builder $query, string $operator, mixed $value) => $query)],
             'nullable' => [fn (Field $field): Field => $field->nullable()],
@@ -177,4 +182,6 @@ class FieldCapabilitiesTest extends TestCase
             'meta' => [fn (Field $field): Field => $field->meta(['label' => 'Title'])],
         ];
     }
+
+    private static function fillNothing(Model $model, mixed $value): void {}
 }

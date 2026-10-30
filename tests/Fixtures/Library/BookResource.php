@@ -9,6 +9,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasOne;
 use Lomkit\Rest\Relations\HasOneOfMany;
+use Lomkit\Rest\Relations\MorphMany;
 use Lomkit\Rest\Relations\MorphOne;
 use Lomkit\Rest\Relations\MorphOneOfMany;
 
@@ -30,6 +31,7 @@ class BookResource extends Resource
             HasOneOfMany::make('latestLoan', LoanResource::class),
             MorphOne::make('label', LabelResource::class),
             MorphOneOfMany::make('latestLabel', LabelResource::class),
+            MorphMany::make('labels', LabelResource::class),
             BelongsToMany::make('shelves', ShelfResource::class),
         ];
     }
