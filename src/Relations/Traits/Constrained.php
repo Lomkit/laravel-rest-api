@@ -2,27 +2,24 @@
 
 namespace Lomkit\Rest\Relations\Traits;
 
+use Closure;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
 trait Constrained
 {
-    /** @var (callable(RestRequest, Resource): bool)|bool */
-    public $relationRequiredOnCreationCallback = false;
+    private Closure|bool $creationRequirement = false;
 
-    /** @var (callable(RestRequest, Resource): bool)|bool */
-    public $relationProhibitedOnCreationCallback = false;
+    private Closure|bool $creationProhibition = false;
 
-    /** @var (callable(RestRequest, Resource): bool)|bool */
-    public $relationRequiredOnUpdateCallback = false;
+    private Closure|bool $updateRequirement = false;
 
-    /** @var (callable(RestRequest, Resource): bool)|bool */
-    public $relationProhibitedOnUpdateCallback = false;
+    private Closure|bool $updateProhibition = false;
 
     /** @param (callable(RestRequest, Resource): bool)|bool $callback */
     public function requiredOnCreation(callable|bool $callback = true): static
     {
-        $this->relationRequiredOnCreationCallback = $callback;
+        $this->creationRequirement = is_bool($callback) ? $callback : $callback(...);
 
         return $this;
     }
@@ -30,7 +27,7 @@ trait Constrained
     /** @param (callable(RestRequest, Resource): bool)|bool $callback */
     public function prohibitedOnCreation(callable|bool $callback = true): static
     {
-        $this->relationProhibitedOnCreationCallback = $callback;
+        $this->creationProhibition = is_bool($callback) ? $callback : $callback(...);
 
         return $this;
     }
@@ -38,7 +35,7 @@ trait Constrained
     /** @param (callable(RestRequest, Resource): bool)|bool $callback */
     public function requiredOnUpdate(callable|bool $callback = true): static
     {
-        $this->relationRequiredOnUpdateCallback = $callback;
+        $this->updateRequirement = is_bool($callback) ? $callback : $callback(...);
 
         return $this;
     }
@@ -46,44 +43,44 @@ trait Constrained
     /** @param (callable(RestRequest, Resource): bool)|bool $callback */
     public function prohibitedOnUpdate(callable|bool $callback = true): static
     {
-        $this->relationProhibitedOnUpdateCallback = $callback;
+        $this->updateProhibition = is_bool($callback) ? $callback : $callback(...);
 
         return $this;
     }
 
     public function isRequiredOnCreation(RestRequest $request): bool
     {
-        if (is_callable($this->relationRequiredOnCreationCallback)) {
-            return (bool) ($this->relationRequiredOnCreationCallback)($request, $this->resource());
+        if (is_bool($this->creationRequirement)) {
+            return $this->creationRequirement;
         }
 
-        return (bool) $this->relationRequiredOnCreationCallback;
+        return (bool) ($this->creationRequirement)($request, $this->resource());
     }
 
     public function isProhibitedOnCreation(RestRequest $request): bool
     {
-        if (is_callable($this->relationProhibitedOnCreationCallback)) {
-            return (bool) ($this->relationProhibitedOnCreationCallback)($request, $this->resource());
+        if (is_bool($this->creationProhibition)) {
+            return $this->creationProhibition;
         }
 
-        return (bool) $this->relationProhibitedOnCreationCallback;
+        return (bool) ($this->creationProhibition)($request, $this->resource());
     }
 
     public function isRequiredOnUpdate(RestRequest $request): bool
     {
-        if (is_callable($this->relationRequiredOnUpdateCallback)) {
-            return (bool) ($this->relationRequiredOnUpdateCallback)($request, $this->resource());
+        if (is_bool($this->updateRequirement)) {
+            return $this->updateRequirement;
         }
 
-        return (bool) $this->relationRequiredOnUpdateCallback;
+        return (bool) ($this->updateRequirement)($request, $this->resource());
     }
 
     public function isProhibitedOnUpdate(RestRequest $request): bool
     {
-        if (is_callable($this->relationProhibitedOnUpdateCallback)) {
-            return (bool) ($this->relationProhibitedOnUpdateCallback)($request, $this->resource());
+        if (is_bool($this->updateProhibition)) {
+            return $this->updateProhibition;
         }
 
-        return (bool) $this->relationProhibitedOnUpdateCallback;
+        return (bool) ($this->updateProhibition)($request, $this->resource());
     }
 }

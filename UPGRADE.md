@@ -75,7 +75,7 @@ These items change:
 - `getFields()` returns a `Lomkit\Rest\Fields\FieldSet` instead of an array of names. Call `->names()` to get the old list.
 - `rest:resource` generates `ID::make('id')`.
 - `Lomkit\Rest\Fields\DateTime` has the same short name as PHP's `\DateTime`. In a file that uses both, alias one of them.
-- `Resource` defines `__sleep()`, which leaves out the memoized fields, because fields can hold closures. A queued action's resource therefore rebuilds its fields in the worker, where the request has no user: `fields()` that depend on the user see a guest there. A resource that overrides `__sleep()` must declare `: array` and merge `parent::__sleep()`.
+- `Resource` defines `__sleep()`, which leaves out the memoized fields, scopes and relations, because they can hold closures. A queued action's resource therefore rebuilds them in the worker, where the request has no user: `fields()`, `scopes()` and `relations()` that depend on the user see a guest there. A resource that overrides `__sleep()` must declare `: array` and merge `parent::__sleep()`.
 
 ### Typed inputs
 
@@ -194,6 +194,7 @@ Actions, instructions and relations:
 - An action's `handle()` returns `void`. Before, a synchronous action that returned `false` stopped the remaining chunks; the chunks now always run.
 - `make()` returns `static`. An action, instruction or relation that redefines it must declare `: static`.
 - On relations, `requiredOnCreation()`, `prohibitedOnCreation()`, `requiredOnUpdate()` and `prohibitedOnUpdate()` return `static`. A relation that overrides one of them must declare `: static`. Their callbacks receive the request and the related resource: `fn (RestRequest $request, Resource $resource): bool`.
+- The public `relationRequiredOnCreationCallback`, `relationProhibitedOnCreationCallback`, `relationRequiredOnUpdateCallback` and `relationProhibitedOnUpdateCallback` properties of relations are removed: the constraints are now private. Set them with `requiredOnCreation()`, `prohibitedOnCreation()`, `requiredOnUpdate()` and `prohibitedOnUpdate()`, and read them with `isRequiredOnCreation()`, `isProhibitedOnCreation()`, `isRequiredOnUpdate()` and `isProhibitedOnUpdate()`.
 - `resource(Resource $resource)` returns `static` on actions, instructions and requests.
 
 Other resource methods:
