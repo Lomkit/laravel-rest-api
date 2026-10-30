@@ -466,7 +466,7 @@ class AutomaticGatingTest extends TestCase
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()
+                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()->names()
                                         );
 
                                     return $relation;

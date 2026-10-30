@@ -27,6 +27,15 @@ enum MutationOperation: string
         };
     }
 
+    public function pivotWriteOperation(): ?WriteOperation
+    {
+        return match ($this) {
+            self::Create, self::Attach => WriteOperation::Create,
+            self::Update, self::Sync, self::Toggle => WriteOperation::Update,
+            self::Detach => null,
+        };
+    }
+
     public function requiresKey(): bool
     {
         return $this !== self::Create;

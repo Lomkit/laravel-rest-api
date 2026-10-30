@@ -23,12 +23,12 @@ class Ticket extends Model
 
     public function tags(): BelongsToMany
     {
-        return $this->belongsToMany(Tag::class)->withPivot('position');
+        return $this->belongsToMany(Tag::class)->withPivot('position', 'weight', 'added_by', 'note', 'created_at');
     }
 
     public function labels(): MorphToMany
     {
-        return $this->morphToMany(Tag::class, 'labelable')->withPivot('position');
+        return $this->morphToMany(Tag::class, 'labelable')->withPivot('position', 'weight', 'added_by', 'note', 'created_at');
     }
 
     /** @return array<string, mixed> */

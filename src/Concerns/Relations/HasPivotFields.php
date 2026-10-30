@@ -2,53 +2,63 @@
 
 namespace Lomkit\Rest\Concerns\Relations;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
+use Lomkit\Rest\Fields\Field;
+use Lomkit\Rest\Fields\FieldSet;
+use Lomkit\Rest\Rules\Mutate\MutatePivot;
+use ReflectionClass;
+
 trait HasPivotFields
 {
-    protected array $pivotFields = [];
+    private ?FieldSet $pivotFieldSet = null;
 
-    protected array $pivotRules = [];
+    private bool $pivotFieldsBound = false;
 
-    /**
-     * Get the pivot fields.
-     *
-     * @return array
-     */
-    public function getPivotFields()
+    /** @param list<Field> $fields */
+    public function pivotFields(array $fields): static
     {
-        return $this->pivotFields;
+        $this->pivotFieldSet = FieldSet::forPivot($fields, 'pivotFields() of the '.$this->relation.' relation');
+        $this->pivotFieldsBound = false;
+
+        return $this;
     }
 
-    /**
-     * Set the pivot fields.
-     *
-     *
-     * @return $this
-     */
-    public function withPivotFields(array $pivotFields)
+    public function getPivotFields(): FieldSet
     {
-        return tap($this, function () use ($pivotFields) {
-            $this->pivotFields = $pivotFields;
-        });
+        $fields = $this->pivotFieldSet ??= FieldSet::of([]);
+
+        if ($this->pivotFieldsBound) {
+            return $fields;
+        }
+
+        $pivot = $this->pivotModel();
+
+        if ($pivot === null) {
+            return $fields;
+        }
+
+        $this->pivotFieldsBound = true;
+
+        return $fields->bindTo($pivot);
     }
 
-    /**
-     * Set the pivot rules.
-     *
-     *
-     * @return $this
-     */
-    public function withPivotRules(array $pivotRules)
+    /** @return array<string, list<mixed>> */
+    public function pivotRules(string $prefix): array
     {
-        return tap($this, function () use ($pivotRules) {
-            $this->pivotRules = $pivotRules;
-        });
+        return [$prefix.($this->hasMultipleEntries() ? '.*' : '') => [new MutatePivot($this)]];
     }
 
-    /**
-     * Get the pivot rules.
-     */
-    public function getPivotRules(): array
+    private function pivotModel(): ?Model
     {
-        return $this->pivotRules;
+        if (! isset($this->fromResource) || ! (new ReflectionClass($this->fromResource::modelClass()))->isInstantiable()) {
+            return null;
+        }
+
+        $relation = $this->fromResource::newModel()->{$this->relation}();
+        $pivot = $relation instanceof BelongsToMany ? $relation->getPivotClass() : Pivot::class;
+
+        return new $pivot;
     }
 }

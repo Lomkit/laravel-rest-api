@@ -21,7 +21,7 @@ class BelongsToManyResource extends Resource
     {
         return [
             BelongsTo::make('model', ModelQueryChangedResource::class),
-            BelongsToMany::make('models', ModelResource::class)->withPivotFields(['number']),
+            BelongsToMany::make('models', ModelResource::class)->pivotFields([Integer::make('number')]),
         ];
     }
 

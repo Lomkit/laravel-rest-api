@@ -42,6 +42,16 @@ final class InvalidFieldException extends LogicException
         return new self("{$owner} declares the input field [{$name}] with a numeric name. Input names must not be numeric.");
     }
 
+    public static function virtualPivotField(string $owner, string $name): self
+    {
+        return new self("{$owner} declares the virtual field [{$name}]. A pivot field is a column of the pivot table.");
+    }
+
+    public static function filledPivotField(string $owner, string $name): self
+    {
+        return new self("{$owner} declares fillUsing() on the field [{$name}]. A pivot value is written to its column as sent.");
+    }
+
     public static function unknownField(string $name): self
     {
         return new self("Unknown field [{$name}].");

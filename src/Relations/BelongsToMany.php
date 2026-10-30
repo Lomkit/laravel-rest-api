@@ -6,37 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Concerns\Relations\PerformsRelationOperations;
+use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Contracts\RelationResource;
-use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
-use Lomkit\Rest\Rules\ArrayWithKey;
 
-class BelongsToMany extends Relation implements RelationResource
+class BelongsToMany extends Relation implements PivotRelation, RelationResource
 {
     use HasMultipleResults;
     use HasPivotFields;
     use PerformsRelationOperations;
-
-    /**
-     * Define validation rules for the BelongsToMany relation.
-     *
-     * @param  resource  $resource  The resource associated with the relation.
-     * @param  string  $prefix  The prefix used for validation rules.
-     * @return array An array of validation rules.
-     */
-    #[\Override]
-    public function rules(Resource $resource, string $prefix)
-    {
-        return array_merge(
-            parent::rules($resource, $prefix),
-            [
-                $prefix.'.*.pivot' => [
-                    'prohibited_if:'.$prefix.'.*.operation,detach',
-                    new ArrayWithKey($this->getPivotFields()),
-                ],
-            ]
-        );
-    }
 
     /**
      * Perform actions after mutating the BelongsToMany relation.

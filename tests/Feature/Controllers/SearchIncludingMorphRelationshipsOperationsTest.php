@@ -284,7 +284,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource)->relation('morphToManyRelation')->getPivotFields()
+                                            (new ModelResource)->relation('morphToManyRelation')->getPivotFields()->names()
                                         );
 
                                     return $relation;
@@ -341,7 +341,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource)->relation('morphedByManyRelation')->getPivotFields()
+                                            (new ModelResource)->relation('morphedByManyRelation')->getPivotFields()->names()
                                         );
 
                                     return $relation;

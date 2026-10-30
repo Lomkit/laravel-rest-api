@@ -2,8 +2,10 @@
 
 namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
+use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -18,11 +20,7 @@ class AutomaticGatingResource extends Resource
     public function relations(RestRequest $request): array
     {
         return [
-            BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
-                ->withPivotRules([
-                    'number' => 'numeric',
-                ])
-                ->withPivotFields(['created_at', 'number']),
+            BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)->pivotFields([DateTime::make('created_at'), Number::make('number')]),
             HasMany::make('hasManyRelation', HasManyWithGatesResource::class),
         ];
     }

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Fixtures\Helpdesk;
 
 use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -21,6 +22,6 @@ class TagResource extends Resource
     #[\Override]
     public function relations(RestRequest $request): array
     {
-        return [MorphedByMany::make('labelledTickets', TicketResource::class)->withPivotFields(['position'])];
+        return [MorphedByMany::make('labelledTickets', TicketResource::class)->pivotFields([Integer::make('position')->nullable()])];
     }
 }

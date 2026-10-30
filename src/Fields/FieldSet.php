@@ -53,6 +53,24 @@ final readonly class FieldSet implements Countable, IteratorAggregate
         return $set;
     }
 
+    /** @param array<mixed> $fields */
+    public static function forPivot(array $fields, string $owner): self
+    {
+        $set = self::of($fields, $owner);
+
+        foreach ($set->fields as $field) {
+            if ($field->isVirtual()) {
+                throw InvalidFieldException::virtualPivotField($owner, $field->name);
+            }
+
+            if ($field->fillsThroughCallback()) {
+                throw InvalidFieldException::filledPivotField($owner, $field->name);
+            }
+        }
+
+        return $set;
+    }
+
     public function bindTo(Model $model): self
     {
         foreach ($this->fields as $field) {

@@ -3,42 +3,16 @@
 namespace Lomkit\Rest\Tests\Feature\Scramble;
 
 use Dedoc\Scramble\Generator;
-use Dedoc\Scramble\Scramble;
-use Dedoc\Scramble\ScrambleServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Facades\Rest;
-use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\UndeclaredResourceController;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\ImmutableTagController;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\TagController;
-use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
-use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
-use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
 
-class ScrambleDocumentTest extends PackageTestCase
+class ScrambleDocumentTest extends ScrambleTestCase
 {
-    #[\Override]
-    protected function setUp(): void
-    {
-        Scramble::$extensions = [];
-
-        parent::setUp();
-    }
-
-    #[\Override]
-    protected function fixtures(): array
-    {
-        return [new Catalog, new Publishing];
-    }
-
-    #[\Override]
-    protected function getPackageProviders($app): array
-    {
-        return [ScrambleServiceProvider::class, RestServiceProvider::class];
-    }
-
     #[Test]
     public function it_documents_the_search_body_when_scramble_boots_first(): void
     {
@@ -64,6 +38,27 @@ class ScrambleDocumentTest extends PackageTestCase
         $this->assertSame(['asc', 'desc'], $search['sorts']['items']['properties']['direction']['enum']);
         $this->assertSame(['id', 'first_name', 'last_name', 'settings'], $search['selects']['items']['properties']['field']['enum']);
         $this->assertSame(['count', 'min', 'max', 'avg', 'sum', 'exists'], $search['aggregates']['items']['properties']['type']['enum']);
+    }
+
+    #[Test]
+    public function it_documents_the_parameters_and_the_filter_operators_of_the_search_body(): void
+    {
+        $search = $this->body($this->operation('/products/search', 'post'))['properties']['search']['properties'];
+        $filter = $search['filters']['items']['properties'];
+
+        $this->assertSame(['filters', 'sorts', 'selects', 'includes', 'scopes', 'text', 'aggregates', 'instructions', 'gates', 'page', 'limit'], array_keys($search));
+        $this->assertSame(['=', '!=', '>', '>=', '<', '<=', 'in', 'not in', 'like', 'not like'], $filter['operator']['enum']);
+        $this->assertArrayNotHasKey('type', (array) $filter['value']);
+    }
+
+    #[Test]
+    public function it_documents_the_include_relation_as_a_plain_string_when_the_resource_declares_no_relation(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('tags', TagController::class)->register());
+
+        $includes = $this->body($this->operation('/tags/search', 'post'))['properties']['search']['properties']['includes'];
+
+        $this->assertSame(['type' => 'string'], $includes['items']['properties']['relation']);
     }
 
     #[Test]
@@ -158,20 +153,5 @@ class ScrambleDocumentTest extends PackageTestCase
         ));
 
         app(Generator::class)();
-    }
-
-    /** @return array<string, mixed> */
-    private function operation(string $path, string $method): array
-    {
-        return app(Generator::class)()['paths'][$path][$method];
-    }
-
-    /**
-     * @param  array<string, mixed>  $operation
-     * @return array<string, mixed>
-     */
-    private function body(array $operation): array
-    {
-        return $operation['requestBody']['content']['application/json']['schema'];
     }
 }

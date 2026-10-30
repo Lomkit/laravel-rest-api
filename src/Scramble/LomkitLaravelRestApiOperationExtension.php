@@ -7,25 +7,20 @@ use Dedoc\Scramble\Support\Generator\Operation;
 use Dedoc\Scramble\Support\Generator\RequestBodyObject;
 use Dedoc\Scramble\Support\Generator\Schema;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
-use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\MixedType;
-use Dedoc\Scramble\Support\Generator\Types\NumberType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
-use Dedoc\Scramble\Support\Generator\Types\Type;
 use Dedoc\Scramble\Support\RouteInfo;
-use Illuminate\Validation\Rules\In;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Fields\WriteOperation;
-use Lomkit\Rest\Fields\WriteRules;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
-use Lomkit\Rest\Rules\OneOf;
+use Lomkit\Rest\Relations\Relation;
 
 class LomkitLaravelRestApiOperationExtension extends OperationExtension
 {
@@ -45,8 +40,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $resource = $context->resource($controller::resourceClass());
         $fakeRequest = $context->request;
         $fields = $resource->getFields($fakeRequest);
-        $relations = $this->parseRelationsFromSource($resource);
-        $rules = $this->extractAllRules($resource, $fakeRequest);
+        $relations = $resource->getRelations($fakeRequest);
         $resourceName = str_replace('Resource', '', class_basename($resource));
         $action = $routeInfo->route->getActionMethod();
 
@@ -54,10 +48,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
 
         match ($action) {
             'search' => $this->documentSearch($operation, $fields, $relations, $resourceName),
-            'mutate' => $this->documentMutate($operation, $this->writableNames($fields), $relations, $rules, $resourceName, [
-                WriteOperation::Create->value => $fields->writableOn(WriteOperation::Create)->names(),
-                WriteOperation::Update->value => $fields->writableOn(WriteOperation::Update)->names(),
-            ]),
+            'mutate' => $this->documentMutate($operation, $this->attributes($resource, $fakeRequest), $relations, $resourceName),
             'details' => $operation->summary("Get {$resourceName} details"),
             'destroy' => $this->documentDestroy($operation, $resourceName),
             'restore' => $this->documentRestore($operation, $resourceName),
@@ -66,90 +57,10 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
     }
 
     /**
-     * Parse relation definitions from the resource's source code via reflection.
-     *
-     * Falls back to an empty array if the relations() method cannot be read.
-     *
-     * @return array<int, array{name: string, type: string}>
-     */
-    private function parseRelationsFromSource(object $resource): array
-    {
-        try {
-            $rc = new \ReflectionClass($resource);
-
-            if (! $rc->hasMethod('relations')) {
-                return [];
-            }
-
-            $method = $rc->getMethod('relations');
-            $fileName = $method->getFileName();
-
-            if ($fileName === false) {
-                return [];
-            }
-
-            $lines = file($fileName);
-
-            if ($lines === false) {
-                return [];
-            }
-
-            $source = implode('', array_slice(
-                $lines,
-                $method->getStartLine() - 1,
-                $method->getEndLine() - $method->getStartLine() + 1
-            ));
-
-            preg_match_all(
-                '/(\w+)::make\s*\(\s*[\'"]([^\'"]+)[\'"]/',
-                $source,
-                $matches,
-                PREG_SET_ORDER
-            );
-
-            return array_map(fn ($m) => [
-                'name' => $m[2],
-                'type' => $m[1],
-            ], $matches);
-        } catch (\Throwable $e) {
-            return [];
-        }
-    }
-
-    /**
-     * Collect validation rules from rules(), createRules(), and updateRules()
-     * and index them by field name with per-context buckets.
-     *
-     * @return array<string, array{all: array, create: array, update: array}>
-     */
-    private function extractAllRules(object $resource, RestRequest $request): array
-    {
-        $declared = $resource instanceof Resource ? $resource->getFields($request) : FieldSet::of([]);
-        $all = method_exists($resource, 'rules') ? $resource->rules($request) : [];
-        $create = WriteRules::of($declared, WriteOperation::Create, method_exists($resource, 'createRules') ? $resource->createRules($request) : [])->all();
-        $update = WriteRules::of($declared, WriteOperation::Update, method_exists($resource, 'updateRules') ? $resource->updateRules($request) : [])->all();
-
-        $fields = array_unique(array_merge(
-            array_keys($all),
-            array_keys($create),
-            array_keys($update)
-        ));
-
-        $result = [];
-        foreach ($fields as $field) {
-            $result[(string) $field] = [
-                'all' => WriteRules::listOf($all[$field] ?? []),
-                'create' => $create[$field] ?? [],
-                'update' => $update[$field] ?? [],
-            ];
-        }
-
-        return $result;
-    }
-
-    /**
      * Document the search endpoint: filters, sorts, selects, includes, scopes,
      * text search, aggregates, instructions, and gates.
+     *
+     * @param  array<int, Relation>  $relations
      */
     private function documentSearch(
         Operation $operation,
@@ -160,7 +71,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $operation->summary("Search {$resourceName}");
 
         $fieldEnum = $fields->names();
-        $relationEnum = array_column($relations, 'name');
+        $relationEnum = array_values(array_map(fn (Relation $relation): string => $relation->relation, $relations));
         $relationDesc = $this->buildRelationsDescription($relations);
 
         $body = (new ObjectType)->addProperty(
@@ -236,75 +147,44 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         );
     }
 
-    /** @return list<string> */
-    private function writableNames(FieldSet $fields): array
+    private function attributes(Resource $resource, RestRequest $request): ObjectType
     {
-        $writable = [...$fields->writableOn(WriteOperation::Create)->names(), ...$fields->writableOn(WriteOperation::Update)->names()];
+        $create = WriteOperation::Create;
+        $update = WriteOperation::Update;
 
-        return array_values(array_intersect($fields->names(), $writable));
+        return WritableFieldsType::of(
+            $resource->getFields($request),
+            [$create->value => $create, $update->value => $update],
+            [$create->value => $resource->createRules($request), $update->value => $resource->updateRules($request)],
+            $resource->rules($request),
+        )->toType();
     }
 
-    /**
-     * Document the mutate endpoint: create and update operations with attributes
-     * and nested relation mutations.
-     *
-     * @param  array<string, list<string>>  $writable
-     */
-    private function documentMutate(
-        Operation $operation,
-        array $fields,
-        array $relations,
-        array $rules,
-        string $resourceName,
-        array $writable = [],
-    ): void {
+    /** @param array<int, Relation> $relations */
+    private function documentMutate(Operation $operation, ObjectType $attributes, array $relations, string $resourceName): void
+    {
         $operation->summary("Mutate {$resourceName}");
 
-        $attributesType = new ObjectType;
+        $entry = new ObjectType;
+        $entry->addProperty('operation', (new StringType)->enum(['create', 'update']));
+        $entry->addProperty('key', (new IntegerType)->setDescription('Required for update'));
+        $entry->addProperty('attributes', $attributes);
 
-        if ($writable !== []) {
-            $attributesType->setDescription(implode(' ', array_map(
-                fn (string $name, array $names): string => 'Writable on '.$name.': '.($names === [] ? 'none' : implode(', ', $names)).'.',
-                array_keys($writable),
-                $writable,
-            )));
-        }
-
-        foreach ($fields as $field) {
-            $fieldRules = $rules[$field] ?? ['all' => [], 'create' => [], 'update' => []];
-            // Include all three contexts so update-only rules are also reflected.
-            $allRules = array_merge($fieldRules['all'], $fieldRules['create'], $fieldRules['update']);
-            $type = $this->resolveFieldType($allRules);
-            $description = $this->buildRuleDescription($fieldRules);
-
-            if ($description) {
-                $type->setDescription($description);
-            }
-
-            $attributesType->addProperty($field, $type);
-        }
-
-        $recordType = (new ObjectType)
-            ->addProperty('operation', (new StringType)->enum(['create', 'update']))
-            ->addProperty('key', (new IntegerType)->setDescription('Required for update'))
-            ->addProperty('attributes', $attributesType);
-
-        if (! empty($relations)) {
+        if ($relations !== []) {
             $relationsType = new ObjectType;
+
             foreach ($relations as $relation) {
-                $relationsType->addProperty(
-                    $relation['name'],
-                    $this->buildRelationMutationType($relation['type'])
-                        ->setDescription("Type: {$relation['type']}")
-                );
+                $relationsType->addProperty($relation->relation, (new RelationMutationType($relation))->toType());
             }
-            $recordType->addProperty('relations', $relationsType);
+
+            $entry->addProperty('relations', $relationsType);
         }
 
-        $body = (new ObjectType)->addProperty(
-            'mutate',
-            (new ArrayType)->setItems($recordType)
-        );
+        $entries = new ArrayType;
+        $entries->setItems($entry);
+
+        $body = new ObjectType;
+        $body->addProperty('mutate', $entries);
 
         $operation->addRequestBodyObject(
             RequestBodyObject::make()->setContent('application/json', Schema::fromType($body))
@@ -340,66 +220,9 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
     }
 
     /**
-     * Infer an OpenAPI type from a flat list of Laravel validation rules.
-     *
-     * Handles both string rules (e.g. 'integer', 'boolean') and object rules
-     * such as Rule::in(), which indicate a string enum.
-     */
-    private function resolveFieldType(array $rules): Type
-    {
-        $flat = [];
-        foreach ($rules as $rule) {
-            if (is_string($rule)) {
-                // Split on '|' (defensive against un-normalized input) and strip
-                // any parameter suffix after ':' (e.g. 'decimal:2' → 'decimal',
-                // 'array:name,username' → 'array').
-                foreach (explode('|', $rule) as $token) {
-                    $flat[] = strtolower(trim(explode(':', $token)[0]));
-                }
-            } elseif ($rule instanceof In || $rule instanceof OneOf) {
-                // Rule::in(...) constrains values but the underlying type is string.
-                $flat[] = 'string';
-            }
-            // Other Rule objects (Unique, Exists, etc.) do not affect the type.
-        }
-
-        if (array_intersect(['integer', 'int'], $flat)) {
-            return new IntegerType;
-        }
-
-        if (array_intersect(['numeric', 'decimal'], $flat)) {
-            return new NumberType;
-        }
-
-        if (array_intersect(['boolean', 'bool'], $flat)) {
-            return new BooleanType;
-        }
-
-        if (array_intersect(['array'], $flat)) {
-            return new ArrayType;
-        }
-
-        return new StringType;
-    }
-
-    /**
-     * Build a human-readable rule description string grouped by context.
-     */
-    private function buildRuleDescription(array $fieldRules): string
-    {
-        $parts = [];
-        foreach (['all', 'create', 'update'] as $context) {
-            $r = array_filter($fieldRules[$context], fn ($v) => is_string($v));
-            if (! empty($r)) {
-                $parts[] = "{$context}: ".implode(', ', $r);
-            }
-        }
-
-        return implode(' | ', $parts);
-    }
-
-    /**
      * Build a markdown description listing all available relations with their types.
+     *
+     * @param  array<int, Relation>  $relations
      */
     private function buildRelationsDescription(array $relations): string
     {
@@ -408,45 +231,10 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         }
 
         $lines = ["**Available relations:**\n"];
-        foreach ($relations as $rel) {
-            $lines[] = "- `{$rel['name']}` ({$rel['type']})";
+        foreach ($relations as $relation) {
+            $lines[] = '- `'.$relation->relation.'` ('.class_basename($relation).')';
         }
 
         return implode("\n", $lines);
-    }
-
-    /**
-     * Build the OpenAPI type for a relation mutation payload.
-     *
-     * Single-record relations return an ObjectType; collection relations return
-     * an ArrayType of that object. Each record exposes:
-     *   - operation  (create | update | attach | detach, plus sync | toggle on many-to-many relations)
-     *   - key        (integer OR array of integers for bulk operations)
-     *   - attributes (fields of the related resource)
-     *   - pivot      (optional pivot-table attributes, many-to-many only)
-     *   - without_detaching (optional, many-to-many only)
-     */
-    private function buildRelationMutationType(string $relationType): Type
-    {
-        $single = ['BelongsTo', 'HasOne', 'MorphOne', 'MorphTo', 'HasOneThrough', 'HasOneOfMany', 'MorphOneOfMany'];
-        $many = ['HasMany', 'BelongsToMany', 'MorphMany', 'MorphToMany', 'MorphedByMany', 'HasManyThrough'];
-        $pivotMany = ['BelongsToMany', 'MorphToMany', 'MorphedByMany'];
-
-        $recordType = (new ObjectType)
-            ->addProperty('operation', (new StringType)->enum(in_array($relationType, $pivotMany) ? ['create', 'update', 'attach', 'detach', 'sync', 'toggle'] : ['create', 'update', 'attach', 'detach']))
-            ->addProperty('key', (new MixedType)->setDescription('Integer for single operations; array of integers for bulk operations'))
-            ->addProperty('attributes', (new ObjectType)->setDescription('Fields of the related resource'));
-
-        if (in_array($relationType, $many)) {
-            if (in_array($relationType, $pivotMany)) {
-                $recordType
-                    ->addProperty('pivot', (new ObjectType)->setDescription('Pivot-table attributes'))
-                    ->addProperty('without_detaching', (new BooleanType)->setDescription('When true, existing relations are kept during sync'));
-            }
-
-            return (new ArrayType)->setItems($recordType);
-        }
-
-        return $recordType;
     }
 }

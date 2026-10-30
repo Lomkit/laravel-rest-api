@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Rules\Mutate;
 
 use Illuminate\Support\Str;
+use Lomkit\Rest\Fields\WriteRules;
 use Lomkit\Rest\Rules\RestRule;
 
 class MutateRelation extends RestRule
@@ -20,10 +21,12 @@ class MutateRelation extends RestRule
         }
 
         $entries = $relation->hasMultipleEntries() ? $attribute.'.*' : $attribute;
+        $rules = [$entries => [(new Mutate($this->depth + 1, $relation))->setResource($relation->resource())]];
 
-        return [
-            $entries => (new Mutate($this->depth + 1, $relation))->setResource($relation->resource()),
-            ...$relation->rules($relation->resource(), $attribute),
-        ];
+        foreach ($relation->rules($relation->resource(), $attribute) as $key => $list) {
+            $rules[$key] = [...($rules[$key] ?? []), ...WriteRules::listOf($list)];
+        }
+
+        return $rules;
     }
 }

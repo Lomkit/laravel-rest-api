@@ -16,6 +16,6 @@ class Tag extends Model
 
     public function labelledTickets(): MorphToMany
     {
-        return $this->morphedByMany(Ticket::class, 'labelable')->withPivot('position');
+        return $this->morphedByMany(Ticket::class, 'labelable')->withPivot('position', 'weight', 'added_by', 'note', 'created_at');
     }
 }

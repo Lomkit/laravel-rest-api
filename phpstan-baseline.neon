@@ -152,11 +152,6 @@ parameters:
 
 		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 3
-			path: src/Concerns/Relations/HasPivotFields.php
-
-		-
-			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Concerns/Relations/PerformsRelationOperations.php
 
@@ -509,12 +504,6 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			message: '#^Parameter \#1 \$object_or_class of function method_exists expects object\|string, Lomkit\\Rest\\Relations\\Relation\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Parameter \#1 \$object_or_class of function method_exists expects object\|string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -546,12 +535,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$value of method Carbon\\Carbon\:\:addMinutes\(\) expects float\|int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Parameter \#2 \$haystack of function in_array expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Http/Resource.php
@@ -631,12 +614,6 @@ parameters:
 		-
 			message: '#^Cannot access offset ''type'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Http/Response.php
-
-		-
-			message: '#^Cannot call method getPivotFields\(\) on Lomkit\\Rest\\Relations\\Relation\|null\.$#'
-			identifier: method.nonObject
 			count: 1
 			path: src/Http/Response.php
 
@@ -771,12 +748,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$key of method Illuminate\\Support\\Collection\<string,mixed\>\:\:put\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Response.php
-
-		-
-			message: '#^Parameter \#1 \$keys of method Illuminate\\Support\\Collection\<\(int\|string\),mixed\>\:\:only\(\) expects array\<\(int\|string\)\>\|Illuminate\\Support\\Enumerable\<\(int\|string\), \(int\|string\)\>\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Http/Response.php
@@ -1911,24 +1882,6 @@ parameters:
 			path: src/Relations/BelongsToMany.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:getPivotFields\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/BelongsToMany.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:getPivotRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/BelongsToMany.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/BelongsToMany.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:sync\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1965,25 +1918,7 @@ parameters:
 			path: src/Relations/BelongsToMany.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:withPivotFields\(\) has parameter \$pivotFields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/BelongsToMany.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\BelongsToMany\:\:withPivotRules\(\) has parameter \$pivotRules with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/BelongsToMany.php
-
-		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 2
-			path: src/Relations/BelongsToMany.php
-
-		-
-			message: '#^Parameter \#1 \$keys of class Lomkit\\Rest\\Rules\\ArrayWithKey constructor expects array\<string\>, array given\.$#'
-			identifier: argument.type
 			count: 1
 			path: src/Relations/BelongsToMany.php
 
@@ -2063,18 +1998,6 @@ parameters:
 			message: '#^Possibly invalid array key type mixed\.$#'
 			identifier: array.invalidKey
 			count: 5
-			path: src/Relations/BelongsToMany.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Relations\\BelongsToMany\:\:\$pivotFields type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/BelongsToMany.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Relations\\BelongsToMany\:\:\$pivotRules type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
 			path: src/Relations/BelongsToMany.php
 
 		-
@@ -2639,24 +2562,6 @@ parameters:
 			path: src/Relations/MorphToMany.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:getPivotFields\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphToMany.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:getPivotRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphToMany.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphToMany.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:sync\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -2693,25 +2598,7 @@ parameters:
 			path: src/Relations/MorphToMany.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:withPivotFields\(\) has parameter \$pivotFields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphToMany.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphToMany\:\:withPivotRules\(\) has parameter \$pivotRules with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphToMany.php
-
-		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 2
-			path: src/Relations/MorphToMany.php
-
-		-
-			message: '#^Parameter \#1 \$keys of class Lomkit\\Rest\\Rules\\ArrayWithKey constructor expects array\<string\>, array given\.$#'
-			identifier: argument.type
 			count: 1
 			path: src/Relations/MorphToMany.php
 
@@ -2791,18 +2678,6 @@ parameters:
 			message: '#^Possibly invalid array key type mixed\.$#'
 			identifier: array.invalidKey
 			count: 5
-			path: src/Relations/MorphToMany.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Relations\\MorphToMany\:\:\$pivotFields type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphToMany.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Relations\\MorphToMany\:\:\$pivotRules type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
 			path: src/Relations/MorphToMany.php
 
 		-
@@ -2902,24 +2777,6 @@ parameters:
 			path: src/Relations/MorphedByMany.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:getPivotFields\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphedByMany.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:getPivotRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphedByMany.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphedByMany.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:sync\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -2956,25 +2813,7 @@ parameters:
 			path: src/Relations/MorphedByMany.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:withPivotFields\(\) has parameter \$pivotFields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphedByMany.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphedByMany\:\:withPivotRules\(\) has parameter \$pivotRules with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphedByMany.php
-
-		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 2
-			path: src/Relations/MorphedByMany.php
-
-		-
-			message: '#^Parameter \#1 \$keys of class Lomkit\\Rest\\Rules\\ArrayWithKey constructor expects array\<string\>, array given\.$#'
-			identifier: argument.type
 			count: 1
 			path: src/Relations/MorphedByMany.php
 
@@ -3057,38 +2896,8 @@ parameters:
 			path: src/Relations/MorphedByMany.php
 
 		-
-			message: '#^Property Lomkit\\Rest\\Relations\\MorphedByMany\:\:\$pivotFields type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphedByMany.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Relations\\MorphedByMany\:\:\$pivotRules type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphedByMany.php
-
-		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 1
-			path: src/Relations/Relation.php
-
-		-
 			message: '#^Binary operation "\." between mixed and ''\.'' results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 1
-			path: src/Relations/Relation.php
-
-		-
-			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Relations/Relation.php
-
-		-
-			message: '#^Call to an undefined method Lomkit\\Rest\\Relations\\Relation\:\:getPivotRules\(\)\.$#'
-			identifier: method.notFound
 			count: 1
 			path: src/Relations/Relation.php
 
@@ -3155,12 +2964,6 @@ parameters:
 		-
 			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:filter\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
 			identifier: missingType.generics
-			count: 1
-			path: src/Relations/Relation.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: src/Relations/Relation.php
 
@@ -3244,51 +3047,9 @@ parameters:
 			path: src/RestServiceProvider.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Mutate\\MutateRelation\:\:buildValidationRules\(\) should return array\<string, mixed\> but returns array\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Rules/Mutate/MutateRelation.php
-
-		-
-			message: '#^Cannot access offset ''all'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Cannot access offset ''create'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Cannot access offset ''name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Cannot access offset ''type'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Cannot access offset ''update'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Cannot access offset int\|string on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
 			message: '#^Cannot call method addProperty\(\) on mixed\.$#'
 			identifier: method.nonObject
-			count: 32
+			count: 25
 			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
 
 		-
@@ -3298,158 +3059,15 @@ parameters:
 			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:buildRelationMutationType\(\) should return Dedoc\\Scramble\\Support\\Generator\\Types\\Type but returns mixed\.$#'
-			identifier: return.type
-			count: 2
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:buildRelationsDescription\(\) has parameter \$relations with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:buildRuleDescription\(\) has parameter \$fieldRules with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:documentMutate\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:documentMutate\(\) has parameter \$relations with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:documentMutate\(\) has parameter \$rules with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:documentSearch\(\) has parameter \$relations with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:extractAllRules\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:resolveFieldType\(\) has parameter \$rules with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 2
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Parameter \#1 \$array of function array_filter expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Parameter \#1 \$fieldRules of method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:buildRuleDescription\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Parameter \#1 \$name of method Dedoc\\Scramble\\Support\\Generator\\Types\\ObjectType\:\:addProperty\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Parameter \#1 \$relationType of method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:buildRelationMutationType\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
 			message: '#^Parameter \#1 \$type of static method Dedoc\\Scramble\\Support\\Generator\\Schema\:\:fromType\(\) expects Dedoc\\Scramble\\Support\\Generator\\Types\\Type, mixed given\.$#'
 			identifier: argument.type
-			count: 4
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Parameter \#1 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
-			identifier: argument.type
-			count: 1
+			count: 3
 			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
 
 		-
 			message: '#^Parameter \#2 \$schema of method Dedoc\\Scramble\\Support\\Generator\\RequestBodyObject\:\:setContent\(\) expects Dedoc\\Scramble\\Support\\Generator\\Reference\|Dedoc\\Scramble\\Support\\Generator\\Schema, mixed given\.$#'
 			identifier: argument.type
 			count: 4
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Parameter \#3 \$operationRules of static method Lomkit\\Rest\\Fields\\WriteRules\:\:of\(\) expects array\<mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Parameter \#3 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Part \$rel\[''name''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Part \$rel\[''type''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Part \$relation\[''type''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
-			identifier: encapsedStringPart.nonString
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
-			count: 1
 			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
 
 		-

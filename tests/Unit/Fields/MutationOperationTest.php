@@ -32,6 +32,26 @@ class MutationOperationTest extends TestCase
     }
 
     #[Test]
+    #[DataProvider('pivotWrites')]
+    public function it_maps_each_operation_to_the_write_of_its_pivot_row(MutationOperation $operation, ?WriteOperation $write): void
+    {
+        $this->assertSame($write, $operation->pivotWriteOperation());
+    }
+
+    /** @return array<string, array{MutationOperation, ?WriteOperation}> */
+    public static function pivotWrites(): array
+    {
+        return [
+            'create' => [MutationOperation::Create, WriteOperation::Create],
+            'attach' => [MutationOperation::Attach, WriteOperation::Create],
+            'update' => [MutationOperation::Update, WriteOperation::Update],
+            'sync' => [MutationOperation::Sync, WriteOperation::Update],
+            'toggle' => [MutationOperation::Toggle, WriteOperation::Update],
+            'detach' => [MutationOperation::Detach, null],
+        ];
+    }
+
+    #[Test]
     #[DataProvider('entries')]
     public function it_reads_the_operation_of_a_payload_entry(mixed $entry, ?MutationOperation $expected): void
     {

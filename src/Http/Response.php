@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Contracts\PivotRelation;
+use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Relations\Relation;
 
 class Response implements Responsable
@@ -117,9 +119,11 @@ class Response implements Responsable
                             $key => null,
                         ];
                     } elseif ($modelRelation instanceof Pivot) {
+                        $pivotFields = $relation instanceof PivotRelation ? $relation->getPivotFields() : FieldSet::of([]);
+
                         return [
                             $key => collect($modelRelation->toArray())
-                                ->only($relation->getPivotFields())
+                                ->only($pivotFields->selectable()->names())
                                 ->toArray(),
                         ];
                     }
