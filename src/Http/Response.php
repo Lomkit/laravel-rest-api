@@ -218,12 +218,6 @@ class Response implements Responsable
         ];
     }
 
-    /**
-     * This map on each model returned by the API, use it at your ease.
-     *
-     * @var Model
-     * @var array
-     */
     protected function map(Model $model, array $responseModel): array
     {
         return $responseModel;

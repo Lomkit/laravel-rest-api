@@ -2,38 +2,20 @@
 
 namespace Lomkit\Rest\Console\Commands;
 
-use Illuminate\Console\GeneratorCommand;
+use Lomkit\Rest\Console\Generation\Stub;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 #[AsCommand(name: 'rest:base-controller', description: 'Create a new base controller class', hidden: true)]
-class BaseControllerMakeCommand extends GeneratorCommand
+class BaseControllerMakeCommand extends RestGeneratorCommand
 {
     protected $type = 'Base Controller';
 
-    /**
-     * Get the stub file for the generator.
-     */
     #[\Override]
-    protected function getStub(): string
+    protected function stub(): Stub
     {
-        return $this->resolveStubPath('/../stubs/base-controller.stub');
+        return Stub::BaseController;
     }
 
-    /**
-     * Resolve the fully-qualified path to the stub.
-     */
-    protected function resolveStubPath(string $stub): string
-    {
-        return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
-                        ? $customPath
-                        : __DIR__.$stub;
-    }
-
-    /**
-     * Get the default namespace for the class.
-     *
-     * @param  string  $rootNamespace
-     */
     #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {

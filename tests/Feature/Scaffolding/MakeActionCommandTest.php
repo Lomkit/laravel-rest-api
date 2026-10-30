@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
 use App\Rest\Actions\ScaffoldedAction;
 use Lomkit\Rest\Actions\Action;
-use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -12,20 +11,17 @@ use PHPUnit\Framework\Attributes\Test;
 class MakeActionCommandTest extends ScaffoldingTestCase
 {
     #[Test]
-    public function it_writes_an_action_class_that_declares_typed_fields(): void
+    public function it_writes_an_action_class_without_input_fields(): void
     {
-        $this->artisan('rest:action', ['name' => 'ScaffoldedAction'])->assertSuccessful();
+        $this->artisan('rest:action', ['name' => 'ScaffoldedAction'])
+            ->expectsOutputToContain('Action [app/Rest/Actions/ScaffoldedAction.php] created successfully.')
+            ->assertSuccessful();
 
-        $path = app_path('Rest/Actions/ScaffoldedAction.php');
-        $this->assertFileExists($path);
-        require_once $path;
+        $this->loadGeneratedClass(ScaffoldedAction::class);
 
         $action = new ScaffoldedAction;
 
         $this->assertInstanceOf(Action::class, $action);
-        $this->assertSame(
-            [['name' => 'id', 'type' => 'id', 'nullable' => false, 'default' => null, 'rules' => ['integer', 'required'], 'meta' => []]],
-            InputFieldDetails::forFields($action->getFields(new RestRequest)),
-        );
+        $this->assertSame([], $action->fields(new RestRequest));
     }
 }

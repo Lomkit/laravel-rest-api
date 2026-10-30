@@ -15,6 +15,7 @@ use Lomkit\Rest\Console\Commands\InstructionMakeCommand;
 use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceMakeCommand;
 use Lomkit\Rest\Console\Commands\ResponseMakeCommand;
+use Lomkit\Rest\Console\Generation\Stub;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -70,14 +71,14 @@ class RestServiceProvider extends ServiceProvider
 
     protected function registerStubs(): void
     {
-        Event::listen(function (PublishingStubs $event) {
-            $event->add(realpath(__DIR__.'/Console/stubs/action.stub'), 'rest.action.stub');
-            $event->add(realpath(__DIR__.'/Console/stubs/base-controller.stub'), 'rest.base-controller.stub');
-            $event->add(realpath(__DIR__.'/Console/stubs/base-resource.stub'), 'rest.base-resource.stub');
-            $event->add(realpath(__DIR__.'/Console/stubs/controller.stub'), 'rest.controller.stub');
-            $event->add(realpath(__DIR__.'/Console/stubs/instruction.stub'), 'rest.instruction.stub');
-            $event->add(realpath(__DIR__.'/Console/stubs/resource.stub'), 'rest.resource.stub');
-            $event->add(realpath(__DIR__.'/Console/stubs/response.stub'), 'rest.response.stub');
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        Event::listen(function (PublishingStubs $event): void {
+            foreach (Stub::cases() as $stub) {
+                $event->add($stub->packagePath(), $stub->publishedName());
+            }
         });
     }
 

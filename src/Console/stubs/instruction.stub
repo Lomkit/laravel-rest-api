@@ -2,24 +2,21 @@
 
 namespace {{ namespace }};
 
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction as RestInstruction;
 
 class {{ class }} extends RestInstruction
 {
-    /**
-     * @param  array<string, mixed>  $fields
-     * @param  \Illuminate\Database\Eloquent\Builder<\Illuminate\Database\Eloquent\Model>  $query
-     */
-    public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query): void
+    #[\Override]
+    public function handle(array $fields, Builder $query): void
     {
         // ...
     }
 
-    /** @return list<\Lomkit\Rest\Fields\Field> */
-    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    #[\Override]
+    public function fields(RestRequest $request): array
     {
-        return [
-            \Lomkit\Rest\Fields\ID::make('id')->rules('required'),
-        ];
+        return [];
     }
 }

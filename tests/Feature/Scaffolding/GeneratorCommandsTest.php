@@ -19,6 +19,8 @@ class GeneratorCommandsTest extends PackageTestCase
         $this->assertSame($description, $command->getDescription());
         $this->assertSame($hidden, $command->isHidden());
         $this->assertTrue($command->getDefinition()->hasArgument('name'));
+        $this->assertSame('f', $command->getDefinition()->getOption('force')->getShortcut());
+        $this->assertFalse($command->getDefinition()->getOption('force')->acceptValue());
     }
 
     /** @return array<string, array{string, string, bool}> */
