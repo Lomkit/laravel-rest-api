@@ -4,27 +4,23 @@ namespace Lomkit\Rest\Query\Traits;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Requests\MutateRequest;
+use Lomkit\Rest\Query\AttributeWriter;
 
 trait PerformMutation
 {
-    /**
-     * A map of verbose mutation operations to their actual operation names.
-     *
-     * @var array
-     */
-    protected $mutateOperationsVerbose = [
+    /** @var array<string, string> */
+    protected array $mutateOperationsVerbose = [
         'create' => 'created',
         'update' => 'updated',
     ];
 
     /**
-     * Mutate the model based on the provided parameters.
-     *
-     * @param  array  $parameters  An array of mutation parameters.
-     * @return array<string, mixed> An array containing 'created' and 'updated' operations with affected model keys.
+     * @param  array<string, mixed>  $parameters
+     * @return array<string, list<int|string>>
      */
-    public function mutate(array $parameters = [])
+    public function mutate(array $parameters = []): array
     {
         $operations = [
             'created' => [],
@@ -39,17 +35,12 @@ trait PerformMutation
     }
 
     /**
-     * Apply a mutation to the model based on the provided mutation parameters.
-     *
-     * @param  array  $mutation  An array of mutation parameters.
-     * @param  array  $attributes  Additional attributes to apply to the model.
-     * @return Model The mutated model.
+     * @param  array<string, mixed>  $mutation
+     * @param  array<string, mixed>  $attributes
      */
-    public function applyMutation(array $mutation = [], $attributes = [], $key = null)
+    public function applyMutation(array $mutation = [], array $attributes = [], int|string|null $key = null): Model
     {
-        $allAttributes = array_merge($attributes, $mutation['attributes'] ?? []);
-
-        if ($mutation['operation'] === 'create') {
+        if (MutationOperation::from($mutation['operation']) === MutationOperation::Create) {
             $this->resource->context()->authorizer()->ensurePlanned(Check::onClass($this->resource, 'create'));
 
             $model = $this->resource::newModel();
@@ -61,57 +52,46 @@ trait PerformMutation
 
         return $this->mutateModel(
             $model,
-            $allAttributes,
-            $mutation
+            $mutation['attributes'] ?? [],
+            $mutation,
+            $attributes
         );
     }
 
-    /**
-     * Resolve the ability required to perform the given mutation.
-     *
-     * sync and toggle persist caller-supplied attributes onto the related model,
-     * so they must authorize as an update rather than a view.
-     *
-     * @param  array  $mutation  An array of mutation parameters.
-     * @return string The ability to authorize.
-     */
-    protected function mutationAbility(array $mutation)
+    /** @param array<string, mixed> $mutation */
+    protected function mutationAbility(array $mutation): string
     {
+        $operation = MutationOperation::from($mutation['operation']);
+
         return match (true) {
-            $mutation['operation'] === 'create' => 'create',
-            $mutation['operation'] === 'update' => 'update',
-            ! empty($mutation['attributes']) => 'update',
+            $operation === MutationOperation::Create, $operation === MutationOperation::Update => $operation->value,
+            ! empty($mutation['attributes']) => $operation->writeOperation()->value ?? 'view',
             default => 'view',
         };
     }
 
     /**
-     * Apply a mutation to the model based on the provided mutation parameters.
-     *
-     * @param  array  $mutation  An array of mutation parameters.
-     * @param  array  $attributes  Additional attributes to apply to the model.
-     * @return array<int, Model> The mutated model.
+     * @param  array<string, mixed>  $mutation
+     * @param  array<string, mixed>  $attributes
+     * @return list<Model>
      */
-    public function mutations(array $mutation = [], $attributes = [])
+    public function mutations(array $mutation = [], array $attributes = []): array
     {
         $keys = $mutation['key'] ?? [];
-        $keys = is_array($keys) ? $keys : [$keys];
+        $keys = is_array($keys) ? array_values($keys) : [$keys];
 
         return array_map(
-            fn ($key) => $this->applyMutation($mutation, $attributes, $key),
+            fn (int|string $key): Model => $this->applyMutation($mutation, $attributes, $key),
             $keys
         );
     }
 
     /**
-     * Mutate the model by applying attributes and relations.
-     *
-     * @param  Model  $model  The Eloquent model to mutate.
-     * @param  array  $attributes  The attributes to mutate.
-     * @param  array  $mutation  The mutation array.
-     * @return Model The mutated model.
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $mutation
+     * @param  array<string, mixed>  $owned
      */
-    public function mutateModel(Model $model, array $attributes, array $mutation)
+    public function mutateModel(Model $model, array $attributes, array $mutation, array $owned = []): Model
     {
         /** @var MutateRequest $request */
         $request = $this->resource->context()->request;
@@ -119,9 +99,7 @@ trait PerformMutation
 
         $restRelations = array_filter(
             $this->resource->getRelations($request),
-            function ($relation) use ($relations) {
-                return isset($relations[$relation->relation]);
-            }
+            fn ($relation): bool => isset($relations[$relation->relation])
         );
 
         foreach ($restRelations as $restRelation) {
@@ -132,8 +110,14 @@ trait PerformMutation
             ->resource
             ->mutating($request, $mutation, $model);
 
-        $model
-            ->forceFill($attributes)
+        $relationKeys = [];
+
+        foreach ($restRelations as $restRelation) {
+            $relationKeys = [...$relationKeys, ...$restRelation->ownedAttributes($model)];
+        }
+
+        (new AttributeWriter($this->resource->getFields($request)))
+            ->write($model, MutationOperation::from($mutation['operation']), $attributes, [...$relationKeys, ...$owned])
             ->save();
 
         $this->resource->context()->authorizer()->forget($model);

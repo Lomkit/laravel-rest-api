@@ -7,8 +7,11 @@ use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\ScrambleServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
+use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\UndeclaredResourceController;
+use Lomkit\Rest\Tests\Feature\Scramble\Stubs\ImmutableTagController;
+use Lomkit\Rest\Tests\Feature\Scramble\Stubs\TagController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -84,6 +87,55 @@ class ScrambleDocumentTest extends PackageTestCase
         $this->assertSame(['create', 'update', 'attach', 'detach'], $products['category']['properties']['operation']['enum']);
         $this->assertSame(['create', 'update', 'attach', 'detach'], $categories['products']['items']['properties']['operation']['enum']);
         $this->assertSame(['create', 'update', 'attach', 'detach', 'sync', 'toggle'], $categories['featuredProducts']['items']['properties']['operation']['enum']);
+    }
+
+    #[Test]
+    public function it_documents_the_rules_of_the_writable_fields_in_the_mutate_body(): void
+    {
+        $attributes = $this->body($this->operation('/posts/mutate', 'post'))['properties']['mutate']['items']['properties']['attributes'];
+
+        $writable = 'title, summary, status, featured, views, rating, published_on, published_at, metadata';
+        $this->assertSame([
+            'type' => 'object',
+            'description' => 'Writable on create: '.$writable.'. Writable on update: '.$writable.'.',
+            'properties' => [
+                'title' => ['type' => 'string', 'description' => 'create: string, max:60, required | update: string, max:60, filled'],
+                'summary' => ['type' => 'string', 'description' => 'create: nullable, string | update: nullable, string'],
+                'status' => ['type' => 'string', 'description' => 'create: required'],
+                'featured' => ['type' => 'boolean', 'description' => 'create: boolean | update: boolean'],
+                'views' => ['type' => 'integer', 'description' => 'create: integer, min:0 | update: integer, min:0'],
+                'rating' => ['type' => 'number', 'description' => 'create: nullable, numeric | update: nullable, numeric'],
+                'published_on' => ['type' => 'string', 'description' => 'create: date, required | update: date'],
+                'published_at' => ['type' => 'string', 'description' => 'create: nullable, date, after_or_equal:published_on | update: nullable, date, after_or_equal:published_on'],
+                'metadata' => ['type' => 'array', 'description' => 'create: nullable, array | update: nullable, array', 'items' => ['type' => 'string']],
+            ],
+        ], $attributes);
+    }
+
+    #[Test]
+    public function it_documents_only_the_writable_fields_in_the_mutate_body(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('tags', TagController::class)->register());
+
+        $authors = $this->body($this->operation('/authors/mutate', 'post'))['properties']['mutate']['items']['properties']['attributes'];
+        $tags = $this->body($this->operation('/tags/mutate', 'post'))['properties']['mutate']['items']['properties']['attributes'];
+
+        $this->assertSame(['first_name', 'last_name', 'full_name', 'api_token', 'settings'], array_keys($authors['properties']));
+        $this->assertSame(['name', 'slug', 'archived_at'], array_keys($tags['properties']));
+        $this->assertSame('Writable on create: name, slug. Writable on update: name, archived_at.', $tags['description']);
+        $this->assertSame(['type' => 'string', 'description' => 'create: string'], $tags['properties']['slug']);
+        $this->assertSame(['type' => 'string', 'description' => 'update: nullable, date'], $tags['properties']['archived_at']);
+    }
+
+    #[Test]
+    public function it_documents_an_operation_that_writes_no_field(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('immutable-tags', ImmutableTagController::class)->register());
+
+        $tags = $this->body($this->operation('/immutable-tags/mutate', 'post'))['properties']['mutate']['items']['properties']['attributes'];
+
+        $this->assertSame(['name'], array_keys($tags['properties']));
+        $this->assertSame('Writable on create: name. Writable on update: none.', $tags['description']);
     }
 
     #[Test]

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo as EloquentMorphTo;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\RelationResource;
 
@@ -37,5 +38,21 @@ class MorphTo extends MorphRelation implements RelationResource
             ->{$mutationRelations[$relation->relation]['operation'] === 'detach' ? 'dissociate' : 'associate'}(
                 $toPerformActionModel
             );
+    }
+
+    /** @return array<string, mixed> */
+    #[\Override]
+    public function ownedAttributes(Model $model): array
+    {
+        $relation = $model->{$this->relation}();
+
+        if (! $relation instanceof EloquentMorphTo) {
+            return [];
+        }
+
+        return [
+            $relation->getForeignKeyName() => $model->getAttribute($relation->getForeignKeyName()),
+            $relation->getMorphType() => $model->getAttribute($relation->getMorphType()),
+        ];
     }
 }

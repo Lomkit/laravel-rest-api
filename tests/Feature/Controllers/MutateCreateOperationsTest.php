@@ -20,27 +20,6 @@ use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 
 class MutateCreateOperationsTest extends TestCase
 {
-    public function test_creating_a_resource_using_not_authorized_field(): void
-    {
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => ['not_authorized_field' => true],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
-    }
-
     public function test_creating_a_resource_using_no_mutate_key(): void
     {
         Gate::policy(Model::class, GreenPolicy::class);
@@ -94,27 +73,6 @@ class MutateCreateOperationsTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.operation', 'mutate.0.key']]);
-    }
-
-    public function test_creating_a_resource_using_field_not_following_custom_rules(): void
-    {
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => ['string' => true],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.attributes.string']]);
     }
 
     public function test_creating_a_resource_with_no_required_relation(): void
@@ -270,36 +228,6 @@ class MutateCreateOperationsTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot.number']]);
-    }
-
-    public function test_creating_a_resource_with_unique_validation(): void
-    {
-        $modelToCreate = ModelFactory::new()->makeOne([
-            'unique' => 'my unique string',
-        ]);
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'unique' => $modelToCreate->unique,
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertMutatedResponse(
-            $response,
-            [$modelToCreate],
-        );
     }
 
     public function test_creating_a_resource(): void

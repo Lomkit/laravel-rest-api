@@ -127,6 +127,24 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
 
   - Selectable fields (not `writeOnly()`, not `selectable(false)`, not `virtual()`) are the only ones `selects` accepts and the ones a row returns without `selects`, at every include level. Virtual fields cannot be selected yet; `requires()` has no effect yet.
   - Sortable fields are the only ones `sorts` accepts: `Json`, `sortable(false)`, `writeOnly()` fields and `virtual()` fields without `sortUsing()` are refused. `sortUsing()` replaces the column order of its field (and makes a virtual or write-only field sortable); its callback receives the Eloquent query, on an include as well, and `asc` or `desc`. The other fields order by their qualified column (`posts.views`).
+
+  How a mutation writes a field depends on its declaration too (see the `mutate` payload below):
+
+  ```php
+  use Illuminate\Database\Eloquent\Model;
+  use Illuminate\Support\Str;
+
+  ID::make('id'),                                      // refused on create and update
+  ID::make('uuid')->creatable(),                       // a key the client sends on create
+  Text::make('title')->rules('max:255')->creationRules('required')->updateRules('filled'),
+  Number::make('rating')->nullable(),                  // a number or null
+  DateTime::make('created_at')->readonly(),            // refused on create and update
+  Text::make('slug')->updatable(false),                // written on create only
+  Text::make('full_name')->virtual()                   // written through its callback only
+      ->fillUsing(function (Model $author, mixed $value): void {
+          $author->forceFill(['first_name' => Str::before((string) $value, ' '), 'last_name' => Str::after((string) $value, ' ')]);
+      }),
+  ```
 - `relations()` — array of `Lomkit\Rest\Relations\*` instances declared with `::make('relationName', TargetResource::class)`. Only declared relations are includable/mutatable.
 - `scopes()` — `Lomkit\Rest\Scopes\Scope` objects naming the model's local scopes (`scopeX()` methods or `#[Scope]` methods) the client may invoke. Builder methods and macros such as `withTrashed` cannot be called as scopes. `fields()` declares the scope parameters, in the order of the scope method's arguments; strings throw `InvalidScopeException`.
 
@@ -145,7 +163,7 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
 - `limits()` — allowed pagination `limit` values (default `[10, 25, 50]`; `$defaultLimit` property is `50`).
 - `actions()` — `Lomkit\Rest\Actions\Action` instances exposed under `/actions/{uriKey}`.
 - `instructions()` — `Lomkit\Rest\Instructions\Instruction` instances exposed under the `instructions` search key.
-- `rules(RestRequest $request): array`, `createRules(...): array`, `updateRules(...): array` — validation rules applied during mutate (`createRules`/`updateRules` are merged with `rules`).
+- `rules(RestRequest $request): array`, `createRules(...): array`, `updateRules(...): array` — resource-level rules applied during mutate, for rules that compare attributes and for nested keys (`metadata.source`). Put the rules of one attribute on its field instead. Each key gets one list: the field rules, then `createRules()` (on `create`) or `updateRules()` (on `update`, `sync`, `toggle`), then `rules()`; pipe strings are split first.
 - `defaultOrderBy()` — default sort (defaults to `['id' => 'desc']`).
 - Resource hooks (model-lifecycle): `mutating`, `mutated`, `destroying`, `destroyed`, `forceDestroying`, `forceDestroyed`, `restoring`, `restored`. Signatures: `mutating(MutateRequest $request, array $requestBody, Model $model): void`; the others take the endpoint's request and the model, e.g. `destroying(DestroyRequest $request, Model $model): void`.
 
@@ -366,11 +384,18 @@ Per-item keys:
 | Key | Type | Used by | Purpose |
 | --- | --- | --- | --- |
 | `operation` | string | all | `create`, `update`; in `relations` also `attach`, `detach`, and `sync`, `toggle` on many-to-many relations only |
-| `attributes` | object | create / update | Field values; whitelisted by `fields()` and validated by `rules()` |
+| `attributes` | object | create / update / sync / toggle | Field values; only the fields the operation can write, validated by the field rules and the resource rules |
 | `key` | int / string / array | update / attach / detach / sync / toggle | Target model id(s) |
 | `relations` | object | all | Map of `relationName → [operation objects]` (recursive) |
 | `pivot` | object | many-to-many `attach`/`sync`/`toggle` | Pivot column values |
 | `without_detaching` | bool | `sync` | When `true`, behaves like `syncWithoutDetaching` |
+
+Writes go through the fields:
+
+- `create` accepts the creatable fields, and `update`, `sync` and `toggle` accept the updatable fields (`Lomkit\Rest\Fields\MutationOperation::writeOperation()` maps the operation). Fields are creatable and updatable by default; `ID` and `readonly()` fields are not, so declare `->creatable()` on a key the client sends (a UUID). `writeOnly()` fields are accepted; a `virtual()` field only with `fillUsing(Closure(Model, mixed): void)`, which runs after the other fields of the entry. Another key is a `422` under `{entry}.attributes`: `The created_at attribute is not writable on create.` (`on update.` for `sync` and `toggle`), with or without Precognition.
+- Each attribute is validated by its field: the type's base rule (`null` refused unless `nullable()`, arrays refused except on `Json`), `rules()`, and `creationRules()` or `updateRules()`. A rule naming another declared field (`required_if:featured,true`, `after_or_equal:published_on`) compares with that attribute in the same entry.
+- In a nested write, the keys the relation sets win over the entry's attributes: the parent key and morph type (`getMorphClass()`, so morph map aliases) of `HasOne`, `HasOneOfMany`, `HasMany`, `MorphOne`, `MorphOneOfMany`, `MorphMany`, and the foreign key and morph type that `BelongsTo` and `MorphTo` associate. The parent relation's keys win over the entry's own `BelongsTo` or `MorphTo`, and the `BelongsTo` and `MorphTo` keys are read after the `mutating()` hook, so a key the hook associates is kept.
+- A custom relation lists its operations as `MutationOperation` cases in `mutationOperations()`, and returns the keys it sets in `beforeMutating()` from `ownedAttributes(Model $model): array`.
 
 **Response**: grouped affected ids — `{"created": [72979], "updated": [7, 12], ...}`. Do **not** expect the full models back; re-query via `search` if you need them.
 
@@ -610,7 +635,7 @@ composer require dedoc/scramble:^0.13
 
 The package registers the extension itself: `config/scramble.php` needs no change.
 
-Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources.
+Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`.
 
 ## Precognition
 
@@ -647,9 +672,9 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Concerns/Resource/*` (`DisableGates`, `DisableAuthorizationsCache`, hooks, ...)
 - Authorization — `src/Authorization/*` (`Authorizer`, `Check`, `Decision`, `Denial`, `DecisionMemo` and the decision stores), `src/Concerns/Authorizable.php`, `src/Exceptions/{AuthorizationDenied,DenialsRenderer,UnplannedCheckException}.php`; the checks made before validation are collected by the rule nodes (`RuleCompiler::reach()`) and run by `RestRequest::passesAuthorization()`
-- Query layer — `src/Query/Builder.php`, `src/Query/ScoutBuilder.php`
+- Query layer — `src/Query/Builder.php`, `src/Query/ScoutBuilder.php`, and `src/Query/AttributeWriter.php`, which fills a model from the writable fields of a mutation
 - Actions / Instructions / Scopes — `src/Actions/{Action,Actionable}.php`, `src/Instructions/{Instruction,Instructionable}.php`, `src/Scopes/Scope.php`
-- Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `InputValues`, `Details/InputFieldDetails`), clauses in `src/Query/Clauses/`
+- Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `InputValues`, `MutationOperation`, `WriteRules`, `Details/InputFieldDetails`), clauses in `src/Query/Clauses/`
 - Relations — `src/Relations/*.php`
 - Validation rules used to validate the request bodies — `src/Rules/{Search,Mutate,Input,Resource}/*`, compiled into one rule set per request by `src/Validation/RuleCompiler.php`
 - Scramble extension — `src/Scramble/LomkitLaravelRestApiOperationExtension.php`

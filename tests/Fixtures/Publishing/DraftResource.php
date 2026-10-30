@@ -15,7 +15,7 @@ class DraftResource extends Resource
     public function fields(RestRequest $request): array
     {
         return [
-            ID::make('id'),
+            ID::make('id')->creatable(),
             Text::make('title'),
         ];
     }

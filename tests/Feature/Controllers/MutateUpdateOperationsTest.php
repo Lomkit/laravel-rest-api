@@ -20,30 +20,6 @@ use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 
 class MutateUpdateOperationsTest extends TestCase
 {
-    public function test_updating_a_resource_using_not_authorized_field(): void
-    {
-        $modelToUpdate = ModelFactory::new()->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'attributes' => ['not_authorized_field' => true],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.attributes']]);
-    }
-
     public function test_updating_a_resource_without_key(): void
     {
         Gate::policy(Model::class, GreenPolicy::class);

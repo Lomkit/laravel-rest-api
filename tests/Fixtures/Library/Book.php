@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 #[Unguarded]
@@ -31,6 +32,11 @@ class Book extends Model
     public function latestLabel(): MorphOne
     {
         return $this->morphOne(Label::class, 'labelable')->latestOfMany();
+    }
+
+    public function labels(): MorphMany
+    {
+        return $this->morphMany(Label::class, 'labelable');
     }
 
     public function shelves(): BelongsToMany

@@ -82,7 +82,7 @@ class DottedKeysTest extends PackageTestCase
         ]]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.a.b.attributes' => ['The created_at key is not valid for the mutate.a.b.attributes field.'],
+            'mutate.a.b.attributes' => ['The created_at attribute is not writable on create.'],
         ]);
         $this->assertSame(0, Product::query()->count());
     }
@@ -100,7 +100,7 @@ class DottedKeysTest extends PackageTestCase
         ]]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.relations.products.a.b.attributes' => ['The created_at key is not valid for the mutate.0.relations.products.a.b.attributes field.'],
+            'mutate.0.relations.products.a.b.attributes' => ['The created_at attribute is not writable on create.'],
         ]);
         $this->assertSame(0, Category::query()->count());
         $this->assertSame(0, Product::query()->count());

@@ -2,8 +2,10 @@
 
 namespace Lomkit\Rest\Rules\Mutate;
 
+use Closure;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Rules\ArrayWithKey;
 use Lomkit\Rest\Rules\Resource\ResourceCustomRules;
@@ -18,7 +20,7 @@ class Mutate extends RestRule
     #[\Override]
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
     {
-        if (is_array($value) && ($value['operation'] ?? null) === 'create') {
+        if (MutationOperation::tryFromEntry($value) === MutationOperation::Create) {
             $into->reach(Check::onClass($this->resource, 'create', $attribute));
         }
 
@@ -39,7 +41,8 @@ class Mutate extends RestRule
     {
         $request = $this->resource->context()->request;
         $model = $this->resource::newModel();
-        $operations = $this->relation?->mutationOperations() ?? ['create', 'update'];
+        $operations = $this->relation?->mutationOperations() ?? [MutationOperation::Create, MutationOperation::Update];
+        $write = MutationOperation::tryFromEntry($value)?->writeOperation();
 
         return [
             $attribute => [
@@ -48,26 +51,21 @@ class Mutate extends RestRule
             ],
             $attribute.'.operation' => [
                 'required',
-                Rule::in($operations),
+                Rule::enum(MutationOperation::class)->only($operations),
             ],
             $attribute.'.attributes' => [
                 'array',
-                'prohibited_if:'.$attribute.'.operation,attach',
-                'prohibited_if:'.$attribute.'.operation,detach',
-                new ArrayWithKey($this->resource->getFields($request)->names()),
+                ...self::whenOperation('prohibited_if', $attribute, fn (MutationOperation $operation): bool => $operation->writeOperation() === null),
+                ...($write === null ? [] : [new WritableAttributes($this->resource->getFields($request), $write)]),
             ],
             $attribute.'.key' => [
-                'present_if:'.$attribute.'.operation,update',
-                'present_if:'.$attribute.'.operation,attach',
-                'present_if:'.$attribute.'.operation,detach',
-                'present_if:'.$attribute.'.operation,toggle',
-                'present_if:'.$attribute.'.operation,sync',
-                'prohibited_if:'.$attribute.'.operation,create',
+                ...self::whenOperation('present_if', $attribute, fn (MutationOperation $operation): bool => $operation->requiresKey()),
+                ...self::whenOperation('prohibited_if', $attribute, fn (MutationOperation $operation): bool => ! $operation->requiresKey()),
                 Rule::exists($model::class, $model->getKeyName()),
             ],
             $attribute.'.without_detaching' => [
                 'boolean',
-                'prohibited_unless:'.$attribute.'.operation,sync',
+                'prohibited_unless:'.$attribute.'.operation,'.MutationOperation::Sync->value,
             ],
             $attribute.'.relations' => [
                 'sometimes',
@@ -76,5 +74,17 @@ class Mutate extends RestRule
             ],
             $attribute.'.relations.*' => (new MutateRelation($this->depth))->setResource($this->resource),
         ];
+    }
+
+    /**
+     * @param  Closure(MutationOperation): bool  $applies
+     * @return list<string>
+     */
+    private static function whenOperation(string $rule, string $attribute, Closure $applies): array
+    {
+        return array_values(array_map(
+            fn (MutationOperation $operation): string => $rule.':'.$attribute.'.operation,'.$operation->value,
+            array_filter(MutationOperation::cases(), $applies),
+        ));
     }
 }

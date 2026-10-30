@@ -420,6 +420,60 @@ Scramble:
 
 - The search body documents the sortable fields under `sorts` and the selectable fields under `selects`, with the values of `SortDirection` and `AggregateFunction`.
 
+### Writes
+
+A mutation writes each attribute through its field: the field decides whether the operation can write it, which rules validate it and how the model is filled.
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+
+ID::make('id'),                                    // refused on create and update
+ID::make('uuid')->creatable(),                     // a key that clients send on create
+Text::make('title')->rules('max:255')->creationRules('required'),
+Number::make('rating')->nullable(),                // a number or null
+DateTime::make('created_at')->readonly(),          // refused on create and update
+Text::make('slug')->updatable(false),              // written on create only
+Text::make('api_token')->writeOnly(),              // written, never returned
+Text::make('full_name')->virtual()
+    ->fillUsing(function (Model $author, mixed $value): void {
+        $author->forceFill([
+            'first_name' => Str::before((string) $value, ' '),
+            'last_name' => Str::after((string) $value, ' '),
+        ]);
+    }),
+```
+
+Attributes:
+
+- `attributes` accepts only the fields that the operation can write: the creatable fields on `create`, and the updatable fields on `update`, `sync` and `toggle`. A field is creatable and updatable by default. `ID` fields and fields declared `readonly()` are refused: declare `->creatable()` on a key that clients send, such as a UUID. `creatable(false)` and `updatable(false)` refuse a field on one operation. A `writeOnly()` field is accepted.
+- A `virtual()` field is refused unless it declares `fillUsing()`. The callback receives the model and the value and fills the model. It runs after the other fields of the entry are filled.
+- An attribute that the operation cannot write gives a 422 under the `attributes` key of the entry, as an undeclared attribute did. The message changes for both: `The created_at attribute is not writable on create.` On `sync` and `toggle`, it ends with `on update.` Precognition responses change the same way.
+- The model is filled with the writable fields of the operation only, field by field, after the `mutating()` hook.
+
+Rules:
+
+- The rules of each writable field validate its attribute: the base rule of its type, `nullable`, `rules()`, and `creationRules()` on `create` or `updateRules()` on `update`, `sync` and `toggle`. The base rule now applies to mutations: `null` is refused unless the field is `nullable()`, and an array is refused except on a `Json` field. For example, a `Text` field needs a string, an `Integer` field an integer, an `Enum` field a value of its enum, and a `Date` or `DateTime` field a date.
+- The resource rules still apply, for rules that compare attributes and for nested keys such as `metadata.source`. Each key gets one list: the field rules, then `createRules()` or `updateRules()`, then `rules()`. Pipe strings are split before the merge, so `'string|min:3'` in `rules()` and `'required'` in `createRules()` give `['required', 'string', 'min:3']`. Before, the resource rules were merged with `array_merge_recursive()`, which left a pipe string unsplit next to another rule of the same key.
+- A rule that names another attribute, such as `required_if:featured,true` or `after_or_equal:published_on`, compares with that attribute in the same entry, `mutate.0.attributes.featured`, when the resource declares a field of that name. Before, it read the key of that name at the root of the payload.
+
+Nested writes:
+
+- The keys that the parent relation sets win over the attributes of the same name. On `HasOne`, `HasOneOfMany`, `HasMany`, `MorphOne`, `MorphOneOfMany` and `MorphMany`, the entry gets the key of the parent, and on the morph relations its morph type, also when the entry sends its own `BelongsTo` or `MorphTo` relation to another parent. On `BelongsTo` and `MorphTo`, the foreign key and the morph type that the relation sets win over the attributes of the entry. They are read after the `mutating()` hook, so a key that the hook sets on such a relation, for example with `associate()`, is the one written. Before, an attribute such as `category_id` replaced them.
+- `MorphOne`, `MorphOneOfMany` and `MorphMany` write the morph type with `getMorphClass()`: with a morph map, they write the alias instead of the class name, as `MorphTo` does.
+
+Custom relations and query builders:
+
+- `Lomkit\Rest\Fields\MutationOperation` lists the operations: `create`, `update`, `attach`, `detach`, `sync` and `toggle`. `Relation::mutationOperations()` returns a list of its cases instead of strings, for example `[MutationOperation::Create, MutationOperation::Attach]`.
+- `mutateModel(Model $model, array $attributes, array $mutation, array $owned = [])` takes a fourth parameter, which an override must declare too. `$attributes` holds the attributes of the entry and is written through the writable fields: a key that is not a writable field is not written. `$owned` holds the keys that relations set, written last.
+- In `applyMutation($mutation, $attributes, $key)` and `mutations($mutation, $attributes)`, `$attributes` holds the keys that the parent relation sets. They are written after the attributes of the entry.
+- The mutation methods of `Lomkit\Rest\Query\Builder` declare native types, and the `EloquentQueryBuilder` contract declares the same: `mutate(array $parameters = []): array`, `applyMutation(array $mutation = [], array $attributes = [], int|string|null $key = null): Model`, `mutations(array $mutation = [], array $attributes = []): array` and `mutateModel(Model $model, array $attributes, array $mutation, array $owned = []): Model`; `mutationAbility(array $mutation): string` is protected and `$mutateOperationsVerbose` is a typed `array`. An override or an implementation of the contract must declare compatible types.
+- A relation that sets keys of the model in `beforeMutating()` returns them from `ownedAttributes(Model $model): array`, as `BelongsTo` and `MorphTo` do, so that they are written after the attributes. It is called after the `mutating()` hook, and the keys of the parent relation win over the keys it returns. The default returns `[]`.
+
+Scramble:
+
+- The `attributes` of the mutate body list the writable fields only, with their field rules and the resource rules for `create` and `update`. The description of `attributes` names the fields writable on each operation.
+
 ### Framework integration
 
 - `Lomkit\Rest\Http\Controllers\Controller` no longer extends `Illuminate\Routing\Controller`. The inherited `middleware()`, `getMiddleware()`, `callAction()` and `__call()` methods are removed. Replace the `$this->middleware()` calls in your controller constructors with the `Illuminate\Routing\Controllers\HasMiddleware` interface or with the `#[Middleware]` and `#[Authorize]` attributes:

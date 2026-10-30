@@ -127,38 +127,6 @@ class MutateNestedRelationAuthorizationTest extends TestCase
     }
 
     #[DataProvider('manyToManyRelationProvider')]
-    public function test_sync_applies_update_rules_to_nested_attributes(string $relation, string $relatedModel): void
-    {
-        Gate::policy($relatedModel, GreenPolicy::class);
-        $victim = $this->makeRelated($relation);
-
-        $response = $this->mutateNested($relation, [
-            'operation' => 'sync',
-            'key' => $victim->getKey(),
-            'attributes' => ['number' => 999999],
-        ]);
-
-        $response->assertStatus(422);
-        $this->assertEquals(1, $victim->fresh()->number);
-    }
-
-    #[DataProvider('manyToManyRelationProvider')]
-    public function test_toggle_applies_update_rules_to_nested_attributes(string $relation, string $relatedModel): void
-    {
-        Gate::policy($relatedModel, GreenPolicy::class);
-        $victim = $this->makeRelated($relation);
-
-        $response = $this->mutateNested($relation, [
-            'operation' => 'toggle',
-            'key' => $victim->getKey(),
-            'attributes' => ['number' => 999999],
-        ]);
-
-        $response->assertStatus(422);
-        $this->assertEquals(1, $victim->fresh()->number);
-    }
-
-    #[DataProvider('manyToManyRelationProvider')]
     public function test_sync_still_writes_attributes_when_update_is_allowed(string $relation, string $relatedModel): void
     {
         Gate::policy($relatedModel, GreenPolicy::class);

@@ -2,35 +2,30 @@
 
 namespace Lomkit\Rest\Rules\Resource;
 
+use Lomkit\Rest\Fields\MutationOperation;
+use Lomkit\Rest\Fields\WriteOperation;
+use Lomkit\Rest\Fields\WriteRules;
 use Lomkit\Rest\Rules\RestRule;
 
 class ResourceCustomRules extends RestRule
 {
+    /** @return array<string, list<mixed>> */
     #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
-        $request = $this->resource->context()->request;
+        $operation = MutationOperation::tryFromEntry($value)?->writeOperation();
 
-        $operation = is_array($value) ? ($value['operation'] ?? null) : null;
-
-        $rules = match ($operation) {
-            'create' => $this->resource->createRules($request),
-            'update', 'sync', 'toggle' => $this->resource->updateRules($request),
-            default => null,
-        };
-
-        if (is_null($rules)) {
+        if ($operation === null || ! is_array($value) || (array_key_exists('attributes', $value) && ! is_array($value['attributes']))) {
             return [];
         }
 
-        $rules = array_merge_recursive(
-            $rules,
-            $this->resource->rules($request),
-        );
+        $request = $this->resource->context()->request;
 
-        return collect($rules)
-            ->mapWithKeys(function ($item, $key) use ($attribute) {
-                return [$attribute.'.attributes.'.$key => $item];
-            })->toArray();
+        return WriteRules::of(
+            $this->resource->getFields($request),
+            $operation,
+            $operation === WriteOperation::Create ? $this->resource->createRules($request) : $this->resource->updateRules($request),
+            $this->resource->rules($request),
+        )->under($attribute.'.attributes.');
     }
 }

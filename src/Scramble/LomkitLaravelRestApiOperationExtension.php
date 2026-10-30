@@ -19,8 +19,11 @@ use Illuminate\Validation\Rules\In;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Fields\WriteOperation;
+use Lomkit\Rest\Fields\WriteRules;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Rules\OneOf;
 
@@ -51,7 +54,10 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
 
         match ($action) {
             'search' => $this->documentSearch($operation, $fields, $relations, $resourceName),
-            'mutate' => $this->documentMutate($operation, $fields->names(), $relations, $rules, $resourceName),
+            'mutate' => $this->documentMutate($operation, $this->writableNames($fields), $relations, $rules, $resourceName, [
+                WriteOperation::Create->value => $fields->writableOn(WriteOperation::Create)->names(),
+                WriteOperation::Update->value => $fields->writableOn(WriteOperation::Update)->names(),
+            ]),
             'details' => $operation->summary("Get {$resourceName} details"),
             'destroy' => $this->documentDestroy($operation, $resourceName),
             'restore' => $this->documentRestore($operation, $resourceName),
@@ -118,9 +124,10 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
      */
     private function extractAllRules(object $resource, RestRequest $request): array
     {
+        $declared = $resource instanceof Resource ? $resource->getFields($request) : FieldSet::of([]);
         $all = method_exists($resource, 'rules') ? $resource->rules($request) : [];
-        $create = method_exists($resource, 'createRules') ? $resource->createRules($request) : [];
-        $update = method_exists($resource, 'updateRules') ? $resource->updateRules($request) : [];
+        $create = WriteRules::of($declared, WriteOperation::Create, method_exists($resource, 'createRules') ? $resource->createRules($request) : [])->all();
+        $update = WriteRules::of($declared, WriteOperation::Update, method_exists($resource, 'updateRules') ? $resource->updateRules($request) : [])->all();
 
         $fields = array_unique(array_merge(
             array_keys($all),
@@ -130,10 +137,10 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
 
         $result = [];
         foreach ($fields as $field) {
-            $result[$field] = [
-                'all' => (array) ($all[$field] ?? []),
-                'create' => (array) ($create[$field] ?? []),
-                'update' => (array) ($update[$field] ?? []),
+            $result[(string) $field] = [
+                'all' => WriteRules::listOf($all[$field] ?? []),
+                'create' => $create[$field] ?? [],
+                'update' => $update[$field] ?? [],
             ];
         }
 
@@ -229,20 +236,40 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         );
     }
 
+    /** @return list<string> */
+    private function writableNames(FieldSet $fields): array
+    {
+        $writable = [...$fields->writableOn(WriteOperation::Create)->names(), ...$fields->writableOn(WriteOperation::Update)->names()];
+
+        return array_values(array_intersect($fields->names(), $writable));
+    }
+
     /**
      * Document the mutate endpoint: create and update operations with attributes
      * and nested relation mutations.
+     *
+     * @param  array<string, list<string>>  $writable
      */
     private function documentMutate(
         Operation $operation,
         array $fields,
         array $relations,
         array $rules,
-        string $resourceName
+        string $resourceName,
+        array $writable = [],
     ): void {
         $operation->summary("Mutate {$resourceName}");
 
         $attributesType = new ObjectType;
+
+        if ($writable !== []) {
+            $attributesType->setDescription(implode(' ', array_map(
+                fn (string $name, array $names): string => 'Writable on '.$name.': '.($names === [] ? 'none' : implode(', ', $names)).'.',
+                array_keys($writable),
+                $writable,
+            )));
+        }
+
         foreach ($fields as $field) {
             $fieldRules = $rules[$field] ?? ['all' => [], 'create' => [], 'update' => []];
             // Include all three contexts so update-only rules are also reflected.
