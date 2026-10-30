@@ -92,6 +92,7 @@ class Action implements JsonSerializable
     }
 
     /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: array<string, mixed>, standalone: bool, targeted: bool} */
+    #[\Override]
     public function jsonSerialize(): array
     {
         return [

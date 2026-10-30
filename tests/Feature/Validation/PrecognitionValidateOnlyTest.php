@@ -11,6 +11,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.precognition.enabled', true)]
 class PrecognitionValidateOnlyTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Catalog];

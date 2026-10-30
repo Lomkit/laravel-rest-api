@@ -12,11 +12,13 @@ class HeadlinedAuthorResource extends Resource
 {
     public static string $model = Author::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [Text::make('first_name')];
     }
 
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [HasMany::make('posts', HeadlinedPostResource::class)];

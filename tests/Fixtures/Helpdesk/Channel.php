@@ -18,6 +18,7 @@ class Channel extends Model
 
     protected $keyType = 'string';
 
+    #[\Override]
     protected function casts(): array
     {
         return ['code' => ChannelCode::class];

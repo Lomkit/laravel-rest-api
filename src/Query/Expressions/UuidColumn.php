@@ -10,6 +10,7 @@ final readonly class UuidColumn implements Expression
 {
     public function __construct(private string $column) {}
 
+    #[\Override]
     public function getValue(Grammar $grammar): string
     {
         $column = $grammar->wrap($this->column);

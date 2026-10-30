@@ -23,6 +23,7 @@ use Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension;
 
 class RestServiceProvider extends ServiceProvider
 {
+    #[\Override]
     public function register(): void
     {
         $this->replaceConfigRecursivelyFrom(__DIR__.'/../config/rest.php', 'rest');

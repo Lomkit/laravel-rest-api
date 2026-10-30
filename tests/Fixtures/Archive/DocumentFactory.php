@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 #[UseModel(Document::class)]
 class DocumentFactory extends Factory
 {
+    #[\Override]
     public function definition(): array
     {
         return [

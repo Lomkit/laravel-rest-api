@@ -11,6 +11,7 @@ class SearchableDocumentResource extends Resource
 {
     public static string $model = SearchableDocument::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('title')];

@@ -122,11 +122,13 @@ final readonly class FieldSet implements Countable, IteratorAggregate
     }
 
     /** @return ArrayIterator<int, Field> */
+    #[\Override]
     public function getIterator(): ArrayIterator
     {
         return new ArrayIterator($this->fields);
     }
 
+    #[\Override]
     public function count(): int
     {
         return count($this->fields);

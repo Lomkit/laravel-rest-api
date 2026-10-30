@@ -10,11 +10,13 @@ use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 
 class PricedBetween extends Instruction
 {
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [Integer::make('min')->default(0), Integer::make('max')->rules('required')];
     }
 
+    #[\Override]
     public function handleScout(array $fields, ScoutBuilder $query): void
     {
         app(ReceivedFields::class)->record('handleScout', $fields);

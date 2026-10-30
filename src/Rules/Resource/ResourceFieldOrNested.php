@@ -14,6 +14,7 @@ class ResourceFieldOrNested implements ValidationRule
      */
     protected Resource $resource;
 
+    #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! is_string($value) || ! $this->resource->isNestedField($value)) {

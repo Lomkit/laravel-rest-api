@@ -18,11 +18,13 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ControllerMiddlewareTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Archive];
     }
 
+    #[\Override]
     protected function defineRoutes($router): void
     {
         parent::defineRoutes($router);

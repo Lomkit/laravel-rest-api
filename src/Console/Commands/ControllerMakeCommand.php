@@ -23,6 +23,7 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Get the stub file for the generator.
      */
+    #[\Override]
     protected function getStub(): string
     {
         return $this->resolveStubPath('/../stubs/controller.stub');
@@ -33,6 +34,7 @@ class ControllerMakeCommand extends GeneratorCommand
      *
      * @throws FileNotFoundException
      */
+    #[\Override]
     public function handle(): ?bool
     {
         $this->callSilent('rest:base-controller', [
@@ -62,6 +64,7 @@ class ControllerMakeCommand extends GeneratorCommand
      *
      * @throws FileNotFoundException
      */
+    #[\Override]
     protected function buildClass($name): string
     {
         $rootNamespace = $this->rootNamespace();
@@ -106,6 +109,7 @@ class ControllerMakeCommand extends GeneratorCommand
         ]);
     }
 
+    #[\Override]
     protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output): void
     {
         if ($this->didReceiveOptions($input)) {
@@ -122,6 +126,7 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Get the console command options.
      */
+    #[\Override]
     protected function getOptions(): array
     {
         return [
@@ -150,6 +155,7 @@ class ControllerMakeCommand extends GeneratorCommand
      *
      * @param  string  $rootNamespace
      */
+    #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace.'\Rest\Controllers';

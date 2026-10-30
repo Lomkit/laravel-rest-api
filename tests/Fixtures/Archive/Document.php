@@ -18,6 +18,7 @@ class Document extends Model
     use SoftDeletes;
 
     /** @return array<string, string> */
+    #[\Override]
     protected function casts(): array
     {
         return ['archived' => 'boolean'];

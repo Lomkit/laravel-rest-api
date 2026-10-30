@@ -21,6 +21,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class InstructionClauseTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing, new Catalog];

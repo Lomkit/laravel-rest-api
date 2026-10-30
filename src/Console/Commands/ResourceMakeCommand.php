@@ -20,6 +20,7 @@ class ResourceMakeCommand extends GeneratorCommand
     /**
      * Get the stub file for the generator.
      */
+    #[\Override]
     protected function getStub(): string
     {
         return $this->resolveStubPath('/../stubs/resource.stub');
@@ -30,6 +31,7 @@ class ResourceMakeCommand extends GeneratorCommand
      *
      * @throws FileNotFoundException
      */
+    #[\Override]
     public function handle(): ?bool
     {
         $this->callSilent('rest:base-resource', [
@@ -59,6 +61,7 @@ class ResourceMakeCommand extends GeneratorCommand
      *
      * @throws FileNotFoundException
      */
+    #[\Override]
     protected function buildClass($name): string
     {
         $rootNamespace = $this->rootNamespace();
@@ -103,6 +106,7 @@ class ResourceMakeCommand extends GeneratorCommand
         ]);
     }
 
+    #[\Override]
     protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output): void
     {
         if ($this->didReceiveOptions($input)) {
@@ -119,6 +123,7 @@ class ResourceMakeCommand extends GeneratorCommand
     /**
      * Get the console command options.
      */
+    #[\Override]
     protected function getOptions(): array
     {
         return [
@@ -131,6 +136,7 @@ class ResourceMakeCommand extends GeneratorCommand
      *
      * @param  string  $rootNamespace
      */
+    #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace.'\Rest\Resources';

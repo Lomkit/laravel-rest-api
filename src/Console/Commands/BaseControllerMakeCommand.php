@@ -13,6 +13,7 @@ class BaseControllerMakeCommand extends GeneratorCommand
     /**
      * Get the stub file for the generator.
      */
+    #[\Override]
     protected function getStub(): string
     {
         return $this->resolveStubPath('/../stubs/base-controller.stub');
@@ -33,6 +34,7 @@ class BaseControllerMakeCommand extends GeneratorCommand
      *
      * @param  string  $rootNamespace
      */
+    #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace.'\Rest\Controllers';

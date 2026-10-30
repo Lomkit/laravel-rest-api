@@ -11,6 +11,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class TextSearchValidationTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Catalog];

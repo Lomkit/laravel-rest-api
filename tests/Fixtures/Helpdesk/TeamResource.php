@@ -13,11 +13,13 @@ class TeamResource extends Resource
 {
     public static string $model = Team::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('name')];
     }
 
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [HasMany::make('tickets', TicketResource::class), HasManyThrough::make('replies', ReplyResource::class)];

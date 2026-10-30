@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ScopeClauseTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing];
@@ -62,6 +63,7 @@ class ScopeClauseTest extends PackageTestCase
         {
             public static string $model = Post::class;
 
+            #[\Override]
             public function scopes(RestRequest $request): array
             {
                 return [Scope::make('latest')];
@@ -101,6 +103,7 @@ class ScopeClauseTest extends PackageTestCase
         {
             public static string $model = Post::class;
 
+            #[\Override]
             public function scopes(RestRequest $request): array
             {
                 return ['published'];

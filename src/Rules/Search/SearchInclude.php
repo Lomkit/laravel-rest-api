@@ -11,6 +11,7 @@ class SearchInclude extends RestRule
 {
     use ReachesRelations;
 
+    #[\Override]
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
     {
         $this->reachRelation($into, is_array($value) ? ($value['relation'] ?? null) : null, $attribute);
@@ -19,6 +20,7 @@ class SearchInclude extends RestRule
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $relation = is_array($value) ? ($value['relation'] ?? null) : null;

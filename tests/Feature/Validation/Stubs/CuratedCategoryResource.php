@@ -10,6 +10,7 @@ use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 
 class CuratedCategoryResource extends CategoryResource
 {
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [

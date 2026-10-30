@@ -11,6 +11,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ActionFieldValidationTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing];

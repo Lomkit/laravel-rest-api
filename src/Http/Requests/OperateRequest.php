@@ -18,11 +18,13 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OperateRequest extends RestRequest
 {
+    #[\Override]
     public function endpoint(): Endpoint
     {
         return Endpoint::Operate;
     }
 
+    #[\Override]
     protected function authorizeEntry(Authorizer $authorizer): void
     {
         $resource = $this->rootResource();
@@ -52,6 +54,7 @@ class OperateRequest extends RestRequest
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function rules(): array
     {
         return $this
@@ -106,6 +109,7 @@ class OperateRequest extends RestRequest
     }
 
     /** @return array<string, string> */
+    #[\Override]
     public function messages(): array
     {
         return ['search.text.prohibited' => 'Text search is not available for actions.'];
@@ -122,6 +126,7 @@ class OperateRequest extends RestRequest
         return $key;
     }
 
+    #[\Override]
     protected function prepareForValidation(): void
     {
         $this->merge([

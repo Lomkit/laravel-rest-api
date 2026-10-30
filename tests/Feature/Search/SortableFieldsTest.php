@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class SortableFieldsTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing, new Catalog];

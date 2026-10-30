@@ -25,6 +25,7 @@ class NameListRulesTest extends PackageTestCase
 
     private const array SCOUT_FIELDS = ['category_id', 'price'];
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Catalog, new Publishing];

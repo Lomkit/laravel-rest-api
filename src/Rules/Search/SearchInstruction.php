@@ -15,6 +15,7 @@ class SearchInstruction extends RestRule
 {
     use DependsOnTextSearch;
 
+    #[\Override]
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
     {
         $fields = $this->fields($value);
@@ -29,6 +30,7 @@ class SearchInstruction extends RestRule
     }
 
     /** @return array<string, list<mixed>> */
+    #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         return $this->rulesFor($attribute, $this->fields($value), $value);

@@ -11,6 +11,7 @@ class CountedTicket extends Ticket
 
     protected $table = 'tickets';
 
+    #[\Override]
     public function getKey(): mixed
     {
         $this->keyReads++;

@@ -27,6 +27,7 @@ class EnumBindingTest extends TestCase
             }
 
             /** @return array<string, string> */
+            #[\Override]
             protected function casts(): array
             {
                 return $this->declaredCasts;

@@ -13,6 +13,7 @@ class InstructionMakeCommand extends GeneratorCommand
     /**
      * Get the stub file for the generator.
      */
+    #[\Override]
     protected function getStub(): string
     {
         return $this->resolveStubPath('/../stubs/instruction.stub');
@@ -35,6 +36,7 @@ class InstructionMakeCommand extends GeneratorCommand
      *
      * @param  string  $rootNamespace
      */
+    #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace.'\Rest\Instructions';

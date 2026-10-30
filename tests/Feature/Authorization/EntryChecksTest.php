@@ -46,6 +46,7 @@ class EntryChecksTest extends HelpdeskTestCase
         $this->tickets->answers['viewAny'] = Response::deny('Tickets are not listed.');
         $this->app->bind(SearchRequest::class, fn (): SearchRequest => new class extends SearchRequest
         {
+            #[\Override]
             public function authorize(): bool
             {
                 return true;

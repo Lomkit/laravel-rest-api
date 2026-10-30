@@ -10,6 +10,7 @@ class MutateRelation extends RestRule
     public function __construct(protected int $depth = 0) {}
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $relation = $this->resource->relation(Str::afterLast($attribute, '.'));

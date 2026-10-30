@@ -11,6 +11,7 @@ class ArchiveDocumentsAction extends Action
      * @param  array<string, mixed>  $fields
      * @param  Collection<int, Document>  $models
      */
+    #[\Override]
     public function handle(array $fields, Collection $models): void
     {
         foreach ($models as $document) {

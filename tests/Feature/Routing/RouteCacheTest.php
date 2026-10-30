@@ -18,6 +18,7 @@ class RouteCacheTest extends PackageTestCase
 {
     use CompilesRoutes;
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Archive];

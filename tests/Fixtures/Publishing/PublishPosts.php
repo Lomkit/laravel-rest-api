@@ -11,6 +11,7 @@ use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 
 class PublishPosts extends Action
 {
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [DateTime::make('at')->nullable(), Boolean::make('notify')->default(true)];
@@ -20,6 +21,7 @@ class PublishPosts extends Action
      * @param  array<string, mixed>  $fields
      * @param  Collection<int, Post>  $models
      */
+    #[\Override]
     public function handle(array $fields, Collection $models): void
     {
         app(ReceivedFields::class)->record('handle', $fields);

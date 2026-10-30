@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ArchivedTicketResource extends TicketResource
 {
+    #[\Override]
     public function authorizedTo(string $ability, Model|string $model): Response
     {
         return match ($ability) {
@@ -17,6 +18,7 @@ class ArchivedTicketResource extends TicketResource
         };
     }
 
+    #[\Override]
     public function cacheAuthorizationFor(): DateTimeInterface
     {
         return now()->addHour();

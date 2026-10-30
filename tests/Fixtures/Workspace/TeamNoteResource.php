@@ -14,16 +14,19 @@ class TeamNoteResource extends Resource
 {
     public static string $model = Note::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('team'), Text::make('title'), Boolean::make('pinned')];
     }
 
+    #[\Override]
     public function actions(RestRequest $request): array
     {
         return [PinNotes::make()];
     }
 
+    #[\Override]
     public function searchQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->where('team', 'red');
@@ -33,6 +36,7 @@ class TeamNoteResource extends Resource
      * @param  ScoutBuilder<Note>  $query
      * @return ScoutBuilder<Note>
      */
+    #[\Override]
     public function searchScoutQuery(RestRequest $request, ScoutBuilder $query): ScoutBuilder
     {
         return $query->where('team', 'red');

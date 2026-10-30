@@ -11,6 +11,7 @@ class ArchivedShelfResource extends Resource
 {
     public static string $model = ArchivedShelf::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('name')];

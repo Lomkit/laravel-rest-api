@@ -9,6 +9,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class FilterValidationTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Catalog];

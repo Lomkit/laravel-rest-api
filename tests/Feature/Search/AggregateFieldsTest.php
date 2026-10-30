@@ -12,6 +12,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class AggregateFieldsTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing];

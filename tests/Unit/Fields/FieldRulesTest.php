@@ -112,6 +112,7 @@ class FieldRulesTest extends TestCase
         $in = Rule::in(['draft', 'review']);
         $custom = new class implements ValidationRule
         {
+            #[\Override]
             public function validate(string $attribute, mixed $value, Closure $fail): void {}
         };
         $closure = function (string $attribute, mixed $value, Closure $fail): void {};

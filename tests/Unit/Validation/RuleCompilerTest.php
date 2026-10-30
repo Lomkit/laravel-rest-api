@@ -165,6 +165,7 @@ class RuleCompilerTest extends TestCase
         {
             public function __construct(private readonly Closure $rules, private readonly Closure $visit) {}
 
+            #[\Override]
             public function buildValidationRules(string $attribute, mixed $value): array
             {
                 ($this->visit)($attribute, $value);
@@ -181,11 +182,13 @@ class RuleCompilerTest extends TestCase
         {
             public function __construct(private readonly Closure $compile) {}
 
+            #[\Override]
             public function compile(RuleCompiler $into, string $attribute, mixed $value): void
             {
                 ($this->compile)($into, $attribute, $value);
             }
 
+            #[\Override]
             public function buildValidationRules(string $attribute, mixed $value): array
             {
                 return [];

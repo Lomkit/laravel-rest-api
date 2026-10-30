@@ -13,6 +13,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class OperateRouteTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Archive];

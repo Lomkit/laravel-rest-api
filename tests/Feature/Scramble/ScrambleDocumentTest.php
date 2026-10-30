@@ -16,6 +16,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ScrambleDocumentTest extends PackageTestCase
 {
+    #[\Override]
     protected function setUp(): void
     {
         Scramble::$extensions = [];
@@ -23,11 +24,13 @@ class ScrambleDocumentTest extends PackageTestCase
         parent::setUp();
     }
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Catalog, new Publishing];
     }
 
+    #[\Override]
     protected function getPackageProviders($app): array
     {
         return [ScrambleServiceProvider::class, RestServiceProvider::class];

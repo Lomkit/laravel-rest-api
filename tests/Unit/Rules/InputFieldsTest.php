@@ -66,11 +66,13 @@ class InputFieldsTest extends TestCase
         {
             public function __construct(private readonly FieldSet $fields) {}
 
+            #[\Override]
             public function compile(RuleCompiler $into, string $attribute, mixed $value): void
             {
                 (new InputFields($this->fields))->compile($into, $attribute.'.fields', $value['fields'] ?? []);
             }
 
+            #[\Override]
             public function buildValidationRules(string $attribute, mixed $value): array
             {
                 return [];

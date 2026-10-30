@@ -145,6 +145,7 @@ class Relation implements \JsonSerializable
     /**
      * Serialize the object to JSON.
      */
+    #[\Override]
     public function jsonSerialize(): mixed
     {
         $request = $this->fromResource->context()->request;

@@ -63,6 +63,7 @@ class Builder implements EloquentQueryBuilder
      * @param  bool  $disable  True to disable the default limit, false to enable it.
      * @return $this Returns the current instance for chaining.
      */
+    #[\Override]
     public function disableDefaultLimit($disable = true)
     {
         $this->disableDefaultLimit = $disable;
@@ -75,6 +76,7 @@ class Builder implements EloquentQueryBuilder
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
+    #[\Override]
     public function toBase()
     {
         return $this->queryBuilder;

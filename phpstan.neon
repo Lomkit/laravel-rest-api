@@ -7,3 +7,10 @@ parameters:
     paths:
         - src
     level: 8
+    phpVersion: 80300
+    checkMissingOverrideMethodAttribute: true
+    ignoreErrors:
+        -
+            message: '~^Method Lomkit\\Rest\\Http\\Requests\\RestRequest::shouldFailOnUnknownFields\(\) overrides method Illuminate\\Foundation\\Http\\FormRequest::shouldFailOnUnknownFields\(\) but is missing the \#\[\\Override\] attribute\.(?# FormRequest declares this hook from Laravel 13.4 and composer.json allows laravel/framework 13.0, where the attribute is a fatal error)$~'
+            identifier: method.missingOverride
+            path: src/Http/Requests/RestRequest.php

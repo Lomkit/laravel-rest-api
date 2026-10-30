@@ -29,6 +29,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
     /**
      * Generate OpenAPI documentation for a REST endpoint operation.
      */
+    #[\Override]
     public function handle(Operation $operation, RouteInfo $routeInfo): void
     {
         $controller = $routeInfo->route->getController();

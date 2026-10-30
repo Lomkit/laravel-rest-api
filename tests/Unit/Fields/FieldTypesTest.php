@@ -113,11 +113,13 @@ class FieldTypesTest extends TestCase
     {
         $field = new class('archived_at') extends Field
         {
+            #[\Override]
             public function operators(): array
             {
                 return ['=', 'is null'];
             }
 
+            #[\Override]
             public function baseRules(): array
             {
                 return ['date'];

@@ -16,11 +16,13 @@ class BookResource extends Resource
 {
     public static string $model = Book::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('title')];
     }
 
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [

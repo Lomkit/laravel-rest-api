@@ -16,6 +16,7 @@ class CountedValidator extends Validator
         return $this;
     }
 
+    #[\Override]
     public function passes(): bool
     {
         $this->count->passes++;

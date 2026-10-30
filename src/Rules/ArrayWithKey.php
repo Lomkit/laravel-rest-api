@@ -10,6 +10,7 @@ class ArrayWithKey implements ValidationRule
     /** @param array<array-key, string> $keys */
     public function __construct(protected array $keys) {}
 
+    #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! is_array($value)) {

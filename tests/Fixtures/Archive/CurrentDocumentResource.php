@@ -13,26 +13,31 @@ class CurrentDocumentResource extends Resource
 {
     public static string $model = Document::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('title')];
     }
 
+    #[\Override]
     public function searchQuery(RestRequest $request, Builder $query): EloquentBuilder
     {
         return $query->where('archived', false);
     }
 
+    #[\Override]
     public function destroyQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->where('archived', false);
     }
 
+    #[\Override]
     public function restoreQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->where('archived', false);
     }
 
+    #[\Override]
     public function forceDestroyQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->where('archived', false);

@@ -7,6 +7,7 @@ use Lomkit\Rest\Actions\Action;
 
 class WatchTickets extends Action
 {
+    #[\Override]
     public function abilities(): array
     {
         return [];
@@ -16,5 +17,6 @@ class WatchTickets extends Action
      * @param  array<string, mixed>  $fields
      * @param  Collection<int, Ticket>  $models
      */
+    #[\Override]
     public function handle(array $fields, Collection $models): void {}
 }

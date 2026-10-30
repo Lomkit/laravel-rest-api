@@ -11,6 +11,7 @@ class ShelfResource extends Resource
 {
     public static string $model = Shelf::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('name')];

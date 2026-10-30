@@ -19,6 +19,7 @@ final class SearchIncludeAlias implements DataAwareRule, ValidationRule
         private readonly string $relation,
     ) {}
 
+    #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $message = $this->conflict($attribute, $value);
@@ -29,6 +30,7 @@ final class SearchIncludeAlias implements DataAwareRule, ValidationRule
     }
 
     /** @param array<array-key, mixed> $data */
+    #[\Override]
     public function setData(array $data): static
     {
         $this->data = $data;

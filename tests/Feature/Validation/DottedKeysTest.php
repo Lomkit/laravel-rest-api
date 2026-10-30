@@ -12,6 +12,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class DottedKeysTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Catalog, new Publishing];

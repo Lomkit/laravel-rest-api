@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 #[UseModel(Category::class)]
 class CategoryFactory extends Factory
 {
+    #[\Override]
     public function definition(): array
     {
         return [

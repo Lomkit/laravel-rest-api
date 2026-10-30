@@ -10,6 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class PaginationValidationTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Catalog];

@@ -13,6 +13,7 @@ class User extends Authenticatable
 {
     use HasFactory;
 
+    #[\Override]
     protected function casts(): array
     {
         return [

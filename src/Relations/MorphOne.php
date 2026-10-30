@@ -15,6 +15,7 @@ class MorphOne extends MorphRelation implements RelationResource
      * @param  Relation  $relation  The relation being mutated.
      * @param  array  $mutationRelations  An array of mutation relations.
      */
+    #[\Override]
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
         $attributes = [

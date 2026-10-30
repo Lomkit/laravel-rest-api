@@ -18,6 +18,7 @@ class HasMany extends Relation implements RelationResource
      * @param  Relation  $relation  The relation being mutated.
      * @param  array  $mutationRelations  An array of mutation relations.
      */
+    #[\Override]
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {

@@ -11,11 +11,13 @@ use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 
 class HighlightPosts extends Instruction
 {
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [Boolean::make('featured')->default(true), Integer::make('min_views')->nullable()];
     }
 
+    #[\Override]
     public function handle(array $fields, Builder $query): void
     {
         app(ReceivedFields::class)->record('handle', $fields);

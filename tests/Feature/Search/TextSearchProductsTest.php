@@ -21,6 +21,7 @@ class TextSearchProductsTest extends PackageTestCase
 
     private Product $floorLamp;
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -30,6 +31,7 @@ class TextSearchProductsTest extends PackageTestCase
         $this->floorLamp = Product::factory()->for($this->lighting)->create(['name' => 'Floor lamp', 'price' => 129]);
     }
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Catalog];

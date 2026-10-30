@@ -38,6 +38,7 @@ final class Scope implements JsonSerializable
     }
 
     /** @return array{name: string, fields: list<array<string, mixed>>, meta: array<string, mixed>} */
+    #[\Override]
     public function jsonSerialize(): array
     {
         return [

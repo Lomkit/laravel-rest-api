@@ -15,11 +15,13 @@ class InputEntriesTest extends PackageTestCase
 {
     private ReceivedFields $received;
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing];
     }
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

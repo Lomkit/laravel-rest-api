@@ -39,6 +39,7 @@ final readonly class AggregateClause implements Clause
         return new self($aggregate['relation'], $function, $field, $aggregate['alias'] ?? null, $constraints);
     }
 
+    #[\Override]
     public function apply(Builder $query): void
     {
         $query = self::eloquent($query);

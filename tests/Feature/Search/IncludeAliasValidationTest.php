@@ -9,6 +9,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class IncludeAliasValidationTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing];

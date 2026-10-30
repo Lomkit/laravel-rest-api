@@ -12,6 +12,7 @@ class ReplyResource extends Resource
 {
     public static string $model = Reply::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Integer::make('ticket_id'), Text::make('body')];

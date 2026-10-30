@@ -13,6 +13,7 @@ final readonly class CacheDecisionStore implements DecisionStore
         private UserIdentity $user,
     ) {}
 
+    #[\Override]
     public function many(array $checks): array
     {
         $keys = array_keys(array_filter($checks, self::isStorable(...)));
@@ -35,6 +36,7 @@ final readonly class CacheDecisionStore implements DecisionStore
         return $decisions;
     }
 
+    #[\Override]
     public function putMany(array $checks, array $decisions): void
     {
         $resources = [];

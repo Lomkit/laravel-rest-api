@@ -16,6 +16,7 @@ final readonly class ScopeClause implements Clause
         private array $parameters = [],
     ) {}
 
+    #[\Override]
     public function apply(Builder $query): void
     {
         $scope = $this->resource->scope($this->resource->context()->request, $this->name)

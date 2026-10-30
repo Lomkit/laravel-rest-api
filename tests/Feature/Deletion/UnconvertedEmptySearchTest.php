@@ -12,11 +12,13 @@ use PHPUnit\Framework\Attributes\Test;
 
 class UnconvertedEmptySearchTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing];
     }
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

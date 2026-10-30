@@ -11,6 +11,7 @@ class DraftResource extends Resource
 {
     public static string $model = Draft::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [

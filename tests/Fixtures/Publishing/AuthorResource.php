@@ -15,6 +15,7 @@ class AuthorResource extends Resource
 {
     public static string $model = Author::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [
@@ -30,6 +31,7 @@ class AuthorResource extends Resource
         ];
     }
 
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [

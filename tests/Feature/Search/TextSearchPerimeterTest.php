@@ -12,6 +12,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class TextSearchPerimeterTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Workspace];

@@ -23,6 +23,7 @@ final readonly class SortClause implements Clause
         return new self($fields->get($sort['field']), $direction === null ? SortDirection::Asc : SortDirection::parse($direction));
     }
 
+    #[\Override]
     public function apply(Builder $query): void
     {
         $this->field->sort($query instanceof Relation ? $query->getQuery() : $query, $this->direction);

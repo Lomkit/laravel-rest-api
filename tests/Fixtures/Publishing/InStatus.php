@@ -11,6 +11,7 @@ use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 
 class InStatus extends Instruction
 {
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [
@@ -19,6 +20,7 @@ class InStatus extends Instruction
         ];
     }
 
+    #[\Override]
     public function handle(array $fields, Builder $query): void
     {
         app(ReceivedFields::class)->record('handle', $fields);

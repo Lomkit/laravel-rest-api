@@ -18,11 +18,13 @@ class SingleValidatorTest extends PackageTestCase
 {
     private ValidationCount $count;
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Catalog, new Publishing];
     }
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

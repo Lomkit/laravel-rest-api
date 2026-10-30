@@ -20,6 +20,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class IndexPerimeterDeclarationTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Workspace];
@@ -49,6 +50,7 @@ class IndexPerimeterDeclarationTest extends PackageTestCase
                  * @param  ScoutQuery<Note>  $query
                  * @return ScoutQuery<Note>
                  */
+                #[\Override]
                 public function searchScoutQuery(RestRequest $request, ScoutQuery $query): ScoutQuery
                 {
                     return $query->where('team', 'red');
@@ -73,6 +75,7 @@ class IndexPerimeterDeclarationTest extends PackageTestCase
             'searchQuery() alone' => [new SqlOnlyTeamNoteResource],
             'searchQuery() in a subclass of the class of searchScoutQuery()' => [new class extends TeamNoteResource
             {
+                #[\Override]
                 public function searchQuery(RestRequest $request, Builder $query): Builder
                 {
                     return parent::searchQuery($request, $query)->where('pinned', true);

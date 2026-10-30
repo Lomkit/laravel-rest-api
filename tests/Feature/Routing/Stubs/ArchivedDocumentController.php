@@ -9,6 +9,7 @@ class ArchivedDocumentController extends BaseController
 {
     public static string $resource = DocumentResource::class;
 
+    #[\Override]
     public static function middleware(): array
     {
         return [

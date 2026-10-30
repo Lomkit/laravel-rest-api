@@ -7,6 +7,7 @@ use Lomkit\Rest\Rules\RestRule;
 class ResourceMutateRelationOperation extends RestRule
 {
     /** @return array<string, string> */
+    #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = $this->resource->context()->request;

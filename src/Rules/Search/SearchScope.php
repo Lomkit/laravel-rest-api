@@ -14,6 +14,7 @@ class SearchScope extends RestRule
     use DependsOnTextSearch;
 
     /** @return array<string, list<mixed>> */
+    #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         if ($this->textSearch) {
