@@ -316,7 +316,7 @@ Within a request:
 Cache:
 
 - The cache is off by default: `authorizations.cache.enabled` is `false`. A published `config/rest.php` keeps its own value, so set it to `false` there unless you want the cache.
-- When the cache is on, a decision is stored as an array of scalars (`allowed`, `message`, `code` and `status`), not as a `Response` object, so it reads back with any store, including the `file` and `database` stores with `cache.serializable_classes` set to `false`. A `code` that is not an integer or a string is not kept.
+- When the cache is on, a decision is stored as an array of scalars (`allowed`, `message`, `code` and `status`), not as a `Response` object, so it reads back with any store, including the `file` and `database` stores with `cache.serializable_classes` set to `false`.
 - The cache key holds the guard, the user class and key, the resource class, the ability, and the class and key of each model. Entries written under the previous keys are not read anymore and expire on their own.
 - A model whose key is cast to an enum is keyed by the value of the enum. Checks on a model that is not saved yet, such as the `create` check of a mutation, or whose key is not a string, an integer or an enum, are neither cached nor shared with another check of the request.
 - A cached decision stays for `authorizations.cache.default` minutes, or the duration that `cacheAuthorizationFor()` returns: a change to a policy, to the user or to the model shows once the entry expires.
@@ -330,4 +330,4 @@ Resource methods:
   - `authorizeToAttach(Model $model, Model $toAttachModel): void`, `authorizedToAttach(Model $model, Model $toAttachModel): bool`, and the same for `authorizeToDetach()` and `authorizedToDetach()`;
   - `authorizeToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): void` and `authorizedToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): bool`.
 - `authorizeTo()` calls `authorizedTo()`, so an override of `authorizedTo()` applies to the endpoints as well as to the gates.
-- `authorizedTo()` returns a new `Illuminate\Auth\Access\Response` built from the decision. It keeps the result, the message, the code and the status of the policy's response, but not an instance of your own `Response` subclass.
+- `authorizedTo()` returns a new `Illuminate\Auth\Access\Response` built from the decision, with or without the cache. It keeps the result, the message and the status of the policy's response, and its code when the code is an integer or a string. It does not keep a code of another type, such as an enum or an object, or an instance of your own `Response` subclass.
