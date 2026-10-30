@@ -69,6 +69,7 @@ class RuleCompilerWildcardsTest extends TestCase
     {
         $node = new class extends RestRule
         {
+            #[\Override]
             public function buildValidationRules(string $attribute, mixed $value): array
             {
                 return [];

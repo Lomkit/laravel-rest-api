@@ -11,6 +11,7 @@ class SecondaryDocumentResource extends Resource
 {
     public static string $model = SecondaryDocument::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('title')];

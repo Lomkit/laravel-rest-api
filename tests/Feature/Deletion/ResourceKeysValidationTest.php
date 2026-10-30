@@ -10,6 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ResourceKeysValidationTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Archive];

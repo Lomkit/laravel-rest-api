@@ -10,12 +10,14 @@ class RestoreRequest extends RestRequest
 {
     use ValidatesResourceKeys;
 
+    #[\Override]
     public function endpoint(): Endpoint
     {
         return Endpoint::Restore;
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function rules(): array
     {
         return $this->restoreRules($this->context()->resource($this->controllerResourceClass()));

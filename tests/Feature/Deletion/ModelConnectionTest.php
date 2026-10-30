@@ -12,6 +12,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ModelConnectionTest extends PackageTestCase
 {
+    #[\Override]
     protected function defineEnvironment($app): void
     {
         $default = $app['config']->get('database.default');
@@ -22,6 +23,7 @@ class ModelConnectionTest extends PackageTestCase
         ]);
     }
 
+    #[\Override]
     protected function defineRoutes($router): void
     {
         $router->prefix('api')->group(function (): void {
@@ -29,6 +31,7 @@ class ModelConnectionTest extends PackageTestCase
         });
     }
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

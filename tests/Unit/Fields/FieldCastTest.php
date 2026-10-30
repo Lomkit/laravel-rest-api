@@ -164,6 +164,7 @@ class FieldCastTest extends TestCase
     {
         $slug = new class implements Stringable
         {
+            #[\Override]
             public function __toString(): string
             {
                 return 'hello-world';

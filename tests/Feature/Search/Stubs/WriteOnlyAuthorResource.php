@@ -11,6 +11,7 @@ class WriteOnlyAuthorResource extends Resource
 {
     public static string $model = Author::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [Text::make('api_token')->writeOnly()];

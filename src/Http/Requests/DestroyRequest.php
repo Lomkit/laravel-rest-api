@@ -11,12 +11,14 @@ class DestroyRequest extends RestRequest
 {
     use ValidatesResourceKeys;
 
+    #[\Override]
     public function endpoint(): Endpoint
     {
         return Endpoint::Destroy;
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function rules(): array
     {
         return $this->destroyRules($this->context()->resource($this->controllerResourceClass()));

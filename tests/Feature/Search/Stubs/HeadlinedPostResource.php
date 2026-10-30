@@ -12,6 +12,7 @@ class HeadlinedPostResource extends Resource
 {
     public static string $model = Post::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [

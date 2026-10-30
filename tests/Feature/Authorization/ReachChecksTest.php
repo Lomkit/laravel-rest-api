@@ -9,6 +9,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ReachChecksTest extends HelpdeskTestCase
 {
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

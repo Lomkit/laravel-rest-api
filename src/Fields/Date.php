@@ -8,21 +8,25 @@ use Illuminate\Support\Carbon;
 
 class Date extends Field
 {
+    #[\Override]
     public function operators(): array
     {
         return ['=', '!=', '>', '>=', '<', '<=', 'between', 'not between'];
     }
 
+    #[\Override]
     public function baseRules(): array
     {
         return ['date'];
     }
 
+    #[\Override]
     public function type(): string
     {
         return 'date';
     }
 
+    #[\Override]
     protected function castValue(mixed $value): mixed
     {
         if (! $value instanceof DateTimeInterface && ! is_scalar($value)) {
@@ -32,6 +36,7 @@ class Date extends Field
         return $this->toDate($value)->toImmutable();
     }
 
+    #[\Override]
     protected function filterValue(Builder $query, mixed $value): mixed
     {
         if (is_array($value)) {

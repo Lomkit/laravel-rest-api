@@ -22,6 +22,7 @@ final readonly class InstructionClause implements Clause
         private array $fields = [],
     ) {}
 
+    #[\Override]
     public function apply(Builder $query): void
     {
         $instruction = $this->resource->instruction($this->resource->context()->request, $this->name)

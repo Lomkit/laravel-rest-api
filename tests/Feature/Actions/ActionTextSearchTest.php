@@ -10,6 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ActionTextSearchTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Workspace];

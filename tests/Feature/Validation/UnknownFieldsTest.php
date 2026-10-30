@@ -16,11 +16,13 @@ use PHPUnit\Framework\Attributes\Test;
 #[RequiresMethod(FormRequest::class, 'failOnUnknownFields')]
 class UnknownFieldsTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Catalog, new Publishing];
     }
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,6 +30,7 @@ class UnknownFieldsTest extends PackageTestCase
         FormRequest::failOnUnknownFields();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         FormRequest::failOnUnknownFields(false);

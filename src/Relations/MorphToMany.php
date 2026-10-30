@@ -24,6 +24,7 @@ class MorphToMany extends MorphRelation implements RelationResource
      * @param  string  $prefix  The prefix used for validation rules.
      * @return array An array of validation rules.
      */
+    #[\Override]
     public function rules(Resource $resource, string $prefix)
     {
         return array_merge(
@@ -44,6 +45,7 @@ class MorphToMany extends MorphRelation implements RelationResource
      * @param  Relation  $relation  The relation being mutated.
      * @param  array  $mutationRelations  An array of mutation relations.
      */
+    #[\Override]
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
     {
         foreach ($mutationRelations[$relation->relation] as $mutationRelation) {

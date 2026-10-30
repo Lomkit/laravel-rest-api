@@ -15,11 +15,13 @@ class TicketResource extends Resource
 {
     public static string $model = Ticket::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Integer::make('team_id'), Text::make('title'), Text::make('status')];
     }
 
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [
@@ -29,6 +31,7 @@ class TicketResource extends Resource
         ];
     }
 
+    #[\Override]
     public function actions(RestRequest $request): array
     {
         return [CloseTickets::make(), RefreshTickets::make(), ImportTickets::make(), ReportOutage::make(), WatchTickets::make()];

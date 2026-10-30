@@ -15,6 +15,7 @@ class RelationshipChecksTest extends HelpdeskTestCase
     /** @var array<string, Tag> */
     private array $labels;
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

@@ -20,6 +20,7 @@ class DecisionStoreTest extends HelpdeskTestCase
     /** @var list<mixed> */
     private array $written = [];
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

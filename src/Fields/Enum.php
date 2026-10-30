@@ -13,6 +13,7 @@ class Enum extends Field
     private ?string $enum = null;
 
     /** @param class-string<BackedEnum>|null $enum */
+    #[\Override]
     public static function make(string $name, ?string $enum = null): static
     {
         $field = new static($name);
@@ -21,6 +22,7 @@ class Enum extends Field
         return $field;
     }
 
+    #[\Override]
     public function bind(Model $model): void
     {
         if ($this->enum !== null) {
@@ -46,21 +48,25 @@ class Enum extends Field
         return array_map(fn (BackedEnum $case): int|string => $case->value, $this->enumClass()::cases());
     }
 
+    #[\Override]
     public function operators(): array
     {
         return ['=', '!=', 'in', 'not in'];
     }
 
+    #[\Override]
     public function baseRules(): array
     {
         return [Rule::enum($this->enumClass())];
     }
 
+    #[\Override]
     public function type(): string
     {
         return 'enum';
     }
 
+    #[\Override]
     protected function castValue(mixed $value): mixed
     {
         return match (true) {

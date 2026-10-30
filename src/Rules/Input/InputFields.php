@@ -13,6 +13,7 @@ final class InputFields extends RestRule
 {
     public function __construct(private readonly FieldSet $fields) {}
 
+    #[\Override]
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
     {
         if (! is_array($value)) {
@@ -44,6 +45,7 @@ final class InputFields extends RestRule
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         return [];

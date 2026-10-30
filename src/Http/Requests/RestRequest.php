@@ -38,6 +38,7 @@ class RestRequest extends FormRequest
         return null;
     }
 
+    #[\Override]
     protected function passesAuthorization(): bool
     {
         if (! parent::passesAuthorization()) {
@@ -86,17 +87,20 @@ class RestRequest extends FormRequest
     }
 
     /** @return array<array-key, mixed> */
+    #[\Override]
     public function validationData(): array
     {
         return $this->compiledRules()->data($this->all());
     }
 
     /** @return array<string, list<mixed>> */
+    #[\Override]
     protected function validationRules(): array
     {
         return $this->compiledRules()->rules;
     }
 
+    #[\Override]
     protected function createDefaultValidator(ValidationFactory $factory): ValidatorContract
     {
         $validator = parent::createDefaultValidator($factory);
@@ -118,6 +122,7 @@ class RestRequest extends FormRequest
      * @param  string  $attribute
      * @param  array<int, string>  $validateOnly
      */
+    #[\Override]
     protected function shouldValidatePrecognitiveAttribute($attribute, $validateOnly): bool
     {
         foreach ($validateOnly as $name) {

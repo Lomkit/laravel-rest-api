@@ -17,6 +17,7 @@ class ActionFieldsTest extends PackageTestCase
 {
     private ReceivedFields $received;
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -24,11 +25,13 @@ class ActionFieldsTest extends PackageTestCase
         $this->received = $this->app->instance(ReceivedFields::class, new ReceivedFields);
     }
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing];
     }
 
+    #[\Override]
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);

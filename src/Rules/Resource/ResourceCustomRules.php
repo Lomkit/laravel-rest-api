@@ -6,6 +6,7 @@ use Lomkit\Rest\Rules\RestRule;
 
 class ResourceCustomRules extends RestRule
 {
+    #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = $this->resource->context()->request;

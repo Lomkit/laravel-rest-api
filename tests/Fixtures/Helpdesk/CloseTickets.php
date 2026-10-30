@@ -11,6 +11,7 @@ class CloseTickets extends Action
      * @param  array<string, mixed>  $fields
      * @param  Collection<int, Ticket>  $models
      */
+    #[\Override]
     public function handle(array $fields, Collection $models): void
     {
         foreach ($models as $ticket) {

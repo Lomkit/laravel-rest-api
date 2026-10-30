@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Facade;
  */
 class Rest extends Facade
 {
+    #[\Override]
     protected static function getFacadeAccessor(): string
     {
         return \Lomkit\Rest\Rest::class;

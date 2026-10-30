@@ -16,6 +16,7 @@ final readonly class OneOf implements ValidationRule
         $this->allowed = array_flip($values);
     }
 
+    #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (is_scalar($value) && isset($this->allowed[(string) $value])) {

@@ -114,6 +114,7 @@ class FieldOperatorsTest extends TestCase
         $closure = Boolean::make('popular')->virtual()->filterUsing(fn (Builder $query, string $operator, mixed $value) => $query);
         $filter = Boolean::make('popular')->virtual()->filterUsing(new class implements Filter
         {
+            #[\Override]
             public function apply(Builder $query, string $operator, mixed $value): void {}
         });
 
@@ -151,11 +152,13 @@ class FieldOperatorsTest extends TestCase
     {
         $field = new class('slug') extends Field
         {
+            #[\Override]
             public function operators(): array
             {
                 return ['=', 'contains'];
             }
 
+            #[\Override]
             public function baseRules(): array
             {
                 return ['string'];

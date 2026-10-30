@@ -10,11 +10,13 @@ class ChannelResource extends Resource
 {
     public static string $model = Channel::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [Text::make('code'), Text::make('name')];
     }
 
+    #[\Override]
     public function defaultOrderBy(RestRequest $request): array
     {
         return ['code' => 'asc'];

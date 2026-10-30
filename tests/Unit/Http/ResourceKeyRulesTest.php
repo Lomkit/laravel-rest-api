@@ -55,6 +55,7 @@ class ResourceKeyRulesTest extends TestCase
             /** @param list<Field> $declared */
             public function __construct(private readonly array $declared) {}
 
+            #[\Override]
             public function fields(RestRequest $request): array
             {
                 return $this->declared;

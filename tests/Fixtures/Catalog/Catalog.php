@@ -8,11 +8,13 @@ use Lomkit\Rest\Tests\Fixtures\Fixture;
 
 class Catalog implements Fixture
 {
+    #[\Override]
     public function migrations(): string
     {
         return __DIR__.'/migrations';
     }
 
+    #[\Override]
     public function routes(): void
     {
         Route::prefix('api')->group(function (): void {

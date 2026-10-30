@@ -14,6 +14,7 @@ class TextSearchTrashedTest extends PackageTestCase
 
     private SearchableDocument $gone;
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Archive];

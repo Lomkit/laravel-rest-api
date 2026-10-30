@@ -8,12 +8,14 @@ use Lomkit\Rest\Rules\Search\SearchText;
 
 class SearchRequest extends RestRequest
 {
+    #[\Override]
     public function endpoint(): Endpoint
     {
         return Endpoint::Search;
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function rules(): array
     {
         $resource = $this->context()->resource($this->controllerResourceClass());

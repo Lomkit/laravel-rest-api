@@ -11,6 +11,7 @@ use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 
 class AttachPayload extends Action
 {
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [Text::make('reason'), Json::make('payload')];
@@ -20,6 +21,7 @@ class AttachPayload extends Action
      * @param  array<string, mixed>  $fields
      * @param  Collection<int, mixed>  $models
      */
+    #[\Override]
     public function handle(array $fields, Collection $models): void
     {
         app(ReceivedFields::class)->record('handle', $fields);

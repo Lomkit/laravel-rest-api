@@ -11,6 +11,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class AuthorizationResponseTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Archive];
@@ -21,6 +22,7 @@ class AuthorizationResponseTest extends PackageTestCase
     {
         $this->app->bind(SearchRequest::class, fn (): SearchRequest => new class extends SearchRequest
         {
+            #[\Override]
             public function authorize(): bool|Response
             {
                 return Response::deny('The archive is closed.');
@@ -38,6 +40,7 @@ class AuthorizationResponseTest extends PackageTestCase
         $document = Document::factory()->create(['title' => 'Annual report']);
         $this->app->bind(SearchRequest::class, fn (): SearchRequest => new class extends SearchRequest
         {
+            #[\Override]
             public function authorize(): bool|Response
             {
                 return Response::allow();

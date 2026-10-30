@@ -21,11 +21,13 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ApplyFilterArgumentsTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing];
     }
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

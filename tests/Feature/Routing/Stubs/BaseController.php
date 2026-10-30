@@ -8,6 +8,7 @@ use Lomkit\Rest\Http\Controllers\Controller;
 
 abstract class BaseController extends Controller implements HasMiddleware
 {
+    #[\Override]
     public static function middleware(): array
     {
         return [

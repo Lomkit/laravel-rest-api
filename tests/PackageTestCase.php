@@ -22,11 +22,13 @@ abstract class PackageTestCase extends TestCase
         return [];
     }
 
+    #[\Override]
     protected function getPackageProviders($app): array
     {
         return [RestServiceProvider::class];
     }
 
+    #[\Override]
     protected function defineDatabaseMigrations(): void
     {
         foreach ($this->fixtures() as $fixture) {
@@ -34,6 +36,7 @@ abstract class PackageTestCase extends TestCase
         }
     }
 
+    #[\Override]
     protected function defineRoutes($router): void
     {
         foreach ($this->fixtures() as $fixture) {

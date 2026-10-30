@@ -95,11 +95,13 @@ New code follows these rules:
 
 - Declare the type of every parameter, return value and property.
 - Use early returns instead of nested conditions.
+- Add `#[\Override]` to every method that overrides a parent method or implements an interface method. Larastan reports a missing attribute in `src`.
+- Leave out `#[\Override]` when the parent method does not exist in the lowest version that `composer.json` allows, for example a hook added after Laravel 13.0: the attribute is a fatal error on that version. Ignore the Larastan error for this method only in `phpstan.neon`, with the reason in the message pattern.
 - Do not write comments that describe the code. Use PHPDoc only for types that PHP cannot declare, for example `array<string, mixed>` or `Collection<int, Model>`.
 
 ## Static analysis
 
-[Larastan](https://github.com/larastan/larastan) analyses `src` at level 8:
+[Larastan](https://github.com/larastan/larastan) analyses `src` at level 8 for PHP 8.3, the lowest version that `composer.json` allows:
 
 ```bash
 composer analyse

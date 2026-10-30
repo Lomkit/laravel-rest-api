@@ -43,6 +43,7 @@ class LengthAwarePaginator extends BaseLengthAwarePaginator
      *
      * @return array
      */
+    #[\Override]
     public function toArray()
     {
         return [

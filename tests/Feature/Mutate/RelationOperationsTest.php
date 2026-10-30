@@ -22,6 +22,7 @@ class RelationOperationsTest extends PackageTestCase
         'labels' => ['text' => 'Featured'],
     ];
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Library, new Catalog];

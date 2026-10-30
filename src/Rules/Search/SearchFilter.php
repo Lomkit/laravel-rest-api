@@ -31,6 +31,7 @@ class SearchFilter extends RestRule
         return $this;
     }
 
+    #[\Override]
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
     {
         $field = is_array($value) ? ($value['field'] ?? null) : null;
@@ -43,6 +44,7 @@ class SearchFilter extends RestRule
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = $this->resource->context()->request;

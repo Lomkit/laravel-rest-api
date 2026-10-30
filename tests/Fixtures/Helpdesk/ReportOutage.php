@@ -9,6 +9,7 @@ class ReportOutage extends Action
 {
     public bool $standalone = true;
 
+    #[\Override]
     public function abilities(): array
     {
         return [];
@@ -18,5 +19,6 @@ class ReportOutage extends Action
      * @param  array<string, mixed>  $fields
      * @param  Collection<int, Ticket>  $models
      */
+    #[\Override]
     public function handle(array $fields, Collection $models): void {}
 }

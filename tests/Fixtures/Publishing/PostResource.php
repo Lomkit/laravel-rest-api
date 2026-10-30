@@ -20,6 +20,7 @@ class PostResource extends Resource
 {
     public static string $model = Post::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [
@@ -36,6 +37,7 @@ class PostResource extends Resource
         ];
     }
 
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [
@@ -43,6 +45,7 @@ class PostResource extends Resource
         ];
     }
 
+    #[\Override]
     public function scopes(RestRequest $request): array
     {
         return [
@@ -54,11 +57,13 @@ class PostResource extends Resource
         ];
     }
 
+    #[\Override]
     public function instructions(RestRequest $request): array
     {
         return [HighlightPosts::make()->meta(['group' => 'ranking']), InStatus::make()];
     }
 
+    #[\Override]
     public function actions(RestRequest $request): array
     {
         return [

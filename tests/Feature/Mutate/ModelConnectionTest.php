@@ -16,6 +16,7 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('database.connections.archive', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => ''])]
 class ModelConnectionTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Library];

@@ -12,6 +12,7 @@ class StaffProductResource extends Resource
 {
     public static string $model = Product::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         if ($request->user()?->is_staff) {

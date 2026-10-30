@@ -11,6 +11,7 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
 {
     private const array NEW_TEAM = ['operation' => 'create', 'attributes' => ['name' => 'Billing']];
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

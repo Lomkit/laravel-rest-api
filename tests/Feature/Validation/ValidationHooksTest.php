@@ -13,11 +13,13 @@ class ValidationHooksTest extends PackageTestCase
 {
     private ValidationHookCalls $calls;
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Catalog];
     }
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

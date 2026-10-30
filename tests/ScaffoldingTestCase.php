@@ -9,11 +9,13 @@ abstract class ScaffoldingTestCase extends PackageTestCase
 {
     private static ?string $skeletonPath = null;
 
+    #[\Override]
     public static function applicationBasePath(): string
     {
         return self::$skeletonPath ?? parent::applicationBasePath();
     }
 
+    #[\Override]
     protected function setUp(): void
     {
         $skeletonPath = sys_get_temp_dir().'/lomkit-rest-'.bin2hex(random_bytes(8));
@@ -23,6 +25,7 @@ abstract class ScaffoldingTestCase extends PackageTestCase
         parent::setUp();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         parent::tearDown();

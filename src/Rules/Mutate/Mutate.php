@@ -15,6 +15,7 @@ class Mutate extends RestRule
 {
     public function __construct(protected int $depth = 0, protected ?Relation $relation = null) {}
 
+    #[\Override]
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
     {
         if (is_array($value) && ($value['operation'] ?? null) === 'create') {
@@ -33,6 +34,7 @@ class Mutate extends RestRule
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = $this->resource->context()->request;

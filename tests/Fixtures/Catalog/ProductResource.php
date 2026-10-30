@@ -13,11 +13,13 @@ class ProductResource extends Resource
 {
     public static string $model = Product::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Integer::make('category_id'), Text::make('name'), Integer::make('price')];
     }
 
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [
@@ -25,16 +27,19 @@ class ProductResource extends Resource
         ];
     }
 
+    #[\Override]
     public function instructions(RestRequest $request): array
     {
         return [PricedAt::make()];
     }
 
+    #[\Override]
     public function scoutFields(RestRequest $request): array
     {
         return ['category_id', 'price'];
     }
 
+    #[\Override]
     public function scoutInstructions(RestRequest $request): array
     {
         return [PricedAt::make(), PricedBetween::make()];

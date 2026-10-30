@@ -137,6 +137,7 @@ class FieldSetTest extends TestCase
         {
             use HasUuids;
 
+            #[\Override]
             protected function casts(): array
             {
                 return ['status' => PostStatus::class];

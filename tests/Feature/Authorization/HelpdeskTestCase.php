@@ -33,6 +33,7 @@ abstract class HelpdeskTestCase extends PackageTestCase
 
     protected ReplyPolicy $replies;
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -44,6 +45,7 @@ abstract class HelpdeskTestCase extends PackageTestCase
         $this->app->instance(ReplyPolicy::class, $this->replies = new ReplyPolicy);
     }
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Helpdesk];

@@ -13,11 +13,13 @@ class SqlOnlyTeamNoteResource extends Resource
 {
     public static string $model = Note::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('team'), Text::make('title'), Boolean::make('pinned')];
     }
 
+    #[\Override]
     public function searchQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->where('team', 'red');

@@ -23,6 +23,7 @@ final readonly class Distinct implements ValidationRule
         return new self(is_array($entries) ? array_column(array_filter($entries, is_array(...)), $key) : []);
     }
 
+    #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (is_string($value) && isset($this->repeated[$value])) {

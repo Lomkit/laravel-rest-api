@@ -12,6 +12,7 @@ class TicketPolicy extends RecordingPolicy
 
     public bool $open = true;
 
+    #[\Override]
     public function viewAny(?Authenticatable $user): bool|Response
     {
         $answer = $this->record('viewAny');
@@ -19,6 +20,7 @@ class TicketPolicy extends RecordingPolicy
         return $this->open ? $answer : Response::denyWithStatus(423, 'The helpdesk is closed.');
     }
 
+    #[\Override]
     public function update(?Authenticatable $user, Model $model): Response
     {
         $this->record('update '.$model->getKey());
@@ -28,6 +30,7 @@ class TicketPolicy extends RecordingPolicy
             : Response::allow();
     }
 
+    #[\Override]
     public function delete(?Authenticatable $user, Model $model): Response
     {
         $this->record('delete '.$model->getKey());

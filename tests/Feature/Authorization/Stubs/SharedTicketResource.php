@@ -8,6 +8,7 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
 
 class SharedTicketResource extends TicketResource
 {
+    #[\Override]
     public function abilities(Endpoint $endpoint, RestRequest $request): array
     {
         return $endpoint === Endpoint::Search ? [] : parent::abilities($endpoint, $request);

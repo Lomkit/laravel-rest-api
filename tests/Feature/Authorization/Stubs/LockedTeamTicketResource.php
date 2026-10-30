@@ -9,6 +9,7 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
 
 class LockedTeamTicketResource extends TicketResource
 {
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [BelongsTo::make('team', TeamResource::class)->prohibitedOnCreation()->prohibitedOnUpdate()];

@@ -11,9 +11,11 @@ interface EloquentQueryBuilder extends QueryBuilder
      * @param  array<string, mixed>  $parameters
      * @return EloquentBuilder<Model>
      */
+    #[\Override]
     public function search(array $parameters = []);
 
     /** @return EloquentBuilder<Model> */
+    #[\Override]
     public function toBase();
 
     /** @return $this */

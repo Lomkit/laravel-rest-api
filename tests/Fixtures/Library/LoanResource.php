@@ -12,11 +12,13 @@ class LoanResource extends Resource
 {
     public static string $model = Loan::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('borrower')];
     }
 
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [BelongsTo::make('book', BookResource::class)];

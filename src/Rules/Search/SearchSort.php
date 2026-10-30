@@ -13,6 +13,7 @@ class SearchSort extends RestRule
     use DependsOnTextSearch;
 
     /** @return array<string, list<mixed>> */
+    #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = $this->resource->context()->request;

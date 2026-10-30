@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 #[UseModel(Note::class)]
 class NoteFactory extends Factory
 {
+    #[\Override]
     public function definition(): array
     {
         return [

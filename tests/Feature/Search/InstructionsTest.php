@@ -18,6 +18,7 @@ class InstructionsTest extends PackageTestCase
 {
     private ReceivedFields $received;
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -25,6 +26,7 @@ class InstructionsTest extends PackageTestCase
         $this->received = $this->app->instance(ReceivedFields::class, new ReceivedFields);
     }
 
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing, new Catalog];

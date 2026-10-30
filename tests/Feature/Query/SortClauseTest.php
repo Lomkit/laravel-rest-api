@@ -22,6 +22,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class SortClauseTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing];

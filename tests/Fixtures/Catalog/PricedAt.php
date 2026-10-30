@@ -10,16 +10,19 @@ use Lomkit\Rest\Instructions\Instruction;
 
 class PricedAt extends Instruction
 {
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [Integer::make('price')->rules('required')];
     }
 
+    #[\Override]
     public function handle(array $fields, Builder $query): void
     {
         $query->where('price', $fields['price']);
     }
 
+    #[\Override]
     public function handleScout(array $fields, ScoutBuilder $query): void
     {
         $query->where('price', $fields['price']);

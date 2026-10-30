@@ -8,6 +8,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 class NumberedFieldsAction extends Action
 {
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [Integer::make('rank'), Integer::make('2')];

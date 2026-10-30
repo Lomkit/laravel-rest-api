@@ -16,11 +16,13 @@ use PHPUnit\Framework\Attributes\Test;
 
 class CustomFilterTest extends PackageTestCase
 {
+    #[\Override]
     protected function fixtures(): array
     {
         return [new Publishing];
     }
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -40,6 +42,7 @@ class CustomFilterTest extends PackageTestCase
             })],
             'filter object' => [Text::make('headline')->virtual()->filterUsing(new class implements Filter
             {
+                #[\Override]
                 public function apply(Builder $query, string $operator, mixed $value): void
                 {
                     $query->where('title', $operator, $value)->orWhere('summary', $operator, $value);

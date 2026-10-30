@@ -182,6 +182,7 @@ class Response implements Responsable
         return $nestedRequestArray;
     }
 
+    #[\Override]
     public function toResponse($request)
     {
         if ($this->responsable instanceof LengthAwarePaginator) {

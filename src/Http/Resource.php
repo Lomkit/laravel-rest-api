@@ -105,6 +105,7 @@ class Resource implements \JsonSerializable
         return in_array(Searchable::class, class_uses_recursive(static::modelClass()));
     }
 
+    #[\Override]
     public function jsonSerialize(): mixed
     {
         $request = $this->context()->request;

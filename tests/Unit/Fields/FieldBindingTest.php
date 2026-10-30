@@ -183,6 +183,7 @@ class FieldBindingTest extends TestCase
         {
             use HasUuids;
 
+            #[\Override]
             public function uniqueIds(): array
             {
                 return ['public_id'];

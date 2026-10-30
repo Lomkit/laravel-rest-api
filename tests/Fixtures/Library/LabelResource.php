@@ -12,11 +12,13 @@ class LabelResource extends Resource
 {
     public static string $model = Label::class;
 
+    #[\Override]
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('text')];
     }
 
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [MorphTo::make('labelable', BookResource::class)];

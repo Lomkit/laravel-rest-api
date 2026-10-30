@@ -64,11 +64,13 @@ class FilterValueRulesTest extends PackageTestCase
         yield 'between with empty strings' => [$publishedOn, 'between', ['value' => ['', '']], false];
         yield 'comparison with null on a type without base rules' => [fn (): Field => new class('code') extends Field
         {
+            #[\Override]
             public function operators(): array
             {
                 return ['='];
             }
 
+            #[\Override]
             public function baseRules(): array
             {
                 return [];

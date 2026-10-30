@@ -26,6 +26,7 @@ class ID extends Field
         return $this;
     }
 
+    #[\Override]
     public function bind(Model $model): void
     {
         $traits = class_uses_recursive($model);
@@ -38,11 +39,13 @@ class ID extends Field
         };
     }
 
+    #[\Override]
     public function operators(): array
     {
         return ['=', '!=', 'in', 'not in'];
     }
 
+    #[\Override]
     public function baseRules(): array
     {
         return match ($this->resolvedKeyType()) {
@@ -53,6 +56,7 @@ class ID extends Field
         };
     }
 
+    #[\Override]
     public function type(): string
     {
         return 'id';
@@ -64,6 +68,7 @@ class ID extends Field
         return $this->declaredKeyType ?? $this->boundKeyType;
     }
 
+    #[\Override]
     protected function castValue(mixed $value): mixed
     {
         if ($this->resolvedKeyType() === 'int') {
@@ -73,6 +78,7 @@ class ID extends Field
         return is_scalar($value) || $value instanceof Stringable ? (string) $value : $value;
     }
 
+    #[\Override]
     protected function writableByDefault(): bool
     {
         return false;

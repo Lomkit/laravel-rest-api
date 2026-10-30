@@ -123,6 +123,7 @@ class StrictModeTest extends HelpdeskTestCase
     {
         $this->app->bind(SearchRequest::class, fn (): SearchRequest => new class extends SearchRequest
         {
+            #[\Override]
             protected function reach(): array
             {
                 return [];
@@ -130,6 +131,7 @@ class StrictModeTest extends HelpdeskTestCase
         });
         $this->app->bind(MutateRequest::class, fn (): MutateRequest => new class extends MutateRequest
         {
+            #[\Override]
             protected function reach(): array
             {
                 return [];

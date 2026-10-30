@@ -15,6 +15,7 @@ class SearchAggregate extends RestRule
 {
     use ReachesRelations;
 
+    #[\Override]
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
     {
         $this->reachRelation($into, is_array($value) ? ($value['relation'] ?? null) : null, $attribute);
@@ -23,6 +24,7 @@ class SearchAggregate extends RestRule
     }
 
     /** @return array<string, list<mixed>> */
+    #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $aggregate = is_array($value) ? $value : [];

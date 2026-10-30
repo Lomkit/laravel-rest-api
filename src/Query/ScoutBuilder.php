@@ -33,6 +33,7 @@ class ScoutBuilder implements QueryBuilder
      *                             - 'limit': Maximum number of results to return (defaults to 50 if not provided).
      * @return \Laravel\Scout\Builder The configured Scout query builder.
      */
+    #[\Override]
     public function search(array $parameters = [])
     {
         $this->ensureIndexPerimeter();
@@ -212,6 +213,7 @@ class ScoutBuilder implements QueryBuilder
      *
      * @return \Laravel\Scout\Builder
      */
+    #[\Override]
     public function toBase()
     {
         return $this->queryBuilder;
