@@ -101,16 +101,38 @@ New code follows these rules:
 
 ## Static analysis
 
-[Larastan](https://github.com/larastan/larastan) analyses `src` at level 8 for PHP 8.3, the lowest version that `composer.json` allows:
+[Larastan](https://github.com/larastan/larastan) analyses `src` at level 10 for PHP 8.3, the lowest version that `composer.json` allows:
 
 ```bash
 composer analyse
 ```
 
-`phpstan-baseline.neon` lists the errors that existed when the analysis was added. The baseline must only shrink:
+The analysis also requires native type coverage of 100 % in `src` for returns, parameters, properties and constants, with [type-coverage](https://github.com/TomasVotruba/type-coverage). A PHPDoc type does not count. The extension reports a missing type on:
+
+- the return value of a class method, except magic methods such as `__construct()`;
+- a parameter of a function, a closure or a method, unless a parent class or an interface also has a method with this name;
+- a property or a constant, unless a parent class also declares it.
+
+It does not check the return values of closures, arrow functions and functions, the parameters of a method that a parent class or an interface also has, including a constructor when the parent class has one, the parameters of a function or a method whose PHPDoc has a `@param callable` tag, or properties whose PHPDoc mentions `callable` or `resource`. Check these by hand in review. A member that a parent class or an interface in the vendor declares without a type is not reported, so it needs no ignore entry.
+
+These members have no native type and the extension does not report them. Type them when you change their file, then remove them from this list:
+
+- `$items`, `$total`, `$perPage`, `$currentPage` and `$meta` of `Lomkit\Rest\Pagination\LengthAwarePaginator::__construct()`
+- `$disable` of `Lomkit\Rest\Query\Builder::disableDefaultLimit()`
+- `Lomkit\Rest\Query\Builder::$resource` and `Lomkit\Rest\Query\ScoutBuilder::$resource`
+- the return value of `relation_without_pivot()` in `src/helpers.php`
+
+`phpstan-baseline.neon` lists the errors that existed when the analysis was added or made stricter. The baseline must only shrink:
 
 - Do not add entries to the baseline. Fix the new error instead.
-- When you fix an error that is in the baseline, remove its entry. The analysis fails when an entry no longer matches an error.
+- When you fix an error that is in the baseline, lower the `count` of its entry, and remove the entry when the count reaches zero. The analysis fails when the count of an entry no longer matches its errors.
+- The type-coverage entries (identifiers `typeCoverage.*`) match by identifier and path, without a message: the message holds totals for the whole of `src`, which change with every typed member. Never ignore a type-coverage error by its message.
+
+When the baseline is regenerated, delete the message line of the type-coverage entries:
+
+```bash
+sed -i.bak '/message: .#.Out of [0-9]* possible [a-z]* types, only /d' phpstan-baseline.neon && rm phpstan-baseline.neon.bak
+```
 
 ## Commits
 
