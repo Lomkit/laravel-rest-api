@@ -395,7 +395,7 @@ Per-item keys:
 | `attributes` | object | create / update / sync / toggle | Field values; only the fields the operation can write, validated by the field rules and the resource rules |
 | `key` | int / string / array | update / attach / detach / sync / toggle | Target model id(s) |
 | `relations` | object | all | Map of `relationName → [operation objects]` (recursive) |
-| `pivot` | object | many-to-many `attach`/`sync`/`toggle` | Pivot column values |
+| `pivot` | object | many-to-many `create`/`update`/`attach`/`sync`/`toggle` (refused on `detach`) | Pivot values; only the pivot fields the operation can write, validated by their rules |
 | `without_detaching` | bool | `sync` | When `true`, behaves like `syncWithoutDetaching` |
 
 Writes go through the fields:
@@ -403,6 +403,7 @@ Writes go through the fields:
 - `create` accepts the creatable fields, and `update`, `sync` and `toggle` accept the updatable fields (`Lomkit\Rest\Fields\MutationOperation::writeOperation()` maps the operation). Fields are creatable and updatable by default; `ID` and `readonly()` fields are not, so declare `->creatable()` on a key the client sends (a UUID). `writeOnly()` fields are accepted; a `virtual()` field only with `fillUsing(Closure(Model, mixed): void)`, which runs after the other fields of the entry. Another key is a `422` under `{entry}.attributes`: `The created_at attribute is not writable on create.` (`on update.` for `sync` and `toggle`), with or without Precognition.
 - Each attribute is validated by its field: the type's base rule (`null` refused unless `nullable()`, arrays refused except on `Json`), `rules()`, and `creationRules()` or `updateRules()`. A rule naming another declared field (`required_if:featured,true`, `after_or_equal:published_on`) compares with that attribute in the same entry.
 - In a nested write, the keys the relation sets win over the entry's attributes: the parent key and morph type (`getMorphClass()`, so morph map aliases) of `HasOne`, `HasOneOfMany`, `HasMany`, `MorphOne`, `MorphOneOfMany`, `MorphMany`, and the foreign key and morph type that `BelongsTo` and `MorphTo` associate. The parent relation's keys win over the entry's own `BelongsTo` or `MorphTo`, and the `BelongsTo` and `MorphTo` keys are read after the `mutating()` hook, so a key the hook associates is kept.
+- `pivot` goes through the pivot fields of the relation (see Relationships): `create` and `attach` add a pivot row and accept the creatable pivot fields with `creationRules()`; `update`, `sync` and `toggle` accept the updatable pivot fields with `updateRules()` (`MutationOperation::pivotWriteOperation()` maps the operation); `detach` refuses `pivot`. `readonly()` pivot fields are refused, `writeOnly()` ones accepted. Each value is validated by its field (type base rule, `nullable`, `rules()`), with errors under `{entry}.pivot.{key}`, also when `pivot` is missing; another key is a `422` under `{entry}.pivot` (`The created_at attribute is not writable on create.`). A rule naming another pivot field compares with the pivot of the same entry. Only the writable pivot keys reach the database. Limit: a row that `update`, `sync` or `toggle` adds gets the update rules, since validation runs before the database is read; use `attach` to add a row with the creation rules.
 - A custom relation lists its operations as `MutationOperation` cases in `mutationOperations()`, and returns the keys it sets in `beforeMutating()` from `ownedAttributes(Model $model): array`.
 
 **Response**: grouped affected ids — `{"created": [72979], "updated": [7, 12], ...}`. Do **not** expect the full models back; re-query via `search` if you need them.
@@ -553,14 +554,21 @@ public function relations(RestRequest $request): array
             ->requiredOnCreation()
             ->prohibitedOnUpdate(),
 
-        \Lomkit\Rest\Relations\BelongsToMany::make('roles', RoleResource::class)
-            ->withPivotFields(['created_at'])
-            ->withPivotRules(['created_at' => ['required', 'date']]),
+        \Lomkit\Rest\Relations\BelongsToMany::make('roles', RoleResource::class)->pivotFields([
+            Integer::make('level')
+                ->rules('min:1')
+                ->creationRules('required'),
+            Text::make('granted_by')->updatable(false),   // written on create and attach only
+            Text::make('note')->writeOnly(),              // written, never returned
+            DateTime::make('created_at')->readonly(),     // returned, never written
+        ]),
     ];
 }
 ```
 
-Mutation constraints (chainable, may take a closure for conditional logic): `requiredOnCreation()`, `prohibitedOnCreation()`, `requiredOnUpdate()`, `prohibitedOnUpdate()`. Many-to-many pivot data is whitelisted by `withPivotFields()` and validated by `withPivotRules()`.
+Mutation constraints (chainable, may take a closure for conditional logic): `requiredOnCreation()`, `prohibitedOnCreation()`, `requiredOnUpdate()`, `prohibitedOnUpdate()`.
+
+Many-to-many relations (`BelongsToMany`, `MorphToMany`, `MorphedByMany`) declare their pivot columns with typed `Field` objects in `pivotFields([...])` (`withPivotFields()` and `withPivotRules()` are gone; strings and duplicate names throw `InvalidFieldException`). Each pivot field is a column of the pivot table, written as sent: a `virtual()` pivot field or one with `fillUsing()` throws `InvalidFieldException`. `getPivotFields()` returns a `FieldSet` bound to the pivot class of the Eloquent relation (the `using()` class or `Pivot`), so an `Enum` pivot field reads the pivot casts. The pivot fields decide what `pivot` accepts on each operation (see the `mutate` payload) and what the `pivot` of an included row returns: the selectable pivot fields only, never `writeOnly()` or `selectable(false)` ones. Filters on `{relation}.pivot.{key}` accept any declared pivot field. A custom relation with pivot fields implements `Lomkit\Rest\Contracts\PivotRelation` (the `HasPivotFields` trait does).
 
 ## Delete / restore / force
 
@@ -642,7 +650,7 @@ composer require dedoc/scramble:^0.13
 
 The package registers the extension itself: `config/scramble.php` needs no change.
 
-Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`.
+Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`. Relations come from the relation objects of `relations()` (their class name, `mutationOperations()` and number of entries), and the `pivot` of a many-to-many entry lists the writable pivot fields with their rules for `create` and `attach`, then `update`, `sync` and `toggle`.
 
 ## Precognition
 
@@ -683,7 +691,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Query layer — `src/Query/Builder.php`, `src/Query/ScoutBuilder.php`, and `src/Query/AttributeWriter.php`, which fills a model from the writable fields of a mutation
 - Actions / Instructions / Scopes — `src/Actions/{Action,Actionable}.php`, `src/Instructions/{Instruction,Instructionable}.php`, `src/Scopes/Scope.php`
 - Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `InputValues`, `MutationOperation`, `WriteRules`, `Details/InputFieldDetails`), clauses in `src/Query/Clauses/`
-- Relations — `src/Relations/*.php`
+- Relations — `src/Relations/*.php`; pivot fields in `src/Concerns/Relations/HasPivotFields.php` (`src/Contracts/PivotRelation.php`), validated by `src/Rules/Mutate/MutatePivot.php`
 - Validation rules used to validate the request bodies — `src/Rules/{Search,Mutate,Input,Resource}/*`, compiled into one rule set per request by `src/Validation/RuleCompiler.php`
-- Scramble extension — `src/Scramble/LomkitLaravelRestApiOperationExtension.php`
+- Scramble extension — `src/Scramble/LomkitLaravelRestApiOperationExtension.php`, with `RelationMutationType` (a relation entry), `WritableFieldsType` (writable fields per operation) and `RuleType` (the type a rule list implies)
 - Generator stubs — `src/Console/stubs/*.stub`

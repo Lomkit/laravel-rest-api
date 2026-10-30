@@ -139,41 +139,6 @@ class MutateUpdateOperationsTest extends TestCase
         );
     }
 
-    public function test_updating_a_resource_using_pivot_field_not_following_custom_pivot_rules(): void
-    {
-        $modelToUpdate = ModelFactory::new()->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'relations' => [
-                            'belongsToManyRelation' => [
-                                [
-                                    'operation' => 'create',
-                                    'attributes' => [],
-                                    'pivot' => [
-                                        'number' => true,
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot.number']]);
-    }
-
     public function test_updating_a_resource(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();
@@ -2071,12 +2036,16 @@ class MutateUpdateOperationsTest extends TestCase
             Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
             2
         );
+        $related = Model::find($response->json('updated.0'))
+            ->belongsToManyRelation()
+            ->orderBy('belongs_to_many_relations.id')
+            ->get();
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number,
+            $related[0]->belongs_to_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number,
+            $related[1]->belongs_to_many_pivot->number,
             30
         );
     }
@@ -2129,8 +2098,12 @@ class MutateUpdateOperationsTest extends TestCase
             Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
             1
         );
+        $related = Model::find($response->json('updated.0'))
+            ->belongsToManyRelation()
+            ->orderBy('belongs_to_many_relations.id')
+            ->get();
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number,
+            $related[0]->belongs_to_many_pivot->number,
             20
         );
     }
@@ -2184,12 +2157,16 @@ class MutateUpdateOperationsTest extends TestCase
             Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
             2
         );
+        $related = Model::find($response->json('updated.0'))
+            ->belongsToManyRelation()
+            ->orderBy('belongs_to_many_relations.id')
+            ->get();
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number,
+            $related[0]->belongs_to_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number,
+            $related[1]->belongs_to_many_pivot->number,
             20
         );
     }

@@ -438,7 +438,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                                             function (Relation $relation) {
                                                 return $relation->relation === 'belongsToManyRelation';
                                             }
-                                        )->getPivotFields()
+                                        )->getPivotFields()->names()
                                     ),
                                 ]
                             );
@@ -688,7 +688,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()
+                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()->names()
                                         );
 
                                     return $relation;
@@ -747,7 +747,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()
+                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()->names()
                                         );
 
                                     return $relation;
@@ -818,7 +818,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()
+                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()->names()
                                         );
 
                                     return $relation;
@@ -889,7 +889,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()
+                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()->names()
                                         );
 
                                     return $relation;
@@ -1121,7 +1121,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()
+                                            (new ModelResource)->relation('belongsToManyRelation')->getPivotFields()->names()
                                         );
 
                                     return $relation;

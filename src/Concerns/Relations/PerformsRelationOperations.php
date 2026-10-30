@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Concerns\Relations;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
+use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Relations\Relation;
 
@@ -22,6 +23,7 @@ trait PerformsRelationOperations
     {
         $toPerformActionModel = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->applyMutation($mutation, $attributes);
+        $pivot = $this->writablePivot($relation, MutationOperation::Create, $mutation);
 
         $this->resource()->authorizeToAttach($model, $toPerformActionModel);
 
@@ -29,7 +31,7 @@ trait PerformsRelationOperations
             ->{$relation->relation}()
             ->syncWithoutDetaching(
                 [
-                    $toPerformActionModel->getKey() => $mutation['pivot'] ?? [],
+                    $toPerformActionModel->getKey() => $pivot,
                 ]
             );
 
@@ -43,6 +45,7 @@ trait PerformsRelationOperations
     {
         $toPerformActionModels = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
+        $pivot = $this->writablePivot($relation, MutationOperation::Update, $mutation);
 
         foreach ($toPerformActionModels as $toPerformActionModel) {
             $this->resource()->authorizeToAttach($model, $toPerformActionModel);
@@ -52,7 +55,7 @@ trait PerformsRelationOperations
             ->syncWithoutDetaching(
                 collect($toPerformActionModels)
                     ->mapWithKeys(
-                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
+                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $pivot]
                     )->toArray()
             );
 
@@ -66,6 +69,7 @@ trait PerformsRelationOperations
     {
         $toPerformActionModels = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
+        $pivot = $this->writablePivot($relation, MutationOperation::Attach, $mutation);
 
         foreach ($toPerformActionModels as $toPerformActionModel) {
             $this->resource()->authorizeToAttach($model, $toPerformActionModel);
@@ -75,7 +79,7 @@ trait PerformsRelationOperations
             ->attach(
                 collect($toPerformActionModels)
                     ->mapWithKeys(
-                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
+                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $pivot]
                     )->toArray()
             );
 
@@ -106,12 +110,13 @@ trait PerformsRelationOperations
     {
         $toPerformActionModels = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
+        $pivot = $this->writablePivot($relation, MutationOperation::Toggle, $mutation);
 
         $results = $model->{$relation->relation}()
             ->toggle(
                 collect($toPerformActionModels)
                     ->mapWithKeys(
-                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
+                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $pivot]
                     )->toArray(),
             );
 
@@ -128,12 +133,13 @@ trait PerformsRelationOperations
     {
         $toPerformActionModels = app()->make(EloquentQueryBuilder::class, ['resource' => $relation->resource()])
             ->mutations($mutation, $attributes);
+        $pivot = $this->writablePivot($relation, MutationOperation::Sync, $mutation);
 
         $results = $model->{$relation->relation}()
             ->sync(
                 collect($toPerformActionModels)
                     ->mapWithKeys(
-                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $mutation['pivot'] ?? []]
+                        fn (Model $toPerformActionModel) => [$toPerformActionModel->getKey() => $pivot]
                     )->toArray(),
                 $withoutDetaching
             );
@@ -141,6 +147,27 @@ trait PerformsRelationOperations
         $this->resource()->context()->authorizer()->forget($model);
 
         $this->authorizeChanges($model, $relation, $results);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $mutation
+     * @return array<array-key, mixed>
+     */
+    private function writablePivot(Relation $relation, MutationOperation $operation, array $mutation): array
+    {
+        $write = $operation->pivotWriteOperation();
+        $pivot = $mutation['pivot'] ?? [];
+
+        if ($write === null || ! is_array($pivot) || ! $relation instanceof PivotRelation) {
+            return [];
+        }
+
+        $writable = $relation
+            ->getPivotFields()
+            ->writableOn($write)
+            ->names();
+
+        return array_intersect_key($pivot, array_flip($writable));
     }
 
     /** @param array{attached: list<int|string>, detached: list<int|string>} $changes */

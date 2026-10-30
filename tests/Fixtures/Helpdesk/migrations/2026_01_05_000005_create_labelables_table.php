@@ -12,6 +12,10 @@ return new class extends Migration
             $table->foreignId('tag_id')->constrained();
             $table->morphs('labelable');
             $table->unsignedInteger('position')->nullable();
+            $table->unsignedInteger('weight')->nullable();
+            $table->string('added_by')->nullable();
+            $table->string('note')->nullable();
+            $table->timestamp('created_at')->nullable();
         });
     }
 };

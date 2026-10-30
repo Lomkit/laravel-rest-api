@@ -3,8 +3,10 @@
 namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
 use Lomkit\Rest\Concerns\Resource\DisableGates;
+use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -51,11 +53,7 @@ class ModelResource extends Resource
             BelongsTo::make('belongsToRelation', BelongsToResource::class),
             HasMany::make('hasManyRelation', HasManyResource::class),
             HasMany::make('hasManyRelationWithEagerLoadingRelation', HasManyResource::class),
-            BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
-                ->withPivotRules([
-                    'number' => 'numeric',
-                ])
-                ->withPivotFields(['created_at', 'number']),
+            BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)->pivotFields([DateTime::make('created_at'), Number::make('number')]),
 
             // Through relationships
             HasOneThrough::make('hasOneThroughRelation', HasOneThroughResource::class),
@@ -67,10 +65,8 @@ class ModelResource extends Resource
             MorphOne::make('morphOneRelation', MorphOneResource::class),
             MorphOneOfMany::make('morphOneOfManyRelation', MorphOneOfManyResource::class),
             MorphMany::make('morphManyRelation', MorphManyResource::class),
-            MorphToMany::make('morphToManyRelation', MorphToManyResource::class)
-                ->withPivotFields(['created_at', 'number']),
-            MorphedByMany::make('morphedByManyRelation', MorphedByManyResource::class)
-                ->withPivotFields(['created_at', 'number']),
+            MorphToMany::make('morphToManyRelation', MorphToManyResource::class)->pivotFields([DateTime::make('created_at'), Integer::make('number')]),
+            MorphedByMany::make('morphedByManyRelation', MorphedByManyResource::class)->pivotFields([DateTime::make('created_at'), Integer::make('number')]),
         ];
     }
 

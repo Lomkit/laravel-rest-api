@@ -485,6 +485,54 @@ Scramble:
 
 - The `attributes` of the mutate body list the writable fields only, with their field rules and the resource rules for `create` and `update`. The description of `attributes` names the fields writable on each operation.
 
+### Pivot fields
+
+`BelongsToMany`, `MorphToMany` and `MorphedByMany` declare their pivot columns with typed fields. Each pivot field decides which operations write its column, validates the value, and decides whether the value is returned.
+
+```php
+use Lomkit\Rest\Fields\DateTime;
+use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Relations\BelongsToMany;
+
+BelongsToMany::make('tags', TagResource::class)->pivotFields([
+    Integer::make('weight')
+        ->nullable()
+        ->rules('min:0'),
+    Text::make('added_by')->updatable(false),     // written on create and attach only
+    Text::make('note')->writeOnly(),              // written, never returned
+    DateTime::make('created_at')->readonly(),     // returned, never written
+]),
+```
+
+Declaration:
+
+- `withPivotFields()` and `withPivotRules()` are removed. Declare `pivotFields([...])` with `Field` objects instead of column names, and move each rule of `withPivotRules()` to the field of its key: `->withPivotFields(['number'])->withPivotRules(['number' => 'numeric'])` becomes `->pivotFields([Number::make('number')])`. A string, or a name declared twice, throws `Lomkit\Rest\Exceptions\InvalidFieldException`.
+- A pivot field is a column of the pivot table, and a pivot value is written to its column as sent. A pivot field declared `virtual()`, or with `fillUsing()`, throws `Lomkit\Rest\Exceptions\InvalidFieldException` when `pivotFields()` is called.
+- `getPivotFields()` returns a `Lomkit\Rest\Fields\FieldSet` instead of an array of names. Call `->names()` to get the old list. `getPivotRules()` and the `$pivotFields` and `$pivotRules` properties are removed.
+- The pivot fields are bound to the pivot class of the Eloquent relation: the class given to `using()`, or Laravel's `Pivot`. An `Enum` pivot field reads its enum class from the casts of that class.
+- A custom relation that carries pivot fields implements `Lomkit\Rest\Contracts\PivotRelation`: `getPivotFields(): FieldSet` and `pivotRules(string $prefix): array`. The `Lomkit\Rest\Concerns\Relations\HasPivotFields` trait implements both. The package checks this interface instead of the trait.
+- `BelongsToMany`, `MorphToMany` and `MorphedByMany` no longer override `rules()`. `Relation::rules()` returns the pivot rules of a `PivotRelation`: a `Lomkit\Rest\Rules\Mutate\MutatePivot` node on each entry of the relation.
+
+Writes:
+
+- `pivot` accepts only the pivot fields that the operation of its entry can write. `create` and `attach` add a pivot row, so they accept the creatable pivot fields. `update`, `sync` and `toggle` accept the updatable pivot fields. `detach` still refuses `pivot`. `Lomkit\Rest\Fields\MutationOperation::pivotWriteOperation()` maps the operations. A pivot field declared `readonly()` is refused on every operation, and a `writeOnly()` pivot field is accepted.
+- A pivot key that the operation cannot write gives a 422 under the `pivot` key of the entry, as an undeclared pivot key does, with a new message for both: `The created_at attribute is not writable on create.` On `update`, `sync` and `toggle`, it ends with `on update.` A `pivot` that is not an object gives `The mutate.0.relations.tags.0.pivot field must be an array.`
+- The rules of each writable pivot field validate its value under `mutate.0.relations.tags.0.pivot.weight`: the base rule of its type, `nullable`, `rules()`, and `creationRules()` on `create` and `attach` or `updateRules()` on `update`, `sync` and `toggle`. `null` is refused unless the field is `nullable()`. The rules run when `pivot` is missing too, so a pivot field with `creationRules('required')` is required on `attach`. Each entry is validated with its own operation.
+- A rule that names another pivot field, such as `required_with:note`, compares with that key in the pivot of the same entry.
+- The relation writes the writable pivot fields of the operation only, also when it is called without validation.
+- `update`, `sync` and `toggle` validate the pivot with the updatable fields and `updateRules()`, also when they add a pivot row: validation runs before the database is read, so it cannot know whether the row exists. A `creationRules('required')` pivot field is not required then. Use `attach` to add a row with the creation rules.
+
+Reads:
+
+- The `pivot` of an included row holds the selectable pivot fields only. A pivot field declared `writeOnly()` or `selectable(false)` is not returned.
+- Filters on `pivot` keys, such as `tags.pivot.weight`, still accept every declared pivot field.
+
+Scramble:
+
+- The relations are read from the relation objects that `relations()` returns. A field declared in `pivotFields()` is no longer documented as a relation. A custom relation is documented with its class name, the operations of its `mutationOperations()`, as a list when it has many entries, and with its pivot when it implements `PivotRelation`.
+- The `pivot` of a relation entry lists the writable pivot fields with their rules. Its description names the fields writable on each operation: `create` and `attach`, then `update`, `sync` and `toggle`.
+
 ### Framework integration
 
 - `Lomkit\Rest\Http\Controllers\Controller` no longer extends `Illuminate\Routing\Controller`. The inherited `middleware()`, `getMiddleware()`, `callAction()` and `__call()` methods are removed. Replace the `$this->middleware()` calls in your controller constructors with the `Illuminate\Routing\Controllers\HasMiddleware` interface or with the `#[Middleware]` and `#[Authorize]` attributes:

@@ -5,8 +5,10 @@ namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Lomkit\Rest\Concerns\Resource\DisableGates;
+use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
@@ -29,11 +31,7 @@ class ModelWithHooksResource extends Resource
     {
         return [
             BelongsTo::make('belongsToRelation', BelongsToWithHooksResource::class),
-            BelongsToMany::make('belongsToManyRelation', BelongsToManyWithHooksResource::class)
-                ->withPivotRules([
-                    'number' => 'numeric',
-                ])
-                ->withPivotFields(['created_at', 'number']),
+            BelongsToMany::make('belongsToManyRelation', BelongsToManyWithHooksResource::class)->pivotFields([DateTime::make('created_at'), Number::make('number')]),
         ];
     }
 

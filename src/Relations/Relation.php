@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Concerns\Makeable;
-use Lomkit\Rest\Concerns\Relations\HasPivotFields;
+use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\Mutates;
@@ -117,29 +117,10 @@ class Relation implements \JsonSerializable
         });
     }
 
-    /**
-     * Get the validation rules for this relation.
-     *
-     *
-     * @return array
-     */
+    /** @return array<string, mixed> */
     public function rules(Resource $resource, string $prefix)
     {
-        $rules = [];
-
-        if (in_array(HasPivotFields::class, class_uses_recursive($this), true)) {
-            $pivotPrefix = $prefix;
-            if ($this->hasMultipleEntries()) {
-                $pivotPrefix .= '.*';
-            }
-            $pivotPrefix .= '.pivot.';
-
-            foreach ($this->getPivotRules() as $pivotKey => $pivotRule) {
-                $rules[$pivotPrefix.$pivotKey] = $pivotRule;
-            }
-        }
-
-        return $rules;
+        return $this instanceof PivotRelation ? $this->pivotRules($prefix) : [];
     }
 
     /**

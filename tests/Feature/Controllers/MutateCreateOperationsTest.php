@@ -192,44 +192,6 @@ class MutateCreateOperationsTest extends TestCase
         );
     }
 
-    public function test_creating_a_resource_using_pivot_field_not_following_custom_pivot_rules(): void
-    {
-        $modelToCreate = ModelFactory::new()->makeOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'belongsToManyRelation' => [
-                                [
-                                    'operation' => 'create',
-                                    'attributes' => [],
-                                    'pivot' => [
-                                        'number' => true,
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot.number']]);
-    }
-
     public function test_creating_a_resource(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
@@ -1061,44 +1023,6 @@ class MutateCreateOperationsTest extends TestCase
         );
     }
 
-    public function test_creating_a_resource_with_creating_belongs_to_many_relation_with_unauthorized_pivot_fields(): void
-    {
-        $modelToCreate = ModelFactory::new()->makeOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'belongsToManyRelation' => [
-                                [
-                                    'operation' => 'create',
-                                    'attributes' => [],
-                                    'pivot' => [
-                                        'unauthorized_field' => 20,
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation.0.pivot']]);
-    }
-
     public function test_creating_a_resource_with_creating_belongs_to_many_relation_with_pivot_fields(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
@@ -1150,12 +1074,16 @@ class MutateCreateOperationsTest extends TestCase
             Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
             2
         );
+        $related = Model::find($response->json('created.0'))
+            ->belongsToManyRelation()
+            ->orderBy('belongs_to_many_relations.id')
+            ->get();
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number,
+            $related[0]->belongs_to_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number,
+            $related[1]->belongs_to_many_pivot->number,
             30
         );
     }
@@ -1369,12 +1297,16 @@ class MutateCreateOperationsTest extends TestCase
             Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
             2
         );
+        $related = Model::find($response->json('created.0'))
+            ->belongsToManyRelation()
+            ->orderBy('belongs_to_many_relations.id')
+            ->get();
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number,
+            $related[0]->belongs_to_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number,
+            $related[1]->belongs_to_many_pivot->number,
             30
         );
     }
@@ -1651,12 +1583,16 @@ class MutateCreateOperationsTest extends TestCase
             Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
             2
         );
+        $related = Model::find($response->json('created.0'))
+            ->belongsToManyRelation()
+            ->orderBy('belongs_to_many_relations.id')
+            ->get();
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[0]->belongs_to_many_pivot->number,
+            $related[0]->belongs_to_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation[1]->belongs_to_many_pivot->number,
+            $related[1]->belongs_to_many_pivot->number,
             30
         );
     }

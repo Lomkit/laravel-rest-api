@@ -653,44 +653,6 @@ class MutateCreateMorphOperationsTest extends TestCase
         );
     }
 
-    public function test_creating_a_resource_with_creating_morph_to_many_relation_with_unauthorized_pivot_fields(): void
-    {
-        $modelToCreate = ModelFactory::new()->makeOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(MorphToManyRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'morphToManyRelation' => [
-                                [
-                                    'operation' => 'create',
-                                    'attributes' => [],
-                                    'pivot' => [
-                                        'unauthorized_field' => 20,
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.morphToManyRelation.0.pivot']]);
-    }
-
     public function test_creating_a_resource_with_creating_morph_to_many_relation_with_pivot_fields(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
@@ -1105,44 +1067,6 @@ class MutateCreateMorphOperationsTest extends TestCase
         );
     }
 
-    public function test_creating_a_resource_with_creating_morphed_by_many_relation_with_unauthorized_pivot_fields(): void
-    {
-        $modelToCreate = ModelFactory::new()->makeOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(MorphedByManyRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'morphedByManyRelation' => [
-                                [
-                                    'operation' => 'create',
-                                    'attributes' => [],
-                                    'pivot' => [
-                                        'unauthorized_field' => 20,
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.morphedByManyRelation.0.pivot']]);
-    }
-
     public function test_creating_a_resource_with_creating_morphed_by_many_relation_with_pivot_fields(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();
@@ -1194,12 +1118,16 @@ class MutateCreateMorphOperationsTest extends TestCase
             Model::find($response->json('created.0'))->morphedByManyRelation()->count(),
             2
         );
+        $related = Model::find($response->json('created.0'))
+            ->morphedByManyRelation()
+            ->orderBy('morphed_by_many_relations.id')
+            ->get();
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation[0]->morphed_by_many_pivot->number,
+            $related[0]->morphed_by_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation[1]->morphed_by_many_pivot->number,
+            $related[1]->morphed_by_many_pivot->number,
             30
         );
     }

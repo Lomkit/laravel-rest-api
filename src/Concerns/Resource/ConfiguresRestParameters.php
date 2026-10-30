@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Concerns\Resource;
 
 use Illuminate\Support\Str;
+use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
@@ -18,9 +19,8 @@ trait ConfiguresRestParameters
     public function isNestedField(string $field, ?Relation $relation = null)
     {
         if (Str::contains($field, '.')) {
-            // In case we are on a pivot we look for the relation pivot fields
             if (Str::before($field, '.') === 'pivot') {
-                return method_exists($relation, 'getPivotFields') && in_array(Str::after($field, '.'), $relation->getPivotFields());
+                return $relation instanceof PivotRelation && $relation->getPivotFields()->has(Str::after($field, '.'));
             }
 
             $fieldRelation = $this->relation(Str::before($field, '.'));
