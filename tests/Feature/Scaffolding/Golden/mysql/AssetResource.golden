@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Rest\Resources;
+
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Tests\Fixtures\Newsroom\Resource as ResourceModel;
+
+class AssetResource extends Resource
+{
+    public static string $model = ResourceModel::class;
+
+    #[\Override]
+    public function fields(RestRequest $request): array
+    {
+        return [
+            ID::make('id'),
+            Text::make('label')
+                ->rules('max:255')
+                ->creationRules('required'),
+        ];
+    }
+
+    #[\Override]
+    public function relations(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function scopes(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function limits(RestRequest $request): array
+    {
+        return [
+            10,
+            25,
+            50,
+        ];
+    }
+
+    #[\Override]
+    public function actions(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function instructions(RestRequest $request): array
+    {
+        return [];
+    }
+}

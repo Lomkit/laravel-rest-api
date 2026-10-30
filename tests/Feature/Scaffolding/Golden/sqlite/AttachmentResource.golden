@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Rest\Resources;
+
+use Lomkit\Rest\Fields\DateTime;
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Tests\Fixtures\Newsroom\Attachment;
+
+class AttachmentResource extends Resource
+{
+    public static string $model = Attachment::class;
+
+    #[\Override]
+    public function fields(RestRequest $request): array
+    {
+        return [
+            ID::make('id'),
+            Text::make('path')->creationRules('required'),
+            Integer::make('size')->creationRules('required'),
+            DateTime::make('created_at')
+                ->nullable()
+                ->readonly(),
+            DateTime::make('updated_at')
+                ->nullable()
+                ->readonly(),
+        ];
+    }
+
+    #[\Override]
+    public function relations(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function scopes(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function limits(RestRequest $request): array
+    {
+        return [
+            10,
+            25,
+            50,
+        ];
+    }
+
+    #[\Override]
+    public function actions(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function instructions(RestRequest $request): array
+    {
+        return [];
+    }
+}

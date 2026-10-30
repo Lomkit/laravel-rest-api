@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Console\Commands;
 
 use Lomkit\Rest\Console\Generation\BaseClass;
 use Lomkit\Rest\Console\Generation\ClassReference;
-use Lomkit\Rest\Console\Generation\ResourceIndex;
+use Lomkit\Rest\Console\Generation\ImportSet;
 use Lomkit\Rest\Console\Generation\Stub;
 use Lomkit\Rest\Exceptions\InvalidClassReferenceException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -38,7 +38,7 @@ class ControllerMakeCommand extends RestGeneratorCommand
     {
         parent::interact($input, $output);
 
-        if ($input->getOption('resource') !== null) {
+        if ($this->namesTheBaseClass() || $input->getOption('resource') !== null) {
             return;
         }
 
@@ -62,11 +62,17 @@ class ControllerMakeCommand extends RestGeneratorCommand
     #[\Override]
     protected function replacements(string $name): array
     {
-        $import = $this->resource?->import([class_basename($name), 'Controller'], 'Resource');
+        $resource = $this->resource?->fqcn();
+
+        if ($resource === null) {
+            return ['{{ namespacedResource }}' => null, '{{ resource }}' => null];
+        }
+
+        $imports = ImportSet::forController($name, $this->baseClass()->fqcn)->with($resource, 'Resource');
 
         return [
-            '{{ namespacedResource }}' => $import?->statement(),
-            '{{ resource }}' => $import?->name(),
+            '{{ namespacedResource }}' => $imports->statement($resource),
+            '{{ resource }}' => $imports->name($resource),
         ];
     }
 
@@ -111,10 +117,5 @@ class ControllerMakeCommand extends RestGeneratorCommand
     private function resourceNamespace(): string
     {
         return $this->rootNamespace().'Rest\Resources\\';
-    }
-
-    private function resourceIndex(): ResourceIndex
-    {
-        return new ResourceIndex($this->laravel->path('Rest/Resources'), $this->resourceNamespace());
     }
 }

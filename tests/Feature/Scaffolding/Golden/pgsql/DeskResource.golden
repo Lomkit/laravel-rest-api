@@ -1,0 +1,84 @@
+<?php
+
+namespace App\Rest\Resources;
+
+use Lomkit\Rest\Fields\DateTime;
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Relations\BelongsToMany;
+use Lomkit\Rest\Relations\HasMany;
+use Lomkit\Rest\Relations\HasManyThrough;
+use Lomkit\Rest\Relations\HasOneThrough;
+use Lomkit\Rest\Relations\MorphToMany;
+use Lomkit\Rest\Tests\Fixtures\Newsroom\Desk;
+
+class DeskResource extends Resource
+{
+    public static string $model = Desk::class;
+
+    #[\Override]
+    public function fields(RestRequest $request): array
+    {
+        return [
+            ID::make('id'),
+            Text::make('name')
+                ->rules('max:255')
+                ->creationRules('required'),
+        ];
+    }
+
+    #[\Override]
+    public function relations(RestRequest $request): array
+    {
+        return [
+            HasMany::make('stories', RelatedStoryResource::class),
+            HasManyThrough::make('comments', RelatedCommentResource::class),
+            HasOneThrough::make('leadSummary', RelatedSummaryResource::class),
+            MorphToMany::make('keywords', RelatedKeywordResource::class),
+            BelongsToMany::make('reporters', RelatedReporterResource::class)->pivotFields([
+                Text::make('role')
+                    ->rules('max:40')
+                    ->creationRules('required'),
+                Text::make('pass_number')
+                    ->rules('max:12')
+                    ->creationRules('required'),
+                DateTime::make('created_at')->nullable(),
+                DateTime::make('assigned_at')
+                    ->nullable()
+                    ->readonly(),
+                DateTime::make('reviewed_at')
+                    ->nullable()
+                    ->readonly(),
+            ]),
+        ];
+    }
+
+    #[\Override]
+    public function scopes(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function limits(RestRequest $request): array
+    {
+        return [
+            10,
+            25,
+            50,
+        ];
+    }
+
+    #[\Override]
+    public function actions(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function instructions(RestRequest $request): array
+    {
+        return [];
+    }
+}

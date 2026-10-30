@@ -1,0 +1,101 @@
+<?php
+
+namespace App\Rest\Resources;
+
+use App\Rest\Resources\Admin\RelatedTopicResource;
+use Lomkit\Rest\Fields\Boolean;
+use Lomkit\Rest\Fields\DateTime;
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Relations\BelongsTo;
+use Lomkit\Rest\Relations\BelongsToMany;
+use Lomkit\Rest\Relations\HasMany;
+use Lomkit\Rest\Relations\HasOne;
+use Lomkit\Rest\Relations\MorphMany;
+use Lomkit\Rest\Relations\MorphOne;
+use Lomkit\Rest\Relations\MorphToMany;
+use Lomkit\Rest\Tests\Fixtures\Newsroom\Story;
+
+class StoryResource extends Resource
+{
+    public static string $model = Story::class;
+
+    #[\Override]
+    public function fields(RestRequest $request): array
+    {
+        return [
+            ID::make('id'),
+            Integer::make('desk_id')->readonly(),
+            Integer::make('reporter_id')->nullable(),
+            Text::make('headline')
+                ->rules('max:255')
+                ->creationRules('required'),
+            DateTime::make('created_at')
+                ->nullable()
+                ->readonly(),
+            DateTime::make('updated_at')
+                ->nullable()
+                ->readonly(),
+        ];
+    }
+
+    #[\Override]
+    public function relations(RestRequest $request): array
+    {
+        return [
+            BelongsTo::make('desk', RelatedDeskResource::class)->requiredOnCreation(),
+            HasOne::make('summary', RelatedSummaryResource::class),
+            HasMany::make('comments', RelatedCommentResource::class),
+            BelongsToMany::make('topics', RelatedTopicResource::class)->pivotFields([
+                Integer::make('position'),
+                Text::make('note')
+                    ->nullable()
+                    ->rules('max:80'),
+                Boolean::make('pinned')->creationRules('required'),
+                Text::make('badge')->nullable(),
+                Text::make('details')
+                    ->nullable()
+                    ->rules('json'),
+                DateTime::make('created_at')
+                    ->nullable()
+                    ->readonly(),
+                DateTime::make('updated_at')
+                    ->nullable()
+                    ->readonly(),
+            ]),
+            MorphOne::make('cover', RelatedPhotoResource::class),
+            MorphMany::make('photos', RelatedPhotoResource::class),
+            MorphToMany::make('keywords', RelatedKeywordResource::class),
+        ];
+    }
+
+    #[\Override]
+    public function scopes(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function limits(RestRequest $request): array
+    {
+        return [
+            10,
+            25,
+            50,
+        ];
+    }
+
+    #[\Override]
+    public function actions(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function instructions(RestRequest $request): array
+    {
+        return [];
+    }
+}

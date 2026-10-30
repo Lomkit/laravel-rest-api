@@ -73,7 +73,7 @@ class Resource implements \JsonSerializable
     public function defaultOrderBy(RestRequest $request): array
     {
         return [
-            'id' => 'desc',
+            static::newModel()->getKeyName() => 'desc',
         ];
     }
 

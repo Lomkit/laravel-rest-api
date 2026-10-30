@@ -46,12 +46,6 @@ final readonly class ClassReference
         return class_exists($this->fqcn);
     }
 
-    /** @param  list<string>  $takenNames */
-    public function import(array $takenNames, string $aliasSuffix): ClassImport
-    {
-        return ClassImport::of($this->fqcn, $takenNames, $aliasSuffix);
-    }
-
     /** @param  callable(string): string  $transform */
     private static function guess(string $class, string $suffix, callable $transform, string $namespace): ?self
     {

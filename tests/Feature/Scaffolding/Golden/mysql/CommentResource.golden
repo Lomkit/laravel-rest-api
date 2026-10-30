@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Rest\Resources;
+
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Relations\BelongsTo;
+use Lomkit\Rest\Relations\HasMany;
+use Lomkit\Rest\Tests\Fixtures\Newsroom\Comment;
+
+class CommentResource extends Resource
+{
+    public static string $model = Comment::class;
+
+    #[\Override]
+    public function fields(RestRequest $request): array
+    {
+        return [
+            ID::make('id'),
+            Integer::make('story_id')->readonly(),
+            Integer::make('parent_id')
+                ->nullable()
+                ->readonly(),
+            Text::make('body')->creationRules('required'),
+        ];
+    }
+
+    #[\Override]
+    public function relations(RestRequest $request): array
+    {
+        return [
+            BelongsTo::make('story', RelatedStoryResource::class)->requiredOnCreation(),
+            BelongsTo::make('parent', CommentResource::class),
+            HasMany::make('replies', CommentResource::class),
+        ];
+    }
+
+    #[\Override]
+    public function scopes(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function limits(RestRequest $request): array
+    {
+        return [
+            10,
+            25,
+            50,
+        ];
+    }
+
+    #[\Override]
+    public function actions(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function instructions(RestRequest $request): array
+    {
+        return [];
+    }
+}

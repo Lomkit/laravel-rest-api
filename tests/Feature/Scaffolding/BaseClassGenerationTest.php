@@ -88,6 +88,27 @@ class BaseClassGenerationTest extends ScaffoldingTestCase
     }
 
     #[Test]
+    #[DataProvider('promptedBaseClassNames')]
+    public function it_refuses_the_name_of_the_base_class_before_it_asks_anything_else(string $command, string $type, string $base): void
+    {
+        $this->artisan($command)
+            ->expectsQuestion("What should the {$type} be named?", 'Admin/'.class_basename($base))
+            ->expectsOutputToContain('is reserved for the base class ['.$base.'].')
+            ->assertFailed();
+
+        $this->assertDirectoryDoesNotExist(app_path('Rest'));
+    }
+
+    /** @return array<string, array{string, string, string}> */
+    public static function promptedBaseClassNames(): array
+    {
+        return [
+            'base resource' => ['rest:resource', 'resource', 'App\Rest\Resources\Resource'],
+            'base controller' => ['rest:controller', 'controller', 'App\Rest\Controllers\Controller'],
+        ];
+    }
+
+    #[Test]
     public function it_keeps_the_existing_base_resource_when_its_name_is_given_with_force(): void
     {
         $this->artisan('rest:resource', ['name' => 'ForcedNameResource', '--model' => 'Post', '--no-interaction' => true])->assertSuccessful();

@@ -2,15 +2,22 @@
 
 namespace Lomkit\Rest\Console\Commands;
 
+use Illuminate\Database\QueryException;
 use Lomkit\Rest\Console\Generation\BaseClass;
 use Lomkit\Rest\Console\Generation\ClassReference;
+use Lomkit\Rest\Console\Generation\ImportSet;
+use Lomkit\Rest\Console\Generation\ModelTable;
+use Lomkit\Rest\Console\Generation\RelationMapping;
+use Lomkit\Rest\Console\Generation\ResourceBlueprint;
 use Lomkit\Rest\Console\Generation\Stub;
 use Lomkit\Rest\Exceptions\InvalidClassReferenceException;
+use Lomkit\Rest\Exceptions\InvalidModelTableException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\suggest;
 
 #[AsCommand(name: 'rest:resource', description: 'Create a new resource class')]
@@ -19,6 +26,8 @@ class ResourceMakeCommand extends RestGeneratorCommand
     protected $type = 'Resource';
 
     private ?ClassReference $model = null;
+
+    private ResourceBlueprint $blueprint;
 
     #[\Override]
     protected function stub(): Stub
@@ -37,14 +46,16 @@ class ResourceMakeCommand extends RestGeneratorCommand
     {
         parent::interact($input, $output);
 
-        if ($input->getOption('model') !== null) {
+        if ($this->namesTheBaseClass()) {
             return;
         }
 
-        $model = suggest('What model should this resource rely on? (Optional)', $this->findAvailableModels());
+        if ($input->getOption('model') === null) {
+            $this->askForTheModel($input);
+        }
 
-        if ($model !== '') {
-            $input->setOption('model', $model);
+        if ($input->getOption('generate') !== true) {
+            $this->askToGenerate($input);
         }
     }
 
@@ -53,7 +64,8 @@ class ResourceMakeCommand extends RestGeneratorCommand
     {
         try {
             $this->model = $this->modelReference();
-        } catch (InvalidClassReferenceException $exception) {
+            $this->blueprint = $this->blueprint();
+        } catch (InvalidClassReferenceException|InvalidModelTableException $exception) {
             $this->fail($exception->getMessage());
         }
     }
@@ -61,18 +73,27 @@ class ResourceMakeCommand extends RestGeneratorCommand
     #[\Override]
     protected function replacements(string $name): array
     {
-        $import = $this->model?->import([class_basename($name), 'Resource', 'ID', 'RestRequest'], 'Model');
-
-        return [
-            '{{ namespacedModel }}' => $import?->statement(),
-            '{{ model }}' => $import?->name(),
-        ];
+        return $this->blueprint->replacements();
     }
 
     #[\Override]
     protected function afterWritten(): void
     {
         $this->warnAboutReference($this->model, 'model');
+
+        if ($this->option('generate') !== true) {
+            return;
+        }
+
+        $this->components->twoColumnDetail(class_basename($this->qualifyClass($this->getNameInput())), $this->blueprint->summary());
+
+        foreach ($this->blueprint->skipped() as $relation) {
+            $this->line("  Skipped: {$relation}");
+        }
+
+        foreach ($this->blueprint->notes() as $note) {
+            $this->line("  Note: {$note}");
+        }
     }
 
     #[\Override]
@@ -81,6 +102,7 @@ class ResourceMakeCommand extends RestGeneratorCommand
         return [
             ...parent::getOptions(),
             ['model', null, InputOption::VALUE_REQUIRED, 'The model associated with this resource'],
+            ['generate', 'G', InputOption::VALUE_NONE, 'Generate the fields and relations from the table of the model'],
         ];
     }
 
@@ -88,6 +110,52 @@ class ResourceMakeCommand extends RestGeneratorCommand
     protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace.'\Rest\Resources';
+    }
+
+    private function askForTheModel(InputInterface $input): void
+    {
+        $model = suggest('What model should this resource rely on? (Optional)', $this->findAvailableModels());
+
+        if ($model !== '') {
+            $input->setOption('model', $model);
+        }
+    }
+
+    private function askToGenerate(InputInterface $input): void
+    {
+        $source = $this->sourceWithTable();
+
+        if ($source === null) {
+            return;
+        }
+
+        $input->setOption('generate', confirm("Generate the fields and relations from the {$source->name()} table?", default: true));
+    }
+
+    private function sourceWithTable(): ?ModelTable
+    {
+        try {
+            $source = ModelTable::find($this->modelReference());
+
+            return $source?->exists() === true ? $source : null;
+        } catch (InvalidClassReferenceException|QueryException) {
+            return null;
+        }
+    }
+
+    private function blueprint(): ResourceBlueprint
+    {
+        $class = $this->qualifyClass($this->getNameInput());
+        $imports = ImportSet::forResource($class, $this->baseClass()->fqcn);
+
+        if ($this->option('generate') !== true) {
+            return ResourceBlueprint::withKeyOnly($imports, $this->model?->fqcn(), ModelTable::find($this->model)?->model->getKeyName() ?? 'id');
+        }
+
+        $source = ModelTable::of($this->model);
+        $relations = RelationMapping::using($this->resourceIndex()->withPlanned($class, $source->class), $this->modelNamespace());
+
+        return ResourceBlueprint::fromTable($imports, $source, $relations);
     }
 
     private function modelReference(): ?ClassReference

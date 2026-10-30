@@ -81,7 +81,7 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 | json, array cast | `Json::make('metadata')` |
 
 - `getFields()` returns a `Lomkit\Rest\Fields\FieldSet` instead of an array of names. Call `->names()` to get the old list.
-- `rest:resource` generates `ID::make('id')`.
+- `rest:resource` generates `ID::make()` with the key name of the model, `ID::make('id')` by default. See [Generators](#generators).
 - `Lomkit\Rest\Fields\DateTime` has the same short name as PHP's `\DateTime`. In a file that uses both, alias one of them.
 
 ### Typed inputs
@@ -407,7 +407,7 @@ Sorts:
 - The other fields are ordered by their column, qualified with the table of the model: `posts.views`.
 - `direction` accepts the values of `Lomkit\Rest\Fields\SortDirection`, `asc` and `desc`. A sort without a direction is ascending.
 - `Lomkit\Rest\Query\Builder::sort($field, $direction)` is removed. `applySorts()` keeps its signature and applies each sort with a `Lomkit\Rest\Query\Clauses\SortClause`, which calls `Field::sort()`. A sort passed to `search()` or `applySorts()` must name a declared, sortable field of the resource: another field throws `Lomkit\Rest\Exceptions\InvalidFieldException`. `Lomkit\Rest\Query\ScoutBuilder::sort()` does not change.
-- `defaultOrderBy()` still orders by the columns it names.
+- `defaultOrderBy()` still orders by the columns it names. The default `Resource::defaultOrderBy()` returns the key of the model in descending order, `[static::newModel()->getKeyName() => 'desc']`, instead of `['id' => 'desc']`: a search without `sorts` on a model whose key is not `id`, such as `code`, now works instead of failing on an unknown `id` column.
 
 Aggregates:
 
@@ -578,7 +578,7 @@ Scramble:
 
 The classes that the generators write pass Pint with the `laravel` preset and Larastan at level 10:
 
-- They import the classes they use and mark each overriding method with `#[\Override]`. A model or a resource whose short name the file already uses is imported under an alias, for example `use App\Models\Resource as ResourceModel;`.
+- They import the classes they use and mark each overriding method with `#[\Override]`. A model or a resource whose short name the file already uses is imported under an alias, for example `use App\Models\Resource as ResourceModel;`. In a resource, the reserved short names are the resource itself, `Resource`, `RestRequest`, `Rule`, the field classes and the relation classes, so a model named `Rule` or `Text` is imported as `RuleModel` or `TextModel`.
 - `rest:action` and `rest:instruction` generate a `fields()` method that returns `[]`. Before, it declared a required `id` field: the instruction refused every request without it, and the action ignored it and ran on every model of the search.
 - `rest:base-resource` generates an empty abstract class. Before, it declared the query hooks, which returned `$query` unchanged. Override a hook in your base resource when you add constraints to it.
 - `rest:base-controller` generates an empty abstract class.
@@ -588,6 +588,39 @@ Options:
 
 - `rest:resource`, `rest:controller`, `rest:action`, `rest:instruction`, `rest:response`, `rest:base-resource` and `rest:base-controller` accept `--force` (`-f`), which replaces an existing class. Without it, an existing class is kept: the command prints `<Type> already exists.` and exits with 0.
 - When the command runs interactively, `rest:resource` asks for the model and `rest:controller` for the resource whenever the option is missing, also when the name is given or `-v` is passed. With `--no-interaction` they ask nothing.
+- `rest:controller` offers the concrete resources under `app/Rest/Resources`, nested ones included. It reads each file first, and loads only a file that declares a single class, named like the file and its directory, that extends another class and is not abstract: a script or a helper in that directory is never run. `rest:resource --generate` finds the resources of the related models in the same way.
+
+Fields and relations from the model:
+
+- `rest:resource` accepts `--generate` (`-G`): it reads the table of the model through the schema builder and declares a field for each column, in the order of the table, then a relation for each relation method of the model whose related model has a resource. Run it after the migrations: `php artisan rest:resource PostResource --model=Post --generate`.
+- When the command runs interactively without `--generate` and the table of the model exists, it asks `Generate the fields and relations from the <table> table?`, and the default answer is yes. When the model or its table does not exist, or the database cannot be reached, it does not ask. With `--no-interaction` and without `--generate`, the resource declares only the key of the model.
+- `--generate` stops the command with exit code 1 before any file is written when no model is given or guessed, when the model does not exist, is not an Eloquent model or cannot be instantiated, such as an abstract model, and when its table does not exist.
+- An existing resource is kept, as with the other generators: run `--generate --force` to generate it again.
+- After the `created successfully` line, the command prints the resource with its counts, for example `PostResource ... 8 fields, 1 relation`, then one `Skipped:` line for each relation that it did not generate and one `Note:` line for each column that needs a review.
+- The key field is `ID::make()` with the key name of the model, with or without `--generate`. Before, it was always `ID::make('id')`.
+
+With `--generate`, each column gives one field, through these rules in this order:
+
+1. The key of the model gives `ID`. When the key is neither incrementing nor generated by `HasUuids` or `HasUlids`, the client sends it on create: the field gets `creatable()` and the rules below.
+2. A hidden column (`$hidden` or `#[Hidden]`) that the model does not let fill, when the model declares `$fillable`, `$guarded` or their attributes, is left out with a note.
+3. A cast that a field type matches gives that type: a backed enum gives `Enum`, the JSON casts (`array`, `json`, `object`, `collection`, their encrypted forms and the `As*` array and collection casts) give `Json`, and the `boolean`, `integer`, `decimal`, `float`, `date` and `datetime` casts give `Boolean`, `Integer`, `Number`, `Date` and `DateTime`.
+4. Otherwise the column type gives the field type: `Integer`, `Number`, `Boolean` (also `tinyint(1)`), `Date`, `DateTime`, or `Text` for the string, text, `uuid`, `enum`, `time`, `json` and `jsonb` types. Another type, such as a binary column, gives `Text` with a note. A `json` or `jsonb` column without a JSON cast also gets a note: Eloquent encodes an array only for a cast attribute, so the client sends the JSON as a string. Cast the column to `array`, on the model or on the pivot model, to get `Json`. On SQLite, a `json` column is a text column.
+5. A nullable column gets `nullable()`.
+6. The timestamps of the model (`created_at`, `updated_at`, and `deleted_at` with `SoftDeletes`), the auto-increment and generated columns, the columns that `HasUuids` or `HasUlids` fill, and the foreign key of a generated `BelongsTo` relation get `readonly()`, and nothing else.
+7. A hidden column gets `writeOnly()`: clients may write it, and it is never returned. The package does not read `$hidden` at runtime: the generated line declares it.
+8. A `Text` or `ID` field whose column reports a length gets `rules('max:<length>')`. MySQL and PostgreSQL report it, SQLite does not. A `Text` field of a `json` or `jsonb` column gets `rules('json')`.
+9. A column that is not nullable and has no default gets `creationRules('required')`, and a column with a unique index of its own gets `Rule::unique(<Model>::class, '<column>')` in its creation rules.
+
+A field with more than one call after `make()` is written one call per line.
+
+With `--generate`, the relations of the model are generated through these rules:
+
+- The command reads the public methods of the model whose declared return type is an Eloquent relation, such as `public function author(): BelongsTo`, and calls them on a new instance. It never calls a method without a declared relation return type, a static method or a method with a required parameter. The relations keep the order of the methods in the model.
+- A relation is generated when its related model has a resource: a concrete resource under `app/Rest/Resources` whose `$model` is that model, or the resource being generated, for a relation of the model to itself. When several resources have that model, the resource being generated comes first, then the first class name in alphabetical order. `BelongsTo`, `HasOne`, `HasMany`, `BelongsToMany`, `MorphOne`, `MorphMany`, `MorphToMany`, `HasOneThrough` and `HasManyThrough` give the relation class of the same name, for example `BelongsTo::make('author', UserResource::class)`, and `morphedByMany()` gives `MorphedByMany`. A resource in another namespace is imported.
+- A relation whose related model has no resource is not generated, and nothing is exposed for it: the command prints `Skipped: author: no resource for App\Models\User. Generate one first with php artisan rest:resource UserResource --model=User --generate, then run this command again with --force.` Its foreign key stays a writable field.
+- A `MorphTo` relation, or a relation of another class, is not generated: the command prints `Skipped: commentable: MorphTo relations are not generated, declare it in relations() by hand.`
+- A generated `BelongsTo` relation makes its foreign key `readonly()`, so clients set the key through the relation. When the foreign key column is not nullable and has no default, the relation gets `requiredOnCreation()`.
+- A `BelongsToMany`, `MorphToMany` or `MorphedByMany` relation whose definition declares `withPivot()` columns or `withTimestamps()` gets `pivotFields([...])`: one field for each of these columns of the pivot table, typed by the rules above from the column and the casts of the pivot model. The pivot timestamps get `readonly()`, and a pivot field gets no `Rule::unique()`. A note names a pivot column as `<relation>.pivot.<column>`.
 
 Model and resource:
 
@@ -600,11 +633,11 @@ Model and resource:
 Base classes:
 
 - `rest:resource` creates `app/Rest/Resources/Resource.php`, and `rest:controller` creates `app/Rest/Controllers/Controller.php`, when the class it generates was written and the base class does not exist yet. The base class is written after that class and has its own `created successfully` line. Before, it was created first and silently, even when the command then failed. The `--force` of `rest:resource` and `rest:controller` never replaces the base class.
-- `rest:resource` refuses the name `Resource`, and `rest:controller` the name `Controller`, in any case and in any namespace, with exit code 1: these names belong to the base classes. Run `rest:base-resource` or `rest:base-controller` to create a base class.
+- `rest:resource` refuses the name `Resource`, and `rest:controller` the name `Controller`, in any case and in any namespace, with exit code 1: these names belong to the base classes. When the command runs interactively, it refuses the name before it asks for the model or the resource. Run `rest:base-resource` or `rest:base-controller` to create a base class.
 - A class in the namespace of its base class no longer imports it.
 
 Published stubs:
 
 - The generators read the stubs that `php artisan stub:publish` copies to `stubs/rest.<name>.stub`, and fall back to the package stubs. Before, they ignored them. The stubs published under 2.x declare untyped properties such as `public static $model`, which are a fatal error in 3.0 (see [Native types](#native-types)): delete your `stubs/rest.*.stub` files, or publish them again with `php artisan stub:publish --force` after you have saved the Laravel stubs that you customised.
 - The `stubs/rest/*.stub` files that versions before 2.14 used are not read.
-- A published stub keeps the placeholders that the generator fills: `{{ namespace }}` and `{{ class }}` in each stub, `{{ namespacedModel }}` and `{{ model }}` in `rest.resource.stub`, and `{{ namespacedResource }}` and `{{ resource }}` in `rest.controller.stub`. Otherwise the command throws `Lomkit\Rest\Exceptions\InvalidStubException`, which names the stub and the missing placeholder.
+- A published stub keeps the placeholders that the generator fills: `{{ namespace }}` and `{{ class }}` in each stub, `{{ namespacedModel }}`, `{{ model }}`, `{{ imports }}`, `{{ fields }}` and `{{ relations }}` in `rest.resource.stub`, and `{{ namespacedResource }}` and `{{ resource }}` in `rest.controller.stub`. Otherwise the command throws `Lomkit\Rest\Exceptions\InvalidStubException`, which names the stub and the missing placeholder.

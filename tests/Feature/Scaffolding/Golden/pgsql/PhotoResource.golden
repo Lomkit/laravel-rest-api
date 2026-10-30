@@ -1,0 +1,63 @@
+<?php
+
+namespace App\Rest\Resources;
+
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Tests\Fixtures\Newsroom\Photo;
+
+class PhotoResource extends Resource
+{
+    public static string $model = Photo::class;
+
+    #[\Override]
+    public function fields(RestRequest $request): array
+    {
+        return [
+            ID::make('id'),
+            Text::make('imageable_type')
+                ->rules('max:255')
+                ->creationRules('required'),
+            Integer::make('imageable_id')->creationRules('required'),
+            Text::make('path')
+                ->rules('max:255')
+                ->creationRules('required'),
+        ];
+    }
+
+    #[\Override]
+    public function relations(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function scopes(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function limits(RestRequest $request): array
+    {
+        return [
+            10,
+            25,
+            50,
+        ];
+    }
+
+    #[\Override]
+    public function actions(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function instructions(RestRequest $request): array
+    {
+        return [];
+    }
+}

@@ -44,7 +44,7 @@ enum Stub: string
             }
         }
 
-        $contents = strtr($contents, array_filter($values, is_string(...)));
+        $contents = $this->replace($contents, array_filter($values, is_string(...)));
 
         foreach (array_keys($values, null, true) as $line) {
             $contents = $this->withoutLinesHolding($contents, $line);
@@ -58,9 +58,25 @@ enum Stub: string
     {
         return match ($this) {
             self::Controller => ['{{ namespace }}', '{{ class }}', '{{ namespacedResource }}', '{{ resource }}'],
-            self::Resource => ['{{ namespace }}', '{{ class }}', '{{ namespacedModel }}', '{{ model }}'],
+            self::Resource => ['{{ namespace }}', '{{ class }}', '{{ namespacedModel }}', '{{ model }}', '{{ imports }}', '{{ fields }}', '{{ relations }}'],
             default => ['{{ namespace }}', '{{ class }}'],
         };
+    }
+
+    /** @param  array<string, string>  $values */
+    private function replace(string $contents, array $values): string
+    {
+        $lines = explode("\n", $contents);
+
+        foreach ($lines as $index => $line) {
+            $indentation = substr($line, 0, strspn($line, " \t"));
+            $lines[$index] = strtr($line, array_map(
+                fn (string $value): string => preg_replace('/\n(?=.)/', "\n{$indentation}", $value) ?? $value,
+                $values,
+            ));
+        }
+
+        return implode("\n", $lines);
     }
 
     private function withoutLinesHolding(string $contents, string $needle): string
@@ -86,6 +102,8 @@ enum Stub: string
             $kept[] = $line;
         }
 
-        return str_replace("\n{\n}", ' {}', implode("\n", $kept));
+        $contents = str_replace("\n{\n}", ' {}', implode("\n", $kept));
+
+        return preg_replace('/\[\n\s*\]/', '[]', $contents) ?? $contents;
     }
 }

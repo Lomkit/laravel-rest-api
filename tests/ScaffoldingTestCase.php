@@ -70,15 +70,16 @@ abstract class ScaffoldingTestCase extends PackageTestCase
         );
     }
 
-    protected function writeModel(string $class): void
+    protected function writeModel(string $class, ?string $body = null): void
     {
         $path = app_path(str_replace('\\', '/', Str::after($class, 'App\\')).'.php');
 
         (new Filesystem)->ensureDirectoryExists(dirname($path));
         file_put_contents($path, sprintf(
-            "<?php\n\nnamespace %s;\n\nuse Illuminate\Database\Eloquent\Model;\n\nclass %s extends Model {}\n",
+            "<?php\n\nnamespace %s;\n\nuse Illuminate\Database\Eloquent\Model;\n\nclass %s extends Model%s\n",
             Str::beforeLast($class, '\\'),
             class_basename($class),
+            $body === null ? ' {}' : "\n{\n    {$body}\n}",
         ));
     }
 

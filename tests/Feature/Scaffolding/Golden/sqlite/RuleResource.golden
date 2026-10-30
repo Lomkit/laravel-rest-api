@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Rest\Resources;
+
+use Illuminate\Validation\Rule;
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Tests\Fixtures\Newsroom\Rule as RuleModel;
+
+class RuleResource extends Resource
+{
+    public static string $model = RuleModel::class;
+
+    #[\Override]
+    public function fields(RestRequest $request): array
+    {
+        return [
+            ID::make('id'),
+            Text::make('name')->creationRules('required', Rule::unique(RuleModel::class, 'name')),
+            Text::make('pattern')->nullable(),
+        ];
+    }
+
+    #[\Override]
+    public function relations(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function scopes(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function limits(RestRequest $request): array
+    {
+        return [
+            10,
+            25,
+            50,
+        ];
+    }
+
+    #[\Override]
+    public function actions(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function instructions(RestRequest $request): array
+    {
+        return [];
+    }
+}
