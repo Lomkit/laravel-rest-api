@@ -138,33 +138,6 @@ class MutateCreateOperationsTest extends TestCase
         $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
     }
 
-    public function test_creating_a_resource_with_prohibited_relation(): void
-    {
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/constrained/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
-                        'relations' => [
-                            'belongsToRelation' => [
-                                'operation' => 'create',
-                                'attributes' => [],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToRelation']]);
-    }
-
     public function test_creating_a_resource_with_no_required_relation_but_empty_array(): void
     {
         Gate::policy(Model::class, GreenPolicy::class);

@@ -64,6 +64,7 @@ class TestCase extends BaseTestCase
                 'driver' => 'token',
                 'provider' => 'users',
             ]);
+            $config->set('rest.authorizations.strict', true);
         });
     }
 
