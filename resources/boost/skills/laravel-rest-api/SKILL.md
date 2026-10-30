@@ -120,9 +120,11 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
   Text::make('api_token')->writeOnly(),                // never returned, 422 in selects, sorts and aggregates
   DateTime::make('created_at')->selectable(false),     // not returned, 422 in selects, sortable
   Json::make('settings'),                              // returned, 422 in sorts, min/max/avg/sum
-  Text::make('full_name')->virtual()                   // not returned, 422 in selects and aggregates
+  Text::make('full_name')
+      ->virtual()                                      // not returned, 422 in selects and aggregates
       ->sortUsing(fn (Builder $query, string $direction) => $query
-          ->orderBy('last_name', $direction)->orderBy('first_name', $direction)),
+          ->orderBy('last_name', $direction)
+          ->orderBy('first_name', $direction)),
   ```
 
   - Selectable fields (not `writeOnly()`, not `selectable(false)`, not `virtual()`) are the only ones `selects` accepts and the ones a row returns without `selects`, at every include level. Virtual fields cannot be selected yet; `requires()` has no effect yet.
@@ -136,11 +138,15 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
 
   ID::make('id'),                                      // refused on create and update
   ID::make('uuid')->creatable(),                       // a key the client sends on create
-  Text::make('title')->rules('max:255')->creationRules('required')->updateRules('filled'),
+  Text::make('title')
+      ->rules('max:255')
+      ->creationRules('required')
+      ->updateRules('filled'),
   Number::make('rating')->nullable(),                  // a number or null
   DateTime::make('created_at')->readonly(),            // refused on create and update
   Text::make('slug')->updatable(false),                // written on create only
-  Text::make('full_name')->virtual()                   // written through its callback only
+  Text::make('full_name')
+      ->virtual()                                      // written through its callback only
       ->fillUsing(function (Model $author, mixed $value): void {
           $author->forceFill(['first_name' => Str::before((string) $value, ' '), 'last_name' => Str::after((string) $value, ' ')]);
       }),
@@ -156,7 +162,9 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
   {
       return [
           Scope::make('publishedSince')->fields([Date::make('since')]),           // scopePublishedSince(Builder $query, CarbonImmutable $since)
-          Scope::make('popular')->fields([Integer::make('min_views')->default(100)])->meta(['label' => 'Popular']),
+          Scope::make('popular')
+              ->fields([Integer::make('min_views')->default(100)])
+              ->meta(['label' => 'Popular']),
       ];
   }
   ```
@@ -228,11 +236,9 @@ use Lomkit\Rest\Facades\Rest;
 Rest::resource('users', \App\Rest\Controllers\UsersController::class);
 
 // Opt into soft-delete routes (off by default):
-Rest::resource('posts', \App\Rest\Controllers\PostsController::class)
-    ->withSoftDeletes();                       // both restore + force
+Rest::resource('posts', \App\Rest\Controllers\PostsController::class)->withSoftDeletes(); // both restore + force
 // or selectively:
-Rest::resource('posts', \App\Rest\Controllers\PostsController::class)
-    ->withSoftDeletes('restore');
+Rest::resource('posts', \App\Rest\Controllers\PostsController::class)->withSoftDeletes('restore');
 ```
 
 The name must be one URI segment (letters, digits, `-`, `_`). Dotted names (`users.posts`) and slashed names (`admin/users`) throw `InvalidResourceRouteException`: wrap the call in `Route::prefix('admin')` instead. `Rest::resource()` takes two arguments.
@@ -447,8 +453,7 @@ Register on the Resource:
 public function actions(RestRequest $request): array
 {
     return [
-        SendWelcomeNotificationAction::make()
-            ->meta(['color' => '#FFFFFF']),     // merges; getMeta() reads
+        SendWelcomeNotificationAction::make()->meta(['color' => '#FFFFFF']), // merges; getMeta() reads
     ];
 }
 ```

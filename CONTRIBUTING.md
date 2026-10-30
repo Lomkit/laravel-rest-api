@@ -98,6 +98,18 @@ New code follows these rules:
 - Add `#[\Override]` to every method that overrides a parent method or implements an interface method. Larastan reports a missing attribute in `src`.
 - Leave out `#[\Override]` when the parent method does not exist in the lowest version that `composer.json` allows, for example a hook that a later Laravel release added: the attribute is a fatal error on that version. Ignore the Larastan error for this method only in `phpstan.neon`, with the reason in the message pattern.
 - Do not write comments that describe the code. Use PHPDoc only for types that PHP cannot declare, for example `array<string, mixed>` or `Collection<int, Model>`.
+- Write a fluent chain of more than two calls with one call per line, and indent the continuation lines by four spaces. A single call after `make()` stays on the line of `make()`:
+
+  ```php
+  ID::make('id'),
+  Text::make('summary')->nullable(),
+  Text::make('title')
+      ->rules('max:255')
+      ->creationRules('required')
+      ->updateRules('filled'),
+  ```
+
+  Pint does not enforce this rule: check it in review. Existing code follows it as changes touch it.
 
 ## Static analysis
 

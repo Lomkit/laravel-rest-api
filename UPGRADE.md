@@ -397,9 +397,11 @@ Sorts:
   ```php
   use Illuminate\Contracts\Database\Eloquent\Builder;
 
-  Text::make('full_name')->virtual()
+  Text::make('full_name')
+      ->virtual()
       ->sortUsing(fn (Builder $query, string $direction) => $query
-          ->orderBy('last_name', $direction)->orderBy('first_name', $direction)),
+          ->orderBy('last_name', $direction)
+          ->orderBy('first_name', $direction)),
   ```
 
 - The other fields are ordered by their column, qualified with the table of the model: `posts.views`.
@@ -436,12 +438,15 @@ use Illuminate\Support\Str;
 
 ID::make('id'),                                    // refused on create and update
 ID::make('uuid')->creatable(),                     // a key that clients send on create
-Text::make('title')->rules('max:255')->creationRules('required'),
+Text::make('title')
+    ->rules('max:255')
+    ->creationRules('required'),
 Number::make('rating')->nullable(),                // a number or null
 DateTime::make('created_at')->readonly(),          // refused on create and update
 Text::make('slug')->updatable(false),              // written on create only
 Text::make('api_token')->writeOnly(),              // written, never returned
-Text::make('full_name')->virtual()
+Text::make('full_name')
+    ->virtual()
     ->fillUsing(function (Model $author, mixed $value): void {
         $author->forceFill([
             'first_name' => Str::before((string) $value, ' '),
