@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Concerns\Resource;
 
 use Illuminate\Support\Str;
-use Lomkit\Rest\Exceptions\InvalidScopeException;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
@@ -32,9 +31,6 @@ trait ConfiguresRestParameters
         return $this->getFields($this->context()->request)->has($field);
     }
 
-    /** @var list<Scope> */
-    protected array $calculatedScopes;
-
     /** @return list<Scope> */
     public function scopes(RestRequest $request): array
     {
@@ -44,7 +40,7 @@ trait ConfiguresRestParameters
     /** @return list<Scope> */
     public function getScopes(RestRequest $request): array
     {
-        return $this->calculatedScopes ??= self::ensureScopes($this->scopes($request), static::class.'::scopes()');
+        return $this->context()->definition($this)->scopes();
     }
 
     public function scope(RestRequest $request, string $name): ?Scope
@@ -58,33 +54,7 @@ trait ConfiguresRestParameters
         return null;
     }
 
-    /**
-     * @param  array<mixed>  $scopes
-     * @return list<Scope>
-     */
-    private static function ensureScopes(array $scopes, string $owner): array
-    {
-        $declared = [];
-
-        foreach (array_values($scopes) as $index => $scope) {
-            if (! $scope instanceof Scope) {
-                throw InvalidScopeException::notAScope($owner, $index, $scope);
-            }
-
-            $declared[] = $scope;
-        }
-
-        return $declared;
-    }
-
-    /**
-     * The calculated limits if already done in this request.
-     */
-    protected array $calculatedLimits;
-
-    /**
-     * The limits that could be provided.
-     */
+    /** @return list<int> */
     public function limits(RestRequest $request): array
     {
         return [
@@ -94,11 +64,9 @@ trait ConfiguresRestParameters
         ];
     }
 
-    /**
-     * Get the resource's limits.
-     */
+    /** @return list<int> */
     public function getLimits(RestRequest $request): array
     {
-        return $this->calculatedLimits ?? ($this->calculatedLimits = $this->limits($request));
+        return $this->context()->definition($this)->limits();
     }
 }

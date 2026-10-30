@@ -11,7 +11,6 @@ use Lomkit\Rest\Concerns\PerformsQueries;
 use Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters;
 use Lomkit\Rest\Concerns\Resource\Contextual;
 use Lomkit\Rest\Concerns\Resource\DeclaresFields;
-use Lomkit\Rest\Concerns\Resource\ForgetsRequestState;
 use Lomkit\Rest\Concerns\Resource\HasResourceHooks;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
@@ -29,7 +28,6 @@ class Resource implements \JsonSerializable
     use ConfiguresRestParameters;
     use Contextual;
     use DeclaresFields;
-    use ForgetsRequestState;
     use HasResourceHooks;
     use Instructionable;
     use Paginable;

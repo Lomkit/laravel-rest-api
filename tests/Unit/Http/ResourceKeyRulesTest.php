@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Unit\Http;
 
+use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\ID;
@@ -10,6 +11,7 @@ use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\RestContext;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -64,7 +66,7 @@ class ResourceKeyRulesTest extends TestCase
 
         $resource::$model = $model::class;
 
-        return $resource;
+        return $resource->withinContext(new RestContext(new RestRequest, new Container));
     }
 
     private static function model(string $keyType): Model

@@ -98,7 +98,7 @@ A Resource declares the **shape of what the API exposes** for an Eloquent model.
 php artisan rest:resource UserResource --model=User
 ```
 
-Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $request`, so any list can be conditionally narrowed by user/permission):
+Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $request`, so any list can be conditionally narrowed by user/permission). `fields()`, `relations()`, `scopes()`, `limits()`, `actions()`, `instructions()`, `scoutFields()` and `scoutInstructions()` run once per request, the first time the package reads them, and the resource keeps nothing between requests:
 
 - `fields()` — list of typed `Lomkit\Rest\Fields\*` objects the client may select / filter / sort / mutate on: `ID`, `Text`, `Number`, `Integer`, `Boolean`, `Date`, `DateTime`, `Enum`, `Json`, or an app type extending `Field`. Strings and duplicate names throw `InvalidFieldException`. `getFields($request)` returns a `FieldSet`; `->names()` gives the list of names.
 
@@ -495,7 +495,7 @@ smaller.
 
 **Abilities.** Before validation, `operate` resolves the action: an unknown action is a `404` for a user allowed `viewAny` on the resource and a `403` for the others. A known action checks, in this order, `viewAny` on the resource, the abilities the resource's `abilities()` returns for `Endpoint::Operate` (none by default), then those `Action::abilities(): array` returns (`['viewAny']` by default, for every action, standalone and targeted ones included). Both lists add to `viewAny`: an action returning `['export']` checks `viewAny`, then `export`. An action returning `[]` runs with none of these checks (no `viewAny`, no `Endpoint::Operate` abilities, and its search does not check `viewAny` on the resource): use it for an action any user may run, guests included. Includes, aggregates and filters on relations in the action's `search` still need `viewAny` on the related resource, as in a search.
 
-**Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models. Combine with `Lomkit\Rest\Contracts\BatchableAction` and use `withBatch(array $fields, PendingBatch $batch): void` to register `then`/`catch`/`finally` callbacks. The synchronous `handle()`, `withBatch()` and the queued jobs all receive the same cast map. Customise `$connection` and `$queue` properties to route jobs.
+**Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models. Combine with `Lomkit\Rest\Contracts\BatchableAction` and use `withBatch(array $fields, PendingBatch $batch): void` to register `then`/`catch`/`finally` callbacks. The synchronous `handle()`, `withBatch()` and the queued jobs all receive the same cast map. Customise `$connection` and `$queue` properties to route jobs. A job carries the action, the cast map and the models, not the resource's declarations: the worker evaluates them again, with no user on the request, and the action and its field values cannot hold closures.
 
 ## Instructions (custom search refinements)
 
@@ -670,7 +670,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 
 - Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `ResourceRegistrar` and the route value objects)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details}Request.php`
-- Resource base class & traits — `src/Http/Resource.php`, `src/Concerns/Resource/*` (`DisableGates`, `DisableAuthorizationsCache`, hooks, ...)
+- Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, kept by `src/Http/RestContext.php`), `src/Concerns/Resource/*` (`DisableGates`, `DisableAuthorizationsCache`, hooks, ...)
 - Authorization — `src/Authorization/*` (`Authorizer`, `Check`, `Decision`, `Denial`, `DecisionMemo` and the decision stores), `src/Concerns/Authorizable.php`, `src/Exceptions/{AuthorizationDenied,DenialsRenderer,UnplannedCheckException}.php`; the checks made before validation are collected by the rule nodes (`RuleCompiler::reach()`) and run by `RestRequest::passesAuthorization()`
 - Query layer — `src/Query/Builder.php`, `src/Query/ScoutBuilder.php`, and `src/Query/AttributeWriter.php`, which fills a model from the writable fields of a mutation
 - Actions / Instructions / Scopes — `src/Actions/{Action,Actionable}.php`, `src/Instructions/{Instruction,Instructionable}.php`, `src/Scopes/Scope.php`

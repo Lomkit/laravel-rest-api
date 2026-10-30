@@ -7,46 +7,28 @@ use Lomkit\Rest\Instructions\Instruction;
 
 trait Scoutable
 {
-    /**
-     * The calculated scout fields if already done in this request.
-     */
-    protected array $calculatedScoutFields;
-
-    /**
-     * The calculated scout instructions if already done in this request.
-     */
-    protected array $calculatedScoutInstructions;
-
-    /**
-     * The scout fields that could be provided.
-     */
+    /** @return list<string> */
     public function scoutFields(RestRequest $request): array
     {
         return [];
     }
 
-    /**
-     * The scout instructions that could be provided.
-     */
+    /** @return array<int, Instruction> */
     public function scoutInstructions(RestRequest $request): array
     {
         return [];
     }
 
-    /**
-     * Get the resource's scout fields.
-     */
+    /** @return list<string> */
     public function getScoutFields(RestRequest $request): array
     {
-        return $this->calculatedScoutFields ?? ($this->calculatedScoutFields = $this->scoutFields($request));
+        return $this->context()->definition($this)->scoutFields();
     }
 
-    /**
-     * Get the resource's scout instructions.
-     */
+    /** @return array<int, Instruction> */
     public function getScoutInstructions(RestRequest $request): array
     {
-        return $this->calculatedScoutInstructions ??= array_map(fn (Instruction $instruction) => $instruction->resource($this), $this->scoutInstructions($request));
+        return $this->context()->definition($this)->scoutInstructions();
     }
 
     /**

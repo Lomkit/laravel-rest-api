@@ -6,9 +6,6 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Instructionable
 {
-    /** @var array<int, Instruction> */
-    protected array $calculatedInstructions;
-
     /** @return array<int, Instruction> */
     public function instructions(RestRequest $request): array
     {
@@ -18,7 +15,7 @@ trait Instructionable
     /** @return array<int, Instruction> */
     public function getInstructions(RestRequest $request): array
     {
-        return $this->calculatedInstructions ??= array_map(fn (Instruction $instruction) => $instruction->resource($this), $this->instructions($request));
+        return $this->context()->definition($this)->instructions();
     }
 
     public function instructionExists(RestRequest $request, string $instructionKey): bool
