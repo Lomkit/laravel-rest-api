@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Http;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 use Lomkit\Rest\Actions\Actionable;
 use Lomkit\Rest\Concerns\Authorizable;
@@ -92,20 +91,7 @@ class Resource implements \JsonSerializable
 
     public function isAuthorizationCacheEnabled(): bool
     {
-        return config('rest.authorizations.cache.enabled', true);
-    }
-
-    /** @return string */
-    public function getAuthorizationCacheKey(RestRequest $request, string $identifier)
-    {
-        $class = Str::snake((new \ReflectionClass($this))->getShortName());
-
-        return sprintf(
-            'rest.authorization.%s.%s.%s',
-            $class,
-            $identifier,
-            $request->user()?->getKey()
-        );
+        return config('rest.authorizations.cache.enabled', false);
     }
 
     /** @return \DateTimeInterface|\DateInterval */

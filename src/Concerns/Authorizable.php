@@ -2,200 +2,68 @@
 
 namespace Lomkit\Rest\Concerns;
 
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
+use Lomkit\Rest\Authorization\Check;
 
 trait Authorizable
 {
-    /**
-     * Determine if the current user has a given ability.
-     *
-     * @param  string  $ability
-     * @param  Model|string  $model
-     * @return void
-     *
-     * @throws AuthorizationException
-     */
-    public function authorizeTo($ability, $model)
+    public function authorizeTo(string $ability, Model|string $model): void
     {
         $this->authorizedTo($ability, $model)->authorize();
     }
 
-    /**
-     * Determine if the current user can perform an ability on the given model.
-     *
-     * @param  string  $ability
-     * @param  Model|string  $model
-     * @return Response
-     */
-    public function authorizedTo($ability, $model)
+    public function authorizedTo(string $ability, Model|string $model): Response
     {
-        if ($this->isAuthorizingEnabled()) {
-            $resolver = function () use ($ability, $model) {
-                return Gate::inspect($ability, $model);
-            };
-
-            if ($this->isAuthorizationCacheEnabled()) {
-                return Cache::remember(
-                    $this->getAuthorizationCacheKey(
-                        $this->context()->request,
-                        sprintf(
-                            '%s.%s.%s',
-                            $ability,
-                            $model instanceof Model ? Str::snake((new \ReflectionClass($model))->getShortName()) : $model,
-                            $model instanceof Model ? $model->getKey() : null,
-                        )
-                    ),
-                    $this->cacheAuthorizationFor(),
-                    $resolver
-                );
-            }
-
-            return $resolver();
-        }
-
-        return Response::allow();
+        return $this->context()->authorizer()->inspect(new Check($this, $ability, $model))->toResponse();
     }
 
-    /**
-     * Determine if the current user has a given ability.
-     *
-     * @param  string  $ability
-     * @param  Model  $model
-     * @param  string  $toActionModel
-     * @return void
-     *
-     * @throws AuthorizationException
-     */
-    public function authorizeToPerformActionOnRelationship($ability, $model, $toActionModel)
+    public function authorizeToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): void
     {
-        $gate = Gate::getPolicyFor($model);
-        $method = $ability.class_basename($toActionModel);
+        $check = $this->relationshipCheck($ability, $model, $toActionModel);
 
-        if (! is_null($gate) && method_exists($gate, $method) && $this->isAuthorizingEnabled()) {
-            $resolver = function () use ($method, $gate, $model, $toActionModel) {
-                return ! is_null($gate) && method_exists($gate, $method)
-                    ? Gate::authorize($method, [$model, $toActionModel])
-                    : true;
-            };
-
-            if ($this->isAuthorizationCacheEnabled()) {
-                $gatePasses = Cache::remember(
-                    $this->getAuthorizationCacheKey(
-                        $this->context()->request,
-                        sprintf(
-                            '%s.%s.%s.%s.%s',
-                            $ability,
-                            $model instanceof Model ? Str::snake((new \ReflectionClass($model))->getShortName()) : $model,
-                            $model instanceof Model ? $model->getKey() : null,
-                            $toActionModel instanceof Model ? Str::snake((new \ReflectionClass($toActionModel))->getShortName()) : $toActionModel,
-                            $toActionModel instanceof Model ? $toActionModel->getKey() : null,
-                        )
-                    ),
-                    $this->cacheAuthorizationFor(),
-                    $resolver
-                );
-            } else {
-                $gatePasses = $resolver();
-            }
-
-            if (! $gatePasses) {
-                Response::deny()->authorize();
-            }
+        if ($check !== null) {
+            $this->context()->authorizer()->authorize($check);
         }
     }
 
-    /**
-     * Determine if the current user can perform an ability on the given model.
-     *
-     * @param  string  $ability
-     * @param  Model  $model
-     * @param  string  $toActionModel
-     * @return bool
-     */
-    public function authorizedToPerformActionOnRelationship($ability, $model, $toActionModel)
+    public function authorizedToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): bool
     {
-        $gate = Gate::getPolicyFor($model);
-        $method = $ability.class_basename($toActionModel);
+        $check = $this->relationshipCheck($ability, $model, $toActionModel);
 
-        if (! is_null($gate) && method_exists($gate, $method) && $this->isAuthorizingEnabled()) {
-            $resolver = function () use ($method, $toActionModel, $model) {
-                return Gate::check($method, [$model, $toActionModel]);
-            };
-
-            if ($this->isAuthorizationCacheEnabled()) {
-                return Cache::remember(
-                    $this->getAuthorizationCacheKey(
-                        $this->context()->request,
-                        sprintf(
-                            '%s.%s.%s.%s.%s',
-                            $ability,
-                            $model instanceof Model ? Str::snake((new \ReflectionClass($model))->getShortName()) : $model,
-                            $model instanceof Model ? $model->getKey() : null,
-                            $toActionModel instanceof Model ? Str::snake((new \ReflectionClass($toActionModel))->getShortName()) : $toActionModel,
-                            $toActionModel instanceof Model ? $toActionModel->getKey() : null,
-                        )
-                    ),
-                    $this->cacheAuthorizationFor(),
-                    $resolver
-                );
-            }
-
-            return $resolver();
-        }
-
-        return true;
+        return $check === null || $this->context()->authorizer()->inspect($check)->allowed;
     }
 
-    /**
-     * Determine if the user can attach models of the given type to the base model.
-     *
-     * @param  Model|string  $model
-     * @param  Model|string  $toAttachModel
-     * @return bool
-     */
-    public function authorizedToAttach($model, $toAttachModel)
+    public function authorizedToAttach(Model $model, Model $toAttachModel): bool
     {
         return $this->authorizedToPerformActionOnRelationship('attach', $model, $toAttachModel);
     }
 
-    /**
-     * Determine if the user can attach models of the given type to the base model.
-     *
-     * @param  Model|string  $model
-     * @param  Model|string  $toAttachModel
-     * @return void
-     */
-    public function authorizeToAttach($model, $toAttachModel)
+    public function authorizeToAttach(Model $model, Model $toAttachModel): void
     {
         $this->authorizeToPerformActionOnRelationship('attach', $model, $toAttachModel);
     }
 
-    /**
-     * Determine if the user can detach models of the given type to the base model.
-     *
-     * @param  Model|string  $model
-     * @param  Model|string  $toAttachModel
-     * @return bool
-     */
-    public function authorizedToDetach($model, $toAttachModel)
+    public function authorizedToDetach(Model $model, Model $toAttachModel): bool
     {
         return $this->authorizedToPerformActionOnRelationship('detach', $model, $toAttachModel);
     }
 
-    /**
-     * Determine if the user can detach models of the given type to the base model.
-     *
-     * @param  Model|string  $model
-     * @param  Model|string  $toAttachModel
-     * @return void
-     */
-    public function authorizeToDetach($model, $toAttachModel)
+    public function authorizeToDetach(Model $model, Model $toAttachModel): void
     {
         $this->authorizeToPerformActionOnRelationship('detach', $model, $toAttachModel);
+    }
+
+    private function relationshipCheck(string $ability, Model $model, Model $toActionModel): ?Check
+    {
+        $method = $ability.class_basename($toActionModel);
+        $policy = Gate::getPolicyFor($model);
+
+        if ($policy === null || ! method_exists($policy, $method)) {
+            return null;
+        }
+
+        return new Check($this, $method, $model, related: [$toActionModel]);
     }
 }
