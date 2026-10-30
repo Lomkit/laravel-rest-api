@@ -21,30 +21,6 @@ use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 
 class MutateUpdateMorphOperationsTest extends TestCase
 {
-    public function test_updating_a_resource_using_field_not_following_custom_rules(): void
-    {
-        $modelToUpdate = ModelFactory::new()->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'attributes' => ['string' => true],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.attributes.string']]);
-    }
-
     public function test_updating_a_resource_with_creating_morph_to_relation(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();

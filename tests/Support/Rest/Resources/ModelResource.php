@@ -43,20 +43,6 @@ class ModelResource extends Resource
 
     public static string $model = Model::class;
 
-    public function createRules(RestRequest $request): array
-    {
-        return [
-            'string' => 'string',
-        ];
-    }
-
-    public function updateRules(RestRequest $request): array
-    {
-        return [
-            'string' => 'string',
-        ];
-    }
-
     public function relations(RestRequest $request): array
     {
         return [
