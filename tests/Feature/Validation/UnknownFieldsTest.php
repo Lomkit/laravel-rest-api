@@ -10,10 +10,8 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
-use PHPUnit\Framework\Attributes\RequiresMethod;
 use PHPUnit\Framework\Attributes\Test;
 
-#[RequiresMethod(FormRequest::class, 'failOnUnknownFields')]
 class UnknownFieldsTest extends PackageTestCase
 {
     #[\Override]

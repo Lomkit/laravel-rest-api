@@ -113,6 +113,7 @@ class RestRequest extends FormRequest
         return $validator;
     }
 
+    #[\Override]
     protected function shouldFailOnUnknownFields(): bool
     {
         return false;
