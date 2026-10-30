@@ -10,7 +10,7 @@ use Lomkit\Rest\Tests\Feature\Authorization\Stubs\HookedTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\LeadTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\SharedTicketController;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
-use Orchestra\Testbench\Attributes\DefineEnvironment;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -30,7 +30,7 @@ class EntryChecksTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[DefineEnvironment('enablePrecognition')]
+    #[WithConfig('rest.precognition.enabled', true)]
     public function it_refuses_a_precognitive_search_of_a_user_who_cannot_list(): void
     {
         $this->tickets->answers['viewAny'] = Response::deny('Tickets are not listed.');
@@ -150,10 +150,5 @@ class EntryChecksTest extends HelpdeskTestCase
 
         $this->assertDatabaseMissing('tickets', ['id' => $jam->id]);
         $this->assertSame(['deleteAny', ...$this->calls('delete', $jam)], $this->tickets->calls);
-    }
-
-    protected function enablePrecognition($app): void
-    {
-        $app['config']->set('rest.precognition.enabled', true);
     }
 }

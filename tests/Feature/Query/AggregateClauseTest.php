@@ -19,20 +19,15 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Draft;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\PackageTestCase;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
+#[WithConfig('database.connections.pgsql_grammar', ['driver' => 'pgsql', 'database' => ':memory:', 'prefix' => ''])]
+#[WithConfig('database.connections.mysql_grammar', ['driver' => 'mysql', 'database' => ':memory:', 'prefix' => ''])]
+#[WithConfig('database.connections.sqlite_grammar', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => ''])]
 class AggregateClauseTest extends PackageTestCase
 {
-    protected function defineEnvironment($app): void
-    {
-        parent::defineEnvironment($app);
-
-        foreach (['pgsql', 'mysql', 'sqlite'] as $driver) {
-            $app['config']->set("database.connections.{$driver}_grammar", ['driver' => $driver, 'database' => ':memory:', 'prefix' => '']);
-        }
-    }
-
     /** @param Closure(): Field $field */
     #[Test]
     #[DataProvider('uuidKeys')]

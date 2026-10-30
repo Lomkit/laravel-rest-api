@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Fixtures\Publishing;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
@@ -23,17 +24,20 @@ class Post extends Model
         return $this->belongsTo(Author::class);
     }
 
-    public function scopePublishedSince(Builder $query, CarbonImmutable $since): void
+    #[Scope]
+    protected function publishedSince(Builder $query, CarbonImmutable $since): void
     {
         $query->where('published_on', '>=', $since);
     }
 
-    public function scopePopular(Builder $query, int $minViews): void
+    #[Scope]
+    protected function popular(Builder $query, int $minViews): void
     {
         $query->where('views', '>=', $minViews);
     }
 
-    public function scopeViewedBetween(Builder $query, int $min, ?int $max): void
+    #[Scope]
+    protected function viewedBetween(Builder $query, int $min, ?int $max): void
     {
         $query->where('views', '>=', $min);
 
@@ -42,7 +46,8 @@ class Post extends Model
         }
     }
 
-    public function scopeFeatured(Builder $query, ?bool $featured): void
+    #[Scope]
+    protected function featured(Builder $query, ?bool $featured): void
     {
         if ($featured === null) {
             return;
@@ -51,7 +56,8 @@ class Post extends Model
         $query->where('featured', $featured);
     }
 
-    public function scopeReaching(Builder $query, Reach $reach): void
+    #[Scope]
+    protected function reaching(Builder $query, Reach $reach): void
     {
         $query->where('views', '>=', $reach->minViews());
     }

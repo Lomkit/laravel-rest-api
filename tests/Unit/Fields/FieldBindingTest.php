@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Unit\Fields;
 
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +28,7 @@ class FieldBindingTest extends TestCase
             {
                 protected $keyType = 'string';
             }, 'id', ['string']],
+            'string key declared by the table attribute' => [new #[Table(keyType: 'string')] class extends Model {}, 'id', ['string']],
             'uuid key' => [self::uuidKeyed(), 'id', ['uuid']],
             'integer key spelled integer' => [new class extends Model
             {

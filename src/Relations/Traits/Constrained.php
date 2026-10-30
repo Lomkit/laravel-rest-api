@@ -3,133 +3,85 @@
 namespace Lomkit\Rest\Relations\Traits;
 
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Http\Resource;
 
 trait Constrained
 {
-    /**
-     * The callback used to determine if the relation is required on creation.
-     *
-     * @var (callable(RestRequest):bool)|bool
-     */
+    /** @var (callable(RestRequest, Resource): bool)|bool */
     public $relationRequiredOnCreationCallback = false;
 
-    /**
-     * The callback used to determine if the relation is prohibited on creation.
-     *
-     * @var (callable(RestRequest):bool)|bool
-     */
+    /** @var (callable(RestRequest, Resource): bool)|bool */
     public $relationProhibitedOnCreationCallback = false;
 
-    /**
-     * The callback used to determine if the relation is required on update.
-     *
-     * @var (callable(RestRequest):bool)|bool
-     */
+    /** @var (callable(RestRequest, Resource): bool)|bool */
     public $relationRequiredOnUpdateCallback = false;
 
-    /**
-     * The callback used to determine if the relation is prohibited on update.
-     *
-     * @var (callable(RestRequest):bool)|bool
-     */
+    /** @var (callable(RestRequest, Resource): bool)|bool */
     public $relationProhibitedOnUpdateCallback = false;
 
-    /**
-     * Set the callback used to determine if the relation is required on creation.
-     *
-     * @param  (callable(RestRequest):bool)|bool  $callback
-     * @return Relation|Constrained
-     */
-    public function requiredOnCreation(callable|bool $callback = true): self
+    /** @param (callable(RestRequest, Resource): bool)|bool $callback */
+    public function requiredOnCreation(callable|bool $callback = true): static
     {
         $this->relationRequiredOnCreationCallback = $callback;
 
         return $this;
     }
 
-    /**
-     * Set the callback used to determine if the relation is prohibited on creation.
-     *
-     * @param  (callable(RestRequest):bool)|bool  $callback
-     * @return Relation|Constrained
-     */
-    public function prohibitedOnCreation(callable|bool $callback = true): self
+    /** @param (callable(RestRequest, Resource): bool)|bool $callback */
+    public function prohibitedOnCreation(callable|bool $callback = true): static
     {
         $this->relationProhibitedOnCreationCallback = $callback;
 
         return $this;
     }
 
-    /**
-     * Set the callback used to determine if the relation is required on update.
-     *
-     * @param  (callable(RestRequest):bool)|bool  $callback
-     * @return Relation|Constrained
-     */
-    public function requiredOnUpdate(callable|bool $callback = true): self
+    /** @param (callable(RestRequest, Resource): bool)|bool $callback */
+    public function requiredOnUpdate(callable|bool $callback = true): static
     {
         $this->relationRequiredOnUpdateCallback = $callback;
 
         return $this;
     }
 
-    /**
-     * Set the callback used to determine if the relation is prohibited on update.
-     *
-     * @param  (callable(RestRequest):bool)|bool  $callback
-     * @return Relation|Constrained
-     */
-    public function prohibitedOnUpdate(callable|bool $callback = true): self
+    /** @param (callable(RestRequest, Resource): bool)|bool $callback */
+    public function prohibitedOnUpdate(callable|bool $callback = true): static
     {
         $this->relationProhibitedOnUpdateCallback = $callback;
 
         return $this;
     }
 
-    /**
-     * Check required on creation.
-     */
     public function isRequiredOnCreation(RestRequest $request): bool
     {
         if (is_callable($this->relationRequiredOnCreationCallback)) {
-            return (bool) call_user_func($this->relationRequiredOnCreationCallback, $request, $this->resource());
+            return (bool) ($this->relationRequiredOnCreationCallback)($request, $this->resource());
         }
 
         return (bool) $this->relationRequiredOnCreationCallback;
     }
 
-    /**
-     * Check prohibited on creation.
-     */
     public function isProhibitedOnCreation(RestRequest $request): bool
     {
         if (is_callable($this->relationProhibitedOnCreationCallback)) {
-            return (bool) call_user_func($this->relationProhibitedOnCreationCallback, $request, $this->resource());
+            return (bool) ($this->relationProhibitedOnCreationCallback)($request, $this->resource());
         }
 
         return (bool) $this->relationProhibitedOnCreationCallback;
     }
 
-    /**
-     * Check required on update.
-     */
     public function isRequiredOnUpdate(RestRequest $request): bool
     {
         if (is_callable($this->relationRequiredOnUpdateCallback)) {
-            return (bool) call_user_func($this->relationRequiredOnUpdateCallback, $request, $this->resource());
+            return (bool) ($this->relationRequiredOnUpdateCallback)($request, $this->resource());
         }
 
         return (bool) $this->relationRequiredOnUpdateCallback;
     }
 
-    /**
-     * Check prohibited on update.
-     */
     public function isProhibitedOnUpdate(RestRequest $request): bool
     {
         if (is_callable($this->relationProhibitedOnUpdateCallback)) {
-            return (bool) call_user_func($this->relationProhibitedOnUpdateCallback, $request, $this->resource());
+            return (bool) ($this->relationProhibitedOnUpdateCallback)($request, $this->resource());
         }
 
         return (bool) $this->relationProhibitedOnUpdateCallback;

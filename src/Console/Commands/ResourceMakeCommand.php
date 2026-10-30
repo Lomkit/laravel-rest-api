@@ -10,30 +10,11 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use function Laravel\Prompts\search;
+use function Laravel\Prompts\suggest;
 
-#[AsCommand(name: 'rest:resource')]
+#[AsCommand(name: 'rest:resource', description: 'Create a new resource class')]
 class ResourceMakeCommand extends GeneratorCommand
 {
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'rest:resource';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a new resource class';
-
-    /**
-     * The type of class being generated.
-     *
-     * @var string
-     */
     protected $type = 'Resource';
 
     /**
@@ -109,42 +90,28 @@ class ResourceMakeCommand extends GeneratorCommand
     }
 
     /**
-     * Build the model replacement values.
+     * @param  array<string, string>  $replace
+     * @return array<string, string>
      */
     protected function buildModelReplacements(array $replace): array
     {
         $modelClass = $this->parseModel($this->option('model'));
 
         return array_merge($replace, [
-            'DummyFullModelClass' => $modelClass,
             '{{ namespacedModel }}' => $modelClass,
             '{{namespacedModel}}' => $modelClass,
-            'DummyModelClass' => class_basename($modelClass),
-            '{{ model }}' => class_basename($modelClass),
-            '{{model}}' => class_basename($modelClass),
-            'DummyModelVariable' => lcfirst(class_basename($modelClass)),
-            '{{ modelVariable }}' => lcfirst(class_basename($modelClass)),
-            '{{modelVariable}}' => lcfirst(class_basename($modelClass)),
         ]);
     }
 
-    /**
-     * Interact further with the user if they were prompted for missing arguments.
-     */
     protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output): void
     {
         if ($this->didReceiveOptions($input)) {
             return;
         }
 
-        $model = search(
-            'What model should this resource relies to? (Optional)',
-            fn ($value) => strlen($value) > 0
-                ? array_filter($this->possibleModels(), fn ($model) => stripos($model, $value) !== false)
-                : $this->possibleModels()
-        );
+        $model = suggest('What model should this resource rely on? (Optional)', $this->findAvailableModels());
 
-        if ($model) {
+        if ($model !== '') {
             $input->setOption('model', $model);
         }
     }

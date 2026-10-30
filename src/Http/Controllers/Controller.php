@@ -7,7 +7,7 @@ use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Http\Controllers\Traits\HasControllerHooks;
 use Lomkit\Rest\Http\Resource;
 
-abstract class Controller extends \Illuminate\Routing\Controller
+abstract class Controller
 {
     use HasControllerHooks;
     use PerformsRestOperations;

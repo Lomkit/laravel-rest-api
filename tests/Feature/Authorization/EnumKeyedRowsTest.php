@@ -2,9 +2,8 @@
 
 namespace Lomkit\Rest\Tests\Feature\Authorization;
 
-use Illuminate\Foundation\Application;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Channel;
-use Orchestra\Testbench\Attributes\DefineEnvironment;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
 class EnumKeyedRowsTest extends HelpdeskTestCase
@@ -30,7 +29,7 @@ class EnumKeyedRowsTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[DefineEnvironment('enableCache')]
+    #[WithConfig('rest.authorizations.cache.enabled', true)]
     public function it_serves_the_decisions_on_enum_keyed_rows_from_the_cache(): void
     {
         $this->seedChannels();
@@ -41,11 +40,6 @@ class EnumKeyedRowsTest extends HelpdeskTestCase
             ->assertJsonPath('data.1.gates.authorized_to_update', true);
 
         $this->assertSame(['viewAny', 'view email', 'update email', 'view phone', 'update phone'], $this->channels->calls);
-    }
-
-    protected function enableCache(Application $app): void
-    {
-        $app['config']->set('rest.authorizations.cache.enabled', true);
     }
 
     private function seedChannels(): void

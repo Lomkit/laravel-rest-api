@@ -11,7 +11,6 @@
   ],
   "require": {
     "php": "^8.3",
-    "ext-json": "*",
     "laravel/framework": "^13.0"
   },
   "require-dev": {
@@ -20,7 +19,8 @@
     "laravel/pint": "^1.32",
     "laravel/scout": "^11.0",
     "orchestra/testbench": "^11.0",
-    "phpunit/phpunit": "^12.0|^13.0"
+    "phpstan/phpstan-deprecation-rules": "^2.0",
+    "phpunit/phpunit": "^12.0 || ^13.0"
   },
   "suggest": {
     "dedoc/scramble": "Documents the API in OpenAPI through the package's Scramble extension.",

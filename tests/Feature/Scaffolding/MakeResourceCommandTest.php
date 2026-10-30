@@ -5,6 +5,8 @@ namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 use App\Rest\Resources\Resource as BaseResource;
 use App\Rest\Resources\ScaffoldedPlaceholderResource;
 use App\Rest\Resources\ScaffoldedProductResource;
+use App\Rest\Resources\ScaffoldedPromptedResource;
+use App\Rest\Resources\ScaffoldedSuggestedResource;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Laravel\Scout\Builder as ScoutBuilder;
 use Lomkit\Rest\Fields\ID;
@@ -85,5 +87,39 @@ class MakeResourceCommandTest extends ScaffoldingTestCase
         $this->assertSame(BaseResource::class, $searchScoutQuery->getDeclaringClass()->getName());
         $this->assertSame(ScoutBuilder::class, (string) $searchScoutQuery->getReturnType());
         $this->assertSame($query, $resource->searchScoutQuery(new RestRequest, $query));
+    }
+
+    #[Test]
+    public function it_suggests_the_application_models_when_it_prompts_for_the_model(): void
+    {
+        foreach (['User', 'Comment', 'Post'] as $model) {
+            file_put_contents(app_path("Models/{$model}.php"), '<?php');
+        }
+
+        $this->artisan('rest:resource')
+            ->expectsQuestion('What should the resource be named?', 'ScaffoldedSuggestedResource')
+            ->expectsChoice('What model should this resource rely on? (Optional)', 'User', ['Comment', 'Post', 'User'], true)
+            ->assertSuccessful();
+
+        $this->loadGeneratedClass(BaseResource::class);
+        $this->loadGeneratedClass(ScaffoldedSuggestedResource::class);
+
+        $this->assertSame('App\Models\User', ScaffoldedSuggestedResource::modelClass());
+    }
+
+    #[Test]
+    public function it_writes_a_placeholder_model_when_the_model_prompt_is_left_empty(): void
+    {
+        file_put_contents(app_path('Models/Post.php'), '<?php');
+
+        $this->artisan('rest:resource')
+            ->expectsQuestion('What should the resource be named?', 'ScaffoldedPromptedResource')
+            ->expectsChoice('What model should this resource rely on? (Optional)', '', ['Post'], true)
+            ->assertSuccessful();
+
+        $this->loadGeneratedClass(BaseResource::class);
+        $this->loadGeneratedClass(ScaffoldedPromptedResource::class);
+
+        $this->assertSame('Model', ScaffoldedPromptedResource::modelClass());
     }
 }

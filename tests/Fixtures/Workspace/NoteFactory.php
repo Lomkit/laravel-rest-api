@@ -2,12 +2,13 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Workspace;
 
+use Illuminate\Database\Eloquent\Factories\Attributes\UseModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<Note> */
+#[UseModel(Note::class)]
 class NoteFactory extends Factory
 {
-    protected $model = Note::class;
-
     public function definition(): array
     {
         return [

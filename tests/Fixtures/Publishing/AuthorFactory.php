@@ -2,12 +2,13 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Publishing;
 
+use Illuminate\Database\Eloquent\Factories\Attributes\UseModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<Author> */
+#[UseModel(Author::class)]
 class AuthorFactory extends Factory
 {
-    protected $model = Author::class;
-
     public function definition(): array
     {
         return [

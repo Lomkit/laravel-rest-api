@@ -10,14 +10,11 @@ use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
+use Orchestra\Testbench\Attributes\WithConfig;
 
+#[WithConfig('rest.precognition.enabled', true)]
 class PrecognitionOperationsTest extends TestCase
 {
-    protected function getEnvironmentSetUp($app): void
-    {
-        $app['config']->set('rest.precognition.enabled', true);
-    }
-
     public function test_precognition_getting_a_list_of_resources_aggregating_by_unauthorized_relation(): void
     {
         ModelFactory::new()->count(2)->create();

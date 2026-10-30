@@ -10,20 +10,15 @@ use Lomkit\Rest\Tests\Feature\Mutate\Stubs\ArchivedShelfController;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
 use Lomkit\Rest\Tests\Fixtures\Library\Shelf;
 use Lomkit\Rest\Tests\PackageTestCase;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
+#[WithConfig('database.connections.archive', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => ''])]
 class ModelConnectionTest extends PackageTestCase
 {
     protected function fixtures(): array
     {
         return [new Library];
-    }
-
-    protected function defineEnvironment($app): void
-    {
-        parent::defineEnvironment($app);
-
-        $app['config']->set('database.connections.archive', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
     }
 
     #[Test]

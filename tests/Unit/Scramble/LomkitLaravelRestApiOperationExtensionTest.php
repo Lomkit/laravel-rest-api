@@ -50,7 +50,6 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     private function callPrivate(string $method, array $args = []): mixed
     {
         $ref = new \ReflectionMethod(LomkitLaravelRestApiOperationExtension::class, $method);
-        $ref->setAccessible(true);
 
         return $ref->invokeArgs($this->extension, $args);
     }

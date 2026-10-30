@@ -14,8 +14,8 @@ use Lomkit\Rest\Tests\Concerns\InspectsResourceRoutes;
 use Lomkit\Rest\Tests\Fixtures\Archive\Archive;
 use Lomkit\Rest\Tests\Fixtures\Archive\DocumentController;
 use Lomkit\Rest\Tests\PackageTestCase;
-use Orchestra\Testbench\Attributes\DefineEnvironment;
 use Orchestra\Testbench\Attributes\DefineRoute;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -53,7 +53,7 @@ class RouteMiddlewareTest extends PackageTestCase
     }
 
     #[Test]
-    #[DefineEnvironment('enablePrecognition')]
+    #[WithConfig('rest.precognition.enabled', true)]
     public function it_keeps_both_package_middleware_when_precognition_is_enabled(): void
     {
         $routes = $this->registerDocuments(fn (PendingResourceRegistration $pending) => $pending->middleware('auth'));
@@ -119,11 +119,6 @@ class RouteMiddlewareTest extends PackageTestCase
         $response = $this->post('/json-api/documents/search', ['search' => ['filters' => [['field' => 'author', 'value' => 'Ada']]]]);
 
         $response->assertUnprocessable()->assertJsonValidationErrors('search.filters.0.field');
-    }
-
-    protected function enablePrecognition($app): void
-    {
-        $app['config']->set('rest.precognition.enabled', true);
     }
 
     protected function jsonApiRoutes(Router $router): void

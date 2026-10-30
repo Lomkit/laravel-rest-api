@@ -8,11 +8,10 @@ use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Event;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
-use Orchestra\Testbench\Attributes\DefineEnvironment;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
 class DecisionStoreKeysTest extends HelpdeskTestCase
@@ -38,7 +37,8 @@ class DecisionStoreKeysTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[DefineEnvironment('enableCacheWithTwoGuards')]
+    #[WithConfig('auth.guards.api', ['driver' => 'session', 'provider' => 'users'])]
+    #[WithConfig('rest.authorizations.cache.enabled', true)]
     public function it_keeps_the_decisions_of_two_guards_apart(): void
     {
         $user = User::factory()->make(['id' => 1]);
@@ -51,7 +51,8 @@ class DecisionStoreKeysTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[DefineEnvironment('enableCacheWithTwoGuards')]
+    #[WithConfig('auth.guards.api', ['driver' => 'session', 'provider' => 'users'])]
+    #[WithConfig('rest.authorizations.cache.enabled', true)]
     public function it_keeps_the_decisions_of_two_user_classes_with_one_key_apart(): void
     {
         $this->actingAs(User::factory()->make(['id' => 1]))->postJson('/api/tickets/search')->assertOk();
@@ -62,7 +63,8 @@ class DecisionStoreKeysTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[DefineEnvironment('enableCacheWithTwoGuards')]
+    #[WithConfig('auth.guards.api', ['driver' => 'session', 'provider' => 'users'])]
+    #[WithConfig('rest.authorizations.cache.enabled', true)]
     public function it_checks_a_creation_again_in_every_request(): void
     {
         $team = Team::create(['name' => 'Billing']);
@@ -82,7 +84,8 @@ class DecisionStoreKeysTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[DefineEnvironment('enableCacheWithTwoGuards')]
+    #[WithConfig('auth.guards.api', ['driver' => 'session', 'provider' => 'users'])]
+    #[WithConfig('rest.authorizations.cache.enabled', true)]
     public function it_leaves_out_a_resource_that_disables_the_cache(): void
     {
         $this->postJson('/api/uncached-tickets/search')->assertOk();
@@ -91,11 +94,5 @@ class DecisionStoreKeysTest extends HelpdeskTestCase
         $this->postJson('/api/tickets/search')->assertOk();
 
         $this->assertSame(['viewAny', 'viewAny', 'viewAny'], $this->tickets->calls);
-    }
-
-    protected function enableCacheWithTwoGuards(Application $app): void
-    {
-        $app['config']->set('auth.guards.api', ['driver' => 'session', 'provider' => 'users']);
-        $app['config']->set('rest.authorizations.cache.enabled', true);
     }
 }

@@ -2,12 +2,13 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Catalog;
 
+use Illuminate\Database\Eloquent\Factories\Attributes\UseModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<Product> */
+#[UseModel(Product::class)]
 class ProductFactory extends Factory
 {
-    protected $model = Product::class;
-
     public function definition(): array
     {
         return [

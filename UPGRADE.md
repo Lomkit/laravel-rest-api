@@ -193,6 +193,7 @@ Actions, instructions and relations:
   - an override declares its return type: `handle(): void`, `handleScout(): void`, `withBatch(): void`, `name(): string`, `uriKey(): string`, `standalone(): static`, `targeted(): static`, `isStandalone(): bool`, `isTargeted(): bool`, `handleRequest(): int`.
 - An action's `handle()` returns `void`. Before, a synchronous action that returned `false` stopped the remaining chunks; the chunks now always run.
 - `make()` returns `static`. An action, instruction or relation that redefines it must declare `: static`.
+- On relations, `requiredOnCreation()`, `prohibitedOnCreation()`, `requiredOnUpdate()` and `prohibitedOnUpdate()` return `static`. A relation that overrides one of them must declare `: static`. Their callbacks receive the request and the related resource: `fn (RestRequest $request, Resource $resource): bool`.
 - `resource(Resource $resource)` returns `static` on actions, instructions and requests.
 
 Other resource methods:
@@ -417,3 +418,44 @@ Include aliases:
 Scramble:
 
 - The search body documents the sortable fields under `sorts` and the selectable fields under `selects`, with the values of `SortDirection` and `AggregateFunction`.
+
+### Framework integration
+
+- `Lomkit\Rest\Http\Controllers\Controller` no longer extends `Illuminate\Routing\Controller`. The inherited `middleware()`, `getMiddleware()`, `callAction()` and `__call()` methods are removed. Replace the `$this->middleware()` calls in your controller constructors with the `Illuminate\Routing\Controllers\HasMiddleware` interface or with the `#[Middleware]` and `#[Authorize]` attributes:
+  - Middleware that a base controller declared for all its children, such as the controller that `rest:base-controller` generates, moves to the static `middleware()` method of `HasMiddleware` on that base controller. Every child controller inherits it on every Laravel 13 release. A child controller that needs more middleware overrides `middleware()` and adds its entries to `parent::middleware()`.
+
+    ```php
+    use Illuminate\Routing\Controllers\HasMiddleware;
+    use Illuminate\Routing\Controllers\Middleware;
+    use Lomkit\Rest\Http\Controllers\Controller as RestController;
+
+    abstract class Controller extends RestController implements HasMiddleware
+    {
+        public static function middleware(): array
+        {
+            return [
+                'auth',
+                new Middleware('throttle:60,1', only: ['destroy', 'forceDestroy']),
+            ];
+        }
+    }
+    ```
+
+  - Middleware of a single controller can also use the attributes on that controller. The first Laravel 13 releases read these attributes only on the controller class that the route names, not on its parent classes, and ignore them on a controller that implements `HasMiddleware` directly or through a parent class. To support these releases, put the attributes on each concrete controller and do not combine them with `HasMiddleware`. These releases also ignored the attributes on every controller that extended `Illuminate\Routing\Controller`, which the package controller did before.
+
+    ```php
+    use Illuminate\Routing\Attributes\Controllers\Authorize;
+    use Illuminate\Routing\Attributes\Controllers\Middleware;
+    use Lomkit\Rest\Http\Controllers\Controller;
+
+    #[Middleware('throttle:60,1')]
+    #[Authorize('manage-posts', only: ['destroy', 'forceDestroy'])]
+    class PostsController extends Controller
+    {
+        public static string $resource = PostResource::class;
+    }
+    ```
+
+- The `lomkit-rest` container alias is removed. Resolve `Lomkit\Rest\Rest` by its class name, or use the `Lomkit\Rest\Facades\Rest` facade. The container and the facade now return the same instance.
+- The package defaults merge into your published `config/rest.php` at every level. A nested key that your file leaves out, such as `gates.names.authorized_to_restore` or `gates.message.enabled`, now gets its default value. Before, a top-level key such as `gates` replaced all the defaults under it.
+- `destroy` checks that the keys in `resources` exist on the connection of the model. Before, it checked them on the default connection.
