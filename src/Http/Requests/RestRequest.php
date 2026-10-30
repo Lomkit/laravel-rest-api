@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Http\Requests;
 
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Contracts\Validation\Validator as ValidatorContract;
-use Illuminate\Foundation\Http\Attributes\FailOnUnknownFields;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Validator;
@@ -17,7 +16,6 @@ use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Validation\CompiledRules;
 use Lomkit\Rest\Validation\RuleCompiler;
 
-#[FailOnUnknownFields(false)]
 class RestRequest extends FormRequest
 {
     use InteractsWithRules;
@@ -54,6 +52,11 @@ class RestRequest extends FormRequest
         }
 
         return $validator;
+    }
+
+    protected function shouldFailOnUnknownFields(): bool
+    {
+        return false;
     }
 
     /**
