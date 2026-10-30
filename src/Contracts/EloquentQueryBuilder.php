@@ -23,21 +23,20 @@ interface EloquentQueryBuilder extends QueryBuilder
 
     /**
      * @param  array<string, mixed>  $parameters
-     * @return array<string, mixed>
+     * @return array<string, list<int|string>>
      */
-    public function mutate(array $parameters = []);
+    public function mutate(array $parameters = []): array;
 
     /**
      * @param  array<string, mixed>  $mutation
      * @param  array<string, mixed>  $attributes
-     * @return Model
      */
-    public function applyMutation(array $mutation = [], array $attributes = [], mixed $key = null);
+    public function applyMutation(array $mutation = [], array $attributes = [], int|string|null $key = null): Model;
 
     /**
      * @param  array<string, mixed>  $mutation
      * @param  array<string, mixed>  $attributes
-     * @return array<int, Model>
+     * @return list<Model>
      */
-    public function mutations(array $mutation = [], array $attributes = []);
+    public function mutations(array $mutation = [], array $attributes = []): array;
 }
