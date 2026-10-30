@@ -110,6 +110,23 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
       return [ID::make('id'), Text::make('name'), Integer::make('price'), Text::make('note')->nullable()];
   }
   ```
+
+  How a search reads a field depends on its declaration:
+
+  ```php
+  use Illuminate\Contracts\Database\Eloquent\Builder;
+
+  ID::make('id')->sortable(false),                     // returned, 422 in sorts and aggregates
+  Text::make('api_token')->writeOnly(),                // never returned, 422 in selects, sorts and aggregates
+  DateTime::make('created_at')->selectable(false),     // not returned, 422 in selects, sortable
+  Json::make('settings'),                              // returned, 422 in sorts, min/max/avg/sum
+  Text::make('full_name')->virtual()                   // not returned, 422 in selects and aggregates
+      ->sortUsing(fn (Builder $query, string $direction) => $query
+          ->orderBy('last_name', $direction)->orderBy('first_name', $direction)),
+  ```
+
+  - Selectable fields (not `writeOnly()`, not `selectable(false)`, not `virtual()`) are the only ones `selects` accepts and the ones a row returns without `selects`, at every include level. Virtual fields cannot be selected yet; `requires()` has no effect yet.
+  - Sortable fields are the only ones `sorts` accepts: `Json`, `sortable(false)`, `writeOnly()` fields and `virtual()` fields without `sortUsing()` are refused. `sortUsing()` replaces the column order of its field (and makes a virtual or write-only field sortable); its callback receives the Eloquent query, on an include as well, and `asc` or `desc`. The other fields order by their qualified column (`posts.views`).
 - `relations()` — array of `Lomkit\Rest\Relations\*` instances declared with `::make('relationName', TargetResource::class)`. Only declared relations are includable/mutatable.
 - `scopes()` — `Lomkit\Rest\Scopes\Scope` objects naming the model's local scopes (`scopeX()` methods or `#[Scope]` methods) the client may invoke. Builder methods and macros such as `withTrashed` cannot be called as scopes. `fields()` declares the scope parameters, in the order of the scope method's arguments; strings throw `InvalidScopeException`.
 
@@ -301,7 +318,9 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
 **Filter operators**: `=`, `!=`, `>`, `>=`, `<`, `<=`, `like`, `not like`, `in`, `not in`.
 **Filter `type`**: `and` (default) or `or`. Use `nested` to group filters with their own logical operator. `field` may traverse declared relations and pivot data (`user.posts.id`, `languages.pivot.boolean`).
 **Scope `parameters`** is a positional list: each value binds to the scope field at the same position, is validated by its rules, cast to its type and filled from its `default()`. A position is required unless its field has a default; a missing, extra or wrongly typed parameter is a `422` under `search.scopes.{index}.parameters`. A rule that names another field of the same scope, such as `gte:min`, compares with the parameter at that field's position. Scopes are prohibited with `text` (Scout).
-**Aggregate `type`** is required, one of `min`, `max`, `avg`, `sum`, `count`, `exists`. `field` is required for `min/max/avg/sum`, omit for `count/exists`. An optional `alias` (a string) renames the response key, which is `{relation}_{type}_{field}` otherwise (`stars_max_rate`, `stars_count`).
+**`selects`** lists the selectable fields to return (`writeOnly()`, `selectable(false)` and `virtual()` fields are a `422` under `search.selects.{index}.field`); without it a row holds every selectable field of its resource. Include `selects` use the related resource's fields.
+**`sorts`** apply in order and accept the sortable fields only (`Json`, `sortable(false)`, `writeOnly()` and `virtual()` fields without `sortUsing()` are a `422` under `search.sorts.{index}.field`). `direction` is `asc` or `desc` (`Lomkit\Rest\Fields\SortDirection`), `asc` when omitted. Without `sorts`, `defaultOrderBy()` applies. With `text`, sorts accept the `scoutFields()`.
+**Aggregate `type`** is required, one of `min`, `max`, `avg`, `sum`, `count`, `exists` (`Lomkit\Rest\Fields\AggregateFunction`). `field` is required for `min/max/avg/sum`, omit for `count/exists`. `min`/`max` take a field of the related resource that is sortable by its own column (`isSortableByColumn()`: sortable by default or `sortable()`, not `virtual()`, not `writeOnly()`; `sortUsing()` does not count, so a `Json` field with `sortUsing()` is refused) and is not a `Boolean` (an app type extending `Boolean` included), on every database; an `ID` with UUID keys (`HasUuids` or `keyType('uuid')`) works for `min`/`max` on every database and returns the same string (PostgreSQL reads it as text); `avg`/`sum` also need a `Number` field (`Number`, `Integer` or an app type extending `Number`). Another field is a `422` under `search.aggregates.{index}.field`. An optional `alias` (a string) renames the response key, which is `{relation}_{type}_{field}` otherwise (`stars_max_rate`, `stars_count`).
 **`page`** is an integer of at least `1`; `limit` must be one of the resource's `limits()`.
 **`includes`** can recursively re-use `filters`, `sorts`, `scopes`, `limit`, `selects` — but **not nested `includes`** (load chained relations as separate include entries). Includes and aggregates always run in SQL, so they are validated against the related resource's fields and operators, also next to `text`; a missing or undeclared `relation` is a `422`.
 **Include `alias`** renames the response key for that include, which lets the same relation appear several times under different constraints. It must look like an identifier (`^[A-Za-z_][A-Za-z0-9_]*$`), be unique across the includes, and not collide with a field, a relation, or the gates key of the resource. It is used verbatim — no snake_casing — and is rejected on a dotted relation path (use a nested include there).
@@ -519,7 +538,7 @@ POST   /api/users/restore  body: {"resources": [5, 6]}      // requires withSoft
 DELETE /api/users/force    body: {"resources": [5, 6]}      // requires withSoftDeletes()
 ```
 
-All three return the affected records: `{"data": [{...}], "meta": {"gates": {...}}}`. Each entry of `resources` is a key typed like the resource's `ID` field (an integer for integer keys; a string, UUID or ULID otherwise), so a list or an object in `resources` is a `422` under `resources.{index}`.
+All three return the affected records with the selectable fields of their resource: `{"data": [{...}], "meta": []}`. They take no `search`: an empty array is accepted, and any other `search` (`null` and blank strings included) is a `422` under `search`, so their rows carry no `selects`, gates or aggregates. Each entry of `resources` is a key typed like the resource's `ID` field (an integer for integer keys; a string, UUID or ULID otherwise), so a list or an object in `resources` is a `422` under `resources.{index}`.
 
 ## Authorization model
 

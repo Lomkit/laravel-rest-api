@@ -369,3 +369,51 @@ Resource methods:
   - `authorizeToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): void` and `authorizedToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): bool`.
 - `authorizeTo()` calls `authorizedTo()`, so an override of `authorizedTo()` applies to the endpoints as well as to the gates. The checks made before validation, on the endpoint and on each reached resource, also go through the `authorizedTo()` of their resource.
 - `authorizedTo()` returns a new `Illuminate\Auth\Access\Response` built from the decision, with or without the cache. It keeps the result, the message and the status of the policy's response, and its code when the code is an integer or a string. It does not keep a code of another type, such as an enum or an object, or an instance of your own `Response` subclass.
+
+### Selects, sorts and aggregates
+
+A search reads each field through its declaration: `writeOnly()`, `selectable(false)` and `virtual()` decide what a row can return, and `sortable()` and `sortUsing()` decide how the field is sorted.
+
+Selects and rows:
+
+- `selects` accepts the selectable fields only. A field declared `writeOnly()`, `selectable(false)` or `virtual()` gives a 422 under `search.selects.<i>.field`, as an undeclared field does. The `selects` of an include are checked against the fields of the related resource.
+- Without `selects`, a row holds the selectable fields of its resource only, at every level of the includes. A `writeOnly()` field is never returned, by any endpoint: declare `writeOnly()` on a field that clients may write but not read. A `virtual()` field is not returned either.
+- `destroy`, `restore` and `forceDestroy` refuse `search`: an empty array is accepted, and any other `search` gives a 422 under `search`, "The search field is prohibited." for a value that is not empty and "The search field must be an array." for `null` or a blank string. No row is deleted or restored then. Their response holds the selectable fields of each row, without gates or aggregates.
+- Virtual fields cannot be selected yet, and `requires()` has no effect yet.
+
+Sorts:
+
+- `sorts` accepts the sortable fields only. A `Json` field, a field declared `sortable(false)` or `writeOnly()`, and a `virtual()` field without `sortUsing()` give a 422 under `search.sorts.<i>.field`. A field declared `selectable(false)` can still be sorted. The sorts of a text search still accept the `scoutFields()`.
+- A field with `sortUsing()` is sorted by its callback instead of its column. The callback receives the Eloquent query of the resource, on an include as well, and the direction, `asc` or `desc`. A `virtual()` or `writeOnly()` field with `sortUsing()` is sortable.
+
+  ```php
+  use Illuminate\Contracts\Database\Eloquent\Builder;
+
+  Text::make('full_name')->virtual()
+      ->sortUsing(fn (Builder $query, string $direction) => $query
+          ->orderBy('last_name', $direction)->orderBy('first_name', $direction)),
+  ```
+
+- The other fields are ordered by their column, qualified with the table of the model: `posts.views`.
+- `direction` accepts the values of `Lomkit\Rest\Fields\SortDirection`, `asc` and `desc`. A sort without a direction is ascending.
+- `Lomkit\Rest\Query\Builder::sort($field, $direction)` is removed. `applySorts()` keeps its signature and applies each sort with a `Lomkit\Rest\Query\Clauses\SortClause`, which calls `Field::sort()`. A sort passed to `search()` or `applySorts()` must name a declared, sortable field of the resource: another field throws `Lomkit\Rest\Exceptions\InvalidFieldException`. `Lomkit\Rest\Query\ScoutBuilder::sort()` does not change.
+- `defaultOrderBy()` still orders by the columns it names.
+
+Aggregates:
+
+- `type` accepts the values of `Lomkit\Rest\Fields\AggregateFunction`: `count`, `min`, `max`, `avg`, `sum` and `exists`. When `type` is missing or unknown, only `type` gets an error.
+- `min` and `max` accept a field of the related resource that is sortable by its own column (`Field::isSortableByColumn()`): sortable by default or declared `sortable()`, and neither `virtual()` nor `writeOnly()`. `sortUsing()` does not count, because the aggregate reads the column. A `Json` field that is not declared `sortable()`, a field declared `sortable(false)`, `virtual()` or `writeOnly()`, and an undeclared field give a 422 under `search.aggregates.<i>.field`, with or without `sortUsing()`.
+- `min` and `max` refuse a `Boolean` field, and an app type that extends `Boolean`, with the same 422, on every database.
+- `min` and `max` accept an `ID` field with UUID keys (a model using `HasUuids`, or `keyType('uuid')`) on every database, and return the same string on each of them. On PostgreSQL the aggregate reads the key as text, which keeps the order of the UUIDs.
+- `avg` and `sum` also need a `Number` field: `Number`, `Integer`, or an app type that extends `Number`. Another field, such as a `Text`, `Date`, `Boolean` or `ID` field, or an app type that extends `Field` directly, gives a 422. To average or sum the values of an app type, make it extend `Number`.
+- `count` and `exists` still refuse `field`. A direct call to `Lomkit\Rest\Query\Builder::aggregate()` with `count` or `exists` ignores `field`.
+- `aggregate()` keeps its signature and applies each aggregate with a `Lomkit\Rest\Query\Clauses\AggregateClause`. With `min`, `max`, `avg` or `sum`, the `field` passed to `search()` or `aggregate()` must name a declared field of the related resource: another field throws `Lomkit\Rest\Exceptions\InvalidFieldException`. The response key does not change: the `alias`, or `<relation>_<type>_<field>`.
+
+Include aliases:
+
+- An include `alias` is still checked against the name of every field of the resource, `writeOnly()` and `virtual()` fields included. Its messages start with the key instead of `The alias`, for example `The search.includes.0.alias conflicts with a field of this resource.`
+- `Lomkit\Rest\Rules\Search\SearchIncludeAlias` is final and receives the resource and the relation name in its constructor: `new SearchIncludeAlias($resource, 'posts')`. `setResource()` and `setRelation()` are removed.
+
+Scramble:
+
+- The search body documents the sortable fields under `sorts` and the selectable fields under `selects`, with the values of `SortDirection` and `AggregateFunction`.

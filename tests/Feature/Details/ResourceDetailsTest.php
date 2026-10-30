@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Details;
 
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\CategoryResource;
+use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -129,7 +130,19 @@ class ResourceDetailsTest extends PackageTestCase
                     'meta' => [],
                 ],
             ],
-            'relations' => [],
+            'relations' => [
+                [
+                    'resource' => AuthorResource::class,
+                    'relation' => 'author',
+                    'constraints' => [
+                        'required_on_creation' => false,
+                        'prohibited_on_creation' => false,
+                        'required_on_update' => false,
+                        'prohibited_on_update' => false,
+                    ],
+                    'name' => 'BelongsTo',
+                ],
+            ],
             'rules' => ['all' => [], 'create' => [], 'update' => []],
         ]]);
     }

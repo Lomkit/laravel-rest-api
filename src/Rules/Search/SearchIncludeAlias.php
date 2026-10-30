@@ -8,88 +8,27 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Relations\Relation;
 
-class SearchIncludeAlias implements DataAwareRule, ValidationRule
+final class SearchIncludeAlias implements DataAwareRule, ValidationRule
 {
-    /**
-     * The data under validation.
-     */
-    protected array $data = [];
+    /** @var array<array-key, mixed> */
+    private array $data = [];
 
-    /**
-     * The resource instance.
-     */
-    protected Resource $resource;
-
-    /**
-     * The relation the alias is applied to.
-     */
-    protected string $relation;
+    public function __construct(
+        private readonly Resource $resource,
+        private readonly string $relation,
+    ) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        // A nested relation is loaded through its parent, so there is no single level the alias
-        // could key into. The equivalent nested include carries the alias unambiguously.
-        if (Str::contains($this->relation, '.')) {
-            $fail('The alias is not allowed on a nested relation, use a nested include instead.');
+        $message = $this->conflict($attribute, $value);
 
-            return;
-        }
-
-        if ($value === config('rest.gates.key')) {
-            $fail('The alias is reserved.');
-
-            return;
-        }
-
-        if (in_array($value, $this->resource->getFields($this->resource->context()->request)->names(), true)) {
-            $fail('The alias conflicts with a field of this resource.');
-
-            return;
-        }
-
-        if (in_array($value, $this->relationNames(), true)) {
-            $fail('The alias conflicts with a relation of this resource.');
-
-            return;
-        }
-
-        // Two includes resolving to the same key would silently overwrite each other.
-        if ($this->timesUsedAmongSiblings($attribute, $value) > 1) {
-            $fail('The alias is already used by another include.');
+        if ($message !== null) {
+            $fail($message);
         }
     }
 
-    /**
-     * Get the relation names exposed by the resource.
-     */
-    protected function relationNames(): array
-    {
-        return collect($this->resource->getRelations($this->resource->context()->request))
-            ->map(function (Relation $relation) {
-                return $relation->relation;
-            })
-            ->all();
-    }
-
-    /**
-     * Count how many includes of the same level declare the given alias.
-     */
-    protected function timesUsedAmongSiblings(string $attribute, mixed $value): int
-    {
-        $includesKey = Str::beforeLast(Str::beforeLast($attribute, '.'), '.');
-
-        return collect(Arr::get($this->data, $includesKey, []))
-            ->filter(function ($include) use ($value) {
-                return is_array($include) && ($include['alias'] ?? null) === $value;
-            })
-            ->count();
-    }
-
-    /**
-     * Set the data under validation.
-     */
+    /** @param array<array-key, mixed> $data */
     public function setData(array $data): static
     {
         $this->data = $data;
@@ -97,23 +36,28 @@ class SearchIncludeAlias implements DataAwareRule, ValidationRule
         return $this;
     }
 
-    /**
-     * Set the current resource.
-     */
-    public function setResource(Resource $resource): static
+    private function conflict(string $attribute, mixed $value): ?string
     {
-        $this->resource = $resource;
+        $request = $this->resource->context()->request;
 
-        return $this;
+        return match (true) {
+            str_contains($this->relation, '.') => 'The :attribute is not allowed on a nested relation, use a nested include instead.',
+            $value === config('rest.gates.key') => 'The :attribute is reserved.',
+            in_array($value, $this->resource->getFields($request)->names(), true) => 'The :attribute conflicts with a field of this resource.',
+            in_array($value, array_column($this->resource->getRelations($request), 'relation'), true) => 'The :attribute conflicts with a relation of this resource.',
+            $this->timesUsedAmongSiblings($attribute, $value) > 1 => 'The :attribute is already used by another include.',
+            default => null,
+        };
     }
 
-    /**
-     * Set the relation the alias is applied to.
-     */
-    public function setRelation(string $relation): static
+    private function timesUsedAmongSiblings(string $attribute, mixed $value): int
     {
-        $this->relation = $relation;
+        $includes = Arr::get($this->data, Str::beforeLast(Str::beforeLast($attribute, '.'), '.'));
 
-        return $this;
+        if (! is_array($includes)) {
+            return 0;
+        }
+
+        return count(array_filter(array_column($includes, 'alias'), fn (mixed $alias): bool => $alias === $value));
     }
 }

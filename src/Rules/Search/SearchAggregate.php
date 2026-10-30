@@ -3,6 +3,8 @@
 namespace Lomkit\Rest\Rules\Search;
 
 use Illuminate\Validation\Rule;
+use Lomkit\Rest\Fields\AggregateFunction;
+use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Rules\Concerns\ReachesRelations;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\Resource\ResourceRelationOrNested;
@@ -20,39 +22,46 @@ class SearchAggregate extends RestRule
         parent::compile($into, $attribute, $value);
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<string, list<mixed>> */
     public function buildValidationRules(string $attribute, mixed $value): array
     {
-        $request = $this->resource->context()->request;
-
-        $relation = is_array($value) ? ($value['relation'] ?? null) : null;
+        $aggregate = is_array($value) ? $value : [];
+        $relation = $aggregate['relation'] ?? null;
         $relationResource = is_string($relation) ? $this->resource->relation($relation)?->resource() : null;
 
-        return array_merge(
-            [
-                $attribute.'.alias' => [
-                    'nullable',
-                    'string',
-                ],
-                $attribute.'.relation' => [
-                    'required',
-                    (new ResourceRelationOrNested)->setResource($this->resource),
-                ],
-                $attribute.'.type' => [
-                    'required',
-                    Rule::in(['count', 'min', 'max', 'avg', 'sum', 'exists']),
-                ],
-            ],
-            ! is_null($relationResource) ? [
-                $attribute.'.field' => [
-                    'required_if:'.$attribute.'.type,min,max,avg,sum',
-                    'prohibited_if:'.$attribute.'.type,count,exists',
-                    new OneOf($relationResource->getFields($request)->names()),
-                ],
-                $attribute.'.filters.*' => [
-                    (new SearchFilter)->setResource($relationResource),
-                ],
-            ] : []
-        );
+        $rules = [
+            $attribute.'.alias' => ['nullable', 'string'],
+            $attribute.'.relation' => ['required', (new ResourceRelationOrNested)->setResource($this->resource)],
+            $attribute.'.type' => ['required', Rule::enum(AggregateFunction::class)],
+        ];
+
+        if ($relationResource === null) {
+            return $rules;
+        }
+
+        return [
+            ...$rules,
+            $attribute.'.field' => $this->fieldRules($attribute, $relationResource, $aggregate['type'] ?? null),
+            $attribute.'.filters.*' => [(new SearchFilter)->setResource($relationResource)],
+        ];
+    }
+
+    /** @return list<mixed> */
+    private function fieldRules(string $attribute, Resource $relationResource, mixed $type): array
+    {
+        $rules = [
+            'required_if:'.$attribute.'.type,'.implode(',', array_column(AggregateFunction::needingField(), 'value')),
+            'prohibited_if:'.$attribute.'.type,'.implode(',', array_column(AggregateFunction::takingNoField(), 'value')),
+        ];
+
+        $function = is_string($type) ? AggregateFunction::tryFrom($type) : null;
+
+        if ($function === null || ! $function->needsField()) {
+            return $rules;
+        }
+
+        $fields = $relationResource->getFields($this->resource->context()->request);
+
+        return [...$rules, new OneOf($function->acceptedFieldNames($fields))];
     }
 }

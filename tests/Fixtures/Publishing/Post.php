@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Unguarded]
 #[UseFactory(PostFactory::class)]
@@ -16,6 +17,11 @@ use Illuminate\Database\Eloquent\Model;
 class Post extends Model
 {
     use HasFactory;
+
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(Author::class);
+    }
 
     public function scopePublishedSince(Builder $query, CarbonImmutable $since): void
     {

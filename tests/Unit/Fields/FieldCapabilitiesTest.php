@@ -48,7 +48,7 @@ class FieldCapabilitiesTest extends TestCase
 
     #[Test]
     #[DataProvider('sortability')]
-    public function it_is_sortable_from_its_flag_its_custom_sort_and_its_storage(string $class, ?bool $sortable, bool $sortUsing, bool $virtual, bool $expected): void
+    public function it_is_sortable_from_its_flag_its_custom_sort_and_its_storage(string $class, ?bool $sortable, bool $sortUsing, bool $virtual, bool $expected, bool $byColumn): void
     {
         $field = $class::make('column')->virtual($virtual);
 
@@ -61,25 +61,26 @@ class FieldCapabilitiesTest extends TestCase
         }
 
         $this->assertSame($expected, $field->isSortable());
+        $this->assertSame($byColumn, $field->isSortableByColumn());
     }
 
-    /** @return array<string, array{class-string<Field>, bool|null, bool, bool, bool}> */
+    /** @return array<string, array{class-string<Field>, bool|null, bool, bool, bool, bool}> */
     public static function sortability(): array
     {
         return [
-            'text by default' => [Text::class, null, false, false, true],
-            'text sortable' => [Text::class, true, false, false, true],
-            'text not sortable' => [Text::class, false, false, false, false],
-            'virtual text' => [Text::class, null, false, true, false],
-            'virtual text marked sortable' => [Text::class, true, false, true, false],
-            'text with a custom sort' => [Text::class, null, true, false, true],
-            'text not sortable with a custom sort' => [Text::class, false, true, false, false],
-            'virtual text with a custom sort' => [Text::class, null, true, true, true],
-            'virtual text not sortable with a custom sort' => [Text::class, false, true, true, false],
-            'json by default' => [Json::class, null, false, false, false],
-            'json sortable' => [Json::class, true, false, false, true],
-            'json with a custom sort' => [Json::class, null, true, false, true],
-            'virtual json marked sortable' => [Json::class, true, false, true, false],
+            'text by default' => [Text::class, null, false, false, true, true],
+            'text sortable' => [Text::class, true, false, false, true, true],
+            'text not sortable' => [Text::class, false, false, false, false, false],
+            'virtual text' => [Text::class, null, false, true, false, false],
+            'virtual text marked sortable' => [Text::class, true, false, true, false, false],
+            'text with a custom sort' => [Text::class, null, true, false, true, true],
+            'text not sortable with a custom sort' => [Text::class, false, true, false, false, false],
+            'virtual text with a custom sort' => [Text::class, null, true, true, true, false],
+            'virtual text not sortable with a custom sort' => [Text::class, false, true, true, false, false],
+            'json by default' => [Json::class, null, false, false, false, false],
+            'json sortable' => [Json::class, true, false, false, true, true],
+            'json with a custom sort' => [Json::class, null, true, false, true, false],
+            'virtual json marked sortable' => [Json::class, true, false, true, false, false],
         ];
     }
 
