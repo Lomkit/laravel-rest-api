@@ -89,7 +89,11 @@ class ResourceSerializationTest extends PackageTestCase
         $serialized = serialize($resource);
         $restored = unserialize($serialized);
 
-        $this->assertStringNotContainsString('calculatedRelations', $serialized);
+        $this->assertSame(
+            'O:72:"Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\ConstrainedPostResource":2:{s:12:"defaultLimit";i:50;'
+                ."s:34:\"\0Lomkit\Rest\Http\Resource\0context\";O:28:\"Lomkit\Rest\Http\RestContext\":0:{}}",
+            $serialized,
+        );
         $this->assertSame([
             'required_on_creation' => true,
             'prohibited_on_creation' => false,
@@ -119,7 +123,11 @@ class ResourceSerializationTest extends PackageTestCase
         $serialized = serialize($resource);
         $restored = unserialize($serialized);
 
-        $this->assertStringNotContainsString('calculatedScopes', $serialized);
+        $this->assertSame(
+            'O:50:"Lomkit\Rest\Tests\Fixtures\Publishing\PostResource":2:{s:12:"defaultLimit";i:50;'
+                ."s:34:\"\0Lomkit\Rest\Http\Resource\0context\";O:28:\"Lomkit\Rest\Http\RestContext\":0:{}}",
+            $serialized,
+        );
         $this->assertSame(['publishedSince', 'popular', 'viewedBetween', 'featured', 'reaching'], array_map(fn (Scope $scope): string => $scope->name, $restored->getScopes($restored->context()->request)));
     }
 

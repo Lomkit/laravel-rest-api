@@ -41,6 +41,14 @@ These items change:
 - A package request reads its resource from the class of the route controller, which must extend `Lomkit\Rest\Http\Controllers\Controller`. On another route, such as a closure route, the request throws `Lomkit\Rest\Exceptions\InvalidControllerException`. Before, it failed with a PHP error.
 - The query builder methods that only exist on Eloquent (`mutate()`, `mutations()`, `applyMutation()`, `disableDefaultLimit()`) are declared on a new contract, `Lomkit\Rest\Contracts\EloquentQueryBuilder`. If you bind your own `QueryBuilder` implementation, it must implement `EloquentQueryBuilder`. The package resolves `EloquentQueryBuilder` through your `QueryBuilder` binding.
 
+### Resource definitions
+
+A resource holds no request state. Its context evaluates `fields()`, `scopes()`, `relations()`, `instructions()`, `actions()`, `limits()`, `scoutFields()` and `scoutInstructions()` once per request, when they are first read, and keeps the results until the request ends. The next request evaluates them again, with its own user.
+
+- The `calculatedFields`, `calculatedScopes`, `calculatedRelations`, `calculatedInstructions`, `calculatedActions`, `calculatedLimits`, `calculatedScoutFields` and `calculatedScoutInstructions` properties of resources are removed. Read the declarations with `getFields()`, `getScopes()`, `getRelations()`, `getInstructions()`, `getActions()`, `getLimits()`, `getScoutFields()` and `getScoutInstructions()`. They still take a request, but they evaluate the declarations with the request of the resource's context, whatever request they receive.
+- A serialized resource holds its own properties and an empty context, without its declarations. A queued or batched action therefore evaluates them again in the worker, where the request has no user: declarations that depend on the user see a guest there. Closures in the declarations, such as field rules, scope fields, relation constraints, or actions and instructions built with closures, stay out of the queued job. The action that runs and the field values it receives are still serialized with the job, so they cannot hold closures.
+- `Resource` does not define `__sleep()`, and the `Lomkit\Rest\Concerns\Resource\ForgetsRequestState` trait is removed. A resource that overrides `__sleep()` must not call `parent::__sleep()`.
+
 ### Routing
 
 - `operate()` takes only the request: `operate(OperateRequest $request)`. It reads the action key from the route by name, with `$request->actionKey()`. A controller that overrides `operate($request, $action)` no longer loads: remove the second parameter. Actions now also work under route groups with URI or domain parameters, such as `Route::prefix('{tenant}')`.
@@ -75,7 +83,6 @@ These items change:
 - `getFields()` returns a `Lomkit\Rest\Fields\FieldSet` instead of an array of names. Call `->names()` to get the old list.
 - `rest:resource` generates `ID::make('id')`.
 - `Lomkit\Rest\Fields\DateTime` has the same short name as PHP's `\DateTime`. In a file that uses both, alias one of them.
-- `Resource` defines `__sleep()`, which leaves out the memoized fields, scopes and relations, because they can hold closures. A queued action's resource therefore rebuilds them in the worker, where the request has no user: `fields()`, `scopes()` and `relations()` that depend on the user see a guest there. A resource that overrides `__sleep()` must declare `: array` and merge `parent::__sleep()`.
 
 ### Typed inputs
 
@@ -104,7 +111,6 @@ Scopes:
 - The model scope receives the cast values: a `Date` arrives as a `CarbonImmutable` at the start of the day, an `Integer` as an `int`. Update the scope's parameter types.
 - Scopes run through Eloquent's `Builder::scopes()`, so the name must be a local scope of the model (a `scopeX()` method or a `#[Scope]` method). Builder methods and macros can no longer be called as scopes.
 - `Lomkit\Rest\Query\Builder::scope()` returns the query builder instead of the scope's return value.
-- `Resource::__sleep()` also leaves out the memoized scopes.
 
 Instructions:
 

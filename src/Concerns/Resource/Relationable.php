@@ -29,23 +29,15 @@ trait Relationable
         return $relation;
     }
 
-    /** @var array<int, Relation> */
-    protected array $calculatedRelations;
-
     /** @return array<int, Relation> */
     public function relations(RestRequest $request): array
     {
         return [];
     }
 
+    /** @return array<int, Relation> */
     public function getRelations(RestRequest $request): array
     {
-        return $this->calculatedRelations ??
-            (
-                $this->calculatedRelations =
-                    array_map(function (Relation $relation) {
-                        return $relation->fromResource($this);
-                    }, $this->relations($request))
-            );
+        return $this->context()->definition($this)->relations();
     }
 }

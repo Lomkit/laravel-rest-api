@@ -6,25 +6,16 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 trait Actionable
 {
-    /**
-     * The calculated actions if already done in this request.
-     */
-    protected array $calculatedActions;
-
-    /**
-     * The actions that should be linked.
-     */
+    /** @return array<int, Action> */
     public function actions(RestRequest $request): array
     {
         return [];
     }
 
-    /**
-     * Get the resource's actions.
-     */
+    /** @return array<int, Action> */
     public function getActions(RestRequest $request): array
     {
-        return $this->calculatedActions ??= array_map(fn (Action $action) => $action->resource($this), $this->actions($request));
+        return $this->context()->definition($this)->actions();
     }
 
     /**

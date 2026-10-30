@@ -14,10 +14,14 @@ use Lomkit\Rest\Authorization\DecisionStore;
 use Lomkit\Rest\Authorization\NullDecisionStore;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use WeakMap;
 
 final class RestContext
 {
     private readonly ResourceRegistry $resources;
+
+    /** @var WeakMap<Resource, ResourceDefinition> */
+    private readonly WeakMap $definitions;
 
     private ?bool $textSearch = null;
 
@@ -32,12 +36,18 @@ final class RestContext
         private readonly Container $container,
     ) {
         $this->resources = new ResourceRegistry($container);
+        $this->definitions = new WeakMap;
     }
 
     /** @param class-string<Resource> $class */
     public function resource(string $class): Resource
     {
         return $this->resources->get($class)->withinContext($this);
+    }
+
+    public function definition(Resource $resource): ResourceDefinition
+    {
+        return $this->definitions[$resource] ??= new ResourceDefinition($resource, $this->request);
     }
 
     public function isTextSearch(): bool
