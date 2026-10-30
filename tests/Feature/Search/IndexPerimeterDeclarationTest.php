@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Search;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Laravel\Scout\Builder as ScoutQuery;
+use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -95,6 +96,9 @@ class IndexPerimeterDeclarationTest extends PackageTestCase
 
     private function scoutBuilder(Resource $resource): ScoutBuilder
     {
-        return new ScoutBuilder($resource->withinContext(new RestContext(new RestRequest, $this->app)));
+        $context = new RestContext(new RestRequest, $this->app);
+        $context->authorizer()->plan([Check::onClass($resource->withinContext($context), 'viewAny')]);
+
+        return new ScoutBuilder($resource);
     }
 }

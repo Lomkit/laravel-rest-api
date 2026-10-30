@@ -2,11 +2,17 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
+use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Rules\Search\Search;
 use Lomkit\Rest\Rules\Search\SearchText;
 
 class SearchRequest extends RestRequest
 {
+    public function endpoint(): Endpoint
+    {
+        return Endpoint::Search;
+    }
+
     /** @return array<string, mixed> */
     public function rules(): array
     {

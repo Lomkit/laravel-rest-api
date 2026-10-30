@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Validation;
 
 use Illuminate\Support\Str;
+use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Rules\ArrayWithKey;
 
 final class RuleCompiler
@@ -19,6 +20,9 @@ final class RuleCompiler
     /** @var array<string, list<mixed>> */
     private array $wildcards = [];
 
+    /** @var array<string, Check> */
+    private array $reach = [];
+
     /** @param array<array-key, mixed> $data */
     private function __construct(private readonly array $data) {}
 
@@ -31,7 +35,7 @@ final class RuleCompiler
         $compiler = new self($data);
         $compiler->add($rules);
 
-        return new CompiledRules($compiler->resolved() + $compiler->wildcards, $compiler->labels, $compiler->projections);
+        return new CompiledRules($compiler->resolved() + $compiler->wildcards, $compiler->labels, $compiler->projections, array_values($compiler->reach));
     }
 
     /** @param array<array-key, mixed> $rules */
@@ -49,6 +53,11 @@ final class RuleCompiler
     public function project(string $key, mixed $value): void
     {
         $this->projections[$key] = $value;
+    }
+
+    public function reach(Check $check): void
+    {
+        $this->reach[$check->path."\0".$check->key()] ??= $check;
     }
 
     public function label(string $key, string $label): void

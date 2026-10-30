@@ -313,12 +313,50 @@ Within a request:
 - Policies run with `Gate::forUser($request->user())`, or with the authenticated user when the request has none. `Gate::before()` and `Gate::after()` callbacks receive that user.
 - The authorizer belongs to one user. When the user or the default guard changes, for example in a test or a long-running process that reuses a resource, the next check starts a new authorizer for the current user, and the decisions of the previous user are not reused.
 
+Checks before validation:
+
+- Each request checks the abilities of its endpoint, then the resources its payload reaches, before it validates the payload and before any query. A denied check answers with the status of the policy's response, `403` by default, even when the payload is invalid: the `403` now comes before the `422`. This also applies to Precognition requests, with or without `Precognition-Validate-Only`, which answered `204` or `422` before.
+- The `authorize()` method of a request still runs first. When it passes, the endpoint abilities and the reached resources must pass too.
+- The endpoint abilities are `viewAny` for `details` and `search`, and none for `mutate`, `destroy`, `restore` and `forceDestroy`, which check each row and each creation. `operate` is described under "Actions" below.
+- To change them for one resource, override `abilities(Endpoint $endpoint, RestRequest $request): array` on the resource (`Lomkit\Rest\Http\Routing\Endpoint`), for example to require `deleteAny` on `Endpoint::Destroy`. The list replaces the default of the endpoint: a resource that returns `['export']` for `Endpoint::Search` no longer checks `viewAny` there, and its search runs without it. To add an ability, keep `viewAny` in the list, as in `['viewAny', 'export']`. `Endpoint::Operate` is the exception: its list adds to `viewAny`. A resource that already defines a method named `abilities()` must give it this signature.
+- `details` checks `viewAny` before the controller's `beforeDetails()` hook runs, so the hook no longer runs for a user who cannot list the resource.
+- Every resource the payload reaches needs `viewAny` on that resource: each level of an include (`team.replies` needs `viewAny` on the teams and on the replies), each level of an aggregate, each level of a filter on a relation, nested filters included, and a filter on a pivot column (`tags.pivot.position` needs `viewAny` on the tags). The same applies to the `search` of an action. A filter on a relation did not check the related resource before, and an include was checked only when the query returned rows.
+- Each `create` in `mutate`, at the root or under a relation, needs `create` on the created resource. It is checked once per resource class and request, before validation, with the model class as its argument, as `Gate::inspect('create', Model::class)` does. Before, it was checked for each new model, after validation, with an unsaved model instance: a `create` policy method that requires a model as its second parameter no longer receives one. A creation under a relation that the package refuses, such as a `HasManyThrough` relation or a relation marked `prohibitedOnCreation()`, is checked before the `422` as well.
+
+Actions:
+
+- An unknown action answers `404` to a user allowed `viewAny` on the resource, and `403` to the others.
+- A known action checks, before validation and in this order: `viewAny` on the resource, the abilities that the resource's `abilities()` returns for `Endpoint::Operate` (none by default), then the abilities that the action's `abilities()` returns. These abilities add to `viewAny` and never replace it.
+- `Action::abilities(): array` returns `['viewAny']` by default, for every action, standalone and targeted actions included. An action that returns `['export']` checks `viewAny`, then `export`; listing `viewAny` as well, as in `['viewAny', 'export']`, checks the same abilities. An action that already defines a method named `abilities()` must give it this signature.
+- An action whose `abilities()` returns `[]` runs without any of these checks: neither `viewAny` nor the resource's abilities for `Endpoint::Operate`, and the search of its models does not check `viewAny` on the resource either. Use it for an action that any user may run, guests included. The resources that its `search` reaches through includes, aggregates and filters on relations still need `viewAny`.
+
+Denials:
+
+- A check made before validation (an endpoint ability or a reached resource) that is denied throws `Lomkit\Rest\Exceptions\AuthorizationDenied`, which extends Laravel's `Illuminate\Auth\Access\AuthorizationException`. It holds every denial of these checks, at most 50, as `Lomkit\Rest\Authorization\Denial` objects in `$exception->denials`, each with the path in the payload (`search.includes.0`, `mutate.1.relations.team`, or an empty string for the endpoint), the ability, the resource class, the key of the model when the check is on a model, and the message.
+- Its message, code and status are those of the first denial, in the order of the request's rules. The response body stays `{"message": ...}`, and a policy that returns `Response::denyAsNotFound()` still answers `404`.
+- The checks on rows (`view`, `update`, `delete`, `restore`, `forceDelete`, and the attach and detach checks of a relation) still throw Laravel's `AuthorizationException`, with no denials, as before.
+- To add the denials to the JSON body, register the renderer in `bootstrap/app.php`. It adds a `denials` list of `{path, ability, key, message}`, where `key` only appears for a model, to every `AuthorizationDenied` except a `404`, and leaves the other responses unchanged:
+
+  ```php
+  ->withExceptions(function (Exceptions $exceptions): void {
+      $exceptions->render(new \Lomkit\Rest\Exceptions\DenialsRenderer);
+  })
+  ```
+
+Checks the request did not plan:
+
+- The queries still check `viewAny` on each resource they search, and `create` on each resource they create. A check that the request already made before validation is reused; another one is evaluated when the query runs.
+- The resource of the endpoint is the exception: its endpoint abilities stand in for `viewAny`. When they leave `viewAny` out (by default for `mutate`, `destroy`, `restore` and `forceDestroy`, through an override of the resource's `abilities()`, or for an action whose `abilities()` returns `[]`), the queries do not check it on that resource, and strict mode does not report it. The other resources the queries search are checked, or reported, as above.
+- With `authorizations.strict` set to `true` (`false` by default), a check that the request did not make before validation throws `Lomkit\Rest\Exceptions\UnplannedCheckException` instead. Turn it on in your test suite to find a resource that the request reaches without checking it first, for example through a custom rule node: a node records its checks in `compile()` with `$into->reach(Check::onClass($resource, 'viewAny', $attribute))` (`Lomkit\Rest\Authorization\Check`).
+- A `Lomkit\Rest\Query\Builder` used outside a request evaluates `viewAny` when it searches. In strict mode, plan it first: `$resource->context()->authorizer()->plan([Check::onClass($resource, 'viewAny')])`.
+
 Cache:
 
 - The cache is off by default: `authorizations.cache.enabled` is `false`. A published `config/rest.php` keeps its own value, so set it to `false` there unless you want the cache.
 - When the cache is on, a decision is stored as an array of scalars (`allowed`, `message`, `code` and `status`), not as a `Response` object, so it reads back with any store, including the `file` and `database` stores with `cache.serializable_classes` set to `false`.
 - The cache key holds the guard, the user class and key, the resource class, the ability, and the class and key of each model. Entries written under the previous keys are not read anymore and expire on their own.
-- A model whose key is cast to an enum is keyed by the value of the enum. Checks on a model that is not saved yet, such as the `create` check of a mutation, or whose key is not a string, an integer or an enum, are neither cached nor shared with another check of the request.
+- A model whose key is cast to an enum is keyed by the value of the enum. Checks on a model that is not saved yet, or whose key is not a string, an integer or an enum, are neither cached nor shared with another check of the request.
+- `create` checks are not cached: they run once per request, including the `authorized_to_create` gate.
 - A cached decision stays for `authorizations.cache.default` minutes, or the duration that `cacheAuthorizationFor()` returns: a change to a policy, to the user or to the model shows once the entry expires.
 - `Resource::getAuthorizationCacheKey()` is removed: the package builds the key.
 - `isAuthorizationCacheEnabled()` and the `DisableAuthorizationsCache` trait turn the cache off for one resource. When `authorizations.cache.enabled` is `false`, no resource uses the cache.
@@ -329,5 +367,5 @@ Resource methods:
   - `authorizeTo(string $ability, Model|string $model): void` and `authorizedTo(string $ability, Model|string $model): Response`;
   - `authorizeToAttach(Model $model, Model $toAttachModel): void`, `authorizedToAttach(Model $model, Model $toAttachModel): bool`, and the same for `authorizeToDetach()` and `authorizedToDetach()`;
   - `authorizeToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): void` and `authorizedToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): bool`.
-- `authorizeTo()` calls `authorizedTo()`, so an override of `authorizedTo()` applies to the endpoints as well as to the gates.
+- `authorizeTo()` calls `authorizedTo()`, so an override of `authorizedTo()` applies to the endpoints as well as to the gates. The checks made before validation, on the endpoint and on each reached resource, also go through the `authorizedTo()` of their resource.
 - `authorizedTo()` returns a new `Illuminate\Auth\Access\Response` built from the decision, with or without the cache. It keeps the result, the message and the status of the policy's response, and its code when the code is an integer or a string. It does not keep a code of another type, such as an enum or an object, or an instance of your own `Response` subclass.

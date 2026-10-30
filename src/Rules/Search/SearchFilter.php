@@ -2,15 +2,19 @@
 
 namespace Lomkit\Rest\Rules\Search;
 
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Rules\Concerns\DependsOnTextSearch;
+use Lomkit\Rest\Rules\Concerns\ReachesRelations;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\Resource\ResourceFieldOrNested;
 use Lomkit\Rest\Rules\RestRule;
+use Lomkit\Rest\Validation\RuleCompiler;
 
 class SearchFilter extends RestRule
 {
     use DependsOnTextSearch;
+    use ReachesRelations;
 
     /**
      * How many levels of nesting this filter already sits under.
@@ -25,6 +29,17 @@ class SearchFilter extends RestRule
         $this->depth = $depth;
 
         return $this;
+    }
+
+    public function compile(RuleCompiler $into, string $attribute, mixed $value): void
+    {
+        $field = is_array($value) ? ($value['field'] ?? null) : null;
+
+        if (! $this->textSearch && is_string($field) && str_contains($field, '.')) {
+            $this->reachRelation($into, Str::beforeLast($field, '.'), $attribute);
+        }
+
+        parent::compile($into, $attribute, $value);
     }
 
     /** @return array<string, mixed> */

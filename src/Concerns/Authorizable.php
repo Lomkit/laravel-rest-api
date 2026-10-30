@@ -6,9 +6,17 @@ use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Routing\Endpoint;
 
 trait Authorizable
 {
+    /** @return list<string> */
+    public function abilities(Endpoint $endpoint, RestRequest $request): array
+    {
+        return $endpoint->abilities();
+    }
+
     public function authorizeTo(string $ability, Model|string $model): void
     {
         $this->authorizedTo($ability, $model)->authorize();

@@ -85,6 +85,12 @@ class Action implements JsonSerializable
         return $this->targeted;
     }
 
+    /** @return list<string> */
+    public function abilities(): array
+    {
+        return ['viewAny'];
+    }
+
     /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: array<string, mixed>, standalone: bool, targeted: bool} */
     public function jsonSerialize(): array
     {

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Query\Traits;
 
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 
 trait PerformMutation
@@ -49,15 +50,14 @@ trait PerformMutation
         $allAttributes = array_merge($attributes, $mutation['attributes'] ?? []);
 
         if ($mutation['operation'] === 'create') {
+            $this->resource->context()->authorizer()->ensurePlanned(Check::onClass($this->resource, 'create'));
+
             $model = $this->resource::newModel();
         } else {
             $model = $this->resource::newModel()::query()->findOrFail($key ?? $mutation['key']);
-        }
 
-        $this->resource->authorizeTo(
-            $this->mutationAbility($mutation),
-            $model
-        );
+            $this->resource->authorizeTo($this->mutationAbility($mutation), $model);
+        }
 
         return $this->mutateModel(
             $model,

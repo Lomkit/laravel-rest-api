@@ -18,6 +18,7 @@ return new class extends Migration
         Schema::create('tag_ticket', function (Blueprint $table): void {
             $table->foreignId('tag_id')->constrained();
             $table->foreignId('ticket_id')->constrained();
+            $table->unsignedInteger('position')->nullable();
         });
     }
 };

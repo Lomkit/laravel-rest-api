@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Relations;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Http\Resource;
@@ -77,6 +78,8 @@ class Relation implements \JsonSerializable
     public function applySearchQuery(Builder $query)
     {
         $resource = $this->resource();
+
+        $resource->context()->authorizer()->ensurePlanned(Check::onClass($resource, 'viewAny'));
 
         $resource->searchQuery($resource->context()->request, $query);
     }

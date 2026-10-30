@@ -12,11 +12,11 @@ class TicketPolicy extends RecordingPolicy
 
     public bool $open = true;
 
-    public function viewAny(?Authenticatable $user): Response
+    public function viewAny(?Authenticatable $user): bool|Response
     {
-        $this->record('viewAny');
+        $answer = $this->record('viewAny');
 
-        return $this->open ? Response::allow() : Response::denyWithStatus(423, 'The helpdesk is closed.');
+        return $this->open ? $answer : Response::denyWithStatus(423, 'The helpdesk is closed.');
     }
 
     public function update(?Authenticatable $user, Model $model): Response

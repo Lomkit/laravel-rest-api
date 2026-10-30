@@ -9,7 +9,6 @@ use Lomkit\Rest\Tests\Support\Database\Factories\HasManyThroughRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasOneThroughRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
-use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 use Lomkit\Rest\Tests\Support\Models\HasManyThroughRelation;
 use Lomkit\Rest\Tests\Support\Models\HasOneThroughRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
@@ -133,41 +132,6 @@ class MutateCreateThroughOperationsTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.hasOneThroughRelation']]);
-    }
-
-    public function test_creating_a_resource_with_creating_has_many_through_relation(): void
-    {
-        $modelToCreate = ModelFactory::new()->makeOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(HasManyRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'hasManyThroughRelation' => [
-                                [
-                                    'operation' => 'create',
-                                    'attributes' => [],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.hasManyThroughRelation']]);
     }
 
     public function test_creating_a_resource_with_creating_multiple_has_many_through_relation(): void

@@ -4,8 +4,12 @@ namespace Lomkit\Rest\Http\Requests;
 
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Authorization\Authorizer;
+use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Fields\InputValues;
+use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Rules\Distinct;
 use Lomkit\Rest\Rules\Input\InputFields;
 use Lomkit\Rest\Rules\OneOf;
@@ -14,6 +18,39 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OperateRequest extends RestRequest
 {
+    public function endpoint(): Endpoint
+    {
+        return Endpoint::Operate;
+    }
+
+    protected function authorizeEntry(Authorizer $authorizer): void
+    {
+        $resource = $this->rootResource();
+        $key = $this->route('action');
+
+        if (! is_string($key) || ! $resource->actionExists($this, $key)) {
+            $authorizer->plan([Check::onClass($resource, 'viewAny')]);
+
+            throw new HttpException(404);
+        }
+
+        $action = $resource->action($this, $key);
+
+        if ($action->abilities() !== []) {
+            $authorizer->plan([Check::onClass($resource, 'viewAny')]);
+        }
+
+        $authorizer->enter($resource, self::checksOn($resource, $this->entryAbilities($resource, $action)));
+    }
+
+    /** @return list<string> */
+    private function entryAbilities(Resource $resource, Action $action): array
+    {
+        $abilities = $action->abilities();
+
+        return $abilities === [] ? [] : ['viewAny', ...$resource->abilities(Endpoint::Operate, $this), ...$abilities];
+    }
+
     /** @return array<string, mixed> */
     public function rules(): array
     {

@@ -2,4 +2,12 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-class DetailsRequest extends RestRequest {}
+use Lomkit\Rest\Http\Routing\Endpoint;
+
+class DetailsRequest extends RestRequest
+{
+    public function endpoint(): Endpoint
+    {
+        return Endpoint::Details;
+    }
+}

@@ -10,11 +10,11 @@ class ArchivedTicketResource extends TicketResource
 {
     public function authorizedTo(string $ability, Model|string $model): Response
     {
-        if ($ability === 'delete') {
-            return Response::deny('Tickets are archived, not deleted.');
-        }
-
-        return parent::authorizedTo($ability, $model);
+        return match ($ability) {
+            'delete' => Response::deny('Tickets are archived, not deleted.'),
+            'create' => Response::deny('Tickets are archived, not created.'),
+            default => parent::authorizedTo($ability, $model),
+        };
     }
 
     public function cacheAuthorizationFor(): DateTimeInterface

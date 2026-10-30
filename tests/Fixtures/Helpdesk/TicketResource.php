@@ -9,6 +9,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
+use Lomkit\Rest\Relations\MorphToMany;
 
 class TicketResource extends Resource
 {
@@ -21,6 +22,15 @@ class TicketResource extends Resource
 
     public function relations(RestRequest $request): array
     {
-        return [BelongsTo::make('team', TeamResource::class), BelongsToMany::make('tags', TagResource::class)];
+        return [
+            BelongsTo::make('team', TeamResource::class),
+            BelongsToMany::make('tags', TagResource::class)->withPivotFields(['position']),
+            MorphToMany::make('labels', TagResource::class)->withPivotFields(['position']),
+        ];
+    }
+
+    public function actions(RestRequest $request): array
+    {
+        return [CloseTickets::make(), RefreshTickets::make(), ImportTickets::make(), ReportOutage::make(), WatchTickets::make()];
     }
 }

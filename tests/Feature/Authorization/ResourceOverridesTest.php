@@ -34,4 +34,14 @@ class ResourceOverridesTest extends HelpdeskTestCase
         $this->assertDatabaseMissing('tickets', ['id' => $jam->id]);
         $this->assertSame($this->calls('delete', $jam), $this->tickets->calls);
     }
+
+    #[Test]
+    public function it_checks_a_creation_through_the_authorized_to_of_the_resource_before_validating(): void
+    {
+        $this->postJson('/api/archived-tickets/mutate', ['mutate' => [['operation' => 'create', 'attributes' => ['priority' => 'high']]]])
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'Tickets are archived, not created.']);
+
+        $this->assertSame([], $this->tickets->calls);
+    }
 }

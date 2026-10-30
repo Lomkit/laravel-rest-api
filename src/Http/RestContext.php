@@ -60,6 +60,7 @@ final class RestContext
         return $this->authorizer = new Authorizer(
             $this->container->make(Gate::class)->forUser($user),
             $this->decisionStore($guard, $user),
+            strict: (bool) config('rest.authorizations.strict', false),
         );
     }
 

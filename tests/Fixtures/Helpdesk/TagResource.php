@@ -6,6 +6,7 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\MorphedByMany;
 
 class TagResource extends Resource
 {
@@ -14,5 +15,10 @@ class TagResource extends Resource
     public function fields(RestRequest $request): array
     {
         return [ID::make('id'), Text::make('name')];
+    }
+
+    public function relations(RestRequest $request): array
+    {
+        return [MorphedByMany::make('labelledTickets', TicketResource::class)->withPivotFields(['position'])];
     }
 }

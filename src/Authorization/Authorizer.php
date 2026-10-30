@@ -5,14 +5,20 @@ namespace Lomkit\Rest\Authorization;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Lomkit\Rest\Exceptions\AuthorizationDenied;
+use Lomkit\Rest\Exceptions\UnplannedCheckException;
 use Lomkit\Rest\Http\Resource;
 
-final readonly class Authorizer
+final class Authorizer
 {
+    /** @var array<class-string<Resource>, true> */
+    private array $entered = [];
+
     public function __construct(
-        private Gate $gate,
-        private DecisionStore $store = new NullDecisionStore,
-        private DecisionMemo $memo = new DecisionMemo,
+        private readonly Gate $gate,
+        private readonly DecisionStore $store = new NullDecisionStore,
+        private readonly DecisionMemo $memo = new DecisionMemo,
+        private readonly bool $strict = false,
     ) {}
 
     public function inspect(Check $check): Decision
@@ -72,14 +78,81 @@ final readonly class Authorizer
         $this->authorizeAll(array_values($checks->all()));
     }
 
+    /** @param list<Check> $checks */
+    public function enter(Resource $resource, array $checks): void
+    {
+        $this->plan($checks);
+
+        $this->entered[$resource::class] = true;
+    }
+
+    /** @param list<Check> $checks */
+    public function plan(array $checks): void
+    {
+        self::enforce($checks, array_map($this->planned(...), $checks));
+    }
+
+    public function ensurePlanned(Check $check): void
+    {
+        if ($this->isPlanned($check)) {
+            $this->plan([$check]);
+
+            return;
+        }
+
+        if ($check->ability === 'viewAny' && isset($this->entered[$check->resource::class])) {
+            return;
+        }
+
+        if ($this->strict) {
+            throw UnplannedCheckException::for($check);
+        }
+
+        $this->plan([$check]);
+    }
+
     public function forget(Model $model): void
     {
         $this->memo->forget($model);
     }
 
+    /**
+     * @param  list<Check>  $checks
+     * @param  list<Decision>  $decisions
+     */
+    private static function enforce(array $checks, array $decisions): void
+    {
+        $denials = [];
+
+        foreach ($decisions as $index => $decision) {
+            if (! $decision->allowed) {
+                $denials[] = Denial::of($checks[$index], $decision);
+            }
+        }
+
+        if ($denials !== []) {
+            throw new AuthorizationDenied($denials);
+        }
+    }
+
     private static function keyOf(Check $check): ?string
     {
         return $check->resource->isAuthorizingEnabled() ? $check->key() : null;
+    }
+
+    private function isPlanned(Check $check): bool
+    {
+        $key = self::keyOf($check);
+
+        return $key === null || $this->memo->has($key);
+    }
+
+    private function planned(Check $check): Decision
+    {
+        $key = self::keyOf($check);
+        $decide = fn (): Decision => Decision::fromResponse($check->resource->authorizedTo($check->ability, $check->subject));
+
+        return $key === null ? $decide() : $this->memo->remember($key, $check, $decide);
     }
 
     /**

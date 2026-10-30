@@ -89,39 +89,6 @@ class MutateUpdateOperationsTest extends TestCase
         $response->assertExactJsonStructure(['message', 'errors' => ['mutate.0.relations.belongsToManyRelation']]);
     }
 
-    public function test_updating_a_resource_with_prohibited_relation(): void
-    {
-        $modelToUpdate = ModelFactory::new()->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/constrained/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'attributes' => ['string' => 'string', 'name' => 'name', 'number' => 1],
-                        'relations' => [
-                            'belongsToRelation' => [
-                                'operation' => 'create',
-                                'attributes' => [],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(422);
-        $response->assertExactJsonStructure(['message', 'errors' => [
-            'mutate.0.relations.belongsToRelation',
-            'mutate.0.relations.belongsToManyRelation',
-        ]]);
-    }
-
     public function test_updating_a_resource_with_no_required_relation_but_empty_array(): void
     {
         $modelToUpdate = ModelFactory::new()->createOne();

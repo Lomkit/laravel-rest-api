@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Rules\Mutate;
 
 use Illuminate\Validation\Rule;
+use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Rules\ArrayWithKey;
 use Lomkit\Rest\Rules\Resource\ResourceCustomRules;
@@ -16,6 +17,10 @@ class Mutate extends RestRule
 
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
     {
+        if (is_array($value) && ($value['operation'] ?? null) === 'create') {
+            $into->reach(Check::onClass($this->resource, 'create', $attribute));
+        }
+
         $rules = $this->buildValidationRules($attribute, $value);
 
         if ($this->relation?->hasMultipleEntries() === true) {
