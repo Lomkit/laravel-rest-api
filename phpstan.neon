@@ -1,11 +1,17 @@
 includes:
     - vendor/larastan/larastan/extension.neon
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+    - vendor/tomasvotruba/type-coverage/config/extension.neon
     - phpstan-baseline.neon
 
 parameters:
     paths:
         - src
-    level: 8
+    level: 10
     phpVersion: 80300
     checkMissingOverrideMethodAttribute: true
+    type_coverage:
+        return: 100
+        param: 100
+        property: 100
+        constant: 100
