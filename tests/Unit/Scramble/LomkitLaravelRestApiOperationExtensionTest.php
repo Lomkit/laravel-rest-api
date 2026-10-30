@@ -15,6 +15,9 @@ use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\TypeTransformer;
 use Illuminate\Validation\Rules\In;
+use Lomkit\Rest\Fields\FieldSet;
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
@@ -314,7 +317,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     public function test_search_schema_includes_not_like_operator(): void
     {
         $operation = $this->makeOperation();
-        $this->callPrivate('documentSearch', [$operation, ['id', 'name'], [], 'Model']);
+        $this->callPrivate('documentSearch', [$operation, FieldSet::of([ID::make('id'), Text::make('name')]), [], 'Model']);
 
         $schema = $this->extractSearchSchema($operation);
 
@@ -328,7 +331,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     public function test_search_schema_value_is_mixed_type(): void
     {
         $operation = $this->makeOperation();
-        $this->callPrivate('documentSearch', [$operation, ['id'], [], 'Model']);
+        $this->callPrivate('documentSearch', [$operation, FieldSet::of([ID::make('id')]), [], 'Model']);
 
         $schema = $this->extractSearchSchema($operation);
         $filterItems = $schema->properties['filters']->items;
@@ -339,7 +342,7 @@ class LomkitLaravelRestApiOperationExtensionTest extends TestCase
     public function test_search_schema_includes_text_aggregates_instructions_gates(): void
     {
         $operation = $this->makeOperation();
-        $this->callPrivate('documentSearch', [$operation, ['id'], [], 'Model']);
+        $this->callPrivate('documentSearch', [$operation, FieldSet::of([ID::make('id')]), [], 'Model']);
 
         $schema = $this->extractSearchSchema($operation);
 

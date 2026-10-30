@@ -16,6 +16,7 @@ class Publishing implements Fixture
     public function routes(): void
     {
         Route::prefix('api')->group(function (): void {
+            Rest::resource('authors', AuthorController::class)->withSoftDeletes();
             Rest::resource('posts', PostController::class);
         });
     }

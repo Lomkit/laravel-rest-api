@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('posts', function (Blueprint $table): void {
             $table->id();
+            $table->foreignId('author_id')->nullable()->constrained();
             $table->string('title');
             $table->string('summary')->nullable();
             $table->string('status');

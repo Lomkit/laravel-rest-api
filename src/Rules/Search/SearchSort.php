@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Rules\Search;
 
 use Illuminate\Validation\Rule;
+use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Rules\Concerns\DependsOnTextSearch;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\RestRule;
@@ -11,24 +12,24 @@ class SearchSort extends RestRule
 {
     use DependsOnTextSearch;
 
-    /** @return array<string, mixed> */
+    /** @return array<string, list<mixed>> */
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = $this->resource->context()->request;
 
         $fields = $this->textSearch ?
-            new OneOf($this->resource->getScoutFields($request)) :
-            new OneOf($this->resource->getFields($request)->names());
+            $this->resource->getScoutFields($request) :
+            $this->resource->getFields($request)->sortable()->names();
 
         return [
             $attribute.'.field' => [
-                $fields,
+                new OneOf($fields),
                 'required',
                 'string',
             ],
             $attribute.'.direction' => [
                 'sometimes',
-                Rule::in('desc', 'asc'),
+                Rule::enum(SortDirection::class),
             ],
         ];
     }

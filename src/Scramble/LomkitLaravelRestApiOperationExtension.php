@@ -16,6 +16,9 @@ use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Dedoc\Scramble\Support\RouteInfo;
 use Illuminate\Validation\Rules\In;
+use Lomkit\Rest\Fields\AggregateFunction;
+use Lomkit\Rest\Fields\FieldSet;
+use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
@@ -37,7 +40,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $context = new RestContext(RestRequest::createFrom(request()), app());
         $resource = $context->resource($controller::resourceClass());
         $fakeRequest = $context->request;
-        $fields = $resource->getFields($fakeRequest)->names();
+        $fields = $resource->getFields($fakeRequest);
         $relations = $this->parseRelationsFromSource($resource);
         $rules = $this->extractAllRules($resource, $fakeRequest);
         $resourceName = str_replace('Resource', '', class_basename($resource));
@@ -47,7 +50,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
 
         match ($action) {
             'search' => $this->documentSearch($operation, $fields, $relations, $resourceName),
-            'mutate' => $this->documentMutate($operation, $fields, $relations, $rules, $resourceName),
+            'mutate' => $this->documentMutate($operation, $fields->names(), $relations, $rules, $resourceName),
             'details' => $operation->summary("Get {$resourceName} details"),
             'destroy' => $this->documentDestroy($operation, $resourceName),
             'restore' => $this->documentRestore($operation, $resourceName),
@@ -142,13 +145,13 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
      */
     private function documentSearch(
         Operation $operation,
-        array $fields,
+        FieldSet $fields,
         array $relations,
         string $resourceName
     ): void {
         $operation->summary("Search {$resourceName}");
 
-        $fieldEnum = array_values($fields);
+        $fieldEnum = $fields->names();
         $relationEnum = array_column($relations, 'name');
         $relationDesc = $this->buildRelationsDescription($relations);
 
@@ -168,11 +171,11 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
                 ))
                 ->addProperty('sorts', (new ArrayType)->setItems(
                     (new ObjectType)
-                        ->addProperty('field', (new StringType)->enum($fieldEnum))
-                        ->addProperty('direction', (new StringType)->enum(['asc', 'desc']))
+                        ->addProperty('field', (new StringType)->enum($fields->sortable()->names()))
+                        ->addProperty('direction', (new StringType)->enum(array_column(SortDirection::cases(), 'value')))
                 ))
                 ->addProperty('selects', (new ArrayType)->setItems(
-                    (new ObjectType)->addProperty('field', (new StringType)->enum($fieldEnum))
+                    (new ObjectType)->addProperty('field', (new StringType)->enum($fields->selectable()->names()))
                 ))
                 ->addProperty('includes', (new ArrayType)->setItems(
                     (new ObjectType)
@@ -205,7 +208,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
                 ->addProperty('aggregates', (new ArrayType)->setItems(
                     (new ObjectType)
                         ->addProperty('relation', new StringType)
-                        ->addProperty('type', (new StringType)->enum(['count', 'min', 'max', 'avg', 'sum', 'exists']))
+                        ->addProperty('type', (new StringType)->enum(array_column(AggregateFunction::cases(), 'value')))
                         ->addProperty('field', new StringType)
                         ->addProperty('filters', new ArrayType)
                 )->setDescription('Aggregate values over relations'))

@@ -36,6 +36,7 @@ class DestroyRequest extends RestRequest
                 ...$this->keyRules($resource),
                 Rule::exists($model->getTable(), $model->getKeyName()),
             ],
+            'search' => ['bail', 'prohibited', 'array'],
         ];
     }
 }

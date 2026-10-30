@@ -58,6 +58,12 @@ class ID extends Field
         return 'id';
     }
 
+    /** @return 'int'|'string'|'uuid'|'ulid' */
+    public function resolvedKeyType(): string
+    {
+        return $this->declaredKeyType ?? $this->boundKeyType;
+    }
+
     protected function castValue(mixed $value): mixed
     {
         if ($this->resolvedKeyType() === 'int') {
@@ -70,11 +76,5 @@ class ID extends Field
     protected function writableByDefault(): bool
     {
         return false;
-    }
-
-    /** @return 'int'|'string'|'uuid'|'ulid' */
-    private function resolvedKeyType(): string
-    {
-        return $this->declaredKeyType ?? $this->boundKeyType;
     }
 }

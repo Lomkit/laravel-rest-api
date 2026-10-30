@@ -29,6 +29,7 @@ class RestoreRequest extends RestRequest
                 'required', 'array',
             ],
             'resources.*' => $this->keyRules($resource),
+            'search' => ['bail', 'prohibited', 'array'],
         ];
     }
 }

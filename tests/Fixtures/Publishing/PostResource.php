@@ -13,6 +13,7 @@ use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Scopes\Scope;
 
 class PostResource extends Resource
@@ -32,6 +33,13 @@ class PostResource extends Resource
             Date::make('published_on'),
             DateTime::make('published_at')->nullable(),
             Json::make('metadata')->nullable(),
+        ];
+    }
+
+    public function relations(RestRequest $request): array
+    {
+        return [
+            BelongsTo::make('author', AuthorResource::class),
         ];
     }
 

@@ -10,6 +10,7 @@ use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\UndeclaredResourceController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -24,7 +25,7 @@ class ScrambleDocumentTest extends PackageTestCase
 
     protected function fixtures(): array
     {
-        return [new Catalog];
+        return [new Catalog, new Publishing];
     }
 
     protected function getPackageProviders($app): array
@@ -42,6 +43,21 @@ class ScrambleDocumentTest extends PackageTestCase
             ['id', 'category_id', 'name', 'price'],
             $this->body($operation)['properties']['search']['properties']['filters']['items']['properties']['field']['enum'],
         );
+    }
+
+    #[Test]
+    public function it_documents_the_sortable_and_selectable_fields_of_the_search_body(): void
+    {
+        $search = $this->body($this->operation('/authors/search', 'post'))['properties']['search']['properties'];
+
+        $this->assertSame(
+            ['id', 'first_name', 'last_name', 'full_name', 'initials', 'api_token', 'settings', 'created_at'],
+            $search['filters']['items']['properties']['field']['enum'],
+        );
+        $this->assertSame(['first_name', 'last_name', 'full_name', 'created_at'], $search['sorts']['items']['properties']['field']['enum']);
+        $this->assertSame(['asc', 'desc'], $search['sorts']['items']['properties']['direction']['enum']);
+        $this->assertSame(['id', 'first_name', 'last_name', 'settings'], $search['selects']['items']['properties']['field']['enum']);
+        $this->assertSame(['count', 'min', 'max', 'avg', 'sum', 'exists'], $search['aggregates']['items']['properties']['type']['enum']);
     }
 
     #[Test]

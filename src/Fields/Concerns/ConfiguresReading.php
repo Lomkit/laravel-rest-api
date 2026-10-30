@@ -80,10 +80,11 @@ trait ConfiguresReading
             return false;
         }
 
-        if ($this->sortUsing !== null) {
-            return true;
-        }
+        return $this->sortUsing !== null || $this->isSortableByColumn();
+    }
 
+    public function isSortableByColumn(): bool
+    {
         return ($this->sortable ?? $this->sortableByDefault()) && ! $this->virtual && ! $this->isWriteOnly();
     }
 

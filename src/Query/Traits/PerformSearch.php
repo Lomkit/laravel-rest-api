@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Fields\FieldSet;
+use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\InstructionClause;
 use Lomkit\Rest\Query\Clauses\ScopeClause;
+use Lomkit\Rest\Query\Clauses\SortClause;
 
 trait PerformSearch
 {
@@ -134,25 +137,16 @@ trait PerformSearch
     }
 
     /**
-     * Sort the query builder by a field and direction.
-     *
-     * @param  string  $field  The field to sort by.
-     * @param  string  $direction  The sort direction ('asc' or 'desc').
-     */
-    public function sort($field, $direction = 'asc')
-    {
-        return $this->queryBuilder->orderBy($field, $direction);
-    }
-
-    /**
      * Apply multiple sorts to the query builder.
      *
      * @param  array  $sorts  An array of sorts to apply.
      */
     public function applySorts($sorts)
     {
+        $fields = $this->resource->getFields($this->resource->context()->request);
+
         foreach ($sorts as $sort) {
-            $this->sort($this->queryBuilder->getModel()->getTable().'.'.$sort['field'], $sort['direction'] ?? 'asc');
+            SortClause::fromSort($fields, $sort)->apply($this->toBase());
         }
     }
 
@@ -301,23 +295,20 @@ trait PerformSearch
     /**
      * Apply an aggregate function to the query builder.
      *
-     * @param  array  $aggregate  An array defining the aggregate function.
+     * @param  array{relation: string, type: string, field?: string|null, alias?: string|null, filters?: array<mixed>}  $aggregate  An array defining the aggregate function.
      */
     public function aggregate($aggregate)
     {
-        $relation = $aggregate['relation'];
+        $resource = $this->resource->relation($aggregate['relation'])?->resource();
+        $fields = $resource?->getFields($this->resource->context()->request) ?? FieldSet::of([]);
 
-        if (isset($aggregate['alias'])) {
-            $relation .= ' as '.$aggregate['alias'];
-        }
-
-        return $this->queryBuilder->withAggregate([$relation => function (Builder $query) use ($aggregate) {
-            $resource = $this->resource->relation($aggregate['relation'])?->resource();
-
+        AggregateClause::fromAggregate($fields, $aggregate, function (Builder $query) use ($resource, $aggregate) {
             $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
 
             return $queryBuilder->search(['filters' => $aggregate['filters'] ?? []]);
-        }], $aggregate['field'] ?? '*', $aggregate['type']);
+        })->apply($this->toBase());
+
+        return $this->queryBuilder;
     }
 
     /**

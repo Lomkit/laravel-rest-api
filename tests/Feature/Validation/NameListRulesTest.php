@@ -59,9 +59,19 @@ class NameListRulesTest extends PackageTestCase
     #[Test]
     public function it_checks_aggregated_fields_against_a_one_of_rule(): void
     {
-        $rules = (new SearchAggregate)->setResource($this->products())->buildValidationRules('aggregate', ['relation' => 'category']);
+        $rules = (new SearchAggregate)->setResource($this->products())->buildValidationRules('aggregate', ['relation' => 'category', 'type' => 'min']);
 
         $this->assertSame(['id', 'name'], $this->oneOf($rules['aggregate.field']));
+    }
+
+    #[Test]
+    public function it_checks_no_aggregated_field_name_without_a_known_type(): void
+    {
+        $missing = (new SearchAggregate)->setResource($this->products())->buildValidationRules('aggregate', ['relation' => 'category']);
+        $unknown = (new SearchAggregate)->setResource($this->products())->buildValidationRules('aggregate', ['relation' => 'category', 'type' => 'median']);
+
+        $this->assertSame([], array_filter($missing['aggregate.field'], fn (mixed $rule): bool => $rule instanceof OneOf));
+        $this->assertSame([], array_filter($unknown['aggregate.field'], fn (mixed $rule): bool => $rule instanceof OneOf));
     }
 
     #[Test]

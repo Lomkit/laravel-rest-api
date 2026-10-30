@@ -45,6 +45,12 @@ class AggregateValidationTest extends PackageTestCase
             'an unknown type' => [['relation' => 'products', 'type' => 'median', 'field' => 'price'], [
                 'search.aggregates.0.type' => ['The selected search.aggregates.0.type is invalid.'],
             ]],
+            'an unknown type with an undeclared field' => [['relation' => 'products', 'type' => 'median', 'field' => 'created_at'], [
+                'search.aggregates.0.type' => ['The selected search.aggregates.0.type is invalid.'],
+            ]],
+            'a missing type with an undeclared field' => [['relation' => 'products', 'field' => 'created_at'], [
+                'search.aggregates.0.type' => ['The search.aggregates.0.type field is required.'],
+            ]],
             'an undeclared field' => [['relation' => 'products', 'type' => 'min', 'field' => 'created_at'], [
                 'search.aggregates.0.field' => ['The selected search.aggregates.0.field is invalid.'],
             ]],

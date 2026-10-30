@@ -531,7 +531,7 @@ parameters:
 		-
 			message: '#^Cannot call method getModel\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
 			identifier: method.nonObject
-			count: 4
+			count: 3
 			path: src/Query/Builder.php
 
 		-
@@ -543,7 +543,7 @@ parameters:
 		-
 			message: '#^Cannot call method orderBy\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
 			identifier: method.nonObject
-			count: 2
+			count: 1
 			path: src/Query/Builder.php
 
 		-
@@ -565,12 +565,6 @@ parameters:
 			path: src/Query/Builder.php
 
 		-
-			message: '#^Cannot call method withAggregate\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:__construct\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
 			identifier: missingType.generics
 			count: 1
@@ -585,12 +579,6 @@ parameters:
 		-
 			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:aggregate\(\) has no return type specified\.$#'
 			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:aggregate\(\) has parameter \$aggregate with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: src/Query/Builder.php
 
@@ -795,12 +783,6 @@ parameters:
 		-
 			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:search\(\) should return Illuminate\\Database\\Eloquent\\Builder but returns Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
 			identifier: return.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:sort\(\) has no return type specified\.$#'
-			identifier: missingType.return
 			count: 1
 			path: src/Query/Builder.php
 
@@ -1591,36 +1573,6 @@ parameters:
 			path: src/RestServiceProvider.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchIncludeAlias\:\:relationNames\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchIncludeAlias.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Rules\\Search\\SearchIncludeAlias\:\:setData\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchIncludeAlias.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Rules\\Search\\SearchIncludeAlias\:\:\$data type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Rules/Search/SearchIncludeAlias.php
-
-		-
-			message: '#^Unable to resolve the template type TKey in call to function collect$#'
-			identifier: argument.templateType
-			count: 1
-			path: src/Rules/Search/SearchIncludeAlias.php
-
-		-
-			message: '#^Unable to resolve the template type TValue in call to function collect$#'
-			identifier: argument.templateType
-			count: 1
-			path: src/Rules/Search/SearchIncludeAlias.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:buildRelationsDescription\(\) has parameter \$relations with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1646,12 +1598,6 @@ parameters:
 
 		-
 			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:documentMutate\(\) has parameter \$rules with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Scramble\\LomkitLaravelRestApiOperationExtension\:\:documentSearch\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php

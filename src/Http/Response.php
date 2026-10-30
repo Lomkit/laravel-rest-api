@@ -84,7 +84,7 @@ class Response implements Responsable
                     array_merge(
                         isset($requestArray['selects']) ?
                                 collect($requestArray['selects'])->pluck('field')->toArray() :
-                                $resource->getFields($resource->context()->request)->names(),
+                                $resource->getFields($resource->context()->request)->selectable()->names(),
                         // Here we add the aggregates
                         collect($requestArray['aggregates'] ?? [])
                             ->map(function ($aggregate) {
