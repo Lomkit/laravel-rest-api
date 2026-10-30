@@ -10,8 +10,10 @@ use Illuminate\Support\ServiceProvider;
 use Lomkit\Rest\Console\Commands\ActionMakeCommand;
 use Lomkit\Rest\Console\Commands\BaseControllerMakeCommand;
 use Lomkit\Rest\Console\Commands\BaseResourceMakeCommand;
+use Lomkit\Rest\Console\Commands\CheckCommand;
 use Lomkit\Rest\Console\Commands\ControllerMakeCommand;
 use Lomkit\Rest\Console\Commands\InstructionMakeCommand;
+use Lomkit\Rest\Console\Commands\PolicyMakeCommand;
 use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceMakeCommand;
 use Lomkit\Rest\Console\Commands\ResponseMakeCommand;
@@ -65,6 +67,8 @@ class RestServiceProvider extends ServiceProvider
                 QuickStartCommand::class,
                 ActionMakeCommand::class,
                 InstructionMakeCommand::class,
+                PolicyMakeCommand::class,
+                CheckCommand::class,
             ]);
         }
     }

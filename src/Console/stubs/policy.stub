@@ -1,0 +1,35 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ namespacedModel }};
+use {{ namespacedUserModel }};
+
+class {{ class }}
+{
+    public function viewAny({{ user }} $user): bool
+    {
+        return true;
+    }
+
+    public function view({{ user }} $user, {{ model }} ${{ modelVariable }}): bool
+    {
+        return true;
+    }
+
+    public function create({{ user }} $user): bool
+    {
+        return false;
+    }
+
+    public function update({{ user }} $user, {{ model }} ${{ modelVariable }}): bool
+    {
+        return false;
+    }
+
+    public function delete({{ user }} $user, {{ model }} ${{ modelVariable }}): bool
+    {
+        return false;
+    }
+{{ softDeleteMethods }}
+}

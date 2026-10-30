@@ -32,6 +32,7 @@ class GeneratorCommandsTest extends PackageTestCase
             'base resource' => ['rest:base-resource', 'Create a new base resource class', true],
             'controller' => ['rest:controller', 'Create a new controller class', false],
             'instruction' => ['rest:instruction', 'Create a new instruction class', false],
+            'policy' => ['rest:policy', 'Create a new read-only policy class', false],
             'resource' => ['rest:resource', 'Create a new resource class', false],
             'response' => ['rest:response', 'Create a new response class', false],
         ];

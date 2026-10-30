@@ -13,11 +13,11 @@ use Lomkit\Rest\Console\Generation\Schema\TableReader;
 final readonly class RelationMapping
 {
     /** @param  array<string, string>  $resources */
-    private function __construct(private array $resources, private string $modelNamespace) {}
+    private function __construct(private array $resources, private string $modelNamespace, private MissingResourceHint $hint) {}
 
-    public static function using(ResourceIndex $resources, string $modelNamespace): self
+    public static function using(ResourceIndex $resources, string $modelNamespace, MissingResourceHint $hint = MissingResourceHint::GenerateTheResource): self
     {
-        return new self($resources->byModel(), $modelNamespace);
+        return new self($resources->byModel(), $modelNamespace, $hint);
     }
 
     public function map(ModelTable $source, Table $table, ImportSet $imports): RelationList
@@ -90,8 +90,6 @@ final readonly class RelationMapping
     {
         $option = str_starts_with($model, $this->modelNamespace) ? Str::after($model, $this->modelNamespace) : $model;
 
-        return "{$name}: no resource for {$model}. Generate one first with php artisan rest:resource "
-            .class_basename($model).'Resource --model='.str_replace('\\', '/', $option)
-            .' --generate, then run this command again with --force.';
+        return "{$name}: no resource for {$model}. ".$this->hint->for($model, str_replace('\\', '/', $option));
     }
 }

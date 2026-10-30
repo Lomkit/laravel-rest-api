@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Console\Commands;
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\Generation\BaseClass;
+use Lomkit\Rest\Console\Generation\ClassDraft;
 use Lomkit\Rest\Console\Generation\ClassReference;
 use Lomkit\Rest\Console\Generation\ResourceIndex;
 use Lomkit\Rest\Console\Generation\Stub;
@@ -20,7 +21,7 @@ abstract class RestGeneratorCommand extends GeneratorCommand
         $this->rejectTheBaseClassName();
         $this->prepare();
 
-        if (parent::handle() === false) {
+        if ($this->keepsAnotherClass() || parent::handle() === false) {
             return false;
         }
 
@@ -36,6 +37,11 @@ abstract class RestGeneratorCommand extends GeneratorCommand
     }
 
     protected function prepare(): void {}
+
+    protected function keepsAnotherClass(): bool
+    {
+        return false;
+    }
 
     protected function afterWritten(): void {}
 
@@ -54,13 +60,7 @@ abstract class RestGeneratorCommand extends GeneratorCommand
     #[\Override]
     protected function buildClass($name): string
     {
-        return $this->stub()->fill([
-            '{{ namespace }}' => $this->getNamespace($name),
-            '{{ rootNamespace }}' => $this->rootNamespace(),
-            '{{ class }}' => class_basename($name),
-            ...$this->baseClassImport($name),
-            ...$this->replacements($name),
-        ]);
+        return (new ClassDraft($name, $this->stub(), $this->rootNamespace(), $this->replacements($name), $this->baseClass()))->render();
     }
 
     #[\Override]
@@ -111,18 +111,6 @@ abstract class RestGeneratorCommand extends GeneratorCommand
         }
 
         $this->fail("The name \"{$this->getNameInput()}\" is reserved for the base class [{$base->fqcn}].");
-    }
-
-    /** @return array<string, null> */
-    private function baseClassImport(string $name): array
-    {
-        $base = $this->baseClass();
-
-        if ($base === null || ! $base->sharesNamespaceWith($name)) {
-            return [];
-        }
-
-        return ["use {$base->fqcn};" => null];
     }
 
     private function ensureBaseClass(): void

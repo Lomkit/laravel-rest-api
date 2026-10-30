@@ -81,10 +81,10 @@ If the package is **not** installed and the user explicitly asks for it, install
 ```bash
 composer require lomkit/laravel-rest-api
 php artisan vendor:publish --tag="rest-config"   # publishes config/rest.php
-php artisan rest:quick-start                     # optional: scaffolds UserResource + UsersController and wires routes/api.php
+php artisan rest:quick-start                     # optional: asks which models to expose, then writes their resources, controllers, read-only policies and auth:sanctum routes
 ```
 
-`rest:quick-start` will also ensure `api: __DIR__.'/../routes/api.php'` is registered in `bootstrap/app.php` (Laravel 11+).
+`rest:quick-start` runs `php artisan install:api` (Laravel Sanctum) when `routes/api.php` is missing, after a confirmation or with `--install-api`. Without interaction, name the models: `php artisan rest:quick-start -n --model=Post --model=Tag --install-api`. A related model that is not chosen is skipped, with the `--model` option to add. Without a terminal (CI, scripts, agents), pass `--model` and `--install-api` too: the command never answers its own questions. It stops before any write when existing routes already use the URIs or names of the new ones (for example `Route::apiResource('posts', ...)`). The command keeps existing files, never edits the user model (add `HasApiTokens` yourself), checks the routes and policies in a fresh process and exits 1 when something blocks. The generated policies let signed-in users read and refuse every write: edit them before production.
 
 The `RestServiceProvider` and `Rest` facade are auto-registered via composer's `extra.laravel`.
 
@@ -602,7 +602,7 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 | `attach{Model}($user, $parent, $related)` | attach/sync on a relation (e.g. `attachRole`) |
 | `detach{Model}($user, $parent, $related)` | detach/sync on a relation (e.g. `detachRole`) |
 
-**Define a policy for every model you expose**, including the attach/detach methods for many-to-many relations you allow mutating. Missing methods will block the operation.
+**Define a policy for every model you expose**, including the attach/detach methods for many-to-many relations you allow mutating. Missing methods will block the operation. `php artisan rest:policy PostPolicy --model=Post` writes a read-only starting point.
 
 **Class-level checks run before validation and before any query.** The request checks its endpoint abilities (`viewAny` for `search` and `details`, none for `mutate`, `destroy`, `restore` and `forceDestroy`, and for `operate` `viewAny` followed by the resource's `Endpoint::Operate` abilities and the action's `abilities()`), then `viewAny` on every resource the payload reaches and `create` for every created resource. A denied check answers `403` (or the status of the policy's response) even for an invalid payload or a Precognition request. The request's own `authorize()` runs first, and both must pass. Row checks (`view`, `update`, `delete`, attach/detach, ...) still run when the rows are loaded.
 
@@ -666,7 +666,8 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - `rest:action {Name}` — scaffold an Action.
 - `rest:instruction {Name}` — scaffold an Instruction.
 - `rest:response {Name}` — scaffold a custom Response class.
-- `rest:quick-start` — generates a working UserResource + UsersController and wires `routes/api.php`.
+- `rest:policy {Name} --model=Model` — generate a read-only policy in `app/Policies`: `viewAny` and `view` return `true`, `create`, `update` and `delete` (plus `restore` and `forceDelete` with `SoftDeletes`) return `false`. The user parameter is typed with the model of the default guard's user provider. Without `--model`, the model is guessed from the name (`PostPolicy` → `App\Models\Post`). A model that Gate already maps to another policy keeps it: nothing is written, and with `--force` the file is written but Gate still uses the other policy until you register the new one with `Gate::policy()`.
+- `rest:quick-start --model=Post --model=Tag` — for each model, write the resource from its table (as `--generate`), the controller and, when Gate finds no policy, a read-only policy, then append `Rest::resource('posts', PostsController::class)->middleware('auth:sanctum')` to `routes/api.php` once per controller. Related models that are not chosen are skipped. Interactively it asks for the models; with `-n`, `--model` is required, and `--install-api` is required when `routes/api.php` is missing. It ends with a check in a fresh process (routes authenticated, a policy found per model) and exits 1 when blocked. Existing files are reported as `kept`, so a rerun changes nothing.
 - The generators keep an existing class unless `--force` (`-f`) is passed, and read the published `stubs/rest.<name>.stub` before the package stubs. Stubs published under 2.x generate untyped properties, which are a fatal error in 3.x: delete them, or publish them again with `php artisan stub:publish --force`.
 
 ## Working conventions and gotchas

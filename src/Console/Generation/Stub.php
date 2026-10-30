@@ -12,6 +12,7 @@ enum Stub: string
     case BaseResource = 'base-resource';
     case Controller = 'controller';
     case Instruction = 'instruction';
+    case Policy = 'policy';
     case Resource = 'resource';
     case Response = 'response';
 
@@ -58,6 +59,7 @@ enum Stub: string
     {
         return match ($this) {
             self::Controller => ['{{ namespace }}', '{{ class }}', '{{ namespacedResource }}', '{{ resource }}'],
+            self::Policy => ['{{ namespace }}', '{{ class }}', '{{ namespacedModel }}', '{{ model }}', '{{ modelVariable }}', '{{ namespacedUserModel }}', '{{ user }}', '{{ softDeleteMethods }}'],
             self::Resource => ['{{ namespace }}', '{{ class }}', '{{ namespacedModel }}', '{{ model }}', '{{ imports }}', '{{ fields }}', '{{ relations }}'],
             default => ['{{ namespace }}', '{{ class }}'],
         };
