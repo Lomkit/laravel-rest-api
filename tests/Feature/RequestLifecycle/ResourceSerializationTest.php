@@ -3,25 +3,50 @@
 namespace Lomkit\Rest\Tests\Feature\RequestLifecycle;
 
 use Illuminate\Http\Request;
+use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Scopes\Scope;
+use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\ConstrainedPostController;
+use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\ConstrainedPostResource;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Lomkit\Rest\Tests\Fixtures\Archive\Archive;
 use Lomkit\Rest\Tests\Fixtures\Archive\Document;
 use Lomkit\Rest\Tests\Fixtures\Archive\DocumentResource;
 use Lomkit\Rest\Tests\Fixtures\Catalog\StaffProductResource;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
+use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
+use Orchestra\Testbench\Attributes\WithMigration;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
+#[WithMigration('queue')]
 class ResourceSerializationTest extends PackageTestCase
 {
     #[\Override]
     protected function fixtures(): array
     {
-        return [new Archive];
+        return [new Archive, new Publishing];
+    }
+
+    #[\Override]
+    protected function defineEnvironment($app): void
+    {
+        parent::defineEnvironment($app);
+
+        $app['config']->set('queue.batching.database', $app['config']->get('database.default'));
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function queuedActions(): iterable
+    {
+        yield 'queued' => ['queued-publish-posts'];
+        yield 'batched' => ['batched-publish-posts'];
     }
 
     #[Test]
@@ -35,6 +60,42 @@ class ResourceSerializationTest extends PackageTestCase
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
         $this->assertSame(2, Document::query()->where('archived', true)->count());
+    }
+
+    #[Test]
+    #[DataProvider('queuedActions')]
+    public function it_runs_a_queued_action_filtered_on_a_relation_whose_constraints_hold_callables(string $action): void
+    {
+        Rest::resource('constrained-posts', ConstrainedPostController::class)->register();
+        $author = Author::factory()->create();
+        Post::factory()->count(2)->for($author)->create();
+        Post::factory()->create();
+
+        $response = $this->postJson("/constrained-posts/actions/{$action}", [
+            'search' => ['filters' => [['field' => 'author.id', 'value' => $author->id]]],
+        ]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $this->assertSame(2, Post::query()->whereBelongsTo($author)->where('status', PostStatus::Published)->count());
+        $this->assertSame(0, Post::query()->whereNull('author_id')->where('status', PostStatus::Published)->count());
+    }
+
+    #[Test]
+    public function it_rebuilds_the_relations_after_a_serialization_round_trip(): void
+    {
+        $resource = (new RestContext(RestRequest::create('/constrained-posts/search', 'POST'), $this->app))->resource(ConstrainedPostResource::class);
+        $resource->getRelations($resource->context()->request);
+
+        $serialized = serialize($resource);
+        $restored = unserialize($serialized);
+
+        $this->assertStringNotContainsString('calculatedRelations', $serialized);
+        $this->assertSame([
+            'required_on_creation' => true,
+            'prohibited_on_creation' => false,
+            'required_on_update' => false,
+            'prohibited_on_update' => false,
+        ], $restored->relation('author')->jsonSerialize()['constraints']);
     }
 
     #[Test]
