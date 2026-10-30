@@ -7,7 +7,7 @@ Version 3.0 is in development on the `3.x` branch. This guide lists each breakin
 ### Requirements
 
 - PHP 8.3 or later.
-- Laravel 13 or later. Applications on Laravel 12 stay on 2.x.
+- Laravel 13.30 or later. Applications on Laravel 12 stay on 2.x, and applications on an earlier Laravel 13 release update Laravel first: `composer update laravel/framework`.
 - Laravel Scout 11 or later, if you use full-text search.
 
 ### Built-in documentation generator removed
@@ -289,7 +289,7 @@ Requests:
 - A key that the request expands from a wildcard, such as an entry of a to-many relation (`mutate.0.relations.lineItems.0.operation`), is named as written in messages, as Laravel names wildcard keys, unless the request's `attributes()` or a `validation.attributes` translation line names it. `Validator::setImplicitAttributesFormatter()` does not apply to these keys.
 - The input values added by `validationData()` also appear in `validated()` and `safe()`, under `fields.<name>` for an action. `resolveFields()` and the values that `handle()` receives do not change.
 - The request's `messages()` and `attributes()` now apply to the fields of actions and instructions, under `fields.<name>` and `search.instructions.<i>.fields.<name>`. Without them, such a field is still named by the `validation.attributes.<name>` translation, or else by its name.
-- `FormRequest::failOnUnknownFields()` and the `#[FailOnUnknownFields]` attribute do not apply to package requests: `shouldFailOnUnknownFields()` returns `false`, on every Laravel version that has the setting (13.4 and later).
+- `FormRequest::failOnUnknownFields()` and the `#[FailOnUnknownFields]` attribute do not apply to package requests: `shouldFailOnUnknownFields()` returns `false`.
 - With Precognition enabled, a name in `Precognition-Validate-Only` also covers the keys under it: `search` validates `search.limit` and `search.filters.0.field`. Before, a payload with invalid nested values could return `204`.
 
 Payloads:
@@ -422,7 +422,7 @@ Scramble:
 ### Framework integration
 
 - `Lomkit\Rest\Http\Controllers\Controller` no longer extends `Illuminate\Routing\Controller`. The inherited `middleware()`, `getMiddleware()`, `callAction()` and `__call()` methods are removed. Replace the `$this->middleware()` calls in your controller constructors with the `Illuminate\Routing\Controllers\HasMiddleware` interface or with the `#[Middleware]` and `#[Authorize]` attributes:
-  - Middleware that a base controller declared for all its children, such as the controller that `rest:base-controller` generates, moves to the static `middleware()` method of `HasMiddleware` on that base controller. Every child controller inherits it on every Laravel 13 release. A child controller that needs more middleware overrides `middleware()` and adds its entries to `parent::middleware()`.
+  - Middleware that a base controller declared for all its children, such as the controller that `rest:base-controller` generates, moves to the static `middleware()` method of `HasMiddleware` on that base controller. Every child controller inherits it. A child controller that needs more middleware overrides `middleware()` and adds its entries to `parent::middleware()`.
 
     ```php
     use Illuminate\Routing\Controllers\HasMiddleware;
@@ -441,7 +441,7 @@ Scramble:
     }
     ```
 
-  - Middleware of a single controller can also use the attributes on that controller. The first Laravel 13 releases read these attributes only on the controller class that the route names, not on its parent classes, and ignore them on a controller that implements `HasMiddleware` directly or through a parent class. To support these releases, put the attributes on each concrete controller and do not combine them with `HasMiddleware`. These releases also ignored the attributes on every controller that extended `Illuminate\Routing\Controller`, which the package controller did before.
+  - Middleware can also use the attributes. Laravel reads them on the controller that the route names and on its parent classes, and adds them after the middleware of `HasMiddleware`.
 
     ```php
     use Illuminate\Routing\Attributes\Controllers\Authorize;
