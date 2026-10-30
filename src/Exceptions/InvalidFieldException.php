@@ -37,6 +37,11 @@ final class InvalidFieldException extends LogicException
         return new self("{$owner} declares creation or update rules on the input field [{$name}]. Input fields take rules() only.");
     }
 
+    public static function numericInputName(string $owner, string $name): self
+    {
+        return new self("{$owner} declares the input field [{$name}] with a numeric name. Input names must not be numeric.");
+    }
+
     public static function unknownField(string $name): self
     {
         return new self("Unknown field [{$name}].");

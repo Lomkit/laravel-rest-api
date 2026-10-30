@@ -300,7 +300,7 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
 
 **Filter operators**: `=`, `!=`, `>`, `>=`, `<`, `<=`, `like`, `not like`, `in`, `not in`.
 **Filter `type`**: `and` (default) or `or`. Use `nested` to group filters with their own logical operator. `field` may traverse declared relations and pivot data (`user.posts.id`, `languages.pivot.boolean`).
-**Scope `parameters`** is a positional list: each value binds to the scope field at the same position, is validated by its rules, cast to its type and filled from its `default()`. A position is required unless its field has a default; a missing, extra or wrongly typed parameter is a `422` under `search.scopes.{index}.parameters`. Scopes are prohibited with `text` (Scout).
+**Scope `parameters`** is a positional list: each value binds to the scope field at the same position, is validated by its rules, cast to its type and filled from its `default()`. A position is required unless its field has a default; a missing, extra or wrongly typed parameter is a `422` under `search.scopes.{index}.parameters`. A rule that names another field of the same scope, such as `gte:min`, compares with the parameter at that field's position. Scopes are prohibited with `text` (Scout).
 **Aggregate `type`** is required, one of `min`, `max`, `avg`, `sum`, `count`, `exists`. `field` is required for `min/max/avg/sum`, omit for `count/exists`. An optional `alias` (a string) renames the response key, which is `{relation}_{type}_{field}` otherwise (`stars_max_rate`, `stars_count`).
 **`page`** is an integer of at least `1`; `limit` must be one of the resource's `limits()`.
 **`includes`** can recursively re-use `filters`, `sorts`, `scopes`, `limit`, `selects` — but **not nested `includes`** (load chained relations as separate include entries). Includes and aggregates always run in SQL, so they are validated against the related resource's fields and operators, also next to `text`; a missing or undeclared `relation` is a `422`.
@@ -334,8 +334,10 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
          {"operation": "attach", "key": 42, "pivot": {"role": "owner"}}
        ]
      }},
-    {"operation": "update", "key": 7, "attributes": {"name": "John"}},
-    {"operation": "sync",   "key": [1, 2, 3], "without_detaching": false}
+    {"operation": "update", "key": 7, "attributes": {"name": "John"},
+     "relations": {
+       "roles": [{"operation": "sync", "key": [1, 2, 3], "without_detaching": false}]
+     }}
   ]
 }
 ```
@@ -344,7 +346,7 @@ Per-item keys:
 
 | Key | Type | Used by | Purpose |
 | --- | --- | --- | --- |
-| `operation` | string | all | `create`, `update`, `attach`, `detach`, `sync`, `toggle` |
+| `operation` | string | all | `create`, `update`; in `relations` also `attach`, `detach`, and `sync`, `toggle` on many-to-many relations only |
 | `attributes` | object | create / update | Field values; whitelisted by `fields()` and validated by `rules()` |
 | `key` | int / string / array | update / attach / detach / sync / toggle | Target model id(s) |
 | `relations` | object | all | Map of `relationName → [operation objects]` (recursive) |
@@ -439,7 +441,9 @@ smaller.
 { "resources": [1, 5, 9], "fields": [{ "name": "reason", "value": "spam" }] }
 ```
 
-**Fields are typed `Lomkit\Rest\Fields\*` objects.** Each field is validated with its type rules, `nullable()` and `rules()` as a normal Laravel validation: presence and cross-field rules (`required`, `required_if:status,published`, `present`, …) fire even when a field is absent from the `fields` array. Validation errors are keyed by field name — `fields.{name}` (e.g. `fields.expires_at`) — while an unknown or missing field name is reported positionally as `fields.{index}.name`. An `Enum` field must name its enum class (`Enum::make('status', PostStatus::class)`), because action fields are not bound to a model.
+**Fields are typed `Lomkit\Rest\Fields\*` objects.** Each field is validated with its type rules, `nullable()` and `rules()` as a normal Laravel validation: presence and cross-field rules (`required`, `required_if:status,published`, `present`, …) fire even when a field is absent from the `fields` array. Validation errors are keyed by field name — `fields.{name}` (e.g. `fields.expires_at`) — while an unknown or missing field name is reported positionally as `fields.{index}.name`. An `Enum` field must name its enum class (`Enum::make('status', PostStatus::class)`), because action fields are not bound to a model. Field names must not be numeric: `Integer::make('2')` throws `InvalidFieldException`. The request's `messages()` and `attributes()` apply to the `fields.{name}` keys, and so do translation lines keyed by the full key (`validation.custom.fields.{name}.{rule}`); `validation.attributes.{name}` still names the field.
+
+**Field rules run in the request's validator.** A rule that names another input compares with that input: the field parameters of Laravel's dependent rules (`required_if`, `gte`, `after`, `same`, …), `date_equals` and `in_array`, as strings or arrays, in `Rule::date()` / `Rule::numeric()` / `Rule::string()` / `Rule::array()` objects and inside `Rule::when()`. Other rule objects see the whole request: a `DataAwareRule` receives the whole payload, with each input value under `fields.{name}`, and rule objects and closures receive the full key (`fields.{name}`, `search.instructions.{index}.fields.{name}`) as their attribute.
 
 **`handle()` receives a name => value map**: each value cast to its field type (`Date`/`DateTime` → `CarbonImmutable`, `Integer` → `int`, `Boolean` → `bool`, `Enum` → the enum case), with `default()` values filled in. A field that is absent and has no default is missing from the array, so read optional fields with `$fields['name'] ?? null`; an entry sent without `value` counts as absent.
 
@@ -482,7 +486,7 @@ Register in `Resource::instructions()`. Clients invoke them via the `instruction
 
 `->meta([...])` (which merges) and `getMeta()` are also available on Instructions.
 
-Instruction `fields()` are typed and validated exactly like Action fields: full Laravel validation (including `required` on absent fields), with errors keyed by name under `search.instructions.{index}.fields.{name}`; a name repeated in `fields` is a `422` under `search.instructions.{index}.fields.{position}.name`. The fields of Scout instructions (`scoutInstructions()`) are validated the same way. `handle()` and `handleScout()` receive the same cast name => value map as an action, with defaults filled in.
+Instruction `fields()` are typed and validated exactly like Action fields: full Laravel validation (including `required` on absent fields), with errors keyed by name under `search.instructions.{index}.fields.{name}` (custom translation lines go under `validation.custom.search.instructions.*.fields.{name}.{rule}`); a name repeated in `fields` is a `422` under `search.instructions.{index}.fields.{position}.name`. The fields of Scout instructions (`scoutInstructions()`) are validated the same way. `handle()` and `handleScout()` receive the same cast name => value map as an action, with defaults filled in.
 
 ## Relationships
 
@@ -570,7 +574,7 @@ Docs are served at `/docs/api`. Fields, validation rules, relations, search filt
 
 ## Precognition
 
-Set `rest.precognition.enabled = true` (default `false`). Clients send `Precognition: true` (and optionally `Precognition-Validate-Only`) on any endpoint, and the request is validated and short-circuited before the controller body runs — `204 No Content` on success, `422` on validation failure. Useful for live frontend form validation.
+Set `rest.precognition.enabled = true` (default `false`). Clients send `Precognition: true` (and optionally `Precognition-Validate-Only`) on any endpoint, and the request is validated and short-circuited before the controller body runs — `204 No Content` on success, `422` on validation failure. Useful for live frontend form validation. A name in `Precognition-Validate-Only` also covers the keys under it: `search` validates `search.limit`, `search.filters.0.field` and every other key of the search, while `search.filters` leaves `search.limit` out.
 
 ## Artisan commands shipped by the package
 
@@ -591,7 +595,8 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - **Don't bypass policies by toggling `authorizations.enabled = false`** — write the policy. The package's threat model assumes it's on, including `viewAny`, `replicate`, and `attach{Model}`/`detach{Model}`.
 - **`mutate` is one batch but per-item-authorized.** A single denied item fails the whole batch.
 - **`includes` are not recursive** — they accept `filters`/`sorts`/`scopes`/`limit`/`selects` but not nested `includes`. To go deeper, register chained relations on the intermediate resource and add an entry per level.
-- **Action `fields` payload is an array of `{name, value}` pairs**, not an object — easy mistake.
+- **Action `fields` payload is an array of `{name, value}` pairs**, not an object — easy mistake: an object keyed by name is a `422`, `The fields field must be a list.` The same goes for instruction `fields`.
+- **One validator per request.** A package request compiles its rule tree (`Lomkit\Rest\Rules\RestRule` nodes) against the payload into rules on explicit keys, then validates them in one pass, so `withValidator()` and `after()` on a request subclass run once and see every error. A `RestRule` is not a Laravel rule: a custom node implements `buildValidationRules(string $attribute, mixed $value): array` and only works in the `rules()` of a package request. To adjust the validator, use `withValidator()` or override `createDefaultValidator()` and call the parent: a request that defines `validator()` must build it from `validationData()` and `validationRules()`, and loses the names the package gives to input fields. Overrides of `validationData()`, `validationRules()`, `createDefaultValidator()` and `shouldValidatePrecognitiveAttribute()` must keep the parent's return types.
 - **Scope `parameters` are positional.** They bind to the scope's fields in declared order, so reordering a scope's fields changes what clients must send. Only model local scopes run: `withTrashed`, `latest` and other Builder methods or macros cannot be called as scopes.
 - **`HasOneThrough` / `HasManyThrough` can be searched/included but not mutated.**
 - **Cache invalidation.** The authorization cache is keyed per user and per resource; when debugging policy changes, disable the cache via config or use the `DisableAuthorizationsCache` trait.
@@ -605,6 +610,6 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Actions / Instructions / Scopes — `src/Actions/{Action,Actionable}.php`, `src/Instructions/{Instruction,Instructionable}.php`, `src/Scopes/Scope.php`
 - Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `InputValues`, `Details/InputFieldDetails`), clauses in `src/Query/Clauses/`
 - Relations — `src/Relations/*.php`
-- Validation rules used to validate the request bodies — `src/Rules/{Search,Mutate,Operate,Resource}/*`
+- Validation rules used to validate the request bodies — `src/Rules/{Search,Mutate,Input,Resource}/*`, compiled into one rule set per request by `src/Validation/RuleCompiler.php`
 - Scramble extension — `src/Scramble/LomkitLaravelRestApiOperationExtension.php`
 - Generator stubs — `src/Console/stubs/*.stub`

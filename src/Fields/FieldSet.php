@@ -44,6 +44,10 @@ final readonly class FieldSet implements Countable, IteratorAggregate
             if ($field->getRules()->hasWriteRules()) {
                 throw InvalidFieldException::writeRulesOnInput($owner, $field->name);
             }
+
+            if (is_numeric($field->name)) {
+                throw InvalidFieldException::numericInputName($owner, $field->name);
+            }
         }
 
         return $set;

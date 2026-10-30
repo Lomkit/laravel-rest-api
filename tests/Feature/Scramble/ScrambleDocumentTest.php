@@ -57,6 +57,17 @@ class ScrambleDocumentTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_documents_sync_and_toggle_on_many_to_many_relations_only(): void
+    {
+        $products = $this->body($this->operation('/products/mutate', 'post'))['properties']['mutate']['items']['properties']['relations']['properties'];
+        $categories = $this->body($this->operation('/categories/mutate', 'post'))['properties']['mutate']['items']['properties']['relations']['properties'];
+
+        $this->assertSame(['create', 'update', 'attach', 'detach'], $products['category']['properties']['operation']['enum']);
+        $this->assertSame(['create', 'update', 'attach', 'detach'], $categories['products']['items']['properties']['operation']['enum']);
+        $this->assertSame(['create', 'update', 'attach', 'detach', 'sync', 'toggle'], $categories['featuredProducts']['items']['properties']['operation']['enum']);
+    }
+
+    #[Test]
     public function it_documents_the_destroy_body_when_scramble_boots_first(): void
     {
         $operation = $this->operation('/products', 'delete');

@@ -389,7 +389,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
      *
      * Single-record relations return an ObjectType; collection relations return
      * an ArrayType of that object. Each record exposes:
-     *   - operation  (create | update | attach | detach | sync | toggle)
+     *   - operation  (create | update | attach | detach, plus sync | toggle on many-to-many relations)
      *   - key        (integer OR array of integers for bulk operations)
      *   - attributes (fields of the related resource)
      *   - pivot      (optional pivot-table attributes, many-to-many only)
@@ -402,7 +402,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $pivotMany = ['BelongsToMany', 'MorphToMany', 'MorphedByMany'];
 
         $recordType = (new ObjectType)
-            ->addProperty('operation', (new StringType)->enum(['create', 'update', 'attach', 'detach', 'sync', 'toggle']))
+            ->addProperty('operation', (new StringType)->enum(in_array($relationType, $pivotMany) ? ['create', 'update', 'attach', 'detach', 'sync', 'toggle'] : ['create', 'update', 'attach', 'detach']))
             ->addProperty('key', (new MixedType)->setDescription('Integer for single operations; array of integers for bulk operations'))
             ->addProperty('attributes', (new ObjectType)->setDescription('Fields of the related resource'));
 

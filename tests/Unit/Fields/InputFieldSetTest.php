@@ -43,6 +43,15 @@ class InputFieldSetTest extends TestCase
     }
 
     #[Test]
+    public function it_rejects_a_numeric_input_name(): void
+    {
+        $this->expectExceptionObject(InvalidFieldException::numericInputName('PublishPosts::fields()', '2'));
+        $this->expectExceptionMessage('PublishPosts::fields() declares the input field [2] with a numeric name. Input names must not be numeric.');
+
+        FieldSet::forInputs([Boolean::make('notify'), Integer::make('2')], 'PublishPosts::fields()');
+    }
+
+    #[Test]
     public function it_checks_the_entries_like_any_field_set_first(): void
     {
         $this->expectExceptionObject(InvalidFieldException::duplicateName('PublishPosts::fields()', 'notify'));

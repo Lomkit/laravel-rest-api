@@ -24,4 +24,10 @@ trait Mutates
      * @param  array  $mutationRelations  An array of mutation relations.
      */
     public function afterMutating(Model $model, Relation $relation, array $mutationRelations) {}
+
+    /** @return list<string> */
+    public function mutationOperations(): array
+    {
+        return ['create', 'update', 'attach', 'detach'];
+    }
 }
