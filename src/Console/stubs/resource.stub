@@ -3,31 +3,36 @@
 namespace {{ namespace }};
 
 use {{ rootNamespace }}Rest\Resources\Resource;
+use {{ namespacedModel }};
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Http\Requests\RestRequest;
 
 class {{ class }} extends Resource
 {
-    /** @var class-string<\Illuminate\Database\Eloquent\Model> */
-    public static string $model = \{{ namespacedModel }}::class;
+    public static string $model = {{ model }}::class;
 
-    /** @return array<int, \Lomkit\Rest\Fields\Field> */
-    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    #[\Override]
+    public function fields(RestRequest $request): array
     {
         return [
-            \Lomkit\Rest\Fields\ID::make('id'),
+            ID::make('id'),
         ];
     }
 
-    public function relations(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    #[\Override]
+    public function relations(RestRequest $request): array
     {
         return [];
     }
 
-    public function scopes(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    #[\Override]
+    public function scopes(RestRequest $request): array
     {
         return [];
     }
 
-    public function limits(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    #[\Override]
+    public function limits(RestRequest $request): array
     {
         return [
             10,
@@ -36,12 +41,14 @@ class {{ class }} extends Resource
         ];
     }
 
-    public function actions(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    #[\Override]
+    public function actions(RestRequest $request): array
     {
         return [];
     }
 
-    public function instructions(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    #[\Override]
+    public function instructions(RestRequest $request): array
     {
         return [];
     }

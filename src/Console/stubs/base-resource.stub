@@ -4,35 +4,4 @@ namespace {{ namespace }};
 
 use Lomkit\Rest\Http\Resource as RestResource;
 
-abstract class {{ class }} extends RestResource
-{
-    public function searchQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query): \Illuminate\Contracts\Database\Eloquent\Builder
-    {
-        return $query;
-    }
-
-    public function searchScoutQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Laravel\Scout\Builder $query): \Laravel\Scout\Builder
-    {
-        return $query;
-    }
-
-    public function mutateQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query): \Illuminate\Contracts\Database\Eloquent\Builder
-    {
-        return $query;
-    }
-
-    public function destroyQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query): \Illuminate\Contracts\Database\Eloquent\Builder
-    {
-        return $query;
-    }
-
-    public function restoreQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query): \Illuminate\Contracts\Database\Eloquent\Builder
-    {
-        return $query;
-    }
-
-    public function forceDestroyQuery(\Lomkit\Rest\Http\Requests\RestRequest $request, \Illuminate\Contracts\Database\Eloquent\Builder $query): \Illuminate\Contracts\Database\Eloquent\Builder
-    {
-        return $query;
-    }
-}
+abstract class {{ class }} extends RestResource {}

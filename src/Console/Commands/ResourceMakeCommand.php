@@ -2,9 +2,10 @@
 
 namespace Lomkit\Rest\Console\Commands;
 
-use Illuminate\Console\GeneratorCommand;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
-use InvalidArgumentException;
+use Lomkit\Rest\Console\Generation\BaseClass;
+use Lomkit\Rest\Console\Generation\ClassReference;
+use Lomkit\Rest\Console\Generation\Stub;
+use Lomkit\Rest\Exceptions\InvalidClassReferenceException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -13,103 +14,30 @@ use Symfony\Component\Console\Output\OutputInterface;
 use function Laravel\Prompts\suggest;
 
 #[AsCommand(name: 'rest:resource', description: 'Create a new resource class')]
-class ResourceMakeCommand extends GeneratorCommand
+class ResourceMakeCommand extends RestGeneratorCommand
 {
     protected $type = 'Resource';
 
-    /**
-     * Get the stub file for the generator.
-     */
+    private ?ClassReference $model = null;
+
     #[\Override]
-    protected function getStub(): string
+    protected function stub(): Stub
     {
-        return $this->resolveStubPath('/../stubs/resource.stub');
-    }
-
-    /**
-     * Execute the console command.
-     *
-     * @throws FileNotFoundException
-     */
-    #[\Override]
-    public function handle(): ?bool
-    {
-        $this->callSilent('rest:base-resource', [
-            'name' => 'Resource',
-        ]);
-
-        return parent::handle();
-    }
-
-    /**
-     * Resolve the fully-qualified path to the stub.
-     *
-     * @param  string  $stub
-     * @return string
-     */
-    protected function resolveStubPath($stub)
-    {
-        return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
-                        ? $customPath
-                        : __DIR__.$stub;
-    }
-
-    /**
-     * Build the class with the given name.
-     *
-     * @param  string  $name
-     *
-     * @throws FileNotFoundException
-     */
-    #[\Override]
-    protected function buildClass($name): string
-    {
-        $rootNamespace = $this->rootNamespace();
-
-        $replace = [];
-
-        if ($this->option('model')) {
-            $replace = $this->buildModelReplacements($replace);
-        } else {
-            $replace = array_merge(
-                $replace,
-                [
-                    '{{ namespacedModel }}' => 'Model',
-                ]
-            );
-        }
-
-        $baseResourceExists = file_exists($this->getPath("{$rootNamespace}Rest\Resources\Resource"));
-
-        if (! $baseResourceExists) {
-            $replace["use {$rootNamespace}Rest\Resources\Resource;\n"] = "use Lomkit\\Rest\\Http\\Resource;\n";
-        }
-
-        return str_replace(
-            array_keys($replace),
-            array_values($replace),
-            parent::buildClass($name)
-        );
-    }
-
-    /**
-     * @param  array<string, string>  $replace
-     * @return array<string, string>
-     */
-    protected function buildModelReplacements(array $replace): array
-    {
-        $modelClass = $this->parseModel($this->option('model'));
-
-        return array_merge($replace, [
-            '{{ namespacedModel }}' => $modelClass,
-            '{{namespacedModel}}' => $modelClass,
-        ]);
+        return Stub::Resource;
     }
 
     #[\Override]
-    protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output): void
+    protected function baseClass(): BaseClass
     {
-        if ($this->didReceiveOptions($input)) {
+        return new BaseClass($this->rootNamespace().'Rest\Resources\Resource', 'rest:base-resource');
+    }
+
+    #[\Override]
+    protected function interact(InputInterface $input, OutputInterface $output): void
+    {
+        parent::interact($input, $output);
+
+        if ($input->getOption('model') !== null) {
             return;
         }
 
@@ -120,41 +48,61 @@ class ResourceMakeCommand extends GeneratorCommand
         }
     }
 
-    /**
-     * Get the console command options.
-     */
+    #[\Override]
+    protected function prepare(): void
+    {
+        try {
+            $this->model = $this->modelReference();
+        } catch (InvalidClassReferenceException $exception) {
+            $this->fail($exception->getMessage());
+        }
+    }
+
+    #[\Override]
+    protected function replacements(string $name): array
+    {
+        $import = $this->model?->import([class_basename($name), 'Resource', 'ID', 'RestRequest'], 'Model');
+
+        return [
+            '{{ namespacedModel }}' => $import?->statement(),
+            '{{ model }}' => $import?->name(),
+        ];
+    }
+
+    #[\Override]
+    protected function afterWritten(): void
+    {
+        $this->warnAboutReference($this->model, 'model');
+    }
+
     #[\Override]
     protected function getOptions(): array
     {
         return [
+            ...parent::getOptions(),
             ['model', null, InputOption::VALUE_REQUIRED, 'The model associated with this resource'],
         ];
     }
 
-    /**
-     * Get the default namespace for the class.
-     *
-     * @param  string  $rootNamespace
-     */
     #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace.'\Rest\Resources';
     }
 
-    /**
-     * Get the fully-qualified model class name.
-     *
-     * @param  string  $model
-     *
-     * @throws InvalidArgumentException
-     */
-    protected function parseModel($model): string
+    private function modelReference(): ?ClassReference
     {
-        if (preg_match('([^A-Za-z0-9_/\\\\])', $model)) {
-            throw new InvalidArgumentException('Model name contains invalid characters.');
+        $model = $this->option('model');
+
+        if (is_string($model) && $model !== '') {
+            return ClassReference::fromInput($model, $this->rootNamespace(), $this->modelNamespace());
         }
 
-        return $this->qualifyModel($model);
+        return ClassReference::guessModel($this->relativeName(), $this->modelNamespace());
+    }
+
+    private function modelNamespace(): string
+    {
+        return is_dir($this->laravel->path('Models')) ? $this->rootNamespace().'Models\\' : $this->rootNamespace();
     }
 }

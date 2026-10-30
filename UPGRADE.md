@@ -132,7 +132,7 @@ Instructions and actions:
 - `Lomkit\Rest\Concerns\Fieldable` and its `field()` helper are removed. Use `getFields($request)->find($name)`, which returns the `Field` or `null`. `getFields()` returns a `FieldSet` built on each call.
 - The fields are not bound to a model, so an `Enum` field names its enum class: `Enum::make('status', PostStatus::class)`.
 - For actions and Scout instructions, an entry without a name, or that is not an object, now gives a 422 under `fields.<i>.name` instead of a 500, as it already did for instructions. A name that is not a string fails with `must be a string`.
-- `rest:action` and `rest:instruction` generate `ID::make('id')->rules('required')`.
+- `rest:action` and `rest:instruction` generate a `fields()` method that returns `[]`. Before, it declared a required `id` field that the action or the instruction did not use. See [Generators](#generators).
 
 Meta:
 
@@ -167,11 +167,11 @@ Resources and controllers:
 
 - A resource without `$model` throws `Lomkit\Rest\Exceptions\InvalidResourceException`, and a controller without `$resource` throws `Lomkit\Rest\Exceptions\InvalidControllerException`. Both messages name your class. Read the values with `Resource::modelClass()` and `Controller::resourceClass()`, which throw these exceptions, instead of `static::$model` and `static::$resource`.
 - `Rest::resource()` loads the controller class and checks its resource when the routes register. A controller that PHP cannot load, such as one that still declares an untyped `$resource`, now stops the route files and every Artisan command, not only its own endpoints. Routes served from the route cache skip this check: their controller throws on its first request instead.
-- `rest:resource` and `rest:controller` generate the typed properties, and `rest:base-resource` generates the typed query hooks.
+- `rest:resource` and `rest:controller` generate the typed properties.
 
 Query hooks:
 
-- `searchQuery()`, `mutateQuery()`, `destroyQuery()`, `restoreQuery()` and `forceDestroyQuery()` return `Illuminate\Contracts\Database\Eloquent\Builder`, and `searchScoutQuery()` returns `Laravel\Scout\Builder`. Add the return type to every override, including the five hooks of the base resource that `rest:base-resource` wrote in `app/Rest/Resources/Resource.php`. The parameter keeps the contract type, and the return type may be the Eloquent `Builder` instead of the contract:
+- `searchQuery()`, `mutateQuery()`, `destroyQuery()`, `restoreQuery()` and `forceDestroyQuery()` return `Illuminate\Contracts\Database\Eloquent\Builder`, and `searchScoutQuery()` returns `Laravel\Scout\Builder`. Add the return type to every override, including the five hooks that `rest:base-resource` wrote in `app/Rest/Resources/Resource.php` under 2.x. A hook that only returns `$query` can be deleted instead: `rest:base-resource` no longer generates them. The parameter keeps the contract type, and the return type may be the Eloquent `Builder` instead of the contract:
 
   ```php
   use Illuminate\Contracts\Database\Eloquent\Builder;
@@ -249,7 +249,7 @@ Text search (`search.text`):
   }
   ```
 
-- `rest:base-resource` generates `searchScoutQuery()` next to `searchQuery()`. If your base resource (`app/Rest/Resources/Resource.php`) declares `searchQuery()`, add `searchScoutQuery()` to it, otherwise a text search on the resources that extend it throws.
+- If your base resource (`app/Rest/Resources/Resource.php`) declares `searchQuery()`, add `searchScoutQuery()` to it, otherwise a text search on the resources that extend it throws. The base resource that `rest:base-resource` wrote under 2.x declares a `searchQuery()` that only returns `$query`: delete it, or add `searchScoutQuery()`. `rest:base-resource` now generates no query hook.
 - Includes and aggregates are validated as in a search without text, also next to a text search, because they run in SQL on the loaded page: their filters, sorts, selects and scopes use the fields and operators of the related resource, not its scout fields. An include or an aggregate whose `relation` is missing or not declared gives a 422.
 - Actions refuse `search.text` with a 422 under `search.text`: "Text search is not available for actions."
 
@@ -525,3 +525,38 @@ Scramble:
 - The `lomkit-rest` container alias is removed. Resolve `Lomkit\Rest\Rest` by its class name, or use the `Lomkit\Rest\Facades\Rest` facade. The container and the facade now return the same instance.
 - The package defaults merge into your published `config/rest.php` at every level. A nested key that your file leaves out, such as `gates.names.authorized_to_restore` or `gates.message.enabled`, now gets its default value. Before, a top-level key such as `gates` replaced all the defaults under it.
 - `destroy` checks that the keys in `resources` exist on the connection of the model. Before, it checked them on the default connection.
+
+### Generators
+
+The classes that the generators write pass Pint with the `laravel` preset and Larastan at level 10:
+
+- They import the classes they use and mark each overriding method with `#[\Override]`. A model or a resource whose short name the file already uses is imported under an alias, for example `use App\Models\Resource as ResourceModel;`.
+- `rest:action` and `rest:instruction` generate a `fields()` method that returns `[]`. Before, it declared a required `id` field: the instruction refused every request without it, and the action ignored it and ran on every model of the search.
+- `rest:base-resource` generates an empty abstract class. Before, it declared the query hooks, which returned `$query` unchanged. Override a hook in your base resource when you add constraints to it.
+- `rest:base-controller` generates an empty abstract class.
+- `rest:response` generates a `map()` method with its array types in PHPDoc.
+
+Options:
+
+- `rest:resource`, `rest:controller`, `rest:action`, `rest:instruction`, `rest:response`, `rest:base-resource` and `rest:base-controller` accept `--force` (`-f`), which replaces an existing class. Without it, an existing class is kept: the command prints `<Type> already exists.` and exits with 0.
+- When the command runs interactively, `rest:resource` asks for the model and `rest:controller` for the resource whenever the option is missing, also when the name is given or `-v` is passed. With `--no-interaction` they ask nothing.
+
+Model and resource:
+
+- Without `--model`, `rest:resource` guesses the model from the class name, and uses it when the class exists: `PostResource` gives `App\Models\Post`, and `Admin/PostResource` gives `App\Models\Admin\Post`. Without `--resource`, `rest:controller` guesses the resource the same way: `PostsController` gives `App\Rest\Resources\PostResource`. An empty `--model` or `--resource` counts as a missing one.
+- When nothing is given or guessed, the `$model` or `$resource` line is left out and the command warns. Before, it wrote `\Model::class` or `\Resource::class`. A resource without `$model` then throws `InvalidResourceException` on its first request. A controller without `$resource` throws `InvalidControllerException` as soon as `Rest::resource()` registers its routes: the route files, every request and every Artisan command, the generators included, stop until you set `$resource` in the class or remove the route. With cached routes, it throws on its first request instead. Both messages name the class, and `rest:controller` warns that `$resource` must be set before the controller is registered.
+- A class that does not exist is written as given, and the command warns.
+- A fully qualified class that exists is kept as it is, also outside `App\`. Before, it was prefixed with `App\Models\` or `App\Rest\Resources\`.
+- A value that is not a valid class name, such as `Post-1` or `Admin//Post`, stops the command with exit code 1 before any file is written.
+
+Base classes:
+
+- `rest:resource` creates `app/Rest/Resources/Resource.php`, and `rest:controller` creates `app/Rest/Controllers/Controller.php`, when the class it generates was written and the base class does not exist yet. The base class is written after that class and has its own `created successfully` line. Before, it was created first and silently, even when the command then failed. The `--force` of `rest:resource` and `rest:controller` never replaces the base class.
+- `rest:resource` refuses the name `Resource`, and `rest:controller` the name `Controller`, in any case and in any namespace, with exit code 1: these names belong to the base classes. Run `rest:base-resource` or `rest:base-controller` to create a base class.
+- A class in the namespace of its base class no longer imports it.
+
+Published stubs:
+
+- The generators read the stubs that `php artisan stub:publish` copies to `stubs/rest.<name>.stub`, and fall back to the package stubs. Before, they ignored them. The stubs published under 2.x declare untyped properties such as `public static $model`, which are a fatal error in 3.0 (see [Native types](#native-types)): delete your `stubs/rest.*.stub` files, or publish them again with `php artisan stub:publish --force` after you have saved the Laravel stubs that you customised.
+- The `stubs/rest/*.stub` files that versions before 2.14 used are not read.
+- A published stub keeps the placeholders that the generator fills: `{{ namespace }}` and `{{ class }}` in each stub, `{{ namespacedModel }}` and `{{ model }}` in `rest.resource.stub`, and `{{ namespacedResource }}` and `{{ resource }}` in `rest.controller.stub`. Otherwise the command throws `Lomkit\Rest\Exceptions\InvalidStubException`, which names the stub and the missing placeholder.

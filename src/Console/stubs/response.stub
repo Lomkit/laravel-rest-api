@@ -2,19 +2,18 @@
 
 namespace {{ namespace }};
 
+use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Response as RestResponse;
 
 class {{ class }} extends RestResponse
 {
     /**
-     * This map on each model returned by the API, use it at your ease.
-     *
-     * @var \Illuminate\Database\Eloquent\Model $model
-     * @var array $responseModel
-     *
-     * @return array
+     * @param  array<string, mixed>  $responseModel
+     * @return array<string, mixed>
      */
-    protected function map(\Illuminate\Database\Eloquent\Model $model, array $responseModel) : array {
+    #[\Override]
+    protected function map(Model $model, array $responseModel): array
+    {
         return $responseModel;
     }
 }

@@ -2,40 +2,20 @@
 
 namespace Lomkit\Rest\Console\Commands;
 
-use Illuminate\Console\GeneratorCommand;
+use Lomkit\Rest\Console\Generation\Stub;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 #[AsCommand(name: 'rest:action', description: 'Create a new action class')]
-class ActionMakeCommand extends GeneratorCommand
+class ActionMakeCommand extends RestGeneratorCommand
 {
     protected $type = 'Action';
 
-    /**
-     * Get the stub file for the generator.
-     */
     #[\Override]
-    protected function getStub(): string
+    protected function stub(): Stub
     {
-        return $this->resolveStubPath('/../stubs/action.stub');
+        return Stub::Action;
     }
 
-    /**
-     * Resolve the fully-qualified path to the stub.
-     *
-     * @param  string  $stub
-     */
-    protected function resolveStubPath($stub): string
-    {
-        return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
-                        ? $customPath
-                        : __DIR__.$stub;
-    }
-
-    /**
-     * Get the default namespace for the class.
-     *
-     * @param  string  $rootNamespace
-     */
     #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {

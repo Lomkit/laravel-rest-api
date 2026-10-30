@@ -210,32 +210,6 @@ parameters:
 			path: src/Concerns/Resource/Scoutable.php
 
 		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 1
-			path: src/Console/Commands/ActionMakeCommand.php
-
-		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 1
-			path: src/Console/Commands/ControllerMakeCommand.php
-
-		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 3
-			path: src/Console/Commands/ControllerMakeCommand.php
-
-		-
-			message: '#^Parameter \#1 \$model of method Lomkit\\Rest\\Console\\Commands\\ControllerMakeCommand\:\:parseResource\(\) expects string, array\|bool\|float\|int\|string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Console/Commands/ControllerMakeCommand.php
-
-		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 1
-			path: src/Console/Commands/InstructionMakeCommand.php
-
-		-
 			identifier: typeCoverage.returnTypeCoverage
 			count: 7
 			path: src/Console/Commands/QuickStartCommand.php
@@ -262,27 +236,6 @@ parameters:
 			identifier: argument.type
 			count: 3
 			path: src/Console/Commands/QuickStartCommand.php
-
-		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 1
-			path: src/Console/Commands/ResourceMakeCommand.php
-
-		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 2
-			path: src/Console/Commands/ResourceMakeCommand.php
-
-		-
-			message: '#^Parameter \#1 \$model of method Lomkit\\Rest\\Console\\Commands\\ResourceMakeCommand\:\:parseModel\(\) expects string, array\|bool\|float\|int\|string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Console/Commands/ResourceMakeCommand.php
-
-		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 1
-			path: src/Console/Commands/ResponseMakeCommand.php
 
 		-
 			identifier: typeCoverage.returnTypeCoverage
@@ -808,18 +761,6 @@ parameters:
 		-
 			identifier: typeCoverage.paramTypeCoverage
 			count: 12
-			path: src/Http/Response.php
-
-		-
-			message: '#^PHPDoc tag @var above a method has no effect\.$#'
-			identifier: varTag.misplaced
-			count: 1
-			path: src/Http/Response.php
-
-		-
-			message: '#^PHPDoc tag @var has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
 			path: src/Http/Response.php
 
 		-
@@ -3300,12 +3241,6 @@ parameters:
 		-
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
-			path: src/RestServiceProvider.php
-
-		-
-			message: '#^Parameter \#1 \$path of method Illuminate\\Foundation\\Events\\PublishingStubs\:\:add\(\) expects string, string\|false given\.$#'
-			identifier: argument.type
-			count: 7
 			path: src/RestServiceProvider.php
 
 		-

@@ -2,27 +2,39 @@
 
 namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
-use App\Rest\Controllers\Controller as BaseController;
-use App\Rest\Controllers\UsersController;
-use App\Rest\Resources\Resource as BaseResource;
-use App\Rest\Resources\UserResource;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use PHPUnit\Framework\Attributes\Test;
 
 class QuickStartCommandTest extends ScaffoldingTestCase
 {
     #[Test]
-    public function it_writes_a_user_resource_and_controller_that_load(): void
+    public function it_writes_a_user_resource_and_controller_bound_to_each_other(): void
     {
         $this->artisan('rest:quick-start')->assertSuccessful();
 
-        $this->loadGeneratedClass(BaseResource::class);
-        $this->loadGeneratedClass(UserResource::class);
-        $this->loadGeneratedClass(BaseController::class);
-        $this->loadGeneratedClass(UsersController::class);
+        $this->assertUserResource();
+        $this->assertStringContainsString(
+            "use App\\Rest\\Resources\\UserResource;\n\nclass UsersController extends Controller\n{\n    public static string \$resource = UserResource::class;\n}",
+            file_get_contents(app_path('Rest/Controllers/UsersController.php')),
+        );
+        $this->assertFileExists(app_path('Rest/Resources/Resource.php'));
+        $this->assertFileExists(app_path('Rest/Controllers/Controller.php'));
+    }
 
-        $this->assertSame('App\Models\User', UserResource::modelClass());
-        $this->assertSame(UserResource::class, UsersController::resourceClass());
+    #[Test]
+    public function it_asks_nothing_when_the_application_has_a_users_table(): void
+    {
+        Schema::create('users', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+        });
+        $this->writeModel('App\Models\User');
+
+        $this->artisan('rest:quick-start')->assertSuccessful();
+
+        $this->assertUserResource();
     }
 
     #[Test]
@@ -37,5 +49,13 @@ class QuickStartCommandTest extends ScaffoldingTestCase
             '<?php'.PHP_EOL."\Lomkit\Rest\Facades\Rest::resource('users', \App\Rest\Controllers\UsersController::class);",
             file_get_contents(base_path('routes/api.php')),
         );
+    }
+
+    private function assertUserResource(): void
+    {
+        $contents = file_get_contents(app_path('Rest/Resources/UserResource.php'));
+
+        $this->assertStringContainsString("use App\\Models\\User;\n", $contents);
+        $this->assertStringContainsString("public static string \$model = User::class;\n", $contents);
     }
 }

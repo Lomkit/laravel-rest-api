@@ -3,9 +3,9 @@
 namespace {{ namespace }};
 
 use {{ rootNamespace }}Rest\Controllers\Controller;
+use {{ namespacedResource }};
 
 class {{ class }} extends Controller
 {
-    /** @var class-string<\Lomkit\Rest\Http\Resource> */
-    public static string $resource = \{{ namespacedResource }}::class;
+    public static string $resource = {{ resource }}::class;
 }

@@ -30,10 +30,10 @@ class QuickStartCommand extends Command
     public function handle()
     {
         $this->comment('Generating User Resource...');
-        $this->callSilent('rest:resource', ['name' => 'UserResource', '--model' => 'User']);
+        $this->callSilent('rest:resource', ['name' => 'UserResource', '--model' => 'User', '--no-interaction' => true]);
 
         $this->comment('Generating User Controller...');
-        $this->callSilent('rest:controller', ['name' => 'UsersController', '--resource' => 'UserResource']);
+        $this->callSilent('rest:controller', ['name' => 'UsersController', '--resource' => 'UserResource', '--no-interaction' => true]);
 
         $this->updateUserModelNamespace();
         $this->setAppNamespace();

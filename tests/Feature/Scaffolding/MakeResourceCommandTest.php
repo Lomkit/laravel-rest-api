@@ -3,16 +3,14 @@
 namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
 use App\Rest\Resources\Resource as BaseResource;
-use App\Rest\Resources\ScaffoldedPlaceholderResource;
+use App\Rest\Resources\ScaffoldedHooklessBaseResource;
+use App\Rest\Resources\ScaffoldedNamedResource;
 use App\Rest\Resources\ScaffoldedProductResource;
-use App\Rest\Resources\ScaffoldedPromptedResource;
 use App\Rest\Resources\ScaffoldedSuggestedResource;
-use Illuminate\Contracts\Database\Eloquent\Builder;
-use Laravel\Scout\Builder as ScoutBuilder;
+use App\Rest\Resources\ScaffoldedVerboseResource;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use PHPUnit\Framework\Attributes\Test;
 use ReflectionClass;
@@ -26,7 +24,6 @@ class MakeResourceCommandTest extends ScaffoldingTestCase
     {
         $this->artisan('rest:resource', ['name' => 'ScaffoldedProductResource', '--model' => 'Product'])->assertSuccessful();
 
-        $this->loadGeneratedClass(BaseResource::class);
         $this->loadGeneratedClass(ScaffoldedProductResource::class);
         $resource = new ScaffoldedProductResource;
 
@@ -38,55 +35,17 @@ class MakeResourceCommandTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    public function it_writes_a_placeholder_model_when_no_model_is_given(): void
+    public function it_writes_a_base_resource_that_leaves_every_query_hook_to_the_package(): void
     {
-        $this->artisan('rest:resource', ['name' => 'ScaffoldedPlaceholderResource'])->assertSuccessful();
+        $this->artisan('rest:base-resource', ['name' => 'ScaffoldedHooklessBaseResource'])->assertSuccessful();
 
-        $this->loadGeneratedClass(BaseResource::class);
-        $this->loadGeneratedClass(ScaffoldedPlaceholderResource::class);
+        $this->loadGeneratedClass(ScaffoldedHooklessBaseResource::class);
 
-        $this->assertSame('Model', ScaffoldedPlaceholderResource::modelClass());
-    }
-
-    #[Test]
-    public function it_writes_a_base_resource_whose_query_hooks_return_the_builder(): void
-    {
-        $this->artisan('rest:base-resource', ['name' => 'Resource'])->assertSuccessful();
-
-        $this->loadGeneratedClass(BaseResource::class);
-        $resource = new class extends BaseResource
-        {
-            public static string $model = Product::class;
-        };
-        $request = new RestRequest;
-        $query = Product::query();
-
-        $this->assertTrue((new ReflectionClass(BaseResource::class))->isAbstract());
-        $this->assertInstanceOf(Resource::class, $resource);
-        foreach (['searchQuery', 'mutateQuery', 'destroyQuery', 'restoreQuery', 'forceDestroyQuery'] as $hook) {
-            $this->assertSame(Builder::class, (string) (new ReflectionMethod(BaseResource::class, $hook))->getReturnType());
-            $this->assertSame($query, $resource->{$hook}($request, $query));
+        $this->assertTrue((new ReflectionClass(ScaffoldedHooklessBaseResource::class))->isAbstract());
+        $this->assertSame(Resource::class, get_parent_class(ScaffoldedHooklessBaseResource::class));
+        foreach (['searchQuery', 'searchScoutQuery', 'mutateQuery', 'destroyQuery', 'restoreQuery', 'forceDestroyQuery'] as $hook) {
+            $this->assertSame(Resource::class, (new ReflectionMethod(ScaffoldedHooklessBaseResource::class, $hook))->class);
         }
-    }
-
-    #[Test]
-    public function it_writes_a_base_resource_that_declares_search_scout_query_next_to_search_query(): void
-    {
-        $this->artisan('rest:base-resource', ['name' => 'Resource'])->assertSuccessful();
-
-        $this->loadGeneratedClass(BaseResource::class);
-        $resource = new class extends BaseResource
-        {
-            public static string $model = Product::class;
-        };
-        $searchQuery = new ReflectionMethod(BaseResource::class, 'searchQuery');
-        $searchScoutQuery = new ReflectionMethod(BaseResource::class, 'searchScoutQuery');
-        $query = Product::search('lamp');
-
-        $this->assertSame(BaseResource::class, $searchQuery->getDeclaringClass()->getName());
-        $this->assertSame(BaseResource::class, $searchScoutQuery->getDeclaringClass()->getName());
-        $this->assertSame(ScoutBuilder::class, (string) $searchScoutQuery->getReturnType());
-        $this->assertSame($query, $resource->searchScoutQuery(new RestRequest, $query));
     }
 
     #[Test]
@@ -101,25 +60,57 @@ class MakeResourceCommandTest extends ScaffoldingTestCase
             ->expectsChoice('What model should this resource rely on? (Optional)', 'User', ['Comment', 'Post', 'User'], true)
             ->assertSuccessful();
 
-        $this->loadGeneratedClass(BaseResource::class);
         $this->loadGeneratedClass(ScaffoldedSuggestedResource::class);
 
         $this->assertSame('App\Models\User', ScaffoldedSuggestedResource::modelClass());
     }
 
     #[Test]
-    public function it_writes_a_placeholder_model_when_the_model_prompt_is_left_empty(): void
+    public function it_prompts_for_the_model_when_only_the_name_is_given(): void
+    {
+        $this->artisan('rest:resource', ['name' => 'ScaffoldedNamedResource'])
+            ->expectsChoice('What model should this resource rely on? (Optional)', 'Product', [], true)
+            ->assertSuccessful();
+
+        $this->loadGeneratedClass(ScaffoldedNamedResource::class);
+
+        $this->assertSame('App\Models\Product', ScaffoldedNamedResource::modelClass());
+    }
+
+    #[Test]
+    public function it_prompts_for_the_model_when_the_command_runs_verbosely(): void
+    {
+        $this->artisan('rest:resource', ['--verbose' => true])
+            ->expectsQuestion('What should the resource be named?', 'ScaffoldedVerboseResource')
+            ->expectsChoice('What model should this resource rely on? (Optional)', 'Product', [], true)
+            ->assertSuccessful();
+
+        $this->loadGeneratedClass(ScaffoldedVerboseResource::class);
+
+        $this->assertSame('App\Models\Product', ScaffoldedVerboseResource::modelClass());
+    }
+
+    #[Test]
+    public function it_does_not_prompt_for_the_model_when_it_is_given(): void
+    {
+        $this->artisan('rest:resource', ['--model' => 'Product'])
+            ->expectsQuestion('What should the resource be named?', 'ScaffoldedGivenResource')
+            ->assertSuccessful();
+
+        $this->assertFileExists(app_path('Rest/Resources/ScaffoldedGivenResource.php'));
+    }
+
+    #[Test]
+    public function it_leaves_the_model_out_when_the_model_prompt_is_left_empty(): void
     {
         file_put_contents(app_path('Models/Post.php'), '<?php');
 
         $this->artisan('rest:resource')
             ->expectsQuestion('What should the resource be named?', 'ScaffoldedPromptedResource')
             ->expectsChoice('What model should this resource rely on? (Optional)', '', ['Post'], true)
+            ->expectsOutputToContain('No model was given or found for this resource. Pass --model to set it.')
             ->assertSuccessful();
 
-        $this->loadGeneratedClass(BaseResource::class);
-        $this->loadGeneratedClass(ScaffoldedPromptedResource::class);
-
-        $this->assertSame('Model', ScaffoldedPromptedResource::modelClass());
+        $this->assertStringNotContainsString('$model', file_get_contents(app_path('Rest/Resources/ScaffoldedPromptedResource.php')));
     }
 }

@@ -2,26 +2,23 @@
 
 namespace {{ namespace }};
 
+use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action as RestAction;
+use Lomkit\Rest\Http\Requests\RestRequest;
 
 class {{ class }} extends RestAction
 {
-    /**
-     * @param  array<string, mixed>  $fields
-     * @param  \Illuminate\Support\Collection<int, \Illuminate\Database\Eloquent\Model>  $models
-     */
-    public function handle(array $fields, \Illuminate\Support\Collection $models): void
+    #[\Override]
+    public function handle(array $fields, Collection $models): void
     {
         foreach ($models as $model) {
             // ...
         }
     }
 
-    /** @return list<\Lomkit\Rest\Fields\Field> */
-    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    #[\Override]
+    public function fields(RestRequest $request): array
     {
-        return [
-            \Lomkit\Rest\Fields\ID::make('id')->rules('required'),
-        ];
+        return [];
     }
 }

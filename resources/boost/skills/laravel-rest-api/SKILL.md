@@ -207,9 +207,11 @@ php artisan rest:controller UsersController --resource=UserResource
 Generated controllers are intentionally tiny:
 
 ```php
+use App\Rest\Resources\UserResource;
+
 class UsersController extends Controller
 {
-    public static string $resource = \App\Rest\Resources\UserResource::class;
+    public static string $resource = UserResource::class;
 }
 ```
 
@@ -648,13 +650,14 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 
 ## Artisan commands shipped by the package
 
-- `rest:resource {Name} --model=Model` — generate a Resource.
-- `rest:controller {Name} --resource=ResourceClass` — generate a Controller.
-- `rest:base-resource` / `rest:base-controller` — generate the `app/Rest/Resources/Resource.php` (and controller) base classes that all your resources/controllers should extend, with overridable `*Query` hooks.
+- `rest:resource {Name} --model=Model` — generate a Resource. Without `--model`, the model is guessed from the name (`PostResource` → `App\Models\Post`) when that class exists; otherwise the `$model` line is left out and the command warns.
+- `rest:controller {Name} --resource=ResourceClass` — generate a Controller. Without `--resource`, the resource is guessed the same way (`PostsController` → `PostResource`); otherwise the `$resource` line is left out and the command warns. Set `$resource` before you register the controller with `Rest::resource()`: a controller without it stops the route files and every Artisan command, the generators included.
+- `rest:base-resource` / `rest:base-controller` — generate the empty abstract base classes `app/Rest/Resources/Resource.php` and `app/Rest/Controllers/Controller.php` that all your resources/controllers should extend. `rest:resource` and `rest:controller` create them when they are missing. Override the `*Query` hooks in the base resource to constrain every resource.
 - `rest:action {Name}` — scaffold an Action.
 - `rest:instruction {Name}` — scaffold an Instruction.
 - `rest:response {Name}` — scaffold a custom Response class.
 - `rest:quick-start` — generates a working UserResource + UsersController and wires `routes/api.php`.
+- The generators keep an existing class unless `--force` (`-f`) is passed, and read the published `stubs/rest.<name>.stub` before the package stubs. Stubs published under 2.x generate untyped properties, which are a fatal error in 3.x: delete them, or publish them again with `php artisan stub:publish --force`.
 
 ## Working conventions and gotchas
 
