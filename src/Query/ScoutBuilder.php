@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Query;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Traits\Conditionable;
+use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
@@ -36,7 +37,7 @@ class ScoutBuilder implements QueryBuilder
     {
         $this->ensureIndexPerimeter();
 
-        $this->resource->authorizeTo('viewAny', $this->resource::modelClass());
+        $this->resource->context()->authorizer()->ensurePlanned(Check::onClass($this->resource, 'viewAny'));
 
         $this->resource->searchScoutQuery($this->resource->context()->request, $this->queryBuilder);
 

@@ -3,11 +3,15 @@
 namespace Lomkit\Rest\Tests\Feature\Authorization;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Lomkit\Rest\Exceptions\DenialsRenderer;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\ChannelPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Helpdesk;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\ReplyPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamPolicy;
@@ -25,6 +29,8 @@ abstract class HelpdeskTestCase extends PackageTestCase
 
     protected ChannelPolicy $channels;
 
+    protected ReplyPolicy $replies;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -33,11 +39,19 @@ abstract class HelpdeskTestCase extends PackageTestCase
         $this->app->instance(TeamPolicy::class, $this->teams = new TeamPolicy);
         $this->app->instance(TagPolicy::class, $this->tags = new TagPolicy);
         $this->app->instance(ChannelPolicy::class, $this->channels = new ChannelPolicy);
+        $this->app->instance(ReplyPolicy::class, $this->replies = new ReplyPolicy);
     }
 
     protected function fixtures(): array
     {
         return [new Helpdesk];
+    }
+
+    protected function defineEnvironment($app): void
+    {
+        parent::defineEnvironment($app);
+
+        $app['config']->set('app.debug', false);
     }
 
     /** @return array<string, Ticket> */
@@ -66,5 +80,21 @@ abstract class HelpdeskTestCase extends PackageTestCase
         $request->setUserResolver(fn (): ?Authenticatable => $user);
 
         return new RestContext($request, $this->app);
+    }
+
+    protected function renderDenials(): void
+    {
+        $this->app->make(ExceptionHandler::class)->renderable(new DenialsRenderer);
+    }
+
+    protected function logQueries(): void
+    {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+    }
+
+    protected function assertNoQueries(): void
+    {
+        $this->assertCount(0, DB::getQueryLog());
     }
 }

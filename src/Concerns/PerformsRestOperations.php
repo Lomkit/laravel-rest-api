@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Concerns;
 
 use Illuminate\Http\Response as IlluminateResponse;
 use Illuminate\Support\Facades\DB;
+use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
@@ -24,9 +25,9 @@ trait PerformsRestOperations
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $this->beforeDetails($request);
+        $request->context()->authorizer()->ensurePlanned(Check::onClass($resource, 'viewAny'));
 
-        $resource->authorizeTo('viewAny', $resource::modelClass());
+        $this->beforeDetails($request);
 
         return [
             'data' => $resource->jsonSerialize(),

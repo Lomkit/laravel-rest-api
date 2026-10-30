@@ -2,17 +2,21 @@
 
 namespace Lomkit\Rest\Validation;
 
+use Lomkit\Rest\Authorization\Check;
+
 final readonly class CompiledRules
 {
     /**
      * @param  array<string, list<mixed>>  $rules
      * @param  array<string, string>  $labels
      * @param  array<string, mixed>  $projections
+     * @param  list<Check>  $reach
      */
     public function __construct(
         public array $rules,
         public array $labels,
         public array $projections,
+        public array $reach = [],
     ) {}
 
     /**

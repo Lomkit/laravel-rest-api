@@ -7,12 +7,15 @@ use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Validator;
+use Lomkit\Rest\Authorization\Authorizer;
+use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\Traits\InteractsWithRules;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Validation\CompiledRules;
 use Lomkit\Rest\Validation\RuleCompiler;
 
@@ -28,6 +31,58 @@ class RestRequest extends FormRequest
     public function context(): RestContext
     {
         return $this->context ??= new RestContext($this, $this->container);
+    }
+
+    public function endpoint(): ?Endpoint
+    {
+        return null;
+    }
+
+    protected function passesAuthorization(): bool
+    {
+        if (! parent::passesAuthorization()) {
+            return false;
+        }
+
+        $authorizer = $this->context()->authorizer();
+
+        $this->authorizeEntry($authorizer);
+        $authorizer->plan($this->reach());
+
+        return true;
+    }
+
+    protected function authorizeEntry(Authorizer $authorizer): void
+    {
+        $endpoint = $this->endpoint();
+
+        if ($endpoint === null) {
+            return;
+        }
+
+        $resource = $this->rootResource();
+
+        $authorizer->enter($resource, self::checksOn($resource, $resource->abilities($endpoint, $this)));
+    }
+
+    /** @return list<Check> */
+    protected function reach(): array
+    {
+        return $this->compiledRules()->reach;
+    }
+
+    /**
+     * @param  list<string>  $abilities
+     * @return list<Check>
+     */
+    protected static function checksOn(Resource $resource, array $abilities): array
+    {
+        return array_map(fn (string $ability): Check => Check::onClass($resource, $ability), array_values(array_unique($abilities)));
+    }
+
+    protected function rootResource(): Resource
+    {
+        return $this->context()->resource($this->controllerResourceClass());
     }
 
     /** @return array<array-key, mixed> */

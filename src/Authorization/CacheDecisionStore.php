@@ -52,7 +52,7 @@ final readonly class CacheDecisionStore implements DecisionStore
 
     private static function isStorable(Check $check): bool
     {
-        return $check->resource->isAuthorizationCacheEnabled() && ! $check->isKeyedByInstance();
+        return $check->resource->isAuthorizationCacheEnabled() && $check->ability !== 'create' && ! $check->isKeyedByInstance();
     }
 
     private function storageKey(string $key): string

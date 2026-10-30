@@ -27,6 +27,7 @@ abstract class PackageTestCase extends TestCase
     protected function defineEnvironment($app): void
     {
         $app['config']->set('scout.driver', 'collection');
+        $app['config']->set('rest.authorizations.strict', true);
     }
 
     protected function defineDatabaseMigrations(): void

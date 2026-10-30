@@ -83,6 +83,15 @@ enum Endpoint: string
         };
     }
 
+    /** @return list<string> */
+    public function abilities(): array
+    {
+        return match ($this) {
+            self::Details, self::Search => ['viewAny'],
+            self::Mutate, self::Operate, self::Destroy, self::Restore, self::ForceDestroy => [],
+        };
+    }
+
     public function isOptIn(): bool
     {
         return match ($this) {

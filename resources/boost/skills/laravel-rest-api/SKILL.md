@@ -50,7 +50,7 @@ Use this skill when working with the `lomkit/laravel-rest-api` package — build
   ```
 
 - **Soft-delete endpoints**: opt-in `restore` and `force` routes via `->withSoftDeletes()` chained on `Rest::resource(...)`.
-- **Authorization**: automatic per-model Policy checks (`viewAny`, `view`, `create`, `update`, `delete`, `restore`, `forceDelete`, `attach{Model}`, `detach{Model}`) plus client-requested per-row `gates`.
+- **Authorization**: automatic per-model Policy checks (`viewAny`, `view`, `create`, `update`, `delete`, `restore`, `forceDelete`, `attach{Model}`, `detach{Model}`) plus client-requested per-row `gates`. Class-level checks (`viewAny` of every reached resource, `create`) run before validation, so a denied check answers `403` before any `422`.
 - **Custom Response**: override the output shape per Resource via `public static string $response = UserResponse::class;`. Generate with:
 
   ```bash
@@ -173,7 +173,7 @@ class UsersController extends Controller
 `$resource` keeps its `string` type. A controller without it throws `InvalidControllerException` when `Rest::resource()` registers its routes; read it with `UsersController::resourceClass()`.
 
 Controllers expose **request-level hooks** (override as `protected` methods returning `void`):
-- `beforeDetails(DetailsRequest)`
+- `beforeDetails(DetailsRequest)`, which runs once `viewAny` passed
 - `beforeSearch(SearchRequest)`, `afterSearch(SearchRequest)`
 - `beforeMutate(MutateRequest)`, `afterMutate(MutateRequest)`
 - `beforeOperate(OperateRequest)`, `afterOperate(OperateRequest)`
@@ -227,7 +227,7 @@ Rest::resource('posts', PostsController::class)
 | `POST` | `/users/restore` | `restore` | Opt-in via `withSoftDeletes()` |
 | `DELETE` | `/users/force` | `forceDestroy` | Opt-in via `withSoftDeletes()` |
 
-Every route carries the `EnforceExpectsJson` middleware, which adds `application/json` to the `Accept` header, so errors come back as JSON. Group middleware runs before it. Route names only have to be unique within one resource; two resources with the same name or URI still overwrite each other, as with Laravel routes. Laravel Precognition is supported when `rest.precognition.enabled = true` — clients send `Precognition: true` and the request returns `204` after validation without touching the controller body, or `422` with errors.
+Every route carries the `EnforceExpectsJson` middleware, which adds `application/json` to the `Accept` header, so errors come back as JSON. Group middleware runs before it. Route names only have to be unique within one resource; two resources with the same name or URI still overwrite each other, as with Laravel routes. Laravel Precognition is supported when `rest.precognition.enabled = true` — clients send `Precognition: true` and the request returns `204` after validation without touching the controller body, or `422` with errors. The checks made before validation still run, so a denied check answers `403` first.
 
 ## `details` endpoint
 
@@ -449,6 +449,8 @@ smaller.
 
 **Response**: `{"data": {"impacted": 150}}`.
 
+**Abilities.** Before validation, `operate` resolves the action: an unknown action is a `404` for a user allowed `viewAny` on the resource and a `403` for the others. A known action checks, in this order, `viewAny` on the resource, the abilities the resource's `abilities()` returns for `Endpoint::Operate` (none by default), then those `Action::abilities(): array` returns (`['viewAny']` by default, for every action, standalone and targeted ones included). Both lists add to `viewAny`: an action returning `['export']` checks `viewAny`, then `export`. An action returning `[]` runs with none of these checks (no `viewAny`, no `Endpoint::Operate` abilities, and its search does not check `viewAny` on the resource): use it for an action any user may run, guests included. Includes, aggregates and filters on relations in the action's `search` still need `viewAny` on the related resource, as in a search.
+
 **Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models. Combine with `Lomkit\Rest\Contracts\BatchableAction` and use `withBatch(array $fields, PendingBatch $batch): void` to register `then`/`catch`/`finally` callbacks. The synchronous `handle()`, `withBatch()` and the queued jobs all receive the same cast map. Customise `$connection` and `$queue` properties to route jobs.
 
 ## Instructions (custom search refinements)
@@ -529,9 +531,9 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 
 | Policy method | Triggered by |
 | --- | --- |
-| `viewAny` | `search`, `details` (listing) |
+| `viewAny` | `search`, `details`, `operate` (unless the action's `abilities()` returns `[]`), and every resource reached by an include, an aggregate or a relation filter (each level, pivot columns included) |
 | `view` | per-row visibility, includes |
-| `create` | `mutate` create |
+| `create` | `mutate` create, once per created resource class, with the model class |
 | `update` | `mutate` update |
 | `replicate` | `mutate` create when duplicating from existing data |
 | `delete` | `destroy` |
@@ -542,9 +544,26 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 
 **Define a policy for every model you expose**, including the attach/detach methods for many-to-many relations you allow mutating. Missing methods will block the operation.
 
+**Class-level checks run before validation and before any query.** The request checks its endpoint abilities (`viewAny` for `search` and `details`, none for `mutate`, `destroy`, `restore` and `forceDestroy`, and for `operate` `viewAny` followed by the resource's `Endpoint::Operate` abilities and the action's `abilities()`), then `viewAny` on every resource the payload reaches and `create` for every created resource. A denied check answers `403` (or the status of the policy's response) even for an invalid payload or a Precognition request. The request's own `authorize()` runs first, and both must pass. Row checks (`view`, `update`, `delete`, attach/detach, ...) still run when the rows are loaded.
+
+To change the endpoint abilities of one resource, override `abilities()` on it:
+
+```php
+public function abilities(\Lomkit\Rest\Http\Routing\Endpoint $endpoint, RestRequest $request): array
+{
+    return $endpoint === \Lomkit\Rest\Http\Routing\Endpoint::Destroy ? ['deleteAny'] : parent::abilities($endpoint, $request);
+}
+```
+
+The list replaces the endpoint's default: returning `['export']` for `Endpoint::Search` drops `viewAny` there. Keep `viewAny` in the list to add an ability (`['viewAny', 'export']`). `Endpoint::Operate` is the exception: its list adds to `viewAny` (see Custom actions).
+
+These checks go through the resource's `authorizedTo()`, so an override of it applies to them. A denied check made before validation throws `\Lomkit\Rest\Exceptions\AuthorizationDenied` (an `AuthorizationException`) holding every denial of these checks (path such as `search.includes.0`, ability, resource class, key, message; at most 50). The body stays `{"message": ...}` with the message and status of the first denial, so `Response::denyAsNotFound()` still gives `404`. To add the denials to the JSON, register `$exceptions->render(new \Lomkit\Rest\Exceptions\DenialsRenderer);` in `bootstrap/app.php`'s `withExceptions()`; it leaves `404` responses unchanged. Row checks (`view`, `update`, `delete`, `restore`, `forceDelete`, attach/detach) still throw Laravel's `AuthorizationException`, without denials.
+
+The queries check `viewAny` again on each resource they search (and `create` on each resource they create), reusing the decisions made before validation. The endpoint's own resource is the exception: its endpoint abilities stand in for `viewAny`, so when they leave `viewAny` out (a resource override of `abilities()`, or an action whose `abilities()` returns `[]`) the queries do not check it there. With `authorizations.strict = true` (default `false`, meant for test suites), a check on another resource that was not made before validation throws `UnplannedCheckException`: a custom rule node that reaches a resource records it in `compile()` with `$into->reach(Check::onClass($resource, 'viewAny', $attribute))`.
+
 Within a request, each distinct check (ability, resource, model or model class) runs the policy once and the later checks reuse its decision, so `GateEvaluated` listeners and `Gate::after()` see one evaluation per distinct check. Policies run with `Gate::forUser($request->user())`, and a change of user starts a new set of decisions. The package drops the decisions on a model after writing it; a hook that writes a model itself calls `$request->context()->authorizer()->forget($model)`.
 
-The cross-request cache is off by default (`authorizations.cache.enabled = false`). When on, it stores each decision as scalars for `authorizations.cache.default` minutes (default `5`), keyed by guard, user class and key, resource, ability and model class and key; checks on unsaved models are not cached. Override `cacheAuthorizationFor()` on the resource, or use the `\Lomkit\Rest\Concerns\Resource\DisableAuthorizationsCache` trait, to tweak behaviour.
+The cross-request cache is off by default (`authorizations.cache.enabled = false`). When on, it stores each decision as scalars for `authorizations.cache.default` minutes (default `5`), keyed by guard, user class and key, resource, ability and model class and key; `create` checks and checks on unsaved models are not cached. Override `cacheAuthorizationFor()` on the resource, or use the `\Lomkit\Rest\Concerns\Resource\DisableAuthorizationsCache` trait, to tweak behaviour.
 
 ### 2. Gates (`gates.enabled`, default `true`)
 
@@ -576,7 +595,7 @@ Docs are served at `/docs/api`. Fields, validation rules, relations, search filt
 
 ## Precognition
 
-Set `rest.precognition.enabled = true` (default `false`). Clients send `Precognition: true` (and optionally `Precognition-Validate-Only`) on any endpoint, and the request is validated and short-circuited before the controller body runs — `204 No Content` on success, `422` on validation failure. Useful for live frontend form validation. A name in `Precognition-Validate-Only` also covers the keys under it: `search` validates `search.limit`, `search.filters.0.field` and every other key of the search, while `search.filters` leaves `search.limit` out.
+Set `rest.precognition.enabled = true` (default `false`). Clients send `Precognition: true` (and optionally `Precognition-Validate-Only`) on any endpoint, and the request is authorized (the class-level checks above, a denied one answers `403`), validated and short-circuited before the controller body runs — `204 No Content` on success, `422` on validation failure. Useful for live frontend form validation. A name in `Precognition-Validate-Only` also covers the keys under it: `search` validates `search.limit`, `search.filters.0.field` and every other key of the search, while `search.filters` leaves `search.limit` out.
 
 ## Artisan commands shipped by the package
 
@@ -608,7 +627,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `ResourceRegistrar` and the route value objects)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Concerns/Resource/*` (`DisableGates`, `DisableAuthorizationsCache`, hooks, ...)
-- Authorization — `src/Authorization/*` (`Authorizer`, `Check`, `Decision`, `DecisionMemo` and the decision stores), `src/Concerns/Authorizable.php`
+- Authorization — `src/Authorization/*` (`Authorizer`, `Check`, `Decision`, `Denial`, `DecisionMemo` and the decision stores), `src/Concerns/Authorizable.php`, `src/Exceptions/{AuthorizationDenied,DenialsRenderer,UnplannedCheckException}.php`; the checks made before validation are collected by the rule nodes (`RuleCompiler::reach()`) and run by `RestRequest::passesAuthorization()`
 - Query layer — `src/Query/Builder.php`, `src/Query/ScoutBuilder.php`
 - Actions / Instructions / Scopes — `src/Actions/{Action,Actionable}.php`, `src/Instructions/{Instruction,Instructionable}.php`, `src/Scopes/Scope.php`
 - Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `InputValues`, `Details/InputFieldDetails`), clauses in `src/Query/Clauses/`

@@ -43,6 +43,10 @@ return [
 
     'authorizations' => [
         'enabled' => true,
+        // When true, a class-level check that the request did not plan before
+        // validation throws a LogicException instead of being evaluated. Turn it
+        // on in your test suite to catch a relation the request does not cover.
+        'strict' => false,
         'cache' => [
             'enabled' => false,
             'default' => 5, // Cache minutes by default

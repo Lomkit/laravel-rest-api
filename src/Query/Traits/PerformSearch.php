@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Query\Clauses\InstructionClause;
 use Lomkit\Rest\Query\Clauses\ScopeClause;
 
@@ -33,7 +34,7 @@ trait PerformSearch
      */
     public function search(array $parameters = [])
     {
-        $this->resource->authorizeTo('viewAny', $this->resource::modelClass());
+        $this->resource->context()->authorizer()->ensurePlanned(Check::onClass($this->resource, 'viewAny'));
 
         // The perimeter runs in a subquery so that an "or" inside it cannot swallow the
         // constraints appended afterwards, which bind tighter than it does
