@@ -68,6 +68,11 @@ trait ConfiguresReading
         return $this->virtual;
     }
 
+    public function fromStorage(mixed $value): mixed
+    {
+        return $value;
+    }
+
     /** @return list<string> */
     public function getRequires(): array
     {

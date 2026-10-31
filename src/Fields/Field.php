@@ -50,6 +50,14 @@ abstract class Field
 
     public function bind(Model $model): void {}
 
+    public function boundTo(Model $model): static
+    {
+        $bound = clone $this;
+        $bound->bind($model);
+
+        return $bound;
+    }
+
     public function cast(mixed $value): mixed
     {
         if ($value === null) {

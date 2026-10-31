@@ -79,20 +79,23 @@ class Response implements Responsable
      */
     public function modelToResponse(Model $model, Resource $resource, array $requestArray, ?Relation $relation = null)
     {
+        $aggregates = collect($requestArray['aggregates'] ?? [])
+            ->map(function ($aggregate) {
+                return $aggregate['alias'] ?? Str::snake($aggregate['relation']).'_'.$aggregate['type'].(isset($aggregate['field']) ? '_'.$aggregate['field'] : '');
+            })
+            ->toArray();
+        $attributes = $model->attributesToArray();
+        $columns = array_filter($attributes, fn (int|string $key): bool => ! in_array($key, $aggregates, true), ARRAY_FILTER_USE_KEY);
+
         return array_merge(
             // toArray to take advantage of Laravel's logic
-            collect($model->attributesToArray())
+            collect(array_replace($attributes, $resource->getFields($resource->context()->request)->fromStorage($columns)))
                 ->only(
                     array_merge(
                         isset($requestArray['selects']) ?
                                 collect($requestArray['selects'])->pluck('field')->toArray() :
                                 $resource->getFields($resource->context()->request)->selectable()->names(),
-                        // Here we add the aggregates
-                        collect($requestArray['aggregates'] ?? [])
-                            ->map(function ($aggregate) {
-                                return $aggregate['alias'] ?? Str::snake($aggregate['relation']).'_'.$aggregate['type'].(isset($aggregate['field']) ? '_'.$aggregate['field'] : '');
-                            })
-                            ->toArray()
+                        $aggregates
                     )
                 )
                 ->when($resource->isGatingEnabled() && isset($requestArray['gates']), function ($attributes) use ($requestArray, $resource, $model) {
@@ -122,7 +125,7 @@ class Response implements Responsable
                         $pivotFields = $relation instanceof PivotRelation ? $relation->getPivotFields() : FieldSet::of([]);
 
                         return [
-                            $key => collect($modelRelation->toArray())
+                            $key => collect($pivotFields->fromStorage($modelRelation->toArray()))
                                 ->only($pivotFields->selectable()->names())
                                 ->toArray(),
                         ];

@@ -84,12 +84,17 @@ trait ConfiguresWriting
     public function fill(Model $model, mixed $value): void
     {
         if ($this->fillUsing === null) {
-            $model->forceFill([$this->name => $value]);
+            $model->forceFill([$this->name => $this->toStorage($value)]);
 
             return;
         }
 
         ($this->fillUsing)($model, $value);
+    }
+
+    public function toStorage(mixed $value): mixed
+    {
+        return $value;
     }
 
     public function isWritableOn(WriteOperation $operation): bool

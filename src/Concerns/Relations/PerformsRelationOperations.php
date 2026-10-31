@@ -164,10 +164,9 @@ trait PerformsRelationOperations
 
         $writable = $relation
             ->getPivotFields()
-            ->writableOn($write)
-            ->names();
+            ->writableOn($write);
 
-        return array_intersect_key($pivot, array_flip($writable));
+        return $writable->toStorage(array_intersect_key($pivot, array_flip($writable->names())));
     }
 
     /** @param array{attached: list<int|string>, detached: list<int|string>} $changes */
