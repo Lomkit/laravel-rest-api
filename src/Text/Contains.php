@@ -8,7 +8,7 @@ use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\Expressions\LikeCondition;
 
-final readonly class Contains implements TextSearch
+final readonly class Contains implements QueryTextSearch
 {
     public const int MAX_WORDS = 10;
 

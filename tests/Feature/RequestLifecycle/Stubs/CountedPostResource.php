@@ -6,8 +6,6 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Tests\Fixtures\Publishing\HighlightPosts;
-use Lomkit\Rest\Tests\Fixtures\Publishing\InStatus;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 
 class CountedPostResource extends PostResource
@@ -62,22 +60,6 @@ class CountedPostResource extends PostResource
         $this->evaluated('limits', $request);
 
         return [10, 25];
-    }
-
-    #[\Override]
-    public function scoutFields(RestRequest $request): array
-    {
-        $this->evaluated('scoutFields', $request);
-
-        return ['title'];
-    }
-
-    #[\Override]
-    public function scoutInstructions(RestRequest $request): array
-    {
-        $this->evaluated('scoutInstructions', $request);
-
-        return [HighlightPosts::make(), InStatus::make()];
     }
 
     private function evaluated(string $declaration, RestRequest $request): void

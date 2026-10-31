@@ -47,9 +47,6 @@ class PaginationValidationTest extends PackageTestCase
             'a negative page' => [['page' => -1], [
                 'search.page' => ['The search.page field must be at least 1.'],
             ]],
-            'page zero of a text search' => [['text' => ['value' => 'lamp'], 'page' => 0], [
-                'search.page' => ['The search.page field must be at least 1.'],
-            ]],
         ];
     }
 

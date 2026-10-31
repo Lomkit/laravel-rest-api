@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Query;
 
-use LogicException;
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -10,9 +9,9 @@ use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Query\Clauses\InstructionClause;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
+use Lomkit\Rest\Tests\Fixtures\Catalog\PricedBetween;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
-use Lomkit\Rest\Tests\Fixtures\Publishing\HighlightPosts;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
@@ -51,16 +50,6 @@ class InstructionClauseTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_applies_a_scout_instruction_to_a_scout_query(): void
-    {
-        $query = Product::search('lamp');
-
-        (new InstructionClause($this->resource(ProductResource::class), 'priced-at', [['name' => 'price', 'value' => '129']]))->applyToScout($query);
-
-        $this->assertSame([['field' => 'price', 'operator' => '=', 'value' => 129]], $query->wheres);
-    }
-
-    #[Test]
     public function it_refuses_an_instruction_the_resource_does_not_declare(): void
     {
         $this->expectException(InvalidInstructionException::class);
@@ -70,21 +59,13 @@ class InstructionClauseTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_refuses_a_scout_instruction_the_resource_does_not_declare(): void
+    public function it_refuses_to_apply_an_instruction_that_only_applies_to_a_search_engine(): void
     {
-        $this->expectException(InvalidInstructionException::class);
-        $this->expectExceptionMessage(PostResource::class.' does not declare the Scout instruction [highlight-posts].');
+        $query = Product::query();
 
-        (new InstructionClause($this->resource(PostResource::class), 'highlight-posts'))->applyToScout(Product::search('lamp'));
-    }
+        $this->expectExceptionObject(InvalidInstructionException::engineOnly(PricedBetween::class));
 
-    #[Test]
-    public function it_refuses_scout_queries_unless_the_instruction_handles_them(): void
-    {
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage(HighlightPosts::class.' does not support Scout queries. Override handleScout() to support them.');
-
-        HighlightPosts::make()->handleScout([], Product::search('lamp'));
+        (new InstructionClause($this->resource(ProductResource::class), 'priced-between', [['name' => 'max', 'value' => '39']]))->apply($query);
     }
 
     /** @param class-string<Resource> $resource */

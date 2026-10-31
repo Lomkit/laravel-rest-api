@@ -19,8 +19,6 @@ class Workspace implements Fixture
     {
         Route::prefix('api')->group(function (): void {
             Rest::resource('team-notes', TeamNoteController::class);
-            Rest::resource('sql-only-team-notes', SqlOnlyTeamNoteController::class);
-            Rest::resource('wide-index-team-notes', WideIndexTeamNoteController::class);
         });
     }
 }

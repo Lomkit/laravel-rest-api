@@ -4,9 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Search;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Testing\TestResponse;
-use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
-use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
-use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
@@ -29,7 +26,7 @@ class InstructionsTest extends PackageTestCase
     #[\Override]
     protected function fixtures(): array
     {
-        return [new Publishing, new Catalog];
+        return [new Publishing];
     }
 
     #[Test]
@@ -109,28 +106,6 @@ class InstructionsTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_passes_the_cast_and_defaulted_values_to_a_scout_instruction(): void
-    {
-        $lighting = Category::factory()->create(['name' => 'Lighting']);
-        $deskLamp = Product::factory()->for($lighting)->create(['name' => 'Desk lamp', 'price' => 39]);
-        $floorLamp = Product::factory()->for($lighting)->create(['name' => 'Floor lamp', 'price' => 129]);
-        Product::factory()->for($lighting)->create(['name' => 'Arc lamp', 'price' => 300]);
-
-        $response = $this->postJson('/api/products/search', [
-            'search' => [
-                'text' => ['value' => 'lamp'],
-                'instructions' => [['name' => 'priced-between', 'fields' => [['name' => 'max', 'value' => '129']]]],
-            ],
-        ]);
-
-        $response->assertOk()->assertJsonPath('data', [
-            ['id' => $floorLamp->id, 'category_id' => $lighting->id, 'name' => 'Floor lamp', 'price' => 129],
-            ['id' => $deskLamp->id, 'category_id' => $lighting->id, 'name' => 'Desk lamp', 'price' => 39],
-        ]);
-        $this->assertSame([['handleScout', ['min' => 0, 'max' => 129]]], $this->received->calls());
-    }
-
-    #[Test]
     public function it_describes_the_instruction_fields_in_the_details(): void
     {
         $response = $this->getJson('/api/posts');
@@ -144,6 +119,7 @@ class InstructionsTest extends PackageTestCase
                     ['name' => 'min_views', 'type' => 'integer', 'nullable' => true, 'default' => null, 'rules' => ['nullable', 'integer'], 'meta' => []],
                 ],
                 'meta' => ['group' => 'ranking'],
+                'text' => false,
             ],
             [
                 'name' => 'In Status',
@@ -153,6 +129,7 @@ class InstructionsTest extends PackageTestCase
                     ['name' => 'since', 'type' => 'date', 'nullable' => false, 'default' => null, 'rules' => ['date', 'required_if:status,published'], 'meta' => []],
                 ],
                 'meta' => [],
+                'text' => false,
             ],
         ]);
     }

@@ -8,14 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Laravel\Scout\Searchable;
 
 #[Unguarded]
 #[UsePolicy(TicketPolicy::class)]
 class Ticket extends Model
 {
-    use Searchable;
-
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
@@ -29,11 +26,5 @@ class Ticket extends Model
     public function labels(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'labelable')->withPivot('position', 'weight', 'added_by', 'note', 'created_at');
-    }
-
-    /** @return array<string, mixed> */
-    public function toSearchableArray(): array
-    {
-        return ['title' => $this->title];
     }
 }

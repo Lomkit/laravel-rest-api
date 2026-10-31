@@ -37,16 +37,6 @@ class ResourceModelTest extends TestCase
         $resource::newModel();
     }
 
-    #[Test]
-    public function it_names_the_resource_without_a_model_when_it_checks_whether_the_model_is_searchable(): void
-    {
-        $resource = new class extends Resource {};
-
-        $this->expectExceptionObject($this->missingModel($resource));
-
-        $resource->isModelSearchable();
-    }
-
     private function missingModel(Resource $resource): InvalidResourceException
     {
         return new InvalidResourceException(

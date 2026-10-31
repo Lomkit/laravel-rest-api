@@ -17,7 +17,7 @@
     "dedoc/scramble": "^0.13",
     "larastan/larastan": "^3.13",
     "laravel/pint": "^1.32",
-    "laravel/scout": "^11.0",
+    "laravel/scout": "^11.9",
     "orchestra/testbench": "^11.0",
     "phpstan/phpstan-deprecation-rules": "^2.0",
     "phpunit/phpunit": "^12.0 || ^13.0",
@@ -25,10 +25,11 @@
   },
   "suggest": {
     "dedoc/scramble": "Documents the API in OpenAPI through the package's Scramble extension.",
-    "laravel/scout": "Required to use full-text search (search.text) on searchable models."
+    "laravel/scout": "Runs text searches on a search engine through the ScoutEngine text strategy."
   },
   "conflict": {
-    "dedoc/scramble": "<0.13 || >=0.14"
+    "dedoc/scramble": "<0.13 || >=0.14",
+    "laravel/scout": "<11.9.0"
   },
   "autoload": {
     "psr-4": {

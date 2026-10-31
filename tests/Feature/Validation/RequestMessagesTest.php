@@ -57,8 +57,8 @@ class RequestMessagesTest extends PackageTestCase
         ]);
 
         $response->assertUnprocessable()->assertExactJson([
-            'message' => 'Text search is not available for actions.',
-            'errors' => ['search.text' => ['Text search is not available for actions.']],
+            'message' => 'Text search is not available on this resource.',
+            'errors' => ['search.text' => ['Text search is not available on this resource.']],
         ]);
     }
 }

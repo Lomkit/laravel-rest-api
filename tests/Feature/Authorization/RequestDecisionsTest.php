@@ -22,18 +22,6 @@ class RequestDecisionsTest extends HelpdeskTestCase
     ]];
 
     #[Test]
-    public function it_checks_view_any_once_for_a_text_search(): void
-    {
-        $this->seedTickets();
-
-        $this->postJson('/api/tickets/search', ['search' => ['text' => ['value' => 'Printer']]])
-            ->assertOk()
-            ->assertJsonPath('total', 2);
-
-        $this->assertSame(['viewAny'], $this->tickets->calls);
-    }
-
-    #[Test]
     public function it_checks_each_distinct_gate_of_repeated_included_rows_once(): void
     {
         ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
