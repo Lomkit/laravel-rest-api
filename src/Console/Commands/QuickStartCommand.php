@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Console\Concerns\FindsAvailableModels;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Process;
@@ -44,6 +45,12 @@ class QuickStartCommand extends Command
 
     public function handle(Filesystem $files, Gate $gate, Router $router): int
     {
+        if ($this->laravel instanceof CachesRoutes && $this->laravel->routesAreCached()) {
+            $this->components->error('Routes are cached. Run php artisan route:clear, then run this command again.');
+
+            return self::FAILURE;
+        }
+
         $app = AppNamespace::of($this->laravel);
         $user = UserModel::configured($this->laravel->make(Repository::class), $app->root);
         $routes = new ApiRoutes($files, $this->laravel->basePath());
