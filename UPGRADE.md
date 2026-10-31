@@ -590,8 +590,8 @@ Query builder and custom relations:
 
 - `Lomkit\Rest\Query\Builder::filter()` is removed. `applyFilters(array $filters)` keeps its signature and applies the filters as one group of clauses (`Lomkit\Rest\Query\Clauses\FilterGroupClause`, with a `FieldConditionClause` or a `RelationConditionClause` per filter), which call `Field::filter()`. A filter passed to `search()` or `applyFilters()` must name a filterable field, or a path to one, with an operator of that field: another field or operator throws `Lomkit\Rest\Exceptions\InvalidFieldException`. `Lomkit\Rest\Query\ScoutBuilder::filter()` does not change.
 - `Relation::filter()` and the `Lomkit\Rest\Contracts\RelationResource` interface are removed. Remove `implements RelationResource` from your custom relations: an override of `filter()` is no longer called, and a filter through the relation uses `has()` on the Eloquent relation of the same name.
-- `Resource::isNestedField()` and the `Lomkit\Rest\Rules\Resource\ResourceFieldOrNested` rule are removed. `Lomkit\Rest\Fields\FieldPath::resolve($resource, 'author.first_name')` returns the relations, the field and the resource of a filter path, or `null` when the path does not reach a filterable field.
-- The `relation_without_pivot()` helper is removed, and the package no longer autoloads a file of global functions.
+- `Resource::isNestedField()`, the `Lomkit\Rest\Rules\Resource\ResourceFieldOrNested` rule and the `relation_without_pivot()` helper are removed, with no public replacement: filters, includes and aggregates validate their dotted paths themselves.
+- The package no longer autoloads a file of global functions.
 
 Scramble:
 
