@@ -15,6 +15,7 @@ return new class extends Migration
             $table->json('samples')->nullable();
             $table->json('limits')->nullable();
             $table->json('notes')->nullable();
+            $table->json('transcript')->nullable();
         });
     }
 };

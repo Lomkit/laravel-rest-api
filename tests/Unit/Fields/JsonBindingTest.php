@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Stringable;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Tests\Fixtures\Lab\EncodedJson;
 use Lomkit\Rest\Tests\Fixtures\Lab\Instrument;
@@ -29,9 +30,11 @@ class JsonBindingTest extends TestCase
     {
         $field = Json::make('specs');
         $field->bind($this->modelCasting($cast));
+        $stringable = new Stringable('{"ram":8}');
 
         $this->assertSame(['ram' => 8], $field->toStorage(['ram' => 8]));
         $this->assertSame('{"ram":8}', $field->fromStorage('{"ram":8}'));
+        $this->assertSame($stringable, $field->fromStorage($stringable));
     }
 
     /** @return array<string, array{string}> */
@@ -73,6 +76,15 @@ class JsonBindingTest extends TestCase
             'encrypted string' => ['encrypted'],
             'stringable class' => [AsStringable::class],
         ];
+    }
+
+    #[Test]
+    public function it_decodes_the_stringable_value_that_a_stringable_cast_of_the_bound_model_returns(): void
+    {
+        $field = Json::make('specs');
+        $field->bind($this->modelCasting(AsStringable::class));
+
+        $this->assertSame(['ram' => 8, 'ports' => ['usb']], $field->fromStorage(new Stringable('{"ram":8,"ports":["usb"]}')));
     }
 
     #[Test]

@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Fields;
 
 use Illuminate\Database\Eloquent\Casts\AsStringable;
 use Illuminate\Database\Eloquent\Model;
+use Stringable;
 
 class Json extends Field
 {
@@ -32,11 +33,11 @@ class Json extends Field
     #[\Override]
     public function fromStorage(mixed $value): mixed
     {
-        if (! $this->encodes || ! is_string($value)) {
+        if (! $this->encodes || ! (is_string($value) || $value instanceof Stringable)) {
             return $value;
         }
 
-        return json_decode($value, true);
+        return json_decode((string) $value, true);
     }
 
     #[\Override]

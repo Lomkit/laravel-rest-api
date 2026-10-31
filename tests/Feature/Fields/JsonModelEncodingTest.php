@@ -37,6 +37,7 @@ class JsonModelEncodingTest extends PackageTestCase
             'samples' => null,
             'limits' => null,
             'notes' => null,
+            'transcript' => null,
             $column => $value,
         ]]);
     }
@@ -51,6 +52,28 @@ class JsonModelEncodingTest extends PackageTestCase
 
         $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$logger->id]]);
         $this->assertSame($value, $this->stored($column));
+    }
+
+    #[Test]
+    public function it_encodes_and_decodes_the_value_of_a_column_that_a_stringable_cast_of_the_model_stores_as_it_is(): void
+    {
+        $response = $this->mutate(['operation' => 'create', 'attributes' => ['name' => 'Logger', 'transcript' => ['lines' => 2, 'speaker' => 'Ada']]]);
+
+        $logger = Recorder::sole();
+        $response->assertOk()->assertExactJson(['created' => [$logger->id], 'updated' => []]);
+        $this->assertSame(['lines' => 2, 'speaker' => 'Ada'], $this->stored('transcript'));
+
+        $search = $this->postJson('/api/recorders/search');
+
+        $search->assertOk()->assertJsonPath('data', [[
+            'id' => $logger->id,
+            'name' => 'Logger',
+            'profile' => null,
+            'samples' => null,
+            'limits' => null,
+            'notes' => null,
+            'transcript' => ['lines' => 2, 'speaker' => 'Ada'],
+        ]]);
     }
 
     /** @return array<string, array{string, array<mixed>}> */
