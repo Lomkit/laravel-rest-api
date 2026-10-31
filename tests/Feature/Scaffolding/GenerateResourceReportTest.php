@@ -77,6 +77,51 @@ class GenerateResourceReportTest extends ScaffoldingTestCase
     }
 
     #[Test]
+    public function it_reports_each_declared_pivot_column_that_the_pivot_table_lacks(): void
+    {
+        $this->writeModel('App\Models\Athlete');
+        $this->writeModel('App\Models\Squad', implode("\n\n    ", [
+            'public function athletes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany { return $this->belongsToMany(Athlete::class)->withPivot("position", "rank", "created_at")->withTimestamps(); }',
+            'public function coaches(): \Illuminate\Database\Eloquent\Relations\BelongsToMany { return $this->belongsToMany(Athlete::class, "squad_coaches")->withPivot("since"); }',
+        ]));
+        Schema::create('athletes', function (Blueprint $table): void {
+            $table->id();
+        });
+        Schema::create('squads', function (Blueprint $table): void {
+            $table->id();
+        });
+        Schema::create('athlete_squad', function (Blueprint $table): void {
+            $table->foreignId('athlete_id')->constrained();
+            $table->foreignId('squad_id')->constrained();
+            $table->unsignedInteger('position')->nullable();
+        });
+        Schema::create('squad_coaches', function (Blueprint $table): void {
+            $table->foreignId('athlete_id')->constrained();
+            $table->foreignId('squad_id')->constrained();
+        });
+        $this->artisan('rest:resource', ['name' => 'AthleteResource', '--model' => 'Athlete', '--no-interaction' => true])->assertSuccessful();
+
+        $exitCode = Artisan::call('rest:resource', ['name' => 'SquadResource', '--model' => 'Squad', '--generate' => true, '--no-interaction' => true], $output = new BufferedOutput);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertMatchesRegularExpression(
+            '/^  SquadResource \.+ 1 field, 2 relations\s*\n'
+            .'  Note: athletes\.pivot\.rank: no such column in the athlete_squad pivot table, left out\.\n'
+            .'  Note: athletes\.pivot\.created_at: no such column in the athlete_squad pivot table, left out\.\n'
+            .'  Note: athletes\.pivot\.updated_at: no such column in the athlete_squad pivot table, left out\.\n'
+            .'  Note: coaches\.pivot\.since: no such column in the squad_coaches pivot table, left out\.\n$/m',
+            $output->fetch(),
+        );
+        $this->assertStringContainsString(
+            "            BelongsToMany::make('athletes', AthleteResource::class)->pivotFields([\n"
+            ."                Integer::make('position')->nullable(),\n"
+            ."            ]),\n"
+            ."            BelongsToMany::make('coaches', AthleteResource::class),\n",
+            (string) file_get_contents(app_path('Rest/Resources/SquadResource.php')),
+        );
+    }
+
+    #[Test]
     public function it_reports_a_morph_to_relation_as_skipped(): void
     {
         $this->artisan('rest:resource', ['name' => 'SkippedPhotoResource', '--model' => Photo::class, '--generate' => true, '--no-interaction' => true])
