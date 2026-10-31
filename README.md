@@ -26,12 +26,12 @@ Here is a quick look at what you can do using API search method:
         ],
         "filters": [
             {
-                "field": "id", "operator": ">", "value": 1, "type": "or"
+                "field": "views", "operator": ">", "value": 1, "type": "or"
             },
             {
                 "nested": [
-                    {"field": "user.posts.id", "operator": "<", "value": 2},
-                    {"field": "user.id", "operator": ">", "value": 3, "type": "or"}
+                    {"field": "user.posts.views", "operator": "<", "value": 2},
+                    {"field": "user.name", "operator": "like", "value": "Ada%", "type": "or"}
                 ]
             }
         ],

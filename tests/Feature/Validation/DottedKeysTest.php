@@ -38,16 +38,16 @@ class DottedKeysTest extends PackageTestCase
 
         return [
             'a filter' => [['filters' => ['a.b' => $undeclared]], [
-                'search.filters.a.b.field' => ["The 'field' field is not valid."],
+                'search.filters.a.b.field' => ['The selected search.filters.a.b.field is invalid.'],
             ]],
             'a filter whose key ends with a dot' => [['filters' => ['a.' => $undeclared]], [
-                'search.filters.a..field' => ["The 'field' field is not valid."],
+                'search.filters.a..field' => ['The selected search.filters.a..field is invalid.'],
             ]],
             'a nested filter' => [['filters' => [['nested' => ['a.b' => $undeclared]]]], [
-                'search.filters.0.nested.a.b.field' => ["The 'field' field is not valid."],
+                'search.filters.0.nested.a.b.field' => ['The selected search.filters.0.nested.a.b.field is invalid.'],
             ]],
             'a filter of an include' => [['includes' => [['relation' => 'category', 'filters' => ['a.b' => $undeclared]]]], [
-                'search.includes.0.filters.a.b.field' => ["The 'field' field is not valid."],
+                'search.includes.0.filters.a.b.field' => ['The selected search.includes.0.filters.a.b.field is invalid.'],
             ]],
             'a select' => [['selects' => ['a.b' => ['field' => 'created_at']]], [
                 'search.selects.a.b.field' => ['The selected search.selects.a.b.field is invalid.'],

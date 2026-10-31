@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\RequestLifecycle;
 
 use Illuminate\Http\Request;
+use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
@@ -79,8 +80,28 @@ class RestContextTest extends PackageTestCase
         $staff = $this->contextFor(User::factory()->staff()->make())->resource(StaffProductResource::class);
         $customer = $this->contextFor(User::factory()->make())->resource(StaffProductResource::class);
 
-        $this->assertTrue($staff->isNestedField('price'));
-        $this->assertFalse($customer->isNestedField('price'));
+        $this->assertNotNull(FieldPath::resolve($staff, 'price'));
+        $this->assertNull(FieldPath::resolve($customer, 'price'));
+    }
+
+    #[Test]
+    public function it_reads_the_filter_nesting_depth_once_per_request(): void
+    {
+        config(['rest.search.max_nesting_depth' => 3]);
+        $context = $this->contextFor(null);
+
+        $first = $context->maxNestingDepth();
+        config(['rest.search.max_nesting_depth' => 5]);
+
+        $this->assertSame([3, 3, 5], [$first, $context->maxNestingDepth(), $this->contextFor(null)->maxNestingDepth()]);
+    }
+
+    #[Test]
+    public function it_reads_a_filter_nesting_depth_given_as_a_numeric_string(): void
+    {
+        config(['rest.search.max_nesting_depth' => '2']);
+
+        $this->assertSame(2, $this->contextFor(null)->maxNestingDepth());
     }
 
     private function contextFor(?User $user): RestContext

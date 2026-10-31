@@ -52,7 +52,7 @@ class PivotFieldsTest extends WeightedPivotTestCase
 
         $declared->assertOk()->assertJsonPath('data.*.id', [$this->parent($relation)->getKey()]);
         $undeclared->assertUnprocessable()->assertJsonPath('errors', [
-            'search.filters.0.field' => ["The 'field' field is not valid."],
+            'search.filters.0.field' => ['The selected search.filters.0.field is invalid.'],
         ]);
     }
 

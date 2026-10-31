@@ -2,28 +2,21 @@
 
 namespace Lomkit\Rest\Rules\Search;
 
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Fields\FieldPath;
+use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Rules\Concerns\DependsOnTextSearch;
-use Lomkit\Rest\Rules\Concerns\ReachesRelations;
 use Lomkit\Rest\Rules\OneOf;
-use Lomkit\Rest\Rules\Resource\ResourceFieldOrNested;
 use Lomkit\Rest\Rules\RestRule;
 use Lomkit\Rest\Validation\RuleCompiler;
 
 class SearchFilter extends RestRule
 {
     use DependsOnTextSearch;
-    use ReachesRelations;
 
-    /**
-     * How many levels of nesting this filter already sits under.
-     */
     protected int $depth = 0;
 
-    /**
-     * Set the nesting level this filter sits at.
-     */
     public function setDepth(int $depth): static
     {
         $this->depth = $depth;
@@ -34,64 +27,91 @@ class SearchFilter extends RestRule
     #[\Override]
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
     {
-        $field = is_array($value) ? ($value['field'] ?? null) : null;
+        $field = self::field($value);
+        $relations = $this->textSearch || $field === null ? [] : FieldPath::relationsAlong($this->resource, $field);
 
-        if (! $this->textSearch && is_string($field) && str_contains($field, '.')) {
-            $this->reachRelation($into, Str::beforeLast($field, '.'), $attribute);
+        foreach ($relations as $relation) {
+            $into->reach(Check::onClass($relation->resource(), 'viewAny', $attribute));
         }
 
         parent::compile($into, $attribute, $value);
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<string, list<mixed>> */
     #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
-        $request = $this->resource->context()->request;
+        if ($this->textSearch) {
+            return $this->textSearchRules($attribute);
+        }
 
-        $fieldsValidation = $this->textSearch ?
-            new OneOf($this->resource->getScoutFields($request)) :
-            (new ResourceFieldOrNested)->setResource($this->resource);
+        $field = self::field($value);
+        $path = $field === null ? null : FieldPath::resolve($this->resource, $field);
+        $operator = is_array($value) ? ($value['operator'] ?? FilterOperator::Equal->value) : null;
 
-        $allowedOperators = $this->textSearch ?
-            ['=', 'in', 'not in'] :
-            ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'in', 'not in'];
+        return [
+            $attribute.'.field' => ['string', 'required_without:'.$attribute.'.nested', new OneOf($path === null ? [] : [$field])],
+            $attribute.'.nested' => $this->depth < $this->resource->context()->maxNestingDepth()
+                ? ['sometimes', 'prohibits:'.$attribute.'.field,'.$attribute.'.operator,'.$attribute.'.value', 'array']
+                : ['prohibited'],
+            $attribute.'.nested.*' => [(new SearchFilter)
+                ->setResource($this->resource)
+                ->setDepth($this->depth + 1)],
+            $attribute.'.operator' => $this->operatorRules($path),
+            $attribute.'.type' => ['sometimes', Rule::in(['or', 'and'])],
+            ...$this->valueRules($attribute.'.value', $path, $operator),
+        ];
+    }
 
-        $nestingAllowed = ! $this->textSearch && $this->depth < config('rest.search.max_nesting_depth', 1);
+    private static function field(mixed $value): ?string
+    {
+        $field = is_array($value) ? ($value['field'] ?? null) : null;
 
+        return is_string($field) ? $field : null;
+    }
+
+    /** @return list<mixed> */
+    private function operatorRules(?FieldPath $path): array
+    {
+        if ($path === null) {
+            return ['string', Rule::enum(FilterOperator::class)];
+        }
+
+        $operators = $path->field->filterOperators();
+        $required = in_array(FilterOperator::Equal, $operators, true) ? [] : ['required'];
+
+        return [...$required, 'string', Rule::enum(FilterOperator::class)->only($operators)];
+    }
+
+    /** @return array<string, list<mixed>> */
+    private function valueRules(string $attribute, ?FieldPath $path, mixed $operator): array
+    {
+        $operator = is_string($operator) ? FilterOperator::tryFrom($operator) : null;
+
+        if ($path === null || $operator === null || ! in_array($operator, $path->field->filterOperators(), true)) {
+            return [];
+        }
+
+        return $path->field->filterValueRules($operator, $attribute);
+    }
+
+    /** @return array<string, list<mixed>> */
+    private function textSearchRules(string $attribute): array
+    {
         return [
             $attribute.'.field' => [
                 'string',
                 'required_without:'.$attribute.'.nested',
-                $fieldsValidation,
+                new OneOf($this->resource->getScoutFields($this->resource->context()->request)),
             ],
-            $attribute.'.nested' => $nestingAllowed ? [
-                'sometimes',
-                'prohibits:'.$attribute.'.field,'.$attribute.'.operator,'.$attribute.'.value',
-                'array',
-            ] : [
-                'prohibited',
-            ],
-            $attribute.'.nested.*' => [
-                (new SearchFilter)
-                    ->setResource($this->resource)
-                    ->setDepth($this->depth + 1)
-                    ->forTextSearch($this->textSearch),
-            ],
-            $attribute.'.operator' => [
-                'string',
-                Rule::in($allowedOperators),
-            ],
-            $attribute.'.type' => ! $this->textSearch ? [
-                'sometimes',
-                Rule::in(['or', 'and']),
-            ] : [
-                'prohibited',
-            ],
-            $attribute.'.value' => [
-                'exclude_if:'.$attribute.'.value,null',
-                'required_without:'.$attribute.'.nested',
-            ],
+            $attribute.'.nested' => ['prohibited'],
+            $attribute.'.nested.*' => [(new SearchFilter)
+                ->setResource($this->resource)
+                ->setDepth($this->depth + 1)
+                ->forTextSearch()],
+            $attribute.'.operator' => ['string', Rule::in(['=', 'in', 'not in'])],
+            $attribute.'.type' => ['prohibited'],
+            $attribute.'.value' => ['exclude_if:'.$attribute.'.value,null', 'required_without:'.$attribute.'.nested'],
         ];
     }
 }

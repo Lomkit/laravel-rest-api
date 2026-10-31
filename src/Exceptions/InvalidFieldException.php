@@ -67,6 +67,11 @@ final class InvalidFieldException extends LogicException
         return new self("The field [{$field}] does not support the operator [{$operator}].");
     }
 
+    public static function notFilterable(string $field): self
+    {
+        return new self("The field [{$field}] is not filterable.");
+    }
+
     public static function notSortable(string $field): self
     {
         return new self("The field [{$field}] is not sortable.");

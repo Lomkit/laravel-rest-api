@@ -7,10 +7,9 @@ use InvalidArgumentException;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
 use Lomkit\Rest\Concerns\Relations\PerformsRelationOperations;
 use Lomkit\Rest\Contracts\PivotRelation;
-use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
 
-class MorphToMany extends MorphRelation implements PivotRelation, RelationResource
+class MorphToMany extends MorphRelation implements PivotRelation
 {
     use HasMultipleResults;
     use HasPivotFields;

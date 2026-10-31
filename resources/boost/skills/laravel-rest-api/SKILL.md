@@ -118,18 +118,25 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
   use Illuminate\Contracts\Database\Eloquent\Builder;
 
   ID::make('id')->sortable(false),                     // returned, 422 in sorts and aggregates
-  Text::make('api_token')->writeOnly(),                // never returned, 422 in selects, sorts and aggregates
+  Text::make('api_token')->writeOnly(),                // never returned, 422 in selects, sorts, filters and aggregates
   DateTime::make('created_at')->selectable(false),     // not returned, 422 in selects, sortable
-  Json::make('settings'),                              // returned, 422 in sorts, min/max/avg/sum
+  Json::make('settings'),                              // returned, 422 in sorts, filters, min/max/avg/sum
+  Text::make('summary')->nullable(),                   // the Text operators, plus is null and is not null
+  Text::make('slug')->filterable(false),               // 422 in filters
   Text::make('full_name')
       ->virtual()                                      // not returned, 422 in selects and aggregates
       ->sortUsing(fn (Builder $query, string $direction) => $query
           ->orderBy('last_name', $direction)
-          ->orderBy('first_name', $direction)),
+          ->orderBy('first_name', $direction))
+      ->filterable(['=', 'like'])                      // these operators only
+      ->filterUsing(fn (Builder $query, string $operator, mixed $value) => $query
+          ->where('first_name', $operator, $value)
+          ->orWhere('last_name', $operator, $value)),
   ```
 
   - Selectable fields (not `writeOnly()`, not `selectable(false)`, not `virtual()`) are the only ones `selects` accepts and the ones a row returns without `selects`, at every include level. Virtual fields cannot be selected yet; `requires()` has no effect yet.
   - Sortable fields are the only ones `sorts` accepts: `Json`, `sortable(false)`, `writeOnly()` fields and `virtual()` fields without `sortUsing()` are refused. `sortUsing()` replaces the column order of its field (and makes a virtual or write-only field sortable); its callback receives the Eloquent query, on an include as well, and `asc` or `desc`. The other fields order by their qualified column (`posts.views`).
+  - Filterable fields are the only ones `filters` accepts: `Json`, `filterable(false)` fields, and `virtual()` or `writeOnly()` fields without `filterUsing()` are refused (`The selected search.filters.0.field is invalid.`). The operators come from the field type, `nullable()` adds `is null` and `is not null`, and `filterable([...])` narrows them (an operator the type does not have throws `InvalidFieldException`). `filterUsing()`, a closure or a `Lomkit\Rest\Contracts\Filter` object, replaces the column condition of its field, also at the end of a relation path (`author.full_name`): it receives the Eloquent query, the operator as a string and the value as sent, and its conditions stay in their own group. The other fields compare their qualified column (`posts.views`, or the pivot table for a pivot field).
 
   How a mutation writes a field depends on its declaration too (see the `mutate` payload below):
 
@@ -312,10 +319,10 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
     "text":   {"value": "needle"},
     "scopes": [{"name": "publishedSince", "parameters": ["2026-01-01"]}],
     "filters": [
-      {"field": "id", "operator": ">", "value": 1, "type": "or"},
+      {"field": "id", "operator": "in", "value": [1, 2], "type": "or"},
       {"nested": [
-        {"field": "user.posts.id", "operator": "<", "value": 2},
-        {"field": "user.id", "operator": ">", "value": 3, "type": "or"}
+        {"field": "posts.views", "operator": ">", "value": 2},
+        {"field": "name", "operator": "like", "value": "Ada%", "type": "or"}
       ]}
     ],
     "sorts":   [{"field": "user_id", "direction": "desc"}],
@@ -342,8 +349,10 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
 }
 ```
 
-**Filter operators**: `=`, `!=`, `>`, `>=`, `<`, `<=`, `like`, `not like`, `in`, `not in`.
-**Filter `type`**: `and` (default) or `or`. Use `nested` to group filters with their own logical operator. `field` may traverse declared relations and pivot data (`user.posts.id`, `languages.pivot.boolean`).
+**Filter `field`** must reach a filterable field: a field of the resource, a dotted path through declared relations checked on the resource at its end (`posts.comments.body`), or a filterable pivot field right after a `BelongsToMany`, `MorphToMany` or `MorphedByMany` relation (`roles.pivot.expires_at`). Through a `MorphTo` relation (`commentable.title`), the field is read on the declared target resource, and only the rows of that target's type match: other stored types never match nor fail. The `searchQuery()` of the resource at the end of a relation path, and of the declared target of each `MorphTo` relation on it, applies to the related rows, in its own group, and each resource on the path needs `viewAny`. Another field is a `422` under `search.filters.{index}.field`.
+**Filter `operator`** depends on the field type (`Lomkit\Rest\Fields\Filtering\FilterOperator`): `ID` and `Enum` take `=`, `!=`, `in`, `not in`; `Text` takes `=`, `!=`, `like`, `not like`, `ilike`, `not ilike`, `in`, `not in`; `Number` and `Integer` take `=`, `!=`, `>`, `>=`, `<`, `<=`, `between`, `not between`, `in`, `not in`; `Boolean` takes `=`, `!=`; `Date` and `DateTime` take `=`, `!=`, `>`, `>=`, `<`, `<=`, `between`, `not between`; `Json` takes none. `nullable()` adds `is null` and `is not null`, and `filterable([...])` narrows the list. Without `operator` a filter uses `=`, and `operator` is required on a field that does not accept `=`. Another operator is a `422` under `search.filters.{index}.operator`.
+**Filter `value`** is validated per operator: a value of the field type for `=`, `!=`, `>`, `>=`, `<`, `<=`; a string for `like`, `not like`, `ilike`, `not ilike`; a non-empty list for `in` and `not in`; exactly two values for `between` and `not between`; no value for `is null` and `is not null`. `=` or `!=` with `null` is a `422`: use `is null` or `is not null`. `like` is case-sensitive on PostgreSQL, follows the column collation on MySQL and ignores the case of ASCII letters on SQLite; `ilike` ignores case, except on MySQL columns with a binary or case-sensitive collation, and only for ASCII letters on SQLite.
+**Filter `type`**: `and` (default) or `or`. Use `nested` to group filters with their own logical operator, up to `rest.search.max_nesting_depth` levels (default `1`). With `text`, filters accept the `scoutFields()` with `=`, `in` and `not in`, without `nested` or `type`.
 **Scope `parameters`** is a positional list: each value binds to the scope field at the same position, is validated by its rules, cast to its type and filled from its `default()`. A position is required unless its field has a default; a missing, extra or wrongly typed parameter is a `422` under `search.scopes.{index}.parameters`. A rule that names another field of the same scope, such as `gte:min`, compares with the parameter at that field's position. Scopes are prohibited with `text` (Scout).
 **`selects`** lists the selectable fields to return (`writeOnly()`, `selectable(false)` and `virtual()` fields are a `422` under `search.selects.{index}.field`); without it a row holds every selectable field of its resource. Include `selects` use the related resource's fields.
 **`sorts`** apply in order and accept the sortable fields only (`Json`, `sortable(false)`, `writeOnly()` and `virtual()` fields without `sortUsing()` are a `422` under `search.sorts.{index}.field`). `direction` is `asc` or `desc` (`Lomkit\Rest\Fields\SortDirection`), `asc` when omitted. Without `sorts`, `defaultOrderBy()` applies. With `text`, sorts accept the `scoutFields()`.
@@ -569,7 +578,7 @@ public function relations(RestRequest $request): array
 
 Mutation constraints (chainable, may take a closure for conditional logic): `requiredOnCreation()`, `prohibitedOnCreation()`, `requiredOnUpdate()`, `prohibitedOnUpdate()`.
 
-Many-to-many relations (`BelongsToMany`, `MorphToMany`, `MorphedByMany`) declare their pivot columns with typed `Field` objects in `pivotFields([...])` (`withPivotFields()` and `withPivotRules()` are gone; strings and duplicate names throw `InvalidFieldException`). Each pivot field is a column of the pivot table, written as sent: a `virtual()` pivot field or one with `fillUsing()` throws `InvalidFieldException`. `getPivotFields()` returns a `FieldSet` bound to the pivot class of the Eloquent relation (the `using()` class or `Pivot`), so an `Enum` pivot field reads the pivot casts. The pivot fields decide what `pivot` accepts on each operation (see the `mutate` payload) and what the `pivot` of an included row returns: the selectable pivot fields only, never `writeOnly()` or `selectable(false)` ones. Filters on `{relation}.pivot.{key}` accept any declared pivot field. A custom relation with pivot fields implements `Lomkit\Rest\Contracts\PivotRelation` (the `HasPivotFields` trait does).
+Many-to-many relations (`BelongsToMany`, `MorphToMany`, `MorphedByMany`) declare their pivot columns with typed `Field` objects in `pivotFields([...])` (`withPivotFields()` and `withPivotRules()` are gone; strings and duplicate names throw `InvalidFieldException`). Each pivot field is a column of the pivot table, written as sent: a `virtual()` pivot field or one with `fillUsing()` throws `InvalidFieldException`. `getPivotFields()` returns a `FieldSet` bound to the pivot class of the Eloquent relation (the `using()` class or `Pivot`), so an `Enum` pivot field reads the pivot casts. The pivot fields decide what `pivot` accepts on each operation (see the `mutate` payload) and what the `pivot` of an included row returns: the selectable pivot fields only, never `writeOnly()` or `selectable(false)` ones. Filters on `{relation}.pivot.{key}` accept the filterable pivot fields only (not `writeOnly()` or `filterable(false)`), with the operators and values of their type. A custom relation with pivot fields implements `Lomkit\Rest\Contracts\PivotRelation` (the `HasPivotFields` trait does).
 
 ## Delete / restore / force
 
@@ -651,7 +660,7 @@ composer require dedoc/scramble:^0.13
 
 The package registers the extension itself: `config/scramble.php` needs no change.
 
-Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`. Relations come from the relation objects of `relations()` (their class name, `mutationOperations()` and number of entries), and the `pivot` of a many-to-many entry lists the writable pivot fields with their rules for `create` and `attach`, then `update`, `sync` and `toggle`.
+Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The search `filters` list the filterable fields (dotted paths are not listed) and every `FilterOperator`. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`. Relations come from the relation objects of `relations()` (their class name, `mutationOperations()` and number of entries), and the `pivot` of a many-to-many entry lists the writable pivot fields with their rules for `create` and `attach`, then `update`, `sync` and `toggle`.
 
 ## Precognition
 
@@ -679,6 +688,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - **Don't bypass policies by toggling `authorizations.enabled = false`** — write the policy. The package's threat model assumes it's on, including `viewAny`, `replicate`, and `attach{Model}`/`detach{Model}`.
 - **`mutate` is one batch but per-item-authorized.** A single denied item fails the whole batch.
 - **`includes` are not recursive** — they accept `filters`/`sorts`/`scopes`/`limit`/`selects` but not nested `includes`. To go deeper, register chained relations on the intermediate resource and add an entry per level.
+- **`=` or `!=` with `null` is a `422`.** Filter the rows without a value with `{"field": "summary", "operator": "is null"}`, on a `nullable()` field only.
 - **Action `fields` payload is an array of `{name, value}` pairs**, not an object — easy mistake: an object keyed by name is a `422`, `The fields field must be a list.` The same goes for instruction `fields`.
 - **One validator per request.** A package request compiles its rule tree (`Lomkit\Rest\Rules\RestRule` nodes) against the payload into rules on explicit keys, then validates them in one pass, so `withValidator()` and `after()` on a request subclass run once and see every error. A `RestRule` is not a Laravel rule: a custom node implements `buildValidationRules(string $attribute, mixed $value): array` and only works in the `rules()` of a package request. To adjust the validator, use `withValidator()` or override `createDefaultValidator()` and call the parent: a request that defines `validator()` must build it from `validationData()` and `validationRules()`, and loses the names the package gives to input fields. Overrides of `validationData()`, `validationRules()`, `createDefaultValidator()` and `shouldValidatePrecognitiveAttribute()` must keep the parent's return types.
 - **Scope `parameters` are positional.** They bind to the scope's fields in declared order, so reordering a scope's fields changes what clients must send. Only model local scopes run: `withTrashed`, `latest` and other Builder methods or macros cannot be called as scopes.
@@ -693,7 +703,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Authorization — `src/Authorization/*` (`Authorizer`, `Check`, `Decision`, `Denial`, `DecisionMemo` and the decision stores), `src/Concerns/Authorizable.php`, `src/Exceptions/{AuthorizationDenied,DenialsRenderer,UnplannedCheckException}.php`; the checks made before validation are collected by the rule nodes (`RuleCompiler::reach()`) and run by `RestRequest::passesAuthorization()`
 - Query layer — `src/Query/Builder.php`, `src/Query/ScoutBuilder.php`, and `src/Query/AttributeWriter.php`, which fills a model from the writable fields of a mutation
 - Actions / Instructions / Scopes — `src/Actions/{Action,Actionable}.php`, `src/Instructions/{Instruction,Instructionable}.php`, `src/Scopes/Scope.php`
-- Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `InputValues`, `MutationOperation`, `WriteRules`, `Details/InputFieldDetails`), clauses in `src/Query/Clauses/`
+- Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `FieldPath`, `InputValues`, `MutationOperation`, `WriteRules`, `Details/InputFieldDetails`), filter operators and conditions in `src/Fields/Filtering/`, clauses in `src/Query/Clauses/` (filters: `FilterGroupClause`, `FieldConditionClause`, `RelationConditionClause`)
 - Relations — `src/Relations/*.php`; pivot fields in `src/Concerns/Relations/HasPivotFields.php` (`src/Contracts/PivotRelation.php`), validated by `src/Rules/Mutate/MutatePivot.php`
 - Validation rules used to validate the request bodies — `src/Rules/{Search,Mutate,Input,Resource}/*`, compiled into one rule set per request by `src/Validation/RuleCompiler.php`
 - Scramble extension — `src/Scramble/LomkitLaravelRestApiOperationExtension.php`, with `RelationMutationType` (a relation entry), `WritableFieldsType` (writable fields per operation) and `RuleType` (the type a rule list implies)

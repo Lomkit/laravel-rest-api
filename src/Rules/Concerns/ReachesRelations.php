@@ -15,7 +15,7 @@ trait ReachesRelations
 
         $resource = $this->resource;
 
-        foreach (explode('.', relation_without_pivot($relation)) as $segment) {
+        foreach (explode('.', $relation) as $segment) {
             $resource = $resource->relation($segment)?->resource();
 
             if ($resource === null) {

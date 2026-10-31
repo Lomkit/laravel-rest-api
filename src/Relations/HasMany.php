@@ -4,10 +4,9 @@ namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
-use Lomkit\Rest\Contracts\RelationResource;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
 
-class HasMany extends Relation implements RelationResource
+class HasMany extends Relation
 {
     use HasMultipleResults;
 

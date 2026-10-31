@@ -34,8 +34,8 @@ class PrecognitionValidateOnlyTest extends PackageTestCase
         $response = $this->precognitiveSearch(['filters' => [['nested' => [['field' => 'stock', 'value' => 3]]]]], 'search');
 
         $response->assertUnprocessable()->assertExactJson([
-            'message' => "The 'field' field is not valid.",
-            'errors' => ['search.filters.0.nested.0.field' => ["The 'field' field is not valid."]],
+            'message' => 'The selected search.filters.0.nested.0.field is invalid.',
+            'errors' => ['search.filters.0.nested.0.field' => ['The selected search.filters.0.nested.0.field is invalid.']],
         ]);
     }
 

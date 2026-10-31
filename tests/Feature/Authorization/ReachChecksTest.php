@@ -83,6 +83,19 @@ class ReachChecksTest extends HelpdeskTestCase
     }
 
     #[Test]
+    public function it_refuses_an_undeclared_field_of_a_resource_the_user_cannot_list(): void
+    {
+        $this->teams->answers['viewAny'] = Response::deny('Teams are not listed.');
+        $this->logQueries();
+
+        $this->postJson('/api/tickets/search', ['search' => ['filters' => [['field' => 'team.budget', 'value' => 1]]]])
+            ->assertForbidden()
+            ->assertExactJson($this->denied('Teams are not listed.', 'search.filters.0'));
+
+        $this->assertNoQueries();
+    }
+
+    #[Test]
     public function it_refuses_a_filter_on_a_pivot_column_of_a_resource_the_user_cannot_list(): void
     {
         $this->tags->answers['viewAny'] = Response::deny('Tags are not listed.');

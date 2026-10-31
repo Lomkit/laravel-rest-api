@@ -11,8 +11,6 @@ trait Relationable
 {
     public function relation(string $name): ?Relation
     {
-        $name = relation_without_pivot($name);
-
         $isSubRelation = Str::contains($name, '.');
         $relationName = $isSubRelation ? Str::before($name, '.') : $name;
 

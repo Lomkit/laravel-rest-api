@@ -428,6 +428,88 @@ Scramble:
 
 - The search body documents the sortable fields under `sorts` and the selectable fields under `selects`, with the values of `SortDirection` and `AggregateFunction`.
 
+### Filters
+
+A filter reads its field through the field's declaration: the field decides whether it can be filtered, which operators it accepts and how its value is validated.
+
+```php
+use Illuminate\Contracts\Database\Eloquent\Builder;
+
+Integer::make('views'),                            // =, !=, >, >=, <, <=, between, not between, in, not in
+Text::make('summary')->nullable(),                 // the Text operators, plus is null and is not null
+Text::make('title')->filterable(['=', 'like']),    // = and like only
+Text::make('slug')->filterable(false),             // refused in filters
+Text::make('full_name')
+    ->virtual()
+    ->filterable(['=', 'like'])
+    ->filterUsing(fn (Builder $query, string $operator, mixed $value) => $query
+        ->where('first_name', $operator, $value)
+        ->orWhere('last_name', $operator, $value)),
+```
+
+Fields:
+
+- `filters` accepts the filterable fields only. A `Json` field, a field declared `filterable(false)`, and a `virtual()` or `writeOnly()` field without `filterUsing()` give a 422 under `search.filters.<i>.field`, as an undeclared field does. The message changes for both: `The selected search.filters.0.field is invalid.` instead of `The 'field' field is not valid.`
+- A dotted path is checked on the resource at its end: `author.first_name` needs a filterable `first_name` field on the resource of the `author` relation. A `pivot` segment is accepted only after a `BelongsToMany`, `MorphToMany` or `MorphedByMany` relation and right before the last segment, which must be a filterable pivot field of that relation: `tags.pivot.weight`. The filters of includes and aggregates are checked on the related resource the same way.
+- A field with `filterUsing()` is filtered by its callback instead of its column, also at the end of a relation path: `author.full_name` runs the callback of `full_name` on the query of the authors. The callback receives the Eloquent query, the operator as a string and the value as sent. It can also be an object that implements `Lomkit\Rest\Contracts\Filter`. A `virtual()` or `writeOnly()` field with `filterUsing()` is filterable. The conditions of the callback stay in their own group, so an `orWhere()` in it does not leave the filter.
+- The other fields are compared on their column, qualified with the table of the model, or with the pivot table of the relation for a pivot field, morph pivot tables and the table of a pivot class included.
+
+Operators:
+
+- The operators depend on the type of the field:
+
+  | Field | Operators |
+  | --- | --- |
+  | `ID`, `Enum` | `=`, `!=`, `in`, `not in` |
+  | `Text` | `=`, `!=`, `like`, `not like`, `ilike`, `not ilike`, `in`, `not in` |
+  | `Number`, `Integer` | `=`, `!=`, `>`, `>=`, `<`, `<=`, `between`, `not between`, `in`, `not in` |
+  | `Boolean` | `=`, `!=` |
+  | `Date`, `DateTime` | `=`, `!=`, `>`, `>=`, `<`, `<=`, `between`, `not between` |
+  | `Json` | none |
+
+- `is null` and `is not null` exist only on `nullable()` fields, which add them to the operators of their type.
+- `ilike`, `not ilike`, `between`, `not between`, `is null` and `is not null` are new. The operators are the cases of `Lomkit\Rest\Fields\Filtering\FilterOperator`.
+- `filterable([...])` narrows the operators of a field to the listed ones. Each one must be an operator of the field: `Boolean::make('featured')->filterable(['>'])` throws `Lomkit\Rest\Exceptions\InvalidFieldException` when the operators of the field are read.
+- An operator that the field does not accept gives a 422 under `search.filters.<i>.operator`: `The selected search.filters.0.operator is invalid.` Before, every field accepted `=`, `!=`, `>`, `>=`, `<`, `<=`, `like`, `not like`, `in` and `not in`.
+- A filter without `operator` still compares with `=`. On a field that does not accept `=`, such as `filterable(['like'])`, `operator` is required.
+
+Values:
+
+- The value is validated for the operator and the type of the field, under `search.filters.<i>.value`, or `search.filters.<i>.value.<n>` for an entry of a list:
+  - `=`, `!=`, `>`, `>=`, `<` and `<=` need a value of the field's type: a string for `Text`, an integer for `Integer`, a number for `Number`, a boolean for `Boolean`, a date for `Date` and `DateTime`, a value of the enum for `Enum`, and a key of the model's key type for `ID`.
+  - `like`, `not like`, `ilike` and `not ilike` need a string.
+  - `in` and `not in` need a list of at least one value, and `between` and `not between` a list of exactly two values, each of the field's type.
+  - `is null` and `is not null` refuse a value.
+- `=` and `!=` with `null` give a 422 under `search.filters.<i>.value`. Before, `=` with `null` matched the rows without a value, and `!=` with `null` the rows with one. Use `is null` or `is not null` on a nullable field instead: `{"field": "summary", "operator": "is null"}`.
+- A `Date` value is compared as the start of its day, and a `Date` or `DateTime` value is written in the date format of the model before the comparison.
+
+Relations:
+
+- A filter on a relation path (`author.first_name`, `author.tags.name`) matches the rows that have a related row matching the filter, as before, and applies the `searchQuery()` of the resource at the end of the path to that related row. This `searchQuery()` now runs in its own group: an `orWhere()` in it no longer makes the filter match related rows outside the filter.
+- `type` and `nested` work the same on relation paths and on fields: a filter with the `or` type is combined with the previous one by `or`, and the filters of a `nested` group stay inside that group.
+- A filter through a `MorphTo` relation, such as `labelable.title`, reads the field on the resource that the relation declares, and only matches the rows whose morph type is the model of that resource and that its `searchQuery()` keeps. Rows of another type never match, and a stored type that is not a model class no longer gives an error. The relation can be anywhere in the path, as in `labels.labelable.title` or `labelable.loan.borrower`, and the `searchQuery()` of the resource it declares applies there too, in its own group.
+- An include or an aggregate whose `relation` ends with a `pivot` segment, such as `tags.pivot`, gives a 422 under its `relation` key. Before, it passed validation and failed when the query ran. `Resource::relation('tags.pivot')` returns `null`.
+
+Text search:
+
+- With a text search, `search.filters` still accept the `scoutFields()` with `=`, `in` and `not in`, without `nested` or `type`. The filters of includes and aggregates follow the rules above.
+
+Database differences:
+
+- `like` and `not like` follow the database: they are case-sensitive on PostgreSQL, follow the collation of the column on MySQL (case-insensitive on the default `_ci` collations), and ignore the case of ASCII letters only on SQLite.
+- `ilike` and `not ilike` ignore case. PostgreSQL runs `ilike`, and MySQL and SQLite run `like`: on MySQL, `ilike` stays case-sensitive on a column with a binary or case-sensitive collation, and on SQLite it ignores the case of ASCII letters only.
+
+Query builder and custom relations:
+
+- `Lomkit\Rest\Query\Builder::filter()` is removed. `applyFilters(array $filters)` keeps its signature and applies the filters as one group of clauses (`Lomkit\Rest\Query\Clauses\FilterGroupClause`, with a `FieldConditionClause` or a `RelationConditionClause` per filter), which call `Field::filter()`. A filter passed to `search()` or `applyFilters()` must name a filterable field, or a path to one, with an operator of that field: another field or operator throws `Lomkit\Rest\Exceptions\InvalidFieldException`. `Lomkit\Rest\Query\ScoutBuilder::filter()` does not change.
+- `Relation::filter()` and the `Lomkit\Rest\Contracts\RelationResource` interface are removed. Remove `implements RelationResource` from your custom relations: an override of `filter()` is no longer called, and a filter through the relation uses `has()` on the Eloquent relation of the same name.
+- `Resource::isNestedField()` and the `Lomkit\Rest\Rules\Resource\ResourceFieldOrNested` rule are removed. `Lomkit\Rest\Fields\FieldPath::resolve($resource, 'author.first_name')` returns the relations, the field and the resource of a filter path, or `null` when the path does not reach a filterable field.
+- The `relation_without_pivot()` helper is removed, and the package no longer autoloads a file of global functions.
+
+Scramble:
+
+- The `filters` of the search body list the filterable fields of the resource under `field`, without the dotted paths, and the operators of `FilterOperator` under `operator`.
+
 ### Writes
 
 A mutation writes each attribute through its field: the field decides whether the operation can write it, which rules validate it and how the model is filled.
@@ -526,7 +608,7 @@ Writes:
 Reads:
 
 - The `pivot` of an included row holds the selectable pivot fields only. A pivot field declared `writeOnly()` or `selectable(false)` is not returned.
-- Filters on `pivot` keys, such as `tags.pivot.weight`, still accept every declared pivot field.
+- Filters on `pivot` keys, such as `tags.pivot.weight`, accept the filterable pivot fields only, with the operators and values of their type, as described under Filters. A pivot field declared `writeOnly()` or `filterable(false)` gives a 422 under `search.filters.<i>.field`.
 
 Scramble:
 

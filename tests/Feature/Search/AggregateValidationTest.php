@@ -40,6 +40,9 @@ class AggregateValidationTest extends PackageTestCase
             'an unknown nested relation' => [['relation' => 'suppliers.country', 'type' => 'count'], [
                 'search.aggregates.0.relation' => ['The relation is not valid or allowed for this resource.'],
             ]],
+            'a pivot segment' => [['relation' => 'featuredProducts.pivot', 'type' => 'count'], [
+                'search.aggregates.0.relation' => ['The relation is not valid or allowed for this resource.'],
+            ]],
             'a missing type' => [['relation' => 'products'], [
                 'search.aggregates.0.type' => ['The search.aggregates.0.type field is required.'],
             ]],
@@ -65,10 +68,10 @@ class AggregateValidationTest extends PackageTestCase
                 'search.aggregates.0.alias' => ['The search.aggregates.0.alias field must be a string.'],
             ]],
             'a filter on an undeclared column' => [['relation' => 'products', 'type' => 'count', 'filters' => [['field' => 'created_at', 'value' => '2026-01-01']]], [
-                'search.aggregates.0.filters.0.field' => ["The 'field' field is not valid."],
+                'search.aggregates.0.filters.0.field' => ['The selected search.aggregates.0.filters.0.field is invalid.'],
             ]],
             'a filter field that is not a string' => [['relation' => 'products', 'type' => 'count', 'filters' => [['field' => ['name'], 'value' => 'Desk lamp']]], [
-                'search.aggregates.0.filters.0.field' => ['The search.aggregates.0.filters.0.field field must be a string.', "The 'field' field is not valid."],
+                'search.aggregates.0.filters.0.field' => ['The search.aggregates.0.filters.0.field field must be a string.', 'The selected search.aggregates.0.filters.0.field is invalid.'],
             ]],
         ];
     }
@@ -90,6 +93,18 @@ class AggregateValidationTest extends PackageTestCase
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
             'search.aggregates.0.filters.0.nested.0.nested' => ['The search.aggregates.0.filters.0.nested.0.nested field is prohibited.'],
+        ]);
+    }
+
+    #[Test]
+    public function it_rejects_an_include_of_a_pivot_segment_as_it_rejects_an_aggregate_of_one(): void
+    {
+        $response = $this->postJson('/api/categories/search', [
+            'search' => ['includes' => [['relation' => 'featuredProducts.pivot']]],
+        ]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', [
+            'search.includes.0.relation' => ['The relation is not valid or allowed for this resource.'],
         ]);
     }
 }
