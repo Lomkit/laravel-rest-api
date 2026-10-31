@@ -13,6 +13,7 @@ use Lomkit\Rest\Console\Generation\Stub;
 use Lomkit\Rest\Exceptions\InvalidClassReferenceException;
 use Lomkit\Rest\Exceptions\InvalidModelTableException;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -88,11 +89,11 @@ class ResourceMakeCommand extends RestGeneratorCommand
         $this->components->twoColumnDetail(class_basename($this->qualifyClass($this->getNameInput())), $this->blueprint->summary());
 
         foreach ($this->blueprint->skipped() as $relation) {
-            $this->line("  Skipped: {$relation}");
+            $this->line('  Skipped: '.OutputFormatter::escape($relation));
         }
 
         foreach ($this->blueprint->notes() as $note) {
-            $this->line("  Note: {$note}");
+            $this->line('  Note: '.OutputFormatter::escape($note));
         }
     }
 

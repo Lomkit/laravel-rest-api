@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Console\QuickStart;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Console\View\Components\Factory;
 use Illuminate\Support\Arr;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 
 final readonly class Outro
 {
@@ -53,7 +54,7 @@ final readonly class Outro
     private function write(OutputStyle $output, array $lines): void
     {
         foreach ($lines as $line) {
-            $output->writeln("  {$line}");
+            $output->writeln('  '.OutputFormatter::escape($line));
         }
     }
 

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\Generation\Schema\Table;
 use Lomkit\Rest\Console\Generation\Schema\TableReader;
+use Throwable;
 
 final readonly class RelationMapping
 {
@@ -31,9 +32,13 @@ final readonly class RelationMapping
         return $list;
     }
 
-    /** @param  Relation<Model, Model, mixed>  $relation */
-    private function mapRelation(string $name, Relation $relation, Table $table, RelationList $list): RelationList
+    /** @param  Relation<Model, Model, mixed>|Throwable  $relation */
+    private function mapRelation(string $name, Relation|Throwable $relation, Table $table, RelationList $list): RelationList
     {
+        if ($relation instanceof Throwable) {
+            return $list->skipping($this->thrown($name, $relation));
+        }
+
         $type = RelationType::of($relation);
 
         if ($type === null) {
@@ -84,6 +89,13 @@ final readonly class RelationMapping
         $table = (new TableReader($schema))->read($relation->getTable());
 
         return FieldMapping::forPivot($pivot, $imports, $timestamps, $name)->map($table->only($columns));
+    }
+
+    private function thrown(string $name, Throwable $exception): string
+    {
+        $message = preg_replace('/[ \t]*[\r\n]+[ \t]*/', ' ', trim($exception->getMessage())) ?? '';
+
+        return "{$name}: {$name}() threw ".$exception::class.($message === '' ? '.' : ": {$message}");
     }
 
     private function missingResource(string $name, string $model): string

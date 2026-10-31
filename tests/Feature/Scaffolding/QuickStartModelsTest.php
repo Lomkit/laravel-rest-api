@@ -2,8 +2,10 @@
 
 namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Schema;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Fixtures\Accounts\Accounts;
 use Lomkit\Rest\Tests\Fixtures\Blog\Blog;
@@ -139,6 +141,42 @@ class QuickStartModelsTest extends ScaffoldingTestCase
         $this->assertStringContainsString("            BelongsToMany::make('tags', TagResource::class),\n", $this->contents('Rest/Resources/PostResource.php'));
         $this->assertStringContainsString('  app/Rest/Resources/PostResource.php ... created (6 fields, 1 relation)', $output);
         $this->assertStringNotContainsString('Skipped: Post.tags', $output);
+    }
+
+    #[Test]
+    public function it_skips_a_relation_method_that_throws_and_exposes_the_model(): void
+    {
+        $this->writeModel('App\Models\Receipt', "public function tenant(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo { throw new \\RuntimeException('No tenant is set.'); }");
+        Schema::create('receipts', function (Blueprint $table): void {
+            $table->id();
+        });
+
+        $output = $this->quickStart('Receipt');
+
+        $this->assertStringContainsString('  app/Rest/Resources/ReceiptResource.php ... created (1 field, 0 relations)', $output);
+        $this->assertStringContainsString("\n  Skipped: Receipt.tenant: tenant() threw RuntimeException: No tenant is set.\n", $output);
+        $this->assertStringContainsString('  checks (fresh process) ... 5 routes authenticated, 1 policy found', $output);
+    }
+
+    #[Test]
+    public function it_prints_the_message_of_a_relation_method_that_throws_literally(): void
+    {
+        $this->writeModel('App\Models\Wallet', implode("\n\n    ", [
+            "public function tenant(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo { throw new \\RuntimeException('Call <info>Tenant::set()</info> first.'); }",
+            "public function owner(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo { throw new \\RuntimeException('<info>a</comment> b'); }",
+        ]));
+        Schema::create('wallets', function (Blueprint $table): void {
+            $table->id();
+        });
+
+        $output = $this->quickStart('Wallet');
+
+        $this->assertStringContainsString(
+            "\n  Skipped: Wallet.tenant: tenant() threw RuntimeException: Call <info>Tenant::set()</info> first.\n"
+            ."  Skipped: Wallet.owner: owner() threw RuntimeException: <info>a</comment> b\n",
+            $output,
+        );
+        $this->assertStringContainsString("\n    curl -X POST http://localhost/api/wallets/search -H ", $output);
     }
 
     #[Test]

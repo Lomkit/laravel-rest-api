@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionNamedType;
+use Throwable;
 
 final readonly class ModelRelations
 {
-    /** @return array<string, Relation<Model, Model, mixed>> */
+    /** @return array<string, Relation<Model, Model, mixed>|Throwable> */
     public static function of(Model $model): array
     {
         $relations = [];
@@ -20,9 +21,9 @@ final readonly class ModelRelations
                 continue;
             }
 
-            $relation = Relation::noConstraints(fn (): mixed => $method->invoke($model));
+            $relation = self::call($method, $model);
 
-            if ($relation instanceof Relation) {
+            if ($relation instanceof Relation || $relation instanceof Throwable) {
                 $relations[$method->getName()] = $relation;
             }
         }
@@ -38,5 +39,14 @@ final readonly class ModelRelations
             && $method->getNumberOfRequiredParameters() === 0
             && $type instanceof ReflectionNamedType
             && is_a($type->getName(), Relation::class, true);
+    }
+
+    private static function call(ReflectionMethod $method, Model $model): mixed
+    {
+        try {
+            return Relation::noConstraints(fn (): mixed => $method->invoke($model));
+        } catch (Throwable $exception) {
+            return $exception;
+        }
     }
 }

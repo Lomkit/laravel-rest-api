@@ -107,6 +107,66 @@ class GenerateResourceReportTest extends ScaffoldingTestCase
         $this->assertStringContainsString("    public function relations(RestRequest \$request): array\n    {\n        return [];\n    }", $resource);
     }
 
+    #[Test]
+    public function it_skips_a_relation_method_that_throws_and_generates_the_rest(): void
+    {
+        $this->writeModel('App\Models\Customer');
+        $this->writeModel('App\Models\Invoice', implode("\n\n    ", [
+            "public function tenant(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo { throw new \\RuntimeException('No tenant is set.'); }",
+            'public function approver(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return null; }',
+            'public function archive(): \Illuminate\Database\Eloquent\Relations\HasOne { throw new \LogicException; }',
+            'public function customer(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Customer::class); }',
+        ]));
+        Schema::create('customers', function (Blueprint $table): void {
+            $table->id();
+        });
+        Schema::create('invoices', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('customer_id')->constrained();
+            $table->foreignId('tenant_id')->nullable();
+        });
+        $this->artisan('rest:resource', ['name' => 'CustomerResource', '--model' => 'Customer', '--no-interaction' => true])->assertSuccessful();
+
+        $exitCode = Artisan::call('rest:resource', ['name' => 'InvoiceResource', '--model' => 'Invoice', '--generate' => true, '--no-interaction' => true], $output = new BufferedOutput);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertMatchesRegularExpression(
+            '/^  InvoiceResource \.+ 3 fields, 1 relation\s*\n'
+            .'  Skipped: tenant: tenant\(\) threw RuntimeException: No tenant is set\.\n'
+            .'  Skipped: approver: approver\(\) threw TypeError: App\\\\Models\\\\Invoice::approver\(\): Return value must be of type Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo, null returned\n'
+            .'  Skipped: archive: archive\(\) threw LogicException\.\n\z/m',
+            $output->fetch(),
+        );
+        $resource = (string) file_get_contents(app_path('Rest/Resources/InvoiceResource.php'));
+        $this->assertStringContainsString("            Integer::make('tenant_id')->nullable(),\n", $resource);
+        $this->assertStringContainsString("        return [\n            BelongsTo::make('customer', CustomerResource::class)->requiredOnCreation(),\n        ];\n", $resource);
+        $this->loadGeneratedClass('App\Rest\Resources\InvoiceResource');
+    }
+
+    #[Test]
+    public function it_prints_the_message_of_a_relation_method_that_throws_literally_on_one_line(): void
+    {
+        $this->writeModel('App\Models\Purse', implode("\n\n    ", [
+            "public function tenant(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo { throw new \\RuntimeException('Call <info>Tenant::set()</info> first.'); }",
+            "public function owner(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo { throw new \\RuntimeException('<info>a</comment> b'); }",
+            'public function ledger(): \Illuminate\Database\Eloquent\Relations\HasOne { throw new \RuntimeException("First line.\r\n  Second line.\n"); }',
+        ]));
+        Schema::create('purses', function (Blueprint $table): void {
+            $table->id();
+        });
+
+        $exitCode = Artisan::call('rest:resource', ['name' => 'PurseResource', '--model' => 'Purse', '--generate' => true, '--no-interaction' => true], $output = new BufferedOutput);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertMatchesRegularExpression(
+            '/^  PurseResource \.+ 1 field, 0 relations\s*\n'
+            .'  Skipped: tenant: tenant\(\) threw RuntimeException: Call <info>Tenant::set\(\)<\/info> first\.\n'
+            .'  Skipped: owner: owner\(\) threw RuntimeException: <info>a<\/comment> b\n'
+            .'  Skipped: ledger: ledger\(\) threw RuntimeException: First line\. Second line\.\n\z/m',
+            $output->fetch(),
+        );
+    }
+
     private function jsonColumnNote(string $column): string
     {
         if (DB::connection()->getDriverName() === 'sqlite') {
