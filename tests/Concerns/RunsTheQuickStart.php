@@ -86,6 +86,23 @@ trait RunsTheQuickStart
             PHP,
     ];
 
+    private const string ROUTES_WITH_POSTS = <<<'PHP'
+        <?php
+
+        use App\Rest\Controllers\PostsController;
+        use Illuminate\Http\Request;
+        use Illuminate\Support\Facades\Route;
+        use Lomkit\Rest\Facades\Rest;
+
+        Route::get('/user', function (Request $request) {
+            return $request->user();
+        })->middleware('auth:sanctum');
+
+        Rest::resource('posts', PostsController::class)
+            ->middleware('auth:sanctum');
+
+        PHP;
+
     private function writeModels(string $namespace, string ...$models): void
     {
         (new Filesystem)->ensureDirectoryExists(app_path('Models'));
@@ -95,9 +112,9 @@ trait RunsTheQuickStart
         }
     }
 
-    private function fakeApiInstall(bool $publishesRoutes = true): void
+    private function fakeApiInstall(bool $publishesRoutes = true, bool $succeeds = true): void
     {
-        $this->app->make(Kernel::class)->registerCommand(new FakeApiInstallCommand($publishesRoutes));
+        $this->app->make(Kernel::class)->registerCommand(new FakeApiInstallCommand($publishesRoutes, $succeeds));
     }
 
     private function runChecksInThisProcess(string $prefix = 'api'): void

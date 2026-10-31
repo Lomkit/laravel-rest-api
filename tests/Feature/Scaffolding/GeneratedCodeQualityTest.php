@@ -163,6 +163,7 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
         $this->writeModel('App\Models\LintedLabel', self::LABEL_MODEL);
         $this->writeModel('App\Models\LintedMemo', "use \\Illuminate\\Database\\Eloquent\\SoftDeletes;\n\n    protected \$table = 'notes';");
         copy(FakeApiInstallCommand::routesStub(), base_path('routes/api.php'));
+        config(['auth.guards.sanctum' => ['driver' => 'session', 'provider' => 'users']]);
         Process::fake(['*rest:check*' => Process::result('{"routes":15,"policies":3,"problems":[],"search":"/api/linted-entries/search"}')]);
 
         $this->generate('rest:quick-start', ['--model' => ['LintedEntry', 'LintedLabel', 'LintedMemo']]);
