@@ -38,7 +38,7 @@ class QuickStartCommand extends Command
 
     protected $signature = 'rest:quick-start
         {--model=* : A model to expose, repeat the option to expose several models}
-        {--install-api : Run php artisan install:api when the application has no API routes}';
+        {--install-api : Run php artisan install:api when the application has no API routes or no Laravel Sanctum}';
 
     protected $description = 'Expose models through resources, controllers, read-only policies and authenticated API routes';
 
@@ -49,7 +49,7 @@ class QuickStartCommand extends Command
         $routes = new ApiRoutes($files, $this->laravel->basePath());
         $plan = $this->plan($app, $gate, $user, $routes);
 
-        if ($plan === null || $this->clashes($plan, $routes, new RouteConflicts($router->getRoutes())) || ! $this->ensureApiRouting($routes)) {
+        if ($plan === null || $this->clashes($plan, $routes, new RouteConflicts($router->getRoutes())) || ! $this->ensureApiRouting($plan, $routes)) {
             return self::FAILURE;
         }
 
@@ -134,19 +134,42 @@ class QuickStartCommand extends Command
         return true;
     }
 
-    private function ensureApiRouting(ApiRoutes $routes): bool
+    private function ensureApiRouting(QuickStartPlan $plan, ApiRoutes $routes): bool
     {
         if ($routes->exist()) {
-            return true;
+            return $this->ensureSanctum($plan, $routes);
         }
 
-        if ($this->option('install-api') !== true && ! $this->confirmsApiInstall()) {
+        if (! $this->agreesToInstallApi('API routing is not installed. Run php artisan install:api now? It installs Laravel Sanctum.')) {
             $this->components->error('API routing is not installed. Run php artisan install:api first, or pass --install-api.');
 
             return false;
         }
 
         return $this->installApi($routes);
+    }
+
+    private function ensureSanctum(QuickStartPlan $plan, ApiRoutes $routes): bool
+    {
+        if ($routes->unregistered($plan) === [] || $this->laravel->make(Repository::class)->get('auth.guards.sanctum') !== null) {
+            return true;
+        }
+
+        if (! $this->agreesToInstallApi('Laravel Sanctum is not installed. Run php artisan install:api now to install it?')) {
+            $this->components->error('Laravel Sanctum is not installed. Run php artisan install:api first, or pass --install-api.');
+
+            return false;
+        }
+
+        $this->components->info('Running php artisan install:api to install Laravel Sanctum. It keeps routes/api.php, which already exists.');
+
+        if ($this->call('install:api') === self::SUCCESS) {
+            return true;
+        }
+
+        $this->components->error('php artisan install:api failed.');
+
+        return false;
     }
 
     private function installApi(ApiRoutes $routes): bool
@@ -162,10 +185,10 @@ class QuickStartCommand extends Command
         return false;
     }
 
-    private function confirmsApiInstall(): bool
+    private function agreesToInstallApi(string $question): bool
     {
-        return $this->canPrompt()
-            && confirm('API routing is not installed. Run php artisan install:api now? It installs Laravel Sanctum.', default: true);
+        return $this->option('install-api') === true
+            || ($this->canPrompt() && confirm($question, default: true));
     }
 
     private function canPrompt(): bool

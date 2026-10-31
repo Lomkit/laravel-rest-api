@@ -10,7 +10,7 @@ class FakeApiInstallCommand extends Command
 {
     protected $signature = 'install:api {--composer=global} {--force} {--passport} {--without-migration-prompt}';
 
-    public function __construct(private readonly bool $publishesRoutes = true)
+    public function __construct(private readonly bool $publishesRoutes = true, private readonly bool $succeeds = true)
     {
         parent::__construct();
     }
@@ -22,7 +22,13 @@ class FakeApiInstallCommand extends Command
 
     public function handle(): int
     {
-        if ($this->publishesRoutes) {
+        if (! $this->succeeds) {
+            return self::FAILURE;
+        }
+
+        if (file_exists(base_path('routes/api.php')) && $this->option('force') !== true) {
+            $this->components->error('API routes file already exists.');
+        } elseif ($this->publishesRoutes) {
             copy(self::routesStub(), base_path('routes/api.php'));
             $this->components->info('Published API routes file.');
         }
