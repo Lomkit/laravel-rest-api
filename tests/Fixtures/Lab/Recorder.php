@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Fixtures\Lab;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Casts\AsFluent;
+use Illuminate\Database\Eloquent\Casts\AsStringable;
 use Illuminate\Database\Eloquent\Casts\AsVector;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -32,6 +33,7 @@ class Recorder extends Model
             'profile' => AsFluent::class,
             'samples' => AsVector::class,
             'limits' => EncodedJson::class,
+            'transcript' => AsStringable::class,
         ];
     }
 }

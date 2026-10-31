@@ -22,6 +22,7 @@ class RecorderResource extends Resource
             Json::make('samples')->nullable(),
             Json::make('limits')->nullable(),
             Json::make('notes')->nullable(),
+            Json::make('transcript')->nullable(),
         ];
     }
 }
