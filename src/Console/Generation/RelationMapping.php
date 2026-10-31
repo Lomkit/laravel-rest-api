@@ -69,7 +69,7 @@ final readonly class RelationMapping
     /** @param  EloquentBelongsToMany<Model, Model, *, *>  $relation */
     private function pivotFields(string $name, EloquentBelongsToMany $relation, ImportSet $imports): FieldList
     {
-        $columns = array_values(array_filter($relation->getPivotColumns(), is_string(...)));
+        $columns = array_values(array_unique(array_filter($relation->getPivotColumns(), is_string(...))));
 
         if ($columns === []) {
             return new FieldList;
@@ -82,8 +82,15 @@ final readonly class RelationMapping
             ->getConnection()
             ->getSchemaBuilder();
         $table = (new TableReader($schema))->read($relation->getTable());
+        $fields = FieldMapping::forPivot($pivot, $imports, $timestamps, $name)->map($table->only($columns));
 
-        return FieldMapping::forPivot($pivot, $imports, $timestamps, $name)->map($table->only($columns));
+        foreach ($columns as $column) {
+            if ($table->column($column) === null) {
+                $fields = $fields->withNote("{$name}.pivot.{$column}: no such column in the {$table->name} pivot table, left out.");
+            }
+        }
+
+        return $fields;
     }
 
     private function missingResource(string $name, string $model): string
