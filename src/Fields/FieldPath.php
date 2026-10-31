@@ -9,6 +9,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\Relation;
 
+/** @internal */
 final readonly class FieldPath
 {
     /** @param list<Relation> $relations */
