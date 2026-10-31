@@ -46,7 +46,7 @@ class QuickStartCommand extends Command
         $app = AppNamespace::of($this->laravel);
         $user = UserModel::configured($this->laravel->make(Repository::class), $app->root);
         $routes = new ApiRoutes($files, $this->laravel->basePath());
-        $plan = $this->plan($app, $gate, $user);
+        $plan = $this->plan($app, $gate, $user, $routes);
 
         if ($plan === null || $this->clashes($plan, $routes, new RouteConflicts($router->getRoutes())) || ! $this->ensureApiRouting($routes)) {
             return self::FAILURE;
@@ -76,7 +76,7 @@ class QuickStartCommand extends Command
         return self::SUCCESS;
     }
 
-    private function plan(AppNamespace $app, Gate $gate, string $user): ?QuickStartPlan
+    private function plan(AppNamespace $app, Gate $gate, string $user, ApiRoutes $routes): ?QuickStartPlan
     {
         $models = $this->models();
 
@@ -91,10 +91,13 @@ class QuickStartCommand extends Command
 
             foreach ($models as $model) {
                 $source = ModelTable::of(ClassReference::fromInput($model, $app->root, $app->models()));
-                $sources[$source->class] = $source;
+                $sources[$source->model::class] ??= $source;
             }
 
-            return QuickStartPlan::for(array_values($sources), $app, $gate, $user);
+            $plan = QuickStartPlan::for(array_values($sources), $app, $gate, $user);
+            $routes->ensureDistinctNames($plan);
+
+            return $plan;
         } catch (InvalidClassReferenceException|InvalidModelTableException $exception) {
             $this->components->error($exception->getMessage());
 

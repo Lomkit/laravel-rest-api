@@ -150,6 +150,24 @@ class QuickStartModelsTest extends ScaffoldingTestCase
         $this->assertSame(1, substr_count((string) file_get_contents(base_path('routes/api.php')), "Rest::resource('posts'"));
     }
 
+    #[Test]
+    public function it_exposes_a_model_given_twice_in_different_cases_once(): void
+    {
+        $output = $this->quickStart('Post', 'post');
+
+        $this->assertStringContainsString(
+            "  app/Rest/Resources/Resource.php ... created\n"
+            ."  app/Rest/Resources/PostResource.php ... created (6 fields, 0 relations)\n"
+            ."  app/Rest/Controllers/Controller.php ... created\n"
+            ."  app/Rest/Controllers/PostsController.php ... created\n"
+            ."  app/Policies/PostPolicy.php ... created (read-only)\n"
+            ."  routes/api.php ... posts behind auth:sanctum\n"
+            ."  checks (fresh process) ... 5 routes authenticated, 1 policy found\n",
+            $output,
+        );
+        $this->assertSame(['PostResource.php', 'Resource.php'], array_values(array_diff((array) scandir(app_path('Rest/Resources')), ['.', '..'])));
+    }
+
     private function quickStart(string ...$models): string
     {
         $exitCode = Artisan::call('rest:quick-start', ['--model' => $models, '--install-api' => true, '--no-interaction' => true], $output = new BufferedOutput);

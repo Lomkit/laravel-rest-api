@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Exceptions;
 
+use Illuminate\Support\Arr;
 use InvalidArgumentException;
 
 final class InvalidModelTableException extends InvalidArgumentException
@@ -29,5 +30,13 @@ final class InvalidModelTableException extends InvalidArgumentException
     public static function missingTable(string $table, string $class): self
     {
         return new self("The table [{$table}] of the model [{$class}] does not exist. Run the migrations, then generate the resource again.");
+    }
+
+    /** @param  list<string>  $classes */
+    public static function sharedResourceName(string $name, array $classes): self
+    {
+        $models = Arr::join(array_map(fn (string $class): string => "[{$class}]", $classes), ', ', ' and ');
+
+        return new self("The models {$models} would share the resource name [{$name}], so their routes would have the same URIs and names. Expose them in separate runs of this command, or rename one of the models.");
     }
 }

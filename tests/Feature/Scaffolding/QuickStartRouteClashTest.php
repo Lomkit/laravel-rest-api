@@ -86,6 +86,53 @@ class QuickStartRouteClashTest extends ScaffoldingTestCase
     }
 
     #[Test]
+    public function it_names_every_model_that_would_share_a_resource_name(): void
+    {
+        $routes = (string) file_get_contents(base_path('routes/api.php'));
+        $this->writeModel('App\Models\Note');
+        $this->writeModel('App\Models\Archive\Note');
+        $this->writeModel('App\Models\Notes');
+
+        $output = $this->quickStart(1, 'Post', 'Note', 'Archive/Note', 'Notes');
+
+        $this->assertSame(
+            "\n   ERROR  The models [App\Models\Note], [App\Models\Archive\Note] and [App\Models\Notes] would share the resource name [notes], so their routes would have the same URIs and names. Expose them in separate runs of this command, or rename one of the models.\n\n",
+            $output,
+        );
+        $this->assertDirectoryDoesNotExist(app_path('Rest'));
+        $this->assertDirectoryDoesNotExist(app_path('Policies'));
+        $this->assertSame($routes, (string) file_get_contents(base_path('routes/api.php')));
+    }
+
+    #[Test]
+    public function it_exposes_models_of_the_same_name_whose_routes_already_have_distinct_names(): void
+    {
+        $this->writeModel('App\Models\Note');
+        $this->writeModel('App\Models\Archive\Note');
+        $routes = $this->appendRoutes(
+            "Lomkit\Rest\Facades\Rest::resource('notes', App\Rest\Controllers\NotesController::class)->middleware('auth:sanctum');\n"
+            ."Lomkit\Rest\Facades\Rest::resource('archived-notes', App\Rest\Controllers\Archive\NotesController::class)->middleware('auth:sanctum');",
+        );
+
+        $output = $this->quickStart(0, 'Note', 'Archive/Note');
+
+        $this->assertStringStartsWith(
+            "  app/Rest/Resources/Resource.php ... created\n"
+            ."  app/Rest/Resources/NoteResource.php ... created (5 fields, 0 relations)\n"
+            ."  app/Rest/Resources/Archive/NoteResource.php ... created (5 fields, 0 relations)\n"
+            ."  app/Rest/Controllers/Controller.php ... created\n"
+            ."  app/Rest/Controllers/NotesController.php ... created\n"
+            ."  app/Rest/Controllers/Archive/NotesController.php ... created\n"
+            ."  app/Policies/NotePolicy.php ... created (read-only)\n"
+            ."  app/Policies/Archive/NotePolicy.php ... created (read-only)\n"
+            ."  routes/api.php ... kept\n"
+            ."  checks (fresh process) ... 10 routes authenticated, 2 policies found\n\n",
+            $output,
+        );
+        $this->assertSame($routes, (string) file_get_contents(base_path('routes/api.php')));
+    }
+
+    #[Test]
     public function it_exposes_a_model_whose_uri_is_taken_outside_the_api_routes(): void
     {
         $this->appendRoutes("Route::get('/user/posts', fn () => 'posts');");
