@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Console\Generation;
 
 use Illuminate\Support\Str;
 use Lomkit\Rest\Exceptions\InvalidClassReferenceException;
+use Throwable;
 
 final readonly class ClassReference
 {
@@ -19,7 +20,7 @@ final readonly class ClassReference
             throw InvalidClassReferenceException::invalidName($input);
         }
 
-        if (str_starts_with($name, $rootNamespace) || (str_contains($name, '\\') && class_exists($name))) {
+        if (str_starts_with($name, $rootNamespace) || (str_contains($name, '\\') && self::found($name))) {
             return new self($name);
         }
 
@@ -63,6 +64,15 @@ final readonly class ClassReference
         $prefix = Str::contains($class, '\\') ? Str::beforeLast($class, '\\').'\\' : '';
         $reference = new self($namespace.$prefix.$transform($basename));
 
-        return $reference->exists() ? $reference : null;
+        return self::found($reference->fqcn) ? $reference : null;
+    }
+
+    private static function found(string $class): bool
+    {
+        try {
+            return class_exists($class);
+        } catch (Throwable) {
+            return true;
+        }
     }
 }

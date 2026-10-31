@@ -168,6 +168,28 @@ class QuickStartModelsTest extends ScaffoldingTestCase
         $this->assertSame(['PostResource.php', 'Resource.php'], array_values(array_diff((array) scandir(app_path('Rest/Resources')), ['.', '..'])));
     }
 
+    #[Test]
+    public function it_notes_an_existing_resource_that_fails_to_load(): void
+    {
+        mkdir(app_path('Rest/Resources'), recursive: true);
+        file_put_contents(app_path('Rest/Resources/UserResource.php'), "<?php\n\nnamespace App\Rest\Resources;\n\nthrow new \LogicException('Finish <comment>UserResource</comment> first');\n\nclass UserResource extends \Lomkit\Rest\Http\Resource {}\n");
+        $this->quickStart('Tag');
+
+        $output = $this->quickStart('Post');
+
+        $this->assertStringContainsString(
+            "  app/Rest/Resources/PostResource.php ... created (6 fields, 1 relation)\n",
+            $output,
+        );
+        $this->assertStringContainsString(
+            "\n\n  Skipped: Post.author: no resource for App\Models\User. Rerun with --model=User to expose users.\n"
+            ."  Note: App\Rest\Resources\UserResource is skipped: Finish <comment>UserResource</comment> first (app/Rest/Resources/UserResource.php:5).\n",
+            $output,
+        );
+        $this->assertSame(1, substr_count($output, 'Note: App\Rest\Resources\UserResource is skipped'));
+        $this->assertStringContainsString("            BelongsToMany::make('tags', TagResource::class),\n", $this->contents('Rest/Resources/PostResource.php'));
+    }
+
     private function quickStart(string ...$models): string
     {
         $exitCode = Artisan::call('rest:quick-start', ['--model' => $models, '--install-api' => true, '--no-interaction' => true], $output = new BufferedOutput);

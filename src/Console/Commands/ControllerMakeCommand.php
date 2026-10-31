@@ -42,7 +42,10 @@ class ControllerMakeCommand extends RestGeneratorCommand
             return;
         }
 
-        $resource = suggest('What resource should this controller rely on? (Optional)', $this->resourceIndex()->names());
+        $index = $this->resourceIndex();
+        $this->writeNotes($index->skipped());
+
+        $resource = suggest('What resource should this controller rely on? (Optional)', $index->names());
 
         if ($resource !== '') {
             $input->setOption('resource', $resource);

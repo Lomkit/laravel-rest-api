@@ -94,6 +94,8 @@ class ResourceMakeCommand extends RestGeneratorCommand
         foreach ($this->blueprint->notes() as $note) {
             $this->line("  Note: {$note}");
         }
+
+        $this->writeNotes($this->resourceIndex()->skipped());
     }
 
     #[\Override]

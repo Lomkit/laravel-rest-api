@@ -94,6 +94,40 @@ class ControllerResourceReferenceTest extends ScaffoldingTestCase
     }
 
     #[Test]
+    public function it_keeps_a_guessed_resource_that_fails_to_load_and_warns(): void
+    {
+        mkdir(app_path('Rest/Resources'), recursive: true);
+        file_put_contents(app_path('Rest/Resources/FailingGuessResource.php'), "<?php\n\nnamespace App\Rest\Resources;\n\nclass FailingGuessResource extends \Lomkit\Rest\Http\Resource implements \App\Contracts\FailingGuessContract {}\n");
+
+        $this->artisan('rest:controller', ['name' => 'FailingGuessesController', '--no-interaction' => true])
+            ->expectsOutputToContain('The resource [App\Rest\Resources\FailingGuessResource] cannot be loaded: Interface "App\Contracts\FailingGuessContract" not found (app/Rest/Resources/FailingGuessResource.php:5).')
+            ->doesntExpectOutputToContain('No resource was given or found')
+            ->assertSuccessful();
+
+        $this->assertSame(
+            "<?php\n\nnamespace App\Rest\Controllers;\n\nuse App\Rest\Resources\FailingGuessResource;\n\nclass FailingGuessesController extends Controller\n{\n    public static string \$resource = FailingGuessResource::class;\n}\n",
+            file_get_contents(app_path('Rest/Controllers/FailingGuessesController.php')),
+        );
+    }
+
+    #[Test]
+    public function it_keeps_a_given_resource_that_fails_to_load_and_warns(): void
+    {
+        mkdir(app_path('Rest/Resources'), recursive: true);
+        file_put_contents(app_path('Rest/Resources/FailingGivenResource.php'), "<?php\n\nnamespace App\Rest\Resources;\n\nthrow new \LogicException('Finish <comment>FailingGivenResource</comment> first');\n\nclass FailingGivenResource extends \Lomkit\Rest\Http\Resource {}\n");
+
+        $this->artisan('rest:controller', ['name' => 'FailingGivenController', '--resource' => 'FailingGivenResource', '--no-interaction' => true])
+            ->expectsOutputToContain('The resource [App\Rest\Resources\FailingGivenResource] cannot be loaded: Finish <comment>FailingGivenResource</comment> first (app/Rest/Resources/FailingGivenResource.php:5).')
+            ->doesntExpectOutputToContain('does not exist')
+            ->assertSuccessful();
+
+        $this->assertSame(
+            "<?php\n\nnamespace App\Rest\Controllers;\n\nuse App\Rest\Resources\FailingGivenResource;\n\nclass FailingGivenController extends Controller\n{\n    public static string \$resource = FailingGivenResource::class;\n}\n",
+            file_get_contents(app_path('Rest/Controllers/FailingGivenController.php')),
+        );
+    }
+
+    #[Test]
     public function it_leaves_the_resource_out_and_warns_when_no_resource_is_given_or_found(): void
     {
         $this->artisan('rest:controller', ['name' => 'StrayController', '--no-interaction' => true])

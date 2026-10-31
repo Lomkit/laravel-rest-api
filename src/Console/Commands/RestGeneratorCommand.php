@@ -7,9 +7,12 @@ use Illuminate\Support\Str;
 use Lomkit\Rest\Console\Generation\BaseClass;
 use Lomkit\Rest\Console\Generation\ClassDraft;
 use Lomkit\Rest\Console\Generation\ClassReference;
+use Lomkit\Rest\Console\Generation\LoadFailure;
 use Lomkit\Rest\Console\Generation\ResourceIndex;
 use Lomkit\Rest\Console\Generation\Stub;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Input\InputOption;
+use Throwable;
 
 abstract class RestGeneratorCommand extends GeneratorCommand
 {
@@ -87,8 +90,24 @@ abstract class RestGeneratorCommand extends GeneratorCommand
             return;
         }
 
-        if (! $reference->exists()) {
+        try {
+            $exists = $reference->exists();
+        } catch (Throwable $error) {
+            $this->components->warn("The {$option} [{$reference->fqcn()}] cannot be loaded: ".OutputFormatter::escape(LoadFailure::describe($error, $this->laravel->basePath())));
+
+            return;
+        }
+
+        if (! $exists) {
             $this->components->warn("The {$option} [{$reference->fqcn()}] does not exist.");
+        }
+    }
+
+    /** @param  list<string>  $notes */
+    protected function writeNotes(array $notes): void
+    {
+        foreach ($notes as $note) {
+            $this->line('  Note: '.OutputFormatter::escape($note));
         }
     }
 
@@ -99,7 +118,7 @@ abstract class RestGeneratorCommand extends GeneratorCommand
 
     protected function resourceIndex(): ResourceIndex
     {
-        return new ResourceIndex($this->laravel->path('Rest/Resources'), $this->rootNamespace().'Rest\Resources\\');
+        return ResourceIndex::scan($this->laravel->path('Rest/Resources'), $this->rootNamespace().'Rest\Resources\\', $this->laravel->basePath());
     }
 
     private function rejectTheBaseClassName(): void

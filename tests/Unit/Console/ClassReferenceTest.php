@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Unit\Console;
 
+use Error;
 use Lomkit\Rest\Console\Generation\ClassReference;
 use Lomkit\Rest\Exceptions\InvalidClassReferenceException;
 use Lomkit\Rest\Http\Resource;
@@ -89,6 +90,24 @@ class ClassReferenceTest extends TestCase
     {
         $this->assertNull(ClassReference::guessModel('ArticleResource', 'Lomkit\Rest\Tests\Fixtures\Catalog\\'));
         $this->assertNull(ClassReference::guessResource('ArticlesController', 'Lomkit\Rest\Tests\Fixtures\Catalog\\'));
+    }
+
+    #[Test]
+    public function it_keeps_and_guesses_a_class_whose_file_fails_to_load(): void
+    {
+        $autoloader = static function (string $class): void {
+            if (str_starts_with($class, 'Vendor\Unloadable\\')) {
+                throw new Error('Interface "Vendor\Unloadable\Contract" not found');
+            }
+        };
+        spl_autoload_register($autoloader);
+
+        try {
+            $this->assertSame('Vendor\Unloadable\PostResource', ClassReference::fromInput('Vendor\Unloadable\PostResource', 'App\\', 'App\Rest\Resources\\')->fqcn());
+            $this->assertSame('Vendor\Unloadable\PostResource', ClassReference::guessResource('PostsController', 'Vendor\Unloadable\\')?->fqcn());
+        } finally {
+            spl_autoload_unregister($autoloader);
+        }
     }
 
     #[Test]

@@ -33,7 +33,7 @@ final readonly class AppNamespace
 
     public function resources(): ResourceIndex
     {
-        return new ResourceIndex($this->path.'/Rest/Resources', $this->root.'Rest\Resources\\');
+        return ResourceIndex::scan($this->path.'/Rest/Resources', $this->root.'Rest\Resources\\', $this->basePath);
     }
 
     public function pathOf(string $class): string

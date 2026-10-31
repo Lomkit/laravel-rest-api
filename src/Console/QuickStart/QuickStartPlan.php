@@ -15,8 +15,9 @@ final readonly class QuickStartPlan
      * @param  list<ExposedModel>  $models
      * @param  list<PlannedFile>  $classes
      * @param  list<PlannedFile>  $policies
+     * @param  list<string>  $skipped
      */
-    private function __construct(public array $models, private array $classes, public array $policies) {}
+    private function __construct(public array $models, private array $classes, public array $policies, public array $skipped) {}
 
     /** @param  list<ModelTable>  $sources */
     public static function for(array $sources, AppNamespace $app, Gate $gate, string $user): self
@@ -39,6 +40,7 @@ final readonly class QuickStartPlan
                 ...array_map(fn (ExposedModel $model): PlannedFile => $model->controllerFile($app), $models),
             ],
             array_map(fn (ExposedModel $model): PlannedFile => $model->policyFile($app, $gate, $user), $models),
+            $index->skipped(),
         );
     }
 
