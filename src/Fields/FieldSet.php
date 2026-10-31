@@ -73,11 +73,7 @@ final readonly class FieldSet implements Countable, IteratorAggregate
 
     public function bindTo(Model $model): self
     {
-        foreach ($this->fields as $field) {
-            $field->bind($model);
-        }
-
-        return $this;
+        return new self(array_map(fn (Field $field): Field => $field->boundTo($model), $this->fields));
     }
 
     /** @return list<string> */
@@ -139,6 +135,28 @@ final readonly class FieldSet implements Countable, IteratorAggregate
         return $rules;
     }
 
+    /**
+     * @template TKey of array-key
+     *
+     * @param  array<TKey, mixed>  $values
+     * @return array<TKey, mixed>
+     */
+    public function toStorage(array $values): array
+    {
+        return $this->mapValues($values, fn (Field $field, mixed $value): mixed => $field->toStorage($value));
+    }
+
+    /**
+     * @template TKey of array-key
+     *
+     * @param  array<TKey, mixed>  $values
+     * @return array<TKey, mixed>
+     */
+    public function fromStorage(array $values): array
+    {
+        return $this->mapValues($values, fn (Field $field, mixed $value): mixed => $field->fromStorage($value));
+    }
+
     /** @return ArrayIterator<int, Field> */
     #[\Override]
     public function getIterator(): ArrayIterator
@@ -156,5 +174,23 @@ final readonly class FieldSet implements Countable, IteratorAggregate
     private function where(Closure $keep): self
     {
         return new self(array_values(array_filter($this->fields, $keep)));
+    }
+
+    /**
+     * @template TKey of array-key
+     *
+     * @param  array<TKey, mixed>  $values
+     * @param  Closure(Field, mixed): mixed  $map
+     * @return array<TKey, mixed>
+     */
+    private function mapValues(array $values, Closure $map): array
+    {
+        foreach ($this->fields as $field) {
+            if (array_key_exists($field->name, $values)) {
+                $values[$field->name] = $map($field, $values[$field->name]);
+            }
+        }
+
+        return $values;
     }
 }

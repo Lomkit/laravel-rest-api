@@ -9,8 +9,10 @@ use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Tests\Fixtures\Lab\Instrument;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -131,7 +133,7 @@ class FieldSetTest extends TestCase
     }
 
     #[Test]
-    public function it_binds_every_field_to_the_model_and_returns_itself(): void
+    public function it_binds_a_copy_of_every_field_to_the_model_and_leaves_the_declared_fields_unbound(): void
     {
         $model = new class extends Model
         {
@@ -145,10 +147,33 @@ class FieldSetTest extends TestCase
         };
         $set = FieldSet::of([ID::make('id'), Text::make('title'), Enum::make('status')]);
 
-        $this->assertSame($set, $set->bindTo($model));
-        $this->assertSame(['uuid'], $set->get('id')->baseRules());
-        $this->assertSame(['string'], $set->get('title')->baseRules());
-        $this->assertEquals([Rule::enum(PostStatus::class)], $set->get('status')->baseRules());
+        $bound = $set->bindTo($model);
+
+        $this->assertSame(['id', 'title', 'status'], $bound->names());
+        $this->assertSame(['uuid'], $bound->get('id')->baseRules());
+        $this->assertSame(['string'], $bound->get('title')->baseRules());
+        $this->assertEquals([Rule::enum(PostStatus::class)], $bound->get('status')->baseRules());
+        $this->assertNotSame($set->get('id'), $bound->get('id'));
+        $this->assertSame(['integer'], $set->get('id')->baseRules());
+        $this->assertSame(
+            'The enum field [status] has no enum class. Pass it to Enum::make() or cast the attribute to an enum on the model.',
+            $this->rejectionOf(fn () => $set->get('status')->baseRules()),
+        );
+    }
+
+    #[Test]
+    public function it_maps_the_values_of_its_fields_to_storage_and_back_and_keeps_the_other_keys(): void
+    {
+        $set = FieldSet::of([Text::make('name'), Json::make('specs')])->bindTo(new Instrument);
+
+        $this->assertSame(
+            ['name' => 'Scope', 'specs' => '{"ram":8}', 'specs_count' => 2],
+            $set->toStorage(['name' => 'Scope', 'specs' => ['ram' => 8], 'specs_count' => 2]),
+        );
+        $this->assertSame(
+            ['name' => 'Scope', 'specs' => ['ram' => 8], 'specs_count' => '2'],
+            $set->fromStorage(['name' => 'Scope', 'specs' => '{"ram":8}', 'specs_count' => '2']),
+        );
     }
 
     private function rejectionOf(callable $build): string

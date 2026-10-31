@@ -41,7 +41,7 @@ trait HasPivotFields
 
         $this->pivotFieldsBound = true;
 
-        return $fields->bindTo($pivot);
+        return $this->pivotFieldSet = $fields->bindTo($pivot);
     }
 
     /** @return array<string, list<mixed>> */
