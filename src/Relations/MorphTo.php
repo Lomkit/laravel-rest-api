@@ -5,12 +5,30 @@ namespace Lomkit\Rest\Relations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo as EloquentMorphTo;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
+use Lomkit\Rest\Exceptions\InvalidResourceException;
 
 class MorphTo extends MorphRelation
 {
     public function targets(): MorphTargets
     {
         return MorphTargets::of($this->type);
+    }
+
+    /** @return array<string, mixed> */
+    #[\Override]
+    public function toDetails(): array
+    {
+        $relation = $this->modelRelation();
+
+        if (! $relation instanceof EloquentMorphTo) {
+            throw InvalidResourceException::notAMorphTo($this->fromResource::class, $this->relation);
+        }
+
+        return [
+            ...parent::toDetails(),
+            'types' => (object) $this->targets()->byType(),
+            'morph' => MorphColumns::of($relation),
+        ];
     }
 
     /**

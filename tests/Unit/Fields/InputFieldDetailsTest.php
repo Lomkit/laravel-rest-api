@@ -22,26 +22,23 @@ class InputFieldDetailsTest extends TestCase
     public function it_describes_a_plain_field(): void
     {
         $this->assertSame(
-            ['name' => 'since', 'type' => 'date', 'nullable' => false, 'default' => null, 'rules' => ['date'], 'meta' => []],
-            (new InputFieldDetails(Date::make('since')))->toArray(),
+            '{"name":"since","type":"date","nullable":false,"default":null,"rules":["date"],"meta":{}}',
+            json_encode((new InputFieldDetails(Date::make('since')))->toArray()),
         );
     }
 
     #[Test]
     public function it_describes_nullable_default_rules_and_meta(): void
     {
-        $field = Integer::make('min_views')->nullable()->default(100)->rules('min:0|max:1000')->meta(['label' => 'Minimum views']);
+        $field = Integer::make('min_views')
+            ->nullable()
+            ->default(100)
+            ->rules('min:0|max:1000')
+            ->meta(['label' => 'Minimum views']);
 
         $this->assertSame(
-            [
-                'name' => 'min_views',
-                'type' => 'integer',
-                'nullable' => true,
-                'default' => 100,
-                'rules' => ['nullable', 'integer', 'min:0', 'max:1000'],
-                'meta' => ['label' => 'Minimum views'],
-            ],
-            (new InputFieldDetails($field))->toArray(),
+            '{"name":"min_views","type":"integer","nullable":true,"default":100,"rules":["nullable","integer","min:0","max:1000"],"meta":{"label":"Minimum views"}}',
+            json_encode((new InputFieldDetails($field))->toArray()),
         );
     }
 
@@ -49,8 +46,8 @@ class InputFieldDetailsTest extends TestCase
     public function it_adds_the_values_of_an_enum(): void
     {
         $this->assertSame(
-            ['name' => 'status', 'type' => 'enum', 'nullable' => false, 'default' => 'draft', 'rules' => ['enum'], 'meta' => [], 'values' => ['draft', 'review', 'published']],
-            (new InputFieldDetails(Enum::make('status', PostStatus::class)->default('draft')))->toArray(),
+            '{"name":"status","type":"enum","nullable":false,"default":"draft","rules":["enum"],"meta":{},"values":["draft","review","published"]}',
+            json_encode((new InputFieldDetails(Enum::make('status', PostStatus::class)->default('draft')))->toArray()),
         );
         $this->assertSame([1, 2, 3], (new InputFieldDetails(Enum::make('priority', Priority::class)))->toArray()['values'] ?? null);
     }
@@ -70,11 +67,8 @@ class InputFieldDetailsTest extends TestCase
         $fields = FieldSet::of([Boolean::make('featured')->default(true), Integer::make('min_views')->nullable()]);
 
         $this->assertSame(
-            [
-                ['name' => 'featured', 'type' => 'boolean', 'nullable' => false, 'default' => true, 'rules' => ['boolean'], 'meta' => []],
-                ['name' => 'min_views', 'type' => 'integer', 'nullable' => true, 'default' => null, 'rules' => ['nullable', 'integer'], 'meta' => []],
-            ],
-            InputFieldDetails::forFields($fields),
+            '[{"name":"featured","type":"boolean","nullable":false,"default":true,"rules":["boolean"],"meta":{}},{"name":"min_views","type":"integer","nullable":true,"default":null,"rules":["nullable","integer"],"meta":{}}]',
+            json_encode(InputFieldDetails::forFields($fields)),
         );
     }
 }

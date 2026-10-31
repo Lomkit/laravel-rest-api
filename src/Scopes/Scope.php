@@ -37,14 +37,14 @@ final class Scope implements JsonSerializable
         return $this->fields;
     }
 
-    /** @return array{name: string, fields: list<array<string, mixed>>, meta: array<string, mixed>} */
+    /** @return array{name: string, fields: list<array<string, mixed>>, meta: \stdClass} */
     #[\Override]
     public function jsonSerialize(): array
     {
         return [
             'name' => $this->name,
             'fields' => InputFieldDetails::forFields($this->fields),
-            'meta' => $this->getMeta(),
+            'meta' => (object) $this->getMeta(),
         ];
     }
 }

@@ -3,9 +3,11 @@
 namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany as EloquentBelongsToMany;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Contracts\PivotRelation;
+use Lomkit\Rest\Fields\Details\FieldDetails;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\Mutates;
@@ -95,15 +97,18 @@ class Relation implements \JsonSerializable
         return $this instanceof PivotRelation ? $this->pivotRules($prefix) : [];
     }
 
-    /**
-     * Serialize the object to JSON.
-     */
     #[\Override]
     public function jsonSerialize(): mixed
     {
+        return $this->toDetails();
+    }
+
+    /** @return array<string, mixed> */
+    public function toDetails(): array
+    {
         $request = $this->fromResource->context()->request;
 
-        return [
+        $details = [
             'resource' => $this->type,
             'relation' => $this->relation,
             'constraints' => [
@@ -114,5 +119,19 @@ class Relation implements \JsonSerializable
             ],
             'name' => $this->name(),
         ];
+
+        if (! $this instanceof PivotRelation) {
+            return $details;
+        }
+
+        return [
+            ...$details,
+            'pivot_fields' => FieldDetails::forPivotFields($this->getPivotFields(), $this->modelRelation() instanceof EloquentBelongsToMany),
+        ];
+    }
+
+    protected function modelRelation(): mixed
+    {
+        return $this->fromResource::newModel()->{$this->relation}();
     }
 }

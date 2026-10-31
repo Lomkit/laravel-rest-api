@@ -270,7 +270,7 @@ Rest::resource('posts', PostsController::class)
 
 | Method | URI | Endpoint | Purpose |
 | --- | --- | --- | --- |
-| `GET` | `/users` | `details` | Schema for the resource (fields, relations, scopes, limits, actions, instructions, rules) |
+| `GET` | `/users` | `details` | Schema for the resource (fields, relations, scopes, limits, actions, instructions, rules, text search) |
 | `POST` | `/users/search` | `search` | Filterable/sortable/paginated read |
 | `POST` | `/users/mutate` | `mutate` | Batch create/update + relation operations |
 | `POST` | `/users/actions/{action}` | `operate` | Run a custom action (`{action}` is its `uriKey`) |
@@ -282,29 +282,56 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
 
 ## `details` endpoint
 
-`GET /api/users` returns the resource schema, filtered by the current user's permissions:
+`GET /api/artworks` describes the resource. It lists what the declarations of the resource (`fields()`, `relations()`, `scopes()`, `actions()`, `instructions()`, the rules methods and `text()`) return for the current request, which can depend on `$request->user()`. It checks `viewAny` only and applies no policy to the entries. With a `collector` morph-map alias:
 
 ```json
-{
-  "data": {
-    "actions":      [{"uriKey": "publish-posts", "name": "...", "fields": [...], "meta": {...}, "standalone": false, "targeted": false}],
-    "instructions": [{"uriKey": "odd-even-id",   "name": "...", "fields": [...], "meta": {...}, "text": true}],
-    "fields":       ["id", "name", ...],
-    "limits":       [10, 25, 50],
-    "scopes":       [{"name": "publishedSince", "fields": [...], "meta": {...}}],
-    "relations":    [{"resource": "PostResource", "relation": "posts", "constraints": {...}}, ...],
-    "rules":        {"all": {...}, "create": {...}, "update": {...}}
-  }
-}
+{"data": {
+  "actions": [{"name": "Retire Artworks", "uriKey": "retire-artworks",
+    "fields": [{"name": "notify", "type": "boolean", "nullable": false, "default": false, "rules": ["boolean"], "meta": {}}],
+    "meta": {}, "standalone": false, "targeted": false}],
+  "instructions": [{"name": "By Medium", "uriKey": "by-medium",
+    "fields": [{"name": "medium", "type": "enum", "nullable": false, "default": null, "rules": ["enum", "required"], "meta": {}, "values": ["oil", "ink", "watercolor"]}],
+    "meta": {}, "text": true}],
+  "fields": [
+    {"name": "id", "type": "id", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "in", "not in"]}, "create": false, "update": false, "rules": {"all": ["integer"], "create": [], "update": []}, "meta": {}},
+    {"name": "title", "type": "text", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["string", "max:120"], "create": ["required"], "update": ["filled"]}, "meta": {"label": "Title"}},
+    {"name": "medium", "type": "enum", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["enum"], "create": [], "update": []}, "meta": {}, "values": ["oil", "ink", "watercolor"]},
+    {"name": "dimensions", "type": "json", "nullable": true, "select": true, "sort": false, "filter": {"operators": []}, "create": true, "update": true, "rules": {"all": ["nullable", "array"], "create": [], "update": []}, "meta": {}},
+    {"name": "price", "type": "number", "nullable": true, "select": true, "sort": true, "filter": {"operators": ["=", "!=", ">", ">=", "<", "<=", "between", "not between", "in", "not in", "is null", "is not null"]}, "create": true, "update": false, "rules": {"all": ["nullable", "numeric"], "create": [], "update": []}, "meta": {}},
+    {"name": "notes", "type": "text", "nullable": true, "select": false, "sort": false, "filter": {"operators": []}, "create": true, "update": true, "rules": {"all": ["nullable", "string"], "create": [], "update": []}, "meta": {}}],
+  "limits": [10, 25, 50],
+  "scopes": [{"name": "pricedUnder", "fields": [{"name": "max", "type": "number", "nullable": false, "default": null, "rules": ["numeric"], "meta": {}}], "meta": {}}],
+  "relations": [
+    {"resource": "App\\Rest\\Resources\\ArtistResource", "relation": "artist",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsTo"},
+    {"resource": "App\\Rest\\Resources\\ExhibitionResource", "relation": "exhibitions",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsToMany",
+     "pivot_fields": [
+       {"name": "position", "type": "integer", "nullable": true, "select": true, "sort": false, "filter": {"operators": ["=", "!=", ">", ">=", "<", "<=", "between", "not between", "in", "not in", "is null", "is not null"]}, "create": true, "update": true, "rules": {"all": ["nullable", "integer"], "create": [], "update": []}, "meta": {}},
+       {"name": "wall", "type": "text", "nullable": false, "select": true, "sort": false, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": false, "rules": {"all": ["string"], "create": [], "update": []}, "meta": {}}]},
+    {"resource": "App\\Rest\\Resources\\CollectorResource", "relation": "owner",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "MorphTo",
+     "types": {"collector": "App\\Rest\\Resources\\CollectorResource"},
+     "morph": {"type_column": "owner_type", "key_column": "owner_id"}}],
+  "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
+  "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null}
+}}
 ```
+
+- `fields` has one entry per field, in declared order. `select`: accepted in `search.selects` and returned. `sort`: accepted in `search.sorts`. `filter.operators`: the operators of `search.filters` on the field, `[]` when it is not filterable. `create` / `update`: writable on that operation. `rules.all` is the type rule, `nullable` and `rules()`; `rules.create` and `rules.update` are `creationRules()` and `updateRules()`. `Enum` entries add `values`. There is no `default`: resource fields do not apply it.
+- `rules` holds the resource rules (`rules()`, `createRules()`, `updateRules()`), keyed by attribute, as lists of strings.
+- `relations`: `resource` is the class name of the related resource, and `name` is the short class name of the relation (or its `$name`). Many-to-many relations (every `PivotRelation`) add `pivot_fields`: `create` means `create` and `attach`, `update` means `update`, `sync` and `toggle`, `select` means returned in the `pivot` of an included row, `filter.operators` applies to `<relation>.pivot.<field>` filters, and `sort` is always `false`. When the model method is not an Eloquent many-to-many relation, `select` is `false` and `filter.operators` is `[]`. `MorphTo` adds `types` (each morph type, the morph-map alias or the model class, mapped to its resource class) and `morph` (`type_column`, `key_column`). Detect `pivot_fields`, `types` and `morph` by their presence, not by `name`.
+- `text` is `null` without `text()`. Otherwise: `fields` (the searchable fields, `[]` on `ScoutEngine`), `modes`, `relevance` (`@relevance` accepted with a text), `trashed` (`search.trashed` accepted with a text), `max_length`, and `engine`, `null` on `Contains` and `FullText`. On `ScoutEngine`, `engine` holds `filters` (the `filterable()` attributes with `name`, `type`, `operators`, and `values` for an `Enum`; never the perimeter attributes), `sorts`, `max_sorts`, `max_page_size` and `window` (`null` when unbounded). With a filled text on `ScoutEngine`, `text.engine` replaces the `sort` and `filter` of the field entries, within the grammar of [Search engines](#search-engines).
+- `actions`, `instructions` and `relations` are lists, also when a declaration method returns a keyed array. Maps are objects, also when empty (`"meta": {}`, `"all": {}`). Ignore unknown keys: later releases can add keys.
+- A declaration error also throws on `details`: `InvalidTextSearchException` for the text search, `InvalidResourceException` for a `MorphTo` whose model method is not a `MorphTo`, `InvalidFieldException` for an `Enum` field without an enum class or cast, `BadMethodCallException` for a many-to-many relation or a `MorphTo` without its model method.
 
 The `fields` of actions, instructions and scopes take `rules()` only: declaring `creationRules()` or `updateRules()` on them throws `InvalidFieldException` when the fields are built. They are described as input entries, which a frontend can render as a form:
 
 ```json
-{"name": "since", "type": "date", "nullable": false, "default": null, "rules": ["date"], "meta": []}
+{"name": "since", "type": "date", "nullable": false, "default": null, "rules": ["date"], "meta": {}}
 ```
 
-`Enum` entries add `values`. Rules are strings: pipe strings are split, `Stringable` rules are cast to string, other rule objects are named by their snake class name (`enum`, `password`), and closures are left out.
+`Enum` entries add `values`. Rules are strings: pipe strings are split, `Stringable` rules are cast to string, other rule objects are named by their snake class name (`enum`, `password`), and closures and anonymous rule objects are left out.
 
 An instruction's `text` says whether it can be sent next to a `search.text` of this resource: `false` without a `text()` strategy; with `Contains` or `FullText`, `true` unless the instruction only applies to search engines; with `ScoutEngine`, `true` when it implements `AppliesToEngine`.
 
@@ -758,7 +785,7 @@ composer require dedoc/scramble:^0.13
 
 The package registers the extension itself: `config/scramble.php` needs no change.
 
-Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The search `filters` list the filterable fields (dotted paths are not listed) and every `FilterOperator`. The search `text` (with the `mode`s of its strategy), `trashed` (on `SoftDeletes` models) and the `@relevance` sort only appear on the resources that support them. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`. Relations come from the relation objects of `relations()` (their class name, `mutationOperations()` and number of entries), and the `pivot` of a many-to-many entry lists the writable pivot fields with their rules for `create` and `attach`, then `update`, `sync` and `toggle`.
+Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The search `filters` list the filterable fields (dotted paths are not listed) and every `FilterOperator`. The search `text` (with the `mode`s of its strategy), `trashed` (on `SoftDeletes` models) and the `@relevance` sort only appear on the resources that support them. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`. Relations come from the relation objects of `relations()` (their class name, `mutationOperations()` and number of entries), and the `pivot` of a many-to-many entry lists the writable pivot fields with their rules for `create` and `attach`, then `update`, `sync` and `toggle`. The details response is documented with its entries: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, and the input entries of actions, instructions and scopes.
 
 ## Precognition
 
@@ -803,8 +830,8 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Text search — `src/Text/*` (`TextSearch`; the SQL strategies `Contains` and `FullText` implement `QueryTextSearch`, with the database dialects in `src/Text/Dialects/`; `ScoutEngine` implements `EngineTextSearch`; `ResolvedText`, the text search of a resource for one request, read through `$request->context()->text($resource)`; `TextQuery`, `TextMode`, `TextCapabilities`), applied by `TextClause`, `RelevanceClause` and `TrashedClause` in `src/Query/Clauses/`
 - Search engines — `src/Text/Engine/*` (`EngineQuery`, `IndexAttributes`, `EnginePage`, `ScoutModel`) and one profile per Scout engine in `src/Text/Engine/Profiles/`; engine filters and sorts are validated by `src/Rules/Search/{EngineFilter,EngineSort}.php`, and actions read their keys through `src/Actions/{EngineTargets,EngineTargetKeys}.php`
 - Actions / Instructions / Scopes — `src/Actions/{Action,Actionable}.php`, `src/Instructions/{Instruction,Instructionable,AppliesToEngine}.php`, `src/Scopes/Scope.php`
-- Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `FieldPath`, `InputValues`, `MutationOperation`, `WriteRules`, `Details/InputFieldDetails`), filter operators and conditions in `src/Fields/Filtering/`, clauses in `src/Query/Clauses/` (filters: `FilterGroupClause`, `FieldConditionClause`, `RelationConditionClause`)
-- Relations — `src/Relations/*.php`; pivot fields in `src/Concerns/Relations/HasPivotFields.php` (`src/Contracts/PivotRelation.php`), validated by `src/Rules/Mutate/MutatePivot.php`
+- Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `FieldPath`, `InputValues`, `MutationOperation`, `WriteRules`, `Details/FieldDetails`, `Details/ResourceRuleDetails`, `Details/InputFieldDetails`), filter operators and conditions in `src/Fields/Filtering/`, clauses in `src/Query/Clauses/` (filters: `FilterGroupClause`, `FieldConditionClause`, `RelationConditionClause`)
+- Relations — `src/Relations/*.php` (`MorphColumns`, the columns of a `MorphTo` in the details); pivot fields in `src/Concerns/Relations/HasPivotFields.php` (`src/Contracts/PivotRelation.php`), validated by `src/Rules/Mutate/MutatePivot.php`
 - Validation rules used to validate the request bodies — `src/Rules/{Search,Mutate,Input,Resource}/*`, compiled into one rule set per request by `src/Validation/RuleCompiler.php`
-- Scramble extension — `src/Scramble/LomkitLaravelRestApiOperationExtension.php`, with `RelationMutationType` (a relation entry), `WritableFieldsType` (writable fields per operation), `RuleType` (the type a rule list implies), `TextSearchType` (`search.text`, `search.trashed` and the `@relevance` sort) and `EngineTextType` (`search.text` of a `ScoutEngine` resource)
+- Scramble extension — `src/Scramble/LomkitLaravelRestApiOperationExtension.php`, with `RelationMutationType` (a relation entry), `WritableFieldsType` (writable fields per operation), `RuleType` (the type a rule list implies), `TextSearchType` (`search.text`, `search.trashed` and the `@relevance` sort), `EngineTextType` (`search.text` of a `ScoutEngine` resource), `DetailsResponseType` (the details response) and `DetailsEntryTypes` (its entries)
 - Generator stubs — `src/Console/stubs/*.stub`

@@ -39,4 +39,14 @@ class MorphTargetsTest extends TestCase
 
         $this->assertSame(['book'], MorphTargets::of(BookResource::class)->types());
     }
+
+    #[Test]
+    public function it_maps_each_target_type_to_its_resource(): void
+    {
+        $this->assertSame([Book::class => BookResource::class], MorphTargets::of(BookResource::class)->byType());
+
+        Relation::morphMap(['book' => Book::class], false);
+
+        $this->assertSame(['book' => BookResource::class], MorphTargets::of(BookResource::class)->byType());
+    }
 }

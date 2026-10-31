@@ -1,0 +1,31 @@
+{"data": {
+  "actions": [{"name": "Retire Artworks", "uriKey": "retire-artworks",
+    "fields": [{"name": "notify", "type": "boolean", "nullable": false, "default": false, "rules": ["boolean"], "meta": {}}],
+    "meta": {}, "standalone": false, "targeted": false}],
+  "instructions": [{"name": "By Medium", "uriKey": "by-medium",
+    "fields": [{"name": "medium", "type": "enum", "nullable": false, "default": null, "rules": ["enum", "required"], "meta": {}, "values": ["oil", "ink", "watercolor"]}],
+    "meta": {}, "text": true}],
+  "fields": [
+    {"name": "id", "type": "id", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "in", "not in"]}, "create": false, "update": false, "rules": {"all": ["integer"], "create": [], "update": []}, "meta": {}},
+    {"name": "title", "type": "text", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["string", "max:120"], "create": ["required"], "update": ["filled"]}, "meta": {"label": "Title"}},
+    {"name": "medium", "type": "enum", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["enum"], "create": [], "update": []}, "meta": {}, "values": ["oil", "ink", "watercolor"]},
+    {"name": "dimensions", "type": "json", "nullable": true, "select": true, "sort": false, "filter": {"operators": []}, "create": true, "update": true, "rules": {"all": ["nullable", "array"], "create": [], "update": []}, "meta": {}},
+    {"name": "price", "type": "number", "nullable": true, "select": true, "sort": true, "filter": {"operators": ["=", "!=", ">", ">=", "<", "<=", "between", "not between", "in", "not in", "is null", "is not null"]}, "create": true, "update": false, "rules": {"all": ["nullable", "numeric"], "create": [], "update": []}, "meta": {}},
+    {"name": "notes", "type": "text", "nullable": true, "select": false, "sort": false, "filter": {"operators": []}, "create": true, "update": true, "rules": {"all": ["nullable", "string"], "create": [], "update": []}, "meta": {}}],
+  "limits": [10, 25, 50],
+  "scopes": [{"name": "pricedUnder", "fields": [{"name": "max", "type": "number", "nullable": false, "default": null, "rules": ["numeric"], "meta": {}}], "meta": {}}],
+  "relations": [
+    {"resource": "Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\ArtistResource", "relation": "artist",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsTo"},
+    {"resource": "Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\ExhibitionResource", "relation": "exhibitions",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsToMany",
+     "pivot_fields": [
+       {"name": "position", "type": "integer", "nullable": true, "select": true, "sort": false, "filter": {"operators": ["=", "!=", ">", ">=", "<", "<=", "between", "not between", "in", "not in", "is null", "is not null"]}, "create": true, "update": true, "rules": {"all": ["nullable", "integer"], "create": [], "update": []}, "meta": {}},
+       {"name": "wall", "type": "text", "nullable": false, "select": true, "sort": false, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": false, "rules": {"all": ["string"], "create": [], "update": []}, "meta": {}}]},
+    {"resource": "Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\CollectorResource", "relation": "owner",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "MorphTo",
+     "types": {"Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\Collector": "Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\CollectorResource"},
+     "morph": {"type_column": "owner_type", "key_column": "owner_id"}}],
+  "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
+  "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null}
+}}

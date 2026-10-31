@@ -2,9 +2,10 @@
 
 namespace Lomkit\Rest\Text\Engine;
 
+use JsonSerializable;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 
-final readonly class EngineGrammar
+final readonly class EngineGrammar implements JsonSerializable
 {
     /**
      * @param  array<string, IndexAttribute>  $filters
@@ -27,5 +28,18 @@ final readonly class EngineGrammar
     public function sorts(string $attribute): bool
     {
         return in_array($attribute, $this->sorts, true);
+    }
+
+    /** @return array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null} */
+    #[\Override]
+    public function jsonSerialize(): array
+    {
+        return [
+            'filters' => array_values($this->filters),
+            'sorts' => $this->sorts,
+            'max_sorts' => $this->sortKeys === PHP_INT_MAX ? null : $this->sortKeys,
+            'max_page_size' => $this->maxPageSize,
+            'window' => $this->window,
+        ];
     }
 }

@@ -1,0 +1,24 @@
+{"data": {
+  "actions": [],
+  "instructions": [
+    {"name": "Priced At", "uriKey": "priced-at",
+     "fields": [{"name": "price", "type": "integer", "nullable": false, "default": null, "rules": ["integer", "required"], "meta": {}}],
+     "meta": {}, "text": false},
+    {"name": "Priced Between", "uriKey": "priced-between",
+     "fields": [
+       {"name": "min", "type": "integer", "nullable": false, "default": 0, "rules": ["integer"], "meta": {}},
+       {"name": "max", "type": "integer", "nullable": false, "default": null, "rules": ["integer", "required"], "meta": {}}],
+     "meta": {}, "text": false}],
+  "fields": [
+    {"name": "id", "type": "id", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "in", "not in"]}, "create": false, "update": false, "rules": {"all": ["integer"], "create": [], "update": []}, "meta": {}},
+    {"name": "category_id", "type": "integer", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", ">", ">=", "<", "<=", "between", "not between", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["integer"], "create": [], "update": []}, "meta": {}},
+    {"name": "name", "type": "text", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["string"], "create": [], "update": []}, "meta": {}},
+    {"name": "price", "type": "integer", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", ">", ">=", "<", "<=", "between", "not between", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["integer"], "create": [], "update": []}, "meta": {}}],
+  "limits": [10, 25, 50],
+  "scopes": [],
+  "relations": [
+    {"resource": "Lomkit\\Rest\\Tests\\Fixtures\\Catalog\\CategoryResource", "relation": "category",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsTo"}],
+  "rules": {"all": {}, "create": {}, "update": {}},
+  "text": null
+}}

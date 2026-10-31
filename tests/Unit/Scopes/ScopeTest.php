@@ -45,13 +45,10 @@ class ScopeTest extends TestCase
             ->fields([Integer::make('min_views')->default(100)->rules('min:0')])
             ->meta(['label' => 'Popular']);
 
-        $this->assertSame([
-            'name' => 'popular',
-            'fields' => [
-                ['name' => 'min_views', 'type' => 'integer', 'nullable' => false, 'default' => 100, 'rules' => ['integer', 'min:0'], 'meta' => []],
-            ],
-            'meta' => ['label' => 'Popular'],
-        ], $scope->jsonSerialize());
+        $this->assertSame(
+            '{"name":"popular","fields":[{"name":"min_views","type":"integer","nullable":false,"default":100,"rules":["integer","min:0"],"meta":{}}],"meta":{"label":"Popular"}}',
+            json_encode($scope),
+        );
     }
 
     #[Test]

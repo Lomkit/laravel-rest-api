@@ -137,12 +137,7 @@ Meta:
 
 - `Lomkit\Rest\Concerns\Metable` is removed. Actions, instructions and scopes use `Lomkit\Rest\Concerns\HasMeta`: `withMeta([...])` becomes `meta([...])`, which merges, and the `meta()` getter becomes `getMeta()`. The `$meta` property is private.
 
-Details:
-
-- `scopes` is a list of `{name, fields, meta}` instead of a list of names.
-- The `fields` of actions, instructions and scopes are input entries `{name, type, nullable, default, rules, meta}`. `Enum` entries add `values`.
-- Rules are described as strings: pipe strings are split, `Stringable` rules are cast to string, other rule objects are named by their snake class name (`enum`, `password`), and closures are left out.
-- The resource `fields` stay a list of names.
+Details: scopes, instructions and actions list their inputs as entries, see [Details](#details).
 
 ### Native types
 
@@ -821,6 +816,86 @@ Scramble:
 
 - The relations are read from the relation objects that `relations()` returns. A field declared in `pivotFields()` is no longer documented as a relation. A custom relation is documented with its class name, the operations of its `mutationOperations()`, as a list when it has many entries, and with its pivot when it implements `PivotRelation`.
 - The `pivot` of a relation entry lists the writable pivot fields with their rules. Its description names the fields writable on each operation: `create` and `attach`, then `update`, `sync` and `toggle`.
+
+### Details
+
+The details endpoint, `GET /{resource}`, describes the resource with typed entries. Its keys are `actions`, `instructions`, `fields`, `limits`, `scopes`, `relations`, `rules` and `text`. An excerpt:
+
+```json
+{"data": {
+  "fields": [
+    {"name": "title", "type": "text", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["string", "max:120"], "create": ["required"], "update": ["filled"]}, "meta": {"label": "Title"}},
+    {"name": "medium", "type": "enum", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["enum"], "create": [], "update": []}, "meta": {}, "values": ["oil", "ink", "watercolor"]}],
+  "relations": [
+    {"resource": "App\\Rest\\Resources\\ExhibitionResource", "relation": "exhibitions",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsToMany",
+     "pivot_fields": [
+       {"name": "wall", "type": "text", "nullable": false, "select": true, "sort": false, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": false, "rules": {"all": ["string"], "create": [], "update": []}, "meta": {}}]},
+    {"resource": "App\\Rest\\Resources\\CollectorResource", "relation": "owner",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "MorphTo",
+     "types": {"App\\Models\\Collector": "App\\Rest\\Resources\\CollectorResource"},
+     "morph": {"type_column": "owner_type", "key_column": "owner_id"}}],
+  "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
+  "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null}
+}}
+```
+
+Fields:
+
+- `fields` is a list of entries instead of a list of names. Read the names with `fields[].name`. The entries keep the declared order.
+- `select` is `true` when `search.selects` accepts the field and the response returns it.
+- `sort` is `true` when `search.sorts` accepts the field.
+- `filter.operators` lists the operators that `search.filters` accept on the field. It is `[]` when the field is not filterable.
+- `create` and `update` are `true` when the field is writable on that operation.
+- `rules` holds strings. `all` is the type rule, `nullable` and `rules()`. `create` and `update` are `creationRules()` and `updateRules()`.
+- `Enum` entries add `values`, the backing values of the enum.
+
+Rules:
+
+- Rules are described as strings everywhere in the details. Pipe strings are split, `Stringable` rules are cast to string, other rule objects are named by their snake class name (`enum`, `password`), and closures and anonymous rule objects are left out.
+- The top-level `rules` holds `rules()`, `createRules()` and `updateRules()` under `all`, `create` and `update`. Each one maps an attribute to its list of rules. Before, it held the raw values, and a rule object gave `{}`.
+
+Inputs:
+
+- `scopes` is a list of `{name, fields, meta}` instead of a list of names.
+- The `fields` of actions, instructions and scopes are input entries `{name, type, nullable, default, rules, meta}`, with `meta` as an object. `Enum` entries add `values`.
+
+Relations:
+
+- `resource` is the class name of the related resource.
+- `BelongsToMany`, `MorphToMany`, `MorphedByMany` and the relations that implement `PivotRelation` add `pivot_fields`, one entry per pivot field. The list is `[]` without `pivotFields()`. Other relations have no `pivot_fields` key.
+- In a pivot field entry, `create` means written by `create` and `attach`, and `update` means written by `update`, `sync` and `toggle`. `select` means returned in the `pivot` of an included row. `filter.operators` lists the operators of the `<relation>.pivot.<field>` filters. `sort` is always `false`.
+- When the model method of the relation does not return a many-to-many relation, the pivot field entries have `select` set to `false` and `filter.operators` set to `[]`.
+- `MorphTo` entries add `types` and `morph`. `types` maps each morph type to its resource class. The morph type is the morph-map alias of the model, or its class without an alias. Read the targets of a `MorphTo` from `types`. `morph` holds the `type_column` and the `key_column` of the relation.
+- Detect `pivot_fields`, `types` and `morph` by their presence, not by `name`. `name` is the short class name of the relation or its `$name`, so a subclass changes it.
+- `actions`, `instructions` and `relations` are lists, also when a resource returns keyed arrays.
+
+Text search:
+
+- `text` is a new key. It is `null` when `text()` returns `null`. Otherwise it describes the text search of the resource:
+  - `fields`: the searchable fields. It is `[]` on `ScoutEngine`, because the index decides what the text matches.
+  - `modes`: the accepted values of `search.text.mode`.
+  - `relevance`: whether the `@relevance` sort is accepted with a text.
+  - `trashed`: whether `search.trashed` can be sent with a text.
+  - `max_length`: the longest accepted text.
+  - `engine`: `null` on `Contains` and `FullText`.
+- On `ScoutEngine`, `engine` describes the search with a filled text. `filters` lists the `filterable()` attributes with their `name`, `type` and `operators`, and `values` for an `Enum`. The perimeter attributes are not listed. `sorts` lists the `sortable()` attributes. `max_sorts`, `max_page_size` and `window` are the limits of the engine, `null` when it has none. `max_sorts` is `0` when only `@relevance` is accepted.
+- With a filled text on `ScoutEngine`, `text.engine` replaces the `sort` and `filter` of the field entries. The rest of the grammar is described under [Search engines](#search-engines).
+
+Behaviour:
+
+- Empty maps are `{}`: the `meta` of every entry, input entries, actions, instructions and scopes included, and the maps of `rules`. Lists stay `[]`.
+- Details builds every field entry, the pivot fields and the text search, so it now throws where it listed names:
+  - `Lomkit\Rest\Exceptions\InvalidTextSearchException` for a text search declaration error, as on the first search;
+  - `Lomkit\Rest\Exceptions\InvalidResourceException` for a `MorphTo` whose model method does not return a `MorphTo` relation;
+  - `Lomkit\Rest\Exceptions\InvalidFieldException` for an `Enum` field or pivot field with no enum class and no enum cast;
+  - `BadMethodCallException` for a many-to-many relation or a `MorphTo` whose model method is missing.
+- Details checks `viewAny` only and applies no policy to the entries. It lists what the declarations of the resource return for the current request, which can depend on `$request->user()`.
+- Clients ignore the keys they do not know. Later releases can add keys.
+
+Scramble:
+
+- Scramble documents the details response: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, and the input entries of actions, instructions and scopes.
 
 ### Framework integration
 

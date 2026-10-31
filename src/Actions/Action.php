@@ -91,7 +91,7 @@ class Action implements JsonSerializable
         return ['viewAny'];
     }
 
-    /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: array<string, mixed>, standalone: bool, targeted: bool} */
+    /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: \stdClass, standalone: bool, targeted: bool} */
     #[\Override]
     public function jsonSerialize(): array
     {
@@ -99,7 +99,7 @@ class Action implements JsonSerializable
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
             'fields' => InputFieldDetails::forFields($this->getFields($this->resource->context()->request)),
-            'meta' => $this->getMeta(),
+            'meta' => (object) $this->getMeta(),
             'standalone' => $this->isStandalone(),
             'targeted' => $this->isTargeted(),
         ];
