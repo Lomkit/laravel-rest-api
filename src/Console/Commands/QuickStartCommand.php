@@ -3,160 +3,195 @@
 namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Console\Concerns\FindsAvailableModels;
+use Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Str;
+use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Process;
+use Lomkit\Rest\Console\Generation\ClassReference;
+use Lomkit\Rest\Console\Generation\ModelTable;
+use Lomkit\Rest\Console\Generation\UserModel;
+use Lomkit\Rest\Console\QuickStart\ApiRoutes;
+use Lomkit\Rest\Console\QuickStart\AppNamespace;
+use Lomkit\Rest\Console\QuickStart\ExposedModel;
+use Lomkit\Rest\Console\QuickStart\ExposureReport;
+use Lomkit\Rest\Console\QuickStart\Outro;
+use Lomkit\Rest\Console\QuickStart\PlannedFile;
+use Lomkit\Rest\Console\QuickStart\QuickStartPlan;
+use Lomkit\Rest\Console\QuickStart\RouteConflicts;
+use Lomkit\Rest\Console\QuickStart\RouteFile;
+use Lomkit\Rest\Exceptions\InvalidClassReferenceException;
+use Lomkit\Rest\Exceptions\InvalidModelTableException;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+use function Illuminate\Support\artisan_binary;
+use function Illuminate\Support\php_binary;
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\multiselect;
+
+#[AsCommand(name: 'rest:quick-start', description: 'Expose models through resources, controllers, read-only policies and authenticated API routes')]
 class QuickStartCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'rest:quick-start';
+    use FindsAvailableModels;
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Demonstrate the app using user related resource registering.';
+    protected $signature = 'rest:quick-start
+        {--model=* : A model to expose, repeat the option to expose several models}
+        {--install-api : Run php artisan install:api when the application has no API routes}';
 
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle()
+    protected $description = 'Expose models through resources, controllers, read-only policies and authenticated API routes';
+
+    public function handle(Filesystem $files, Gate $gate, Router $router): int
     {
-        $this->comment('Generating User Resource...');
-        $this->callSilent('rest:resource', ['name' => 'UserResource', '--model' => 'User', '--no-interaction' => true]);
+        $app = AppNamespace::of($this->laravel);
+        $user = UserModel::configured($this->laravel->make(Repository::class), $app->root);
+        $routes = new ApiRoutes($files, $this->laravel->basePath());
+        $plan = $this->plan($app, $gate, $user);
 
-        $this->comment('Generating User Controller...');
-        $this->callSilent('rest:controller', ['name' => 'UsersController', '--resource' => 'UserResource', '--no-interaction' => true]);
+        if ($plan === null || $this->clashes($plan, $routes, new RouteConflicts($router->getRoutes())) || ! $this->ensureApiRouting($routes)) {
+            return self::FAILURE;
+        }
 
-        $this->updateUserModelNamespace();
-        $this->setAppNamespace();
-        $this->updateApiRoutes();
+        $created = array_values(array_filter($plan->files(), fn (PlannedFile $file): bool => $file->isNew($files)));
 
-        $this->uncommentApiRoutesFile();
+        foreach ($plan->files() as $file) {
+            $this->components->twoColumnDetail($app->display($file->path), $file->write($files));
+        }
 
-        $this->info('Laravel Rest Api is ready. Type \'php artisan route:list\' to see your new routes !');
+        $added = $routes->append($plan);
+        $this->components->twoColumnDetail(ApiRoutes::PATH, $added === [] ? 'kept' : implode(', ', $added).' behind '.RouteFile::MIDDLEWARE);
+
+        $outro = new Outro($plan, $created, $app, $user, $this->appUrl());
+        $report = $this->check($plan);
+
+        if ($report === null) {
+            $outro->renderUnfinished($this->output);
+            $this->components->error('The API is not ready yet: fix the problems above, then run this command again.');
+
+            return self::FAILURE;
+        }
+
+        $outro->render($this->output, $this->components, $report->search);
+
+        return self::SUCCESS;
     }
 
-    /**
-     * Uncomment the API routes file in the application bootstrap file.
-     *
-     * @return void
-     */
-    protected function uncommentApiRoutesFile()
+    private function plan(AppNamespace $app, Gate $gate, string $user): ?QuickStartPlan
     {
-        $appBootstrapPath = $this->laravel->bootstrapPath('app.php');
+        $models = $this->models();
 
-        $content = file_get_contents($appBootstrapPath);
+        if ($models === []) {
+            $this->components->error('Pass the models to expose with --model, for example --model=Post --model=Tag.');
 
-        if (str_contains($content, '// api: ')) {
-            (new Filesystem)->replaceInFile(
-                '// api: ',
-                'api: ',
-                $appBootstrapPath,
-            );
-        } elseif (str_contains($content, 'web: __DIR__.\'/../routes/web.php\',') && ! str_contains($content, 'api: __DIR__.\'/../routes/api.php\',')) {
-            (new Filesystem)->replaceInFile(
-                'web: __DIR__.\'/../routes/web.php\',',
-                'web: __DIR__.\'/../routes/web.php\','.PHP_EOL.'        api: __DIR__.\'/../routes/api.php\',',
-                $appBootstrapPath,
-            );
-        } else {
-            $this->components->warn('Unable to automatically add API route definition to bootstrap file. API route file should be registered manually if you did not already run `php artisan install:api`.');
+            return null;
+        }
+
+        try {
+            $sources = [];
+
+            foreach ($models as $model) {
+                $source = ModelTable::of(ClassReference::fromInput($model, $app->root, $app->models()));
+                $sources[$source->class] = $source;
+            }
+
+            return QuickStartPlan::for(array_values($sources), $app, $gate, $user);
+        } catch (InvalidClassReferenceException|InvalidModelTableException $exception) {
+            $this->components->error($exception->getMessage());
+
+            return null;
         }
     }
 
-    /**
-     * Update the User model namespace in the generated files.
-     *
-     * @return void
-     */
-    protected function updateUserModelNamespace()
+    /** @return list<string> */
+    private function models(): array
     {
-        $resource = app_path('Rest/Resources/UserResource.php');
+        $models = array_values(array_filter((array) $this->option('model'), fn (mixed $model): bool => is_string($model) && $model !== ''));
 
-        if (file_exists(app_path('Models/User.php'))) {
-            file_put_contents(
-                $resource,
-                str_replace('App\Models\Model::class', 'App\Models\User::class', file_get_contents($resource))
-            );
+        if ($models !== [] || ! $this->canPrompt() || $this->findAvailableModels() === []) {
+            return $models;
         }
 
-        $controller = app_path('Rest/Controllers/UsersController.php');
+        $chosen = multiselect('Which models should the API expose?', $this->findAvailableModels(), required: 'Choose at least one model.');
 
-        if (file_exists(app_path('Models/User.php'))) {
-            file_put_contents(
-                $controller,
-                str_replace('App\Rest\Resources\ModelResource::class', 'App\Rest\Resources\UserResource::class', file_get_contents($controller))
-            );
-        }
+        return array_values(array_map(strval(...), $chosen));
     }
 
-    /**
-     * Set the proper application namespace on the installed files.
-     *
-     * @return void
-     */
-    protected function setAppNamespace()
+    private function clashes(QuickStartPlan $plan, ApiRoutes $routes, RouteConflicts $conflicts): bool
     {
-        $namespace = $this->laravel->getNamespace();
+        $clashes = array_merge(...array_map(fn (ExposedModel $model): array => $conflicts->of($model->uri()), $routes->unregistered($plan)));
 
-        $this->setAppNamespaceOn(app_path('Rest/Resources/UserResource.php'), $namespace);
-        $this->setAppNamespaceOn(app_path('Rest/Controllers/UsersController.php'), $namespace);
-    }
-
-    /**
-     * Set the namespace on the given file.
-     *
-     * @param  string  $file
-     * @param  string  $namespace
-     * @return void
-     */
-    protected function setAppNamespaceOn($file, $namespace)
-    {
-        file_put_contents($file, str_replace(
-            'App\\',
-            $namespace,
-            file_get_contents($file)
-        ));
-    }
-
-    /**
-     * Update the api routes file to include the new resource.
-     *
-     * @return void
-     */
-    protected function updateApiRoutes()
-    {
-        $routesPath = base_path('routes/api.php');
-        if (! file_exists($routesPath)) {
-            file_put_contents($routesPath, '<?php');
+        if ($clashes === []) {
+            return false;
         }
 
-        $routeContent = file_get_contents($routesPath);
-        $newRoute = "\Lomkit\Rest\Facades\Rest::resource('users', \App\Rest\Controllers\UsersController::class);";
+        $this->components->error('Routes of the application already use the URIs or names of the routes to add. Rename or remove them, or leave their models out, then run this command again.');
+        $this->components->bulletList($clashes);
 
-        if (! Str::contains($routeContent, $newRoute)) {
-            file_put_contents($routesPath, $routeContent.PHP_EOL.$newRoute);
-        }
+        return true;
     }
 
-    /**
-     * Resolve the fully-qualified path to the stub.
-     *
-     * @param  string  $stub
-     * @return string
-     */
-    protected function resolveStubPath($stub)
+    private function ensureApiRouting(ApiRoutes $routes): bool
     {
-        return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
-            ? $customPath
-            : __DIR__.str_replace('rest/', '', $stub);
+        if ($routes->exist()) {
+            return true;
+        }
+
+        if ($this->option('install-api') !== true && ! $this->confirmsApiInstall()) {
+            $this->components->error('API routing is not installed. Run php artisan install:api first, or pass --install-api.');
+
+            return false;
+        }
+
+        return $this->installApi($routes);
+    }
+
+    private function installApi(ApiRoutes $routes): bool
+    {
+        if ($this->call('install:api') === self::SUCCESS && $routes->exist()) {
+            $this->components->twoColumnDetail(ApiRoutes::PATH, 'created by install:api');
+
+            return true;
+        }
+
+        $this->components->error('php artisan install:api did not create routes/api.php.');
+
+        return false;
+    }
+
+    private function confirmsApiInstall(): bool
+    {
+        return $this->canPrompt()
+            && confirm('API routing is not installed. Run php artisan install:api now? It installs Laravel Sanctum.', default: true);
+    }
+
+    private function canPrompt(): bool
+    {
+        return $this->input->isInteractive()
+            && ((defined('STDIN') && stream_isatty(STDIN)) || $this->laravel->runningUnitTests());
+    }
+
+    private function check(QuickStartPlan $plan): ?ExposureReport
+    {
+        $result = Process::path($this->laravel->basePath())
+            ->run([php_binary(), artisan_binary(), 'rest:check', ...$plan->controllers(), '--json', '--no-interaction']);
+        $report = ExposureReport::fromJson($result->output());
+
+        if ($report === null) {
+            $this->output->write($result->output());
+            $this->output->write($result->errorOutput());
+
+            return null;
+        }
+
+        $report->render($this->components);
+
+        return $report->passed() ? $report : null;
+    }
+
+    private function appUrl(): string
+    {
+        $url = $this->laravel->make(Repository::class)->get('app.url');
+
+        return is_string($url) && $url !== '' ? $url : 'http://localhost';
     }
 }

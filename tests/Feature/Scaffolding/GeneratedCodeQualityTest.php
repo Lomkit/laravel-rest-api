@@ -5,6 +5,10 @@ namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 use Illuminate\Contracts\Process\ProcessResult;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Process;
+use Lomkit\Rest\Console\QuickStart\RouteFile;
+use Lomkit\Rest\Tests\Fixtures\Accounts\Accounts;
+use Lomkit\Rest\Tests\Fixtures\Blog\Blog;
+use Lomkit\Rest\Tests\Fixtures\Blog\FakeApiInstallCommand;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Article;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Comment;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Desk;
@@ -30,6 +34,7 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
             tmpDir: %s
             paths:
                 - %s
+                - %s
             scanDirectories:
                 - %s
         NEON;
@@ -38,6 +43,9 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
         'Actions/LintedAction.php',
         'Controllers/Admin/LintedTagsController.php',
         'Controllers/Controller.php',
+        'Controllers/LintedEntriesController.php',
+        'Controllers/LintedLabelsController.php',
+        'Controllers/LintedMemosController.php',
         'Controllers/LintedPostsController.php',
         'Controllers/LintedStrayController.php',
         'Instructions/LintedInstruction.php',
@@ -48,7 +56,10 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
         'Resources/LintedDeskResource.php',
         'Resources/LintedDraftResource.php',
         'Resources/LintedEditionResource.php',
+        'Resources/LintedEntryResource.php',
+        'Resources/LintedLabelResource.php',
         'Resources/LintedLibraryResource.php',
+        'Resources/LintedMemoResource.php',
         'Resources/LintedPostResource.php',
         'Resources/LintedRuleResource.php',
         'Resources/LintedStoryResource.php',
@@ -56,10 +67,37 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
         'Responses/LintedResponse.php',
     ];
 
+    private const array GENERATED_POLICIES = [
+        'Admin/LintedTagPolicy.php',
+        'LintedArticlePolicy.php',
+        'LintedEntryPolicy.php',
+        'LintedLabelPolicy.php',
+        'LintedMemoPolicy.php',
+        'LintedPostPolicy.php',
+    ];
+
+    private const string ENTRY_MODEL = <<<'PHP'
+        protected $table = 'posts';
+
+            public function labels(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+            {
+                return $this->belongsToMany(LintedLabel::class, 'post_tag', 'post_id', 'tag_id');
+            }
+        PHP;
+
+    private const string LABEL_MODEL = <<<'PHP'
+        protected $table = 'tags';
+
+            public function entries(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+            {
+                return $this->belongsToMany(LintedEntry::class, 'post_tag', 'tag_id', 'post_id');
+            }
+        PHP;
+
     #[\Override]
     protected function fixtures(): array
     {
-        return [new Newsroom];
+        return [new Newsroom, new Accounts, new Blog];
     }
 
     #[Test]
@@ -67,7 +105,7 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
     {
         $this->generateEveryClass();
 
-        $result = $this->runTool(['vendor/bin/pint', '--test', '--no-config', '--preset', 'laravel', '--cache-file', base_path('../pint.cache'), app_path('Rest')]);
+        $result = $this->runTool(['vendor/bin/pint', '--test', '--no-config', '--preset', 'laravel', '--cache-file', base_path('../pint.cache'), app_path('Rest'), app_path('Policies'), base_path('routes')]);
 
         $this->assertTrue($result->successful(), $result->output().$result->errorOutput());
     }
@@ -78,7 +116,7 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
         $this->generateEveryClass();
         file_put_contents(
             $config = base_path('../phpstan.neon'),
-            sprintf(self::LARASTAN_CONFIG, $this->packagePath(), base_path('../phpstan'), app_path('Rest'), app_path('Models')),
+            sprintf(self::LARASTAN_CONFIG, $this->packagePath(), base_path('../phpstan'), app_path('Rest'), app_path('Policies'), app_path('Models')),
         );
 
         $result = $this->runTool(['vendor/bin/phpstan', 'analyse', '--configuration', $config, '--memory-limit', '1G', '--no-progress', '--error-format', 'raw']);
@@ -109,14 +147,39 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
         $this->generate('rest:action', ['name' => 'LintedAction']);
         $this->generate('rest:instruction', ['name' => 'LintedInstruction']);
         $this->generate('rest:response', ['name' => 'LintedResponse']);
+        $this->generate('rest:policy', ['name' => 'LintedPostPolicy', '--model' => 'LintedPost']);
+        $this->generate('rest:policy', ['name' => 'LintedArticlePolicy', '--model' => Article::class, '--force' => true]);
+        $this->generate('rest:policy', ['name' => 'Admin/LintedTagPolicy']);
+        $this->quickStart();
+        file_put_contents(base_path('routes/rest.php'), (new RouteFile("<?php\n\ndeclare(strict_types=1);\n"))->withResource('admin-logs', 'App\Rest\Controllers\AdminLogsController')->withResource('admin-posts', 'App\Rest\Controllers\Admin\PostsController')->contents);
 
-        $files = array_map(fn (SplFileInfo $file): string => $file->getRelativePathname(), (new Filesystem)->allFiles(app_path('Rest')));
-        sort($files);
-
-        $this->assertSame(self::GENERATED_FILES, $files);
+        $this->assertSame(self::GENERATED_FILES, $this->filesIn(app_path('Rest')));
+        $this->assertSame(self::GENERATED_POLICIES, $this->filesIn(app_path('Policies')));
     }
 
-    /** @param  array<string, string|bool>  $arguments */
+    private function quickStart(): void
+    {
+        $this->writeModel('App\Models\LintedEntry', self::ENTRY_MODEL);
+        $this->writeModel('App\Models\LintedLabel', self::LABEL_MODEL);
+        $this->writeModel('App\Models\LintedMemo', "use \\Illuminate\\Database\\Eloquent\\SoftDeletes;\n\n    protected \$table = 'notes';");
+        copy(FakeApiInstallCommand::routesStub(), base_path('routes/api.php'));
+        Process::fake(['*rest:check*' => Process::result('{"routes":15,"policies":3,"problems":[],"search":"/api/linted-entries/search"}')]);
+
+        $this->generate('rest:quick-start', ['--model' => ['LintedEntry', 'LintedLabel', 'LintedMemo']]);
+
+        $this->assertStringContainsString("\nRest::resource('linted-memos', LintedMemosController::class)\n    ->middleware('auth:sanctum');\n", (string) file_get_contents(base_path('routes/api.php')));
+    }
+
+    /** @return list<string> */
+    private function filesIn(string $directory): array
+    {
+        $files = array_map(fn (SplFileInfo $file): string => $file->getRelativePathname(), (new Filesystem)->allFiles($directory));
+        sort($files);
+
+        return $files;
+    }
+
+    /** @param  array<string, string|bool|list<string>>  $arguments */
     private function generate(string $command, array $arguments): void
     {
         $this->artisan($command, [...$arguments, '--no-interaction' => true])->assertSuccessful();

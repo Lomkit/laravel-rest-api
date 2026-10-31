@@ -586,7 +586,7 @@ The classes that the generators write pass Pint with the `laravel` preset and La
 
 Options:
 
-- `rest:resource`, `rest:controller`, `rest:action`, `rest:instruction`, `rest:response`, `rest:base-resource` and `rest:base-controller` accept `--force` (`-f`), which replaces an existing class. Without it, an existing class is kept: the command prints `<Type> already exists.` and exits with 0.
+- `rest:resource`, `rest:controller`, `rest:policy`, `rest:action`, `rest:instruction`, `rest:response`, `rest:base-resource` and `rest:base-controller` accept `--force` (`-f`), which replaces an existing class. Without it, an existing class is kept: the command prints `<Type> already exists.` and exits with 0.
 - When the command runs interactively, `rest:resource` asks for the model and `rest:controller` for the resource whenever the option is missing, also when the name is given or `-v` is passed. With `--no-interaction` they ask nothing.
 - `rest:controller` offers the concrete resources under `app/Rest/Resources`, nested ones included. It reads each file first, and loads only a file that declares a single class, named like the file and its directory, that extends another class and is not abstract: a script or a helper in that directory is never run. `rest:resource --generate` finds the resources of the related models in the same way.
 
@@ -636,8 +636,42 @@ Base classes:
 - `rest:resource` refuses the name `Resource`, and `rest:controller` the name `Controller`, in any case and in any namespace, with exit code 1: these names belong to the base classes. When the command runs interactively, it refuses the name before it asks for the model or the resource. Run `rest:base-resource` or `rest:base-controller` to create a base class.
 - A class in the namespace of its base class no longer imports it.
 
+Policies:
+
+- `rest:policy` is a new generator. `php artisan rest:policy PostPolicy --model=Post` writes `app/Policies/PostPolicy.php`, a read-only policy: `viewAny()` and `view()` return `true` for a signed-in user, and `create()`, `update()` and `delete()` return `false`. For a model that uses `SoftDeletes`, `restore()` and `forceDelete()` are added and return `false`. Edit the policy before clients need to write.
+- The user parameter has the type of the model of the user provider of the default guard (`auth.providers.<provider>.model`), or `App\Models\User` when it is not set. In the policy of the user model itself, the second parameter is named `$model`.
+- Without `--model`, the model is guessed from the class name: `PostPolicy` gives `App\Models\Post`, `Admin/InvoicePolicy` gives `App\Models\Admin\Invoice`, and `LearningResourcePolicy` gives `App\Models\LearningResource`. When the command runs interactively, it asks for the model. When no model is given or guessed, or the model does not exist, the command stops with exit code 1 before any file is written.
+- When Gate already finds another policy for the model, through `Gate::policy()`, `#[UsePolicy]` or the naming convention, the command prints `The model [App\Models\Post] already has the policy [App\Policies\ContentPolicy].`, writes nothing and exits with 0. With `--force`, it writes the policy and warns that Gate still uses the other one: register the new policy with `Gate::policy()` to use it.
+
 Published stubs:
 
 - The generators read the stubs that `php artisan stub:publish` copies to `stubs/rest.<name>.stub`, and fall back to the package stubs. Before, they ignored them. The stubs published under 2.x declare untyped properties such as `public static $model`, which are a fatal error in 3.0 (see [Native types](#native-types)): delete your `stubs/rest.*.stub` files, or publish them again with `php artisan stub:publish --force` after you have saved the Laravel stubs that you customised.
 - The `stubs/rest/*.stub` files that versions before 2.14 used are not read.
-- A published stub keeps the placeholders that the generator fills: `{{ namespace }}` and `{{ class }}` in each stub, `{{ namespacedModel }}`, `{{ model }}`, `{{ imports }}`, `{{ fields }}` and `{{ relations }}` in `rest.resource.stub`, and `{{ namespacedResource }}` and `{{ resource }}` in `rest.controller.stub`. Otherwise the command throws `Lomkit\Rest\Exceptions\InvalidStubException`, which names the stub and the missing placeholder.
+- A published stub keeps the placeholders that the generator fills: `{{ namespace }}` and `{{ class }}` in each stub, `{{ namespacedModel }}`, `{{ model }}`, `{{ imports }}`, `{{ fields }}` and `{{ relations }}` in `rest.resource.stub`, `{{ namespacedResource }}` and `{{ resource }}` in `rest.controller.stub`, and `{{ namespacedModel }}`, `{{ namespacedUserModel }}`, `{{ model }}`, `{{ modelVariable }}`, `{{ user }}` and `{{ softDeleteMethods }}` in `rest.policy.stub`. Otherwise the command throws `Lomkit\Rest\Exceptions\InvalidStubException`, which names the stub and the missing placeholder.
+
+### Quick start
+
+`rest:quick-start` exposes the models that you choose, behind authentication, and checks the result before it reports success:
+
+```bash
+php artisan rest:quick-start
+php artisan rest:quick-start --no-interaction --model=Post --model=Tag --install-api
+```
+
+- The command asks `Which models should the API expose?` and offers the models of `app/Models`, or of `app` when that directory does not exist, with none selected. With `--no-interaction`, or when no terminal can answer, pass each model with `--model`: without it, the command stops with exit code 1 and writes nothing. Before, it always exposed `App\Models\User`.
+- Each model must exist and have a table. Otherwise the command stops with exit code 1 before any file is written.
+- For each model, it writes the resource with the fields and relations of the table, as `rest:resource --generate` does, the controller, and a read-only policy, as `rest:policy` does, when Gate finds no policy for the model. It creates the base resource and the base controller when they are missing. The relations between the models of one run are generated. A relation to a model that is not exposed is skipped and reported: `Skipped: Post.author: no resource for App\Models\User. Rerun with --model=User to expose users.`
+- When `routes/api.php` does not exist, the command asks before it runs `php artisan install:api`, which installs Laravel Sanctum. `--install-api` runs it without asking. With `--no-interaction` or without a terminal, for example in CI, and without `--install-api`, or when you decline, the command stops with exit code 1 and writes nothing. The command no longer edits `bootstrap/app.php`: `install:api` registers `routes/api.php`.
+- It appends one route per model to `routes/api.php`, behind `auth:sanctum`, and adds the `use` imports of the classes it names:
+
+  ```php
+  Rest::resource('posts', PostsController::class)
+      ->middleware('auth:sanctum');
+  ```
+
+  A controller that `routes/api.php` already names, by its full name, an import, a group import, an alias or an imported namespace, is not added again. The imports go after the existing ones, or after `declare(strict_types=1);` when the file has none. Before, the route had no middleware.
+- Before it writes anything, the command checks that no route of the application already answers the URIs of the new routes under the prefix of the API routes, or uses their names, such as `posts.destroy` from `Route::apiResource('posts', ...)`. Otherwise it lists these routes and stops with exit code 1: rename or remove them, or leave their models out.
+- Then it checks the result in a new PHP process: each controller has routes, each route is behind an authentication middleware whose guards exist, and Gate finds a policy for each model. It prints `checks (fresh process) ... 10 routes authenticated, 2 policies found`. When a check fails, the command lists the problems, the skipped relations and the policy reminder, and stops with exit code 1. The files it wrote stay, and the next run keeps them. Before, the command always exited with 0.
+- An existing class is never changed: the command reports it as `kept`. A second run prints `kept` on every line and exits with 0.
+- The command never edits the user model. When the user model does not use `Laravel\Sanctum\HasApiTokens`, it prints a warning. It ends with a command that creates a token, a `curl` request to the search route that the application registered for the first model, with its API prefix, and, when it wrote policies, a reminder that they refuse every write.
+- The generated classes use the root namespace of the application, such as `MyApp\`. Before, the command replaced `App\` in the generated files, which gave `MyMyApp\`.

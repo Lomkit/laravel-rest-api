@@ -206,34 +206,6 @@ parameters:
 
 		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 7
-			path: src/Console/Commands/QuickStartCommand.php
-
-		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 3
-			path: src/Console/Commands/QuickStartCommand.php
-
-		-
-			message: '#^Parameter \#1 \$haystack of function str_contains expects string, string\|false given\.$#'
-			identifier: argument.type
-			count: 3
-			path: src/Console/Commands/QuickStartCommand.php
-
-		-
-			message: '#^Parameter \#1 \$haystack of static method Illuminate\\Support\\Str\:\:contains\(\) expects string, string\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Console/Commands/QuickStartCommand.php
-
-		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|false given\.$#'
-			identifier: argument.type
-			count: 3
-			path: src/Console/Commands/QuickStartCommand.php
-
-		-
-			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Contracts/EloquentQueryBuilder.php
 

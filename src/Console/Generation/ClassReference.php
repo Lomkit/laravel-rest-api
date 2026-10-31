@@ -31,6 +31,11 @@ final readonly class ClassReference
         return self::guess($resource, 'Resource', fn (string $model): string => $model, $namespace);
     }
 
+    public static function guessPolicyModel(string $policy, string $namespace): ?self
+    {
+        return self::guess($policy, 'Policy', fn (string $model): string => $model, $namespace);
+    }
+
     public static function guessResource(string $controller, string $namespace): ?self
     {
         return self::guess($controller, 'Controller', fn (string $name): string => Str::singular($name).'Resource', $namespace);

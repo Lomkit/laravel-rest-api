@@ -6,6 +6,7 @@ use Illuminate\Foundation\Events\PublishingStubs;
 use Lomkit\Rest\Console\Generation\Stub;
 use Lomkit\Rest\Exceptions\InvalidStubException;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -13,6 +14,8 @@ use PHPUnit\Framework\Attributes\Test;
 class PublishedStubsTest extends ScaffoldingTestCase
 {
     private const string RESOURCE_WITH_MODEL = "<?php\n\nnamespace {{ namespace }};\n\nuse {{ namespacedModel }};\n\n// {{ model }}\n";
+
+    private const string POLICY_WITHOUT_SOFT_DELETES = "<?php\n\nnamespace {{ namespace }};\n\nuse {{ namespacedModel }};\nuse {{ namespacedUserModel }};\n\n// {{ user }} {{ model }} {{ modelVariable }}\nclass {{ class }} {}\n";
 
     private const string PUBLISHED_ACTION = "<?php\n\nnamespace {{ namespace }};\n\nuse Lomkit\Rest\Actions\Action;\n\nclass {{ class }} extends Action {}\n";
 
@@ -28,6 +31,7 @@ class PublishedStubsTest extends ScaffoldingTestCase
                 realpath(__DIR__.'/../../../src/Console/stubs/base-resource.stub') => 'rest.base-resource.stub',
                 realpath(__DIR__.'/../../../src/Console/stubs/controller.stub') => 'rest.controller.stub',
                 realpath(__DIR__.'/../../../src/Console/stubs/instruction.stub') => 'rest.instruction.stub',
+                realpath(__DIR__.'/../../../src/Console/stubs/policy.stub') => 'rest.policy.stub',
                 realpath(__DIR__.'/../../../src/Console/stubs/resource.stub') => 'rest.resource.stub',
                 realpath(__DIR__.'/../../../src/Console/stubs/response.stub') => 'rest.response.stub',
             ],
@@ -98,6 +102,7 @@ class PublishedStubsTest extends ScaffoldingTestCase
             'resource without its relations' => ['resource', self::RESOURCE_WITH_MODEL."{{ imports }}\n\nclass {{ class }}\n{\n    {{ fields }}\n}\n", '{{ relations }}', 'rest:resource', ['name' => 'RelationlessResource', '--model' => 'Post']],
             'controller without its resource' => ['controller', "<?php\n\nnamespace {{ namespace }};\n\nclass {{ class }} {}\n", '{{ namespacedResource }}', 'rest:controller', ['name' => 'UnfilledController', '--resource' => 'PostResource']],
             'controller without the name of its resource' => ['controller', "<?php\n\nnamespace {{ namespace }};\n\nuse {{ namespacedResource }};\n\nclass {{ class }} {}\n", '{{ resource }}', 'rest:controller', ['name' => 'UnnamedResourceController', '--resource' => 'PostResource']],
+            'policy without the restore and force delete methods' => ['policy', self::POLICY_WITHOUT_SOFT_DELETES, '{{ softDeleteMethods }}', 'rest:policy', ['name' => 'UnfilledPolicy', '--model' => User::class]],
             'action without its class' => ['action', "<?php\n\nnamespace {{ namespace }};\n\nclass UnfilledAction {}\n", '{{ class }}', 'rest:action', ['name' => 'UnfilledAction']],
             'response without its namespace' => ['response', "<?php\n\nclass {{ class }} {}\n", '{{ namespace }}', 'rest:response', ['name' => 'UnfilledResponse']],
         ];

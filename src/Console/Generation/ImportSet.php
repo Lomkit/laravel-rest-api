@@ -67,6 +67,11 @@ final readonly class ImportSet
         return self::reserving($class, [$baseClass]);
     }
 
+    public static function forPolicy(string $class): self
+    {
+        return self::reserving($class, []);
+    }
+
     public function with(string $class, string $aliasSuffix): self
     {
         if (isset($this->names[$class])) {
