@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Process;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Fixtures\Accounts\Accounts;
@@ -157,15 +158,26 @@ class QuickStartBlockedTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    public function it_fails_when_the_policy_of_a_model_outside_the_application_cannot_be_found(): void
+    public function it_stops_before_any_write_when_gate_would_not_discover_the_policy_of_a_model_outside_the_application(): void
     {
-        $this->installApiRoutes();
+        $this->fakeApiInstall();
 
-        $output = $this->blockedQuickStart(['--model' => [User::class]]);
+        $output = $this->blockedQuickStart(['--model' => ['Post', User::class], '--install-api' => true]);
 
-        $this->assertStringContainsString('  app/Rest/Resources/UserResource.php ... created', $output);
-        $this->assertStringContainsString('  app/Policies/UserPolicy.php ... created (read-only)', $output);
-        $this->assertStringContainsString('  ⇂ No policy is found for '.User::class.'. Generate one with php artisan rest:policy, or register it with Gate::policy()', $output);
+        $this->assertStringContainsString('Gate finds no policy for the model ['.User::class.'] and would not discover the policy [App\Policies\UserPolicy] that this command generates. Register a policy for the model with Gate::policy(), for example one generated with php artisan rest:policy, then run this command again.', $output);
+        $this->assertNothingWritten();
+    }
+
+    #[Test]
+    public function it_stops_before_any_write_when_gate_guesses_another_policy_name_for_a_model(): void
+    {
+        Gate::guessPolicyNamesUsing(fn (string $model): string => 'App\Authorization\\'.class_basename($model).'Policy');
+        $this->fakeApiInstall();
+
+        $output = $this->blockedQuickStart(['--model' => ['Post'], '--install-api' => true]);
+
+        $this->assertStringContainsString('Gate finds no policy for the model [App\Models\Post] and would not discover the policy [App\Policies\PostPolicy] that this command generates. Register a policy for the model with Gate::policy(), for example one generated with php artisan rest:policy, then run this command again.', $output);
+        $this->assertNothingWritten();
     }
 
     #[Test]

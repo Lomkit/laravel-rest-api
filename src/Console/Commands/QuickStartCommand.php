@@ -23,6 +23,7 @@ use Lomkit\Rest\Console\QuickStart\RouteConflicts;
 use Lomkit\Rest\Console\QuickStart\RouteFile;
 use Lomkit\Rest\Exceptions\InvalidClassReferenceException;
 use Lomkit\Rest\Exceptions\InvalidModelTableException;
+use Lomkit\Rest\Exceptions\UndiscoverablePolicyException;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 use function Illuminate\Support\artisan_binary;
@@ -98,7 +99,7 @@ class QuickStartCommand extends Command
             $routes->ensureDistinctNames($plan);
 
             return $plan;
-        } catch (InvalidClassReferenceException|InvalidModelTableException $exception) {
+        } catch (InvalidClassReferenceException|InvalidModelTableException|UndiscoverablePolicyException $exception) {
             $this->components->error($exception->getMessage());
 
             return null;
