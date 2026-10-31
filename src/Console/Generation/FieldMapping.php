@@ -48,10 +48,6 @@ final readonly class FieldMapping
             $list = $list->withNote("{$this->prefix}{$column->name}: no field type matches the column type {$column->typeName}, generated as Text.");
         }
 
-        if ($class === Text::class && $column->isJson()) {
-            $list = $list->withNote("{$this->prefix}{$column->name}: {$column->typeName} column without an array cast on the model, generated as Text.");
-        }
-
         return $list->withField($this->declare($column, $class ?? Text::class, $table));
     }
 
@@ -86,10 +82,6 @@ final readonly class FieldMapping
 
     private function rule(Column $column, string $class): ?string
     {
-        if ($class === Text::class && $column->isJson()) {
-            return 'json';
-        }
-
         $length = $column->length();
 
         return $length !== null && in_array($class, [ID::class, Text::class], true) ? "max:{$length}" : null;

@@ -46,6 +46,8 @@ class ArticleResource extends Resource
             Integer::make('edition_year')->nullable(),
             Text::make('metadata')->nullable(),
             Json::make('options')->nullable(),
+            Json::make('layout')->nullable(),
+            Json::make('embedding')->nullable(),
             Text::make('thumbnail')->nullable(),
             Text::make('editor_token')
                 ->nullable()

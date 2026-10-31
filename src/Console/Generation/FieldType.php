@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Casts\AsEncryptedArrayObject;
 use Illuminate\Database\Eloquent\Casts\AsEncryptedCollection;
 use Illuminate\Database\Eloquent\Casts\AsEnumArrayObject;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
+use Illuminate\Database\Eloquent\Casts\AsFluent;
+use Illuminate\Database\Eloquent\Casts\AsVector;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\Generation\Schema\Column;
 use Lomkit\Rest\Fields\Boolean;
@@ -47,6 +49,8 @@ enum FieldType: string
         AsEncryptedCollection::class,
         AsEnumArrayObject::class,
         AsEnumCollection::class,
+        AsFluent::class,
+        AsVector::class,
     ];
 
     public static function fromCast(mixed $cast): ?self
@@ -85,7 +89,8 @@ enum FieldType: string
             'decimal', 'double', 'float', 'float4', 'float8', 'money', 'numeric', 'real' => self::Number,
             'date' => self::Date,
             'datetime', 'timestamp', 'timestamptz' => self::DateTime,
-            'bpchar', 'char', 'citext', 'enum', 'json', 'jsonb', 'longtext', 'mediumtext', 'set', 'text', 'time', 'timetz', 'tinytext', 'uuid', 'varchar' => self::Text,
+            'json', 'jsonb' => self::Json,
+            'bpchar', 'char', 'citext', 'enum', 'longtext', 'mediumtext', 'set', 'text', 'time', 'timetz', 'tinytext', 'uuid', 'varchar' => self::Text,
             default => null,
         };
     }

@@ -7,6 +7,7 @@ use Lomkit\Rest\Fields\Boolean;
 use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\BelongsTo;
@@ -55,9 +56,7 @@ class StoryResource extends Resource
                     ->rules('max:80'),
                 Boolean::make('pinned')->creationRules('required'),
                 Text::make('badge')->nullable(),
-                Text::make('details')
-                    ->nullable()
-                    ->rules('json'),
+                Json::make('details')->nullable(),
                 DateTime::make('created_at')
                     ->nullable()
                     ->readonly(),

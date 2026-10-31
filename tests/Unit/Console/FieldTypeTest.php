@@ -4,6 +4,9 @@ namespace Lomkit\Rest\Tests\Unit\Console;
 
 use Illuminate\Database\Eloquent\Casts\AsCollection;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
+use Illuminate\Database\Eloquent\Casts\AsFluent;
+use Illuminate\Database\Eloquent\Casts\AsStringable;
+use Illuminate\Database\Eloquent\Casts\AsVector;
 use Lomkit\Rest\Console\Generation\FieldType;
 use Lomkit\Rest\Console\Generation\Schema\Column;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\ArticleStatus;
@@ -29,6 +32,8 @@ class FieldTypeTest extends TestCase
             'encrypted array' => ['encrypted:array', FieldType::Json],
             'collection class' => [AsCollection::class, FieldType::Json],
             'enum collection with its argument' => [AsEnumCollection::class.':'.ArticleStatus::class, FieldType::Json],
+            'fluent' => [AsFluent::class, FieldType::Json],
+            'vector' => [AsVector::class, FieldType::Json],
             'boolean' => ['boolean', FieldType::Boolean],
             'integer' => ['int', FieldType::Integer],
             'decimal with its precision' => ['decimal:2', FieldType::Number],
@@ -36,6 +41,7 @@ class FieldTypeTest extends TestCase
             'datetime with its format' => ['datetime:Y-m-d H:i', FieldType::DateTime],
             'unix timestamp' => ['timestamp', null],
             'hashed' => ['hashed', null],
+            'stringable' => [AsStringable::class, null],
             'no cast' => [null, null],
         ];
     }
@@ -61,8 +67,8 @@ class FieldTypeTest extends TestCase
             'date' => ['date', 'date', FieldType::Date],
             'pgsql timestamp' => ['timestamp', 'timestamp(0) without time zone', FieldType::DateTime],
             'pgsql timestamp with time zone' => ['timestamptz', 'timestamp(0) with time zone', FieldType::DateTime],
-            'mysql json' => ['json', 'json', FieldType::Text],
-            'pgsql jsonb' => ['jsonb', 'jsonb', FieldType::Text],
+            'mysql json' => ['json', 'json', FieldType::Json],
+            'pgsql jsonb' => ['jsonb', 'jsonb', FieldType::Json],
             'pgsql uuid' => ['uuid', 'uuid', FieldType::Text],
             'pgsql char' => ['bpchar', 'character(2)', FieldType::Text],
             'mysql enum' => ['enum', "enum('draft','published')", FieldType::Text],
