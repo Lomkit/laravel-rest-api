@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Search;
 
 use Illuminate\Testing\TestResponse;
-use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -15,7 +14,7 @@ class ScopesTest extends PackageTestCase
     #[\Override]
     protected function fixtures(): array
     {
-        return [new Publishing, new Catalog];
+        return [new Publishing];
     }
 
     #[Test]
@@ -145,24 +144,6 @@ class ScopesTest extends PackageTestCase
             'a whole float' => ['[2.0]', ['National post']],
             'a numeric string' => ['["3"]', []],
         ];
-    }
-
-    #[Test]
-    public function it_prohibits_scopes_in_scout_mode(): void
-    {
-        $response = $this->postJson('/api/products/search', [
-            'search' => [
-                'text' => ['value' => 'lamp'],
-                'scopes' => [['name' => 'popular']],
-            ],
-        ]);
-
-        $response->assertUnprocessable()->assertExactJson([
-            'message' => 'The search.scopes field is prohibited.',
-            'errors' => [
-                'search.scopes' => ['The search.scopes field is prohibited.'],
-            ],
-        ]);
     }
 
     /** @param list<array<string, mixed>> $scopes */

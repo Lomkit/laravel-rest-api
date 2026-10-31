@@ -111,7 +111,7 @@ class OperateRequest extends RestRequest
     #[\Override]
     public function messages(): array
     {
-        return ['search.text.prohibited' => 'Text search is not available for actions.'];
+        return ['search.text.prohibited' => 'Text search is not available on this resource.'];
     }
 
     public function actionKey(): string

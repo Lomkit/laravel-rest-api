@@ -18,6 +18,13 @@
       <directory suffix="Test.php">./tests/Feature</directory>
     </testsuite>
   </testsuites>
+  <groups>
+    <exclude>
+      <group>meilisearch</group>
+      <group>typesense</group>
+      <group>algolia</group>
+    </exclude>
+  </groups>
   <php>
     <env name="APP_ENV" value="testing"/>
     <env name="APP_DEBUG" value="true"/>

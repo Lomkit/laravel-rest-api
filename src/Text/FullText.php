@@ -9,7 +9,7 @@ use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Text\Dialects\MySqlFullText;
 use Lomkit\Rest\Text\Dialects\PostgresFullText;
 
-final readonly class FullText implements TextSearch
+final readonly class FullText implements QueryTextSearch
 {
     private const string CONFIGURATION_NAME = '/^[A-Za-z_][A-Za-z0-9_]*$/';
 
@@ -17,7 +17,7 @@ final readonly class FullText implements TextSearch
     private function __construct(
         private array $groups = [],
         private string $language = 'english',
-        private ?TextSearch $otherwise = null,
+        private ?QueryTextSearch $otherwise = null,
     ) {}
 
     public static function make(): self
@@ -43,7 +43,7 @@ final readonly class FullText implements TextSearch
         return new self($this->groups, $language, $this->otherwise);
     }
 
-    public function otherwise(TextSearch $strategy): self
+    public function otherwise(QueryTextSearch $strategy): self
     {
         return new self($this->groups, $this->language, $strategy);
     }
@@ -72,7 +72,7 @@ final readonly class FullText implements TextSearch
         return $this->resolve($target)->run($query, $target);
     }
 
-    private function resolve(TextTarget $target): TextSearch
+    private function resolve(TextTarget $target): QueryTextSearch
     {
         $groups = $this->groups($target);
 

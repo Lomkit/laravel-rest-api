@@ -8,7 +8,6 @@ use Lomkit\Rest\Exceptions\UnplannedCheckException;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Query\Builder;
-use Lomkit\Rest\Query\ScoutBuilder;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
 use PHPUnit\Framework\Attributes\Test;
@@ -85,16 +84,6 @@ class StrictModeTest extends HelpdeskTestCase
         $this->expectExceptionObject($this->unplanned('viewAny', TicketResource::class));
 
         (new Builder($resource))->search();
-    }
-
-    #[Test]
-    public function it_throws_when_a_text_search_runs_without_planning_the_listing(): void
-    {
-        $resource = $this->contextFor(null)->resource(TicketResource::class);
-
-        $this->expectExceptionObject($this->unplanned('viewAny', TicketResource::class));
-
-        (new ScoutBuilder($resource))->search(['text' => ['value' => 'printer']]);
     }
 
     #[Test]

@@ -16,7 +16,7 @@ use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Response;
-use Lomkit\Rest\Query\ScoutBuilder;
+use Lomkit\Rest\Query\EngineSearch;
 
 trait PerformsRestOperations
 {
@@ -41,9 +41,16 @@ trait PerformsRestOperations
         $this->beforeSearch($request);
 
         $text = $request->context()->text($resource);
-        $builder = $text->usesScout() ? ScoutBuilder::class : QueryBuilder::class;
 
-        $query = app()->make($builder, ['resource' => $resource, 'query' => null])
+        if ($text->usesEngine()) {
+            $page = (new EngineSearch($resource, $text))->paginate($request);
+
+            $this->afterSearch($request);
+
+            return $this->buildResponse($resource, $page);
+        }
+
+        $query = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
             ->search($request->input('search', []));
 
         $this->afterSearch($request);

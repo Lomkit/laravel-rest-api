@@ -120,6 +120,17 @@ class FieldCapabilitiesTest extends TestCase
     }
 
     #[Test]
+    public function it_filters_and_sorts_through_a_callback_only_when_one_is_declared(): void
+    {
+        $this->assertFalse(Text::make('title')->filtersThroughCallback());
+        $this->assertFalse(Text::make('title')->sortsThroughCallback());
+        $this->assertTrue(Text::make('title')->filterUsing(fn (Builder $query): Builder => $query)->filtersThroughCallback());
+        $this->assertFalse(Text::make('title')->filterUsing(fn (Builder $query): Builder => $query)->sortsThroughCallback());
+        $this->assertTrue(Text::make('title')->sortUsing(fn (Builder $query): Builder => $query)->sortsThroughCallback());
+        $this->assertFalse(Text::make('title')->sortUsing(fn (Builder $query): Builder => $query)->filtersThroughCallback());
+    }
+
+    #[Test]
     public function it_is_write_only_only_when_asked(): void
     {
         $this->assertFalse(Text::make('password')->isWriteOnly());

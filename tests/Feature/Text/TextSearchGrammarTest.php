@@ -107,22 +107,33 @@ class TextSearchGrammarTest extends TextSearchTestCase
             ->assertJsonPath('data.0.posts_count', 2);
     }
 
+    /** @param array<string, mixed> $text */
     #[Test]
-    public function it_runs_the_text_search_of_a_resource_whose_model_is_indexed_by_scout(): void
+    #[DataProvider('emptyIncludeTexts')]
+    public function it_does_not_search_the_text_on_an_include_that_holds_an_empty_text(array $text): void
     {
-        $product = $this->createProduct('Desk lamp');
-        $this->createProduct('Glass vase');
-
-        $response = $this->search('contains-products', [
-            'text' => ['value' => 'lamp'],
-            'filters' => [['field' => 'name', 'operator' => 'like', 'value' => 'Desk%', 'type' => 'or']],
+        $response = $this->search('contains-authors', [
+            'text' => ['value' => 'ada'],
+            'includes' => [['relation' => 'posts', 'sorts' => [['field' => 'id']], ...$text]],
         ]);
 
-        $response->assertOk()->assertJsonPath('data.*.id', [$product->id]);
+        $response->assertOk()
+            ->assertJsonPath('data.*.id', [$this->lovelace->id])
+            ->assertJsonPath('data.0.posts.*.id', [$this->posts['desk']->id, $this->posts['vase']->id]);
+    }
+
+    /** @return array<string, array{array<string, mixed>}> */
+    public static function emptyIncludeTexts(): array
+    {
+        return [
+            'a null text' => [['text' => null]],
+            'an empty object' => [['text' => []]],
+            'an empty string' => [['text' => '']],
+        ];
     }
 
     #[Test]
-    public function it_keeps_the_whole_grammar_in_an_include_of_a_resource_indexed_by_scout(): void
+    public function it_filters_an_include_of_a_text_search_with_the_database_grammar(): void
     {
         $lighting = Category::factory()->create(['name' => 'Lighting']);
         $seating = Category::factory()->create(['name' => 'Seating']);
@@ -167,12 +178,5 @@ class TextSearchGrammarTest extends TextSearchTestCase
                 ->pluck('status')
                 ->all(),
         );
-    }
-
-    private function createProduct(string $name): Product
-    {
-        return Product::factory()
-            ->for(Category::factory()->create(['name' => 'Lighting']))
-            ->create(['name' => $name, 'price' => 10]);
     }
 }

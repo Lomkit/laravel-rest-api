@@ -7,14 +7,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\Expressions\TsMatch;
 use Lomkit\Rest\Query\Expressions\TsRank;
+use Lomkit\Rest\Text\QueryTextSearch;
 use Lomkit\Rest\Text\TextCapabilities;
 use Lomkit\Rest\Text\TextMode;
 use Lomkit\Rest\Text\TextQuery;
-use Lomkit\Rest\Text\TextSearch;
 use Lomkit\Rest\Text\TextTarget;
 use Lomkit\Rest\Text\WebSearch;
 
-final readonly class PostgresFullText implements TextSearch
+final readonly class PostgresFullText implements QueryTextSearch
 {
     /** @param non-empty-list<non-empty-list<string>> $groups */
     public function __construct(

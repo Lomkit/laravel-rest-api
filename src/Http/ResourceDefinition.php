@@ -31,18 +31,14 @@ final class ResourceDefinition
     /** @var list<int>|null */
     private ?array $limits = null;
 
-    /** @var list<string>|null */
-    private ?array $scoutFields = null;
-
-    /** @var array<int, Instruction>|null */
-    private ?array $scoutInstructions = null;
-
     private ?ResolvedText $text = null;
 
     public function __construct(
         private readonly Resource $resource,
         private readonly RestRequest $request,
-    ) {}
+    ) {
+        RemovedHooks::ensureAbsentFrom($resource);
+    }
 
     public function fields(): FieldSet
     {
@@ -85,18 +81,6 @@ final class ResourceDefinition
         return $this->limits ??= $this->resource->limits($this->request);
     }
 
-    /** @return list<string> */
-    public function scoutFields(): array
-    {
-        return $this->scoutFields ??= $this->resource->scoutFields($this->request);
-    }
-
-    /** @return array<int, Instruction> */
-    public function scoutInstructions(): array
-    {
-        return $this->scoutInstructions ??= $this->boundInstructions($this->resource->scoutInstructions($this->request));
-    }
-
     public function text(): ResolvedText
     {
         return $this->text ??= ResolvedText::of($this->resource, $this->request);
@@ -119,7 +103,11 @@ final class ResourceDefinition
      */
     private function boundInstructions(array $instructions): array
     {
-        return array_map(fn (Instruction $instruction): Instruction => $instruction->resource($this->resource), $instructions);
+        return array_map(function (Instruction $instruction): Instruction {
+            RemovedHooks::ensureAbsentFromInstruction($instruction);
+
+            return $instruction->resource($this->resource);
+        }, $instructions);
     }
 
     /**

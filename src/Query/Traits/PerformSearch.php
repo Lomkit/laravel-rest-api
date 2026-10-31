@@ -4,12 +4,15 @@ namespace Lomkit\Rest\Query\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\FilterGroupClause;
 use Lomkit\Rest\Query\Clauses\InstructionClause;
+use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
 use Lomkit\Rest\Query\Clauses\ScopeClause;
 use Lomkit\Rest\Query\Clauses\SortClause;
@@ -44,13 +47,13 @@ trait PerformSearch
     {
         $this->resource->context()->authorizer()->ensurePlanned(Check::onClass($this->resource, 'viewAny'));
 
-        // The perimeter runs in a subquery so that an "or" inside it cannot swallow the
-        // constraints appended afterwards, which bind tighter than it does
-        $this->queryBuilder->where(function ($query) {
-            $this->resource->searchQuery($this->resource->context()->request, $query);
-        });
+        (new PerimeterClause($this->resource))->apply($this->toBase());
 
         $text = array_key_exists('text', $parameters) ? $this->resource->context()->text($this->resource) : null;
+
+        if ($text?->usesEngine() === true) {
+            throw InvalidTextSearchException::runsOnEngine($this->resource::class);
+        }
 
         $text?->clause()?->apply($this->toBase());
 
@@ -191,7 +194,7 @@ trait PerformSearch
 
             $queryBuilder = $this->newQueryBuilder(['resource' => $resource, 'query' => $query]);
 
-            return $queryBuilder->search($include);
+            return $queryBuilder->search(Arr::except($include, ['text']));
         });
     }
 
@@ -221,7 +224,7 @@ trait PerformSearch
         $relation->addEagerConstraints($models);
 
         $resource = $this->resource->relation($relationName)?->resource();
-        $this->newQueryBuilder(['resource' => $resource, 'query' => $relation])->search($include);
+        $this->newQueryBuilder(['resource' => $resource, 'query' => $relation])->search(Arr::except($include, ['text']));
 
         // Matching has to happen under the real relation name: MorphTo hydrates parents from
         // getEager() using that name and ignores the one given to match(). The results are moved

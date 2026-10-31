@@ -43,7 +43,7 @@ class MakeResourceCommandTest extends ScaffoldingTestCase
 
         $this->assertTrue((new ReflectionClass(ScaffoldedHooklessBaseResource::class))->isAbstract());
         $this->assertSame(Resource::class, get_parent_class(ScaffoldedHooklessBaseResource::class));
-        foreach (['searchQuery', 'searchScoutQuery', 'mutateQuery', 'destroyQuery', 'restoreQuery', 'forceDestroyQuery'] as $hook) {
+        foreach (['searchQuery', 'mutateQuery', 'destroyQuery', 'restoreQuery', 'forceDestroyQuery'] as $hook) {
             $this->assertSame(Resource::class, (new ReflectionMethod(ScaffoldedHooklessBaseResource::class, $hook))->class);
         }
     }

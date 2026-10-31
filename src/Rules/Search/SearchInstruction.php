@@ -4,10 +4,12 @@ namespace Lomkit\Rest\Rules\Search;
 
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Rules\Distinct;
 use Lomkit\Rest\Rules\Input\InputFields;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\RestRule;
+use Lomkit\Rest\Text\TextBackend;
 use Lomkit\Rest\Validation\RuleCompiler;
 
 class SearchInstruction extends RestRule
@@ -81,6 +83,6 @@ class SearchInstruction extends RestRule
     /** @return array<int, Instruction> */
     private function declared(): array
     {
-        return $this->instructions ?? $this->resource->getInstructions($this->resource->context()->request);
+        return $this->instructions ?? InstructionSupport::among($this->resource->getInstructions($this->resource->context()->request), TextBackend::Query);
     }
 }

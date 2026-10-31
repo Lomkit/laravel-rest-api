@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Text;
 
+use Lomkit\Rest\Text\Engine\EngineGrammar;
+
 final readonly class TextCapabilities
 {
     public const int MAX_LENGTH = 255;
@@ -16,12 +18,13 @@ final readonly class TextCapabilities
         public bool $relevance,
         public bool $trashed,
         public int $maxLength = self::MAX_LENGTH,
+        public ?EngineGrammar $engine = null,
     ) {}
 
     /** @param list<TextMode> $modes */
     public static function of(TextTarget $target, array $modes, bool $relevance): self
     {
-        return new self($target->fields->names(), $modes, $relevance, $target->softDeletes());
+        return new self($target->names(), $modes, $relevance, $target->softDeletes());
     }
 
     public function supports(TextMode $mode): bool

@@ -10,12 +10,14 @@ use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Traits\PerformMutation;
 use Lomkit\Rest\Query\Traits\PerformSearch;
+use Lomkit\Rest\Query\Traits\SearchesKeys;
 
 class Builder implements EloquentQueryBuilder
 {
     use Conditionable;
     use PerformMutation;
     use PerformSearch;
+    use SearchesKeys;
     use Tappable;
 
     /**
@@ -30,12 +32,7 @@ class Builder implements EloquentQueryBuilder
         $this->queryBuilder = $query ?? $resource::newModel()->query();
     }
 
-    /**
-     * The query builder instance.
-     *
-     * @var resource
-     */
-    protected $resource;
+    protected Resource $resource;
 
     /**
      * Determine if default limit should be applied.
@@ -64,7 +61,7 @@ class Builder implements EloquentQueryBuilder
      * @return $this Returns the current instance for chaining.
      */
     #[\Override]
-    public function disableDefaultLimit($disable = true)
+    public function disableDefaultLimit(bool $disable = true)
     {
         $this->disableDefaultLimit = $disable;
 
