@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Fields;
 
 use Illuminate\Database\Eloquent\Casts\AsStringable;
 use Illuminate\Database\Eloquent\Model;
-use Stringable;
+use Illuminate\Support\Stringable;
 
 class Json extends Field
 {
