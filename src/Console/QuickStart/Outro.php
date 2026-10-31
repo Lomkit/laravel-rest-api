@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Console\QuickStart;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Console\View\Components\Factory;
 use Illuminate\Support\Arr;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 
 final readonly class Outro
 {
@@ -60,7 +61,10 @@ final readonly class Outro
     /** @return list<string> */
     private function remarks(): array
     {
-        return array_merge(...array_map(fn (PlannedFile $file): array => $file->remarks, $this->created));
+        return [
+            ...array_merge(...array_map(fn (PlannedFile $file): array => $file->remarks, $this->created)),
+            ...array_map(fn (string $note): string => 'Note: '.OutputFormatter::escape($note), $this->plan->skipped),
+        ];
     }
 
     private function userHasApiTokens(): bool

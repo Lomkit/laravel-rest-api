@@ -148,4 +148,64 @@ class GenerateResourceReportTest extends ScaffoldingTestCase
         $this->assertStringContainsString("            Integer::make('writer_id')->creationRules('required'),\n", $resource);
         $this->assertStringContainsString("    public function relations(RestRequest \$request): array\n    {\n        return [];\n    }", $resource);
     }
+
+    #[Test]
+    public function it_notes_an_existing_resource_that_fails_to_load(): void
+    {
+        $this->writeModel('App\Models\Critic');
+        $this->writeModel('App\Models\Outlet');
+        $this->writeModel('App\Models\Critique', implode("\n\n    ", [
+            'public function critic(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Critic::class); }',
+            'public function outlet(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Outlet::class); }',
+        ]));
+        Schema::create('critics', function (Blueprint $table): void {
+            $table->id();
+        });
+        Schema::create('outlets', function (Blueprint $table): void {
+            $table->id();
+        });
+        Schema::create('critiques', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('critic_id')->constrained();
+            $table->foreignId('outlet_id')->constrained();
+        });
+        $this->artisan('rest:resource', ['name' => 'OutletResource', '--model' => 'Outlet', '--no-interaction' => true])->assertSuccessful();
+        file_put_contents(app_path('Rest/Resources/CriticResource.php'), "<?php\n\nnamespace App\Rest\Resources;\n\nuse App\Models\Critic;\n\nclass CriticResource extends Resource implements Rated\n{\n    public static string \$model = Critic::class;\n}\n");
+
+        $exitCode = Artisan::call('rest:resource', ['name' => 'CritiqueResource', '--model' => 'Critique', '--generate' => true, '--no-interaction' => true], $output = new BufferedOutput);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertStringEndsWith(
+            "  CritiqueResource ... 3 fields, 1 relation\n"
+            ."  Skipped: critic: no resource for App\Models\Critic. Generate one first with php artisan rest:resource CriticResource --model=Critic --generate, then run this command again with --force.\n"
+            ."  Note: App\Rest\Resources\CriticResource is skipped: Interface \"App\Rest\Resources\Rated\" not found (app/Rest/Resources/CriticResource.php:7).\n",
+            (string) preg_replace(['/ \.+ /', '/[ \t]+$/m'], [' ... ', ''], $output->fetch()),
+        );
+        $this->assertStringContainsString(
+            "            BelongsTo::make('outlet', OutletResource::class)->requiredOnCreation(),\n",
+            (string) file_get_contents(app_path('Rest/Resources/CritiqueResource.php')),
+        );
+    }
+
+    #[Test]
+    public function it_does_not_note_a_resource_that_fails_to_load_once_it_generates_it_again(): void
+    {
+        $this->writeModel('App\Models\Rerun');
+        Schema::create('reruns', function (Blueprint $table): void {
+            $table->id();
+        });
+        $this->artisan('rest:base-resource', ['name' => 'Resource', '--no-interaction' => true])->assertSuccessful();
+        file_put_contents(app_path('Rest/Resources/RerunResource.php'), "<?php\n\nnamespace App\Rest\Resources;\n\nclass RerunResource extends Resource implements \App\Contracts\Rerunnable {}\n");
+        file_put_contents(app_path('Rest/Resources/RerunLogResource.php'), "<?php\n\nnamespace App\Rest\Resources;\n\nclass RerunLogResource extends Resource implements \App\Contracts\RerunLogged {}\n");
+
+        $exitCode = Artisan::call('rest:resource', ['name' => 'RerunResource', '--model' => 'Rerun', '--generate' => true, '--force' => true, '--no-interaction' => true], $output = new BufferedOutput);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertStringEndsWith(
+            "  RerunResource ... 1 field, 0 relations\n"
+            ."  Note: App\Rest\Resources\RerunLogResource is skipped: Interface \"App\Contracts\RerunLogged\" not found (app/Rest/Resources/RerunLogResource.php:5).\n",
+            (string) preg_replace(['/ \.+ /', '/[ \t]+$/m'], [' ... ', ''], $output->fetch()),
+        );
+        $this->loadGeneratedClass('App\Rest\Resources\RerunResource');
+    }
 }
