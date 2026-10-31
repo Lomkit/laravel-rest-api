@@ -2,9 +2,7 @@
 
 namespace Lomkit\Rest\Relations;
 
-use Closure;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Contracts\PivotRelation;
@@ -44,32 +42,6 @@ class Relation implements \JsonSerializable
     public function name()
     {
         return $this->name ?? (new \ReflectionClass($this))->getShortName();
-    }
-
-    /**
-     * Filter the query based on the relation.
-     *
-     * @param  mixed  $relation
-     * @param  mixed  $operator
-     * @param  mixed  $value
-     * @param  string  $boolean
-     * @return Builder
-     */
-    public function filter(Builder $query, $relation, $operator, $value, $boolean = 'and', ?Closure $callback = null)
-    {
-        return $query->has(Str::beforeLast(relation_without_pivot($relation), '.'), '>=', 1, $boolean, function (Builder $query) use ($value, $operator, $relation, $callback) {
-            $field = (Str::contains($relation, '.pivot.') ?
-                    $this->fromResource::newModel()->{Str::of($relation)->before('.pivot.')->afterLast('.')->toString()}()->getTable() :
-                    $query->getModel()->getTable()).'.'.Str::afterLast($relation, '.');
-
-            if (in_array($operator, ['in', 'not in'])) {
-                $query->whereIn($field, $value, 'and', $operator === 'not in');
-            } else {
-                $query->where($field, $operator, $value);
-            }
-
-            $callback($query);
-        });
     }
 
     /**

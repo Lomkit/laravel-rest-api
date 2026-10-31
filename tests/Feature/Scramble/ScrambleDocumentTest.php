@@ -26,12 +26,12 @@ class ScrambleDocumentTest extends ScrambleTestCase
     }
 
     #[Test]
-    public function it_documents_the_sortable_and_selectable_fields_of_the_search_body(): void
+    public function it_documents_the_filterable_sortable_and_selectable_fields_of_the_search_body(): void
     {
         $search = $this->body($this->operation('/authors/search', 'post'))['properties']['search']['properties'];
 
         $this->assertSame(
-            ['id', 'first_name', 'last_name', 'full_name', 'initials', 'api_token', 'settings', 'created_at'],
+            ['id', 'first_name', 'last_name', 'full_name', 'created_at'],
             $search['filters']['items']['properties']['field']['enum'],
         );
         $this->assertSame(['first_name', 'last_name', 'full_name', 'created_at'], $search['sorts']['items']['properties']['field']['enum']);
@@ -47,7 +47,10 @@ class ScrambleDocumentTest extends ScrambleTestCase
         $filter = $search['filters']['items']['properties'];
 
         $this->assertSame(['filters', 'sorts', 'selects', 'includes', 'scopes', 'text', 'aggregates', 'instructions', 'gates', 'page', 'limit'], array_keys($search));
-        $this->assertSame(['=', '!=', '>', '>=', '<', '<=', 'in', 'not in', 'like', 'not like'], $filter['operator']['enum']);
+        $this->assertSame(
+            ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'ilike', 'not ilike', 'in', 'not in', 'between', 'not between', 'is null', 'is not null'],
+            $filter['operator']['enum'],
+        );
         $this->assertArrayNotHasKey('type', (array) $filter['value']);
     }
 

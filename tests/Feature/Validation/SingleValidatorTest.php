@@ -67,7 +67,7 @@ class SingleValidatorTest extends PackageTestCase
         ]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'search.filters.0.nested.0.field' => ["The 'field' field is not valid."],
+            'search.filters.0.nested.0.field' => ['The selected search.filters.0.nested.0.field is invalid.'],
             'search.includes.0.filters.0.operator' => ['The selected search.includes.0.filters.0.operator is invalid.'],
             'search.instructions.0.fields.price' => ['The price field must be an integer.'],
         ]);

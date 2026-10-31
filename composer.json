@@ -33,10 +33,7 @@
   "autoload": {
     "psr-4": {
       "Lomkit\\Rest\\": "src/"
-    },
-    "files": [
-      "src/helpers.php"
-    ]
+    }
   },
   "autoload-dev": {
     "psr-4": {

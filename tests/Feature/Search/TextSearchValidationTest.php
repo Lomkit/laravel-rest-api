@@ -105,10 +105,10 @@ class TextSearchValidationTest extends PackageTestCase
     {
         return [
             'an include filter on an undeclared column' => [['includes' => [['relation' => 'category', 'filters' => [['field' => 'created_at', 'value' => '2026-01-01']]]]], [
-                'search.includes.0.filters.0.field' => ["The 'field' field is not valid."],
+                'search.includes.0.filters.0.field' => ['The selected search.includes.0.filters.0.field is invalid.'],
             ]],
             'an include filter field that is not a string' => [['includes' => [['relation' => 'category', 'filters' => [['field' => ['name'], 'value' => 'Lighting']]]]], [
-                'search.includes.0.filters.0.field' => ['The search.includes.0.filters.0.field field must be a string.', "The 'field' field is not valid."],
+                'search.includes.0.filters.0.field' => ['The search.includes.0.filters.0.field field must be a string.', 'The selected search.includes.0.filters.0.field is invalid.'],
             ]],
             'an include select of an undeclared column' => [['includes' => [['relation' => 'category', 'selects' => [['field' => 'created_at']]]]], [
                 'search.includes.0.selects.0.field' => ['The selected search.includes.0.selects.0.field is invalid.'],
@@ -129,7 +129,7 @@ class TextSearchValidationTest extends PackageTestCase
                 'search.aggregates.0.relation' => ['The search.aggregates.0.relation field is required.'],
             ]],
             'an aggregate filter field that is not a string' => [['aggregates' => [['relation' => 'category', 'type' => 'count', 'filters' => [['field' => ['name'], 'value' => 'Lighting']]]]], [
-                'search.aggregates.0.filters.0.field' => ['The search.aggregates.0.filters.0.field field must be a string.', "The 'field' field is not valid."],
+                'search.aggregates.0.filters.0.field' => ['The search.aggregates.0.filters.0.field field must be a string.', 'The selected search.aggregates.0.filters.0.field is invalid.'],
             ]],
         ];
     }

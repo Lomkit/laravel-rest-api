@@ -5,9 +5,8 @@ namespace Lomkit\Rest\Relations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo as EloquentBelongsTo;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
-use Lomkit\Rest\Contracts\RelationResource;
 
-class BelongsTo extends Relation implements RelationResource
+class BelongsTo extends Relation
 {
     /**
      * Perform actions before mutating the MorphTo relation.

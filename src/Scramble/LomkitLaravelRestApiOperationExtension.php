@@ -14,6 +14,7 @@ use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\RouteInfo;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\FieldSet;
+use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Fields\WriteOperation;
 use Lomkit\Rest\Http\Controllers\Controller;
@@ -70,7 +71,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
     ): void {
         $operation->summary("Search {$resourceName}");
 
-        $fieldEnum = $fields->names();
+        $fieldEnum = $fields->filterable()->names();
         $relationEnum = array_values(array_map(fn (Relation $relation): string => $relation->relation, $relations));
         $relationDesc = $this->buildRelationsDescription($relations);
 
@@ -80,10 +81,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
                 ->addProperty('filters', (new ArrayType)->setItems(
                     (new ObjectType)
                         ->addProperty('field', (new StringType)->enum($fieldEnum))
-                        ->addProperty('operator', (new StringType)->enum([
-                            '=', '!=', '>', '>=', '<', '<=',
-                            'in', 'not in', 'like', 'not like',
-                        ]))
+                        ->addProperty('operator', (new StringType)->enum(array_column(FilterOperator::cases(), 'value')))
                         ->addProperty('value', (new MixedType)->setDescription('Accepts string, integer, boolean, or array'))
                         ->addProperty('type', (new StringType)->enum(['and', 'or']))
                         ->addProperty('nested', new ArrayType)

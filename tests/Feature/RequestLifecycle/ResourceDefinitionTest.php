@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\RequestLifecycle;
 use Illuminate\Http\Request;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
@@ -181,7 +182,7 @@ class ResourceDefinitionTest extends PackageTestCase
             $resource->getScoutInstructions($request);
             $resource->relation('author');
             $resource->scope($request, 'popular');
-            $resource->isNestedField('title');
+            FieldPath::resolve($resource, 'title');
             $resource->actionExists($request, 'publish-posts');
             $resource->instruction($request, 'highlight-posts');
             $resource->scoutInstruction($request, 'highlight-posts');

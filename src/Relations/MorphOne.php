@@ -4,9 +4,8 @@ namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
-use Lomkit\Rest\Contracts\RelationResource;
 
-class MorphOne extends MorphRelation implements RelationResource
+class MorphOne extends MorphRelation
 {
     /**
      * Handle actions after mutating a MorphOne relation.

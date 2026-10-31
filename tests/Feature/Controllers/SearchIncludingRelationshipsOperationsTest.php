@@ -864,7 +864,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                         [
                             'relation' => 'belongsToManyRelation',
                             'filters' => [
-                                ['field' => 'models.pivot.number', 'operator' => '=', 'value' => null],
+                                ['field' => 'models.pivot.number', 'operator' => 'is null'],
                             ],
                         ],
                     ],

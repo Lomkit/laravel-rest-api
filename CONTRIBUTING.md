@@ -132,7 +132,6 @@ These members have no native type and the extension does not report them. Type t
 - `$items`, `$total`, `$perPage`, `$currentPage` and `$meta` of `Lomkit\Rest\Pagination\LengthAwarePaginator::__construct()`
 - `$disable` of `Lomkit\Rest\Query\Builder::disableDefaultLimit()`
 - `Lomkit\Rest\Query\Builder::$resource` and `Lomkit\Rest\Query\ScoutBuilder::$resource`
-- the return value of `relation_without_pivot()` in `src/helpers.php`
 
 `phpstan-baseline.neon` lists the errors that existed when the analysis was added or made stricter. The baseline must only shrink:
 

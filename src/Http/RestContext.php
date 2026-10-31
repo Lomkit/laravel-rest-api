@@ -25,6 +25,8 @@ final class RestContext
 
     private ?bool $textSearch = null;
 
+    private ?int $maxNestingDepth = null;
+
     private ?Authorizer $authorizer = null;
 
     private ?string $authorizerGuard = null;
@@ -53,6 +55,17 @@ final class RestContext
     public function isTextSearch(): bool
     {
         return $this->textSearch ??= filled($this->request->input('search.text.value'));
+    }
+
+    public function maxNestingDepth(): int
+    {
+        if ($this->maxNestingDepth !== null) {
+            return $this->maxNestingDepth;
+        }
+
+        $depth = config('rest.search.max_nesting_depth', 1);
+
+        return $this->maxNestingDepth = is_numeric($depth) ? (int) $depth : 1;
     }
 
     public function authorizer(): Authorizer

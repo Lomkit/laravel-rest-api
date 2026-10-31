@@ -33,13 +33,13 @@ class FilterValidationTest extends PackageTestCase
     {
         return [
             'an undeclared column' => [[['field' => 'created_at', 'value' => '2026-01-01']], [
-                'search.filters.0.field' => ["The 'field' field is not valid."],
+                'search.filters.0.field' => ['The selected search.filters.0.field is invalid.'],
             ]],
             'a field that is not a string' => [[['field' => ['name'], 'value' => 'Desk lamp']], [
-                'search.filters.0.field' => ['The search.filters.0.field field must be a string.', "The 'field' field is not valid."],
+                'search.filters.0.field' => ['The search.filters.0.field field must be a string.', 'The selected search.filters.0.field is invalid.'],
             ]],
             'a nested field that is not a string' => [[['nested' => [['field' => ['name'], 'value' => 'Desk lamp']]]], [
-                'search.filters.0.nested.0.field' => ['The search.filters.0.nested.0.field field must be a string.', "The 'field' field is not valid."],
+                'search.filters.0.nested.0.field' => ['The search.filters.0.nested.0.field field must be a string.', 'The selected search.filters.0.nested.0.field is invalid.'],
             ]],
         ];
     }

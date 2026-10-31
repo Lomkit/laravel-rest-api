@@ -4,9 +4,8 @@ namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
-use Lomkit\Rest\Contracts\RelationResource;
 
-class HasOneOfMany extends Relation implements RelationResource
+class HasOneOfMany extends Relation
 {
     /**
      * Perform actions after mutating the HasOneOfMany relation.

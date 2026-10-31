@@ -26,6 +26,8 @@ class AuthorResource extends Resource
             Text::make('first_name'),
             Text::make('last_name'),
             Text::make('full_name')->virtual()
+                ->filterable(['=', 'like'])
+                ->filterUsing(fn (Builder $query, string $operator, mixed $value) => $query->where('first_name', $operator, $value)->orWhere('last_name', $operator, $value))
                 ->sortUsing(fn (Builder $query, string $direction) => $query->orderBy('last_name', $direction)->orderBy('first_name', $direction))
                 ->fillUsing(function (Model $author, mixed $value): void {
                     $author->forceFill(['first_name' => Str::before((string) $value, ' '), 'last_name' => Str::after((string) $value, ' ')]);

@@ -5,10 +5,10 @@ namespace Lomkit\Rest\Query\Traits;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Query\Clauses\AggregateClause;
+use Lomkit\Rest\Query\Clauses\FilterGroupClause;
 use Lomkit\Rest\Query\Clauses\InstructionClause;
 use Lomkit\Rest\Query\Clauses\ScopeClause;
 use Lomkit\Rest\Query\Clauses\SortClause;
@@ -45,13 +45,11 @@ trait PerformSearch
             $this->resource->searchQuery($this->resource->context()->request, $query);
         });
 
-        // Here we run the filters in a subquery to avoid conflicts
-        $this->when(isset($parameters['filters']), function () use ($parameters) {
-            $this->queryBuilder->where(function ($query) use ($parameters) {
-                $this->newQueryBuilder(['resource' => $this->resource, 'query' => $query])
-                    ->applyFilters($parameters['filters']);
-            });
-        });
+        $filters = $parameters['filters'] ?? null;
+
+        if (is_array($filters)) {
+            $this->applyFilters($filters);
+        }
 
         if (empty($parameters['sorts'])) {
             foreach ($this->resource->defaultOrderBy(
@@ -89,51 +87,13 @@ trait PerformSearch
     }
 
     /**
-     * Apply a filter to the query builder.
-     *
-     * @param  string  $field  The field to filter on.
-     * @param  string  $operator  The filter operator.
-     * @param  mixed  $value  The filter value.
-     * @param  string  $type  The filter type (e.g., 'and' or 'or').
-     * @param  array|null  $nested  Nested filters.
-     */
-    public function filter($field, $operator, $value, $type = 'and', $nested = null)
-    {
-        if ($nested !== null) {
-            return $this->queryBuilder->where(function ($query) use ($nested) {
-                $this->newQueryBuilder(['resource' => $this->resource, 'query' => $query])
-                    ->applyFilters($nested);
-            }, null, null, $type);
-        }
-
-        // Here we assume the user has asked a relation filter
-        if (Str::contains($field, '.')) {
-            $relation = $this->resource->relation(
-                Str::beforeLast($field, '.')
-            );
-
-            return $relation->filter($this->queryBuilder, $field, $operator, $value, $type, function ($query) use ($relation) {
-                $relation->applySearchQuery($query);
-            });
-        } else {
-            if (in_array($operator, ['in', 'not in'])) {
-                $this->queryBuilder->whereIn($this->queryBuilder->getModel()->getTable().'.'.$field, $value, $type, $operator === 'not in');
-            } else {
-                $this->queryBuilder->where($this->queryBuilder->getModel()->getTable().'.'.$field, $operator, $value, $type);
-            }
-        }
-    }
-
-    /**
      * Apply multiple filters to the query builder.
      *
-     * @param  array  $filters  An array of filters to apply.
+     * @param  array<array-key, mixed>  $filters  An array of filters to apply.
      */
     public function applyFilters($filters)
     {
-        foreach ($filters as $filter) {
-            $this->filter($filter['field'] ?? null, $filter['operator'] ?? '=', $filter['value'] ?? null, $filter['type'] ?? 'and', $filter['nested'] ?? null);
-        }
+        FilterGroupClause::fromPayload($this->resource, $filters)->apply($this->toBase());
     }
 
     /**
