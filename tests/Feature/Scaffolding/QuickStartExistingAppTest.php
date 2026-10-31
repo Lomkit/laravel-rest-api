@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Fixtures\Accounts\Accounts;
+use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Lomkit\Rest\Tests\Fixtures\Blog\Blog;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -145,6 +146,31 @@ class QuickStartExistingAppTest extends ScaffoldingTestCase
         $this->assertStringContainsString("  app/Policies/Blog/Editorial.php ... kept\n  app/Policies/TagPolicy.php ... created (read-only)\n", $output);
         $this->assertStringContainsString('TagPolicy lets signed-in users read and refuses every write.', $output);
         $this->assertFileDoesNotExist(app_path('Policies/PostPolicy.php'));
+    }
+
+    #[Test]
+    public function it_keeps_the_policy_registered_for_a_model_outside_the_application(): void
+    {
+        mkdir(app_path('Policies'));
+        file_put_contents(app_path('Policies/AccountPolicy.php'), "<?php\n\nnamespace App\Policies;\n\nclass AccountPolicy\n{\n    public function viewAny(): bool\n    {\n        return true;\n    }\n}\n");
+        Gate::policy(User::class, 'App\Policies\AccountPolicy');
+
+        $output = $this->quickStart(User::class);
+
+        $this->assertStringContainsString("  app/Rest/Controllers/UsersController.php ... created\n  app/Policies/AccountPolicy.php ... kept\n", $output);
+        $this->assertStringContainsString('  checks (fresh process) ... 5 routes authenticated, 1 policy found', $output);
+        $this->assertFileDoesNotExist(app_path('Policies/UserPolicy.php'));
+    }
+
+    #[Test]
+    public function it_writes_the_policy_of_a_model_outside_the_application_when_gate_guesses_its_name(): void
+    {
+        Gate::guessPolicyNamesUsing(fn (string $model): string => 'App\Policies\\'.class_basename($model).'Policy');
+
+        $output = $this->quickStart(User::class);
+
+        $this->assertStringContainsString("  app/Rest/Controllers/UsersController.php ... created\n  app/Policies/UserPolicy.php ... created (read-only)\n", $output);
+        $this->assertStringContainsString('  checks (fresh process) ... 5 routes authenticated, 1 policy found', $output);
     }
 
     #[Test]

@@ -11,6 +11,7 @@ use Lomkit\Rest\Console\Generation\PolicyBlueprint;
 use Lomkit\Rest\Console\Generation\RelationMapping;
 use Lomkit\Rest\Console\Generation\ResourceBlueprint;
 use Lomkit\Rest\Console\Generation\Stub;
+use Lomkit\Rest\Exceptions\UndiscoverablePolicyException;
 
 final readonly class ExposedModel
 {
@@ -71,10 +72,14 @@ final readonly class ExposedModel
 
     public function policyFile(AppNamespace $app, Gate $gate, string $user): PlannedFile
     {
-        $policy = $gate->getPolicyFor($this->source->class);
+        $lookup = PolicyLookup::for($gate, $this->source->class);
 
-        if (is_object($policy)) {
-            return PlannedFile::existing($policy::class);
+        if ($lookup->policy !== null) {
+            return PlannedFile::existing($lookup->policy::class);
+        }
+
+        if (! $lookup->wouldDiscover($this->policy)) {
+            throw UndiscoverablePolicyException::for($this->source->class, $this->policy);
         }
 
         $blueprint = PolicyBlueprint::for($this->policy, $this->source->class, $user);
