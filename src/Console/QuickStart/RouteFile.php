@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Console\QuickStart;
 
+use Illuminate\Support\Arr;
 use Lomkit\Rest\Facades\Rest;
 use PhpToken;
 
@@ -9,14 +10,13 @@ final readonly class RouteFile
 {
     public const string MIDDLEWARE = 'auth:sanctum';
 
-    private const string CLASS_IMPORT = '/^use [A-Za-z_\\\\][A-Za-z0-9_\\\\]*( as [A-Za-z_][A-Za-z0-9_]*)?;$/';
-
     public function __construct(public string $contents) {}
 
     public function registers(string $controller): bool
     {
-        $tokens = $this->tokens();
-        $imports = FileImports::read($tokens);
+        $source = $this->source();
+        $imports = FileImports::read($source);
+        $tokens = array_values(FileImports::code($source));
 
         foreach ($tokens as $index => $token) {
             $isClassConstant = $token->is(FileImports::NAMES)
@@ -33,7 +33,7 @@ final readonly class RouteFile
 
     public function withResource(string $uri, string $controller): self
     {
-        $imports = FileImports::read($this->tokens());
+        $imports = FileImports::read($this->source());
         $facade = $imports->nameOf(Rest::class);
         $name = $imports->nameOf($controller);
         $missing = array_filter([Rest::class => $facade, $controller => $name], fn (string $short): bool => ! $imports->binds($short) && ! str_starts_with($short, '\\'));
@@ -49,49 +49,48 @@ final readonly class RouteFile
             return $this->contents;
         }
 
+        usort($classes, ImportStatement::compare(...));
+
+        if ($imports->statements === []) {
+            return $this->withFirstImports($classes, $imports->headerEnd);
+        }
+
+        $last = $imports->statements[array_key_last($imports->statements)];
+        $insertions = [];
+
+        foreach ($classes as $class) {
+            $next = Arr::first($imports->statements, fn (ImportStatement $statement): bool => $statement->sortsAfter($class));
+            $offset = $next === null ? $last->end : $next->start;
+            $insertions[$offset] = ($insertions[$offset] ?? '').($next === null ? "\nuse {$class};" : "use {$class};\n");
+        }
+
+        krsort($insertions);
+        $contents = $this->contents;
+
+        foreach ($insertions as $offset => $statements) {
+            $contents = substr_replace($contents, $statements, $offset, 0);
+        }
+
+        return $contents;
+    }
+
+    /** @param  list<string>  $classes */
+    private function withFirstImports(array $classes, int $line): string
+    {
         $lines = explode("\n", $this->contents);
-        $block = array_keys(array_filter($lines, fn (string $line): bool => preg_match(self::CLASS_IMPORT, $line) === 1));
-        $start = $block[0] ?? null;
-        $length = 0;
 
-        while ($start !== null && in_array($start + $length, $block, true)) {
-            $length++;
-        }
-
-        $statements = $this->sorted([
-            ...($start === null ? [] : array_slice($lines, $start, $length)),
+        array_splice($lines, $line, 0, [
+            '',
             ...array_map(fn (string $class): string => "use {$class};", $classes),
-        ]);
-
-        if ($start !== null) {
-            array_splice($lines, $start, $length, $statements);
-
-            return implode("\n", $lines);
-        }
-
-        array_splice($lines, $imports->line, 0, [
-            ...($imports->followsAnImport ? [] : ['']),
-            ...$statements,
-            ...(trim($lines[$imports->line] ?? '') === '' ? [] : ['']),
+            ...(trim($lines[$line] ?? '') === '' ? [] : ['']),
         ]);
 
         return implode("\n", $lines);
     }
 
-    /**
-     * @param  list<string>  $statements
-     * @return list<string>
-     */
-    private function sorted(array $statements): array
-    {
-        usort($statements, fn (string $first, string $second): int => strcasecmp(str_replace('\\', ' ', $first), str_replace('\\', ' ', $second)));
-
-        return $statements;
-    }
-
     /** @return list<PhpToken> */
-    private function tokens(): array
+    private function source(): array
     {
-        return array_values(array_filter(PhpToken::tokenize($this->contents), fn (PhpToken $token): bool => ! $token->isIgnorable()));
+        return array_values(PhpToken::tokenize($this->contents));
     }
 }

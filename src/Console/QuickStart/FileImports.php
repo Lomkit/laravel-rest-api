@@ -11,15 +11,20 @@ final readonly class FileImports
 
     private const string GROUP = '/^(?<prefix>[^{]*)\{(?<clauses>[^}]*)\}$/';
 
-    /** @param  array<string, string>  $classes */
-    private function __construct(public array $classes, public int $line, public bool $followsAnImport) {}
+    /**
+     * @param  array<string, string>  $classes
+     * @param  list<ImportStatement>  $statements
+     */
+    private function __construct(public array $classes, public int $headerEnd, public array $statements) {}
 
-    /** @param  list<PhpToken>  $tokens */
-    public static function read(array $tokens): self
+    /** @param  list<PhpToken>  $source */
+    public static function read(array $source): self
     {
+        $code = self::code($source);
+        $tokens = array_values($code);
+        $offsets = array_keys($code);
         $classes = [];
-        $line = self::headerEnd($tokens);
-        $followsAnImport = false;
+        $statements = [];
         $depth = 0;
 
         foreach ($tokens as $index => $token) {
@@ -35,11 +40,19 @@ final readonly class FileImports
 
             $statement = self::statement($tokens, $index + 1);
             $classes = [...$classes, ...self::clauses($statement)];
-            $line = ($tokens[$index + count($statement) + 1] ?? $token)->line;
-            $followsAnImport = true;
+            $statements[] = ImportStatement::read($source, $offsets[$index], $offsets[$index + 1], $offsets[$index + count($statement) + 1] ?? count($source));
         }
 
-        return new self($classes, $line, $followsAnImport);
+        return new self($classes, self::headerEnd($tokens), $statements);
+    }
+
+    /**
+     * @param  list<PhpToken>  $source
+     * @return array<int, PhpToken>
+     */
+    public static function code(array $source): array
+    {
+        return array_filter($source, fn (PhpToken $token): bool => ! $token->isIgnorable());
     }
 
     public function resolve(PhpToken $name): string
