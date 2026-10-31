@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Stringable;
+use JsonSerializable;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Tests\Fixtures\Lab\EncodedJson;
 use Lomkit\Rest\Tests\Fixtures\Lab\Instrument;
@@ -127,6 +128,38 @@ class JsonBindingTest extends TestCase
         });
 
         $this->assertSame('{"done":true}', $field->toStorage(['done' => true]));
+    }
+
+    #[Test]
+    public function it_returns_the_object_that_a_get_accessor_of_the_bound_model_returns_unchanged(): void
+    {
+        $model = new class extends Model
+        {
+            /** @return Attribute<JsonSerializable, never> */
+            protected function notes(): Attribute
+            {
+                return Attribute::get(fn (): JsonSerializable => new class implements \Stringable, JsonSerializable
+                {
+                    /** @return array{amount: int, currency: string} */
+                    #[\Override]
+                    public function jsonSerialize(): array
+                    {
+                        return ['amount' => 12, 'currency' => 'EUR'];
+                    }
+
+                    #[\Override]
+                    public function __toString(): string
+                    {
+                        return '12 EUR';
+                    }
+                });
+            }
+        };
+        $field = Json::make('notes');
+        $field->bind($model);
+        $price = $model->notes;
+
+        $this->assertSame($price, $field->fromStorage($price));
     }
 
     #[Test]
