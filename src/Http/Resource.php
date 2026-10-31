@@ -16,6 +16,7 @@ use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
 use Lomkit\Rest\Concerns\Resource\Rulable;
 use Lomkit\Rest\Concerns\Resource\Scoutable;
+use Lomkit\Rest\Concerns\Resource\SearchesText;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instructionable;
@@ -36,6 +37,7 @@ class Resource implements \JsonSerializable
     use Relationable;
     use Rulable;
     use Scoutable;
+    use SearchesText;
 
     /** @var class-string<Model> */
     public static string $model;

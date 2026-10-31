@@ -84,7 +84,6 @@ class OperateRequest extends RestRequest
                 'search' => $searchable
                     ? ['array', (new Search)->setResource($this->resource)]
                     : ['prohibited'],
-                'search.text' => $searchable ? ['prohibited'] : [],
                 'resources' => $operatedAction->isTargeted()
                     ? ['required', 'array', 'max:'.$operatedAction->maxResources]
                     : ['prohibited'],

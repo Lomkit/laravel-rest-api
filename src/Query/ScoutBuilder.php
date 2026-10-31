@@ -26,7 +26,8 @@ class ScoutBuilder implements QueryBuilder
      * defaulting to 50 if no limit is specified.
      *
      * @param  array  $parameters  An associative array of search criteria, which may include:
-     *                             - 'text': An array containing 'value' (search string) and optionally 'trashed' ('with'|'only').
+     *                             - 'text': An array containing 'value' (search string).
+     *                             - 'trashed': 'with' or 'only' to add or keep only the trashed models.
      *                             - 'filters': An array of filter conditions.
      *                             - 'sorts': An array of sorting directives.
      *                             - 'instructions': Additional query instructions.
@@ -48,8 +49,8 @@ class ScoutBuilder implements QueryBuilder
             $this->applyFilters($parameters['filters']);
         });
 
-        $this->when(isset($parameters['text']['trashed']), function () use ($parameters) {
-            $this->applyTrashed($parameters['text']['trashed']);
+        $this->when(isset($parameters['trashed']), function () use ($parameters) {
+            $this->applyTrashed($parameters['trashed']);
         });
 
         $this->when(isset($parameters['sorts']), function () use ($parameters) {
@@ -64,7 +65,7 @@ class ScoutBuilder implements QueryBuilder
     }
 
     /**
-     *  Forwards the extra parameters after excluding reserved keys (filters, instructions, sorts, text, and limit)
+     *  Forwards the extra parameters after excluding reserved keys (filters, instructions, sorts, text, trashed and limit)
      *  to the underlying search operation.
      *
      * @param  \Laravel\Scout\Builder  $query
@@ -81,6 +82,7 @@ class ScoutBuilder implements QueryBuilder
                         'instructions',
                         'sorts',
                         'text',
+                        'trashed',
                         'limit',
                         'page',
                     ])

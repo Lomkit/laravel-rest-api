@@ -52,6 +52,21 @@ final class InvalidFieldException extends LogicException
         return new self("{$owner} declares fillUsing() on the field [{$name}]. A pivot value is written to its column as sent.");
     }
 
+    public static function notSearchableType(string $name, string $type): self
+    {
+        return new self("The field [{$name}] of type [{$type}] cannot be searchable: only text fields can be searched.");
+    }
+
+    public static function searchableVirtual(string $name): self
+    {
+        return new self("The field [{$name}] is virtual and cannot be searchable: a text search runs on columns.");
+    }
+
+    public static function searchableWriteOnly(string $name): self
+    {
+        return new self("The field [{$name}] is write-only and cannot be searchable.");
+    }
+
     public static function unknownField(string $name): self
     {
         return new self("Unknown field [{$name}].");

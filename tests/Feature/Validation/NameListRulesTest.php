@@ -6,8 +6,9 @@ use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Rules\OneOf;
+use Lomkit\Rest\Rules\RestRule;
+use Lomkit\Rest\Rules\Search\Search;
 use Lomkit\Rest\Rules\Search\SearchAggregate;
-use Lomkit\Rest\Rules\Search\SearchFilter;
 use Lomkit\Rest\Rules\Search\SearchInstruction;
 use Lomkit\Rest\Rules\Search\SearchScope;
 use Lomkit\Rest\Rules\Search\SearchSelect;
@@ -43,7 +44,7 @@ class NameListRulesTest extends PackageTestCase
     public function it_checks_sorted_fields_against_a_one_of_rule(): void
     {
         $sql = (new SearchSort)->setResource($this->products())->buildValidationRules('sort', ['field' => 'name']);
-        $text = (new SearchSort)->setResource($this->products())->forTextSearch()->buildValidationRules('sort', ['field' => 'price']);
+        $text = $this->textSearchRule('search.sorts.*')->buildValidationRules('sort', ['field' => 'price']);
 
         $this->assertSame(self::PRODUCT_FIELDS, $this->oneOf($sql['sort.field']));
         $this->assertSame(self::SCOUT_FIELDS, $this->oneOf($text['sort.field']));
@@ -52,7 +53,7 @@ class NameListRulesTest extends PackageTestCase
     #[Test]
     public function it_checks_the_filtered_fields_of_a_text_search_against_a_one_of_rule(): void
     {
-        $rules = (new SearchFilter)->setResource($this->products())->forTextSearch()->buildValidationRules('filter', ['field' => 'price']);
+        $rules = $this->textSearchRule('search.filters.*')->buildValidationRules('filter', ['field' => 'price']);
 
         $this->assertSame(self::SCOUT_FIELDS, $this->oneOf($rules['filter.field']));
     }
@@ -80,7 +81,7 @@ class NameListRulesTest extends PackageTestCase
     {
         $instruction = ['name' => 'priced-at', 'fields' => [['name' => 'price', 'value' => 39]]];
         $sql = (new SearchInstruction)->setResource($this->products())->buildValidationRules('instruction', $instruction);
-        $text = (new SearchInstruction)->setResource($this->products())->forTextSearch()->buildValidationRules('instruction', $instruction);
+        $text = $this->textSearchRule('search.instructions.*')->buildValidationRules('instruction', $instruction);
 
         $this->assertSame(['priced-at'], $this->oneOf($sql['instruction.name']));
         $this->assertSame(['priced-at', 'priced-between'], $this->oneOf($text['instruction.name']));
@@ -104,6 +105,19 @@ class NameListRulesTest extends PackageTestCase
         $request->setRouteResolver(fn () => $route);
 
         $this->assertSame(['at', 'notify'], $this->oneOf($request->rules()['fields.*.name']));
+    }
+
+    private function textSearchRule(string $key): RestRule
+    {
+        $products = RestRequest::create('/', 'POST', ['search' => ['text' => ['value' => 'lamp']]])
+            ->setContainer($this->app)
+            ->context()
+            ->resource(ProductResource::class);
+        $rule = (new Search)->setResource($products)->buildValidationRules('search', [])[$key];
+
+        $this->assertInstanceOf(RestRule::class, $rule);
+
+        return $rule;
     }
 
     private function products(): Resource

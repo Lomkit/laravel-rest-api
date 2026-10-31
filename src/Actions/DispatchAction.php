@@ -119,10 +119,12 @@ class DispatchAction
      */
     public function handleClassic(int $chunkCount)
     {
-        return $this->dispatchInChunks(
-            $this->modelsQuery($this->request->input('search', [])),
-            $chunkCount
-        );
+        $query = $this->modelsQuery($this->request->input('search', []));
+
+        return $this->request
+            ->context()
+            ->text($this->request->resource)
+            ->run(fn (): int => $this->dispatchInChunks($query, $chunkCount));
     }
 
     /**

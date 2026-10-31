@@ -14,6 +14,7 @@ use Lomkit\Rest\Authorization\DecisionStore;
 use Lomkit\Rest\Authorization\NullDecisionStore;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Text\ResolvedText;
 use WeakMap;
 
 final class RestContext
@@ -22,8 +23,6 @@ final class RestContext
 
     /** @var WeakMap<Resource, ResourceDefinition> */
     private readonly WeakMap $definitions;
-
-    private ?bool $textSearch = null;
 
     private ?int $maxNestingDepth = null;
 
@@ -52,9 +51,9 @@ final class RestContext
         return $this->definitions[$resource] ??= new ResourceDefinition($resource, $this->request);
     }
 
-    public function isTextSearch(): bool
+    public function text(Resource $resource): ResolvedText
     {
-        return $this->textSearch ??= filled($this->request->input('search.text.value'));
+        return $this->definition($resource)->text();
     }
 
     public function maxNestingDepth(): int

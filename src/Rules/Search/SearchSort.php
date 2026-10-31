@@ -4,27 +4,34 @@ namespace Lomkit\Rest\Rules\Search;
 
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Fields\SortDirection;
-use Lomkit\Rest\Rules\Concerns\DependsOnTextSearch;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\RestRule;
 
 class SearchSort extends RestRule
 {
-    use DependsOnTextSearch;
+    /** @var list<string>|null */
+    private ?array $names = null;
+
+    /** @param list<string> $names */
+    public function among(array $names): static
+    {
+        $this->names = $names;
+
+        return $this;
+    }
 
     /** @return array<string, list<mixed>> */
     #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
-        $request = $this->resource->context()->request;
-
-        $fields = $this->textSearch ?
-            $this->resource->getScoutFields($request) :
-            $this->resource->getFields($request)->sortable()->names();
+        $names = $this->names ?? $this->resource
+            ->getFields($this->resource->context()->request)
+            ->sortable()
+            ->names();
 
         return [
             $attribute.'.field' => [
-                new OneOf($fields),
+                new OneOf($names),
                 'required',
                 'string',
             ],

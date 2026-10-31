@@ -10,8 +10,11 @@ use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\FilterGroupClause;
 use Lomkit\Rest\Query\Clauses\InstructionClause;
+use Lomkit\Rest\Query\Clauses\RelevanceClause;
 use Lomkit\Rest\Query\Clauses\ScopeClause;
 use Lomkit\Rest\Query\Clauses\SortClause;
+use Lomkit\Rest\Query\Clauses\TrashedClause;
+use Lomkit\Rest\Text\ResolvedText;
 
 trait PerformSearch
 {
@@ -26,7 +29,9 @@ trait PerformSearch
      * - Limit the result set according to a specified limit or a default value of 50.
      *
      * @param  array  $parameters  An associative array of search parameters that may include:
+     *                             - 'text': The text to search, applied by the text search of the resource.
      *                             - 'filters': Criteria for filtering the results.
+     *                             - 'trashed': Whether to add ('with') or keep only ('only') the trashed models.
      *                             - 'sorts': Definitions for ordering the results.
      *                             - 'scopes': Named scopes to refine the query.
      *                             - 'instructions': Additional instructions for query customization.
@@ -45,21 +50,27 @@ trait PerformSearch
             $this->resource->searchQuery($this->resource->context()->request, $query);
         });
 
+        $text = array_key_exists('text', $parameters) ? $this->resource->context()->text($this->resource) : null;
+
+        $text?->clause()?->apply($this->toBase());
+
         $filters = $parameters['filters'] ?? null;
 
         if (is_array($filters)) {
             $this->applyFilters($filters);
         }
 
+        TrashedClause::fromPayload($parameters['trashed'] ?? null)?->apply($this->toBase());
+
         if (empty($parameters['sorts'])) {
-            foreach ($this->resource->defaultOrderBy(
-                $this->resource->context()->request
-            ) as $column => $order) {
+            $text?->relevance()?->apply($this->toBase());
+
+            foreach ($this->resource->defaultOrderBy($this->resource->context()->request) as $column => $order) {
                 $this->queryBuilder->orderBy($this->queryBuilder->getModel()->getTable().'.'.$column, $order);
             }
         }
-        $this->when(isset($parameters['sorts']), function () use ($parameters) {
-            $this->applySorts($parameters['sorts']);
+        $this->when(isset($parameters['sorts']), function () use ($parameters, $text) {
+            $this->applySorts($parameters['sorts'], $text);
         });
 
         $this->when(isset($parameters['scopes']), function () use ($parameters) {
@@ -101,12 +112,14 @@ trait PerformSearch
      *
      * @param  array  $sorts  An array of sorts to apply.
      */
-    public function applySorts($sorts)
+    public function applySorts($sorts, ?ResolvedText $text = null)
     {
         $fields = $this->resource->getFields($this->resource->context()->request);
 
         foreach ($sorts as $sort) {
-            SortClause::fromSort($fields, $sort)->apply($this->toBase());
+            $clause = RelevanceClause::requestedBy($sort) ? RelevanceClause::fromSort($sort, $text) : SortClause::fromSort($fields, $sort);
+
+            $clause->apply($this->toBase());
         }
     }
 

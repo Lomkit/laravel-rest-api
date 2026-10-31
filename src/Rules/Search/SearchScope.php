@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Rules\Search;
 
 use Lomkit\Rest\Fields\Field;
-use Lomkit\Rest\Rules\Concerns\DependsOnTextSearch;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\RestRule;
 use Lomkit\Rest\Scopes\Scope;
@@ -11,16 +10,10 @@ use Lomkit\Rest\Validation\RuleReferences;
 
 class SearchScope extends RestRule
 {
-    use DependsOnTextSearch;
-
     /** @return array<string, list<mixed>> */
     #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
-        if ($this->textSearch) {
-            return [];
-        }
-
         $request = $this->resource->context()->request;
 
         $names = array_map(fn (Scope $scope): string => $scope->name, $this->resource->getScopes($request));

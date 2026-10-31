@@ -8,7 +8,7 @@ Version 3.0 is in development on the `3.x` branch. This guide lists each breakin
 
 - PHP 8.3 or later.
 - Laravel 13.30 or later. Applications on Laravel 12 stay on 2.x, and applications on an earlier Laravel 13 release update Laravel first: `composer update laravel/framework`.
-- Laravel Scout 11 or later, if you use full-text search.
+- Laravel Scout 11 or later, if you run text searches through Scout.
 
 ### Built-in documentation generator removed
 
@@ -43,7 +43,7 @@ These items change:
 
 ### Resource definitions
 
-A resource holds no request state. Its context evaluates `fields()`, `scopes()`, `relations()`, `instructions()`, `actions()`, `limits()`, `scoutFields()` and `scoutInstructions()` once per request, when they are first read, and keeps the results until the request ends. The next request evaluates them again, with its own user.
+A resource holds no request state. Its context evaluates `fields()`, `scopes()`, `relations()`, `instructions()`, `actions()`, `limits()`, `scoutFields()`, `scoutInstructions()` and `text()` once per request, when they are first read, and keeps the results until the request ends. The next request evaluates them again, with its own user.
 
 - The `calculatedFields`, `calculatedScopes`, `calculatedRelations`, `calculatedInstructions`, `calculatedActions`, `calculatedLimits`, `calculatedScoutFields` and `calculatedScoutInstructions` properties of resources are removed. Read the declarations with `getFields()`, `getScopes()`, `getRelations()`, `getInstructions()`, `getActions()`, `getLimits()`, `getScoutFields()` and `getScoutInstructions()`. They still take a request, but they evaluate the declarations with the request of the resource's context, whatever request they receive.
 - A serialized resource holds its own properties and an empty context, without its declarations. A queued or batched action therefore evaluates them again in the worker, where the request has no user: declarations that depend on the user see a guest there. Closures in the declarations, such as field rules, scope fields, relation constraints, or actions and instructions built with closures, stay out of the queued job. The action that runs and the field values it receives are still serialized with the job, so they cannot hold closures.
@@ -226,14 +226,14 @@ Service provider and facade:
 
 ### Search
 
-Text search (`search.text`):
+Text search (`search.text`). A resource now declares its text search with `text()`, see [Text search](#text-search). The items below also describe the Scout text search that resources keep when their model uses `Laravel\Scout\Searchable` and they do not declare `text()`:
 
 - A request runs a text search when `search.text.value` is filled. A blank, `null` or missing value runs the normal search and returns the normal list, and the rest of the payload is validated as a normal search. Before, a blank or `null` value returned an empty page.
 - `search.text.value` accepts at most 255 characters.
-- `search.text.trashed` needs a filled `search.text.value`. Without one it gives a 422.
+- `search.text.trashed` is removed and gives a 422. Send `search.trashed` instead, see [Text search](#text-search).
 - `viewAny` is checked before any search runs, including a text search without hits and a page past the last one.
-- With a text search, `searchQuery()` also applies to the loaded page: a row that the index returns outside `searchQuery()` is left out of `data`. The order of the page, `total` and `last_page` stay the index's.
-- A resource that overrides `searchQuery()` must declare `searchScoutQuery()` in the same class, or in a subclass of it, to run a text search. Otherwise a text search throws `Lomkit\Rest\Exceptions\InvalidResourceException`, which names the resource. A resource that overrides neither keeps working. Put the same constraints in both hooks, and write them in `searchScoutQuery()` as `where()` conditions on attributes that the index stores and can filter on, not as a `query()` callback:
+- With a Scout text search, `searchQuery()` also applies to the loaded page: a row that the index returns outside `searchQuery()` is left out of `data`. The order of the page, `total` and `last_page` stay the index's.
+- A resource that overrides `searchQuery()` must declare `searchScoutQuery()` in the same class, or in a subclass of it, to run a Scout text search. Otherwise a text search throws `Lomkit\Rest\Exceptions\InvalidResourceException`, which names the resource. A resource that overrides neither keeps working. Put the same constraints in both hooks, and write them in `searchScoutQuery()` as `where()` conditions on attributes that the index stores and can filter on, not as a `query()` callback:
 
   ```php
   use Illuminate\Contracts\Database\Eloquent\Builder;
@@ -250,9 +250,9 @@ Text search (`search.text`):
   }
   ```
 
-- If your base resource (`app/Rest/Resources/Resource.php`) declares `searchQuery()`, add `searchScoutQuery()` to it, otherwise a text search on the resources that extend it throws. The base resource that `rest:base-resource` wrote under 2.x declares a `searchQuery()` that only returns `$query`: delete it, or add `searchScoutQuery()`. `rest:base-resource` now generates no query hook.
+- If your base resource (`app/Rest/Resources/Resource.php`) declares `searchQuery()`, add `searchScoutQuery()` to it, otherwise a Scout text search on the resources that extend it throws. The base resource that `rest:base-resource` wrote under 2.x declares a `searchQuery()` that only returns `$query`: delete it, or add `searchScoutQuery()`. `rest:base-resource` now generates no query hook.
 - Includes and aggregates are validated as in a search without text, also next to a text search, because they run in SQL on the loaded page: their filters, sorts, selects and scopes use the fields and operators of the related resource, not its scout fields. An include or an aggregate whose `relation` is missing or not declared gives a 422.
-- Actions refuse `search.text` with a 422 under `search.text`: "Text search is not available for actions."
+- The actions of a resource that does not declare `text()` refuse `search.text` with a 422 under `search.text`: "Text search is not available for actions." The actions of a resource that declares it act on the matching rows, see [Text search](#text-search).
 
 Validation:
 
@@ -269,10 +269,96 @@ Validation:
 Query builder and requests:
 
 - `disableSecurity()` is removed from `Lomkit\Rest\Query\Builder` and from the `EloquentQueryBuilder` contract. `searchQuery()` applies to every search.
-- `RestRequest::isScoutMode()` is removed. Use `$request->context()->isTextSearch()`, which is true when `search.text.value` is filled.
-- `Lomkit\Rest\Rules\Search\Search` no longer validates `text`. `SearchRequest` validates it with `SearchText`, and includes and actions prohibit it.
+- `RestRequest::isScoutMode()` is removed. `$request->context()->text($resource)` returns the text search of the resource for the request, a `Lomkit\Rest\Text\ResolvedText`: its `usesScout()` is true when the request runs a Scout text search, and its `query` holds the text of the search, or `null` when the request has no text to search.
+- `Lomkit\Rest\Rules\Search\Search` validates `text` (with `SearchText`) and `trashed` at the root of the search, and the search of an include prohibits them.
 - `Resource::relation()` returns `null` for a dotted path whose first relation is not declared. Before, it failed with an error.
 - `Lomkit\Rest\Rules\ArrayWithKey` stops after reporting that a value is not an array.
+
+### Text search
+
+A resource declares its text search with `text()`, and the fields to search with `searchable()`. The text becomes one more condition of the SQL search: filters, scopes, instructions, includes, aggregates, sorts, pagination, `searchQuery()` and actions work with it as they do without it.
+
+```php
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Text\Contains;
+use Lomkit\Rest\Text\FullText;
+use Lomkit\Rest\Text\TextSearch;
+
+public function fields(RestRequest $request): array
+{
+    return [
+        ID::make('id'),
+        Text::make('name')->searchable(),
+        Text::make('description')->searchable(),
+        Integer::make('price'),
+    ];
+}
+
+public function text(RestRequest $request): ?TextSearch
+{
+    return FullText::make()
+        ->index('name', 'description')
+        ->otherwise(Contains::make());
+}
+```
+
+Declaration:
+
+- `Resource::text(RestRequest $request): ?TextSearch` returns `null` by default. A resource without text search refuses `search.text` with a 422, "The search.text field is prohibited.", except the Scout resources described below. If one of your resources already has a method named `text()`, rename it.
+- `searchable()` marks a field that the text search reads. Only `Text` fields, and app types that extend `Text`, can be searchable: `searchable()` throws `Lomkit\Rest\Exceptions\InvalidFieldException` on another type, and on a `virtual()` or `writeOnly()` field, whatever the order of the calls. `Lomkit\Rest\Fields\FieldSet::searchable()` returns the searchable fields.
+- A resource whose `text()` returns a strategy but that has no searchable field throws `Lomkit\Rest\Exceptions\InvalidTextSearchException` when it is searched.
+- The strategies are in the `Lomkit\Rest\Text` namespace:
+  - `Contains::make()` runs on every database. Each word of the text must appear in one of the searchable fields, as a part of its value. The words match in any order, and the words after the tenth are ignored. It runs `ILIKE` on PostgreSQL and `LIKE` on the other databases, and the `%`, `_` and `\` characters of the text match as they are typed. It supports the `words` and `phrase` modes, and does not order by relevance.
+  - `FullText::make()` runs the full-text search of MySQL, MariaDB and PostgreSQL. It supports the four modes and orders by relevance.
+    - `index('name', 'description')` declares a group of columns. Call it once per FULLTEXT index: a row matches when one of the groups matches. Without `index()`, the searchable fields form one group. A column that is not a searchable field throws `InvalidTextSearchException` when the resource is searched.
+    - `language('english')` names the PostgreSQL text search configuration, `english` by default: letters, digits and `_` only. MySQL and MariaDB ignore it.
+    - `otherwise(Contains::make())` runs another strategy on the other databases, such as SQLite and SQL Server. Without it, searching the resource on these databases throws `InvalidTextSearchException`, which names the resource and the database driver.
+    - On MySQL and MariaDB, each group needs a FULLTEXT index on exactly its columns. A group without one throws `InvalidTextSearchException`, which names the table and the groups. Create one index per group in a migration: `$table->fullText(['name', 'description'])`. On PostgreSQL, the search runs without index, and the same call, with `->language(...)` when the configuration is not `english`, creates the index that the search uses.
+
+Request:
+
+- `search.text` is an object: `{"value": "desk lamp", "mode": "words"}`. `value` is a string of at most 255 characters. A blank, `null` or missing value, or a value without a letter or a digit, runs the search without text and returns the normal list. A text made only of words that FullText ignores, such as stopwords, returns no row: see the database differences below.
+- `mode`, `words` by default, is a case of `Lomkit\Rest\Text\TextMode`. A mode that the strategy does not support gives a 422 under `search.text.mode`.
+  - `words`: the words of the text, in any order. With Contains and on PostgreSQL, a row must hold every word. On MySQL and MariaDB, a row matches when it holds one of the words, and without `sorts` the rows that hold more of them come first.
+  - `phrase`: the words of the text, next to each other and in this order.
+  - `prefix`: each word starts a word of the row, for a search box that shows results while the user types: `lam` finds `lamp`.
+  - `websearch`: words, `"quoted phrases"`, `-excluded` words, and `or` between two alternatives.
+- FullText keeps the letters and digits of the text. The other characters, such as `+`, `*`, `:`, `&`, `|` and `!`, separate words and have no meaning, except the quotes, `-` and `or` of the `websearch` mode. On MySQL and MariaDB, an `_` between two letters or digits stays in the word, as in their FULLTEXT index: `snake_case` is one word there, and two words on PostgreSQL.
+- The full search grammar works with text: filters with `or`, `nested`, relation paths and every operator, scopes, instructions, includes, aggregates, sorts, `page` and `limit`. `total` counts the matching rows. The text narrows the searched resource only: it does not narrow includes, aggregates or relation filters, and `text` in an include gives a 422. `viewAny` is checked before the search runs, and `searchQuery()` applies as in any search.
+- With a strategy that orders by relevance, a search with text and without `sorts` returns the most relevant rows first, then follows `defaultOrderBy()`. The sort field `@relevance` places the relevance among the other sorts, `desc` when `direction` is omitted: `"sorts": [{"field": "featured", "direction": "desc"}, {"field": "@relevance"}]`. `@relevance` gives a 422 under `search.sorts.<i>.field` without text, in includes, and with a strategy that does not order by relevance, such as Contains or the `otherwise()` strategy of FullText.
+- `search.trashed` replaces `search.text.trashed`, with or without text: `with` adds the soft-deleted rows, and `only` returns them alone. It gives a 422 on a model without `SoftDeletes` and in includes. `search.text.trashed` gives a 422.
+- An action of a resource that declares `text()` accepts `search.text` and acts on the matching rows only. A blank text acts on every row that the rest of the search resolves. `search.trashed` applies to actions too.
+
+Scout resources:
+
+- Until a Scout strategy is available for `text()`, a resource whose model uses `Laravel\Scout\Searchable` and that does not declare `text()` keeps the Scout text search described in [Search](#search): its scout fields and scout instructions, `searchScoutQuery()`, its reduced filters and sorts, no scopes, and actions that refuse text. `search.trashed` replaces `search.text.trashed` there too, and `search.text.mode` gives a 422.
+- A resource that declares `text()` runs its strategy in SQL, even when its model uses `Searchable`.
+
+Database differences:
+
+- Contains: `ILIKE` ignores case on PostgreSQL. On MySQL and MariaDB, `LIKE` follows the collation of the column: the default `_ci` collations ignore case. On SQLite, `LIKE` ignores the case of ASCII letters only.
+- FullText on MySQL and MariaDB:
+  - Words are not stemmed: `lamps` does not find `lamp`.
+  - Words shorter than `innodb_ft_min_token_size` (3 by default) and the InnoDB stopwords, such as `the` or `with`, are not indexed. The `words` mode ignores them and the `phrase` mode skips them, but a text made of such words only returns no row.
+  - In the `prefix` mode, each word of the text must start an indexed word of the row. Short beginnings work: `l` and `la` find `lamp`. A stopword or a short word of the text only finds the longer indexed words that start with it: `the lam` finds `Theme lamp` but not `The lamp`, whose `the` is not indexed.
+  - In the `websearch` mode each word is required, so a stopword or a short word finds no row and the search returns nothing. To search such words, lower `innodb_ft_min_token_size` or change the stopword list, then rebuild the indexes.
+  - A `websearch` text made of excluded words only returns no row.
+  - InnoDB only finds committed rows: in tests that run each test in a transaction, such as tests that use `RefreshDatabase`, a FullText search finds no row that the test wrote.
+- FullText on PostgreSQL:
+  - `language()` sets how words are read. With `english`, words are stemmed (`lamps` finds `lamp`) and English stopwords are ignored. A text made of stopwords only returns no row. With `simple`, words are only lowercased. Give the index the same configuration, `$table->fullText([...])->language('simple')`, otherwise PostgreSQL does not use it.
+  - A row whose value is `null` in one column of a group does not match through that group. Declare the columns of a group `NOT NULL`, or give a nullable column its own `index()` group.
+  - A `websearch` text made of excluded words only returns the rows without these words.
+
+Query builder:
+
+- `Lomkit\Rest\Query\Builder::applySorts($sorts, ?ResolvedText $text = null)` takes the text search of the request as a second parameter, to sort by `@relevance`. An override of `applySorts()` must declare it.
+
+Scramble:
+
+- The search body documents `text` only on the resources with a text search: `value` and the `mode`s of the strategy, or `value` alone for a Scout text search. The `fields` key of `text`, which the package never read, is removed.
+- `trashed` is documented on the resources whose model uses `SoftDeletes`, and the sort `field` lists `@relevance` when the strategy orders by relevance.
 
 ### Validation engine
 
@@ -392,7 +478,7 @@ Selects and rows:
 
 Sorts:
 
-- `sorts` accepts the sortable fields only. A `Json` field, a field declared `sortable(false)` or `writeOnly()`, and a `virtual()` field without `sortUsing()` give a 422 under `search.sorts.<i>.field`. A field declared `selectable(false)` can still be sorted. The sorts of a text search still accept the `scoutFields()`.
+- `sorts` accepts the sortable fields only. A `Json` field, a field declared `sortable(false)` or `writeOnly()`, and a `virtual()` field without `sortUsing()` give a 422 under `search.sorts.<i>.field`. A field declared `selectable(false)` can still be sorted. The sorts of a Scout text search still accept the `scoutFields()`.
 - A field with `sortUsing()` is sorted by its callback instead of its column. The callback receives the Eloquent query of the resource, on an include as well, and the direction, `asc` or `desc`. A `virtual()` or `writeOnly()` field with `sortUsing()` is sortable.
 
   ```php
@@ -407,7 +493,7 @@ Sorts:
 
 - The other fields are ordered by their column, qualified with the table of the model: `posts.views`.
 - `direction` accepts the values of `Lomkit\Rest\Fields\SortDirection`, `asc` and `desc`. A sort without a direction is ascending.
-- `Lomkit\Rest\Query\Builder::sort($field, $direction)` is removed. `applySorts()` keeps its signature and applies each sort with a `Lomkit\Rest\Query\Clauses\SortClause`, which calls `Field::sort()`. A sort passed to `search()` or `applySorts()` must name a declared, sortable field of the resource: another field throws `Lomkit\Rest\Exceptions\InvalidFieldException`. `Lomkit\Rest\Query\ScoutBuilder::sort()` does not change.
+- `Lomkit\Rest\Query\Builder::sort($field, $direction)` is removed. `applySorts($sorts, ?ResolvedText $text = null)` applies each sort with a `Lomkit\Rest\Query\Clauses\SortClause`, which calls `Field::sort()`, and takes the text search of the request as a second parameter: an override must declare it, see [Text search](#text-search). A sort passed to `search()` or `applySorts()` must name a declared, sortable field of the resource, or `@relevance`: another field throws `Lomkit\Rest\Exceptions\InvalidFieldException`. `@relevance` orders by relevance (`Lomkit\Rest\Query\Clauses\RelevanceClause`) when the search has a text and a strategy that orders by relevance, and throws `InvalidFieldException` otherwise. `Lomkit\Rest\Query\ScoutBuilder::sort()` does not change.
 - `defaultOrderBy()` still orders by the columns it names. The default `Resource::defaultOrderBy()` returns the key of the model in descending order, `[static::newModel()->getKeyName() => 'desc']`, instead of `['id' => 'desc']`: a search without `sorts` on a model whose key is not `id`, such as `code`, now works instead of failing on an unknown `id` column.
 
 Aggregates:
@@ -493,7 +579,7 @@ Relations:
 
 Text search:
 
-- With a text search, `search.filters` still accept the `scoutFields()` with `=`, `in` and `not in`, without `nested` or `type`. The filters of includes and aggregates follow the rules above.
+- With a Scout text search, `search.filters` still accept the `scoutFields()` with `=`, `in` and `not in`, without `nested` or `type`. With the text search of `text()`, they follow the rules above. The filters of includes and aggregates always follow the rules above.
 
 Database differences:
 

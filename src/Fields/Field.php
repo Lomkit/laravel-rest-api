@@ -10,6 +10,7 @@ use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\Concerns\ConfiguresFiltering;
 use Lomkit\Rest\Fields\Concerns\ConfiguresReading;
 use Lomkit\Rest\Fields\Concerns\ConfiguresRules;
+use Lomkit\Rest\Fields\Concerns\ConfiguresSearching;
 use Lomkit\Rest\Fields\Concerns\ConfiguresWriting;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 
@@ -18,6 +19,7 @@ abstract class Field
     use ConfiguresFiltering;
     use ConfiguresReading;
     use ConfiguresRules;
+    use ConfiguresSearching;
     use ConfiguresWriting;
     use HasMeta;
 
@@ -113,5 +115,10 @@ abstract class Field
     protected function writableByDefault(): bool
     {
         return true;
+    }
+
+    protected function supportsTextSearch(): bool
+    {
+        return false;
     }
 }

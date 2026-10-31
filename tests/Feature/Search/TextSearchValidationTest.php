@@ -64,11 +64,20 @@ class TextSearchValidationTest extends PackageTestCase
             'a sort outside the scout fields' => [['text' => $lamp, 'sorts' => [['field' => 'name']]], [
                 'search.sorts.0.field' => ['The selected search.sorts.0.field is invalid.'],
             ]],
+            'a scope' => [['text' => $lamp, 'scopes' => [['name' => 'cheap']]], [
+                'search.scopes' => ['The search.scopes field is prohibited.'],
+            ]],
+            'a mode' => [['text' => ['value' => 'lamp', 'mode' => 'words']], [
+                'search.text.mode' => ['The search.text.mode field is prohibited.'],
+            ]],
             'an instruction not declared for text search' => [['text' => $lamp, 'instructions' => [['name' => 'discounted']]], [
                 'search.instructions.0.name' => ['The selected search.instructions.0.name is invalid.'],
             ]],
             'an unknown trashed value' => [['text' => ['value' => 'lamp', 'trashed' => 'unknown']], [
-                'search.text.trashed' => ['The selected search.text.trashed is invalid.'],
+                'search.text.trashed' => ['The search.text.trashed field is prohibited.'],
+            ]],
+            'a trashed value in the text' => [['text' => ['value' => 'lamp', 'trashed' => 'with']], [
+                'search.text.trashed' => ['The search.text.trashed field is prohibited.'],
             ]],
             'a trashed value without text' => [['text' => ['trashed' => 'with']], [
                 'search.text.trashed' => ['The search.text.trashed field is prohibited.'],
