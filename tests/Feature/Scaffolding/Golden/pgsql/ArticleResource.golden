@@ -1,0 +1,103 @@
+<?php
+
+namespace App\Rest\Resources;
+
+use Illuminate\Validation\Rule;
+use Lomkit\Rest\Fields\Boolean;
+use Lomkit\Rest\Fields\Date;
+use Lomkit\Rest\Fields\DateTime;
+use Lomkit\Rest\Fields\Enum;
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Json;
+use Lomkit\Rest\Fields\Number;
+use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Tests\Fixtures\Newsroom\Article;
+
+class ArticleResource extends Resource
+{
+    public static string $model = Article::class;
+
+    #[\Override]
+    public function fields(RestRequest $request): array
+    {
+        return [
+            ID::make('id'),
+            Text::make('reference')->creationRules('required', Rule::unique(Article::class, 'reference')),
+            Text::make('title')
+                ->rules('max:255')
+                ->creationRules('required'),
+            Text::make('slug')
+                ->rules('max:120')
+                ->creationRules('required', Rule::unique(Article::class, 'slug')),
+            Text::make('locale')->rules('max:2'),
+            Text::make('body')->creationRules('required'),
+            Text::make('summary')->nullable(),
+            Enum::make('status'),
+            Integer::make('priority'),
+            Integer::make('word_count')->creationRules('required'),
+            Integer::make('reading_minutes')->readonly(),
+            Number::make('rating')->nullable(),
+            Number::make('score'),
+            Boolean::make('featured'),
+            Date::make('published_on')->nullable(),
+            DateTime::make('published_at')->nullable(),
+            DateTime::make('embargoed_until')->nullable(),
+            Text::make('deadline')->nullable(),
+            Integer::make('edition_year')->nullable(),
+            Text::make('metadata')
+                ->nullable()
+                ->rules('json'),
+            Json::make('options')->nullable(),
+            Text::make('thumbnail')->nullable(),
+            Text::make('editor_token')
+                ->nullable()
+                ->writeOnly()
+                ->rules('max:255'),
+            DateTime::make('created_at')
+                ->nullable()
+                ->readonly(),
+            DateTime::make('updated_at')
+                ->nullable()
+                ->readonly(),
+            DateTime::make('deleted_at')
+                ->nullable()
+                ->readonly(),
+        ];
+    }
+
+    #[\Override]
+    public function relations(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function scopes(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function limits(RestRequest $request): array
+    {
+        return [
+            10,
+            25,
+            50,
+        ];
+    }
+
+    #[\Override]
+    public function actions(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function instructions(RestRequest $request): array
+    {
+        return [];
+    }
+}

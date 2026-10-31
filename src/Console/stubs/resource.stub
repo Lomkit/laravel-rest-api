@@ -4,8 +4,8 @@ namespace {{ namespace }};
 
 use {{ rootNamespace }}Rest\Resources\Resource;
 use {{ namespacedModel }};
-use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\Requests\RestRequest;
+{{ imports }}
 
 class {{ class }} extends Resource
 {
@@ -15,14 +15,16 @@ class {{ class }} extends Resource
     public function fields(RestRequest $request): array
     {
         return [
-            ID::make('id'),
+            {{ fields }}
         ];
     }
 
     #[\Override]
     public function relations(RestRequest $request): array
     {
-        return [];
+        return [
+            {{ relations }}
+        ];
     }
 
     #[\Override]

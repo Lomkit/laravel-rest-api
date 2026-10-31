@@ -1,0 +1,62 @@
+<?php
+
+namespace App\Rest\Resources;
+
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Relations\MorphedByMany;
+use Lomkit\Rest\Tests\Fixtures\Newsroom\Keyword;
+
+class KeywordResource extends Resource
+{
+    public static string $model = Keyword::class;
+
+    #[\Override]
+    public function fields(RestRequest $request): array
+    {
+        return [
+            ID::make('id'),
+            Text::make('name')
+                ->rules('max:255')
+                ->creationRules('required'),
+        ];
+    }
+
+    #[\Override]
+    public function relations(RestRequest $request): array
+    {
+        return [
+            MorphedByMany::make('stories', RelatedStoryResource::class),
+            MorphedByMany::make('desks', RelatedDeskResource::class),
+        ];
+    }
+
+    #[\Override]
+    public function scopes(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function limits(RestRequest $request): array
+    {
+        return [
+            10,
+            25,
+            50,
+        ];
+    }
+
+    #[\Override]
+    public function actions(RestRequest $request): array
+    {
+        return [];
+    }
+
+    #[\Override]
+    public function instructions(RestRequest $request): array
+    {
+        return [];
+    }
+}

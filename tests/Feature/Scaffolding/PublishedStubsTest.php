@@ -12,6 +12,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 class PublishedStubsTest extends ScaffoldingTestCase
 {
+    private const string RESOURCE_WITH_MODEL = "<?php\n\nnamespace {{ namespace }};\n\nuse {{ namespacedModel }};\n\n// {{ model }}\n";
+
     private const string PUBLISHED_ACTION = "<?php\n\nnamespace {{ namespace }};\n\nuse Lomkit\Rest\Actions\Action;\n\nclass {{ class }} extends Action {}\n";
 
     #[Test]
@@ -91,6 +93,9 @@ class PublishedStubsTest extends ScaffoldingTestCase
         return [
             'resource without its model' => ['resource', "<?php\n\nnamespace {{ namespace }};\n\nclass {{ class }} {}\n", '{{ namespacedModel }}', 'rest:resource', ['name' => 'UnfilledResource', '--model' => 'Post']],
             'resource without the name of its model' => ['resource', "<?php\n\nnamespace {{ namespace }};\n\nuse {{ namespacedModel }};\n\nclass {{ class }} {}\n", '{{ model }}', 'rest:resource', ['name' => 'UnnamedModelResource', '--model' => 'Post']],
+            'resource without the imports of its fields' => ['resource', self::RESOURCE_WITH_MODEL."class {{ class }}\n{\n    {{ fields }}\n    {{ relations }}\n}\n", '{{ imports }}', 'rest:resource', ['name' => 'UnimportedResource', '--model' => 'Post']],
+            'resource without its fields' => ['resource', self::RESOURCE_WITH_MODEL."{{ imports }}\n\nclass {{ class }}\n{\n    {{ relations }}\n}\n", '{{ fields }}', 'rest:resource', ['name' => 'FieldlessResource', '--model' => 'Post']],
+            'resource without its relations' => ['resource', self::RESOURCE_WITH_MODEL."{{ imports }}\n\nclass {{ class }}\n{\n    {{ fields }}\n}\n", '{{ relations }}', 'rest:resource', ['name' => 'RelationlessResource', '--model' => 'Post']],
             'controller without its resource' => ['controller', "<?php\n\nnamespace {{ namespace }};\n\nclass {{ class }} {}\n", '{{ namespacedResource }}', 'rest:controller', ['name' => 'UnfilledController', '--resource' => 'PostResource']],
             'controller without the name of its resource' => ['controller', "<?php\n\nnamespace {{ namespace }};\n\nuse {{ namespacedResource }};\n\nclass {{ class }} {}\n", '{{ resource }}', 'rest:controller', ['name' => 'UnnamedResourceController', '--resource' => 'PostResource']],
             'action without its class' => ['action', "<?php\n\nnamespace {{ namespace }};\n\nclass UnfilledAction {}\n", '{{ class }}', 'rest:action', ['name' => 'UnfilledAction']],

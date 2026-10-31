@@ -6,6 +6,7 @@ use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\Generation\BaseClass;
 use Lomkit\Rest\Console\Generation\ClassReference;
+use Lomkit\Rest\Console\Generation\ResourceIndex;
 use Lomkit\Rest\Console\Generation\Stub;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -91,11 +92,21 @@ abstract class RestGeneratorCommand extends GeneratorCommand
         }
     }
 
+    protected function namesTheBaseClass(): bool
+    {
+        return $this->baseClass()?->isNamedLike($this->getNameInput()) === true;
+    }
+
+    protected function resourceIndex(): ResourceIndex
+    {
+        return new ResourceIndex($this->laravel->path('Rest/Resources'), $this->rootNamespace().'Rest\Resources\\');
+    }
+
     private function rejectTheBaseClassName(): void
     {
         $base = $this->baseClass();
 
-        if ($base === null || ! $base->isNamedLike($this->getNameInput())) {
+        if ($base === null || ! $this->namesTheBaseClass()) {
             return;
         }
 
