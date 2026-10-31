@@ -108,6 +108,22 @@ class QuickStartBlockedTest extends ScaffoldingTestCase
     }
 
     #[Test]
+    public function it_stops_before_any_write_when_two_models_share_a_resource_name(): void
+    {
+        $this->writeModel('App\Models\Note');
+        $this->writeModel('App\Models\Archive\Note');
+        $this->fakeApiInstall();
+
+        $output = $this->blockedQuickStart(['--model' => ['Note', 'Archive/Note'], '--install-api' => true]);
+
+        $this->assertSame(
+            "\n   ERROR  The models [App\Models\Note] and [App\Models\Archive\Note] would share the resource name [notes], so their routes would have the same URIs and names. Expose them in separate runs of this command, or rename one of the models.\n\n",
+            $output,
+        );
+        $this->assertNothingWritten();
+    }
+
+    #[Test]
     public function it_fails_when_the_checks_find_a_route_without_authentication(): void
     {
         $this->installApiRoutes();

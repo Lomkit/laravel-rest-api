@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Console\QuickStart;
 
 use Illuminate\Filesystem\Filesystem;
+use Lomkit\Rest\Exceptions\InvalidModelTableException;
 
 final readonly class ApiRoutes
 {
@@ -21,6 +22,21 @@ final readonly class ApiRoutes
         $routes = $this->file();
 
         return array_values(array_filter($plan->models, fn (ExposedModel $model): bool => ! $routes->registers($model->controller)));
+    }
+
+    public function ensureDistinctNames(QuickStartPlan $plan): void
+    {
+        $classes = [];
+
+        foreach ($this->unregistered($plan) as $model) {
+            $classes[$model->uri()][] = $model->source->class;
+        }
+
+        foreach ($classes as $name => $sharing) {
+            if (count($sharing) > 1) {
+                throw InvalidModelTableException::sharedResourceName($name, $sharing);
+            }
+        }
     }
 
     /** @return list<string> */
