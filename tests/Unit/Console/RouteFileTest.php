@@ -137,6 +137,79 @@ class RouteFileTest extends TestCase
     }
 
     #[Test]
+    #[DataProvider('importsInPintOrder')]
+    public function it_inserts_each_import_where_pint_sorts_it(string $imports, string $expected): void
+    {
+        $routes = new RouteFile("<?php\n\n{$imports}\n\nRoute::view('/', 'welcome');\n");
+
+        $this->assertSame(
+            "<?php\n\n{$expected}\n\nRoute::view('/', 'welcome');\n\nRest::resource('posts', PostsController::class)\n    ->middleware('auth:sanctum');\n",
+            $routes->withResource('posts', self::CONTROLLER)->contents,
+        );
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function importsInPintOrder(): array
+    {
+        $controller = 'use App\Rest\Controllers\PostsController;';
+        $facade = 'use Lomkit\Rest\Facades\Rest;';
+        $http = 'use Illuminate\Http\{JsonResponse, Request};';
+        $facades = 'use Illuminate\Support\Facades\{Route, Schema};';
+        $rest = "use App\Rest\{\n    Controllers\TagsController,\n    Controllers\UsersController,\n};";
+
+        return [
+            'groups around the new imports' => ["{$http}\n{$facades}", "{$controller}\n{$http}\n{$facades}\n{$facade}"],
+            'a group before single imports' => ["{$http}\nuse Illuminate\Support\Facades\Route;", "{$controller}\n{$http}\nuse Illuminate\Support\Facades\Route;\n{$facade}"],
+            'a group after the new imports' => ["use App\Models\{Post, Tag};\nuse Symfony\Component\HttpFoundation\{Request, Response};", "use App\Models\{Post, Tag};\n{$controller}\n{$facade}\nuse Symfony\Component\HttpFoundation\{Request, Response};"],
+            'a group on several lines' => ["{$rest}\n{$facades}", "{$rest}\n{$controller}\n{$facades}\n{$facade}"],
+            'an imported namespace' => ['use App\Rest\Controllers;', "use App\Rest\Controllers;\n{$controller}\n{$facade}"],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('commentedImports')]
+    public function it_keeps_the_comments_of_the_file_next_to_their_imports(string $imports, string $expected): void
+    {
+        $routes = new RouteFile("<?php\n\n{$imports}\n\nRoute::view('/', 'welcome');\n");
+
+        $this->assertSame(
+            "<?php\n\n{$expected}\n\nRoute::view('/', 'welcome');\n\nRest::resource('posts', PostsController::class)\n    ->middleware('auth:sanctum');\n",
+            $routes->withResource('posts', self::CONTROLLER)->contents,
+        );
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function commentedImports(): array
+    {
+        $controller = 'use App\Rest\Controllers\PostsController;';
+        $facade = 'use Lomkit\Rest\Facades\Rest;';
+        $request = 'use Illuminate\Http\Request;';
+
+        return [
+            'a comment after the last import' => ["{$request}\nuse Illuminate\Support\Facades\Route; // facade", "{$controller}\n{$request}\nuse Illuminate\Support\Facades\Route; // facade\n{$facade}"],
+            'a comment after the last group import' => ['use Illuminate\Support\Facades\{Route, Schema}; // facades', "{$controller}\nuse Illuminate\Support\Facades\{Route, Schema}; // facades\n{$facade}"],
+            'comments after the last import' => ["{$request} /* http */ # request", "{$controller}\n{$request} /* http */ # request\n{$facade}"],
+            'a comment above the next import' => ["// http\n{$request}", "{$controller}\n// http\n{$request}\n{$facade}"],
+            'comments above the next import' => ["/*\n * http\n */\n// request\n{$request}", "{$controller}\n/*\n * http\n */\n// request\n{$request}\n{$facade}"],
+            'comments after and above imports' => ["use App\Models\Post; // post\n// http\n{$request}", "use App\Models\Post; // post\n{$controller}\n// http\n{$request}\n{$facade}"],
+            'a comment above a blank line' => ["// imports\n\n{$request}", "// imports\n\n{$controller}\n{$request}\n{$facade}"],
+            'an indented import' => ["    {$request}", "{$controller}\n    {$request}\n{$facade}"],
+        ];
+    }
+
+    #[Test]
+    public function it_leaves_the_imports_of_the_file_in_their_order(): void
+    {
+        $routes = new RouteFile("<?php\n\nuse Illuminate\Support\Facades\Route;\nuse Illuminate\Http\Request;\n");
+
+        $this->assertSame(
+            "<?php\n\nuse App\Rest\Controllers\PostsController;\nuse Illuminate\Support\Facades\Route;\nuse Illuminate\Http\Request;\nuse Lomkit\Rest\Facades\Rest;\n\n"
+            ."Rest::resource('posts', PostsController::class)\n    ->middleware('auth:sanctum');\n",
+            $routes->withResource('posts', self::CONTROLLER)->contents,
+        );
+    }
+
+    #[Test]
     #[DataProvider('takenShortNames')]
     public function it_qualifies_a_class_whose_short_name_a_group_or_a_list_imports(string $imports): void
     {
