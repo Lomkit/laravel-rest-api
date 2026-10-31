@@ -46,10 +46,10 @@ class ArticleResource extends Resource
             DateTime::make('embargoed_until')->nullable(),
             Text::make('deadline')->nullable(),
             Integer::make('edition_year')->nullable(),
-            Text::make('metadata')
-                ->nullable()
-                ->rules('json'),
+            Json::make('metadata')->nullable(),
             Json::make('options')->nullable(),
+            Json::make('layout')->nullable(),
+            Json::make('embedding')->nullable(),
             Text::make('thumbnail')->nullable(),
             Text::make('editor_token')
                 ->nullable()

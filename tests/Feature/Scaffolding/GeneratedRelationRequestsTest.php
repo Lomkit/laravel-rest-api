@@ -86,17 +86,20 @@ class GeneratedRelationRequestsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    public function it_writes_a_json_pivot_column_that_the_pivot_model_does_not_cast(): void
+    public function it_writes_and_returns_a_json_pivot_column_that_the_pivot_model_does_not_cast(): void
     {
         $this->serveStories('Detailed');
         $desk = Desk::query()->create(['name' => 'Politics']);
         $topic = Topic::query()->create(['name' => 'Budget']);
+        $details = DB::connection()->getDriverName() === 'sqlite' ? '{"tier":1}' : ['tier' => 1];
 
         $this->mutate('detailed', ['headline' => 'Budget vote'], [
             'desk' => ['operation' => 'attach', 'key' => $desk->id],
-            'topics' => [['operation' => 'attach', 'key' => $topic->id, 'pivot' => ['pinned' => true, 'details' => '{"tier":1}']]],
+            'topics' => [['operation' => 'attach', 'key' => $topic->id, 'pivot' => ['pinned' => true, 'details' => $details]]],
         ])->assertOk();
+        $response = $this->postJson('/detailed-stories/search', ['search' => ['includes' => [['relation' => 'topics']]]]);
 
+        $response->assertOk()->assertJsonPath('data.0.topics.0.pivot.details', $details);
         $this->assertSame(['tier' => 1], json_decode((string) DB::table('story_topic')->value('details'), true));
     }
 

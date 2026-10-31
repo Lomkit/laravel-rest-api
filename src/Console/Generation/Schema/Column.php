@@ -35,11 +35,6 @@ final readonly class Column
         return ! $this->nullable && ! $this->hasDefault;
     }
 
-    public function isJson(): bool
-    {
-        return in_array($this->typeName, ['json', 'jsonb'], true);
-    }
-
     public function length(): ?int
     {
         if (preg_match(self::LENGTH, $this->type, $matches) !== 1) {

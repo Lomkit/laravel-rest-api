@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Article;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Comment;
@@ -35,8 +34,7 @@ class GenerateResourceReportTest extends ScaffoldingTestCase
 
         $this->assertSame(0, $exitCode);
         $this->assertMatchesRegularExpression(
-            '/^  ReportedArticleResource \.+ 26 fields, 0 relations\s*\n'
-            .$this->jsonColumnNote('metadata')
+            '/^  ReportedArticleResource \.+ 28 fields, 0 relations\s*\n'
             .'  Note: thumbnail: no field type matches the column type \w+, generated as Text\.\n'
             .'  Note: internal_token: hidden and not fillable on the model, left out\.\n/m',
             $output->fetch(),
@@ -70,8 +68,7 @@ class GenerateResourceReportTest extends ScaffoldingTestCase
         $this->assertMatchesRegularExpression(
             '/^  ReportedStoryResource \.+ 6 fields, 7 relations\s*\n'
             .'  Skipped: reporter: no resource for '.preg_quote(Reporter::class, '/').'\. Generate one first with php artisan rest:resource ReporterResource --model=Lomkit\/Rest\/Tests\/Fixtures\/Newsroom\/Reporter --generate, then run this command again with --force\.\n'
-            .'  Note: topics\.pivot\.badge: no field type matches the column type \w+, generated as Text\.\n'
-            .$this->jsonColumnNote('topics.pivot.details').'$/m',
+            .'  Note: topics\.pivot\.badge: no field type matches the column type \w+, generated as Text\.\n$/m',
             $output->fetch(),
         );
     }
@@ -150,14 +147,5 @@ class GenerateResourceReportTest extends ScaffoldingTestCase
         $resource = (string) file_get_contents(app_path('Rest/Resources/BylineResource.php'));
         $this->assertStringContainsString("            Integer::make('writer_id')->creationRules('required'),\n", $resource);
         $this->assertStringContainsString("    public function relations(RestRequest \$request): array\n    {\n        return [];\n    }", $resource);
-    }
-
-    private function jsonColumnNote(string $column): string
-    {
-        if (DB::connection()->getDriverName() === 'sqlite') {
-            return '';
-        }
-
-        return '  Note: '.preg_quote($column, '/').': json column without an array cast on the model, generated as Text\.\n';
     }
 }

@@ -30,6 +30,8 @@ return new class extends Migration
             $table->year('edition_year')->nullable();
             $table->json('metadata')->nullable();
             $table->text('options')->nullable();
+            $table->json('layout')->nullable();
+            $table->text('embedding')->nullable();
             $table->binary('thumbnail')->nullable();
             $table->string('editor_token')->nullable();
             $table->string('internal_token')->nullable();

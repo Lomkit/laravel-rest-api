@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Article;
@@ -107,13 +108,29 @@ class GeneratedResourceRequestsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    public function it_writes_a_json_column_that_the_model_does_not_cast(): void
+    public function it_writes_and_returns_a_json_column_that_the_model_does_not_cast(): void
     {
         $this->serve('MetadataArticle', Article::class, 'metadata-articles');
+        $metadata = DB::connection()->getDriverName() === 'sqlite' ? '{"pages":4}' : ['pages' => 4];
 
-        $this->mutate('metadata-articles', [...self::ARTICLE, 'metadata' => '{"pages":4}'])->assertOk();
+        $this->mutate('metadata-articles', [...self::ARTICLE, 'metadata' => $metadata])->assertOk();
+        $response = $this->postJson('/metadata-articles/search', ['search' => ['selects' => [['field' => 'metadata']]]]);
 
+        $response->assertOk()->assertJsonPath('data', [['metadata' => $metadata]]);
         $this->assertSame(['pages' => 4], json_decode((string) Article::query()->sole()->metadata, true));
+    }
+
+    #[Test]
+    public function it_writes_and_returns_the_columns_of_a_fluent_and_a_vector_cast(): void
+    {
+        $this->serve('CastArticle', Article::class, 'cast-articles');
+
+        $this->mutate('cast-articles', [...self::ARTICLE, 'layout' => ['columns' => 2], 'embedding' => [0.5, 1.5]])->assertOk();
+        $response = $this->postJson('/cast-articles/search', ['search' => ['selects' => [['field' => 'layout'], ['field' => 'embedding']]]]);
+
+        $response->assertOk()->assertJsonPath('data', [['layout' => ['columns' => 2], 'embedding' => [0.5, 1.5]]]);
+        $this->assertSame(['columns' => 2], json_decode((string) DB::table('articles')->value('layout'), true));
+        $this->assertSame([0.5, 1.5], json_decode((string) DB::table('articles')->value('embedding'), true));
     }
 
     #[Test]

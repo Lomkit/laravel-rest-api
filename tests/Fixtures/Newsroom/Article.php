@@ -5,6 +5,8 @@ namespace Lomkit\Rest\Tests\Fixtures\Newsroom;
 use Illuminate\Database\Eloquent\Attributes\Guarded;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
+use Illuminate\Database\Eloquent\Casts\AsFluent;
+use Illuminate\Database\Eloquent\Casts\AsVector;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -21,6 +23,8 @@ class Article extends Model
         return [
             'status' => ArticleStatus::class,
             'options' => 'array',
+            'layout' => AsFluent::class,
+            'embedding' => AsVector::class,
             'featured' => 'boolean',
             'published_on' => 'date',
             'published_at' => 'datetime',

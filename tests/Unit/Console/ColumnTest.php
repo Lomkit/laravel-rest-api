@@ -31,24 +31,6 @@ class ColumnTest extends TestCase
     }
 
     #[Test]
-    #[DataProvider('jsonTypes')]
-    public function it_tells_a_json_column_from_its_type_name(string $typeName, bool $json): void
-    {
-        $this->assertSame($json, (new Column('column', $typeName, $typeName, false, false, false, false))->isJson());
-    }
-
-    /** @return array<string, array{string, bool}> */
-    public static function jsonTypes(): array
-    {
-        return [
-            'json' => ['json', true],
-            'pgsql jsonb' => ['jsonb', true],
-            'text' => ['text', false],
-            'longtext' => ['longtext', false],
-        ];
-    }
-
-    #[Test]
     public function it_reads_a_column_reported_by_the_schema_builder(): void
     {
         $column = Column::fromSchema([
