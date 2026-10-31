@@ -25,6 +25,12 @@ class Text extends Field
     }
 
     #[\Override]
+    protected function supportsTextSearch(): bool
+    {
+        return true;
+    }
+
+    #[\Override]
     protected function castValue(mixed $value): mixed
     {
         return is_scalar($value) || $value instanceof Stringable ? (string) $value : $value;

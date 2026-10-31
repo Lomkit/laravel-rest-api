@@ -40,14 +40,15 @@ trait PerformsRestOperations
 
         $this->beforeSearch($request);
 
-        $builder = $request->context()->isTextSearch() ? ScoutBuilder::class : QueryBuilder::class;
+        $text = $request->context()->text($resource);
+        $builder = $text->usesScout() ? ScoutBuilder::class : QueryBuilder::class;
 
         $query = app()->make($builder, ['resource' => $resource, 'query' => null])
             ->search($request->input('search', []));
 
         $this->afterSearch($request);
 
-        return $this->buildResponse($resource, $resource->paginate($query, $request));
+        return $this->buildResponse($resource, $text->run(fn () => $resource->paginate($query, $request)));
     }
 
     private function buildResponse(Resource $resource, mixed $responsable): Response

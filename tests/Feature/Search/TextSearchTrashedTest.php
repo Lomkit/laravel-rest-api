@@ -38,7 +38,7 @@ class TextSearchTrashedTest extends PackageTestCase
         $this->seedDocuments($driver);
 
         $response = $this->postJson('/api/searchable-documents/search', [
-            'search' => ['text' => ['value' => 'report', 'trashed' => 'with']],
+            'search' => ['text' => ['value' => 'report'], 'trashed' => 'with'],
         ]);
 
         $response->assertOk()->assertExactJson($this->page([$this->row($this->gone), $this->row($this->kept)]));
@@ -51,7 +51,7 @@ class TextSearchTrashedTest extends PackageTestCase
         $this->seedDocuments($driver);
 
         $response = $this->postJson('/api/searchable-documents/search', [
-            'search' => ['text' => ['value' => 'report', 'trashed' => 'only']],
+            'search' => ['text' => ['value' => 'report'], 'trashed' => 'only'],
         ]);
 
         $response->assertOk()->assertExactJson($this->page([$this->row($this->gone)]));

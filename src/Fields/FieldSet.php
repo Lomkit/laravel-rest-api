@@ -89,13 +89,7 @@ final readonly class FieldSet implements Countable, IteratorAggregate
 
     public function find(string $name): ?Field
     {
-        foreach ($this->fields as $field) {
-            if ($field->name === $name) {
-                return $field;
-            }
-        }
-
-        return null;
+        return $this->where(fn (Field $field): bool => $field->name === $name)->fields[0] ?? null;
     }
 
     public function get(string $name): Field
@@ -111,6 +105,11 @@ final readonly class FieldSet implements Countable, IteratorAggregate
     public function sortable(): self
     {
         return $this->where(fn (Field $field): bool => $field->isSortable());
+    }
+
+    public function searchable(): self
+    {
+        return $this->where(fn (Field $field): bool => $field->isSearchable());
     }
 
     public function filterable(): self

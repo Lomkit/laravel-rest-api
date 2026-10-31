@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Rules\Search;
 
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Instructions\Instruction;
-use Lomkit\Rest\Rules\Concerns\DependsOnTextSearch;
 use Lomkit\Rest\Rules\Distinct;
 use Lomkit\Rest\Rules\Input\InputFields;
 use Lomkit\Rest\Rules\OneOf;
@@ -13,7 +12,16 @@ use Lomkit\Rest\Validation\RuleCompiler;
 
 class SearchInstruction extends RestRule
 {
-    use DependsOnTextSearch;
+    /** @var array<int, Instruction>|null */
+    private ?array $instructions = null;
+
+    /** @param array<int, Instruction> $instructions */
+    public function among(array $instructions): static
+    {
+        $this->instructions = $instructions;
+
+        return $this;
+    }
 
     #[\Override]
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
@@ -54,23 +62,25 @@ class SearchInstruction extends RestRule
     /** @return list<string> */
     private function names(): array
     {
-        $request = $this->resource->context()->request;
-        $instructions = $this->textSearch ? $this->resource->getScoutInstructions($request) : $this->resource->getInstructions($request);
-
-        return array_values(array_map(fn (Instruction $instruction): string => $instruction->uriKey(), $instructions));
+        return array_values(array_map(fn (Instruction $instruction): string => $instruction->uriKey(), $this->declared()));
     }
 
     private function fields(mixed $value): ?FieldSet
     {
-        $request = $this->resource->context()->request;
         $name = is_array($value) ? ($value['name'] ?? null) : null;
 
-        if (! is_string($name)) {
-            return null;
+        foreach ($this->declared() as $instruction) {
+            if ($instruction->uriKey() === $name) {
+                return $instruction->getFields($this->resource->context()->request);
+            }
         }
 
-        $instruction = $this->textSearch ? $this->resource->scoutInstruction($request, $name) : $this->resource->instruction($request, $name);
+        return null;
+    }
 
-        return $instruction?->getFields($request);
+    /** @return array<int, Instruction> */
+    private function declared(): array
+    {
+        return $this->instructions ?? $this->resource->getInstructions($this->resource->context()->request);
     }
 }

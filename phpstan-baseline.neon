@@ -1330,12 +1330,6 @@ parameters:
 			path: src/Query/ScoutBuilder.php
 
 		-
-			message: '#^Cannot access offset ''trashed'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Query/ScoutBuilder.php
-
-		-
 			message: '#^Cannot access offset ''type'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -2820,13 +2814,13 @@ parameters:
 		-
 			message: '#^Cannot call method addProperty\(\) on mixed\.$#'
 			identifier: method.nonObject
-			count: 25
+			count: 22
 			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
 
 		-
 			message: '#^Cannot call method setDescription\(\) on mixed\.$#'
 			identifier: method.nonObject
-			count: 4
+			count: 3
 			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
 
 		-

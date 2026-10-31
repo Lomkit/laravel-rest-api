@@ -30,6 +30,10 @@ trait ConfiguresReading
 
     public function virtual(bool $virtual = true): static
     {
+        if ($virtual && $this->isSearchable()) {
+            throw InvalidFieldException::searchableVirtual($this->name);
+        }
+
         $this->virtual = $virtual;
 
         return $this;

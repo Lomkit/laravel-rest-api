@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Fields\Concerns;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\WriteOperation;
 
 trait ConfiguresWriting
@@ -63,6 +64,10 @@ trait ConfiguresWriting
 
     public function writeOnly(bool $writeOnly = true): static
     {
+        if ($writeOnly && $this->isSearchable()) {
+            throw InvalidFieldException::searchableWriteOnly($this->name);
+        }
+
         $this->writeOnly = $writeOnly;
 
         return $this;

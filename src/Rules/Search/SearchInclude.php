@@ -26,14 +26,22 @@ class SearchInclude extends RestRule
         $relation = is_array($value) ? ($value['relation'] ?? null) : null;
         $relationResource = is_string($relation) ? $this->resource->relation($relation)?->resource() : null;
 
+        $search = is_null($relationResource) ? [] : (new Search)
+            ->setResource($relationResource)
+            ->nested()
+            ->buildValidationRules($attribute, $value);
+
         return array_merge(
-            is_null($relationResource) ? [] : (new Search)->setResource($relationResource)->buildValidationRules($attribute, $value),
+            $search,
             [
                 $attribute.'.relation' => [
                     'required',
                     (new ResourceRelationOrNested)->setResource($this->resource),
                 ],
                 $attribute.'.text' => [
+                    'prohibited',
+                ],
+                $attribute.'.trashed' => [
                     'prohibited',
                 ],
                 $attribute.'.alias' => [

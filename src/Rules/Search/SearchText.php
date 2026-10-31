@@ -3,26 +3,30 @@
 namespace Lomkit\Rest\Rules\Search;
 
 use Illuminate\Validation\Rule;
-use Lomkit\Rest\Rules\Concerns\DependsOnTextSearch;
 use Lomkit\Rest\Rules\RestRule;
+use Lomkit\Rest\Text\TextBackend;
+use Lomkit\Rest\Text\TextCapabilities;
+use Lomkit\Rest\Text\TextMode;
 
 class SearchText extends RestRule
 {
-    use DependsOnTextSearch;
-
     /** @return array<string, list<mixed>> */
     #[\Override]
     public function buildValidationRules(string $attribute, mixed $value): array
     {
-        if (! $this->resource->isModelSearchable()) {
-            return [
-                $attribute => ['prohibited'],
-            ];
+        $text = $this->resource->context()->text($this->resource);
+        $capabilities = $text->capabilities;
+
+        if ($text->backend === TextBackend::None) {
+            return [$attribute => ['prohibited']];
         }
 
         return [
-            $attribute.'.value' => ['nullable', 'string', 'max:255'],
-            $attribute.'.trashed' => $this->textSearch ? [Rule::in('with', 'only')] : ['prohibited'],
+            $attribute.'.value' => ['nullable', 'string', 'max:'.($capabilities->maxLength ?? TextCapabilities::MAX_LENGTH)],
+            $attribute.'.mode' => $capabilities === null
+                ? ['prohibited']
+                : ['sometimes', 'string', Rule::enum(TextMode::class)->only($capabilities->modes)],
+            $attribute.'.trashed' => ['prohibited'],
         ];
     }
 }

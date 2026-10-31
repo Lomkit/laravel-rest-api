@@ -35,7 +35,7 @@ Use this skill when working with the `lomkit/laravel-rest-api` package — build
   Rest::resource('users', \App\Rest\Controllers\UsersController::class);
   ```
 
-- **Search**: filterable, sortable, paginated reads with nested relation includes, aggregates, scopes, and per-row policy gates via `POST /{resource}/search`.
+- **Search**: filterable, sortable, paginated reads with nested relation includes, aggregates, scopes, per-row policy gates and an opt-in text search (`LIKE` or the full-text index of the database) via `POST /{resource}/search`.
 - **Mutate**: batched create/update plus relation operations (`attach`, `detach`, `sync`, `toggle`) in one request via `POST /{resource}/mutate`.
 - **Actions**: custom mutators exposed under `/{resource}/actions/{uriKey}`, runnable against a `search`-resolved set of models, against an explicit list of ids, or standalone. Generate with:
 
@@ -99,7 +99,7 @@ php artisan rest:resource UserResource --model=User
 php artisan rest:resource UserResource --model=User --generate   # one field per column of the users table, plus the relations that have a resource
 ```
 
-Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $request`, so any list can be conditionally narrowed by user/permission). `fields()`, `relations()`, `scopes()`, `limits()`, `actions()`, `instructions()`, `scoutFields()` and `scoutInstructions()` run once per request, the first time the package reads them, and the resource keeps nothing between requests:
+Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $request`, so any list can be conditionally narrowed by user/permission). `fields()`, `relations()`, `scopes()`, `limits()`, `actions()`, `instructions()`, `text()`, `scoutFields()` and `scoutInstructions()` run once per request, the first time the package reads them, and the resource keeps nothing between requests:
 
 - `fields()` — list of typed `Lomkit\Rest\Fields\*` objects the client may select / filter / sort / mutate on: `ID`, `Text`, `Number`, `Integer`, `Boolean`, `Date`, `DateTime`, `Enum`, `Json`, or an app type extending `Field`. Strings and duplicate names throw `InvalidFieldException`. `getFields($request)` returns a `FieldSet`; `->names()` gives the list of names.
 
@@ -137,6 +137,7 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
   - Selectable fields (not `writeOnly()`, not `selectable(false)`, not `virtual()`) are the only ones `selects` accepts and the ones a row returns without `selects`, at every include level. Virtual fields cannot be selected yet; `requires()` has no effect yet.
   - Sortable fields are the only ones `sorts` accepts: `Json`, `sortable(false)`, `writeOnly()` fields and `virtual()` fields without `sortUsing()` are refused. `sortUsing()` replaces the column order of its field (and makes a virtual or write-only field sortable); its callback receives the Eloquent query, on an include as well, and `asc` or `desc`. The other fields order by their qualified column (`posts.views`).
   - Filterable fields are the only ones `filters` accepts: `Json`, `filterable(false)` fields, and `virtual()` or `writeOnly()` fields without `filterUsing()` are refused (`The selected search.filters.0.field is invalid.`). The operators come from the field type, `nullable()` adds `is null` and `is not null`, and `filterable([...])` narrows them (an operator the type does not have throws `InvalidFieldException`). `filterUsing()`, a closure or a `Lomkit\Rest\Contracts\Filter` object, replaces the column condition of its field, also at the end of a relation path (`author.full_name`): it receives the Eloquent query, the operator as a string and the value as sent, and its conditions stay in their own group. The other fields compare their qualified column (`posts.views`, or the pivot table for a pivot field).
+  - Searchable fields (`searchable()`) are the ones a text search reads, see "Text search" below. Only `Text` fields (and app types extending `Text`) can be searchable; `searchable()` on another type, a `virtual()` or a `writeOnly()` field throws `InvalidFieldException`, in any order of the calls.
 
   How a mutation writes a field depends on its declaration too (see the `mutate` payload below):
 
@@ -179,13 +180,14 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
 - `limits()` — allowed pagination `limit` values (default `[10, 25, 50]`; `$defaultLimit` property is `50`).
 - `actions()` — `Lomkit\Rest\Actions\Action` instances exposed under `/actions/{uriKey}`.
 - `instructions()` — `Lomkit\Rest\Instructions\Instruction` instances exposed under the `instructions` search key.
+- `text(RestRequest $request): ?\Lomkit\Rest\Text\TextSearch` — the text search strategy of `search.text` (`Contains::make()` or `FullText::make()`), `null` by default (no text search). See "Text search" below.
 - `rules(RestRequest $request): array`, `createRules(...): array`, `updateRules(...): array` — resource-level rules applied during mutate, for rules that compare attributes and for nested keys (`metadata.source`). Put the rules of one attribute on its field instead. Each key gets one list: the field rules, then `createRules()` (on `create`) or `updateRules()` (on `update`, `sync`, `toggle`), then `rules()`; pipe strings are split first.
 - `defaultOrderBy()` — default sort (defaults to the model key in descending order, `[$model->getKeyName() => 'desc']`).
 - Resource hooks (model-lifecycle): `mutating`, `mutated`, `destroying`, `destroyed`, `forceDestroying`, `forceDestroyed`, `restoring`, `restored`. Signatures: `mutating(MutateRequest $request, array $requestBody, Model $model): void`; the others take the endpoint's request and the model, e.g. `destroying(DestroyRequest $request, Model $model): void`.
 
-For Scout-backed models (`Laravel\Scout\Searchable`), additionally:
+For Scout-backed models (`Laravel\Scout\Searchable`) whose resource does not declare `text()`, `search.text` still runs through Scout until a Scout strategy is available for `text()`; these resources additionally use:
 - `scoutFields()`, `scoutInstructions()`, `searchScoutQuery(RestRequest $request, \Laravel\Scout\Builder $query): \Laravel\Scout\Builder`.
-- A resource that overrides `searchQuery()` must declare `searchScoutQuery()` in the same class or in a subclass of it, with the same constraints written as `where()` conditions on attributes the index stores and can filter on (not a `query()` callback). Otherwise a text search throws `InvalidResourceException`. `searchQuery()` also applies to the page loaded after a text search.
+- A resource that overrides `searchQuery()` must declare `searchScoutQuery()` in the same class or in a subclass of it, with the same constraints written as `where()` conditions on attributes the index stores and can filter on (not a `query()` callback). Otherwise a Scout text search throws `InvalidResourceException`. `searchQuery()` also applies to the page loaded after a Scout text search.
 
 The Resource also has typed static properties (PHP requires the `string` type when you redeclare them):
 - `public static string $model = Post::class;` — the Eloquent class (required: a resource without it throws `InvalidResourceException`). Read it with `PostResource::modelClass()`.
@@ -316,7 +318,7 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
 ```json
 {
   "search": {
-    "text":   {"value": "needle"},
+    "text":   {"value": "needle", "mode": "words"},
     "scopes": [{"name": "publishedSince", "parameters": ["2026-01-01"]}],
     "filters": [
       {"field": "id", "operator": "in", "value": [1, 2], "type": "or"},
@@ -352,16 +354,17 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
 **Filter `field`** must reach a filterable field: a field of the resource, a dotted path through declared relations checked on the resource at its end (`posts.comments.body`), or a filterable pivot field right after a `BelongsToMany`, `MorphToMany` or `MorphedByMany` relation (`roles.pivot.expires_at`). Through a `MorphTo` relation (`commentable.title`), the field is read on the declared target resource, and only the rows of that target's type match: other stored types never match nor fail. The `searchQuery()` of the resource at the end of a relation path, and of the declared target of each `MorphTo` relation on it, applies to the related rows, in its own group, and each resource on the path needs `viewAny`. Another field is a `422` under `search.filters.{index}.field`.
 **Filter `operator`** depends on the field type (`Lomkit\Rest\Fields\Filtering\FilterOperator`): `ID` and `Enum` take `=`, `!=`, `in`, `not in`; `Text` takes `=`, `!=`, `like`, `not like`, `ilike`, `not ilike`, `in`, `not in`; `Number` and `Integer` take `=`, `!=`, `>`, `>=`, `<`, `<=`, `between`, `not between`, `in`, `not in`; `Boolean` takes `=`, `!=`; `Date` and `DateTime` take `=`, `!=`, `>`, `>=`, `<`, `<=`, `between`, `not between`; `Json` takes none. `nullable()` adds `is null` and `is not null`, and `filterable([...])` narrows the list. Without `operator` a filter uses `=`, and `operator` is required on a field that does not accept `=`. Another operator is a `422` under `search.filters.{index}.operator`.
 **Filter `value`** is validated per operator: a value of the field type for `=`, `!=`, `>`, `>=`, `<`, `<=`; a string for `like`, `not like`, `ilike`, `not ilike`; a non-empty list for `in` and `not in`; exactly two values for `between` and `not between`; no value for `is null` and `is not null`. `=` or `!=` with `null` is a `422`: use `is null` or `is not null`. `like` is case-sensitive on PostgreSQL, follows the column collation on MySQL and ignores the case of ASCII letters on SQLite; `ilike` ignores case, except on MySQL columns with a binary or case-sensitive collation, and only for ASCII letters on SQLite.
-**Filter `type`**: `and` (default) or `or`. Use `nested` to group filters with their own logical operator, up to `rest.search.max_nesting_depth` levels (default `1`). With `text`, filters accept the `scoutFields()` with `=`, `in` and `not in`, without `nested` or `type`.
-**Scope `parameters`** is a positional list: each value binds to the scope field at the same position, is validated by its rules, cast to its type and filled from its `default()`. A position is required unless its field has a default; a missing, extra or wrongly typed parameter is a `422` under `search.scopes.{index}.parameters`. A rule that names another field of the same scope, such as `gte:min`, compares with the parameter at that field's position. Scopes are prohibited with `text` (Scout).
+**Filter `type`**: `and` (default) or `or`. Use `nested` to group filters with their own logical operator, up to `rest.search.max_nesting_depth` levels (default `1`). With a `text()` strategy, filters keep this whole grammar next to `text`. With a Scout text search (a `Searchable` model whose resource does not declare `text()`), filters accept the `scoutFields()` with `=`, `in` and `not in`, without `nested` or `type`.
+**Scope `parameters`** is a positional list: each value binds to the scope field at the same position, is validated by its rules, cast to its type and filled from its `default()`. A position is required unless its field has a default; a missing, extra or wrongly typed parameter is a `422` under `search.scopes.{index}.parameters`. A rule that names another field of the same scope, such as `gte:min`, compares with the parameter at that field's position. Scopes are prohibited with a Scout text search.
 **`selects`** lists the selectable fields to return (`writeOnly()`, `selectable(false)` and `virtual()` fields are a `422` under `search.selects.{index}.field`); without it a row holds every selectable field of its resource. Include `selects` use the related resource's fields.
-**`sorts`** apply in order and accept the sortable fields only (`Json`, `sortable(false)`, `writeOnly()` and `virtual()` fields without `sortUsing()` are a `422` under `search.sorts.{index}.field`). `direction` is `asc` or `desc` (`Lomkit\Rest\Fields\SortDirection`), `asc` when omitted. Without `sorts`, `defaultOrderBy()` applies. With `text`, sorts accept the `scoutFields()`.
+**`sorts`** apply in order and accept the sortable fields only (`Json`, `sortable(false)`, `writeOnly()` and `virtual()` fields without `sortUsing()` are a `422` under `search.sorts.{index}.field`). `direction` is `asc` or `desc` (`Lomkit\Rest\Fields\SortDirection`), `asc` when omitted. Without `sorts`, `defaultOrderBy()` applies, after the relevance order when the search has a text and its strategy orders by relevance. `@relevance` sorts by relevance (`desc` when `direction` is omitted) next to the other sorts, only with a filled text and a strategy that orders by relevance (`FullText` on MySQL, MariaDB or PostgreSQL), never in includes. With a Scout text search, sorts accept the `scoutFields()`.
 **Aggregate `type`** is required, one of `min`, `max`, `avg`, `sum`, `count`, `exists` (`Lomkit\Rest\Fields\AggregateFunction`). `field` is required for `min/max/avg/sum`, omit for `count/exists`. `min`/`max` take a field of the related resource that is sortable by its own column (`isSortableByColumn()`: sortable by default or `sortable()`, not `virtual()`, not `writeOnly()`; `sortUsing()` does not count, so a `Json` field with `sortUsing()` is refused) and is not a `Boolean` (an app type extending `Boolean` included), on every database; an `ID` with UUID keys (`HasUuids` or `keyType('uuid')`) works for `min`/`max` on every database and returns the same string (PostgreSQL reads it as text); `avg`/`sum` also need a `Number` field (`Number`, `Integer` or an app type extending `Number`). Another field is a `422` under `search.aggregates.{index}.field`. An optional `alias` (a string) renames the response key, which is `{relation}_{type}_{field}` otherwise (`stars_max_rate`, `stars_count`).
 **`page`** is an integer of at least `1`; `limit` must be one of the resource's `limits()`.
 **`includes`** can recursively re-use `filters`, `sorts`, `scopes`, `limit`, `selects` — but **not nested `includes`** (load chained relations as separate include entries). Includes and aggregates always run in SQL, so they are validated against the related resource's fields and operators, also next to `text`; a missing or undeclared `relation` is a `422`.
 **Include `alias`** renames the response key for that include, which lets the same relation appear several times under different constraints. It must look like an identifier (`^[A-Za-z_][A-Za-z0-9_]*$`), be unique across the includes, and not collide with a field, a relation, or the gates key of the resource. It is used verbatim — no snake_casing — and is rejected on a dotted relation path (use a nested include there).
 **`gates`** asks the server to evaluate the listed policy abilities per row and embed the result under the configured key (default `gates`); with `rest.gates.message.enabled = true` the value becomes `{allowed: bool, message: string}`.
-**`text`** triggers the Scout path when `text.value` is filled (at most 255 characters); only models using `Laravel\Scout\Searchable` accept it, and some standard search features become Scout-driver-dependent. A blank, `null` or missing `text.value` runs the normal search and returns the normal list. `text.trashed` (`with`/`only`) needs a filled `text.value`. `viewAny` is checked before any search runs, and with a text search `searchQuery()` also applies to the loaded page, while its order and `total` stay the index's.
+**`text`** runs the text search of the resource, see "Text search" below: `{"value": "desk lamp", "mode": "words"}`, `value` at most 255 characters. A blank, `null` or missing `text.value` runs the normal search and returns the normal list. A resource that declares no `text()` and whose model does not use `Laravel\Scout\Searchable` refuses `text` with a `422`. `viewAny` is checked before any search runs.
+**`trashed`** (`with` adds the soft-deleted rows, `only` returns them alone) works with and without `text`, on a model that uses `SoftDeletes` only (a `422` otherwise), and not in includes. `text.trashed` is a `422`.
 
 **Response** is Laravel's paginator JSON:
 
@@ -373,6 +376,46 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
   "meta":        {"gates": {"authorized_to_create": true}}
 }
 ```
+
+## Text search
+
+Text search is opt-in per resource: `text()` returns a strategy, and `searchable()` marks the `Text` fields it reads. The text is one more condition of the SQL search, so filters (with their whole grammar), scopes, instructions, includes, aggregates, sorts, pagination totals, `searchQuery()`, `viewAny` and actions work with it unchanged.
+
+```php
+use Lomkit\Rest\Fields\{ID, Integer, Text};
+use Lomkit\Rest\Text\{Contains, FullText, TextSearch};
+
+public function fields(RestRequest $request): array
+{
+    return [ID::make('id'), Text::make('name')->searchable(), Text::make('description')->searchable(), Integer::make('price')];
+}
+
+public function text(RestRequest $request): ?TextSearch
+{
+    return FullText::make()
+        ->index('name', 'description')   // one call per FULLTEXT index; without index(), one group of every searchable field
+        ->language('english')            // PostgreSQL text search configuration (default english); MySQL ignores it
+        ->otherwise(Contains::make());   // SQLite, SQL Server; without it, searching the resource there throws InvalidTextSearchException
+}
+```
+
+- `Contains::make()` runs on every database: `ILIKE` on PostgreSQL, `LIKE` elsewhere. Each word must appear, as a part of the value, in one of the searchable fields, in any order; the words after the tenth are ignored; `%`, `_` and `\` match as typed. Modes `words` and `phrase`, no relevance.
+- `FullText::make()` runs `MATCH ... AGAINST` on MySQL and MariaDB, and `to_tsvector` / `ts_rank` on PostgreSQL. All four modes, ordered by relevance. The `index()` columns must be searchable fields (`InvalidTextSearchException` otherwise). On MySQL and MariaDB each `index()` group needs a FULLTEXT index on exactly its columns, `$table->fullText(['name', 'description'])` in a migration; a missing one throws `InvalidTextSearchException`, which names the table and the group. On PostgreSQL the same migration, with `->language(...)` when the configuration is not `english`, creates the index that the search uses.
+- `text.mode` is a case of `Lomkit\Rest\Text\TextMode`, `words` by default; a mode that the strategy does not support is a `422` under `search.text.mode`:
+  - `words`: the words in any order. Contains and PostgreSQL need every word; MySQL matches any word and, without `sorts`, ranks the rows with more of them first.
+  - `phrase`: the words next to each other, in this order.
+  - `prefix`: each word starts a word of the row, for type-ahead (`lam` finds `lamp`).
+  - `websearch`: words, `"quoted phrases"`, `-excluded` words, and `or` between two alternatives.
+- FullText keeps the letters and digits of the text only: `+`, `*`, `:`, `&`, `|`, `!` and the other characters separate words and have no meaning, except the quotes, `-` and `or` of `websearch`. On MySQL and MariaDB an `_` between letters or digits stays in the word, as in the FULLTEXT index (`snake_case` is one word); PostgreSQL reads two words.
+- With text, a strategy that orders by relevance and no `sorts`, the rows come most relevant first, then in `defaultOrderBy()`. `{"field": "@relevance"}` (`desc` when `direction` is omitted) places the relevance among the other sorts.
+- A blank, `null` or missing `text.value`, or one without a letter or a digit, returns the normal list. A text made only of words that FullText ignores (stopwords, and on MySQL words under the minimum token size) returns no row. The text never narrows includes, aggregates or relation filters, and `text` in an include is a `422`.
+- `search.trashed` (`with` / `only`) replaces `text.trashed`, with or without text.
+- An action of a resource that declares `text()` accepts `search.text` and acts on the matching rows only.
+- A resource that declares no `text()` and whose model uses `Laravel\Scout\Searchable` keeps the Scout path until a Scout strategy is available for `text()`: scout fields and scout instructions, `searchScoutQuery()`, filters on `scoutFields()` with `=`, `in` and `not in` only, no scopes, `text.mode` a `422`, and actions that refuse `text`. Declaring `text()` on it runs the strategy in SQL instead.
+- Database notes:
+  - Contains: `ILIKE` ignores case on PostgreSQL; on MySQL `LIKE` follows the column collation (the default `_ci` collations ignore case); SQLite ignores the case of ASCII letters only.
+  - MySQL and MariaDB FULLTEXT: no stemming (`lamps` does not find `lamp`). Words shorter than `innodb_ft_min_token_size` (3 by default) and the InnoDB stopwords (`the`, `with`, ...) are not indexed: `words` ignores them and `phrase` skips them. In `prefix` each word must start an indexed word of the row: `l` and `la` find `lamp`, but `the lam` misses `The lamp` because `the` is not indexed. In `websearch` such a word is required and makes the search return nothing; lower `innodb_ft_min_token_size` or change the stopword list, then rebuild the indexes. A `websearch` of excluded words only returns nothing. InnoDB only sees committed rows, so a test wrapped in a transaction (`RefreshDatabase`) finds none of the rows it wrote.
+  - PostgreSQL: `english` stems words (`lamps` finds `lamp`) and drops English stopwords, `simple` only lowercases; the index must use the same configuration. A `null` value in one column of a group keeps the row from matching through that group: use `NOT NULL` columns, or a separate `index()` for a nullable column. A `websearch` of excluded words only returns the rows without these words.
 
 ## `mutate` payload
 
@@ -482,7 +525,7 @@ POST /api/users/actions/send-welcome-notification-action
 }
 ```
 
-Note the **`fields` payload is an array of `{name, value}` pairs**, not an object, and each name may appear only once (a repeated name is a `422` under `fields.{index}.name`). The `search` block resolves the target models (whole `search` schema is supported, except `text`: a text search on an action is a `422`); when sent, it must be an object. Standalone actions (`->standalone()` or `public bool $standalone = true`) omit `search` and receive an empty collection.
+Note the **`fields` payload is an array of `{name, value}` pairs**, not an object, and each name may appear only once (a repeated name is a `422` under `fields.{index}.name`). The `search` block resolves the target models (the whole `search` schema; `text` only on a resource that declares `text()`, and the action then acts on the matching rows only, while on other resources `text` is a `422` "Text search is not available for actions."); when sent, it must be an object. Standalone actions (`->standalone()` or `public bool $standalone = true`) omit `search` and receive an empty collection.
 
 An action has exactly one of three targeting states, which decides what the request body may carry:
 
@@ -537,7 +580,7 @@ class OddEvenIdInstruction extends \Lomkit\Rest\Instructions\Instruction
         return [\Lomkit\Rest\Fields\Text::make('type')->rules('required', 'in:odd,even')];
     }
 
-    // Scout variant — implement when this Instruction must also work under full-text search.
+    // Scout variant — implement when this Instruction must also work under a Scout text search.
     // The base handleScout() throws InvalidInstructionException (a LogicException).
     // public function handleScout(array $fields, ScoutBuilder $builder): void { ... }
 }
@@ -661,7 +704,7 @@ composer require dedoc/scramble:^0.13
 
 The package registers the extension itself: `config/scramble.php` needs no change.
 
-Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The search `filters` list the filterable fields (dotted paths are not listed) and every `FilterOperator`. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`. Relations come from the relation objects of `relations()` (their class name, `mutationOperations()` and number of entries), and the `pivot` of a many-to-many entry lists the writable pivot fields with their rules for `create` and `attach`, then `update`, `sync` and `toggle`.
+Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The search `filters` list the filterable fields (dotted paths are not listed) and every `FilterOperator`. The search `text` (with the `mode`s of its strategy), `trashed` (on `SoftDeletes` models) and the `@relevance` sort only appear on the resources that support them. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`. Relations come from the relation objects of `relations()` (their class name, `mutationOperations()` and number of entries), and the `pivot` of a many-to-many entry lists the writable pivot fields with their rules for `create` and `attach`, then `update`, `sync` and `toggle`.
 
 ## Precognition
 
@@ -703,9 +746,10 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, kept by `src/Http/RestContext.php`), `src/Concerns/Resource/*` (`DisableGates`, `DisableAuthorizationsCache`, hooks, ...)
 - Authorization — `src/Authorization/*` (`Authorizer`, `Check`, `Decision`, `Denial`, `DecisionMemo` and the decision stores), `src/Concerns/Authorizable.php`, `src/Exceptions/{AuthorizationDenied,DenialsRenderer,UnplannedCheckException}.php`; the checks made before validation are collected by the rule nodes (`RuleCompiler::reach()`) and run by `RestRequest::passesAuthorization()`
 - Query layer — `src/Query/Builder.php`, `src/Query/ScoutBuilder.php`, and `src/Query/AttributeWriter.php`, which fills a model from the writable fields of a mutation
+- Text search — `src/Text/*` (`TextSearch` strategies `Contains` and `FullText`, with the database dialects in `src/Text/Dialects/`; `ResolvedText`, the text search of a resource for one request, read through `$request->context()->text($resource)`; `TextQuery`, `TextMode`, `TextCapabilities`), applied by `TextClause`, `RelevanceClause` and `TrashedClause` in `src/Query/Clauses/`
 - Actions / Instructions / Scopes — `src/Actions/{Action,Actionable}.php`, `src/Instructions/{Instruction,Instructionable}.php`, `src/Scopes/Scope.php`
 - Typed fields and input values — `src/Fields/*` (`Field`, `FieldSet`, `FieldPath`, `InputValues`, `MutationOperation`, `WriteRules`, `Details/InputFieldDetails`), filter operators and conditions in `src/Fields/Filtering/`, clauses in `src/Query/Clauses/` (filters: `FilterGroupClause`, `FieldConditionClause`, `RelationConditionClause`)
 - Relations — `src/Relations/*.php`; pivot fields in `src/Concerns/Relations/HasPivotFields.php` (`src/Contracts/PivotRelation.php`), validated by `src/Rules/Mutate/MutatePivot.php`
 - Validation rules used to validate the request bodies — `src/Rules/{Search,Mutate,Input,Resource}/*`, compiled into one rule set per request by `src/Validation/RuleCompiler.php`
-- Scramble extension — `src/Scramble/LomkitLaravelRestApiOperationExtension.php`, with `RelationMutationType` (a relation entry), `WritableFieldsType` (writable fields per operation) and `RuleType` (the type a rule list implies)
+- Scramble extension — `src/Scramble/LomkitLaravelRestApiOperationExtension.php`, with `RelationMutationType` (a relation entry), `WritableFieldsType` (writable fields per operation), `RuleType` (the type a rule list implies) and `TextSearchType` (`search.text`, `search.trashed` and the `@relevance` sort)
 - Generator stubs — `src/Console/stubs/*.stub`

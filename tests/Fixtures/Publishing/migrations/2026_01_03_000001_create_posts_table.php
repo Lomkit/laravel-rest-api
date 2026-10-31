@@ -21,6 +21,11 @@ return new class extends Migration
             $table->dateTime('published_at')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
+
+            if (in_array(Schema::getConnection()->getDriverName(), ['mysql', 'mariadb', 'pgsql'], true)) {
+                $table->fullText(['title', 'summary']);
+                $table->fullText(['title']);
+            }
         });
     }
 };

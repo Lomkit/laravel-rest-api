@@ -9,6 +9,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
+use Lomkit\Rest\Text\ResolvedText;
 use ReflectionClass;
 
 final class ResourceDefinition
@@ -35,6 +36,8 @@ final class ResourceDefinition
 
     /** @var array<int, Instruction>|null */
     private ?array $scoutInstructions = null;
+
+    private ?ResolvedText $text = null;
 
     public function __construct(
         private readonly Resource $resource,
@@ -92,6 +95,11 @@ final class ResourceDefinition
     public function scoutInstructions(): array
     {
         return $this->scoutInstructions ??= $this->boundInstructions($this->resource->scoutInstructions($this->request));
+    }
+
+    public function text(): ResolvedText
+    {
+        return $this->text ??= ResolvedText::of($this->resource, $this->request);
     }
 
     private function declaredFields(): FieldSet

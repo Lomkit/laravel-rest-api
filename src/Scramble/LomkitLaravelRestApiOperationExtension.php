@@ -48,7 +48,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $operation->setTags([$resourceName]);
 
         match ($action) {
-            'search' => $this->documentSearch($operation, $fields, $relations, $resourceName),
+            'search' => $this->documentSearch($operation, $resource, $fields, $relations, $resourceName),
             'mutate' => $this->documentMutate($operation, $this->attributes($resource, $fakeRequest), $relations, $resourceName),
             'details' => $operation->summary("Get {$resourceName} details"),
             'destroy' => $this->documentDestroy($operation, $resourceName),
@@ -65,6 +65,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
      */
     private function documentSearch(
         Operation $operation,
+        Resource $resource,
         FieldSet $fields,
         array $relations,
         string $resourceName
@@ -74,71 +75,69 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $fieldEnum = $fields->filterable()->names();
         $relationEnum = array_values(array_map(fn (Relation $relation): string => $relation->relation, $relations));
         $relationDesc = $this->buildRelationsDescription($relations);
+        $text = TextSearchType::of($resource);
 
-        $body = (new ObjectType)->addProperty(
-            'search',
-            (new ObjectType)
-                ->addProperty('filters', (new ArrayType)->setItems(
-                    (new ObjectType)
-                        ->addProperty('field', (new StringType)->enum($fieldEnum))
-                        ->addProperty('operator', (new StringType)->enum(array_column(FilterOperator::cases(), 'value')))
-                        ->addProperty('value', (new MixedType)->setDescription('Accepts string, integer, boolean, or array'))
-                        ->addProperty('type', (new StringType)->enum(['and', 'or']))
-                        ->addProperty('nested', new ArrayType)
-                ))
-                ->addProperty('sorts', (new ArrayType)->setItems(
-                    (new ObjectType)
-                        ->addProperty('field', (new StringType)->enum($fields->sortable()->names()))
-                        ->addProperty('direction', (new StringType)->enum(array_column(SortDirection::cases(), 'value')))
-                ))
-                ->addProperty('selects', (new ArrayType)->setItems(
-                    (new ObjectType)->addProperty('field', (new StringType)->enum($fields->selectable()->names()))
-                ))
-                ->addProperty('includes', (new ArrayType)->setItems(
-                    (new ObjectType)
-                        ->addProperty(
-                            'relation',
-                            empty($relationEnum)
-                                ? new StringType
-                                : (new StringType)->enum($relationEnum)->setDescription($relationDesc)
-                        )
-                        ->addProperty(
-                            'alias',
-                            (new StringType)->setDescription('Optional output key for this include, used verbatim. Allows including the same relation several times under different keys. Must match ^[A-Za-z_][A-Za-z0-9_]*$, be unique across the includes, and not collide with a field, a relation or the gates key. Not allowed on a dotted relation path.')
-                        )
-                        ->addProperty('limit', new IntegerType)
-                        ->addProperty('filters', new ArrayType)
-                        ->addProperty('sorts', new ArrayType)
-                ))
-                ->addProperty('scopes', (new ArrayType)->setItems(
-                    (new ObjectType)
-                        ->addProperty('name', new StringType)
-                        ->addProperty('parameters', new ArrayType)
-                ))
-                ->addProperty(
-                    'text',
-                    (new ObjectType)
-                        ->addProperty('value', new StringType)
-                        ->addProperty('fields', (new ArrayType)->setItems(new StringType))
-                        ->setDescription('Full-text search across specified fields')
-                )
-                ->addProperty('aggregates', (new ArrayType)->setItems(
-                    (new ObjectType)
-                        ->addProperty('relation', new StringType)
-                        ->addProperty('type', (new StringType)->enum(array_column(AggregateFunction::cases(), 'value')))
-                        ->addProperty('field', new StringType)
-                        ->addProperty('filters', new ArrayType)
-                )->setDescription('Aggregate values over relations'))
-                ->addProperty('instructions', (new ArrayType)->setItems(
-                    (new ObjectType)
-                        ->addProperty('name', new StringType)
-                        ->addProperty('fields', new ArrayType)
-                )->setDescription('Named query instructions defined on the resource'))
-                ->addProperty('gates', (new ArrayType)->setItems(new StringType)
-                    ->setDescription('Gates to evaluate for the current user on each result'))
-                ->addProperty('page', new IntegerType)
-                ->addProperty('limit', new IntegerType)
-        );
+        $search = new ObjectType;
+        $search
+            ->addProperty('filters', (new ArrayType)->setItems(
+                (new ObjectType)
+                    ->addProperty('field', (new StringType)->enum($fieldEnum))
+                    ->addProperty('operator', (new StringType)->enum(array_column(FilterOperator::cases(), 'value')))
+                    ->addProperty('value', (new MixedType)->setDescription('Accepts string, integer, boolean, or array'))
+                    ->addProperty('type', (new StringType)->enum(['and', 'or']))
+                    ->addProperty('nested', new ArrayType)
+            ))
+            ->addProperty('sorts', (new ArrayType)->setItems(
+                (new ObjectType)
+                    ->addProperty('field', (new StringType)->enum($text->sortNames($fields->sortable()->names())))
+                    ->addProperty('direction', (new StringType)->enum(array_column(SortDirection::cases(), 'value')))
+            ))
+            ->addProperty('selects', (new ArrayType)->setItems(
+                (new ObjectType)->addProperty('field', (new StringType)->enum($fields->selectable()->names()))
+            ))
+            ->addProperty('includes', (new ArrayType)->setItems(
+                (new ObjectType)
+                    ->addProperty(
+                        'relation',
+                        empty($relationEnum)
+                            ? new StringType
+                            : (new StringType)->enum($relationEnum)->setDescription($relationDesc)
+                    )
+                    ->addProperty(
+                        'alias',
+                        (new StringType)->setDescription('Optional output key for this include, used verbatim. Allows including the same relation several times under different keys. Must match ^[A-Za-z_][A-Za-z0-9_]*$, be unique across the includes, and not collide with a field, a relation or the gates key. Not allowed on a dotted relation path.')
+                    )
+                    ->addProperty('limit', new IntegerType)
+                    ->addProperty('filters', new ArrayType)
+                    ->addProperty('sorts', new ArrayType)
+            ))
+            ->addProperty('scopes', (new ArrayType)->setItems(
+                (new ObjectType)
+                    ->addProperty('name', new StringType)
+                    ->addProperty('parameters', new ArrayType)
+            ));
+
+        $text->addTo($search);
+
+        $search
+            ->addProperty('aggregates', (new ArrayType)->setItems(
+                (new ObjectType)
+                    ->addProperty('relation', new StringType)
+                    ->addProperty('type', (new StringType)->enum(array_column(AggregateFunction::cases(), 'value')))
+                    ->addProperty('field', new StringType)
+                    ->addProperty('filters', new ArrayType)
+            )->setDescription('Aggregate values over relations'))
+            ->addProperty('instructions', (new ArrayType)->setItems(
+                (new ObjectType)
+                    ->addProperty('name', new StringType)
+                    ->addProperty('fields', new ArrayType)
+            )->setDescription('Named query instructions defined on the resource'))
+            ->addProperty('gates', (new ArrayType)->setItems(new StringType)
+                ->setDescription('Gates to evaluate for the current user on each result'))
+            ->addProperty('page', new IntegerType)
+            ->addProperty('limit', new IntegerType);
+
+        $body = (new ObjectType)->addProperty('search', $search);
 
         $operation->addRequestBodyObject(
             RequestBodyObject::make()->setContent('application/json', Schema::fromType($body))
