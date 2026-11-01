@@ -27,7 +27,7 @@ final class EngineFilter extends RestRule
             $attribute.'.nested' => ['prohibited'],
             $attribute.'.type' => ['sometimes', Rule::in(['and'])],
             $attribute.'.operator' => self::operatorRules($declared),
-            ...self::valueRules($attribute.'.value', $declared, $filter['operator'] ?? FilterOperator::Equal->value, $this->resource->context()->limits()->values),
+            ...self::valueRules($attribute.'.value', $declared, $filter['operator'] ?? FilterOperator::Equal->value, $this->resource->context()->limits()->sizes->values),
         ];
     }
 

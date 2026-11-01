@@ -6,11 +6,11 @@ use Illuminate\Support\Str;
 
 final class NodeBudget
 {
-    private int $nodesLeft;
+    private int $entriesLeft;
 
     private int $filtersLeft;
 
-    private bool $nodesReported = false;
+    private bool $entriesReported = false;
 
     private bool $filtersReported = false;
 
@@ -20,17 +20,17 @@ final class NodeBudget
     private array $refused = [];
 
     public function __construct(
-        private readonly int $nodes = PHP_INT_MAX,
-        private readonly int $filterNodes = PHP_INT_MAX,
+        private readonly int $entries = PHP_INT_MAX,
+        private readonly int $filters = PHP_INT_MAX,
     ) {
-        $this->nodesLeft = $nodes;
-        $this->filtersLeft = $filterNodes;
+        $this->entriesLeft = $entries;
+        $this->filtersLeft = $filters;
         $this->violations = new Violations;
     }
 
     public static function of(Limits $limits): self
     {
-        return new self($limits->nodes, $limits->filterNodes);
+        return new self($limits->totals->entries, $limits->totals->filters);
     }
 
     public function admit(string $key, int $count, int $max, bool $filters): bool
@@ -43,17 +43,17 @@ final class NodeBudget
             $reported = $this->filtersReported;
             $this->filtersReported = true;
 
-            return $this->refuse($key, $reported ? null : Violation::tooManyFilters($key, $this->filterNodes));
+            return $this->refuse($key, $reported ? null : Violation::tooManyFilters($key, $this->filters));
         }
 
-        if ($count > $this->nodesLeft) {
-            $reported = $this->nodesReported;
-            $this->nodesReported = true;
+        if ($count > $this->entriesLeft) {
+            $reported = $this->entriesReported;
+            $this->entriesReported = true;
 
-            return $this->refuse($key, $reported ? null : Violation::tooManyEntries($key, $this->nodes));
+            return $this->refuse($key, $reported ? null : Violation::tooManyEntries($key, $this->entries));
         }
 
-        $this->nodesLeft -= $count;
+        $this->entriesLeft -= $count;
 
         if ($filters) {
             $this->filtersLeft -= $count;

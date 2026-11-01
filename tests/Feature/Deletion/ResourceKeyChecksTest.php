@@ -94,7 +94,7 @@ class ResourceKeyChecksTest extends PackageTestCase
     #[DataProvider('endpoints')]
     public function it_refuses_more_keys_than_the_limit(string $method, string $uri, ?string $deletedAt): void
     {
-        config(['rest.limits.resources' => 2]);
+        config(['rest.limits.sizes.resources' => 2]);
         $this->seedDocuments(3, $deletedAt);
         $this->captureQueries();
 

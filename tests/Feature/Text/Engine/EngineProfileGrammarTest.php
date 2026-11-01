@@ -70,7 +70,7 @@ class EngineProfileGrammarTest extends EngineSearchTestCase
     #[Test]
     public function it_limits_the_sorts_to_the_smaller_of_the_config_and_the_engine(): void
     {
-        config(['rest.limits.sorts' => 2]);
+        config(['rest.limits.sizes.sorts' => 2]);
         $this->useEngine(new FakeTypesenseEngine);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'sorts' => [

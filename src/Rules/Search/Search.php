@@ -37,19 +37,19 @@ class Search extends RestRule
         return [
             $attribute.'.limit' => ['sometimes', 'integer', Rule::in($this->resource->getLimits($request)), ...self::limitRules($engine)],
             $attribute.'.page' => ['sometimes', 'integer', 'min:1', ...$this->pageRules($engine, $search['limit'] ?? null)],
-            $attribute.'.filters' => ['sometimes', 'array', MaxItems::filters($limits->filters)],
-            $attribute.'.gates' => ['sometimes', 'array', Rule::in(['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete']), new MaxItems($limits->gates)],
+            $attribute.'.filters' => ['sometimes', 'array', MaxItems::filters($limits->sizes->filters)],
+            $attribute.'.gates' => ['sometimes', 'array', Rule::in(['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete']), new MaxItems($limits->sizes->gates)],
             $attribute.'.filters.*' => ($engine === null ? new SearchFilter : new EngineFilter($engine))->setResource($this->resource),
-            $attribute.'.scopes' => ['sometimes', 'array', Rule::prohibitedIf($engine !== null), new MaxItems($limits->scopes)],
+            $attribute.'.scopes' => ['sometimes', 'array', Rule::prohibitedIf($engine !== null), new MaxItems($limits->sizes->scopes)],
             $attribute.'.scopes.*' => $engine === null ? (new SearchScope)->setResource($this->resource) : [],
             $attribute.'.sorts' => ['sometimes', 'array', new MaxItems(self::sortLimit($limits, $engine))],
             $attribute.'.sorts.*' => $this->sortRule($text, $engine, $search['sorts'] ?? null),
-            $attribute.'.selects' => ['sometimes', 'array', new MaxItems($limits->selects)],
+            $attribute.'.selects' => ['sometimes', 'array', new MaxItems($limits->sizes->selects)],
             $attribute.'.selects.*' => (new SearchSelect)->setResource($this->resource),
-            $attribute.'.aggregates' => ['sometimes', 'array', new MaxItems($limits->aggregates)],
+            $attribute.'.aggregates' => ['sometimes', 'array', new MaxItems($limits->sizes->aggregates)],
             $attribute.'.aggregates.*' => (new SearchAggregate)->setResource($this->resource),
             ...$this->includeRules($attribute, $limits),
-            $attribute.'.instructions' => ['sometimes', 'array', new MaxItems($limits->instructions)],
+            $attribute.'.instructions' => ['sometimes', 'array', new MaxItems($limits->sizes->instructions)],
             $attribute.'.instructions.*' => (new SearchInstruction)
                 ->setResource($this->resource)
                 ->among(InstructionSupport::among($this->resource->getInstructions($request), $engine === null ? TextBackend::Query : TextBackend::Engine)),
@@ -60,12 +60,12 @@ class Search extends RestRule
     /** @return array<string, mixed> */
     private function includeRules(string $attribute, Limits $limits): array
     {
-        if ($this->depth >= $limits->includeDepth) {
+        if ($this->depth >= $limits->depths->includes) {
             return [$attribute.'.includes' => ['prohibited']];
         }
 
         return [
-            $attribute.'.includes' => ['sometimes', 'array', new MaxItems($limits->includes)],
+            $attribute.'.includes' => ['sometimes', 'array', new MaxItems($limits->sizes->includes)],
             $attribute.'.includes.*' => (new SearchInclude($this->depth + 1))->setResource($this->resource),
         ];
     }
@@ -130,9 +130,9 @@ class Search extends RestRule
     private static function sortLimit(Limits $limits, ?EngineGrammar $engine): int
     {
         if ($engine === null || $engine->sortKeys === PHP_INT_MAX) {
-            return $limits->sorts;
+            return $limits->sizes->sorts;
         }
 
-        return min($limits->sorts, max(1, $engine->sortKeys));
+        return min($limits->sizes->sorts, max(1, $engine->sortKeys));
     }
 }

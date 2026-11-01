@@ -45,7 +45,7 @@ class SearchAggregate extends RestRule
         return [
             ...$rules,
             $attribute.'.field' => $this->fieldRules($attribute, $relationResource, $aggregate['type'] ?? null),
-            $attribute.'.filters' => ['sometimes', 'array', MaxItems::filters($this->resource->context()->limits()->filters)],
+            $attribute.'.filters' => ['sometimes', 'array', MaxItems::filters($this->resource->context()->limits()->sizes->filters)],
             $attribute.'.filters.*' => [(new SearchFilter)->setResource($relationResource)],
         ];
     }

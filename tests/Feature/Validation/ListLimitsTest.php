@@ -21,7 +21,7 @@ class ListLimitsTest extends PackageTestCase
     #[DataProvider('listsOverTheirLimit')]
     public function it_refuses_a_list_over_its_limit(string $limit, string $method, string $uri, array $payload, string $key): void
     {
-        config(["rest.limits.{$limit}" => 2]);
+        config(["rest.limits.sizes.{$limit}" => 2]);
         $message = "The {$key} field must not have more than 2 items.";
 
         $response = $this->json($method, $uri, $payload);
@@ -76,7 +76,7 @@ class ListLimitsTest extends PackageTestCase
     #[Test]
     public function it_accepts_a_list_at_its_limit(): void
     {
-        config(['rest.limits.filters' => 2]);
+        config(['rest.limits.sizes.filters' => 2]);
 
         $response = $this->postJson('/api/posts/search', ['search' => ['filters' => [
             ['field' => 'views', 'value' => 1],
@@ -90,7 +90,7 @@ class ListLimitsTest extends PackageTestCase
     #[DataProvider('ranges')]
     public function it_refuses_the_values_of_a_range_over_their_limit(string $operator): void
     {
-        config(['rest.limits.values' => 2]);
+        config(['rest.limits.sizes.values' => 2]);
         $limit = 'The search.filters.0.value field must not have more than 2 items.';
 
         $response = $this->postJson('/api/posts/search', ['search' => ['filters' => [
@@ -144,7 +144,7 @@ class ListLimitsTest extends PackageTestCase
     #[Test]
     public function it_reports_a_relation_list_in_the_order_of_the_payload(): void
     {
-        config(['rest.limits.relation_entries' => 2]);
+        config(['rest.limits.sizes.relation_entries' => 2]);
 
         $response = $this->postJson('/api/categories/mutate', ['mutate' => [
             [

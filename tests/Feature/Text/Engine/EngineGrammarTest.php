@@ -122,7 +122,7 @@ class EngineGrammarTest extends EngineSearchTestCase
     #[Test]
     public function it_limits_the_values_of_an_engine_filter(): void
     {
-        config(['rest.limits.values' => 2]);
+        config(['rest.limits.sizes.values' => 2]);
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [
             ['field' => 'number', 'operator' => 'in', 'value' => [1, 2, 3]],

@@ -95,7 +95,7 @@ class OperateRequest extends RestRequest
             'fields' => [
                 'sometimes',
                 'array',
-                new MaxItems($this->context()->limits()->fields),
+                new MaxItems($this->context()->limits()->sizes->fields),
                 new InputFields($fields),
             ],
             'fields.*.name' => [

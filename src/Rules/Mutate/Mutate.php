@@ -65,7 +65,7 @@ class Mutate extends RestRule
                 ...self::whenOperation('present_if', $attribute, fn (MutationOperation $operation): bool => $operation->requiresKey()),
                 ...self::whenOperation('prohibited_if', $attribute, fn (MutationOperation $operation): bool => ! $operation->requiresKey()),
                 Rule::exists($model::class, $model->getKeyName()),
-                ...(is_array($value) && is_array($value['key'] ?? null) ? [new MaxItems($limits->values)] : []),
+                ...(is_array($value) && is_array($value['key'] ?? null) ? [new MaxItems($limits->sizes->values)] : []),
             ],
             $attribute.'.without_detaching' => [
                 'boolean',
@@ -78,7 +78,7 @@ class Mutate extends RestRule
     /** @return array<string, mixed> */
     private function relationRules(string $attribute, Limits $limits): array
     {
-        if ($this->depth >= $limits->mutationDepth) {
+        if ($this->depth >= $limits->depths->mutations) {
             return [$attribute.'.relations' => ['prohibited']];
         }
 

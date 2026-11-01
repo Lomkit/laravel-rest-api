@@ -21,7 +21,7 @@ class MutateRequest extends RestRequest
         $resource = $this->context()->resource($this->controllerResourceClass());
 
         return [
-            'mutate' => ['required', 'array', new MaxItems($this->context()->limits()->mutate)],
+            'mutate' => ['required', 'array', new MaxItems($this->context()->limits()->sizes->mutate)],
             'mutate.*' => (new Mutate)->setResource($resource),
         ];
     }

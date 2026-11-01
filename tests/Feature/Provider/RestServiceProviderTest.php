@@ -2,7 +2,10 @@
 
 namespace Lomkit\Rest\Tests\Feature\Provider;
 
+use InvalidArgumentException;
 use Lomkit\Rest\Facades\Rest as RestFacade;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Rest;
 use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -22,9 +25,64 @@ class RestServiceProviderTest extends PackageTestCase
         $this->assertSame('authorized_to_create', config('rest.gates.names.authorized_to_create'));
         $this->assertFalse(config('rest.gates.message.enabled'));
         $this->assertTrue(config('rest.gates.enabled'));
+        $this->assertSame(1, config('rest.limits.depths.filters'));
+        $this->assertSame(100, config('rest.limits.sizes.filters'));
+        $this->assertSame(1000, config('rest.limits.totals.entries'));
+    }
+
+    #[Test]
+    public function it_fills_every_limit_of_a_config_published_without_limits(): void
+    {
+        config()->set('rest', ['gates' => ['key' => 'abilities'], 'precognition' => ['enabled' => true]]);
+
+        $this->app->register(RestServiceProvider::class, force: true);
+
+        $this->assertSame([
+            'sizes' => [
+                'filters' => 100,
+                'sorts' => 20,
+                'selects' => 100,
+                'scopes' => 10,
+                'aggregates' => 20,
+                'includes' => 20,
+                'instructions' => 10,
+                'gates' => 7,
+                'fields' => 100,
+                'values' => 100,
+                'mutate' => 100,
+                'relation_entries' => 100,
+                'resources' => 1000,
+            ],
+            'depths' => ['filters' => 1, 'includes' => 3, 'mutations' => 3],
+            'totals' => ['filters' => 500, 'entries' => 1000],
+        ], config('rest.limits'));
+        $this->assertSame(1000, $this->context()->limits()->totals->entries);
+    }
+
+    #[Test]
+    public function it_fills_the_limits_that_a_published_limits_block_leaves_out(): void
+    {
+        config()->set('rest', ['limits' => ['sizes' => ['filters' => 50], 'depths' => ['filters' => '2']]]);
+
+        $this->app->register(RestServiceProvider::class, force: true);
+        $limits = $this->context()->limits();
+
+        $this->assertSame([50, 20, 1000], [$limits->sizes->filters, $limits->sizes->sorts, $limits->sizes->resources]);
+        $this->assertSame([2, 3, 3], [$limits->depths->filters, $limits->depths->includes, $limits->depths->mutations]);
+        $this->assertSame([500, 1000], [$limits->totals->filters, $limits->totals->entries]);
+    }
+
+    #[Test]
+    public function it_keeps_the_former_filter_depth_of_a_published_config_and_refuses_it(): void
+    {
+        config()->set('rest', ['search' => ['max_nesting_depth' => 1]]);
+
+        $this->app->register(RestServiceProvider::class, force: true);
+
         $this->assertSame(1, config('rest.search.max_nesting_depth'));
-        $this->assertSame(100, config('rest.limits.filters'));
-        $this->assertSame(1000, config('rest.limits.nodes'));
+        $this->expectExceptionObject(new InvalidArgumentException('The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters].'));
+
+        $this->context()->limits();
     }
 
     #[Test]
@@ -34,5 +92,10 @@ class RestServiceProviderTest extends PackageTestCase
 
         $this->assertSame($rest, $this->app->make(Rest::class));
         $this->assertSame($rest, RestFacade::getFacadeRoot());
+    }
+
+    private function context(): RestContext
+    {
+        return new RestContext(RestRequest::create('/api/products/search', 'POST'), $this->app);
     }
 }

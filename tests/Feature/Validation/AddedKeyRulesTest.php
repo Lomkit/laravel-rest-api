@@ -45,7 +45,7 @@ class AddedKeyRulesTest extends PackageTestCase
     #[Test]
     public function it_applies_no_added_key_rule_under_a_list_over_its_limit(): void
     {
-        config(['rest.limits.resources' => 1]);
+        config(['rest.limits.sizes.resources' => 1]);
 
         $response = $this->deleteJson('/api/documents', ['resources' => [1, 2]]);
 

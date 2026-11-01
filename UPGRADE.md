@@ -513,61 +513,70 @@ Payloads:
 
 Limits:
 
-- Each list of a request accepts a limited number of entries, includes and relation operations nest up to a set depth, and two totals bound one request. The values are in the new `limits` block of `config/rest.php`:
+- Each list of a request accepts a limited number of entries, filters, includes and relation operations nest up to a set depth, and two totals bound one request. The values are in the new `limits` block of `config/rest.php`, in three groups:
 
   ```php
   'limits' => [
-      'filters' => 100,
-      'sorts' => 20,
-      'selects' => 100,
-      'scopes' => 10,
-      'aggregates' => 20,
-      'includes' => 20,
-      'instructions' => 10,
-      'gates' => 7,
-      'fields' => 100,
-      'values' => 100,
-      'mutate' => 100,
-      'relation_entries' => 100,
-      'resources' => 1000,
-      'include_depth' => 3,
-      'mutation_depth' => 3,
-      'filter_nodes' => 500,
-      'nodes' => 1000,
+      'sizes' => [
+          'filters' => 100,
+          'sorts' => 20,
+          'selects' => 100,
+          'scopes' => 10,
+          'aggregates' => 20,
+          'includes' => 20,
+          'instructions' => 10,
+          'gates' => 7,
+          'fields' => 100,
+          'values' => 100,
+          'mutate' => 100,
+          'relation_entries' => 100,
+          'resources' => 1000,
+      ],
+      'depths' => [
+          'filters' => 1,
+          'includes' => 3,
+          'mutations' => 3,
+      ],
+      'totals' => [
+          'filters' => 500,
+          'entries' => 1000,
+      ],
   ],
   ```
 
-- Each key applies to these lists, at every level of a search, including the search of an include and of an action:
+- Each key of `sizes` applies to these lists, at every level of a search, including the search of an include and of an action:
   - `filters`: `search.filters`, each `nested` group, and the `filters` of includes and aggregates;
   - `sorts`, `selects`, `scopes`, `aggregates`, `includes`, `instructions` and `gates`: the list of that name;
   - `fields`: the `fields` of an action and of each instruction;
   - `values`: the values of an `in`, `not in`, `between` or `not between` filter, and the `key` list of one mutation entry;
   - `mutate`: the entries of `mutate`;
   - `relation_entries`: the entries of each to-many relation in `mutate`;
-  - `resources`: the keys of `destroy`, `restore` and `forceDestroy`. A targeted action uses its `$maxResources` property instead;
-  - `include_depth` and `mutation_depth`: how deep includes and relation operations nest;
-  - `filter_nodes`: the filters of one search, at every depth and in its includes and aggregates;
-  - `nodes`: the entries of every list above in one request, except `resources`.
+  - `resources`: the keys of `destroy`, `restore` and `forceDestroy`. A targeted action uses its `$maxResources` property instead.
+- `depths` sets how deep filters, includes and relation operations nest: `filters`, `includes` and `mutations`.
+- `totals` sets two totals:
+  - `filters`: the filters of one search, at every depth and in its includes and aggregates;
+  - `entries`: the entries of every list in `sizes` in one request, except `resources`.
 - The `parameters` of a scope keep their limit: one value per field of the scope.
 - A list over its limit gets a 422 on its own key, such as `search.filters`: "The search.filters field must not have more than 100 items." This message comes first on the key, and the entries of the list are not validated.
-- Includes nest up to `include_depth` levels, 3 by default. A fourth level gives a 422: "The search.includes.0.includes.0.includes.0.includes field is prohibited." Relations in `mutate` nest up to `mutation_depth` levels, 3 by default: "The mutate.0.relations.products.0.relations.category.relations.products.0.relations field is prohibited." An empty list passes at that depth.
-- The two totals give a 422 on the list that goes over them: "The search.includes.0.filters field goes over the limit of 500 filters in one search." for `filter_nodes`, and "The search.selects field goes over the limit of 1000 list entries in one request." for `nodes`. A later list that does not fit is refused without a second message.
-- `rest.search.max_nesting_depth` still sets how deep filters nest. Each `nested` list takes the `filters` limit and counts in `filter_nodes`. Nothing below a group refused at the maximum depth is validated: the request only gets the error on its `nested` key.
-- On a search engine, `search.sorts` accepts the smaller of `sorts` and the number of sorts the engine runs, with the same message.
+- Includes nest up to `depths.includes` levels, 3 by default. A fourth level gives a 422: "The search.includes.0.includes.0.includes.0.includes field is prohibited." Relations in `mutate` nest up to `depths.mutations` levels, 3 by default: "The mutate.0.relations.products.0.relations.category.relations.products.0.relations field is prohibited." An empty list passes at that depth.
+- The two totals give a 422 on the list that goes over them: "The search.includes.0.filters field goes over the limit of 500 filters in one search." for `totals.filters`, and "The search.selects field goes over the limit of 1000 list entries in one request." for `totals.entries`. A later list that does not fit is refused without a second message.
+- `rest.search.max_nesting_depth` moved to `rest.limits.depths.filters`, with the same default of 1 and the same meaning, and the `search` block of `config/rest.php` is removed. A `config/rest.php` that still sets the old key throws an `InvalidArgumentException` when a request reads the limits: "The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters]." Move its value to the new key and remove the `search` block.
+- Filters nest up to `depths.filters` levels, 1 by default. Each `nested` key counts as one level, so 1 allows a single group of filters. A text search run by a search engine never nests filters. Each `nested` list takes the `sizes.filters` limit and counts in `totals.filters`. Nothing below a group refused at that depth is validated: the request only gets the error on its `nested` key.
+- On a search engine, `search.sorts` accepts the smaller of `sizes.sorts` and the number of sorts the engine runs, with the same message.
 - `search.aggregates.*.filters` must be an array: "The search.aggregates.0.filters field must be an array." Before, it was not validated.
-- What a refused list holds is not checked: the `viewAny` check of a relation it names and the `create` check of a mutation entry in it do not run. This covers a list over its limit or over a total, `includes` at `include_depth`, `relations` at `mutation_depth` and a `nested` group past the maximum depth. Such a request gets the 422 of the refused key, where it got a 403 before. The checks of the other parts of the payload still run first, and one that fails there still gives a 403.
+- What a refused list holds is not checked: the `viewAny` check of a relation it names and the `create` check of a mutation entry in it do not run. This covers a list over its limit or over a total, `includes` at `depths.includes`, `relations` at `depths.mutations` and a `nested` group at `depths.filters`. Such a request gets the 422 of the refused key, where it got a 403 before. The checks of the other parts of the payload still run first, and one that fails there still gives a 403.
 - With Precognition, a list over its limit reports on its own key. A `Precognition-Validate-Only` name below it, such as `search.filters.0.field`, gets `204`, so name the list or an ancestor, such as `search.filters` or `search`.
 - The package now renders some errors itself, so a custom message keyed by their rule no longer applies, and `$validator->failed()` reports `Lomkit\Rest\Validation\Rejected` or `Lomkit\Rest\Validation\ExistingKey` instead of Laravel's rule:
-  - `max` on each list that takes a `rest.limits` value, `search.sorts` next to an engine text included, and on the `resources` of an action: `Rejected` instead of `Max`;
+  - `max` on each list that takes a `rest.limits.sizes` value, `search.sorts` next to an engine text included, and on the `resources` of an action: `Rejected` instead of `Max`;
   - `list` on `resources`: `Rejected` instead of `List`;
   - `distinct` on the keys of `resources`: `Rejected` instead of `Distinct`;
   - `exists` on the keys of `resources`: `ExistingKey` instead of `Exists`.
 - Laravel's `list` rule still checks the `fields` of actions and instructions, the values of a filter and the `parameters` of a scope, and Laravel's `max` rule still limits the `parameters` of a scope. Custom messages keyed by these rules still apply there.
 - Laravel's lines `validation.max.array`, `validation.list`, `validation.distinct`, `validation.exists` and the type lines still apply, and the two total texts are JSON translation keys.
 - These limits are not the page sizes of a resource, which `limits()` returns.
-- A `config/rest.php` published before takes the defaults of the keys it leaves out. A value must be an integer of 0 or more, or a string of digits, as `env()` gives. Anything else throws an `InvalidArgumentException` that names the key: "The [rest.limits.filters] option must be an integer of 0 or more."
+- A `config/rest.php` published before takes the defaults of the keys it leaves out. A value must be an integer of 0 or more, or a string of digits, as `env()` gives. Anything else throws an `InvalidArgumentException` that names the key: "The [rest.limits.sizes.filters] option must be an integer of 0 or more."
 - Custom nodes:
-  - `Lomkit\Rest\Rules\MaxItems` limits a list and counts its entries in `nodes`, and `MaxItems::filters()` also counts them in `filter_nodes`. Its key needs a plain rule as well, such as `array`: `'tags' => ['array', new MaxItems(20)]`.
+  - `Lomkit\Rest\Rules\MaxItems` limits a list and counts its entries in `totals.entries`, and `MaxItems::filters()` also counts them in `totals.filters`. Its key needs a plain rule as well, such as `array`: `'tags' => ['array', new MaxItems(20)]`.
   - `RuleCompiler::compile()` takes an optional `Lomkit\Rest\Validation\NodeBudget`, and `RuleCompiler::budget()` returns the budget of the compile.
   - `Search::nested()` takes the include depth: `nested(int $depth)`.
 
@@ -584,7 +593,7 @@ Resource keys:
 - A repeated key gives "The resources.0 field has a duplicate value." on every copy, on `restore`, `forceDestroy` and targeted actions too. `destroy` already gave it. On every endpoint, two UUID or ULID keys that differ only by case are repeated.
 - On `destroy`, a repeated value that is not a valid key gets its type message only. Before, it also got "has a duplicate value.".
 - An object in place of a list gives "The resources field must be a list.", on every endpoint that takes keys.
-- `destroy`, `restore` and `forceDestroy` accept at most `rest.limits.resources` keys: "The resources field must not have more than 1000 items." A targeted action over its `$maxResources` gets only the error on `resources`. Before, every key was also checked.
+- `destroy`, `restore` and `forceDestroy` accept at most `rest.limits.sizes.resources` keys: "The resources field must not have more than 1000 items." A targeted action over its `$maxResources` gets only the error on `resources`. Before, every key was also checked.
 - On a targeted action, a key of the wrong type gives "The resources.0 field must be an integer." (or a string, a UUID or a ULID, by key type). Before, it gave "The selected resources.0 is invalid.", and a 500 on PostgreSQL.
 - In an application without the `ConvertEmptyStringsToNull` middleware, a blank string key gives the type message on every endpoint that takes keys. Before, it passed and nothing was done for it.
 - A custom message for `exists` or `distinct` on `resources.*` no longer applies, see "Limits" above.

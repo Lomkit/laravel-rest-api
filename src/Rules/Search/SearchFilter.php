@@ -55,9 +55,9 @@ class SearchFilter extends RestRule
     /** @return array<string, list<mixed>> */
     private function nestedRules(string $attribute): array
     {
-        $context = $this->resource->context();
+        $limits = $this->resource->context()->limits();
 
-        if ($this->depth >= $context->maxNestingDepth()) {
+        if ($this->depth >= $limits->depths->filters) {
             return [$attribute.'.nested' => ['prohibited']];
         }
 
@@ -66,7 +66,7 @@ class SearchFilter extends RestRule
                 'sometimes',
                 'prohibits:'.$attribute.'.field,'.$attribute.'.operator,'.$attribute.'.value',
                 'array',
-                MaxItems::filters($context->limits()->filters),
+                MaxItems::filters($limits->sizes->filters),
             ],
             $attribute.'.nested.*' => [(new SearchFilter)
                 ->setResource($this->resource)
@@ -106,7 +106,7 @@ class SearchFilter extends RestRule
         $rules = $path->field->filterValueRules($operator, $attribute);
 
         if (isset($rules[$attribute.'.*'])) {
-            $rules[$attribute] = [...$rules[$attribute] ?? [], new MaxItems($this->resource->context()->limits()->values)];
+            $rules[$attribute] = [...$rules[$attribute] ?? [], new MaxItems($this->resource->context()->limits()->sizes->values)];
         }
 
         return $rules;

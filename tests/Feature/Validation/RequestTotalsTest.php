@@ -23,7 +23,7 @@ class RequestTotalsTest extends PackageTestCase
     #[Test]
     public function it_refuses_the_filter_list_that_goes_over_the_total(): void
     {
-        config(['rest.limits.filter_nodes' => 4]);
+        config(['rest.limits.totals.filters' => 4]);
 
         $response = $this->postJson('/api/posts/search', ['search' => ['filters' => [
             ['nested' => [self::FILTER, self::FILTER, self::FILTER]],
@@ -36,7 +36,7 @@ class RequestTotalsTest extends PackageTestCase
     #[Test]
     public function it_reports_the_filter_total_once(): void
     {
-        config(['rest.limits.filter_nodes' => 3]);
+        config(['rest.limits.totals.filters' => 3]);
         $ada = ['field' => 'first_name', 'value' => 'Ada'];
 
         $response = $this->postJson('/api/posts/search', ['search' => [
@@ -53,7 +53,7 @@ class RequestTotalsTest extends PackageTestCase
     #[Test]
     public function it_counts_the_filters_of_aggregates(): void
     {
-        config(['rest.limits.filter_nodes' => 2]);
+        config(['rest.limits.totals.filters' => 2]);
 
         $response = $this->postJson('/api/categories/search', ['search' => [
             'filters' => [['field' => 'name', 'value' => 'Lighting']],
@@ -70,7 +70,7 @@ class RequestTotalsTest extends PackageTestCase
     #[Test]
     public function it_refuses_the_list_that_goes_over_the_total_of_entries(): void
     {
-        config(['rest.limits.nodes' => 5]);
+        config(['rest.limits.totals.entries' => 5]);
 
         $response = $this->postJson('/api/posts/search', ['search' => [
             'sorts' => [['field' => 'views'], ['field' => 'title'], ['field' => 'id']],
@@ -83,7 +83,7 @@ class RequestTotalsTest extends PackageTestCase
     #[Test]
     public function it_counts_the_values_of_a_filter(): void
     {
-        config(['rest.limits.nodes' => 3]);
+        config(['rest.limits.totals.entries' => 3]);
 
         $response = $this->postJson('/api/posts/search', ['search' => ['filters' => [
             ['field' => 'views', 'operator' => 'in', 'value' => [1, 2, 3]],
@@ -95,7 +95,7 @@ class RequestTotalsTest extends PackageTestCase
     #[Test]
     public function it_counts_the_entries_of_relations(): void
     {
-        config(['rest.limits.nodes' => 4]);
+        config(['rest.limits.totals.entries' => 4]);
         $product = ['operation' => 'create', 'attributes' => ['name' => 'Desk lamp', 'price' => 39]];
         $category = ['operation' => 'create', 'attributes' => ['name' => 'Lighting'], 'relations' => ['products' => [$product, $product]]];
 
@@ -109,7 +109,7 @@ class RequestTotalsTest extends PackageTestCase
     #[Test]
     public function it_counts_the_input_fields(): void
     {
-        config(['rest.limits.nodes' => 2]);
+        config(['rest.limits.totals.entries' => 2]);
 
         $response = $this->postJson('/api/posts/search', ['search' => ['instructions' => [[
             'name' => 'highlight-posts',

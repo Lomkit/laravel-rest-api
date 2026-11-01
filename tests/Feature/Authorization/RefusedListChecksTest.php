@@ -18,7 +18,7 @@ class RefusedListChecksTest extends HelpdeskTestCase
     #[Test]
     public function it_checks_no_relation_named_in_a_list_over_its_limit(): void
     {
-        config(['rest.limits.includes' => 2]);
+        config(['rest.limits.sizes.includes' => 2]);
         $message = 'The search.includes field must not have more than 2 items.';
         $this->logQueries();
 
@@ -37,7 +37,7 @@ class RefusedListChecksTest extends HelpdeskTestCase
     #[Test]
     public function it_checks_no_relation_below_a_group_nested_too_deep(): void
     {
-        config(['rest.search.max_nesting_depth' => 1]);
+        config(['rest.limits.depths.filters' => 1]);
         $message = 'The search.filters.0.nested.0.nested field is prohibited.';
 
         $this->postJson('/api/tickets/search', ['search' => ['filters' => [
@@ -52,7 +52,7 @@ class RefusedListChecksTest extends HelpdeskTestCase
     #[Test]
     public function it_checks_the_relations_of_the_lists_that_are_read(): void
     {
-        config(['rest.limits.selects' => 1]);
+        config(['rest.limits.sizes.selects' => 1]);
 
         $this->postJson('/api/tickets/search', ['search' => [
             'selects' => [['field' => 'id'], ['field' => 'title']],

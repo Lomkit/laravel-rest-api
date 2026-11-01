@@ -82,7 +82,7 @@ class AggregateValidationTest extends PackageTestCase
     #[Test]
     public function it_rejects_an_aggregate_filter_nested_deeper_than_the_configured_maximum(): void
     {
-        config(['rest.search.max_nesting_depth' => 1]);
+        config(['rest.limits.depths.filters' => 1]);
 
         $response = $this->postJson('/api/categories/search', [
             'search' => [

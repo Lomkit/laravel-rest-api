@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\RequestLifecycle;
 
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
@@ -85,23 +86,42 @@ class RestContextTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_reads_the_filter_nesting_depth_once_per_request(): void
+    public function it_reads_the_limits_once_per_request(): void
     {
-        config(['rest.search.max_nesting_depth' => 3]);
+        config(['rest.limits.depths.filters' => 3]);
         $context = $this->contextFor(null);
 
-        $first = $context->maxNestingDepth();
-        config(['rest.search.max_nesting_depth' => 5]);
+        $first = $context->limits()->depths->filters;
+        config(['rest.limits.depths.filters' => 5]);
 
-        $this->assertSame([3, 3, 5], [$first, $context->maxNestingDepth(), $this->contextFor(null)->maxNestingDepth()]);
+        $this->assertSame([3, 3, 5], [$first, $context->limits()->depths->filters, $this->contextFor(null)->limits()->depths->filters]);
+        $this->assertSame($context->limits(), $context->limits());
     }
 
     #[Test]
-    public function it_reads_a_filter_nesting_depth_given_as_a_numeric_string(): void
+    public function it_reads_a_filter_depth_given_as_a_numeric_string(): void
     {
-        config(['rest.search.max_nesting_depth' => '2']);
+        config(['rest.limits.depths.filters' => '2']);
 
-        $this->assertSame(2, $this->contextFor(null)->maxNestingDepth());
+        $this->assertSame(2, $this->contextFor(null)->limits()->depths->filters);
+    }
+
+    #[Test]
+    public function it_refuses_the_filter_depth_at_its_former_key(): void
+    {
+        config(['rest.search.max_nesting_depth' => 1]);
+
+        $this->expectExceptionObject(new InvalidArgumentException('The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters].'));
+
+        $this->contextFor(null)->limits();
+    }
+
+    #[Test]
+    public function it_reads_the_limits_next_to_a_former_filter_depth_set_to_null(): void
+    {
+        config(['rest.search' => ['max_nesting_depth' => null]]);
+
+        $this->assertSame(1, $this->contextFor(null)->limits()->depths->filters);
     }
 
     private function contextFor(?User $user): RestContext

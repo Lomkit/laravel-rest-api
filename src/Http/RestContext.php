@@ -8,6 +8,7 @@ use Illuminate\Container\Container as IlluminateContainer;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Container\Container;
+use InvalidArgumentException;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\CacheDecisionStore;
 use Lomkit\Rest\Authorization\DecisionStore;
@@ -24,8 +25,6 @@ final class RestContext
 
     /** @var WeakMap<Resource, ResourceDefinition> */
     private readonly WeakMap $definitions;
-
-    private ?int $maxNestingDepth = null;
 
     private ?Limits $limits = null;
 
@@ -59,20 +58,17 @@ final class RestContext
         return $this->definition($resource)->text();
     }
 
-    public function maxNestingDepth(): int
-    {
-        if ($this->maxNestingDepth !== null) {
-            return $this->maxNestingDepth;
-        }
-
-        $depth = config('rest.search.max_nesting_depth', 1);
-
-        return $this->maxNestingDepth = is_numeric($depth) ? (int) $depth : 1;
-    }
-
     public function limits(): Limits
     {
-        return $this->limits ??= Limits::fromConfig(config('rest.limits'));
+        if ($this->limits !== null) {
+            return $this->limits;
+        }
+
+        if (config('rest.search.max_nesting_depth') !== null) {
+            throw new InvalidArgumentException('The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters].');
+        }
+
+        return $this->limits = Limits::fromConfig(config('rest.limits'));
     }
 
     public function authorizer(): Authorizer

@@ -28,7 +28,7 @@ class ForceDestroyRequest extends RestRequest
         $this->resource($resource = $this->context()->resource($this->controllerResourceClass()));
 
         return [
-            ...$this->resourceKeyRules($resource, $this->context()->limits()->resources),
+            ...$this->resourceKeyRules($resource, $this->context()->limits()->sizes->resources),
             'search' => ['bail', 'prohibited', 'array'],
         ];
     }

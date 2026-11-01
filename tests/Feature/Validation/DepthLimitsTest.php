@@ -20,7 +20,7 @@ class DepthLimitsTest extends PackageTestCase
     #[Test]
     public function it_refuses_includes_deeper_than_the_limit(): void
     {
-        config(['rest.limits.include_depth' => 1]);
+        config(['rest.limits.depths.includes' => 1]);
 
         $response = $this->postJson('/api/posts/search', ['search' => ['includes' => [
             ['relation' => 'author', 'includes' => [['relation' => 'posts']]],
@@ -54,7 +54,7 @@ class DepthLimitsTest extends PackageTestCase
     #[Test]
     public function it_refuses_relations_deeper_than_the_limit(): void
     {
-        config(['rest.limits.mutation_depth' => 1]);
+        config(['rest.limits.depths.mutations' => 1]);
 
         $response = $this->postJson('/api/categories/mutate', ['mutate' => [[
             'operation' => 'create',
@@ -88,7 +88,7 @@ class DepthLimitsTest extends PackageTestCase
     #[Test]
     public function it_reads_nothing_under_a_filter_group_nested_too_deep(): void
     {
-        config(['rest.search.max_nesting_depth' => 1]);
+        config(['rest.limits.depths.filters' => 1]);
 
         $response = $this->postJson('/api/posts/search', ['search' => ['filters' => [
             ['nested' => [['nested' => [['field' => 'secret']]]]],

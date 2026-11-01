@@ -69,7 +69,7 @@ class PrecognitionValidateOnlyTest extends PackageTestCase
     #[Test]
     public function it_reports_a_list_over_its_limit_on_the_list_key(): void
     {
-        config(['rest.limits.filters' => 2]);
+        config(['rest.limits.sizes.filters' => 2]);
         $message = 'The search.filters field must not have more than 2 items.';
 
         $response = $this->precognitiveSearch(['filters' => $this->threeStockFilters()], 'search.filters');
@@ -80,7 +80,7 @@ class PrecognitionValidateOnlyTest extends PackageTestCase
     #[Test]
     public function it_accepts_a_name_below_a_list_over_its_limit(): void
     {
-        config(['rest.limits.filters' => 2]);
+        config(['rest.limits.sizes.filters' => 2]);
 
         $response = $this->precognitiveSearch(['filters' => $this->threeStockFilters()], 'search.filters.0.field');
 

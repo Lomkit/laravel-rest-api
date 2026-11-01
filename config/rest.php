@@ -55,62 +55,61 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Rest Search
-    |--------------------------------------------------------------------------
-    |
-    | How deep filters may nest into each other. Each "nested" key counts as one
-    | level: the default of 1 allows a single group of filters (the historical
-    | behavior), while a higher value allows that many groups nested inside one
-    | another. A text search run by a search engine never nests filters, whatever
-    | this is set to. Keep it modest, since deeply nested filters build large,
-    | complex boolean queries.
-    |
-    */
-
-    'search' => [
-        'max_nesting_depth' => 1,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Rest Limits
     |--------------------------------------------------------------------------
     |
-    | The most entries that each list of a request accepts, how deep includes
-    | and relation operations nest, and two totals. "filters" also applies to
-    | each "nested" group and to the filters of includes and aggregates.
-    | "fields" applies to the fields of an action and of each instruction.
-    | "values" applies to the values of an "in", "not in", "between" or "not
-    | between" filter and to the key list of one mutation entry.
-    | "relation_entries" applies to each to-many relation of a mutation.
-    | "resources" applies to destroy, restore and force destroy; an action
-    | uses its $maxResources property instead.
-    | "filter_nodes" counts the filters of one search, at every depth and in
-    | its includes and aggregates. "nodes" counts the entries of every list
-    | above in one request, except "resources". A request over a limit gets a
-    | 422 on the list that goes over it. These limits are not the page sizes
-    | of a resource, which limits() returns.
+    | These limits bound the size of a request. A request over a limit gets a
+    | 422 on the list that goes over it. They are not the page sizes of a
+    | resource, which limits() returns.
+    |
+    | "sizes" sets the most entries of each list. A key applies to the list of
+    | that name. "filters" also applies to each "nested" group and to the
+    | filters of includes and aggregates. "fields" applies to the fields of an
+    | action and of each instruction. "values" applies to the values of an
+    | "in", "not in", "between" or "not between" filter, and to the key list
+    | of one mutation entry. "relation_entries" applies to each to-many
+    | relation of a mutation. "resources" applies to destroy, restore and
+    | force destroy. An action uses its $maxResources property instead.
+    |
+    | "depths" sets how deep filters, includes and relation operations nest.
+    | Each "nested" key counts as one filter level. A filter depth of 1 allows
+    | a single group of filters, the historical behavior. A higher value allows
+    | that many groups nested inside one another. A text search run by a
+    | search engine never nests filters, whatever the filter depth. Keep the
+    | filter depth modest: deeply nested filters build large, complex boolean
+    | queries.
+    |
+    | "totals" sets two totals. "filters" counts the filters of one search, at
+    | every depth and in its includes and aggregates. "entries" counts the
+    | entries of every list in "sizes" in one request, except "resources".
     |
     */
 
     'limits' => [
-        'filters' => 100,
-        'sorts' => 20,
-        'selects' => 100,
-        'scopes' => 10,
-        'aggregates' => 20,
-        'includes' => 20,
-        'instructions' => 10,
-        'gates' => 7,
-        'fields' => 100,
-        'values' => 100,
-        'mutate' => 100,
-        'relation_entries' => 100,
-        'resources' => 1000,
-        'include_depth' => 3,
-        'mutation_depth' => 3,
-        'filter_nodes' => 500,
-        'nodes' => 1000,
+        'sizes' => [
+            'filters' => 100,
+            'sorts' => 20,
+            'selects' => 100,
+            'scopes' => 10,
+            'aggregates' => 20,
+            'includes' => 20,
+            'instructions' => 10,
+            'gates' => 7,
+            'fields' => 100,
+            'values' => 100,
+            'mutate' => 100,
+            'relation_entries' => 100,
+            'resources' => 1000,
+        ],
+        'depths' => [
+            'filters' => 1,
+            'includes' => 3,
+            'mutations' => 3,
+        ],
+        'totals' => [
+            'filters' => 500,
+            'entries' => 1000,
+        ],
     ],
 
     /*

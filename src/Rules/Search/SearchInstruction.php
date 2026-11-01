@@ -52,7 +52,7 @@ class SearchInstruction extends RestRule
     {
         return [
             $attribute.'.name' => [new OneOf($this->names()), 'required', 'string'],
-            $attribute.'.fields' => ['sometimes', 'array', new MaxItems($this->resource->context()->limits()->fields)],
+            $attribute.'.fields' => ['sometimes', 'array', new MaxItems($this->resource->context()->limits()->sizes->fields)],
             $attribute.'.fields.*.name' => $fields === null ? [] : [
                 'required',
                 'string',
