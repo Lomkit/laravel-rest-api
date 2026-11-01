@@ -143,14 +143,6 @@ class RestContextTest extends PackageTestCase
         $this->assertSame(2, $this->contextFor(null)->limits()->depths->filters);
     }
 
-    #[Test]
-    public function it_ignores_the_filter_depth_at_its_former_key(): void
-    {
-        config(['rest.search.max_nesting_depth' => 2]);
-
-        $this->assertSame(1, $this->contextFor(null)->limits()->depths->filters);
-    }
-
     private function contextFor(?User $user): RestContext
     {
         $request = RestRequest::create('/api/products/search', 'POST');

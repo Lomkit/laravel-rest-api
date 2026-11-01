@@ -103,15 +103,6 @@ class RestConfigTest extends TestCase
         RestConfig::from($config);
     }
 
-    #[Test]
-    public function it_ignores_the_keys_that_3_0_removed_or_moved(): void
-    {
-        $config = $this->packageConfig();
-        $config->set(['rest.gates.enabled' => 'no', 'rest.authorizations.enabled' => 'no', 'rest.documentation' => ['routing' => ['enabled' => 'no']], 'rest.search' => ['max_nesting_depth' => 'no']]);
-
-        $this->assertEquals(RestConfig::from($this->packageConfig()), RestConfig::from($config));
-    }
-
     /** @return array<string, array{string, mixed, string}> */
     public static function wrongTypes(): array
     {

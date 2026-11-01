@@ -14,7 +14,7 @@ Version 3.0 is in development on the `3.x` branch. This guide lists each breakin
 
 This section lists each change to `config/rest.php`. Compare your published file with `vendor/lomkit/laravel-rest-api/config/rest.php`, then apply the changes below.
 
-`authorizations.enabled` and `gates.enabled` are removed. A published file that still sets them to `false` no longer turns anything off: the policies run, so a request that a policy denies gets a `403`, and a search returns the gates that the client asks for. To turn the policies or the gates off for the whole application, add the `DisableAuthorizations` or the `DisableGates` trait to your base resource, `app/Rest/Resources/Resource.php`, which your resources extend:
+`authorizations.enabled` and `gates.enabled` are removed. To turn the policies or the gates off for the whole application, add the `DisableAuthorizations` or the `DisableGates` trait to your base resource, `app/Rest/Resources/Resource.php`, which your resources extend:
 
 ```php
 namespace App\Rest\Resources;
@@ -148,12 +148,12 @@ Authorizations:
 Limits:
 
 - The `limits` block sets the most entries of each list of a request, how deep filters, includes and relations nest, and two totals. See "Limits" in [Validation engine](#validation-engine) for what each key covers.
-- `search.max_nesting_depth` moved to `limits.depths.filters`, with the same default of 1 and the same meaning. Move its value to the new key and remove the `search` block: the old key is ignored.
+- `search.max_nesting_depth` moved to `limits.depths.filters`, with the same default of 1 and the same meaning. Move its value to the new key and remove the `search` block.
 
 Published files:
 
 - The package defaults merge into your published `config/rest.php` at every level. A nested key that your file leaves out, such as `gates.names.authorized_to_restore` or `limits.sizes.filters`, gets its default value. Before, a top-level key such as `gates` replaced all the defaults under it.
-- A key that 3.0 removed or moved is ignored: `authorizations.enabled`, `gates.enabled`, `search.max_nesting_depth` and the `documentation` block. Remove them from your file, after moving the value of `search.max_nesting_depth` to `limits.depths.filters`.
+- Remove from your file the keys that 3.0 removed or moved: `authorizations.enabled`, `gates.enabled`, `search.max_nesting_depth` and the `documentation` block, after moving the value of `search.max_nesting_depth` to `limits.depths.filters`.
 - A key under `limits` that the package does not know throws an exception that names it, so that a typo does not keep the default without notice: "The [rest.limits.sizes.filter] option does not exist." An unknown key elsewhere is ignored.
 
 Types:

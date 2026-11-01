@@ -91,4 +91,17 @@ class GateConfigTest extends HelpdeskTestCase
 
         $this->postJson('/api/tickets/search', ['search' => ['gates' => ['view']]]);
     }
+
+    #[Test]
+    public function it_leaves_out_the_gates_of_a_resource_that_disables_them(): void
+    {
+        ['Laptop setup' => $laptop] = $this->seedTickets();
+
+        $this->postJson('/api/ungated-tickets/search', ['search' => ['gates' => ['view', 'create']]])
+            ->assertOk()
+            ->assertJsonPath('data.0', ['id' => $laptop->id, 'team_id' => $laptop->team_id, 'title' => 'Laptop setup', 'status' => 'closed'])
+            ->assertJsonPath('meta', []);
+
+        $this->assertSame(['viewAny'], $this->tickets->calls);
+    }
 }

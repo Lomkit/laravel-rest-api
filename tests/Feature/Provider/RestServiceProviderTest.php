@@ -73,16 +73,6 @@ class RestServiceProviderTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_ignores_the_former_filter_depth_of_a_published_config(): void
-    {
-        config()->set('rest', ['search' => ['max_nesting_depth' => 2]]);
-
-        $this->app->register(RestServiceProvider::class, force: true);
-
-        $this->assertSame(1, $this->context()->limits()->depths->filters);
-    }
-
-    #[Test]
     public function it_keeps_an_unknown_limit_of_a_published_config_and_names_it(): void
     {
         config()->set('rest', ['limits' => ['sizes' => ['filter' => 50]]]);
@@ -93,27 +83,6 @@ class RestServiceProviderTest extends PackageTestCase
         $this->expectExceptionObject(new InvalidConfigException('The [rest.limits.sizes.filter] option does not exist.'));
 
         $this->context()->limits();
-    }
-
-    #[Test]
-    public function it_reads_a_published_config_that_still_holds_the_removed_keys(): void
-    {
-        config()->set('rest', [
-            'gates' => ['enabled' => false, 'key' => 'abilities'],
-            'authorizations' => ['enabled' => false, 'cache' => ['enabled' => true, 'default' => 10]],
-            'documentation' => ['routing' => ['enabled' => true, 'path' => '/api-documentation']],
-        ]);
-
-        $this->app->register(RestServiceProvider::class, force: true);
-        $context = $this->context();
-
-        $this->assertSame([false, true, 10, 'abilities'], [
-            $context->config()->strict,
-            $context->config()->cacheEnabled,
-            $context->config()->cacheMinutes,
-            $context->config()->gatesKey,
-        ]);
-        $this->assertSame(100, $context->limits()->sizes->filters);
     }
 
     #[Test]
