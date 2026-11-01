@@ -15,7 +15,6 @@ use Lomkit\Rest\Authorization\DecisionStore;
 use Lomkit\Rest\Authorization\NullDecisionStore;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Config\RestConfig;
-use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Text\ResolvedText;
 use Lomkit\Rest\Validation\Limits;
@@ -69,17 +68,7 @@ final class RestContext
 
     public function limits(): Limits
     {
-        if ($this->limits !== null) {
-            return $this->limits;
-        }
-
-        $config = $this->container->make(ConfigRepository::class);
-
-        if ($config->get('rest.search.max_nesting_depth') !== null) {
-            throw InvalidConfigException::moved('rest.search.max_nesting_depth', 'rest.limits.depths.filters');
-        }
-
-        return $this->limits = Limits::fromConfig($config->get('rest.limits'));
+        return $this->limits ??= Limits::fromConfig($this->container->make(ConfigRepository::class)->get('rest.limits'));
     }
 
     public function authorizer(): Authorizer

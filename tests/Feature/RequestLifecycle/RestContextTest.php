@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\RequestLifecycle;
 
 use DateTimeInterface;
 use Illuminate\Http\Request;
-use InvalidArgumentException;
 use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -145,19 +144,9 @@ class RestContextTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_refuses_the_filter_depth_at_its_former_key(): void
+    public function it_ignores_the_filter_depth_at_its_former_key(): void
     {
-        config(['rest.search.max_nesting_depth' => 1]);
-
-        $this->expectExceptionObject(new InvalidArgumentException('The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters].'));
-
-        $this->contextFor(null)->limits();
-    }
-
-    #[Test]
-    public function it_reads_the_limits_next_to_a_former_filter_depth_set_to_null(): void
-    {
-        config(['rest.search' => ['max_nesting_depth' => null]]);
+        config(['rest.search.max_nesting_depth' => 2]);
 
         $this->assertSame(1, $this->contextFor(null)->limits()->depths->filters);
     }

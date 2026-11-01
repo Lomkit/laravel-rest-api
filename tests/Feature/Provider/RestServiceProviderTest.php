@@ -73,16 +73,13 @@ class RestServiceProviderTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_keeps_the_former_filter_depth_of_a_published_config_and_refuses_it(): void
+    public function it_ignores_the_former_filter_depth_of_a_published_config(): void
     {
-        config()->set('rest', ['search' => ['max_nesting_depth' => 1]]);
+        config()->set('rest', ['search' => ['max_nesting_depth' => 2]]);
 
         $this->app->register(RestServiceProvider::class, force: true);
 
-        $this->assertSame(1, config('rest.search.max_nesting_depth'));
-        $this->expectExceptionObject(new InvalidConfigException('The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters].'));
-
-        $this->context()->limits();
+        $this->assertSame(1, $this->context()->limits()->depths->filters);
     }
 
     #[Test]

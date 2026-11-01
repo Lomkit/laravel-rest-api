@@ -11,11 +11,6 @@ final class InvalidConfigException extends InvalidArgumentException
         return new self("The [{$key}] option must be {$type}.");
     }
 
-    public static function moved(string $key, string $to): self
-    {
-        return new self("The [{$key}] option moved to [{$to}].");
-    }
-
     public static function unknown(string $key): self
     {
         return new self("The [{$key}] option does not exist.");

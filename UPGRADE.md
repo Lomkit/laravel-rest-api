@@ -148,13 +148,12 @@ Authorizations:
 Limits:
 
 - The `limits` block sets the most entries of each list of a request, how deep filters, includes and relations nest, and two totals. See "Limits" in [Validation engine](#validation-engine) for what each key covers.
-- `search.max_nesting_depth` moved to `limits.depths.filters`, with the same default of 1 and the same meaning. A file that still sets the old key throws when a request reads the limits: "The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters]." Move its value to the new key and remove the `search` block.
+- `search.max_nesting_depth` moved to `limits.depths.filters`, with the same default of 1 and the same meaning. Move its value to the new key and remove the `search` block: the old key is ignored.
 
 Published files:
 
 - The package defaults merge into your published `config/rest.php` at every level. A nested key that your file leaves out, such as `gates.names.authorized_to_restore` or `limits.sizes.filters`, gets its default value. Before, a top-level key such as `gates` replaced all the defaults under it.
-- A key that 3.0 moved throws an exception that gives its new path. Only `search.max_nesting_depth` moved.
-- A key that 3.0 removed is ignored: `authorizations.enabled`, `gates.enabled` and the `documentation` block. Remove them from your file.
+- A key that 3.0 removed or moved is ignored: `authorizations.enabled`, `gates.enabled`, `search.max_nesting_depth` and the `documentation` block. Remove them from your file, after moving the value of `search.max_nesting_depth` to `limits.depths.filters`.
 - A key under `limits` that the package does not know throws an exception that names it, so that a typo does not keep the default without notice: "The [rest.limits.sizes.filter] option does not exist." An unknown key elsewhere is ignored.
 
 Types:
