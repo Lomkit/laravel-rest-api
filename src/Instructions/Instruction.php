@@ -31,14 +31,14 @@ class Instruction
         return Str::slug($this->name(), '-', null);
     }
 
-    /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: array<string, mixed>, text: bool} */
+    /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: \stdClass, text: bool} */
     public function jsonSerialize(): array
     {
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
             'fields' => InputFieldDetails::forFields($this->getFields($this->resource->context()->request)),
-            'meta' => $this->getMeta(),
+            'meta' => (object) $this->getMeta(),
             'text' => InstructionSupport::of($this)->runsWithText($this->resource->context()->text($this->resource)->backend),
         ];
     }

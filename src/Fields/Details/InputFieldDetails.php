@@ -16,7 +16,7 @@ final readonly class InputFieldDetails
         return array_map(fn (Field $field): array => (new self($field))->toArray(), iterator_to_array($fields, false));
     }
 
-    /** @return array{name: string, type: string, nullable: bool, default: mixed, rules: list<string>, meta: array<string, mixed>, values?: list<int|string>} */
+    /** @return array{name: string, type: string, nullable: bool, default: mixed, rules: list<string>, meta: \stdClass, values?: list<int|string>} */
     public function toArray(): array
     {
         $details = [
@@ -25,7 +25,7 @@ final readonly class InputFieldDetails
             'nullable' => $this->field->isNullable(),
             'default' => $this->field->defaultValue(),
             'rules' => (new RuleDescriptions($this->field->getRules()->shared()))->toArray(),
-            'meta' => $this->field->getMeta(),
+            'meta' => (object) $this->field->getMeta(),
         ];
 
         if (! $this->field instanceof Enum) {

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Unit\Fields;
 
 use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Lomkit\Rest\Fields\Details\RuleDescriptions;
@@ -52,6 +53,18 @@ class RuleDescriptionsTest extends TestCase
         $closure = function (string $attribute, mixed $value, Closure $fail): void {};
 
         $this->assertSame(['string', 'max:20'], (new RuleDescriptions(['string', $closure, 'max:20']))->toArray());
+    }
+
+    #[Test]
+    public function it_leaves_anonymous_rule_objects_out(): void
+    {
+        $rule = new class implements ValidationRule
+        {
+            #[\Override]
+            public function validate(string $attribute, mixed $value, Closure $fail): void {}
+        };
+
+        $this->assertSame(['string', 'max:20'], (new RuleDescriptions(['string', $rule, 'max:20']))->toArray());
     }
 
     #[Test]

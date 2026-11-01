@@ -2,9 +2,11 @@
 
 namespace Lomkit\Rest\Text;
 
+use JsonSerializable;
 use Lomkit\Rest\Text\Engine\EngineGrammar;
+use Lomkit\Rest\Text\Engine\IndexAttribute;
 
-final readonly class TextCapabilities
+final readonly class TextCapabilities implements JsonSerializable
 {
     public const int MAX_LENGTH = 255;
 
@@ -36,5 +38,19 @@ final readonly class TextCapabilities
     public function modeNames(): array
     {
         return array_map(fn (TextMode $mode): string => $mode->value, $this->modes);
+    }
+
+    /** @return array{fields: list<string>, modes: list<string>, relevance: bool, trashed: bool, max_length: int, engine: array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null}|null} */
+    #[\Override]
+    public function jsonSerialize(): array
+    {
+        return [
+            'fields' => $this->fields,
+            'modes' => $this->modeNames(),
+            'relevance' => $this->relevance,
+            'trashed' => $this->trashed,
+            'max_length' => $this->maxLength,
+            'engine' => $this->engine?->jsonSerialize(),
+        ];
     }
 }

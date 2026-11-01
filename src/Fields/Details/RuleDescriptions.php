@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Fields\Details;
 use Closure;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
+use ReflectionClass;
 use Stringable;
 
 final readonly class RuleDescriptions
@@ -37,6 +38,7 @@ final readonly class RuleDescriptions
             $rule instanceof Closure => null,
             $rule instanceof Enum => 'enum',
             $rule instanceof Stringable => (string) $rule,
+            is_object($rule) && (new ReflectionClass($rule))->isAnonymous() => null,
             is_object($rule) => Str::snake(class_basename($rule)),
             default => null,
         };

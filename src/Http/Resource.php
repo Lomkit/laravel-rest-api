@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Http;
 
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\Actionable;
 use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
@@ -16,8 +17,12 @@ use Lomkit\Rest\Concerns\Resource\Relationable;
 use Lomkit\Rest\Concerns\Resource\Rulable;
 use Lomkit\Rest\Concerns\Resource\SearchesText;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
+use Lomkit\Rest\Fields\Details\FieldDetails;
+use Lomkit\Rest\Fields\Details\ResourceRuleDetails;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Instructions\Instructionable;
+use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 
 class Resource implements \JsonSerializable
@@ -103,17 +108,14 @@ class Resource implements \JsonSerializable
         $request = $this->context()->request;
 
         return [
-            'actions' => collect($this->getActions($request))->map->jsonSerialize()->toArray(),
-            'instructions' => collect($this->getInstructions($request))->map->jsonSerialize()->toArray(),
-            'fields' => $this->getFields($request)->names(),
+            'actions' => array_values(array_map(fn (Action $action): array => $action->jsonSerialize(), $this->getActions($request))),
+            'instructions' => array_values(array_map(fn (Instruction $instruction): array => $instruction->jsonSerialize(), $this->getInstructions($request))),
+            'fields' => FieldDetails::forFields($this->getFields($request)),
             'limits' => $this->getLimits($request),
             'scopes' => array_map(fn (Scope $scope): array => $scope->jsonSerialize(), $this->getScopes($request)),
-            'relations' => collect($this->getRelations($request))->map->jsonSerialize()->toArray(),
-            'rules' => [
-                'all' => $this->rules($request),
-                'create' => $this->createRules($request),
-                'update' => $this->updateRules($request),
-            ],
+            'relations' => array_values(array_map(fn (Relation $relation): mixed => $relation->jsonSerialize(), $this->getRelations($request))),
+            'rules' => ResourceRuleDetails::of($this, $request)->jsonSerialize(),
+            'text' => $this->context()->text($this)->capabilities?->jsonSerialize(),
         ];
     }
 }

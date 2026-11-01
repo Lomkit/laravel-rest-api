@@ -34,6 +34,12 @@ final readonly class MorphTargets
         return array_map(fn (string $resource): string => $resource::newModel()->getMorphClass(), $this->resources);
     }
 
+    /** @return array<string, class-string<Resource>> */
+    public function byType(): array
+    {
+        return array_combine($this->types(), $this->resources);
+    }
+
     public function isPolymorphic(): bool
     {
         return count($this->resources) > 1;

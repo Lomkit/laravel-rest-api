@@ -50,7 +50,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         match ($action) {
             'search' => $this->documentSearch($operation, $resource, $fields, $relations, $resourceName),
             'mutate' => $this->documentMutate($operation, $this->attributes($resource, $fakeRequest), $relations, $resourceName),
-            'details' => $operation->summary("Get {$resourceName} details"),
+            'details' => DetailsResponseType::document($operation, $resourceName),
             'destroy' => $this->documentDestroy($operation, $resourceName),
             'restore' => $this->documentRestore($operation, $resourceName),
             default => null,
