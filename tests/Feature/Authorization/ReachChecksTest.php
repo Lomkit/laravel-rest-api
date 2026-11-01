@@ -125,22 +125,6 @@ class ReachChecksTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_validates_a_relation_filter_of_a_text_search_without_checking_the_relation(): void
-    {
-        $this->teams->answers['viewAny'] = Response::deny('Teams are not listed.');
-
-        $this->postJson('/api/tickets/search', ['search' => [
-            'text' => ['value' => 'printer'],
-            'filters' => [['field' => 'team.name', 'value' => 'Billing']],
-        ]])->assertUnprocessable()->assertExactJson([
-            'message' => 'The selected search.filters.0.field is invalid.',
-            'errors' => ['search.filters.0.field' => ['The selected search.filters.0.field is invalid.']],
-        ]);
-
-        $this->assertSame([], $this->teams->calls);
-    }
-
-    #[Test]
     public function it_refuses_the_search_of_an_action_on_a_resource_the_user_cannot_list(): void
     {
         $this->teams->answers['viewAny'] = Response::deny('Teams are not listed.');

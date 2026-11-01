@@ -6,8 +6,12 @@ use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Feature\Text\Stubs\ContainsPostResource;
 use Lomkit\Rest\Tests\Feature\Text\Stubs\MisindexedPostResource;
+use Lomkit\Rest\Tests\Feature\Text\Stubs\PlainTextSearch;
+use Lomkit\Rest\Tests\Feature\Text\Stubs\PlainTextSearchPostResource;
 use Lomkit\Rest\Tests\Feature\Text\Stubs\StrictFullTextPostResource;
 use Lomkit\Rest\Tests\Feature\Text\Stubs\UnsearchablePostResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
@@ -62,11 +66,22 @@ class TextDeclarationTest extends TextSearchTestCase
     #[Test]
     public function it_refuses_a_relevance_order_from_a_strategy_that_does_not_rank(): void
     {
-        $target = new TextTarget(ContainsPostResource::class, FieldSet::of([Text::make('title')->searchable()]), new Post);
+        $fields = FieldSet::of([Text::make('title')->searchable()]);
+        $target = new TextTarget(ContainsPostResource::class, $fields, new Post, $fields);
 
         $this->expectExceptionObject(InvalidTextSearchException::noRelevance(ContainsPostResource::class));
 
         Contains::make()->orderByRelevance(Post::query(), new TextQuery('lamp'), $target, SortDirection::Desc);
+    }
+
+    #[Test]
+    public function it_refuses_a_text_search_that_runs_neither_on_the_query_nor_on_an_engine(): void
+    {
+        $context = new RestContext(RestRequest::create('/plain-text-search-posts/search', 'POST'), $this->app);
+
+        $this->expectExceptionObject(InvalidTextSearchException::unsupportedStrategy(PlainTextSearchPostResource::class, PlainTextSearch::class));
+
+        $context->text($context->resource(PlainTextSearchPostResource::class));
     }
 
     /** @return array<string, array{array<string, mixed>}> */

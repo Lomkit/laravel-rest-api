@@ -33,12 +33,16 @@ final readonly class TextSearchType
 
     public function addTo(ObjectType $search): void
     {
+        $engine = $this->text->backend === TextBackend::Engine && $this->text->capabilities !== null
+            ? new EngineTextType($this->text->capabilities)
+            : null;
+
         if ($this->text->backend !== TextBackend::None) {
-            $search->addProperty('text', $this->textType());
+            $search->addProperty('text', $engine?->text() ?? $this->textType());
         }
 
         if (Trashed::supportedBy($this->resource::modelClass())) {
-            $search->addProperty('trashed', (new StringType)->enum(array_column(Trashed::cases(), 'value')));
+            $search->addProperty('trashed', $engine?->trashed() ?? (new StringType)->enum(array_column(Trashed::cases(), 'value')));
         }
     }
 

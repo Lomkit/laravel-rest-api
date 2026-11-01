@@ -23,7 +23,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ResourceDefinitionTest extends PackageTestCase
 {
-    private const array DECLARATIONS = ['actions', 'fields', 'instructions', 'limits', 'relations', 'scopes', 'scoutFields', 'scoutInstructions'];
+    private const array DECLARATIONS = ['actions', 'fields', 'instructions', 'limits', 'relations', 'scopes'];
 
     private EvaluatedDeclarations $evaluated;
 
@@ -151,7 +151,7 @@ class ResourceDefinitionTest extends PackageTestCase
         $this->app->instance('request', Request::create('/'));
         $restored = unserialize($serialized);
         $request = $restored->context()->request;
-        $declared = [...$restored->getActions($request), ...$restored->getInstructions($request), ...$restored->getScoutInstructions($request)];
+        $declared = [...$restored->getActions($request), ...$restored->getInstructions($request)];
         $bound = array_map(fn (Action|Instruction $declaration): Resource => $declaration->resource, $declared);
         $this->readEveryDeclaration($restored, 2);
 
@@ -159,7 +159,7 @@ class ResourceDefinitionTest extends PackageTestCase
         $this->assertSame(['Grace', null], $this->evaluated->usersOf('fields'));
         $this->assertSame(['id', 'title'], $restored->getFields($request)->names());
         $this->assertSame(
-            ['publish-posts', 'queued-publish-posts', 'batched-publish-posts', 'change-status', 'highlight-posts', 'in-status', 'highlight-posts', 'in-status'],
+            ['publish-posts', 'queued-publish-posts', 'batched-publish-posts', 'change-status', 'highlight-posts', 'in-status'],
             array_map(fn (Action|Instruction $declaration): string => $declaration->uriKey(), $declared),
         );
         foreach ($bound as $boundResource) {
@@ -178,14 +178,11 @@ class ResourceDefinitionTest extends PackageTestCase
             $resource->getInstructions($request);
             $resource->getActions($request);
             $resource->getLimits($request);
-            $resource->getScoutFields($request);
-            $resource->getScoutInstructions($request);
             $resource->relation('author');
             $resource->scope($request, 'popular');
             FieldPath::resolve($resource, 'title');
             $resource->actionExists($request, 'publish-posts');
             $resource->instruction($request, 'highlight-posts');
-            $resource->scoutInstruction($request, 'highlight-posts');
             $resource->jsonSerialize();
         }
     }

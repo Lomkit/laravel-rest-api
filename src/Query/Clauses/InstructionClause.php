@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use InvalidArgumentException;
-use Laravel\Scout\Builder as ScoutBuilder;
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
 use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Instructions\InstructionSupport;
+use Lomkit\Rest\Text\TextBackend;
 
 final readonly class InstructionClause implements Clause
 {
@@ -28,16 +29,11 @@ final readonly class InstructionClause implements Clause
         $instruction = $this->resource->instruction($this->resource->context()->request, $this->name)
             ?? throw InvalidInstructionException::undeclared($this->resource::class, $this->name);
 
+        if (! InstructionSupport::of($instruction)->runsOn(TextBackend::Query)) {
+            throw InvalidInstructionException::engineOnly($instruction::class);
+        }
+
         $instruction->handle($this->values($instruction), self::eloquent($query));
-    }
-
-    /** @param ScoutBuilder<Model> $query */
-    public function applyToScout(ScoutBuilder $query): void
-    {
-        $instruction = $this->resource->scoutInstruction($this->resource->context()->request, $this->name)
-            ?? throw InvalidInstructionException::undeclaredForScout($this->resource::class, $this->name);
-
-        $instruction->handleScout($this->values($instruction), $query);
     }
 
     /** @return array<string, mixed> */

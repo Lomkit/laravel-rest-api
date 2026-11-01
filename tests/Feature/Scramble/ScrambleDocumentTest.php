@@ -46,12 +46,21 @@ class ScrambleDocumentTest extends ScrambleTestCase
         $search = $this->body($this->operation('/products/search', 'post'))['properties']['search']['properties'];
         $filter = $search['filters']['items']['properties'];
 
-        $this->assertSame(['filters', 'sorts', 'selects', 'includes', 'scopes', 'text', 'aggregates', 'instructions', 'gates', 'page', 'limit'], array_keys($search));
+        $this->assertSame(['filters', 'sorts', 'selects', 'includes', 'scopes', 'aggregates', 'instructions', 'gates', 'page', 'limit'], array_keys($search));
         $this->assertSame(
             ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'ilike', 'not ilike', 'in', 'not in', 'between', 'not between', 'is null', 'is not null'],
             $filter['operator']['enum'],
         );
         $this->assertArrayNotHasKey('type', (array) $filter['value']);
+    }
+
+    #[Test]
+    public function it_documents_the_keys_of_the_details_response(): void
+    {
+        $details = $this->operation('/posts', 'get')['responses'][200]['content']['application/json']['schema']['properties']['data'];
+
+        $this->assertSame(['actions', 'instructions', 'fields', 'limits', 'scopes', 'relations', 'rules'], array_keys($details['properties']));
+        $this->assertSame(['actions', 'instructions', 'fields', 'limits', 'scopes', 'relations', 'rules'], $details['required']);
     }
 
     #[Test]

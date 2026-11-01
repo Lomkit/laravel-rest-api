@@ -4,9 +4,11 @@ namespace Lomkit\Rest\Tests\Unit\Text;
 
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Text\FullText;
+use Lomkit\Rest\Text\ScoutEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 
 class FullTextDeclarationTest extends TestCase
 {
@@ -16,6 +18,14 @@ class FullTextDeclarationTest extends TestCase
         $this->expectExceptionObject(InvalidTextSearchException::emptyIndex());
 
         FullText::make()->index();
+    }
+
+    #[Test]
+    public function it_takes_only_a_database_strategy_as_fallback(): void
+    {
+        $this->expectException(TypeError::class);
+
+        FullText::make()->otherwise(ScoutEngine::make()->withoutPerimeter());
     }
 
     #[Test]

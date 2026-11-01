@@ -5,14 +5,14 @@ namespace Lomkit\Rest\Query\Clauses;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use InvalidArgumentException;
+use Lomkit\Rest\Text\QueryTextSearch;
 use Lomkit\Rest\Text\TextQuery;
-use Lomkit\Rest\Text\TextSearch;
 use Lomkit\Rest\Text\TextTarget;
 
 final readonly class TextClause implements Clause
 {
     public function __construct(
-        private TextSearch $strategy,
+        private QueryTextSearch $strategy,
         private TextQuery $text,
         private TextTarget $target,
     ) {}

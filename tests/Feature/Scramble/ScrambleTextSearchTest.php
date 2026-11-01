@@ -53,15 +53,6 @@ class ScrambleTextSearchTest extends ScrambleTestCase
     }
 
     #[Test]
-    public function it_documents_the_text_of_a_resource_indexed_by_scout_without_modes(): void
-    {
-        $search = $this->search('/products/search');
-
-        $this->assertSame(['value' => ['type' => 'string']], $search['text']['properties']);
-        $this->assertArrayNotHasKey('trashed', $search);
-    }
-
-    #[Test]
     public function it_documents_the_trashed_models_only_on_a_resource_that_soft_deletes(): void
     {
         $search = $this->search('/authors/search');

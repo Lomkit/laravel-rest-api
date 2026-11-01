@@ -8,15 +8,15 @@ use Illuminate\Database\QueryException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\Expressions\FullTextScore;
+use Lomkit\Rest\Text\QueryTextSearch;
 use Lomkit\Rest\Text\TermPattern;
 use Lomkit\Rest\Text\TextCapabilities;
 use Lomkit\Rest\Text\TextMode;
 use Lomkit\Rest\Text\TextQuery;
-use Lomkit\Rest\Text\TextSearch;
 use Lomkit\Rest\Text\TextTarget;
 use Lomkit\Rest\Text\WebSearch;
 
-final readonly class MySqlFullText implements TextSearch
+final readonly class MySqlFullText implements QueryTextSearch
 {
     private const int MISSING_INDEX = 1191;
 

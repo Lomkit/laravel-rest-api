@@ -11,13 +11,18 @@ final class InvalidInstructionException extends LogicException
         return new self("{$resource} does not declare the instruction [{$name}].");
     }
 
-    public static function undeclaredForScout(string $resource, string $name): self
+    public static function engineOnly(string $instruction): self
     {
-        return new self("{$resource} does not declare the Scout instruction [{$name}].");
+        return new self("{$instruction} implements AppliesToEngine without its own handle(): it only applies to a text search on a search engine.");
     }
 
-    public static function scoutNotSupported(string $instruction): self
+    public static function queryOnly(string $instruction): self
     {
-        return new self("{$instruction} does not support Scout queries. Override handleScout() to support them.");
+        return new self("{$instruction} does not implement AppliesToEngine: it cannot apply to a text search on a search engine.");
+    }
+
+    public static function removedHook(string $instruction, string $method, string $replacement): self
+    {
+        return new self("{$instruction} declares {$method}(), which the package no longer calls. {$replacement}");
     }
 }

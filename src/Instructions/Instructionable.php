@@ -20,24 +20,11 @@ trait Instructionable
 
     public function instructionExists(RestRequest $request, string $instructionKey): bool
     {
-        return collect($this->getInstructions($request))
-            ->contains(function (Instruction $instruction) use ($instructionKey) {
-                return $instruction->uriKey() === $instructionKey;
-            });
+        return array_any($this->getInstructions($request), fn (Instruction $instruction): bool => $instruction->uriKey() === $instructionKey);
     }
 
     public function instruction(RestRequest $request, string $instructionKey): ?Instruction
     {
-        $instruction = collect($this->getInstructions($request))
-            ->first(function (Instruction $instruction) use ($instructionKey) {
-                return $instruction->uriKey() === $instructionKey;
-            });
-
-        if (! is_null($instruction)) {
-            $instruction
-                ->resource($this);
-        }
-
-        return $instruction;
+        return array_find($this->getInstructions($request), fn (Instruction $instruction): bool => $instruction->uriKey() === $instructionKey)?->resource($this);
     }
 }

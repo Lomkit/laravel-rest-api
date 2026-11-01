@@ -5,11 +5,9 @@ namespace Lomkit\Rest\Instructions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Laravel\Scout\Builder as ScoutBuilder;
 use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Resourcable;
-use Lomkit\Rest\Exceptions\InvalidInstructionException;
 use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
 
@@ -33,7 +31,7 @@ class Instruction
         return Str::slug($this->name(), '-', null);
     }
 
-    /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: array<string, mixed>} */
+    /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: array<string, mixed>, text: bool} */
     public function jsonSerialize(): array
     {
         return [
@@ -41,6 +39,7 @@ class Instruction
             'uriKey' => $this->uriKey(),
             'fields' => InputFieldDetails::forFields($this->getFields($this->resource->context()->request)),
             'meta' => $this->getMeta(),
+            'text' => InstructionSupport::of($this)->runsWithText($this->resource->context()->text($this->resource)->backend),
         ];
     }
 
@@ -49,13 +48,4 @@ class Instruction
      * @param  Builder<Model>  $query
      */
     public function handle(array $fields, Builder $query): void {}
-
-    /**
-     * @param  array<string, mixed>  $fields
-     * @param  ScoutBuilder<Model>  $query
-     */
-    public function handleScout(array $fields, ScoutBuilder $query): void
-    {
-        throw InvalidInstructionException::scoutNotSupported(static::class);
-    }
 }

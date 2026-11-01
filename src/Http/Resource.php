@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Http;
 
 use Illuminate\Database\Eloquent\Model;
-use Laravel\Scout\Searchable;
 use Lomkit\Rest\Actions\Actionable;
 use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
@@ -15,7 +14,6 @@ use Lomkit\Rest\Concerns\Resource\HasResourceHooks;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
 use Lomkit\Rest\Concerns\Resource\Rulable;
-use Lomkit\Rest\Concerns\Resource\Scoutable;
 use Lomkit\Rest\Concerns\Resource\SearchesText;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -36,7 +34,6 @@ class Resource implements \JsonSerializable
     use PerformsQueries;
     use Relationable;
     use Rulable;
-    use Scoutable;
     use SearchesText;
 
     /** @var class-string<Model> */
@@ -100,11 +97,6 @@ class Resource implements \JsonSerializable
         return now()->addMinutes(config('rest.authorizations.cache.default', 5));
     }
 
-    public function isModelSearchable(): bool
-    {
-        return in_array(Searchable::class, class_uses_recursive(static::modelClass()));
-    }
-
     #[\Override]
     public function jsonSerialize(): mixed
     {
@@ -113,9 +105,7 @@ class Resource implements \JsonSerializable
         return [
             'actions' => collect($this->getActions($request))->map->jsonSerialize()->toArray(),
             'instructions' => collect($this->getInstructions($request))->map->jsonSerialize()->toArray(),
-            'scout_instructions' => collect($this->getScoutInstructions($request))->map->jsonSerialize()->toArray(),
             'fields' => $this->getFields($request)->names(),
-            'scout_fields' => $this->getScoutFields($request),
             'limits' => $this->getLimits($request),
             'scopes' => array_map(fn (Scope $scope): array => $scope->jsonSerialize(), $this->getScopes($request)),
             'relations' => collect($this->getRelations($request))->map->jsonSerialize()->toArray(),

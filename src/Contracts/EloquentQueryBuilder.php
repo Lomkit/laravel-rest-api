@@ -39,4 +39,11 @@ interface EloquentQueryBuilder extends QueryBuilder
      * @return list<Model>
      */
     public function mutations(array $mutation = [], array $attributes = []): array;
+
+    /**
+     * @param  list<int|string>  $keys
+     * @param  array<string, mixed>  $parameters
+     * @return EloquentBuilder<Model>
+     */
+    public function searchKeys(array $keys, array $parameters = []): EloquentBuilder;
 }

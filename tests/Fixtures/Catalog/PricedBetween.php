@@ -2,13 +2,14 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Catalog;
 
-use Laravel\Scout\Builder as ScoutBuilder;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Instructions\AppliesToEngine;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
+use Lomkit\Rest\Text\Engine\EngineQuery;
 
-class PricedBetween extends Instruction
+class PricedBetween extends Instruction implements AppliesToEngine
 {
     #[\Override]
     public function fields(RestRequest $request): array
@@ -17,9 +18,9 @@ class PricedBetween extends Instruction
     }
 
     #[\Override]
-    public function handleScout(array $fields, ScoutBuilder $query): void
+    public function handleEngine(array $fields, EngineQuery $query): void
     {
-        app(ReceivedFields::class)->record('handleScout', $fields);
+        app(ReceivedFields::class)->record('handleEngine', $fields);
 
         $query->where('price', '>=', $fields['min'])->where('price', '<=', $fields['max']);
     }

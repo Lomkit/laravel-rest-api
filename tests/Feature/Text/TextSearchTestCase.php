@@ -9,7 +9,6 @@ use Lomkit\Rest\Tests\Feature\Text\Stubs\AllFieldsFullTextPostController;
 use Lomkit\Rest\Tests\Feature\Text\Stubs\ContainsAuthorController;
 use Lomkit\Rest\Tests\Feature\Text\Stubs\ContainsCategoryController;
 use Lomkit\Rest\Tests\Feature\Text\Stubs\ContainsPostController;
-use Lomkit\Rest\Tests\Feature\Text\Stubs\ContainsProductController;
 use Lomkit\Rest\Tests\Feature\Text\Stubs\FullTextPostController;
 use Lomkit\Rest\Tests\Feature\Text\Stubs\FullTextPostsAuthorController;
 use Lomkit\Rest\Tests\Feature\Text\Stubs\MisindexedPostController;
@@ -36,7 +35,6 @@ abstract class TextSearchTestCase extends PackageTestCase
         'unsearchable-posts' => UnsearchablePostController::class,
         'perimeter-posts' => PerimeterPostController::class,
         'contains-authors' => ContainsAuthorController::class,
-        'contains-products' => ContainsProductController::class,
         'contains-categories' => ContainsCategoryController::class,
         'full-text-posts-authors' => FullTextPostsAuthorController::class,
     ];

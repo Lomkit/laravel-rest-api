@@ -102,42 +102,8 @@ class InstructionValidationTest extends PackageTestCase
         ]);
     }
 
-    /**
-     * @param  list<array<string, mixed>>  $fields
-     * @param  array<string, list<string>>  $errors
-     */
     #[Test]
-    #[DataProvider('invalidScoutFields')]
-    public function it_validates_the_fields_of_an_instruction_declared_only_for_scout(array $fields, array $errors): void
-    {
-        $response = $this->postJson('/api/products/search', [
-            'search' => [
-                'text' => ['value' => 'lamp'],
-                'instructions' => [['name' => 'priced-between', 'fields' => $fields]],
-            ],
-        ]);
-
-        $response->assertUnprocessable()->assertJsonPath('errors', $errors);
-    }
-
-    /** @return array<string, array{list<array<string, mixed>>, array<string, list<string>>}> */
-    public static function invalidScoutFields(): array
-    {
-        return [
-            'a missing required field' => [[['name' => 'min', 'value' => 10]], [
-                'search.instructions.0.fields.max' => ['The max field is required.'],
-            ]],
-            'a value breaking the field type' => [[['name' => 'max', 'value' => 'cheap']], [
-                'search.instructions.0.fields.max' => ['The max field must be an integer.'],
-            ]],
-            'an unknown field name' => [[['name' => 'max', 'value' => 39], ['name' => 'currency', 'value' => 'EUR']], [
-                'search.instructions.0.fields.1.name' => ['The selected search.instructions.0.fields.1.name is invalid.'],
-            ]],
-        ];
-    }
-
-    #[Test]
-    public function it_rejects_a_scout_instruction_outside_scout_mode(): void
+    public function it_rejects_an_instruction_that_only_applies_to_a_search_engine_in_a_database_search(): void
     {
         $response = $this->postJson('/api/products/search', [
             'search' => ['instructions' => [['name' => 'priced-between', 'fields' => [['name' => 'max', 'value' => 39]]]]],

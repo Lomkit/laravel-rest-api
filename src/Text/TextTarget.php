@@ -16,15 +16,14 @@ final readonly class TextTarget
         public string $resource,
         public FieldSet $fields,
         public Model $model,
-    ) {
-        if (count($fields) === 0) {
-            throw InvalidTextSearchException::noSearchableField($resource);
-        }
-    }
+        public FieldSet $declared,
+    ) {}
 
     public static function of(Resource $resource, RestRequest $request): self
     {
-        return new self($resource::class, $resource->getFields($request)->searchable(), $resource::newModel());
+        $declared = $resource->getFields($request);
+
+        return new self($resource::class, $declared->searchable(), $resource::newModel(), $declared);
     }
 
     /** @return non-empty-list<string> */

@@ -7,13 +7,13 @@ parameters:
 			path: src/Actions/CallRestApiAction.php
 
 		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 2
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 1
 			path: src/Actions/CallRestApiAction.php
 
 		-
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 1
+			identifier: typeCoverage.returnTypeCoverage
+			count: 2
 			path: src/Actions/CallRestApiAction.php
 
 		-
@@ -89,6 +89,11 @@ parameters:
 			path: src/Actions/DispatchAction.php
 
 		-
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 4
+			path: src/Actions/DispatchAction.php
+
+		-
 			identifier: typeCoverage.returnTypeCoverage
 			count: 9
 			path: src/Actions/DispatchAction.php
@@ -96,11 +101,6 @@ parameters:
 		-
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
-			path: src/Actions/DispatchAction.php
-
-		-
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 4
 			path: src/Actions/DispatchAction.php
 
 		-
@@ -180,7 +180,7 @@ parameters:
 
 		-
 			identifier: typeCoverage.paramTypeCoverage
-			count: 2
+			count: 1
 			path: src/Concerns/Resource/Paginable.php
 
 		-
@@ -193,11 +193,6 @@ parameters:
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: src/Concerns/Resource/Relationable.php
-
-		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 1
-			path: src/Concerns/Resource/Scoutable.php
 
 		-
 			identifier: typeCoverage.returnTypeCoverage
@@ -348,32 +343,8 @@ parameters:
 			path: src/Http/Requests/OperateRequest.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:getCollection\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:setCollection\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:restore\(\)\.$#'
 			identifier: method.notFound
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Cannot call method modelKeys\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Cannot call method toQuery\(\) on mixed\.$#'
-			identifier: method.nonObject
 			count: 1
 			path: src/Http/Resource.php
 
@@ -408,19 +379,7 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Http\\Resource\:\:paginate\(\) should return Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Parameter \#1 \$key of method Illuminate\\Support\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Model\>\:\:get\(\) expects int\|string\|null, mixed given\.$#'
-			identifier: argument.type
 			count: 1
 			path: src/Http/Resource.php
 
@@ -437,37 +396,7 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			message: '#^Parameter \#1 \$perPage of method Laravel\\Scout\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:paginate\(\) expects int\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Parameter \#1 \$query of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyQueryCallback\(\) expects Laravel\\Scout\\Builder, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Parameter \#1 \$value of function collect expects Illuminate\\Contracts\\Support\\Arrayable\<\(int\|string\), mixed\>\|iterable\<\(int\|string\), mixed\>\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Parameter \#1 \$value of method Carbon\\Carbon\:\:addMinutes\(\) expects float\|int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Parameter \#2 \$parameters of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyQueryCallback\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Parameter \#3 \$page of method Laravel\\Scout\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:paginate\(\) expects int\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Http/Resource.php
@@ -475,18 +404,6 @@ parameters:
 		-
 			message: '#^Parameter \#4 \$page of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:paginate\(\) expects int\|null, mixed given\.$#'
 			identifier: argument.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Unable to resolve the template type TKey in call to function collect$#'
-			identifier: argument.templateType
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Unable to resolve the template type TValue in call to function collect$#'
-			identifier: argument.templateType
 			count: 1
 			path: src/Http/Resource.php
 
@@ -647,6 +564,11 @@ parameters:
 			path: src/Http/Response.php
 
 		-
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 1
+			path: src/Http/Response.php
+
+		-
 			identifier: typeCoverage.returnTypeCoverage
 			count: 5
 			path: src/Http/Response.php
@@ -654,11 +576,6 @@ parameters:
 		-
 			identifier: typeCoverage.paramTypeCoverage
 			count: 12
-			path: src/Http/Response.php
-
-		-
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 1
 			path: src/Http/Response.php
 
 		-
@@ -943,12 +860,6 @@ parameters:
 			path: src/Query/Builder.php
 
 		-
-			message: '#^Cannot call method where\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
 			message: '#^Cannot call method with\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -1123,17 +1034,17 @@ parameters:
 			path: src/Query/Builder.php
 
 		-
+			identifier: typeCoverage.propertyTypeCoverage
+			count: 1
+			path: src/Query/Builder.php
+
+		-
 			identifier: typeCoverage.returnTypeCoverage
 			count: 3
 			path: src/Query/Builder.php
 
 		-
 			identifier: typeCoverage.paramTypeCoverage
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			identifier: typeCoverage.propertyTypeCoverage
 			count: 1
 			path: src/Query/Builder.php
 
@@ -1294,255 +1205,6 @@ parameters:
 			path: src/Query/Clauses/AggregateClause.php
 
 		-
-			message: '#^Call to an undefined static method Illuminate\\Database\\Eloquent\\Model\:\:search\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Cannot access offset ''direction'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Cannot access offset ''field'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Cannot access offset ''fields'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Cannot access offset ''name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Cannot access offset ''operator'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Cannot access offset ''type'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Cannot access offset ''value'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyFilters\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyFilters\(\) has parameter \$filters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyInstructions\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyInstructions\(\) has parameter \$instructions with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyQueryCallback\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyQueryCallback\(\) has parameter \$query with generic class Laravel\\Scout\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applySorts\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applySorts\(\) has parameter \$sorts with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:filter\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:filter\(\) invoked with 4 parameters, 3 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:instruction\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:search\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:search\(\) return type with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:sort\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\ScoutBuilder\:\:toBase\(\) return type with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 9
-			path: src/Query/ScoutBuilder.php
-
-		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 12
-			path: src/Query/ScoutBuilder.php
-
-		-
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#1 \$field of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:filter\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#1 \$field of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:sort\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#1 \$filters of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyFilters\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#1 \$instructions of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyInstructions\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#1 \$name of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:instruction\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#1 \$parameters of method Lomkit\\Rest\\Contracts\\EloquentQueryBuilder\:\:search\(\) expects array\<string, mixed\>, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#1 \$sorts of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applySorts\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#1 \$trashed of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:applyTrashed\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#2 \$direction of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:sort\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#2 \$fields of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:instruction\(\) expects list\<array\{name\: string, value\?\: mixed\}\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#2 \$operator of method Lomkit\\Rest\\Query\\ScoutBuilder\:\:filter\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#2 \$values of method Laravel\\Scout\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:whereIn\(\) expects array\|Illuminate\\Contracts\\Support\\Arrayable, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Parameter \#2 \$values of method Laravel\\Scout\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:whereNotIn\(\) expects array\|Illuminate\\Contracts\\Support\\Arrayable, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Property Laravel\\Scout\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:\$query \(string\) does not accept mixed\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Query\\ScoutBuilder\:\:\$queryBuilder \(Laravel\\Scout\\Builder\) does not accept mixed\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Query\\ScoutBuilder\:\:\$queryBuilder with generic class Laravel\\Scout\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Query/ScoutBuilder.php
-
-		-
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: src/Query/Traits/PerformMutation.php
@@ -1560,7 +1222,7 @@ parameters:
 
 		-
 			identifier: typeCoverage.paramTypeCoverage
-			count: 14
+			count: 13
 			path: src/Query/Traits/PerformSearch.php
 
 		-

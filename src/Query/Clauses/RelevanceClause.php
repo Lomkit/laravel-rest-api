@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use InvalidArgumentException;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Text\QueryTextSearch;
 use Lomkit\Rest\Text\ResolvedText;
 use Lomkit\Rest\Text\TextQuery;
-use Lomkit\Rest\Text\TextSearch;
 use Lomkit\Rest\Text\TextTarget;
 
 final readonly class RelevanceClause implements Clause
@@ -17,7 +17,7 @@ final readonly class RelevanceClause implements Clause
     public const string FIELD = '@relevance';
 
     public function __construct(
-        private TextSearch $strategy,
+        private QueryTextSearch $strategy,
         private TextQuery $text,
         private TextTarget $target,
         private SortDirection $direction = SortDirection::Desc,

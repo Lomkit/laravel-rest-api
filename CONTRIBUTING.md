@@ -58,6 +58,42 @@ composer test
 composer update
 ```
 
+Laravel Scout is a development dependency, and the package must work without it. The CI runs the suite without Scout, leaving out the tests that need it:
+
+```bash
+composer remove --dev laravel/scout --no-update
+composer update
+vendor/bin/phpunit --exclude-group scout --exclude-group meilisearch --exclude-group typesense --exclude-group algolia
+git checkout composer.json
+composer update
+```
+
+The Meilisearch, Typesense and Algolia tests are in the `meilisearch`, `typesense` and `algolia` groups, which `phpunit.xml` leaves out. The Meilisearch and Typesense tests run against real servers, and the Algolia tests replay recorded responses. The Turbopuffer tests need no extra library and run with the suite. To run them, start the servers and add the engine clients:
+
+```bash
+docker run -d --rm --name lrapi-meilisearch -e MEILI_MASTER_KEY=masterKey123456 -e MEILI_NO_ANALYTICS=true -p 7700:7700 getmeili/meilisearch:v1.55.0
+docker run -d --rm --name lrapi-typesense -e TYPESENSE_API_KEY=xyz123 -e TYPESENSE_DATA_DIR=/tmp -p 8108:8108 typesense/typesense:30.1
+composer config allow-plugins.php-http/discovery true
+composer require --dev --no-update "meilisearch/meilisearch-php:^1.17" "typesense/typesense-php:^4.9.3" "algolia/algoliasearch-client-php:^4.0"
+composer update
+```
+
+Then run the groups. Without `MEILISEARCH_HOST` or `TYPESENSE_HOST`, the tests of that engine are skipped:
+
+```bash
+MEILISEARCH_HOST=http://127.0.0.1:7700 MEILISEARCH_KEY=masterKey123456 \
+TYPESENSE_HOST=127.0.0.1 TYPESENSE_PORT=8108 TYPESENSE_PROTOCOL=http TYPESENSE_API_KEY=xyz123 \
+vendor/bin/phpunit --group meilisearch --group typesense --group algolia
+```
+
+Stop the servers and restore `composer.json` when you are done:
+
+```bash
+docker stop lrapi-meilisearch lrapi-typesense
+git checkout composer.json
+composer update
+```
+
 Add a test for each bug fix and each new feature.
 
 ### Writing tests
@@ -68,6 +104,8 @@ Write new tests in `tests/Feature` or `tests/Unit`:
 - A fixture is a small domain in `tests/Fixtures/<Domain>`: models, factories, migrations, resources and routes. It implements `Lomkit\Rest\Tests\Fixtures\Fixture`.
 - Test methods use the `#[Test]` attribute and are named `it_...`.
 - Use fixed values, not Faker, and write the expected responses by hand.
+- A test class that registers a resource whose model uses `Laravel\Scout\Searchable`, or whose `text()` is a `ScoutEngine`, carries `#[Group('scout')]` on the class. Each concrete class needs the attribute, because PHPUnit does not inherit it.
+- A search engine test extends the base test case of its engine in `tests/Feature/Text/Engine/<Engine>` and carries `#[Group('scout')]` and the group of its engine. `tests/Unit/Text/EngineArchitectureTest.php` checks it.
 
 Pure unit tests that need neither the container nor the database extend PHPUnit's `TestCase`.
 
@@ -130,8 +168,6 @@ It does not check the return values of closures, arrow functions and functions, 
 These members have no native type and the extension does not report them. Type them when you change their file, then remove them from this list:
 
 - `$items`, `$total`, `$perPage`, `$currentPage` and `$meta` of `Lomkit\Rest\Pagination\LengthAwarePaginator::__construct()`
-- `$disable` of `Lomkit\Rest\Query\Builder::disableDefaultLimit()`
-- `Lomkit\Rest\Query\Builder::$resource` and `Lomkit\Rest\Query\ScoutBuilder::$resource`
 
 `phpstan-baseline.neon` lists the errors that existed when the analysis was added or made stricter. The baseline must only shrink:
 

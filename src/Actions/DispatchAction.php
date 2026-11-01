@@ -44,6 +44,8 @@ class DispatchAction
      */
     protected $batchJob;
 
+    private readonly ?EngineTargets $engineTargets;
+
     /**
      * Create a new action dispatcher instance.
      *
@@ -55,6 +57,7 @@ class DispatchAction
         $this->request = $request;
         $this->action = $action;
         $this->fields = $fields;
+        $this->engineTargets = EngineTargets::of($request, $action);
 
         if ($action instanceof BatchableAction) {
             $this->configureBatchJob($action, $fields);
@@ -119,6 +122,10 @@ class DispatchAction
      */
     public function handleClassic(int $chunkCount)
     {
+        if ($this->engineTargets !== null) {
+            return $this->engineTargets->dispatch($this->forModels(...));
+        }
+
         $query = $this->modelsQuery($this->request->input('search', []));
 
         return $this->request

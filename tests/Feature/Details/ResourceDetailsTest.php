@@ -78,6 +78,7 @@ class ResourceDetailsTest extends PackageTestCase
                         ['name' => 'min_views', 'type' => 'integer', 'nullable' => true, 'default' => null, 'rules' => ['nullable', 'integer'], 'meta' => []],
                     ],
                     'meta' => ['group' => 'ranking'],
+                    'text' => false,
                 ],
                 [
                     'name' => 'In Status',
@@ -87,11 +88,10 @@ class ResourceDetailsTest extends PackageTestCase
                         ['name' => 'since', 'type' => 'date', 'nullable' => false, 'default' => null, 'rules' => ['date', 'required_if:status,published'], 'meta' => []],
                     ],
                     'meta' => [],
+                    'text' => false,
                 ],
             ],
-            'scout_instructions' => [],
             'fields' => ['id', 'title', 'summary', 'status', 'featured', 'views', 'rating', 'published_on', 'published_at', 'metadata'],
-            'scout_fields' => [],
             'limits' => [10, 25, 50],
             'scopes' => [
                 [
@@ -149,24 +149,22 @@ class ResourceDetailsTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_describes_the_relations_and_the_scout_instructions(): void
+    public function it_describes_the_relations_and_the_instructions_of_a_resource_without_text_search(): void
     {
-        $pricedAt = [
-            'name' => 'Priced At',
-            'uriKey' => 'priced-at',
-            'fields' => [
-                ['name' => 'price', 'type' => 'integer', 'nullable' => false, 'default' => null, 'rules' => ['integer', 'required'], 'meta' => []],
-            ],
-            'meta' => [],
-        ];
-
         $response = $this->getJson('/api/products');
 
         $response->assertOk()->assertExactJson(['data' => [
             'actions' => [],
-            'instructions' => [$pricedAt],
-            'scout_instructions' => [
-                $pricedAt,
+            'instructions' => [
+                [
+                    'name' => 'Priced At',
+                    'uriKey' => 'priced-at',
+                    'fields' => [
+                        ['name' => 'price', 'type' => 'integer', 'nullable' => false, 'default' => null, 'rules' => ['integer', 'required'], 'meta' => []],
+                    ],
+                    'meta' => [],
+                    'text' => false,
+                ],
                 [
                     'name' => 'Priced Between',
                     'uriKey' => 'priced-between',
@@ -175,10 +173,10 @@ class ResourceDetailsTest extends PackageTestCase
                         ['name' => 'max', 'type' => 'integer', 'nullable' => false, 'default' => null, 'rules' => ['integer', 'required'], 'meta' => []],
                     ],
                     'meta' => [],
+                    'text' => false,
                 ],
             ],
             'fields' => ['id', 'category_id', 'name', 'price'],
-            'scout_fields' => ['category_id', 'price'],
             'limits' => [10, 25, 50],
             'scopes' => [],
             'relations' => [

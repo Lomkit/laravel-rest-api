@@ -53,6 +53,11 @@ trait ConfiguresFiltering
         return $this->filterOperators() !== [];
     }
 
+    public function filtersThroughCallback(): bool
+    {
+        return $this->filterUsing !== null;
+    }
+
     public function filter(Builder $query, FilterOperator|string $operator, mixed $value, string $boolean = 'and', ?string $column = null): void
     {
         $operator = $this->declaredOperator($operator);

@@ -92,6 +92,11 @@ trait ConfiguresReading
         return $this->sortUsing !== null || $this->isSortableByColumn();
     }
 
+    public function sortsThroughCallback(): bool
+    {
+        return $this->sortUsing !== null;
+    }
+
     public function isSortableByColumn(): bool
     {
         return ($this->sortable ?? $this->sortableByDefault()) && ! $this->virtual && ! $this->isWriteOnly();
