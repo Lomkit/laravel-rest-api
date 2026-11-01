@@ -12,14 +12,13 @@ use Illuminate\Support\Facades\Queue;
 use Lomkit\Rest\Contracts\BatchableAction;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Http\Requests\OperateRequest;
-use Lomkit\Rest\Http\Requests\RestRequest;
 
 class DispatchAction
 {
     /**
      * The request instance.
      *
-     * @var RestRequest
+     * @var OperateRequest
      */
     protected $request;
 
@@ -147,7 +146,7 @@ class DispatchAction
     public function handleTargeted(int $chunkCount)
     {
         return $this->dispatchInChunks(
-            $this->modelsQuery()->whereKey($this->request->input('resources', [])),
+            $this->request->targetKeys()->constrain($this->modelsQuery()),
             $chunkCount
         );
     }

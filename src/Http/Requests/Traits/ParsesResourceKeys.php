@@ -51,6 +51,10 @@ trait ParsesResourceKeys
 
     protected function resourceKeys(): KeyList
     {
+        if ($this->passedKeyValidation && $this->keyList === null) {
+            throw new LogicException('The request has no resource keys.');
+        }
+
         if ($this->keyList === null || $this->keyViolations?->isEmpty() !== true || ! $this->passedKeyValidation) {
             throw new LogicException('The resource keys were read before the request passed validation.');
         }

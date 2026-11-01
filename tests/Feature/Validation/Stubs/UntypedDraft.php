@@ -1,6 +1,6 @@
 <?php
 
-namespace Lomkit\Rest\Tests\Feature\Deletion\Stubs;
+namespace Lomkit\Rest\Tests\Feature\Validation\Stubs;
 
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;

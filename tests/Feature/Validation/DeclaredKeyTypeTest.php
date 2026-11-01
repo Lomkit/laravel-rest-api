@@ -1,10 +1,12 @@
 <?php
 
-namespace Lomkit\Rest\Tests\Feature\Deletion;
+namespace Lomkit\Rest\Tests\Feature\Validation;
 
+use LogicException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
-use Lomkit\Rest\Tests\Feature\Deletion\Stubs\UntypedDraftController;
+use Lomkit\Rest\Tests\Feature\Validation\Stubs\TargetKeysReadingController;
+use Lomkit\Rest\Tests\Feature\Validation\Stubs\UntypedDraftController;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Draft;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
@@ -23,9 +25,11 @@ class DeclaredKeyTypeTest extends PackageTestCase
         return [new Publishing];
     }
 
-    #[Test]
-    public function it_destroys_only_the_named_key_when_the_model_keeps_the_default_key_type(): void
+    #[\Override]
+    protected function setUp(): void
     {
+        parent::setUp();
+
         Rest::resource('untyped-drafts', UntypedDraftController::class)->register();
         $author = Author::factory()->create(['id' => 1]);
 
@@ -34,7 +38,11 @@ class DeclaredKeyTypeTest extends PackageTestCase
                 ->for($author)
                 ->create(['id' => $id, 'title' => $title]);
         }
+    }
 
+    #[Test]
+    public function it_destroys_only_the_named_key_when_the_model_keeps_the_default_key_type(): void
+    {
         $this->captureQueries();
 
         $response = $this->deleteJson('/untyped-drafts', ['resources' => [self::NAMED]]);
@@ -49,5 +57,35 @@ class DeclaredKeyTypeTest extends PackageTestCase
                 ->pluck('id')
                 ->all(),
         );
+    }
+
+    #[Test]
+    public function it_acts_only_on_the_named_key_when_the_model_keeps_the_default_key_type(): void
+    {
+        $this->captureQueries();
+
+        $response = $this->postJson('/untyped-drafts/actions/retitle-untyped-drafts', ['resources' => [self::NAMED]]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1]]);
+        $this->assertCount(1, $this->keyQueries('drafts'));
+        $this->assertSame([[self::NAMED], [self::NAMED]], array_column($this->readsOf('drafts'), 1));
+        $this->assertSame(
+            ['Retitled', 'Summer plan', 'Autumn plan'],
+            Draft::query()
+                ->orderBy('id')
+                ->pluck('title')
+                ->all(),
+        );
+    }
+
+    #[Test]
+    public function it_has_no_target_keys_on_an_action_that_is_not_targeted(): void
+    {
+        Rest::resource('reading-drafts', TargetKeysReadingController::class)->register();
+        $this->withoutExceptionHandling();
+
+        $this->expectExceptionObject(new LogicException('The request has no resource keys.'));
+
+        $this->postJson('/reading-drafts/actions/count-untyped-drafts');
     }
 }

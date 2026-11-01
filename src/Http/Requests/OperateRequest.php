@@ -18,6 +18,7 @@ use Lomkit\Rest\Rules\Input\InputFields;
 use Lomkit\Rest\Rules\MaxItems;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\Search\Search;
+use Lomkit\Rest\Validation\KeyList;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OperateRequest extends RestRequest
@@ -104,6 +105,11 @@ class OperateRequest extends RestRequest
                 new OneOf($fields->names()),
             ],
         ];
+    }
+
+    public function targetKeys(): KeyList
+    {
+        return $this->resourceKeys();
     }
 
     /** @return Builder<Model> */

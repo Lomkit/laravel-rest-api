@@ -1,6 +1,6 @@
 <?php
 
-namespace Lomkit\Rest\Tests\Feature\Deletion\Stubs;
+namespace Lomkit\Rest\Tests\Feature\Validation\Stubs;
 
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
@@ -18,5 +18,11 @@ class UntypedDraftResource extends Resource
             ID::make('id')->keyType('uuid'),
             Text::make('title'),
         ];
+    }
+
+    #[\Override]
+    public function actions(RestRequest $request): array
+    {
+        return [RetitleUntypedDrafts::make(), CountUntypedDrafts::make()];
     }
 }
