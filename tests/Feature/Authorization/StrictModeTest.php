@@ -64,6 +64,20 @@ class StrictModeTest extends HelpdeskTestCase
     }
 
     #[Test]
+    public function it_evaluates_a_check_the_request_did_not_plan_when_strict_mode_is_the_string_false(): void
+    {
+        $this->withoutReach();
+        config(['rest.authorizations.strict' => 'false']);
+        $this->seedTickets();
+
+        $this->postJson('/api/tickets/search', self::TEAM_INCLUDE)
+            ->assertOk()
+            ->assertJsonPath('total', 4);
+
+        $this->assertSame(['viewAny'], $this->teams->calls);
+    }
+
+    #[Test]
     public function it_refuses_a_check_the_request_did_not_plan_outside_strict_mode(): void
     {
         $this->withoutReach();

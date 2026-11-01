@@ -83,23 +83,23 @@ class Resource implements \JsonSerializable
 
     public function isGatingEnabled(): bool
     {
-        return config('rest.gates.enabled', true);
+        return true;
     }
 
     public function isAuthorizingEnabled(): bool
     {
-        return config('rest.authorizations.enabled', true);
+        return true;
     }
 
     public function isAuthorizationCacheEnabled(): bool
     {
-        return config('rest.authorizations.cache.enabled', false);
+        return $this->context()->config()->cacheEnabled;
     }
 
     /** @return \DateTimeInterface|\DateInterval */
     public function cacheAuthorizationFor()
     {
-        return now()->addMinutes(config('rest.authorizations.cache.default', 5));
+        return now()->addMinutes($this->context()->config()->cacheMinutes);
     }
 
     #[\Override]

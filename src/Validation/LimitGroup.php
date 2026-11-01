@@ -2,7 +2,8 @@
 
 namespace Lomkit\Rest\Validation;
 
-use InvalidArgumentException;
+use Lomkit\Rest\Config\ConfigValue;
+use Lomkit\Rest\Exceptions\InvalidConfigException;
 
 final readonly class LimitGroup
 {
@@ -12,25 +13,32 @@ final readonly class LimitGroup
         private array $values,
     ) {}
 
-    public static function of(mixed $limits, string $name): self
+    /** @param list<string> $keys */
+    public static function of(mixed $limits, string $name, array $keys): self
     {
         $values = is_array($limits) ? ($limits[$name] ?? null) : null;
+        $values = is_array($values) ? $values : [];
 
-        return new self("rest.limits.{$name}", is_array($values) ? $values : []);
+        self::refuseUnknown("rest.limits.{$name}", $values, $keys);
+
+        return new self("rest.limits.{$name}", $values);
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $values
+     * @param  list<string>  $keys
+     */
+    public static function refuseUnknown(string $path, array $values, array $keys): void
+    {
+        foreach (array_keys($values) as $key) {
+            if (! in_array($key, $keys, true)) {
+                throw InvalidConfigException::unknown("{$path}.{$key}");
+            }
+        }
     }
 
     public function read(string $key): int
     {
-        $value = $this->values[$key] ?? null;
-
-        if (is_int($value) && $value >= 0) {
-            return $value;
-        }
-
-        if (is_string($value) && ctype_digit($value)) {
-            return (int) $value;
-        }
-
-        throw new InvalidArgumentException("The [{$this->path}.{$key}] option must be an integer of 0 or more.");
+        return ConfigValue::at("{$this->path}.{$key}", $this->values[$key] ?? null)->integer();
     }
 }

@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Unit\Validation;
 
 use Closure;
 use InvalidArgumentException;
+use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Validation\Limits;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -105,6 +106,37 @@ class LimitsTest extends TestCase
         Limits::fromConfig(null);
     }
 
+    #[Test]
+    #[DataProvider('unknownKeys')]
+    public function it_names_an_unknown_key_of_a_group(string $group, int|string $key): void
+    {
+        $this->expectExceptionObject(new InvalidConfigException("The [rest.limits.{$group}.{$key}] option does not exist."));
+
+        Limits::fromConfig($this->withLimit($group, $key, 50));
+    }
+
+    #[Test]
+    public function it_names_an_unknown_group_of_the_limits(): void
+    {
+        $config = $this->packageLimits();
+        $config['size'] = ['filters' => 50];
+
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.limits.size] option does not exist.'));
+
+        Limits::fromConfig($config);
+    }
+
+    /** @return array<string, array{string, int|string}> */
+    public static function unknownKeys(): array
+    {
+        return [
+            'a size in the singular' => ['sizes', 'filter'],
+            'a depth of a list that does not nest' => ['depths', 'sorts'],
+            'a total of one list' => ['totals', 'includes'],
+            'a numeric key' => ['sizes', 0],
+        ];
+    }
+
     /** @return array<string, array{string, string, Closure(Limits): int}> */
     public static function keyPaths(): array
     {
@@ -166,7 +198,7 @@ class LimitsTest extends TestCase
     }
 
     /** @return array<array-key, mixed> */
-    private function withLimit(string $group, string $key, mixed $value): array
+    private function withLimit(string $group, int|string $key, mixed $value): array
     {
         $config = $this->packageLimits();
         $this->assertIsArray($config[$group]);

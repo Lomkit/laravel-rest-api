@@ -2,8 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\RequestLifecycle;
 
+use DateTimeInterface;
 use Illuminate\Http\Request;
-use InvalidArgumentException;
+use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
@@ -99,29 +100,47 @@ class RestContextTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_reads_the_config_once_per_request(): void
+    {
+        config(['rest.gates.key' => 'abilities']);
+        $context = $this->contextFor(null);
+
+        $first = $context->config()->gatesKey;
+        config(['rest.gates.key' => 'permissions']);
+
+        $this->assertSame(['abilities', 'abilities', 'permissions'], [$first, $context->config()->gatesKey, $this->contextFor(null)->config()->gatesKey]);
+        $this->assertSame($context->config(), $context->config());
+    }
+
+    #[Test]
+    public function it_names_the_key_of_a_config_value_of_the_wrong_type(): void
+    {
+        config(['rest.authorizations.cache.default' => 'five']);
+
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.authorizations.cache.default] option must be an integer of 0 or more.'));
+
+        $this->contextFor(null)->config();
+    }
+
+    #[Test]
+    public function it_keeps_the_decisions_for_the_minutes_of_the_config(): void
+    {
+        config(['rest.authorizations.cache.default' => '15']);
+        $this->travelTo('2026-11-01 10:00:00');
+
+        $resource = $this->contextFor(null)->resource(ProductResource::class);
+        $expiry = $resource->cacheAuthorizationFor();
+
+        $this->assertInstanceOf(DateTimeInterface::class, $expiry);
+        $this->assertSame('2026-11-01 10:15:00', $expiry->format('Y-m-d H:i:s'));
+    }
+
+    #[Test]
     public function it_reads_a_filter_depth_given_as_a_numeric_string(): void
     {
         config(['rest.limits.depths.filters' => '2']);
 
         $this->assertSame(2, $this->contextFor(null)->limits()->depths->filters);
-    }
-
-    #[Test]
-    public function it_refuses_the_filter_depth_at_its_former_key(): void
-    {
-        config(['rest.search.max_nesting_depth' => 1]);
-
-        $this->expectExceptionObject(new InvalidArgumentException('The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters].'));
-
-        $this->contextFor(null)->limits();
-    }
-
-    #[Test]
-    public function it_reads_the_limits_next_to_a_former_filter_depth_set_to_null(): void
-    {
-        config(['rest.search' => ['max_nesting_depth' => null]]);
-
-        $this->assertSame(1, $this->contextFor(null)->limits()->depths->filters);
     }
 
     private function contextFor(?User $user): RestContext

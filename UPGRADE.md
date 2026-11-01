@@ -10,6 +10,162 @@ Version 3.0 is in development on the `3.x` branch. This guide lists each breakin
 - Laravel 13.30 or later. Applications on Laravel 12 stay on 2.x, and applications on an earlier Laravel 13 release update Laravel first: `composer update laravel/framework`.
 - Laravel Scout 11.9 or later, when Scout is installed: Composer refuses earlier releases next to the package. Scout is only needed for the `ScoutEngine` text search, see [Search engines](#search-engines).
 
+### Configuration
+
+This section lists each change to `config/rest.php`. Compare your published file with `vendor/lomkit/laravel-rest-api/config/rest.php`, then apply the changes below.
+
+`authorizations.enabled` and `gates.enabled` are removed. To turn the policies or the gates off for the whole application, add the `DisableAuthorizations` or the `DisableGates` trait to your base resource, `app/Rest/Resources/Resource.php`, which your resources extend:
+
+```php
+namespace App\Rest\Resources;
+
+use Lomkit\Rest\Concerns\Resource\DisableAuthorizations;
+use Lomkit\Rest\Concerns\Resource\DisableGates;
+use Lomkit\Rest\Http\Resource as RestResource;
+
+abstract class Resource extends RestResource
+{
+    use DisableAuthorizations;
+    use DisableGates;
+}
+```
+
+`Resource::isAuthorizingEnabled()` and `Resource::isGatingEnabled()` return `true` and no longer read the config. The traits override them, and so can a resource of yours.
+
+The keys that change:
+
+| Key | Change |
+| --- | --- |
+| `authorizations.enabled` | Removed. Use the `DisableAuthorizations` trait. |
+| `gates.enabled` | Removed. Use the `DisableGates` trait. |
+| `authorizations.strict` | Added. `false` by default, or the value of `REST_AUTHORIZATIONS_STRICT`. |
+| `authorizations.cache.enabled` | Its default goes from `true` to `false`, or the value of `REST_AUTHORIZATIONS_CACHE_ENABLED`. |
+| `limits` | Added, in three groups: `sizes`, `depths` and `totals`. |
+| `search.max_nesting_depth` | Moved to `limits.depths.filters`. The `search` block is removed. |
+| `documentation` | Removed with the documentation generator. |
+
+`authorizations.cache.default`, `gates.key`, `gates.message.enabled`, `gates.names` and `precognition.enabled` keep their name and their default. The blocks are now in this order: `authorizations`, `gates`, `limits`, `precognition`.
+
+Before, in the file that 2.x published, without its comments and its `documentation` block:
+
+```php
+'gates' => [
+    'enabled' => true,
+    'key' => 'gates',
+    'message' => [
+        'enabled' => false,
+    ],
+    'names' => [
+        // the six names below
+    ],
+],
+
+'authorizations' => [
+    'enabled' => true,
+    'cache' => [
+        'enabled' => true,
+        'default' => 5,
+    ],
+],
+
+'search' => [
+    'max_nesting_depth' => 1,
+],
+
+'precognition' => [
+    'enabled' => false,
+],
+```
+
+After, in 3.0:
+
+```php
+'authorizations' => [
+    'strict' => env('REST_AUTHORIZATIONS_STRICT', false),
+
+    'cache' => [
+        'enabled' => env('REST_AUTHORIZATIONS_CACHE_ENABLED', false),
+        'default' => 5,
+    ],
+],
+
+'gates' => [
+    'key' => 'gates',
+
+    'message' => [
+        'enabled' => false,
+    ],
+
+    'names' => [
+        'authorized_to_view' => 'authorized_to_view',
+        'authorized_to_create' => 'authorized_to_create',
+        'authorized_to_update' => 'authorized_to_update',
+        'authorized_to_delete' => 'authorized_to_delete',
+        'authorized_to_restore' => 'authorized_to_restore',
+        'authorized_to_force_delete' => 'authorized_to_force_delete',
+    ],
+],
+
+'limits' => [
+    'sizes' => [
+        'filters' => 100,
+        'sorts' => 20,
+        'selects' => 100,
+        'scopes' => 10,
+        'aggregates' => 20,
+        'includes' => 20,
+        'instructions' => 10,
+        'gates' => 7,
+        'fields' => 100,
+        'values' => 100,
+        'mutate' => 100,
+        'relation_entries' => 100,
+        'resources' => 1000,
+    ],
+
+    'depths' => [
+        'filters' => 1,
+        'includes' => 3,
+        'mutations' => 3,
+    ],
+
+    'totals' => [
+        'filters' => 500,
+        'entries' => 1000,
+    ],
+],
+
+'precognition' => [
+    'enabled' => false,
+],
+```
+
+Authorizations:
+
+- `authorizations.strict` turns strict mode on, see "Checks the request did not plan" in [Authorization](#authorization). Turn it on in your test suite, for example with `<env name="REST_AUTHORIZATIONS_STRICT" value="true"/>` in `phpunit.xml`.
+- The cache of decisions between requests is off by default. A published file keeps its own value, `true` in the 2.x file: write `env('REST_AUTHORIZATIONS_CACHE_ENABLED', false)` there unless you want the cache. `REST_AUTHORIZATIONS_CACHE_ENABLED=true` turns it on. See "Cache" in [Authorization](#authorization).
+
+Limits:
+
+- The `limits` block sets the most entries of each list of a request, how deep filters, includes and relations nest, and two totals. See "Limits" in [Validation engine](#validation-engine) for what each key covers.
+- `search.max_nesting_depth` moved to `limits.depths.filters`, with the same default of 1 and the same meaning. Move its value to the new key and remove the `search` block.
+
+Published files:
+
+- The package defaults merge into your published `config/rest.php` at every level. A nested key that your file leaves out, such as `gates.names.authorized_to_restore` or `limits.sizes.filters`, gets its default value. Before, a top-level key such as `gates` replaced all the defaults under it.
+- Remove from your file the keys that 3.0 removed or moved: `authorizations.enabled`, `gates.enabled`, `search.max_nesting_depth` and the `documentation` block, after moving the value of `search.max_nesting_depth` to `limits.depths.filters`.
+- A key under `limits` that the package does not know throws an exception that names it, so that a typo does not keep the default without notice: "The [rest.limits.sizes.filter] option does not exist." An unknown key elsewhere is ignored.
+
+Types:
+
+- Each request reads the values once, and checks their type. A value of the wrong type throws an exception that names the key. Before, the values were cast without a check: the string `"false"` turned strict mode, the cache, the gate messages and Precognition on.
+  - `authorizations.strict`, `authorizations.cache.enabled`, `gates.message.enabled` and `precognition.enabled` take `true`, `false`, or the strings `"1"`, `"0"`, `"true"` and `"false"`. Anything else throws, `null` included: "The [rest.authorizations.strict] option must be a boolean."
+  - `authorizations.cache.default` and each value of `limits` take an integer of 0 or more, or a string of digits, as `env()` gives it: "The [rest.limits.sizes.filters] option must be an integer of 0 or more."
+  - `gates.key` takes a string that is not empty: "The [rest.gates.key] option must be a non-empty string."
+  - `gates.names` takes a map of strings that holds the six names above: "The [rest.gates.names] option must be a map of strings." for another value, and "The [rest.gates.names.authorized_to_view] option must be a string." for a missing name or one that is not a string.
+- `precognition.enabled` is read when the routes are registered, `limits` when a request first reads the limits, and the other values together, the first time a request needs one of them.
+- The exception is `Lomkit\Rest\Exceptions\InvalidConfigException`, which extends `InvalidArgumentException`.
+
 ### Built-in documentation generator removed
 
 The package no longer generates its own OpenAPI document. The Scramble extension is now the only way to document the API.
@@ -18,17 +174,16 @@ These items are removed:
 
 - the `/api-documentation` route and its Swagger UI page
 - the `rest:documentation` and `rest:documentation-provider` commands, and the `rest.rest-documentation-service-provider.stub` stub
-- the `documentation` key of `config/rest.php`
+- the `documentation` key of `config/rest.php`, see [Configuration](#configuration)
 - `Rest::withDocumentationCallback()`
 - the `Lomkit\Rest\Documentation` namespace
 - the controller methods `generateDocumentation*Operation()` and their trait, `ExtendsDocumentationOperations`
 
 To upgrade:
 
-1. Remove the `documentation` key from your published `config/rest.php`.
-2. Remove the calls to `Rest::withDocumentationCallback()`, and the service provider that `rest:documentation-provider` created.
-3. Remove the `generateDocumentation*Operation()` methods from your controllers.
-4. Install `dedoc/scramble` 0.13. The package registers its extension, so `config/scramble.php` needs no change. If you added `Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension` to its `extensions`, you can remove it.
+1. Remove the calls to `Rest::withDocumentationCallback()`, and the service provider that `rest:documentation-provider` created.
+2. Remove the `generateDocumentation*Operation()` methods from your controllers.
+3. Install `dedoc/scramble` 0.13. The package registers its extension, so `config/scramble.php` needs no change. If you added `Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension` to its `extensions`, you can remove it.
 
 ### Request context
 
@@ -513,37 +668,7 @@ Payloads:
 
 Limits:
 
-- Each list of a request accepts a limited number of entries, filters, includes and relation operations nest up to a set depth, and two totals bound one request. The values are in the new `limits` block of `config/rest.php`, in three groups:
-
-  ```php
-  'limits' => [
-      'sizes' => [
-          'filters' => 100,
-          'sorts' => 20,
-          'selects' => 100,
-          'scopes' => 10,
-          'aggregates' => 20,
-          'includes' => 20,
-          'instructions' => 10,
-          'gates' => 7,
-          'fields' => 100,
-          'values' => 100,
-          'mutate' => 100,
-          'relation_entries' => 100,
-          'resources' => 1000,
-      ],
-      'depths' => [
-          'filters' => 1,
-          'includes' => 3,
-          'mutations' => 3,
-      ],
-      'totals' => [
-          'filters' => 500,
-          'entries' => 1000,
-      ],
-  ],
-  ```
-
+- Each list of a request accepts a limited number of entries, filters, includes and relation operations nest up to a set depth, and two totals bound one request. The values are in the new `limits` block of `config/rest.php`, in three groups, `sizes`, `depths` and `totals`. See [Configuration](#configuration) for the block, its defaults and the values it accepts.
 - Each key of `sizes` applies to these lists, at every level of a search, including the search of an include and of an action:
   - `filters`: `search.filters`, each `nested` group, and the `filters` of includes and aggregates;
   - `sorts`, `selects`, `scopes`, `aggregates`, `includes`, `instructions` and `gates`: the list of that name;
@@ -560,8 +685,7 @@ Limits:
 - A list over its limit gets a 422 on its own key, such as `search.filters`: "The search.filters field must not have more than 100 items." This message comes first on the key, and the entries of the list are not validated.
 - Includes nest up to `depths.includes` levels, 3 by default. A fourth level gives a 422: "The search.includes.0.includes.0.includes.0.includes field is prohibited." Relations in `mutate` nest up to `depths.mutations` levels, 3 by default: "The mutate.0.relations.products.0.relations.category.relations.products.0.relations field is prohibited." An empty list passes at that depth.
 - The two totals give a 422 on the list that goes over them: "The search.includes.0.filters field goes over the limit of 500 filters in one search." for `totals.filters`, and "The search.selects field goes over the limit of 1000 list entries in one request." for `totals.entries`. A later list that does not fit is refused without a second message.
-- `rest.search.max_nesting_depth` moved to `rest.limits.depths.filters`, with the same default of 1 and the same meaning, and the `search` block of `config/rest.php` is removed. A `config/rest.php` that still sets the old key throws an `InvalidArgumentException` when a request reads the limits: "The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters]." Move its value to the new key and remove the `search` block.
-- Filters nest up to `depths.filters` levels, 1 by default. Each `nested` key counts as one level, so 1 allows a single group of filters. A text search run by a search engine never nests filters. Each `nested` list takes the `sizes.filters` limit and counts in `totals.filters`. Nothing below a group refused at that depth is validated: the request only gets the error on its `nested` key.
+- Filters nest up to `depths.filters` levels, 1 by default, which replaces `search.max_nesting_depth`, see [Configuration](#configuration). Each `nested` key counts as one level, so 1 allows a single group of filters. A text search run by a search engine never nests filters. Each `nested` list takes the `sizes.filters` limit and counts in `totals.filters`. Nothing below a group refused at that depth is validated: the request only gets the error on its `nested` key.
 - On a search engine, `search.sorts` accepts the smaller of `sizes.sorts` and the number of sorts the engine runs, with the same message.
 - `search.aggregates.*.filters` must be an array: "The search.aggregates.0.filters field must be an array." Before, it was not validated.
 - What a refused list holds is not checked: the `viewAny` check of a relation it names and the `create` check of a mutation entry in it do not run. This covers a list over its limit or over a total, `includes` at `depths.includes`, `relations` at `depths.mutations` and a `nested` group at `depths.filters`. Such a request gets the 422 of the refused key, where it got a 403 before. The checks of the other parts of the payload still run first, and one that fails there still gives a 403.
@@ -574,7 +698,6 @@ Limits:
 - Laravel's `list` rule still checks the `fields` of actions and instructions, the values of a filter and the `parameters` of a scope, and Laravel's `max` rule still limits the `parameters` of a scope. Custom messages keyed by these rules still apply there.
 - Laravel's lines `validation.max.array`, `validation.list`, `validation.distinct`, `validation.exists` and the type lines still apply, and the two total texts are JSON translation keys.
 - These limits are not the page sizes of a resource, which `limits()` returns.
-- A `config/rest.php` published before takes the defaults of the keys it leaves out. A value must be an integer of 0 or more, or a string of digits, as `env()` gives. Anything else throws an `InvalidArgumentException` that names the key: "The [rest.limits.sizes.filters] option must be an integer of 0 or more."
 - Custom nodes:
   - `Lomkit\Rest\Rules\MaxItems` limits a list and counts its entries in `totals.entries`, and `MaxItems::filters()` also counts them in `totals.filters`. Its key needs a plain rule as well, such as `array`: `'tags' => ['array', new MaxItems(20)]`.
   - `RuleCompiler::compile()` takes an optional `Lomkit\Rest\Validation\NodeBudget`, and `RuleCompiler::budget()` returns the budget of the compile.
@@ -652,12 +775,12 @@ Checks the request did not plan:
 
 - The queries still check `viewAny` on each resource they search, and `create` on each resource they create. A check that the request already made before validation is reused; another one is evaluated when the query runs.
 - The resource of the endpoint is the exception: its endpoint abilities stand in for `viewAny`. When they leave `viewAny` out (by default for `mutate`, `destroy`, `restore` and `forceDestroy`, through an override of the resource's `abilities()`, or for an action whose `abilities()` returns `[]`), the queries do not check it on that resource, and strict mode does not report it. The other resources the queries search are checked, or reported, as above.
-- With `authorizations.strict` set to `true` (`false` by default), a check that the request did not make before validation throws `Lomkit\Rest\Exceptions\UnplannedCheckException` instead. Turn it on in your test suite to find a resource that the request reaches without checking it first, for example through a custom rule node: a node records its checks in `compile()` with `$into->reach(Check::onClass($resource, 'viewAny', $attribute))` (`Lomkit\Rest\Authorization\Check`).
+- With `authorizations.strict` set to `true` (`false` by default, see [Configuration](#configuration)), a check that the request did not make before validation throws `Lomkit\Rest\Exceptions\UnplannedCheckException` instead. Turn it on in your test suite to find a resource that the request reaches without checking it first, for example through a custom rule node: a node records its checks in `compile()` with `$into->reach(Check::onClass($resource, 'viewAny', $attribute))` (`Lomkit\Rest\Authorization\Check`).
 - A `Lomkit\Rest\Query\Builder` used outside a request evaluates `viewAny` when it searches. In strict mode, plan it first: `$resource->context()->authorizer()->plan([Check::onClass($resource, 'viewAny')])`.
 
 Cache:
 
-- The cache is off by default: `authorizations.cache.enabled` is `false`. A published `config/rest.php` keeps its own value, so set it to `false` there unless you want the cache.
+- The cache is off by default, see [Configuration](#configuration).
 - When the cache is on, a decision is stored as an array of scalars (`allowed`, `message`, `code` and `status`), not as a `Response` object, so it reads back with any store, including the `file` and `database` stores with `cache.serializable_classes` set to `false`.
 - The cache key holds the guard, the user class and key, the resource class, the ability, and the class and key of each model. Entries written under the previous keys are not read anymore and expire on their own.
 - A model whose key is cast to an enum is keyed by the value of the enum. Checks on a model that is not saved yet, or whose key is not a string, an integer or an enum, are neither cached nor shared with another check of the request.
@@ -1030,7 +1153,7 @@ Scramble:
     ```
 
 - The `lomkit-rest` container alias is removed. Resolve `Lomkit\Rest\Rest` by its class name, or use the `Lomkit\Rest\Facades\Rest` facade. The container and the facade now return the same instance.
-- The package defaults merge into your published `config/rest.php` at every level. A nested key that your file leaves out, such as `gates.names.authorized_to_restore` or `gates.message.enabled`, now gets its default value. Before, a top-level key such as `gates` replaced all the defaults under it.
+- The package defaults merge into your published `config/rest.php` at every level, see [Configuration](#configuration).
 - The keys in `resources` are checked on the connection of the model, through the query of the endpoint, see "Resource keys" in [Validation engine](#validation-engine). Before, `destroy` checked them on the default connection.
 
 ### Generators

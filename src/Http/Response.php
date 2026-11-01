@@ -34,18 +34,19 @@ class Response implements Responsable
 
     protected function buildGatesForModel(Model|string $model, Resource $resource, array $gates)
     {
+        $config = $resource->context()->config();
         $nameMap = [
-            'create' => config('rest.gates.names.authorized_to_create'),
-            'view' => config('rest.gates.names.authorized_to_view'),
-            'update' => config('rest.gates.names.authorized_to_update'),
-            'delete' => config('rest.gates.names.authorized_to_delete'),
-            'restore' => config('rest.gates.names.authorized_to_restore'),
-            'forceDelete' => config('rest.gates.names.authorized_to_force_delete'),
+            'create' => $config->gateNames['authorized_to_create'],
+            'view' => $config->gateNames['authorized_to_view'],
+            'update' => $config->gateNames['authorized_to_update'],
+            'delete' => $config->gateNames['authorized_to_delete'],
+            'restore' => $config->gateNames['authorized_to_restore'],
+            'forceDelete' => $config->gateNames['authorized_to_force_delete'],
         ];
 
         $result = [];
 
-        if (config('rest.gates.message.enabled', false)) {
+        if ($config->gateMessages) {
             foreach ($gates as $gate) {
                 if (isset($nameMap[$gate])) {
                     $authorizedTo = $resource->authorizedTo($gate, $model);
@@ -102,7 +103,7 @@ class Response implements Responsable
                     $currentRequestArrayWithoutCreate = collect($requestArray['gates'])->reject(fn ($value) => $value === 'create')->toArray();
 
                     return $attributes->put(
-                        config('rest.gates.key'),
+                        $resource->context()->config()->gatesKey,
                         $this->buildGatesForModel($model, $resource, $currentRequestArrayWithoutCreate)
                     );
                 })
@@ -200,7 +201,7 @@ class Response implements Responsable
                 $this->responsable->currentPage(),
                 $this->responsable->getOptions(),
                 $this->resource->isGatingEnabled() && in_array('create', $request->array('search.gates')) ? [
-                    config('rest.gates.key') => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
+                    $this->resource->context()->config()->gatesKey => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
                 ] : []
             );
 
@@ -219,7 +220,7 @@ class Response implements Responsable
             'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->array('search'))),
             'meta' => array_merge(
                 $this->resource->isGatingEnabled() && in_array('create', $request->array('search.gates')) ? [
-                    config('rest.gates.key') => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
+                    $this->resource->context()->config()->gatesKey => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
                 ] : []
             ),
         ];

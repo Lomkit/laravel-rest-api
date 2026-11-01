@@ -2,7 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Provider;
 
-use InvalidArgumentException;
+use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Facades\Rest as RestFacade;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
@@ -24,7 +24,7 @@ class RestServiceProviderTest extends PackageTestCase
         $this->assertSame('can_view', config('rest.gates.names.authorized_to_view'));
         $this->assertSame('authorized_to_create', config('rest.gates.names.authorized_to_create'));
         $this->assertFalse(config('rest.gates.message.enabled'));
-        $this->assertTrue(config('rest.gates.enabled'));
+        $this->assertSame(['key', 'message', 'names'], array_keys((array) config('rest.gates')));
         $this->assertSame(1, config('rest.limits.depths.filters'));
         $this->assertSame(100, config('rest.limits.sizes.filters'));
         $this->assertSame(1000, config('rest.limits.totals.entries'));
@@ -73,14 +73,14 @@ class RestServiceProviderTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_keeps_the_former_filter_depth_of_a_published_config_and_refuses_it(): void
+    public function it_keeps_an_unknown_limit_of_a_published_config_and_names_it(): void
     {
-        config()->set('rest', ['search' => ['max_nesting_depth' => 1]]);
+        config()->set('rest', ['limits' => ['sizes' => ['filter' => 50]]]);
 
         $this->app->register(RestServiceProvider::class, force: true);
 
-        $this->assertSame(1, config('rest.search.max_nesting_depth'));
-        $this->expectExceptionObject(new InvalidArgumentException('The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters].'));
+        $this->assertSame(50, config('rest.limits.sizes.filter'));
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.limits.sizes.filter] option does not exist.'));
 
         $this->context()->limits();
     }

@@ -5,6 +5,7 @@ namespace Lomkit\Rest;
 use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
+use Lomkit\Rest\Config\ConfigValue;
 use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
@@ -43,7 +44,7 @@ class Rest
     /** @return list<string> */
     private function packageMiddleware(): array
     {
-        if (! (bool) $this->config->get('rest.precognition.enabled', false)) {
+        if (! ConfigValue::of($this->config, 'rest.precognition.enabled')->boolean()) {
             return [EnforceExpectsJson::class];
         }
 

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Event;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Orchestra\Testbench\Attributes\WithConfig;
+use Orchestra\Testbench\Attributes\WithEnv;
 use PHPUnit\Framework\Attributes\Test;
 
 class DecisionStoreKeysTest extends HelpdeskTestCase
@@ -34,6 +35,36 @@ class DecisionStoreKeysTest extends HelpdeskTestCase
         $this->assertFalse(config('rest.authorizations.cache.enabled'));
         $this->assertSame([], $events);
         $this->assertSame(['viewAny', 'viewAny'], $this->tickets->calls);
+    }
+
+    #[Test]
+    #[WithConfig('rest.authorizations.cache.enabled', 'false')]
+    public function it_leaves_the_cache_alone_when_its_option_is_the_string_false(): void
+    {
+        $this->seedTickets();
+        $written = [];
+        Event::listen(KeyWritten::class, function (KeyWritten $event) use (&$written): void {
+            $written[] = $event->key;
+        });
+
+        $this->postJson('/api/tickets/search')->assertOk();
+        $this->postJson('/api/tickets/search')->assertOk();
+
+        $this->assertSame([], $written);
+        $this->assertSame(['viewAny', 'viewAny'], $this->tickets->calls);
+    }
+
+    #[Test]
+    #[WithEnv('REST_AUTHORIZATIONS_CACHE_ENABLED', 'true')]
+    public function it_turns_the_cache_on_from_the_environment(): void
+    {
+        $this->seedTickets();
+
+        $this->postJson('/api/tickets/search')->assertOk();
+        $this->postJson('/api/tickets/search')->assertOk();
+
+        $this->assertTrue(config('rest.authorizations.cache.enabled'));
+        $this->assertSame(['viewAny'], $this->tickets->calls);
     }
 
     #[Test]

@@ -722,9 +722,9 @@ All three return the affected records with the selectable fields of their resour
 
 ## Authorization model
 
-Two layers, both controlled by `config/rest.php`:
+Two layers, configured in `config/rest.php`:
 
-### 1. Policy authorization (`authorizations.enabled`, default `true`)
+### 1. Policy authorization
 
 Every model touched by a search/mutate/delete is checked against its Policy. Required policy methods:
 
@@ -758,17 +758,17 @@ The list replaces the endpoint's default: returning `['export']` for `Endpoint::
 
 These checks go through the resource's `authorizedTo()`, so an override of it applies to them. A denied check made before validation throws `\Lomkit\Rest\Exceptions\AuthorizationDenied` (an `AuthorizationException`) holding every denial of these checks (path such as `search.includes.0`, ability, resource class, key, message; at most 50). The body stays `{"message": ...}` with the message and status of the first denial, so `Response::denyAsNotFound()` still gives `404`. To add the denials to the JSON, register `$exceptions->render(new \Lomkit\Rest\Exceptions\DenialsRenderer);` in `bootstrap/app.php`'s `withExceptions()`; it leaves `404` responses unchanged. Row checks (`view`, `update`, `delete`, `restore`, `forceDelete`, attach/detach) still throw Laravel's `AuthorizationException`, without denials.
 
-The queries check `viewAny` again on each resource they search (and `create` on each resource they create), reusing the decisions made before validation. The endpoint's own resource is the exception: its endpoint abilities stand in for `viewAny`, so when they leave `viewAny` out (a resource override of `abilities()`, or an action whose `abilities()` returns `[]`) the queries do not check it there. With `authorizations.strict = true` (default `false`, meant for test suites), a check on another resource that was not made before validation throws `UnplannedCheckException`: a custom rule node that reaches a resource records it in `compile()` with `$into->reach(Check::onClass($resource, 'viewAny', $attribute))`.
+The queries check `viewAny` again on each resource they search (and `create` on each resource they create), reusing the decisions made before validation. The endpoint's own resource is the exception: its endpoint abilities stand in for `viewAny`, so when they leave `viewAny` out (a resource override of `abilities()`, or an action whose `abilities()` returns `[]`) the queries do not check it there. With `authorizations.strict = true` (default `false`, meant for test suites: set `REST_AUTHORIZATIONS_STRICT=true` in `phpunit.xml`), a check on another resource that was not made before validation throws `UnplannedCheckException`: a custom rule node that reaches a resource records it in `compile()` with `$into->reach(Check::onClass($resource, 'viewAny', $attribute))`.
 
 Within a request, each distinct check (ability, resource, model or model class) runs the policy once and the later checks reuse its decision, so `GateEvaluated` listeners and `Gate::after()` see one evaluation per distinct check. Policies run with `Gate::forUser($request->user())`, and a change of user starts a new set of decisions. The package drops the decisions on a model after writing it; a hook that writes a model itself calls `$request->context()->authorizer()->forget($model)`.
 
-The cross-request cache is off by default (`authorizations.cache.enabled = false`). When on, it stores each decision as scalars for `authorizations.cache.default` minutes (default `5`), keyed by guard, user class and key, resource, ability and model class and key; `create` checks and checks on unsaved models are not cached. Override `cacheAuthorizationFor()` on the resource, or use the `\Lomkit\Rest\Concerns\Resource\DisableAuthorizationsCache` trait, to tweak behaviour.
+The cross-request cache is off by default (`authorizations.cache.enabled = false`; `REST_AUTHORIZATIONS_CACHE_ENABLED=true` turns it on). When on, it stores each decision as scalars for `authorizations.cache.default` minutes (default `5`), keyed by guard, user class and key, resource, ability and model class and key; `create` checks and checks on unsaved models are not cached. Override `cacheAuthorizationFor()` on the resource, or use the `\Lomkit\Rest\Concerns\Resource\DisableAuthorizationsCache` trait, to tweak behaviour.
 
-### 2. Gates (`gates.enabled`, default `true`)
+### 2. Gates
 
 When the client passes `"gates": [...]` in `search`, the listed abilities are evaluated per row and attached under the configured `gates` key. The keys returned (`authorized_to_view`, `authorized_to_create`, etc.) are configurable under `rest.gates.names`.
 
-`rest.gates.message.enabled = true` switches the response to `{allowed, message}`, where `message` comes from a `Response::deny('...')` returned from the policy method. Use the `\Lomkit\Rest\Concerns\Resource\DisableGates` trait on a specific resource to opt out without flipping the global config.
+`rest.gates.message.enabled = true` switches the response to `{allowed, message}`, where `message` comes from a `Response::deny('...')` returned from the policy method. Use the `\Lomkit\Rest\Concerns\Resource\DisableGates` trait on a resource to turn its gates off, or on the base resource `app/Rest/Resources/Resource.php` for every resource; there is no config switch.
 
 ## Custom Response
 
@@ -815,7 +815,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - **Whitelist by declaration.** Adding a column to the table doesn't expose it — it must be in `fields()`. Same for scopes, relations, actions, instructions.
 - **Relation classes are the package's, not Eloquent's.** Use `Lomkit\Rest\Relations\HasMany` (not `Illuminate\Database\Eloquent\Relations\HasMany`), pass `::make('name', TargetResource::class)`, and target the **Resource**, not the model.
 - **Soft deletes are opt-in at the route.** Even if the model uses `SoftDeletes`, `restore` / `force` routes only register when `->withSoftDeletes()` is chained onto `Rest::resource(...)`.
-- **Don't bypass policies by toggling `authorizations.enabled = false`** — write the policy. The package's threat model assumes it's on, including `viewAny`, `replicate`, and `attach{Model}`/`detach{Model}`.
+- **Don't bypass policies with the `DisableAuthorizations` trait** — write the policy. The package expects every policy to run, including `viewAny`, `replicate`, and `attach{Model}`/`detach{Model}`.
 - **`mutate` is one batch but per-item-authorized.** A single denied item fails the whole batch.
 - **`includes` nest up to `rest.limits.depths.includes` levels** (default `3`) — each include accepts `filters`/`sorts`/`scopes`/`limit`/`selects` and its own `includes`. A deeper `includes` is a `422`, `The search.includes.0.includes.0.includes.0.includes field is prohibited.`; raise the config value to go deeper.
 - **`=` or `!=` with `null` is a `422`.** Filter the rows without a value with `{"field": "summary", "operator": "is null"}`, on a `nullable()` field only.
@@ -824,10 +824,12 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - **Scope `parameters` are positional.** They bind to the scope's fields in declared order, so reordering a scope's fields changes what clients must send. Only model local scopes run: `withTrashed`, `latest` and other Builder methods or macros cannot be called as scopes.
 - **`HasOneThrough` / `HasManyThrough` can be searched/included but not mutated.**
 - **Cache invalidation.** The authorization cache is off by default. Once turned on, a decision stays cached for `authorizations.cache.default` minutes, so policy changes show after that delay; keep it off while debugging policies, or use the `DisableAuthorizationsCache` trait on a resource.
+- **`config/rest.php` values are typed.** The switches take `true`, `false`, `"1"`, `"0"`, `"true"` or `"false"` (so `env()` values work), `gates.key` a non-empty string, `gates.names` a map of strings, and `authorizations.cache.default` and every `limits` value an integer of 0 or more. A value of another type and an unknown key under `rest.limits` (such as `sizes.filter`) throw `Lomkit\Rest\Exceptions\InvalidConfigException`, which names the key. The 2.x keys `gates.enabled`, `authorizations.enabled`, `search.max_nesting_depth` and `documentation` are removed: use the `DisableGates` or `DisableAuthorizations` trait instead of the switches, and `limits.depths.filters` instead of `search.max_nesting_depth`.
 
 ## Pointers into the codebase
 
 - Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `ResourceRegistrar` and the route value objects)
+- Config — `src/Config/RestConfig.php` (the typed values of `config/rest.php`, read once per request through `RestContext::config()`) and `src/Config/ConfigValue.php` (the typed read of one key, also used for `rest.limits` and `rest.precognition.enabled`)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, kept by `src/Http/RestContext.php`), `src/Concerns/Resource/*` (`DisableGates`, `DisableAuthorizationsCache`, hooks, ...)
 - Authorization — `src/Authorization/*` (`Authorizer`, `Check`, `Decision`, `Denial`, `DecisionMemo` and the decision stores), `src/Concerns/Authorizable.php`, `src/Exceptions/{AuthorizationDenied,DenialsRenderer,UnplannedCheckException}.php`; the checks made before validation are collected by the rule nodes (`RuleCompiler::reach()`) and run by `RestRequest::passesAuthorization()`

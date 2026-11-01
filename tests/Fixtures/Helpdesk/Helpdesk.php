@@ -21,6 +21,7 @@ class Helpdesk implements Fixture
             Rest::resource('tickets', TicketController::class);
             Rest::resource('public-tickets', PublicTicketController::class);
             Rest::resource('uncached-tickets', UncachedTicketController::class);
+            Rest::resource('ungated-tickets', UngatedTicketController::class);
             Rest::resource('archived-tickets', ArchivedTicketController::class);
             Rest::resource('channels', ChannelController::class);
             Rest::resource('teams', TeamController::class);

@@ -44,7 +44,7 @@ final class SearchIncludeAlias implements DataAwareRule, ValidationRule
 
         return match (true) {
             str_contains($this->relation, '.') => 'The :attribute is not allowed on a nested relation, use a nested include instead.',
-            $value === config('rest.gates.key') => 'The :attribute is reserved.',
+            $value === $this->resource->context()->config()->gatesKey => 'The :attribute is reserved.',
             in_array($value, $this->resource->getFields($request)->names(), true) => 'The :attribute conflicts with a field of this resource.',
             in_array($value, array_column($this->resource->getRelations($request), 'relation'), true) => 'The :attribute conflicts with a relation of this resource.',
             $this->timesUsedAmongSiblings($attribute, $value) > 1 => 'The :attribute is already used by another include.',
