@@ -8,30 +8,31 @@ use PhpToken;
 
 final readonly class RouteFile
 {
-    public const string MIDDLEWARE = 'auth:sanctum';
+    private const string GUARD = '/^->middleware\([\'"]auth:(?<guard>[^,\'"]+)[,\'"]/';
 
     public function __construct(public string $contents) {}
 
     public function registers(string $controller): bool
     {
-        $source = $this->source();
-        $imports = FileImports::read($source);
-        $tokens = array_values(FileImports::code($source));
-
-        foreach ($tokens as $index => $token) {
-            $isClassConstant = $token->is(FileImports::NAMES)
-                && ($tokens[$index + 1] ?? null)?->is(T_DOUBLE_COLON) === true
-                && ($tokens[$index + 2] ?? null)?->is(T_CLASS) === true;
-
-            if ($isClassConstant && strcasecmp($imports->resolve($token), $controller) === 0) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->reference($this->code(), $controller) !== null;
     }
 
-    public function withResource(string $uri, string $controller): self
+    public function guardOf(string $controller): ?string
+    {
+        $tokens = $this->code();
+        $reference = $this->reference($tokens, $controller);
+        $end = $reference === null ? null : self::callEnd($tokens, $reference);
+
+        if ($end === null) {
+            return null;
+        }
+
+        $chain = implode('', array_map(fn (PhpToken $token): string => $token->text, array_slice($tokens, $end + 1, 4)));
+
+        return preg_match(self::GUARD, $chain, $match) === 1 ? $match['guard'] : null;
+    }
+
+    public function withResource(string $uri, string $controller, string $middleware): self
     {
         $imports = FileImports::read($this->source());
         $facade = $imports->nameOf(Rest::class);
@@ -39,7 +40,7 @@ final readonly class RouteFile
         $missing = array_filter([Rest::class => $facade, $controller => $name], fn (string $short): bool => ! $imports->binds($short) && ! str_starts_with($short, '\\'));
         $contents = $this->withImports(array_keys($missing), $imports);
 
-        return new self(rtrim($contents)."\n\n{$facade}::resource('{$uri}', {$name}::class)\n    ->middleware('".self::MIDDLEWARE."');\n");
+        return new self(rtrim($contents)."\n\n{$facade}::resource('{$uri}', {$name}::class)\n    ->middleware('{$middleware}');\n");
     }
 
     /** @param  list<string>  $classes */
@@ -86,6 +87,54 @@ final readonly class RouteFile
         ]);
 
         return implode("\n", $lines);
+    }
+
+    /** @param  list<PhpToken>  $tokens */
+    private function reference(array $tokens, string $controller): ?int
+    {
+        $imports = FileImports::read($this->source());
+
+        foreach ($tokens as $index => $token) {
+            $isClassConstant = $token->is(FileImports::NAMES)
+                && ($tokens[$index + 1] ?? null)?->is(T_DOUBLE_COLON) === true
+                && ($tokens[$index + 2] ?? null)?->is(T_CLASS) === true;
+
+            if ($isClassConstant && strcasecmp($imports->resolve($token), $controller) === 0) {
+                return $index;
+            }
+        }
+
+        return null;
+    }
+
+    /** @param  list<PhpToken>  $tokens */
+    private static function callEnd(array $tokens, int $start): ?int
+    {
+        $depth = 0;
+
+        for ($index = $start; isset($tokens[$index]); $index++) {
+            $depth += match ($tokens[$index]->text) {
+                '(' => 1,
+                ')' => -1,
+                default => 0,
+            };
+
+            if ($depth < 0) {
+                return $index;
+            }
+
+            if ($depth === 0 && $tokens[$index]->text === ';') {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    /** @return list<PhpToken> */
+    private function code(): array
+    {
+        return array_values(FileImports::code($this->source()));
     }
 
     /** @return list<PhpToken> */

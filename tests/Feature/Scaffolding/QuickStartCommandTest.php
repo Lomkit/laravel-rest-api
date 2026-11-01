@@ -84,6 +84,7 @@ class QuickStartCommandTest extends ScaffoldingTestCase
     {
         $this->artisan('rest:quick-start')
             ->expectsChoice('Which models should the API expose?', ['Post', 'Tag'], ['Post', 'Tag', 'User'])
+            ->expectsChoice(self::GUARD_QUESTION, 'sanctum', self::GUARDS, strict: true)
             ->expectsConfirmation('API routing is not installed. Run php artisan install:api now? It installs Laravel Sanctum.', 'yes')
             ->expectsOutputToContain('Published API routes file.')
             ->expectsOutputToContain('Skipped: Post.author: no resource for App\Models\User. Rerun with --model=User to expose users.')

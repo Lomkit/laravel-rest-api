@@ -67,6 +67,7 @@ class QuickStartBlockedTest extends ScaffoldingTestCase
         $this->fakeApiInstall();
 
         $this->artisan('rest:quick-start', ['--model' => ['Post']])
+            ->expectsChoice(self::GUARD_QUESTION, 'sanctum', self::GUARDS, strict: true)
             ->expectsConfirmation('API routing is not installed. Run php artisan install:api now? It installs Laravel Sanctum.', 'no')
             ->expectsOutputToContain('API routing is not installed. Run php artisan install:api first, or pass --install-api.')
             ->assertFailed();

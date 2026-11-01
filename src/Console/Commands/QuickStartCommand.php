@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\Process;
 use Lomkit\Rest\Console\Generation\ClassReference;
 use Lomkit\Rest\Console\Generation\ModelTable;
 use Lomkit\Rest\Console\Generation\UserModel;
+use Lomkit\Rest\Console\QuickStart\ApiGuard;
 use Lomkit\Rest\Console\QuickStart\ApiRoutes;
+use Lomkit\Rest\Console\QuickStart\ApiSetup;
 use Lomkit\Rest\Console\QuickStart\AppNamespace;
 use Lomkit\Rest\Console\QuickStart\ExposedModel;
 use Lomkit\Rest\Console\QuickStart\ExposureReport;
@@ -21,15 +23,14 @@ use Lomkit\Rest\Console\QuickStart\Outro;
 use Lomkit\Rest\Console\QuickStart\PlannedFile;
 use Lomkit\Rest\Console\QuickStart\QuickStartPlan;
 use Lomkit\Rest\Console\QuickStart\RouteConflicts;
-use Lomkit\Rest\Console\QuickStart\RouteFile;
 use Lomkit\Rest\Exceptions\InvalidClassReferenceException;
 use Lomkit\Rest\Exceptions\InvalidModelTableException;
+use Lomkit\Rest\Exceptions\UndefinedGuardException;
 use Lomkit\Rest\Exceptions\UndiscoverablePolicyException;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 use function Illuminate\Support\artisan_binary;
 use function Illuminate\Support\php_binary;
-use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\multiselect;
 
 #[AsCommand(name: 'rest:quick-start', description: 'Expose models through resources, controllers, read-only policies and authenticated API routes')]
@@ -39,7 +40,8 @@ class QuickStartCommand extends Command
 
     protected $signature = 'rest:quick-start
         {--model=* : A model to expose, repeat the option to expose several models}
-        {--install-api : Run php artisan install:api when the application has no API routes or no Laravel Sanctum}';
+        {--guard= : The guard of the routes to add, sanctum by default}
+        {--install-api : Run php artisan install:api without asking when the application has no API routes, or no Laravel Sanctum or Laravel Passport for the guard}';
 
     protected $description = 'Expose models through resources, controllers, read-only policies and authenticated API routes';
 
@@ -54,9 +56,21 @@ class QuickStartCommand extends Command
         $app = AppNamespace::of($this->laravel);
         $user = UserModel::configured($this->laravel->make(Repository::class), $app->root);
         $routes = new ApiRoutes($files, $this->laravel->basePath());
+        $setup = $this->setup($routes);
+
+        if ($setup === null) {
+            return self::FAILURE;
+        }
+
         $plan = $this->plan($app, $gate, $user, $routes);
 
-        if ($plan === null || $this->clashes($plan, $routes, new RouteConflicts($router->getRoutes())) || ! $this->ensureApiRouting($plan, $routes)) {
+        if ($plan === null || $this->clashes($plan, $routes, new RouteConflicts($router->getRoutes()))) {
+            return self::FAILURE;
+        }
+
+        $guard = $setup->guard($plan);
+
+        if ($guard === null) {
             return self::FAILURE;
         }
 
@@ -66,10 +80,10 @@ class QuickStartCommand extends Command
             $this->components->twoColumnDetail($app->display($file->path), $file->write($files));
         }
 
-        $added = $routes->append($plan);
-        $this->components->twoColumnDetail(ApiRoutes::PATH, $added === [] ? 'kept' : implode(', ', $added).' behind '.RouteFile::MIDDLEWARE);
+        $added = $routes->append($plan, $guard);
+        $this->components->twoColumnDetail(ApiRoutes::PATH, $added === [] ? 'kept' : implode(', ', $added).' behind '.$guard->middleware());
 
-        $outro = new Outro($plan, $created, $app, $user, $this->appUrl());
+        $outro = new Outro($plan, $created, $app, $user, $this->appUrl(), $guard);
         $report = $this->check($plan);
 
         if ($report === null) {
@@ -82,6 +96,22 @@ class QuickStartCommand extends Command
         $outro->render($this->output, $this->components, $report->search);
 
         return self::SUCCESS;
+    }
+
+    private function setup(ApiRoutes $routes): ?ApiSetup
+    {
+        $config = $this->laravel->make(Repository::class);
+        $guard = $this->option('guard');
+
+        try {
+            $chosen = is_string($guard) ? ApiGuard::named($guard, $config) : null;
+        } catch (UndefinedGuardException $exception) {
+            $this->components->error($exception->getMessage());
+
+            return null;
+        }
+
+        return new ApiSetup($this, $config, $routes, $chosen, $this->canPrompt(), $this->option('install-api') === true);
     }
 
     private function plan(AppNamespace $app, Gate $gate, string $user, ApiRoutes $routes): ?QuickStartPlan
@@ -139,63 +169,6 @@ class QuickStartCommand extends Command
         $this->components->bulletList($clashes);
 
         return true;
-    }
-
-    private function ensureApiRouting(QuickStartPlan $plan, ApiRoutes $routes): bool
-    {
-        if ($routes->exist()) {
-            return $this->ensureSanctum($plan, $routes);
-        }
-
-        if (! $this->agreesToInstallApi('API routing is not installed. Run php artisan install:api now? It installs Laravel Sanctum.')) {
-            $this->components->error('API routing is not installed. Run php artisan install:api first, or pass --install-api.');
-
-            return false;
-        }
-
-        return $this->installApi($routes);
-    }
-
-    private function ensureSanctum(QuickStartPlan $plan, ApiRoutes $routes): bool
-    {
-        if ($routes->unregistered($plan) === [] || $this->laravel->make(Repository::class)->get('auth.guards.sanctum') !== null) {
-            return true;
-        }
-
-        if (! $this->agreesToInstallApi('Laravel Sanctum is not installed. Run php artisan install:api now to install it?')) {
-            $this->components->error('Laravel Sanctum is not installed. Run php artisan install:api first, or pass --install-api.');
-
-            return false;
-        }
-
-        $this->components->info('Running php artisan install:api to install Laravel Sanctum. It keeps routes/api.php, which already exists.');
-
-        if ($this->call('install:api') === self::SUCCESS) {
-            return true;
-        }
-
-        $this->components->error('php artisan install:api failed.');
-
-        return false;
-    }
-
-    private function installApi(ApiRoutes $routes): bool
-    {
-        if ($this->call('install:api') === self::SUCCESS && $routes->exist()) {
-            $this->components->twoColumnDetail(ApiRoutes::PATH, 'created by install:api');
-
-            return true;
-        }
-
-        $this->components->error('php artisan install:api did not create routes/api.php.');
-
-        return false;
-    }
-
-    private function agreesToInstallApi(string $question): bool
-    {
-        return $this->option('install-api') === true
-            || ($this->canPrompt() && confirm($question, default: true));
     }
 
     private function canPrompt(): bool

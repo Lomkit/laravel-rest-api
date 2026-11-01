@@ -151,7 +151,7 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
         $this->generate('rest:policy', ['name' => 'LintedArticlePolicy', '--model' => Article::class, '--force' => true]);
         $this->generate('rest:policy', ['name' => 'Admin/LintedTagPolicy']);
         $this->quickStart();
-        file_put_contents(base_path('routes/rest.php'), (new RouteFile("<?php\n\ndeclare(strict_types=1);\n"))->withResource('admin-logs', 'App\Rest\Controllers\AdminLogsController')->withResource('admin-posts', 'App\Rest\Controllers\Admin\PostsController')->contents);
+        file_put_contents(base_path('routes/rest.php'), (new RouteFile("<?php\n\ndeclare(strict_types=1);\n"))->withResource('admin-logs', 'App\Rest\Controllers\AdminLogsController', 'auth:sanctum')->withResource('admin-posts', 'App\Rest\Controllers\Admin\PostsController', 'auth:sanctum')->contents);
 
         $this->assertSame(self::GENERATED_FILES, $this->filesIn(app_path('Rest')));
         $this->assertSame(self::GENERATED_POLICIES, $this->filesIn(app_path('Policies')));

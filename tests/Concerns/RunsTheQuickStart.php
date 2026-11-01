@@ -86,6 +86,10 @@ trait RunsTheQuickStart
             PHP,
     ];
 
+    private const string GUARD_QUESTION = 'Which guard should protect the API routes?';
+
+    private const array GUARDS = ['sanctum' => 'sanctum (Laravel Sanctum)', 'api' => 'api (Laravel Passport)', 'web' => 'web'];
+
     private const string ROUTES_WITH_POSTS = <<<'PHP'
         <?php
 

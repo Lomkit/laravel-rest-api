@@ -39,9 +39,10 @@ class QuickStartPromptsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    public function it_installs_api_routing_without_asking_when_the_option_is_given(): void
+    public function it_installs_api_routing_without_confirmation_when_the_option_is_given(): void
     {
         $this->artisan('rest:quick-start', ['--model' => ['Post'], '--install-api' => true])
+            ->expectsChoice(self::GUARD_QUESTION, 'sanctum', self::GUARDS, strict: true)
             ->expectsOutputToContain('Published API routes file.')
             ->assertSuccessful();
     }
@@ -53,6 +54,7 @@ class QuickStartPromptsTest extends ScaffoldingTestCase
         Process::fake(['*rest:check*' => Process::result('{"routes":5,"policies":1,"problems":[],"search":"/api/posts/search"}')]);
 
         $this->artisan('rest:quick-start', ['--model' => ['Post']])
+            ->expectsChoice(self::GUARD_QUESTION, 'sanctum', self::GUARDS, strict: true)
             ->expectsConfirmation('API routing is not installed. Run php artisan install:api now? It installs Laravel Sanctum.', 'yes')
             ->expectsOutputToContain('Published API routes file.')
             ->doesntExpectOutputToContain('Laravel Sanctum is not installed.')
@@ -62,14 +64,14 @@ class QuickStartPromptsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    public function it_installs_laravel_sanctum_when_its_question_is_answered_with_the_default(): void
+    public function it_installs_laravel_sanctum_when_both_questions_are_answered_with_the_default(): void
     {
         config(['auth.guards.sanctum' => null]);
         $this->installApiRoutes();
         Process::fake(['*rest:check*' => Process::result('{"routes":5,"policies":1,"problems":[],"search":"/api/posts/search"}')]);
         $answers = fopen('php://memory', 'r+');
         $this->assertIsResource($answers);
-        fwrite($answers, "\n");
+        fwrite($answers, "\n\n");
         rewind($answers);
         $input = new ArrayInput(['--model' => ['Post']]);
         $input->setStream($answers);
@@ -79,6 +81,11 @@ class QuickStartPromptsTest extends ScaffoldingTestCase
         $this->assertSame(0, $exitCode);
         $this->assertSame(<<<'TXT'
 
+              Which guard should protect the API routes? [sanctum (Laravel Sanctum)]
+              sanctum (Laravel Sanctum) ... sanctum
+              api (Laravel Passport) ... api
+              web ... web
+            ❯
               Laravel Sanctum is not installed. Run php artisan install:api now to install it? (yes/no) [yes]
             ❯
                INFO  Running php artisan install:api to install Laravel Sanctum. It keeps routes/api.php, which already exists.

@@ -71,6 +71,7 @@ class QuickStartSanctumTest extends ScaffoldingTestCase
     public function it_stops_when_the_laravel_sanctum_install_is_declined(): void
     {
         $this->artisan('rest:quick-start', ['--model' => ['Post']])
+            ->expectsChoice(self::GUARD_QUESTION, 'sanctum', self::GUARDS, strict: true)
             ->expectsConfirmation(self::QUESTION, 'no')
             ->expectsOutputToContain('Laravel Sanctum is not installed. Run php artisan install:api first, or pass --install-api.')
             ->doesntExpectOutputToContain('API scaffolding installed.')
@@ -116,6 +117,7 @@ class QuickStartSanctumTest extends ScaffoldingTestCase
         $this->checksPassInTheFreshProcess();
 
         $this->artisan('rest:quick-start', ['--model' => ['Post']])
+            ->expectsChoice(self::GUARD_QUESTION, 'sanctum', self::GUARDS, strict: true)
             ->expectsConfirmation(self::QUESTION, 'yes')
             ->expectsOutputToContain(self::INSTALL)
             ->expectsOutputToContain('API routes file already exists.')

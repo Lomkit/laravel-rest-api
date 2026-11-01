@@ -76,8 +76,8 @@ class RouteFileTest extends TestCase
     public function it_appends_the_resource_behind_authentication_and_sorts_its_imports(): void
     {
         $routes = (new RouteFile(self::INSTALLED))
-            ->withResource('posts', self::CONTROLLER)
-            ->withResource('tags', 'App\Rest\Controllers\TagsController');
+            ->withResource('posts', self::CONTROLLER, 'auth:sanctum')
+            ->withResource('tags', 'App\Rest\Controllers\TagsController', 'auth:sanctum');
 
         $this->assertSame(
             "<?php\n\nuse App\Rest\Controllers\PostsController;\nuse App\Rest\Controllers\TagsController;\nuse Illuminate\Http\Request;\nuse Illuminate\Support\Facades\Route;\nuse Lomkit\Rest\Facades\Rest;\n\n"
@@ -90,10 +90,60 @@ class RouteFileTest extends TestCase
     }
 
     #[Test]
+    public function it_appends_the_resource_behind_the_given_middleware(): void
+    {
+        $this->assertStringEndsWith(
+            "\n\nRest::resource('posts', PostsController::class)\n    ->middleware('auth:api');\n",
+            (new RouteFile(self::INSTALLED))->withResource('posts', self::CONTROLLER, 'auth:api')->contents,
+        );
+    }
+
+    #[Test]
+    #[DataProvider('guardedRoutes')]
+    public function it_reads_the_guard_chained_to_the_resource_of_a_controller(string $routes, string $guard): void
+    {
+        $this->assertSame($guard, (new RouteFile("<?php\n\nuse App\Rest\Controllers\PostsController;\n\n{$routes}\n"))->guardOf(self::CONTROLLER));
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function guardedRoutes(): array
+    {
+        return [
+            'written by the quick start' => ["Rest::resource('posts', PostsController::class)\n    ->middleware('auth:api');", 'api'],
+            'on one line' => ["Rest::resource('posts', PostsController::class)->middleware('auth:web');", 'web'],
+            'with double quotes' => ['Rest::resource("posts", PostsController::class)->middleware("auth:web");', 'web'],
+            'with several guards' => ["Rest::resource('posts', PostsController::class)->middleware('auth:sanctum,api');", 'sanctum'],
+            'with options' => ["Rest::resource(\n    'posts',\n    PostsController::class,\n    ['only' => explode(',', 'search')],\n)->middleware('auth:api');", 'api'],
+            'after another route' => ["Rest::resource('tags', TagsController::class)->middleware('auth:web');\n\nRest::resource('posts', PostsController::class)->middleware('auth:api');", 'api'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('routesWithoutGuard')]
+    public function it_reads_no_guard_when_none_is_chained_to_the_resource_of_a_controller(string $routes): void
+    {
+        $this->assertNull((new RouteFile("<?php\n\nuse App\Rest\Controllers\PostsController;\n\n{$routes}\n"))->guardOf(self::CONTROLLER));
+    }
+
+    /** @return array<string, array{string}> */
+    public static function routesWithoutGuard(): array
+    {
+        return [
+            'no route' => ["Rest::resource('tags', TagsController::class)->middleware('auth:web');"],
+            'no middleware' => ["Rest::resource('posts', PostsController::class);\n\nRoute::get('/user', fn () => 1)->middleware('auth:web');"],
+            'a group' => ["Route::middleware('auth:web')->group(function () {\n    Rest::resource('posts', PostsController::class);\n});"],
+            'the default guard' => ["Rest::resource('posts', PostsController::class)->middleware('auth');"],
+            'another middleware' => ["Rest::resource('posts', PostsController::class)->middleware('throttle:api');"],
+            'a list of middleware' => ["Rest::resource('posts', PostsController::class)->middleware(['auth:web']);"],
+            'a class in a closure' => ["Route::get('/', function () {\n    return PostsController::class;\n})->middleware('auth:web');"],
+        ];
+    }
+
+    #[Test]
     #[DataProvider('filesWithoutImports')]
     public function it_imports_the_classes_after_the_opening_tag_of_a_file_without_imports(string $contents, string $expected): void
     {
-        $this->assertSame($expected, (new RouteFile($contents))->withResource('posts', self::CONTROLLER)->contents);
+        $this->assertSame($expected, (new RouteFile($contents))->withResource('posts', self::CONTROLLER, 'auth:sanctum')->contents);
     }
 
     /** @return array<string, array{string, string}> */
@@ -121,7 +171,7 @@ class RouteFileTest extends TestCase
 
         $this->assertSame(
             "<?php\n\nuse App\Rest\Controllers\PostsController as Posts;\nuse Lomkit\Rest\Facades\Rest as Api;\n\nApi::resource('posts', Posts::class)\n    ->middleware('auth:sanctum');\n",
-            $routes->withResource('posts', self::CONTROLLER)->contents,
+            $routes->withResource('posts', self::CONTROLLER, 'auth:sanctum')->contents,
         );
     }
 
@@ -132,7 +182,7 @@ class RouteFileTest extends TestCase
 
         $this->assertStringStartsWith(
             "<?php\n\nuse App\Rest\Controllers\Admin\PostsController;\nuse App\Rest\Controllers\AdminLogsController;\nuse Lomkit\Rest\Facades\Rest;\n\n",
-            $routes->withResource('posts', 'App\Rest\Controllers\Admin\PostsController')->contents,
+            $routes->withResource('posts', 'App\Rest\Controllers\Admin\PostsController', 'auth:sanctum')->contents,
         );
     }
 
@@ -144,7 +194,7 @@ class RouteFileTest extends TestCase
 
         $this->assertSame(
             "<?php\n\n{$expected}\n\nRoute::view('/', 'welcome');\n\nRest::resource('posts', PostsController::class)\n    ->middleware('auth:sanctum');\n",
-            $routes->withResource('posts', self::CONTROLLER)->contents,
+            $routes->withResource('posts', self::CONTROLLER, 'auth:sanctum')->contents,
         );
     }
 
@@ -174,7 +224,7 @@ class RouteFileTest extends TestCase
 
         $this->assertSame(
             "<?php\n\n{$expected}\n\nRoute::view('/', 'welcome');\n\nRest::resource('posts', PostsController::class)\n    ->middleware('auth:sanctum');\n",
-            $routes->withResource('posts', self::CONTROLLER)->contents,
+            $routes->withResource('posts', self::CONTROLLER, 'auth:sanctum')->contents,
         );
     }
 
@@ -205,7 +255,7 @@ class RouteFileTest extends TestCase
         $this->assertSame(
             "<?php\n\nuse App\Rest\Controllers\PostsController;\nuse Illuminate\Support\Facades\Route;\nuse Illuminate\Http\Request;\nuse Lomkit\Rest\Facades\Rest;\n\n"
             ."Rest::resource('posts', PostsController::class)\n    ->middleware('auth:sanctum');\n",
-            $routes->withResource('posts', self::CONTROLLER)->contents,
+            $routes->withResource('posts', self::CONTROLLER, 'auth:sanctum')->contents,
         );
     }
 
@@ -215,7 +265,7 @@ class RouteFileTest extends TestCase
     {
         $this->assertStringEndsWith(
             "\nRest::resource('posts', \App\Rest\Controllers\PostsController::class)\n    ->middleware('auth:sanctum');\n",
-            (new RouteFile("<?php\n\n{$imports}\nuse Lomkit\Rest\Facades\Rest;\n"))->withResource('posts', self::CONTROLLER)->contents,
+            (new RouteFile("<?php\n\n{$imports}\nuse Lomkit\Rest\Facades\Rest;\n"))->withResource('posts', self::CONTROLLER, 'auth:sanctum')->contents,
         );
     }
 
@@ -236,7 +286,7 @@ class RouteFileTest extends TestCase
 
         $this->assertSame(
             "<?php\n\nuse App\Http\Controllers\PostsController;\nuse App\Support\Rest;\n\n\Lomkit\Rest\Facades\Rest::resource('posts', \App\Rest\Controllers\PostsController::class)\n    ->middleware('auth:sanctum');\n",
-            $routes->withResource('posts', self::CONTROLLER)->contents,
+            $routes->withResource('posts', self::CONTROLLER, 'auth:sanctum')->contents,
         );
     }
 }

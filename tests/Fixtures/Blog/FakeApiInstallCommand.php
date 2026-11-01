@@ -26,14 +26,17 @@ class FakeApiInstallCommand extends Command
             return self::FAILURE;
         }
 
+        $package = $this->option('passport') === true ? 'Passport' : 'Sanctum';
+
         if (file_exists(base_path('routes/api.php')) && $this->option('force') !== true) {
             $this->components->error('API routes file already exists.');
         } elseif ($this->publishesRoutes) {
-            copy(self::routesStub(), base_path('routes/api.php'));
             $this->components->info('Published API routes file.');
+            $routes = (string) file_get_contents(self::routesStub());
+            file_put_contents(base_path('routes/api.php'), $package === 'Passport' ? str_replace('auth:sanctum', 'auth:api', $routes) : $routes);
         }
 
-        $this->components->info('API scaffolding installed. Please add the [Laravel\Sanctum\HasApiTokens] trait to your User model.');
+        $this->components->info("API scaffolding installed. Please add the [Laravel\\{$package}\\HasApiTokens] trait to your User model.");
 
         return self::SUCCESS;
     }

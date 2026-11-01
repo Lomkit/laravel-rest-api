@@ -24,6 +24,21 @@ final readonly class ApiRoutes
         return array_values(array_filter($plan->models, fn (ExposedModel $model): bool => ! $routes->registers($model->controller)));
     }
 
+    public function guardOf(QuickStartPlan $plan): ?string
+    {
+        $routes = $this->file();
+
+        foreach ($plan->models as $model) {
+            $guard = $routes->guardOf($model->controller);
+
+            if ($guard !== null) {
+                return $guard;
+            }
+        }
+
+        return null;
+    }
+
     public function ensureDistinctNames(QuickStartPlan $plan): void
     {
         $classes = [];
@@ -40,13 +55,13 @@ final readonly class ApiRoutes
     }
 
     /** @return list<string> */
-    public function append(QuickStartPlan $plan): array
+    public function append(QuickStartPlan $plan, ApiGuard $guard): array
     {
         $routes = $this->file();
         $added = [];
 
         foreach ($this->unregistered($plan) as $model) {
-            $routes = $routes->withResource($model->uri(), $model->controller);
+            $routes = $routes->withResource($model->uri(), $model->controller, $guard->middleware());
             $added[] = $model->uri();
         }
 
