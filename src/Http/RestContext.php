@@ -7,13 +7,15 @@ use Illuminate\Cache\Repository;
 use Illuminate\Container\Container as IlluminateContainer;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\Container;
-use InvalidArgumentException;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\CacheDecisionStore;
 use Lomkit\Rest\Authorization\DecisionStore;
 use Lomkit\Rest\Authorization\NullDecisionStore;
 use Lomkit\Rest\Authorization\UserIdentity;
+use Lomkit\Rest\Config\RestConfig;
+use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Text\ResolvedText;
 use Lomkit\Rest\Validation\Limits;
@@ -25,6 +27,8 @@ final class RestContext
 
     /** @var WeakMap<Resource, ResourceDefinition> */
     private readonly WeakMap $definitions;
+
+    private ?RestConfig $config = null;
 
     private ?Limits $limits = null;
 
@@ -58,17 +62,24 @@ final class RestContext
         return $this->definition($resource)->text();
     }
 
+    public function config(): RestConfig
+    {
+        return $this->config ??= RestConfig::from($this->container->make(ConfigRepository::class));
+    }
+
     public function limits(): Limits
     {
         if ($this->limits !== null) {
             return $this->limits;
         }
 
-        if (config('rest.search.max_nesting_depth') !== null) {
-            throw new InvalidArgumentException('The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters].');
+        $config = $this->container->make(ConfigRepository::class);
+
+        if ($config->get('rest.search.max_nesting_depth') !== null) {
+            throw InvalidConfigException::moved('rest.search.max_nesting_depth', 'rest.limits.depths.filters');
         }
 
-        return $this->limits = Limits::fromConfig(config('rest.limits'));
+        return $this->limits = Limits::fromConfig($config->get('rest.limits'));
     }
 
     public function authorizer(): Authorizer
@@ -86,7 +97,7 @@ final class RestContext
         return $this->authorizer = new Authorizer(
             $this->container->make(Gate::class)->forUser($user),
             $this->decisionStore($guard, $user),
-            strict: (bool) config('rest.authorizations.strict', false),
+            strict: $this->config()->strict,
         );
     }
 
@@ -103,7 +114,7 @@ final class RestContext
 
     private function decisionStore(string $guard, ?Authenticatable $user): DecisionStore
     {
-        if (! config('rest.authorizations.cache.enabled', false)) {
+        if (! $this->config()->cacheEnabled) {
             return new NullDecisionStore;
         }
 

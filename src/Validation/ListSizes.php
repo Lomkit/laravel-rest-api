@@ -4,6 +4,22 @@ namespace Lomkit\Rest\Validation;
 
 final readonly class ListSizes
 {
+    public const array KEYS = [
+        'filters',
+        'sorts',
+        'selects',
+        'scopes',
+        'aggregates',
+        'includes',
+        'instructions',
+        'gates',
+        'fields',
+        'values',
+        'mutate',
+        'relation_entries',
+        'resources',
+    ];
+
     public function __construct(
         public int $filters,
         public int $sorts,

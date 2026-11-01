@@ -1,23 +1,62 @@
 <?php
 
 return [
+
     /*
     |--------------------------------------------------------------------------
-    | Rest Gates
+    | Authorizations
     |--------------------------------------------------------------------------
     |
-    | The following configuration option contains gates customisation. You might
-    | want to adapt this feature to your needs.
+    | A search checks "viewAny" on each resource it reads. A write or a
+    | delete checks the policy of each record it changes. Each distinct
+    | check runs once per request.
+    |
+    | In strict mode, a check that the request did not plan before
+    | validation throws an UnplannedCheckException. Turn it on in your
+    | tests, for example with REST_AUTHORIZATIONS_STRICT=true in
+    | phpunit.xml.
+    |
+    | The cache keeps the decisions between requests for "default"
+    | minutes. It is off by default. Turn it on with "enabled", for
+    | example with REST_AUTHORIZATIONS_CACHE_ENABLED=true.
+    |
+    */
+
+    'authorizations' => [
+        'strict' => env('REST_AUTHORIZATIONS_STRICT', false),
+
+        'cache' => [
+            'enabled' => env('REST_AUTHORIZATIONS_CACHE_ENABLED', false),
+            'default' => 5,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gates In Responses
+    |--------------------------------------------------------------------------
+    |
+    | A search can list abilities in "gates" to learn, for each row,
+    | whether the user may perform them. The answers go under "key" in
+    | each row, and the "create" answer goes under "key" in the meta of
+    | the response. Pick a key that no field or include uses.
+    |
+    | When "message.enabled" is true, each answer holds "allowed" and
+    | "message". When it is false, each answer is true or false, a
+    | deprecated format.
+    |
+    | "names" renames the answers. Each key is the default name of an
+    | answer. A resource can turn gates off with the DisableGates trait.
     |
     */
 
     'gates' => [
-        'enabled' => true,
         'key' => 'gates',
+
         'message' => [
             'enabled' => false,
         ],
-        // Here you can customize the keys for each gate
+
         'names' => [
             'authorized_to_view' => 'authorized_to_view',
             'authorized_to_create' => 'authorized_to_create',
@@ -30,58 +69,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Rest Authorizations
+    | Request Limits
     |--------------------------------------------------------------------------
     |
-    | This is the feature that automatically binds to policies to validate incoming requests.
-    | Laravel Rest Api will validate each models searched / mutated / deleted to avoid leaks in your API.
+    | A request over one of these limits gets a 422 on the list that goes
+    | over it. A limit of 0 refuses every entry, or the first level of a
+    | depth. These are not the page sizes of a resource, which its
+    | limits() method returns.
     |
-    | Within a request, each distinct check runs once. The cache keeps the
-    | decisions across requests for "default" minutes; it is off by default.
+    | "sizes" is the most entries that each list of a request accepts, at
+    | every level. "filters" also covers each "nested" group and the
+    | filters of includes and aggregates. "fields" covers the fields of
+    | an action and of each instruction. "values" covers the values of an
+    | "in", "not in", "between" or "not between" filter, and the keys of
+    | one mutation entry. "relation_entries" covers each to-many relation
+    | of a mutation. "resources" covers destroy, restore and force
+    | destroy; an action uses its $maxResources property instead.
     |
-    */
-
-    'authorizations' => [
-        'enabled' => true,
-        // When true, a class-level check that the request did not plan before
-        // validation throws a LogicException instead of being evaluated. Turn it
-        // on in your test suite to catch a relation the request does not cover.
-        'strict' => false,
-        'cache' => [
-            'enabled' => false,
-            'default' => 5, // Cache minutes by default
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Rest Limits
-    |--------------------------------------------------------------------------
+    | "depths" is how many levels nest: "nested" filter groups, includes,
+    | and relations in a mutation. A text search run by a search engine
+    | never nests filters.
     |
-    | These limits bound the size of a request. A request over a limit gets a
-    | 422 on the list that goes over it. They are not the page sizes of a
-    | resource, which limits() returns.
-    |
-    | "sizes" sets the most entries of each list. A key applies to the list of
-    | that name. "filters" also applies to each "nested" group and to the
-    | filters of includes and aggregates. "fields" applies to the fields of an
-    | action and of each instruction. "values" applies to the values of an
-    | "in", "not in", "between" or "not between" filter, and to the key list
-    | of one mutation entry. "relation_entries" applies to each to-many
-    | relation of a mutation. "resources" applies to destroy, restore and
-    | force destroy. An action uses its $maxResources property instead.
-    |
-    | "depths" sets how deep filters, includes and relation operations nest.
-    | Each "nested" key counts as one filter level. A filter depth of 1 allows
-    | a single group of filters, the historical behavior. A higher value allows
-    | that many groups nested inside one another. A text search run by a
-    | search engine never nests filters, whatever the filter depth. Keep the
-    | filter depth modest: deeply nested filters build large, complex boolean
-    | queries.
-    |
-    | "totals" sets two totals. "filters" counts the filters of one search, at
-    | every depth and in its includes and aggregates. "entries" counts the
-    | entries of every list in "sizes" in one request, except "resources".
+    | "totals" count across lists. "filters" is the most filters in one
+    | search, at every level and in its includes and aggregates.
+    | "entries" is the most entries of all the lists above in one
+    | request, except "resources".
     |
     */
 
@@ -101,11 +113,13 @@ return [
             'relation_entries' => 100,
             'resources' => 1000,
         ],
+
         'depths' => [
             'filters' => 1,
             'includes' => 3,
             'mutations' => 3,
         ],
+
         'totals' => [
             'filters' => 500,
             'entries' => 1000,
@@ -114,20 +128,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Precognition Support
+    | Precognition
     |--------------------------------------------------------------------------
     |
-    | This option enables support for Laravel Precognition, which allows
-    | frontend applications to perform validation requests without executing
-    | controller logic. When enabled, requests containing the "Precognition"
-    | header will only trigger middleware and validation, skipping the actual
-    | controller method. This is especially useful for live form validation.
-    | The middleware is attached when the routes are registered: clear the
-    | route cache after changing this option.
+    | Supports Laravel Precognition. A request with the "Precognition"
+    | header runs its middleware, the policy checks made before
+    | validation and its validation, then stops before the controller.
+    | Use it for live form validation. The middleware is added when the
+    | routes are registered, so clear the route cache after you change
+    | this option.
     |
     */
 
     'precognition' => [
         'enabled' => false,
     ],
+
 ];

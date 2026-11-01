@@ -4,6 +4,8 @@ namespace Lomkit\Rest\Validation;
 
 final readonly class Totals
 {
+    public const array KEYS = ['filters', 'entries'];
+
     public function __construct(
         public int $filters,
         public int $entries,

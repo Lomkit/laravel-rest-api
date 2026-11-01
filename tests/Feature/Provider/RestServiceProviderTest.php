@@ -2,7 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Provider;
 
-use InvalidArgumentException;
+use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Facades\Rest as RestFacade;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
@@ -24,7 +24,7 @@ class RestServiceProviderTest extends PackageTestCase
         $this->assertSame('can_view', config('rest.gates.names.authorized_to_view'));
         $this->assertSame('authorized_to_create', config('rest.gates.names.authorized_to_create'));
         $this->assertFalse(config('rest.gates.message.enabled'));
-        $this->assertTrue(config('rest.gates.enabled'));
+        $this->assertSame(['key', 'message', 'names'], array_keys((array) config('rest.gates')));
         $this->assertSame(1, config('rest.limits.depths.filters'));
         $this->assertSame(100, config('rest.limits.sizes.filters'));
         $this->assertSame(1000, config('rest.limits.totals.entries'));
@@ -80,9 +80,43 @@ class RestServiceProviderTest extends PackageTestCase
         $this->app->register(RestServiceProvider::class, force: true);
 
         $this->assertSame(1, config('rest.search.max_nesting_depth'));
-        $this->expectExceptionObject(new InvalidArgumentException('The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters].'));
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.search.max_nesting_depth] option moved to [rest.limits.depths.filters].'));
 
         $this->context()->limits();
+    }
+
+    #[Test]
+    public function it_keeps_an_unknown_limit_of_a_published_config_and_names_it(): void
+    {
+        config()->set('rest', ['limits' => ['sizes' => ['filter' => 50]]]);
+
+        $this->app->register(RestServiceProvider::class, force: true);
+
+        $this->assertSame(50, config('rest.limits.sizes.filter'));
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.limits.sizes.filter] option does not exist.'));
+
+        $this->context()->limits();
+    }
+
+    #[Test]
+    public function it_reads_a_published_config_that_still_holds_the_removed_keys(): void
+    {
+        config()->set('rest', [
+            'gates' => ['enabled' => false, 'key' => 'abilities'],
+            'authorizations' => ['enabled' => false, 'cache' => ['enabled' => true, 'default' => 10]],
+            'documentation' => ['routing' => ['enabled' => true, 'path' => '/api-documentation']],
+        ]);
+
+        $this->app->register(RestServiceProvider::class, force: true);
+        $context = $this->context();
+
+        $this->assertSame([false, true, 10, 'abilities'], [
+            $context->config()->strict,
+            $context->config()->cacheEnabled,
+            $context->config()->cacheMinutes,
+            $context->config()->gatesKey,
+        ]);
+        $this->assertSame(100, $context->limits()->sizes->filters);
     }
 
     #[Test]

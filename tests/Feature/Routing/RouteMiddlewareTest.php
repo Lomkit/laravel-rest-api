@@ -7,6 +7,7 @@ use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route as RouteFacade;
+use Lomkit\Rest\Exceptions\InvalidConfigException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
@@ -63,6 +64,35 @@ class RouteMiddlewareTest extends PackageTestCase
             [EnforceExpectsJson::class, HandlePrecognitiveRequests::class, 'auth'],
             $this->route($routes->getRoutes(), 'documents.mutate')->middleware(),
         );
+    }
+
+    #[Test]
+    #[WithConfig('rest.precognition.enabled', 'false')]
+    public function it_leaves_precognition_out_when_its_option_is_the_string_false(): void
+    {
+        foreach ($this->registerDocuments()->getRoutes() as $route) {
+            $this->assertSame([EnforceExpectsJson::class], $route->middleware());
+        }
+    }
+
+    #[Test]
+    #[WithConfig('rest.precognition.enabled', '1')]
+    public function it_adds_precognition_when_its_option_is_the_string_1(): void
+    {
+        $this->assertSame(
+            [EnforceExpectsJson::class, HandlePrecognitiveRequests::class],
+            $this->route($this->registerDocuments()->getRoutes(), 'documents.search')->middleware(),
+        );
+    }
+
+    #[Test]
+    public function it_names_a_precognition_option_that_is_not_a_boolean(): void
+    {
+        config(['rest.precognition.enabled' => null]);
+
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.precognition.enabled] option must be a boolean.'));
+
+        $this->registerDocuments();
     }
 
     /** @param Closure(PendingResourceRegistration): mixed $configure */

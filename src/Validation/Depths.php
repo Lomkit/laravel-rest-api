@@ -4,6 +4,8 @@ namespace Lomkit\Rest\Validation;
 
 final readonly class Depths
 {
+    public const array KEYS = ['filters', 'includes', 'mutations'];
+
     public function __construct(
         public int $filters,
         public int $includes,
