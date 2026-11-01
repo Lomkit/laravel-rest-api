@@ -3,7 +3,9 @@
 namespace Lomkit\Rest\Tests\Feature\Validation;
 
 use Illuminate\Contracts\Translation\Translator;
+use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Validation\Stubs\CountedValidator;
+use Lomkit\Rest\Tests\Feature\Validation\Stubs\PayloadPostController;
 use Lomkit\Rest\Tests\Feature\Validation\Stubs\ValidationCount;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
@@ -156,6 +158,17 @@ class SingleValidatorTest extends PackageTestCase
         $response = $this->postJson('/api/team-notes/actions/pin-named-notes', ['resources' => [1, 2]]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $this->assertOnePass();
+    }
+
+    #[Test]
+    public function it_validates_a_standalone_operation_in_one_pass(): void
+    {
+        Rest::resource('payload-posts', PayloadPostController::class)->register();
+
+        $response = $this->postJson('/payload-posts/actions/attach-payload', ['fields' => [['name' => 'reason', 'value' => 'spam']]]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 0]]);
         $this->assertOnePass();
     }
 

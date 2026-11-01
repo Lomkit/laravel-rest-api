@@ -86,13 +86,11 @@ trait PerformsRestOperations
 
     public function operate(OperateRequest $request): IlluminateResponse
     {
-        $request->resource($resource = $request->context()->resource(static::resourceClass()));
+        $request->resource($request->context()->resource(static::resourceClass()));
 
         $this->beforeOperate($request);
 
-        $actionInstance = $resource->action($request, $request->actionKey());
-
-        $modelsImpacted = $actionInstance->handleRequest($request);
+        $modelsImpacted = $request->payload()->action->handleRequest($request);
 
         $this->afterOperate($request);
 

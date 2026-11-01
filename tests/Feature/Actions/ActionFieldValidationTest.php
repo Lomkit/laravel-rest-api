@@ -69,8 +69,29 @@ class ActionFieldValidationTest extends PackageTestCase
                 'fields.0.name' => ['The fields.0.name field has a duplicate value.'],
                 'fields.1.name' => ['The fields.1.name field has a duplicate value.'],
             ]],
+            'fields given as null' => ['change-status', ['fields' => null], [
+                'fields' => ['The fields field must be an array.'],
+            ]],
+            'fields given as a string' => ['change-status', ['fields' => 'status'], [
+                'fields' => ['The fields field must be an array.'],
+            ]],
             'a search that is not an array' => ['publish-posts', ['search' => 'drafts'], [
                 'search' => ['The search field must be an array.'],
+            ]],
+            'an unknown key in the search' => ['publish-posts', ['search' => ['filter' => []]], [
+                'search.filter' => ['The search.filter field is prohibited.'],
+            ]],
+            'an unknown key in an entry' => ['publish-posts', ['fields' => [['name' => 'notify', 'value' => true, 'default' => false]]], [
+                'fields.0.default' => ['The fields.0.default field is prohibited.'],
+            ]],
+            'a key that holds * in an entry' => ['publish-posts', ['fields' => [['name' => 'notify', 'value' => true, '*' => 1]]], [
+                'fields.0' => ['The * key is not valid for the fields.0 field.'],
+            ]],
+            'names under fields given as an object' => ['publish-posts', ['fields' => ['first' => ['name' => 'pinned', 'value' => true]]], [
+                'fields' => ['The fields field must be a list.'],
+            ]],
+            'a page in the search' => ['publish-posts', ['search' => ['limit' => 10, 'page' => 2]], [
+                'search.page' => ['The search.page field is prohibited.'],
             ]],
             'a required_if condition met by another field' => ['change-status', ['fields' => [['name' => 'status', 'value' => 'published']]], [
                 'fields.at' => ['The at field is required when status is published.'],
