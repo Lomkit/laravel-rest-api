@@ -46,17 +46,28 @@ class ResourceKeysValidationTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_rejects_a_key_that_does_not_exist_on_destroy(): void
+    #[DataProvider('trashedStates')]
+    public function it_rejects_a_key_that_does_not_exist(string $method, string $uri, ?string $deletedAt): void
     {
-        $document = Document::factory()->create(['title' => 'Annual report']);
+        $document = Document::factory()->create(['id' => 1, 'title' => 'Annual report', 'deleted_at' => $deletedAt]);
 
-        $response = $this->deleteJson('/api/documents', ['resources' => [999, $document->id]]);
+        $response = $this->json($method, $uri, ['resources' => [999, $document->id]]);
 
         $response->assertUnprocessable()->assertExactJson([
             'message' => 'The selected resources.0 is invalid.',
             'errors' => ['resources.0' => ['The selected resources.0 is invalid.']],
         ]);
-        $this->assertNotSoftDeleted($document);
+        $this->assertDatabaseHas('documents', ['id' => 1, 'deleted_at' => $deletedAt]);
+    }
+
+    /** @return array<string, array{string, string, ?string}> */
+    public static function trashedStates(): array
+    {
+        return [
+            'destroy' => ['DELETE', '/api/documents', null],
+            'restore' => ['POST', '/api/documents/restore', '2026-01-01 00:00:00'],
+            'force destroy' => ['DELETE', '/api/documents/force', '2026-01-01 00:00:00'],
+        ];
     }
 
     #[Test]

@@ -6,18 +6,20 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Rules\MaxItems;
 use Lomkit\Rest\Rules\RestRule;
 use Lomkit\Rest\Text\Engine\EngineGrammar;
 use Lomkit\Rest\Text\ResolvedText;
 use Lomkit\Rest\Text\TextBackend;
+use Lomkit\Rest\Validation\Limits;
 
 class Search extends RestRule
 {
-    private bool $nested = false;
+    private int $depth = 0;
 
-    public function nested(): static
+    public function nested(int $depth): static
     {
-        $this->nested = true;
+        $this->depth = $depth;
 
         return $this;
     }
@@ -27,31 +29,44 @@ class Search extends RestRule
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = $this->resource->context()->request;
-        $text = $this->nested ? null : $this->resource->context()->text($this->resource);
+        $limits = $this->resource->context()->limits();
+        $text = $this->depth > 0 ? null : $this->resource->context()->text($this->resource);
         $engine = $text?->engineGrammar();
         $search = is_array($value) ? $value : [];
 
         return [
             $attribute.'.limit' => ['sometimes', 'integer', Rule::in($this->resource->getLimits($request)), ...self::limitRules($engine)],
             $attribute.'.page' => ['sometimes', 'integer', 'min:1', ...$this->pageRules($engine, $search['limit'] ?? null)],
-            $attribute.'.filters' => ['sometimes', 'array'],
-            $attribute.'.gates' => ['sometimes', 'array', Rule::in(['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'])],
+            $attribute.'.filters' => ['sometimes', 'array', MaxItems::filters($limits->sizes->filters)],
+            $attribute.'.gates' => ['sometimes', 'array', Rule::in(['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete']), new MaxItems($limits->sizes->gates)],
             $attribute.'.filters.*' => ($engine === null ? new SearchFilter : new EngineFilter($engine))->setResource($this->resource),
-            $attribute.'.scopes' => ['sometimes', 'array', Rule::prohibitedIf($engine !== null)],
+            $attribute.'.scopes' => ['sometimes', 'array', Rule::prohibitedIf($engine !== null), new MaxItems($limits->sizes->scopes)],
             $attribute.'.scopes.*' => $engine === null ? (new SearchScope)->setResource($this->resource) : [],
-            $attribute.'.sorts' => ['sometimes', 'array', ...self::sortCountRules($engine)],
+            $attribute.'.sorts' => ['sometimes', 'array', new MaxItems(self::sortLimit($limits, $engine))],
             $attribute.'.sorts.*' => $this->sortRule($text, $engine, $search['sorts'] ?? null),
-            $attribute.'.selects' => ['sometimes', 'array'],
+            $attribute.'.selects' => ['sometimes', 'array', new MaxItems($limits->sizes->selects)],
             $attribute.'.selects.*' => (new SearchSelect)->setResource($this->resource),
-            $attribute.'.aggregates' => ['sometimes', 'array'],
+            $attribute.'.aggregates' => ['sometimes', 'array', new MaxItems($limits->sizes->aggregates)],
             $attribute.'.aggregates.*' => (new SearchAggregate)->setResource($this->resource),
-            $attribute.'.includes' => ['sometimes', 'array'],
-            $attribute.'.includes.*' => (new SearchInclude)->setResource($this->resource),
-            $attribute.'.instructions' => ['sometimes', 'array'],
+            ...$this->includeRules($attribute, $limits),
+            $attribute.'.instructions' => ['sometimes', 'array', new MaxItems($limits->sizes->instructions)],
             $attribute.'.instructions.*' => (new SearchInstruction)
                 ->setResource($this->resource)
                 ->among(InstructionSupport::among($this->resource->getInstructions($request), $engine === null ? TextBackend::Query : TextBackend::Engine)),
             ...($text === null ? [] : $this->rootRules($attribute, $text)),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function includeRules(string $attribute, Limits $limits): array
+    {
+        if ($this->depth >= $limits->depths->includes) {
+            return [$attribute.'.includes' => ['prohibited']];
+        }
+
+        return [
+            $attribute.'.includes' => ['sometimes', 'array', new MaxItems($limits->sizes->includes)],
+            $attribute.'.includes.*' => (new SearchInclude($this->depth + 1))->setResource($this->resource),
         ];
     }
 
@@ -112,13 +127,12 @@ class Search extends RestRule
         return $maximum === null ? [] : ['max:'.$maximum];
     }
 
-    /** @return list<string> */
-    private static function sortCountRules(?EngineGrammar $engine): array
+    private static function sortLimit(Limits $limits, ?EngineGrammar $engine): int
     {
         if ($engine === null || $engine->sortKeys === PHP_INT_MAX) {
-            return [];
+            return $limits->sizes->sorts;
         }
 
-        return ['max:'.max(1, $engine->sortKeys)];
+        return min($limits->sizes->sorts, max(1, $engine->sortKeys));
     }
 }

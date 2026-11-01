@@ -17,6 +17,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Validation\CompiledRules;
+use Lomkit\Rest\Validation\NodeBudget;
 use Lomkit\Rest\Validation\RuleCompiler;
 
 class RestRequest extends FormRequest
@@ -147,8 +148,26 @@ class RestRequest extends FormRequest
         return $controller::resourceClass();
     }
 
+    /** @return list<string> */
+    protected function refusedLists(): array
+    {
+        return [];
+    }
+
     private function compiledRules(): CompiledRules
     {
-        return $this->compiled ??= RuleCompiler::compile(parent::validationRules(), $this->all());
+        return $this->compiled ??= $this->compile(parent::validationRules());
+    }
+
+    /** @param array<array-key, mixed> $rules */
+    private function compile(array $rules): CompiledRules
+    {
+        $budget = NodeBudget::of($this->context()->limits());
+
+        foreach ($this->refusedLists() as $key) {
+            $budget->close($key);
+        }
+
+        return RuleCompiler::compile($rules, $this->all(), $budget);
     }
 }

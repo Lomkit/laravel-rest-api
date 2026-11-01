@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Rules\Search;
 
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Rules\MaxItems;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\RestRule;
 use Lomkit\Rest\Text\Engine\EngineGrammar;
@@ -26,7 +27,7 @@ final class EngineFilter extends RestRule
             $attribute.'.nested' => ['prohibited'],
             $attribute.'.type' => ['sometimes', Rule::in(['and'])],
             $attribute.'.operator' => self::operatorRules($declared),
-            ...self::valueRules($attribute.'.value', $declared, $filter['operator'] ?? FilterOperator::Equal->value),
+            ...self::valueRules($attribute.'.value', $declared, $filter['operator'] ?? FilterOperator::Equal->value, $this->resource->context()->limits()->sizes->values),
         ];
     }
 
@@ -43,7 +44,7 @@ final class EngineFilter extends RestRule
     }
 
     /** @return array<string, list<mixed>> */
-    private static function valueRules(string $attribute, ?IndexAttribute $declared, mixed $operator): array
+    private static function valueRules(string $attribute, ?IndexAttribute $declared, mixed $operator, int $values): array
     {
         $operator = is_string($operator) ? FilterOperator::tryFrom($operator) : null;
 
@@ -54,6 +55,10 @@ final class EngineFilter extends RestRule
         $rules = $declared->field->filterValueRules($operator, $attribute);
         $compared = isset($rules[$attribute.'.*']) ? $attribute.'.*' : $attribute;
         $rules[$compared] = ['bail', ...$rules[$compared] ?? [], new EngineComparable($declared)];
+
+        if ($compared !== $attribute) {
+            $rules[$attribute] = [...$rules[$attribute] ?? [], new MaxItems($values)];
+        }
 
         return $rules;
     }

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Http\Requests;
 
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Rules\MaxItems;
 use Lomkit\Rest\Rules\Mutate\Mutate;
 
 class MutateRequest extends RestRequest
@@ -20,7 +21,7 @@ class MutateRequest extends RestRequest
         $resource = $this->context()->resource($this->controllerResourceClass());
 
         return [
-            'mutate' => ['required', 'array'],
+            'mutate' => ['required', 'array', new MaxItems($this->context()->limits()->sizes->mutate)],
             'mutate.*' => (new Mutate)->setResource($resource),
         ];
     }

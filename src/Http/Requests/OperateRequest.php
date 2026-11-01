@@ -2,22 +2,29 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-use Illuminate\Validation\Rule;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Fields\InputValues;
+use Lomkit\Rest\Http\Requests\Traits\ParsesResourceKeys;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Rules\Distinct;
 use Lomkit\Rest\Rules\Input\InputFields;
+use Lomkit\Rest\Rules\MaxItems;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\Search\Search;
+use Lomkit\Rest\Validation\KeyList;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OperateRequest extends RestRequest
 {
+    use ParsesResourceKeys;
+
     #[\Override]
     public function endpoint(): Endpoint
     {
@@ -75,36 +82,45 @@ class OperateRequest extends RestRequest
             throw new InvalidActionStateException('An action cannot be both standalone and targeted.');
         }
 
-        $model = $this->resource::newModel();
         $fields = $operatedAction->getFields($this);
         $searchable = ! $operatedAction->isStandalone() && ! $operatedAction->isTargeted();
 
-        return array_merge(
-            [
-                'search' => $searchable
-                    ? ['array', (new Search)->setResource($this->resource)]
-                    : ['prohibited'],
-                'resources' => $operatedAction->isTargeted()
-                    ? ['required', 'array', 'max:'.$operatedAction->maxResources]
-                    : ['prohibited'],
-                'resources.*' => $operatedAction->isTargeted()
-                    ? [Rule::exists($model::class, $model->getKeyName())]
-                    : [],
+        return [
+            'search' => $searchable
+                ? ['array', (new Search)->setResource($this->resource)]
+                : ['prohibited'],
+            ...$operatedAction->isTargeted()
+                ? $this->resourceKeyRules($this->resource, $operatedAction->maxResources)
+                : ['resources' => ['prohibited']],
+            'fields' => [
+                'sometimes',
+                'array',
+                new MaxItems($this->context()->limits()->sizes->fields),
+                new InputFields($fields),
             ],
-            [
-                'fields' => [
-                    'sometimes',
-                    'array',
-                    new InputFields($fields),
-                ],
-                'fields.*.name' => [
-                    'required',
-                    'string',
-                    Distinct::among($this->input('fields'), 'name'),
-                    new OneOf($fields->names()),
-                ],
-            ]
-        );
+            'fields.*.name' => [
+                'required',
+                'string',
+                Distinct::among($this->input('fields'), 'name'),
+                new OneOf($fields->names()),
+            ],
+        ];
+    }
+
+    public function targetKeys(): KeyList
+    {
+        return $this->resourceKeys();
+    }
+
+    /** @return Builder<Model> */
+    #[\Override]
+    public function keysQuery(Resource $resource): Builder
+    {
+        $query = $resource::newModel()->newQuery();
+
+        (new PerimeterClause($resource))->apply($query);
+
+        return $query;
     }
 
     /** @return array<string, string> */

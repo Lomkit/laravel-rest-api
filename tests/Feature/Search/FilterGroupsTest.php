@@ -94,7 +94,7 @@ class FilterGroupsTest extends PackageTestCase
     #[Test]
     public function it_nests_groups_up_to_the_configured_depth(): void
     {
-        config(['rest.search.max_nesting_depth' => 2]);
+        config(['rest.limits.depths.filters' => 2]);
 
         $response = $this->postJson('/api/posts/search', ['search' => ['sorts' => [['field' => 'id']], 'filters' => [['nested' => [
             ['nested' => [['field' => 'views', 'value' => 1], ['field' => 'title', 'value' => 'Annual report']]],
@@ -120,7 +120,7 @@ class FilterGroupsTest extends PackageTestCase
     #[DataProvider('tooDeepGroups')]
     public function it_refuses_a_group_nested_deeper_than_the_configured_depth(int $depth, array $filters, string $key): void
     {
-        config(['rest.search.max_nesting_depth' => $depth]);
+        config(['rest.limits.depths.filters' => $depth]);
 
         $response = $this->postJson('/api/posts/search', ['search' => ['filters' => $filters]]);
 

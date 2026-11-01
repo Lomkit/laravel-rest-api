@@ -2,14 +2,17 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-use Illuminate\Validation\Rule;
-use Lomkit\Rest\Http\Requests\Traits\ValidatesResourceKeys;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Http\Requests\Traits\ParsesResourceKeys;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Validation\KeyList;
 
 class DestroyRequest extends RestRequest
 {
-    use ValidatesResourceKeys;
+    use ParsesResourceKeys;
 
     #[\Override]
     public function endpoint(): Endpoint
@@ -21,24 +24,25 @@ class DestroyRequest extends RestRequest
     #[\Override]
     public function rules(): array
     {
-        return $this->destroyRules($this->context()->resource($this->controllerResourceClass()));
-    }
-
-    /** @return array<string, mixed> */
-    public function destroyRules(Resource $resource): array
-    {
-        $model = $resource::newModel();
+        $this->resource($resource = $this->context()->resource($this->controllerResourceClass()));
 
         return [
-            'resources' => [
-                'required', 'array',
-            ],
-            'resources.*' => [
-                'distinct',
-                ...$this->keyRules($resource),
-                Rule::exists($model::class, $model->getKeyName()),
-            ],
+            ...$this->resourceKeyRules($resource, $this->context()->limits()->sizes->resources),
             'search' => ['bail', 'prohibited', 'array'],
         ];
+    }
+
+    public function payload(): KeyList
+    {
+        return $this->resourceKeys();
+    }
+
+    /** @return EloquentBuilder<Model> */
+    #[\Override]
+    public function keysQuery(Resource $resource): EloquentBuilder
+    {
+        return $resource::newModel()
+            ->newQuery()
+            ->where(fn (Builder $query): Builder => $resource->destroyQuery($this, $query));
     }
 }

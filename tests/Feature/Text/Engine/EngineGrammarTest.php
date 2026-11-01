@@ -120,6 +120,21 @@ class EngineGrammarTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_limits_the_values_of_an_engine_filter(): void
+    {
+        config(['rest.limits.sizes.values' => 2]);
+
+        $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [
+            ['field' => 'number', 'operator' => 'in', 'value' => [1, 2, 3]],
+        ]]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', [
+            'search.filters.0.value' => ['The search.filters.0.value field must not have more than 2 items.'],
+        ]);
+        $this->assertSame([], $this->engine->searches);
+    }
+
+    #[Test]
     public function it_refuses_a_number_the_engine_cannot_compare(): void
     {
         $response = $this->call('POST', '/api/vouchers/search', server: ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'], content: '{"search":{"text":{"value":"report"},"filters":[{"field":"price","value":1e400}]}}');

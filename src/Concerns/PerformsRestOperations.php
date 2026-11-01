@@ -109,15 +109,8 @@ trait PerformsRestOperations
 
         $this->beforeDestroy($request);
 
-        // The perimeter runs in a subquery so that an "or" inside it cannot swallow the
-        // id allow-list appended afterwards, which binds tighter than it does
-        $query = $resource::newModel()::query()
-            ->where(function ($query) use ($request, $resource) {
-                $resource->destroyQuery($request, $query);
-            });
-
-        $models = $query
-            ->whereIn($resource::newModel()->getKeyName(), $request->input('resources'))
+        $models = $request->payload()
+            ->constrain($request->keysQuery($resource))
             ->get();
 
         foreach ($models as $model) {
@@ -147,16 +140,8 @@ trait PerformsRestOperations
 
         $this->beforeRestore($request);
 
-        // The perimeter runs in a subquery so that an "or" inside it cannot swallow the
-        // id allow-list appended afterwards, which binds tighter than it does
-        $query = $resource::newModel()::query()
-            ->where(function ($query) use ($request, $resource) {
-                $resource->restoreQuery($request, $query);
-            });
-
-        $models = $query
-            ->withTrashed()
-            ->whereIn($resource::newModel()->getKeyName(), $request->input('resources'))
+        $models = $request->payload()
+            ->constrain($request->keysQuery($resource))
             ->get();
 
         foreach ($models as $model) {
@@ -186,16 +171,8 @@ trait PerformsRestOperations
 
         $this->beforeForceDestroy($request);
 
-        // The perimeter runs in a subquery so that an "or" inside it cannot swallow the
-        // id allow-list appended afterwards, which binds tighter than it does
-        $query = $resource::newModel()::query()
-            ->where(function ($query) use ($request, $resource) {
-                $resource->forceDestroyQuery($request, $query);
-            });
-
-        $models = $query
-            ->withTrashed()
-            ->whereIn($resource::newModel()->getKeyName(), $request->input('resources'))
+        $models = $request->payload()
+            ->constrain($request->keysQuery($resource))
             ->get();
 
         foreach ($models as $model) {

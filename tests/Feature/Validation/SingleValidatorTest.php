@@ -11,6 +11,8 @@ use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
+use Lomkit\Rest\Tests\Fixtures\Workspace\Note;
+use Lomkit\Rest\Tests\Fixtures\Workspace\Workspace;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -21,7 +23,7 @@ class SingleValidatorTest extends PackageTestCase
     #[\Override]
     protected function fixtures(): array
     {
-        return [new Catalog, new Publishing];
+        return [new Catalog, new Publishing, new Workspace];
     }
 
     #[\Override]
@@ -102,6 +104,31 @@ class SingleValidatorTest extends PackageTestCase
 
         $response->assertOk();
         $this->assertSame(PostStatus::Published, $draft->fresh()?->status);
+        $this->assertOnePass();
+    }
+
+    #[Test]
+    public function it_validates_a_deletion_in_one_pass(): void
+    {
+        Post::factory()->create(['id' => 1, 'title' => 'Annual report']);
+        Post::factory()->create(['id' => 2, 'title' => 'Quarterly report']);
+
+        $response = $this->deleteJson('/api/posts', ['resources' => [1, 2]]);
+
+        $response->assertOk();
+        $this->assertSame(0, Post::query()->count());
+        $this->assertOnePass();
+    }
+
+    #[Test]
+    public function it_validates_a_targeted_operation_in_one_pass(): void
+    {
+        Note::factory()->create(['id' => 1, 'team' => 'red', 'title' => 'Standup']);
+        Note::factory()->create(['id' => 2, 'team' => 'red', 'title' => 'Retro']);
+
+        $response = $this->postJson('/api/team-notes/actions/pin-named-notes', ['resources' => [1, 2]]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
         $this->assertOnePass();
     }
 

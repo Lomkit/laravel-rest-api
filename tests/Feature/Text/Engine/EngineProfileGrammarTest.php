@@ -68,6 +68,21 @@ class EngineProfileGrammarTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_limits_the_sorts_to_the_smaller_of_the_config_and_the_engine(): void
+    {
+        config(['rest.limits.sizes.sorts' => 2]);
+        $this->useEngine(new FakeTypesenseEngine);
+
+        $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'sorts' => [
+            ['field' => 'price'], ['field' => 'number'], ['field' => 'price', 'direction' => 'desc'],
+        ]]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', [
+            'search.sorts' => ['The search.sorts field must not have more than 2 items.'],
+        ]);
+    }
+
+    #[Test]
     public function it_keeps_the_pages_of_the_database_grammar_without_terms(): void
     {
         $this->useEngine(new FakeTurbopufferEngine);

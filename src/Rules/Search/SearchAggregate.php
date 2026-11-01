@@ -6,6 +6,7 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Rules\Concerns\ReachesRelations;
+use Lomkit\Rest\Rules\MaxItems;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\Resource\ResourceRelationOrNested;
 use Lomkit\Rest\Rules\RestRule;
@@ -44,6 +45,7 @@ class SearchAggregate extends RestRule
         return [
             ...$rules,
             $attribute.'.field' => $this->fieldRules($attribute, $relationResource, $aggregate['type'] ?? null),
+            $attribute.'.filters' => ['sometimes', 'array', MaxItems::filters($this->resource->context()->limits()->sizes->filters)],
             $attribute.'.filters.*' => [(new SearchFilter)->setResource($relationResource)],
         ];
     }
