@@ -146,11 +146,6 @@ parameters:
 			path: src/Authorization/UserIdentity.php
 
 		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 3
-			path: src/Concerns/PerformsRestOperations.php
-
-		-
 			identifier: typeCoverage.returnTypeCoverage
 			count: 6
 			path: src/Concerns/Relations/PerformsRelationOperations.php
@@ -217,33 +212,9 @@ parameters:
 			path: src/Fields/Filtering/Range.php
 
 		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 4
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:withTrashed\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Cannot call method get\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: src/Http/Controllers/Controller.php
-
-		-
 			message: '#^Cannot call method responsable\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 4
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Cannot call method whereIn\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 2
 			path: src/Http/Controllers/Controller.php
 
 		-
@@ -271,12 +242,6 @@ parameters:
 			path: src/Http/Controllers/Controller.php
 
 		-
-			message: '#^Parameter \#1 \$model of method Lomkit\\Rest\\Authorization\\Authorizer\:\:forget\(\) expects Illuminate\\Database\\Eloquent\\Model, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Http/Controllers/Controller.php
-
-		-
 			message: '#^Parameter \#1 \$parameters of method Lomkit\\Rest\\Contracts\\EloquentQueryBuilder\:\:mutate\(\) expects array\<string, mixed\>, array given\.$#'
 			identifier: argument.type
 			count: 1
@@ -284,48 +249,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$parameters of method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:search\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Parameter \#2 \$model of method Lomkit\\Rest\\Http\\Resource\:\:authorizeTo\(\) expects Illuminate\\Database\\Eloquent\\Model\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Parameter \#2 \$model of method Lomkit\\Rest\\Http\\Resource\:\:forceDestroyed\(\) expects Illuminate\\Database\\Eloquent\\Model, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Parameter \#2 \$model of method Lomkit\\Rest\\Http\\Resource\:\:forceDestroying\(\) expects Illuminate\\Database\\Eloquent\\Model, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Parameter \#2 \$model of method Lomkit\\Rest\\Http\\Resource\:\:performForceDelete\(\) expects Illuminate\\Database\\Eloquent\\Model, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Parameter \#2 \$model of method Lomkit\\Rest\\Http\\Resource\:\:performRestore\(\) expects Illuminate\\Database\\Eloquent\\Model, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Parameter \#2 \$model of method Lomkit\\Rest\\Http\\Resource\:\:restored\(\) expects Illuminate\\Database\\Eloquent\\Model, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Parameter \#2 \$model of method Lomkit\\Rest\\Http\\Resource\:\:restoring\(\) expects Illuminate\\Database\\Eloquent\\Model, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Http/Controllers/Controller.php

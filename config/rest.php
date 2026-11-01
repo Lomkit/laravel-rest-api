@@ -73,6 +73,48 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Rest Limits
+    |--------------------------------------------------------------------------
+    |
+    | The most entries that each list of a request accepts, how deep includes
+    | and relation operations nest, and two totals. "filters" also applies to
+    | each "nested" group and to the filters of includes and aggregates.
+    | "fields" applies to the fields of an action and of each instruction.
+    | "values" applies to the values of an "in", "not in", "between" or "not
+    | between" filter and to the key list of one mutation entry.
+    | "relation_entries" applies to each to-many relation of a mutation.
+    | "resources" applies to destroy, restore and force destroy; an action
+    | uses its $maxResources property instead.
+    | "filter_nodes" counts the filters of one search, at every depth and in
+    | its includes and aggregates. "nodes" counts the entries of every list
+    | above in one request, except "resources". A request over a limit gets a
+    | 422 on the list that goes over it. These limits are not the page sizes
+    | of a resource, which limits() returns.
+    |
+    */
+
+    'limits' => [
+        'filters' => 100,
+        'sorts' => 20,
+        'selects' => 100,
+        'scopes' => 10,
+        'aggregates' => 20,
+        'includes' => 20,
+        'instructions' => 10,
+        'gates' => 7,
+        'fields' => 100,
+        'values' => 100,
+        'mutate' => 100,
+        'relation_entries' => 100,
+        'resources' => 1000,
+        'include_depth' => 3,
+        'mutation_depth' => 3,
+        'filter_nodes' => 500,
+        'nodes' => 1000,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Precognition Support
     |--------------------------------------------------------------------------
     |

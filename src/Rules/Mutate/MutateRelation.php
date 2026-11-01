@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Rules\Mutate;
 
 use Illuminate\Support\Str;
 use Lomkit\Rest\Fields\WriteRules;
+use Lomkit\Rest\Rules\MaxItems;
 use Lomkit\Rest\Rules\RestRule;
 
 class MutateRelation extends RestRule
@@ -20,8 +21,10 @@ class MutateRelation extends RestRule
             return [];
         }
 
-        $entries = $relation->hasMultipleEntries() ? $attribute.'.*' : $attribute;
-        $rules = [$entries => [(new Mutate($this->depth + 1, $relation))->setResource($relation->resource())]];
+        $mutate = (new Mutate($this->depth + 1, $relation))->setResource($relation->resource());
+        $rules = $relation->hasMultipleEntries()
+            ? [$attribute => ['array', new MaxItems($this->resource->context()->limits()->relationEntries)], $attribute.'.*' => [$mutate]]
+            : [$attribute => [$mutate]];
 
         foreach ($relation->rules($relation->resource(), $attribute) as $key => $list) {
             $rules[$key] = [...($rules[$key] ?? []), ...WriteRules::listOf($list)];

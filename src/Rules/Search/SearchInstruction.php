@@ -7,6 +7,7 @@ use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Rules\Distinct;
 use Lomkit\Rest\Rules\Input\InputFields;
+use Lomkit\Rest\Rules\MaxItems;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\RestRule;
 use Lomkit\Rest\Text\TextBackend;
@@ -51,7 +52,7 @@ class SearchInstruction extends RestRule
     {
         return [
             $attribute.'.name' => [new OneOf($this->names()), 'required', 'string'],
-            $attribute.'.fields' => ['sometimes', 'array'],
+            $attribute.'.fields' => ['sometimes', 'array', new MaxItems($this->resource->context()->limits()->fields)],
             $attribute.'.fields.*.name' => $fields === null ? [] : [
                 'required',
                 'string',

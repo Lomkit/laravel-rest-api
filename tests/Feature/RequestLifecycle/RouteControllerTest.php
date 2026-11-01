@@ -3,11 +3,11 @@
 namespace Lomkit\Rest\Tests\Feature\RequestLifecycle;
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Validation\Rule;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\PackageTestCase;
+use Lomkit\Rest\Validation\ExistingKey;
 use PHPUnit\Framework\Attributes\Test;
 
 class RouteControllerTest extends PackageTestCase
@@ -21,14 +21,15 @@ class RouteControllerTest extends PackageTestCase
     #[Test]
     public function it_reads_the_resource_of_a_route_whose_controller_is_not_built(): void
     {
-        $request = DestroyRequest::create('/api/products', 'DELETE')->setContainer($this->app);
+        $request = DestroyRequest::create('/api/products', 'DELETE', ['resources' => [5]])->setContainer($this->app);
         $route = $this->app['router']->getRoutes()->match($request);
         $request->setRouteResolver(fn () => $route);
 
         $rules = $request->rules();
 
         $this->assertNull($route->controller);
-        $this->assertEquals(['distinct', 'integer', Rule::exists('products', 'id')], $rules['resources.*']);
+        $this->assertSame('integer', $rules['resources.0'][0]);
+        $this->assertInstanceOf(ExistingKey::class, $rules['resources.0'][1]);
     }
 
     #[Test]

@@ -22,7 +22,7 @@ class TeamNoteResource extends Resource
     #[\Override]
     public function actions(RestRequest $request): array
     {
-        return [PinNotes::make()];
+        return [PinNotes::make(), PinNamedNotes::make()];
     }
 
     #[\Override]

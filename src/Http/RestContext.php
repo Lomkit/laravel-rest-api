@@ -15,6 +15,7 @@ use Lomkit\Rest\Authorization\NullDecisionStore;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Text\ResolvedText;
+use Lomkit\Rest\Validation\Limits;
 use WeakMap;
 
 final class RestContext
@@ -25,6 +26,8 @@ final class RestContext
     private readonly WeakMap $definitions;
 
     private ?int $maxNestingDepth = null;
+
+    private ?Limits $limits = null;
 
     private ?Authorizer $authorizer = null;
 
@@ -65,6 +68,11 @@ final class RestContext
         $depth = config('rest.search.max_nesting_depth', 1);
 
         return $this->maxNestingDepth = is_numeric($depth) ? (int) $depth : 1;
+    }
+
+    public function limits(): Limits
+    {
+        return $this->limits ??= Limits::fromConfig(config('rest.limits'));
     }
 
     public function authorizer(): Authorizer

@@ -2,9 +2,11 @@
 
 namespace Lomkit\Rest\Fields;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Stringable;
 
@@ -60,6 +62,43 @@ class ID extends Field
     public function type(): string
     {
         return 'id';
+    }
+
+    public function parseKey(mixed $value): int|string|null
+    {
+        if (is_string($value) && trim($value) === '') {
+            return null;
+        }
+
+        return match ($this->resolvedKeyType()) {
+            'int' => is_int($key = filter_var($value, FILTER_VALIDATE_INT)) ? $key : null,
+            'string' => is_string($value) ? $value : null,
+            'uuid' => is_string($value) && Str::isUuid($value) ? $value : null,
+            'ulid' => is_string($value) && Str::isUlid($value) ? $value : null,
+        };
+    }
+
+    public function normalizeKey(int|string $key): int|string
+    {
+        return in_array($this->resolvedKeyType(), ['uuid', 'ulid'], true) ? strtolower((string) $key) : $key;
+    }
+
+    /**
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
+     * @param  list<int|string>  $keys
+     * @return Builder<TModel>
+     */
+    public function whereKeys(Builder $query, array $keys): Builder
+    {
+        $column = $query->getModel()->getQualifiedKeyName();
+
+        if ($this->resolvedKeyType() === 'int') {
+            return $query->whereIntegerInRaw($column, $keys);
+        }
+
+        return $query->whereIn($column, $keys);
     }
 
     /** @return 'int'|'string'|'uuid'|'ulid' */

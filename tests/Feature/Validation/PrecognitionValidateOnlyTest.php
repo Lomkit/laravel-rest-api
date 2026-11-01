@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Validation;
 
 use Illuminate\Testing\TestResponse;
+use Lomkit\Rest\Tests\Concerns\CapturesQueries;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -11,6 +12,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[WithConfig('rest.precognition.enabled', true)]
 class PrecognitionValidateOnlyTest extends PackageTestCase
 {
+    use CapturesQueries;
+
     #[\Override]
     protected function fixtures(): array
     {
@@ -61,6 +64,47 @@ class PrecognitionValidateOnlyTest extends PackageTestCase
         $response = $this->precognitiveSearch(['limit' => 7], 'search.lim');
 
         $response->assertNoContent()->assertHeader('Precognition-Success', 'true');
+    }
+
+    #[Test]
+    public function it_reports_a_list_over_its_limit_on_the_list_key(): void
+    {
+        config(['rest.limits.filters' => 2]);
+        $message = 'The search.filters field must not have more than 2 items.';
+
+        $response = $this->precognitiveSearch(['filters' => $this->threeStockFilters()], 'search.filters');
+
+        $response->assertUnprocessable()->assertExactJson(['message' => $message, 'errors' => ['search.filters' => [$message]]]);
+    }
+
+    #[Test]
+    public function it_accepts_a_name_below_a_list_over_its_limit(): void
+    {
+        config(['rest.limits.filters' => 2]);
+
+        $response = $this->precognitiveSearch(['filters' => $this->threeStockFilters()], 'search.filters.0.field');
+
+        $response->assertNoContent()->assertHeader('Precognition-Success', 'true');
+    }
+
+    #[Test]
+    public function it_checks_no_key_when_the_keys_are_not_validated(): void
+    {
+        $this->captureQueries();
+
+        $response = $this->deleteJson('/api/products', ['resources' => [999], 'search' => []], [
+            'Precognition' => 'true',
+            'Precognition-Validate-Only' => 'search',
+        ]);
+
+        $response->assertNoContent()->assertHeader('Precognition-Success', 'true');
+        $this->assertSame([], $this->readsOf('products'));
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function threeStockFilters(): array
+    {
+        return array_fill(0, 3, ['field' => 'stock', 'value' => 3]);
     }
 
     /** @param array<string, mixed> $search */

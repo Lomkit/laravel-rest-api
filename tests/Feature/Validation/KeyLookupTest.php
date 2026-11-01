@@ -1,0 +1,94 @@
+<?php
+
+namespace Lomkit\Rest\Tests\Feature\Validation;
+
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Tests\Concerns\CapturesQueries;
+use Lomkit\Rest\Tests\Fixtures\Archive\Archive;
+use Lomkit\Rest\Tests\Fixtures\Archive\Document;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Draft;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
+use Lomkit\Rest\Tests\PackageTestCase;
+use Lomkit\Rest\Validation\KeyLookup;
+use PHPUnit\Framework\Attributes\Test;
+
+class KeyLookupTest extends PackageTestCase
+{
+    use CapturesQueries;
+
+    #[\Override]
+    protected function fixtures(): array
+    {
+        return [new Archive, new Publishing];
+    }
+
+    #[Test]
+    public function it_checks_keys_in_chunks_of_one_thousand(): void
+    {
+        Document::factory()->create(['id' => 1, 'title' => 'Annual report']);
+        Document::factory()->create(['id' => 2, 'title' => 'Quarterly report']);
+        Document::factory()->create(['id' => 3, 'title' => 'Monthly report']);
+        $lookup = new KeyLookup(fn (): Builder => Document::query(), ID::make('id'));
+
+        foreach (range(1, 2500) as $key) {
+            $lookup->expect($key);
+        }
+
+        $this->captureQueries();
+
+        $this->assertTrue($lookup->has(1));
+        $this->assertTrue($lookup->has(3));
+        $this->assertFalse($lookup->has(4));
+        $this->assertFalse($lookup->has(2500));
+
+        $queries = $this->keyQueries('documents');
+        $this->assertCount(3, $this->statements);
+        $this->assertCount(3, $queries);
+        $this->assertSame([[], [], []], array_column($queries, 1));
+        $this->assertStringContainsString('in (1, 2, 3, ', $queries[0][0]);
+        $this->assertStringContainsString(', 2500)', $queries[2][0]);
+        $this->assertStringNotContainsString('2501', $queries[2][0]);
+
+        $this->assertTrue($lookup->has(2));
+        $this->assertCount(3, $this->statements);
+    }
+
+    #[Test]
+    public function it_checks_the_keys_within_the_query_it_is_given(): void
+    {
+        Document::factory()->create(['id' => 1, 'title' => 'Annual report', 'archived' => false]);
+        Document::factory()->create(['id' => 2, 'title' => 'Old ledger', 'archived' => true]);
+        $lookup = new KeyLookup(fn (): Builder => Document::query()->where('archived', false), ID::make('id'));
+
+        $lookup->expect(1);
+        $lookup->expect(2);
+
+        $this->assertTrue($lookup->has(1));
+        $this->assertFalse($lookup->has(2));
+    }
+
+    #[Test]
+    public function it_finds_a_uuid_key_whenever_the_database_matches_it(): void
+    {
+        $key = '019A35F0-7C2E-7A41-9B3D-5E8F1C2A4B60';
+        Draft::factory()
+            ->for(Author::factory())
+            ->create(['id' => '019a35f0-7c2e-7a41-9b3d-5e8f1c2a4b60']);
+        $lookup = new KeyLookup(fn (): Builder => Draft::query(), ID::make('id')->keyType('uuid'));
+        $lookup->expect($key);
+        $this->captureQueries();
+
+        $found = $lookup->has($key);
+
+        $this->assertCount(1, $this->statements);
+        $this->assertSame([$key], $this->keyQueries('drafts')[0][1]);
+        $this->assertSame(
+            Draft::query()
+                ->whereKey($key)
+                ->exists(),
+            $found,
+        );
+    }
+}

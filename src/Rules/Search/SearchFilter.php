@@ -6,6 +6,7 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Rules\MaxItems;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Rules\RestRule;
 use Lomkit\Rest\Validation\RuleCompiler;
@@ -44,15 +45,32 @@ class SearchFilter extends RestRule
 
         return [
             $attribute.'.field' => ['string', 'required_without:'.$attribute.'.nested', new OneOf($path === null ? [] : [$field])],
-            $attribute.'.nested' => $this->depth < $this->resource->context()->maxNestingDepth()
-                ? ['sometimes', 'prohibits:'.$attribute.'.field,'.$attribute.'.operator,'.$attribute.'.value', 'array']
-                : ['prohibited'],
-            $attribute.'.nested.*' => [(new SearchFilter)
-                ->setResource($this->resource)
-                ->setDepth($this->depth + 1)],
+            ...$this->nestedRules($attribute),
             $attribute.'.operator' => $this->operatorRules($path),
             $attribute.'.type' => ['sometimes', Rule::in(['or', 'and'])],
             ...$this->valueRules($attribute.'.value', $path, $operator),
+        ];
+    }
+
+    /** @return array<string, list<mixed>> */
+    private function nestedRules(string $attribute): array
+    {
+        $context = $this->resource->context();
+
+        if ($this->depth >= $context->maxNestingDepth()) {
+            return [$attribute.'.nested' => ['prohibited']];
+        }
+
+        return [
+            $attribute.'.nested' => [
+                'sometimes',
+                'prohibits:'.$attribute.'.field,'.$attribute.'.operator,'.$attribute.'.value',
+                'array',
+                MaxItems::filters($context->limits()->filters),
+            ],
+            $attribute.'.nested.*' => [(new SearchFilter)
+                ->setResource($this->resource)
+                ->setDepth($this->depth + 1)],
         ];
     }
 
@@ -85,6 +103,12 @@ class SearchFilter extends RestRule
             return [];
         }
 
-        return $path->field->filterValueRules($operator, $attribute);
+        $rules = $path->field->filterValueRules($operator, $attribute);
+
+        if (isset($rules[$attribute.'.*'])) {
+            $rules[$attribute] = [...$rules[$attribute] ?? [], new MaxItems($this->resource->context()->limits()->values)];
+        }
+
+        return $rules;
     }
 }

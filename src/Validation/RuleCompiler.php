@@ -24,18 +24,23 @@ final class RuleCompiler
     private array $reach = [];
 
     /** @param array<array-key, mixed> $data */
-    private function __construct(private readonly array $data) {}
+    private function __construct(private readonly array $data, private readonly NodeBudget $budget) {}
 
     /**
      * @param  array<array-key, mixed>  $rules
      * @param  array<array-key, mixed>  $data
      */
-    public static function compile(array $rules, array $data): CompiledRules
+    public static function compile(array $rules, array $data, NodeBudget $budget = new NodeBudget): CompiledRules
     {
-        $compiler = new self($data);
+        $compiler = new self($data, $budget);
         $compiler->add($rules);
 
-        return new CompiledRules($compiler->resolved() + $compiler->wildcards, $compiler->labels, $compiler->projections, array_values($compiler->reach));
+        return new CompiledRules($budget->applyTo($compiler->resolved() + $compiler->wildcards), $compiler->labels, $compiler->projections, array_values($compiler->reach));
+    }
+
+    public function budget(): NodeBudget
+    {
+        return $this->budget;
     }
 
     /** @param array<array-key, mixed> $rules */
@@ -80,7 +85,7 @@ final class RuleCompiler
             $this->addKey((string) $key, RuleList::of($list), $expanded);
         }
 
-        foreach ($wildcards as $key => $list) {
+        foreach ($this->budget->open($wildcards) as $key => $list) {
             $this->expand($key, RuleList::of($list));
         }
     }

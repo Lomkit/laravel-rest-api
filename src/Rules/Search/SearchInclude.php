@@ -11,6 +11,8 @@ class SearchInclude extends RestRule
 {
     use ReachesRelations;
 
+    public function __construct(private readonly int $depth = 1) {}
+
     #[\Override]
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
     {
@@ -28,7 +30,7 @@ class SearchInclude extends RestRule
 
         $search = is_null($relationResource) ? [] : (new Search)
             ->setResource($relationResource)
-            ->nested()
+            ->nested($this->depth)
             ->buildValidationRules($attribute, $value);
 
         return array_merge(

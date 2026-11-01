@@ -16,6 +16,10 @@ final class InputFields extends RestRule
     #[\Override]
     public function compile(RuleCompiler $into, string $attribute, mixed $value): void
     {
+        if ($into->budget()->refused($attribute)) {
+            return;
+        }
+
         if (! is_array($value)) {
             return;
         }

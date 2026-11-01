@@ -210,7 +210,7 @@ Controller endpoints:
 Requests:
 
 - `authorize()` returns `bool|Illuminate\Auth\Access\Response`, so it can still return `Response::deny()`.
-- `rules()`, `destroyRules()`, `forceDestroyRules()`, `restoreRules()`, `operateRules()` and `resolveFields()` return `array`.
+- `rules()`, `operateRules()` and `resolveFields()` return `array`.
 - `Lomkit\Rest\Http\Requests\ActionsRequest` is removed. Nothing used it: the operate hooks receive an `OperateRequest`.
 
 Service provider and facade:
@@ -241,7 +241,7 @@ Validation:
 - A filter whose `field` is not a string gives a 422 under its `field` key, in `search.filters`, in nested filters and in the filters of includes and aggregates.
 - On an action, `search` must be an object (a JSON array of keys and values) when it is sent.
 - A name repeated in the `fields` of an action or an instruction gives a 422 under each repeated entry: `fields.{index}.name` for an action, `search.instructions.{index}.fields.{position}.name` for an instruction. Before, the last value won.
-- Each entry of `resources` on `destroy`, `restore` and `forceDestroy` must be a key typed like the resource's `ID` field: an integer for integer keys, and a string, a UUID or a ULID for the other key types (a resource without an `ID` field uses the model's key type). A list, an object or `null` gives a 422 under `resources.{index}`. On `restore` and `forceDestroy`, a key of the wrong type (`"abc"` for an integer key) gives a 422 instead of matching no record.
+- Each entry of `resources` on `destroy`, `restore` and `forceDestroy` must be a key typed like the resource's `ID` field: an integer for integer keys, and a string, a UUID or a ULID for the other key types (a resource without an `ID` field uses the model's key type). A list, an object or `null` gives a 422 under `resources.{index}`. The other checks of `resources` are listed under "Resource keys" in [Validation engine](#validation-engine).
 - In `mutate`, an `attributes`, `relations` or `pivot` value that is not an object gives one 422 message under its key.
 - The checks of field, scope, instruction and action field names use a new rule, `Lomkit\Rest\Rules\OneOf`, instead of `Rule::in()`. The message is still `validation.in` ("The selected :attribute is invalid."), but a custom message written for the `in` rule of these attributes no longer applies.
 
@@ -510,6 +510,90 @@ Payloads:
 - A list entry that is not an object, such as `"includes": ["category"]` or `"mutate": ["create"]`, gives a 422 on that entry: `The search.includes.0 field must be an array.` A to-one relation given a list or `null` in `mutate` also gives a 422. Some of these payloads gave a 500 before.
 - Under a to-many relation in `mutate`, the errors are listed entry by entry.
 - `sync` and `toggle` are accepted on many-to-many relations only: `BelongsToMany`, `MorphToMany` and `MorphedByMany`. On another relation they give a 422 under the `operation` key of the entry, such as `The selected mutate.0.relations.author.operation is invalid.` Send `attach` there instead. A relation lists the operations it accepts in `mutationOperations()`.
+
+Limits:
+
+- Each list of a request accepts a limited number of entries, includes and relation operations nest up to a set depth, and two totals bound one request. The values are in the new `limits` block of `config/rest.php`:
+
+  ```php
+  'limits' => [
+      'filters' => 100,
+      'sorts' => 20,
+      'selects' => 100,
+      'scopes' => 10,
+      'aggregates' => 20,
+      'includes' => 20,
+      'instructions' => 10,
+      'gates' => 7,
+      'fields' => 100,
+      'values' => 100,
+      'mutate' => 100,
+      'relation_entries' => 100,
+      'resources' => 1000,
+      'include_depth' => 3,
+      'mutation_depth' => 3,
+      'filter_nodes' => 500,
+      'nodes' => 1000,
+  ],
+  ```
+
+- Each key applies to these lists, at every level of a search, including the search of an include and of an action:
+  - `filters`: `search.filters`, each `nested` group, and the `filters` of includes and aggregates;
+  - `sorts`, `selects`, `scopes`, `aggregates`, `includes`, `instructions` and `gates`: the list of that name;
+  - `fields`: the `fields` of an action and of each instruction;
+  - `values`: the values of an `in`, `not in`, `between` or `not between` filter, and the `key` list of one mutation entry;
+  - `mutate`: the entries of `mutate`;
+  - `relation_entries`: the entries of each to-many relation in `mutate`;
+  - `resources`: the keys of `destroy`, `restore` and `forceDestroy`. A targeted action uses its `$maxResources` property instead;
+  - `include_depth` and `mutation_depth`: how deep includes and relation operations nest;
+  - `filter_nodes`: the filters of one search, at every depth and in its includes and aggregates;
+  - `nodes`: the entries of every list above in one request, except `resources`.
+- The `parameters` of a scope keep their limit: one value per field of the scope.
+- A list over its limit gets a 422 on its own key, such as `search.filters`: "The search.filters field must not have more than 100 items." This message comes first on the key, and the entries of the list are not validated.
+- Includes nest up to `include_depth` levels, 3 by default. A fourth level gives a 422: "The search.includes.0.includes.0.includes.0.includes field is prohibited." Relations in `mutate` nest up to `mutation_depth` levels, 3 by default: "The mutate.0.relations.products.0.relations.category.relations.products.0.relations field is prohibited." An empty list passes at that depth.
+- The two totals give a 422 on the list that goes over them: "The search.includes.0.filters field goes over the limit of 500 filters in one search." for `filter_nodes`, and "The search.selects field goes over the limit of 1000 list entries in one request." for `nodes`. A later list that does not fit is refused without a second message.
+- `rest.search.max_nesting_depth` still sets how deep filters nest. Each `nested` list takes the `filters` limit and counts in `filter_nodes`. Nothing below a group refused at the maximum depth is validated: the request only gets the error on its `nested` key.
+- On a search engine, `search.sorts` accepts the smaller of `sorts` and the number of sorts the engine runs, with the same message.
+- `search.aggregates.*.filters` must be an array: "The search.aggregates.0.filters field must be an array." Before, it was not validated.
+- What a refused list holds is not checked: the `viewAny` check of a relation it names and the `create` check of a mutation entry in it do not run. This covers a list over its limit or over a total, `includes` at `include_depth`, `relations` at `mutation_depth` and a `nested` group past the maximum depth. Such a request gets the 422 of the refused key, where it got a 403 before. The checks of the other parts of the payload still run first, and one that fails there still gives a 403.
+- With Precognition, a list over its limit reports on its own key. A `Precognition-Validate-Only` name below it, such as `search.filters.0.field`, gets `204`, so name the list or an ancestor, such as `search.filters` or `search`.
+- The package now renders some errors itself, so a custom message keyed by their rule no longer applies, and `$validator->failed()` reports `Lomkit\Rest\Validation\Rejected` or `Lomkit\Rest\Validation\ExistingKey` instead of Laravel's rule:
+  - `max` on each list that takes a `rest.limits` value, `search.sorts` next to an engine text included, and on the `resources` of an action: `Rejected` instead of `Max`;
+  - `list` on `resources`: `Rejected` instead of `List`;
+  - `distinct` on the keys of `resources`: `Rejected` instead of `Distinct`;
+  - `exists` on the keys of `resources`: `ExistingKey` instead of `Exists`.
+- Laravel's `list` rule still checks the `fields` of actions and instructions, the values of a filter and the `parameters` of a scope, and Laravel's `max` rule still limits the `parameters` of a scope. Custom messages keyed by these rules still apply there.
+- Laravel's lines `validation.max.array`, `validation.list`, `validation.distinct`, `validation.exists` and the type lines still apply, and the two total texts are JSON translation keys.
+- These limits are not the page sizes of a resource, which `limits()` returns.
+- A `config/rest.php` published before takes the defaults of the keys it leaves out. A value must be an integer of 0 or more, or a string of digits, as `env()` gives. Anything else throws an `InvalidArgumentException` that names the key: "The [rest.limits.filters] option must be an integer of 0 or more."
+- Custom nodes:
+  - `Lomkit\Rest\Rules\MaxItems` limits a list and counts its entries in `nodes`, and `MaxItems::filters()` also counts them in `filter_nodes`. Its key needs a plain rule as well, such as `array`: `'tags' => ['array', new MaxItems(20)]`.
+  - `RuleCompiler::compile()` takes an optional `Lomkit\Rest\Validation\NodeBudget`, and `RuleCompiler::budget()` returns the budget of the compile.
+  - `Search::nested()` takes the include depth: `nested(int $depth)`.
+
+Resource keys:
+
+- `destroy`, `restore`, `forceDestroy` and targeted actions read `resources` the same way. `resources` is required and must be a list of keys typed like the resource's `ID` field.
+- The keys are checked with one query per 1,000 keys, after authorization, and only when `resources` is validated: a `Precognition-Validate-Only` request that leaves `resources` out runs no key query.
+- The query is that of the endpoint, with the global scopes of the model: `destroyQuery()`, `restoreQuery()` or `forceDestroyQuery()`, with the trashed rows on `restore` and `forceDestroy`, or `searchQuery()` for a targeted action.
+- The `ID` field sets the type of the keys, whatever the `$keyType` of the model. Integer keys are written into the query as integers, and other keys are bound as sent. UUID and ULID keys that differ only by case are the same key. A key of the `string` type is found only when the query returns it exactly as sent. An `ID` whose key type does not match the column, such as `keyType('string')` on an integer column, finds no key.
+- A key that the query does not return gives a 422, "The selected resources.0 is invalid.":
+  - on `destroy`, a key that `destroyQuery()` or a global scope leaves out, a trashed key included. Before, it passed validation and was skipped;
+  - on `restore` and `forceDestroy`, a key that does not exist or that the hook leaves out. Before, it was skipped;
+  - on a targeted action, a key that `searchQuery()` leaves out. Before, it was skipped and `impacted` was lower.
+- A repeated key gives "The resources.0 field has a duplicate value." on every copy, on `restore`, `forceDestroy` and targeted actions too. `destroy` already gave it. On every endpoint, two UUID or ULID keys that differ only by case are repeated.
+- On `destroy`, a repeated value that is not a valid key gets its type message only. Before, it also got "has a duplicate value.".
+- An object in place of a list gives "The resources field must be a list.", on every endpoint that takes keys.
+- `destroy`, `restore` and `forceDestroy` accept at most `rest.limits.resources` keys: "The resources field must not have more than 1000 items." A targeted action over its `$maxResources` gets only the error on `resources`. Before, every key was also checked.
+- On a targeted action, a key of the wrong type gives "The resources.0 field must be an integer." (or a string, a UUID or a ULID, by key type). Before, it gave "The selected resources.0 is invalid.", and a 500 on PostgreSQL.
+- In an application without the `ConvertEmptyStringsToNull` middleware, a blank string key gives the type message on every endpoint that takes keys. Before, it passed and nothing was done for it.
+- A custom message for `exists` or `distinct` on `resources.*` no longer applies, see "Limits" above.
+- `operateRules()`, and the `rules()` of `DestroyRequest`, `RestoreRequest` and `ForceDestroyRequest`, return rules on `resources.0`, `resources.1`, … instead of `resources.*`.
+- The query hooks of `destroy`, `restore` and `forceDestroy` now run during validation, before `beforeDestroy()`, `beforeRestore()` and `beforeForceDestroy()`, and run again to load the models. `$request->resource` is set in `rules()`.
+- The deletion endpoints load their models from the query of the endpoint, limited to the parsed keys in the same way as the key query.
+- `DestroyRequest`, `RestoreRequest` and `ForceDestroyRequest` have `payload(): KeyList` (`Lomkit\Rest\Validation\KeyList`) and `keysQuery(Resource $resource): Illuminate\Database\Eloquent\Builder`. The `keys` of a `KeyList` hold the parsed keys, and its `constrain()` method limits an Eloquent query to them. `payload()` throws a `LogicException` before the request passed validation. An override of `passedValidation()` must call the parent.
+- The `ValidatesResourceKeys` trait and the `destroyRules()`, `restoreRules()` and `forceDestroyRules()` methods are removed. Override `rules()` and call the parent instead. A `resources.*` rule added there runs on each key, next to the rules of the package, and does not replace them. It does not run when `resources` is over its limit or is not a list.
+- The `key` of a mutation entry keeps Laravel's `exists` rule.
 
 ### Authorization
 
@@ -936,7 +1020,7 @@ Scramble:
 
 - The `lomkit-rest` container alias is removed. Resolve `Lomkit\Rest\Rest` by its class name, or use the `Lomkit\Rest\Facades\Rest` facade. The container and the facade now return the same instance.
 - The package defaults merge into your published `config/rest.php` at every level. A nested key that your file leaves out, such as `gates.names.authorized_to_restore` or `gates.message.enabled`, now gets its default value. Before, a top-level key such as `gates` replaced all the defaults under it.
-- `destroy` checks that the keys in `resources` exist on the connection of the model. Before, it checked them on the default connection.
+- The keys in `resources` are checked on the connection of the model, through the query of the endpoint, see "Resource keys" in [Validation engine](#validation-engine). Before, `destroy` checked them on the default connection.
 
 ### Generators
 

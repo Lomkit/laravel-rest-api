@@ -2,13 +2,18 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-use Lomkit\Rest\Http\Requests\Traits\ValidatesResourceKeys;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Lomkit\Rest\Http\Requests\Traits\ParsesResourceKeys;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Validation\KeyList;
 
 class RestoreRequest extends RestRequest
 {
-    use ValidatesResourceKeys;
+    use ParsesResourceKeys;
 
     #[\Override]
     public function endpoint(): Endpoint
@@ -20,18 +25,26 @@ class RestoreRequest extends RestRequest
     #[\Override]
     public function rules(): array
     {
-        return $this->restoreRules($this->context()->resource($this->controllerResourceClass()));
-    }
+        $this->resource($resource = $this->context()->resource($this->controllerResourceClass()));
 
-    /** @return array<string, mixed> */
-    public function restoreRules(Resource $resource): array
-    {
         return [
-            'resources' => [
-                'required', 'array',
-            ],
-            'resources.*' => $this->keyRules($resource),
+            ...$this->resourceKeyRules($resource, $this->context()->limits()->resources),
             'search' => ['bail', 'prohibited', 'array'],
         ];
+    }
+
+    public function payload(): KeyList
+    {
+        return $this->resourceKeys();
+    }
+
+    /** @return EloquentBuilder<Model> */
+    #[\Override]
+    public function keysQuery(Resource $resource): EloquentBuilder
+    {
+        return $resource::newModel()
+            ->newQuery()
+            ->withoutGlobalScope(SoftDeletingScope::class)
+            ->where(fn (Builder $query): Builder => $resource->restoreQuery($this, $query));
     }
 }

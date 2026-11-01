@@ -23,6 +23,8 @@ class RestServiceProviderTest extends PackageTestCase
         $this->assertFalse(config('rest.gates.message.enabled'));
         $this->assertTrue(config('rest.gates.enabled'));
         $this->assertSame(1, config('rest.search.max_nesting_depth'));
+        $this->assertSame(100, config('rest.limits.filters'));
+        $this->assertSame(1000, config('rest.limits.nodes'));
     }
 
     #[Test]

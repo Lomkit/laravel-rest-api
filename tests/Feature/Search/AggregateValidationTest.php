@@ -73,6 +73,9 @@ class AggregateValidationTest extends PackageTestCase
             'a filter field that is not a string' => [['relation' => 'products', 'type' => 'count', 'filters' => [['field' => ['name'], 'value' => 'Desk lamp']]], [
                 'search.aggregates.0.filters.0.field' => ['The search.aggregates.0.filters.0.field field must be a string.', 'The selected search.aggregates.0.filters.0.field is invalid.'],
             ]],
+            'filters that are not a list' => [['relation' => 'products', 'type' => 'count', 'filters' => 'cheap'], [
+                'search.aggregates.0.filters' => ['The search.aggregates.0.filters field must be an array.'],
+            ]],
         ];
     }
 

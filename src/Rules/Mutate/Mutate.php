@@ -8,9 +8,11 @@ use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Rules\ArrayWithKey;
+use Lomkit\Rest\Rules\MaxItems;
 use Lomkit\Rest\Rules\Resource\ResourceCustomRules;
 use Lomkit\Rest\Rules\Resource\ResourceMutateRelationOperation;
 use Lomkit\Rest\Rules\RestRule;
+use Lomkit\Rest\Validation\Limits;
 use Lomkit\Rest\Validation\RuleCompiler;
 
 class Mutate extends RestRule
@@ -40,6 +42,7 @@ class Mutate extends RestRule
     public function buildValidationRules(string $attribute, mixed $value): array
     {
         $request = $this->resource->context()->request;
+        $limits = $this->resource->context()->limits();
         $model = $this->resource::newModel();
         $operations = $this->relation?->mutationOperations() ?? [MutationOperation::Create, MutationOperation::Update];
         $write = MutationOperation::tryFromEntry($value)?->writeOperation();
@@ -62,15 +65,28 @@ class Mutate extends RestRule
                 ...self::whenOperation('present_if', $attribute, fn (MutationOperation $operation): bool => $operation->requiresKey()),
                 ...self::whenOperation('prohibited_if', $attribute, fn (MutationOperation $operation): bool => ! $operation->requiresKey()),
                 Rule::exists($model::class, $model->getKeyName()),
+                ...(is_array($value) && is_array($value['key'] ?? null) ? [new MaxItems($limits->values)] : []),
             ],
             $attribute.'.without_detaching' => [
                 'boolean',
                 'prohibited_unless:'.$attribute.'.operation,'.MutationOperation::Sync->value,
             ],
+            ...$this->relationRules($attribute, $limits),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function relationRules(string $attribute, Limits $limits): array
+    {
+        if ($this->depth >= $limits->mutationDepth) {
+            return [$attribute.'.relations' => ['prohibited']];
+        }
+
+        return [
             $attribute.'.relations' => [
                 'sometimes',
                 'array',
-                new ArrayWithKey(array_column($this->resource->getRelations($request), 'relation')),
+                new ArrayWithKey(array_column($this->resource->getRelations($this->resource->context()->request), 'relation')),
             ],
             $attribute.'.relations.*' => (new MutateRelation($this->depth))->setResource($this->resource),
         ];
