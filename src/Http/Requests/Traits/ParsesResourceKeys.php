@@ -17,8 +17,6 @@ trait ParsesResourceKeys
 
     private ?Violations $keyViolations = null;
 
-    private bool $passedKeyValidation = false;
-
     /** @return EloquentBuilder<Model> */
     abstract public function keysQuery(Resource $resource): EloquentBuilder;
 
@@ -31,31 +29,20 @@ trait ParsesResourceKeys
             ->parse(Cursor::of($this->all(), $violations)->at('resources'));
         $this->keyViolations = $violations;
 
+        if ($violations->has('resources')) {
+            $this->budget()->close('resources');
+        }
+
         return $violations->applyTo(['resources' => ['required', 'array'], ...$this->keyList->rules]);
-    }
-
-    /** @return list<string> */
-    #[\Override]
-    protected function refusedLists(): array
-    {
-        return $this->keyViolations?->has('resources') === true ? ['resources'] : [];
-    }
-
-    #[\Override]
-    protected function passedValidation(): void
-    {
-        parent::passedValidation();
-
-        $this->passedKeyValidation = true;
     }
 
     protected function resourceKeys(): KeyList
     {
-        if ($this->passedKeyValidation && $this->keyList === null) {
+        if ($this->hasPassedValidation() && $this->keyList === null) {
             throw new LogicException('The request has no resource keys.');
         }
 
-        if ($this->keyList === null || $this->keyViolations?->isEmpty() !== true || ! $this->passedKeyValidation) {
+        if ($this->keyList === null || $this->keyViolations?->isEmpty() !== true || ! $this->hasPassedValidation()) {
             throw new LogicException('The resource keys were read before the request passed validation.');
         }
 

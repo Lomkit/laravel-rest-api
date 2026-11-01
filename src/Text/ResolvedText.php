@@ -12,6 +12,8 @@ use Lomkit\Rest\Query\Clauses\TextClause;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Text\Engine\EngineGrammar;
 use Lomkit\Rest\Text\Engine\EngineQuery;
+use Lomkit\Rest\Validation\Search\SearchGrammar;
+use Lomkit\Rest\Validation\Search\SqlSearchGrammar;
 
 final readonly class ResolvedText
 {
@@ -50,6 +52,17 @@ final readonly class ResolvedText
     public function ranks(): bool
     {
         return $this->strategy !== null && $this->query !== null && $this->capabilities?->relevance === true;
+    }
+
+    public function grammar(): SearchGrammar
+    {
+        $engine = $this->engineGrammar();
+
+        if ($engine === null || $this->capabilities === null) {
+            return new SqlSearchGrammar($this->capabilities, $this->ranks());
+        }
+
+        return $engine->searchGrammar($this->capabilities);
     }
 
     public function clause(): ?TextClause

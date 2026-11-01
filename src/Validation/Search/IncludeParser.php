@@ -1,0 +1,108 @@
+<?php
+
+namespace Lomkit\Rest\Validation\Search;
+
+use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Rules\Resource\ResourceRelationOrNested;
+use Lomkit\Rest\Search\IncludeNode;
+use Lomkit\Rest\Validation\Cursor;
+use Lomkit\Rest\Validation\ValidationContext;
+use Lomkit\Rest\Validation\Violation;
+
+final readonly class IncludeParser
+{
+    private const array KEYS = [
+        'relation' => true,
+        'alias' => true,
+        'limit' => true,
+        'filters' => true,
+        'gates' => true,
+        'scopes' => true,
+        'sorts' => true,
+        'selects' => true,
+        'aggregates' => true,
+        'includes' => true,
+        'instructions' => true,
+        'text' => true,
+        'trashed' => true,
+    ];
+
+    /**
+     * @param  list<Cursor>  $entries
+     * @return list<IncludeNode>
+     */
+    public function parse(array $entries, ValidationContext $context): array
+    {
+        $aliases = [];
+        $includes = [];
+
+        foreach ($entries as $entry) {
+            $alias = $entry->at('alias');
+
+            if ($alias->present) {
+                $aliases[] = $alias->value;
+            }
+        }
+
+        foreach ($entries as $entry) {
+            $include = $this->include($entry, $aliases, $context);
+
+            if ($include !== null) {
+                $includes[] = $include;
+            }
+        }
+
+        return $includes;
+    }
+
+    /** @param list<mixed> $aliases */
+    private function include(Cursor $entry, array $aliases, ValidationContext $context): ?IncludeNode
+    {
+        if (! $context->reader->object($entry)) {
+            return null;
+        }
+
+        $context->reader->known($entry, self::KEYS);
+
+        $rules = $context->rules;
+        $relation = $entry->at('relation');
+        $alias = $entry->at('alias');
+        $name = is_string($relation->value) ? $relation->value : null;
+        $related = $name === null ? null : $context->reachRelation($name, $entry->path);
+        $body = $name === null || $related === null ? null : $this->body($entry, $name, $related, $context);
+
+        $rules->add($relation->path, ['required', (new ResourceRelationOrNested)->setResource($context->resource)]);
+        $rules->add($entry->at('text')->path, ['prohibited']);
+        $rules->add($entry->at('trashed')->path, ['prohibited']);
+        $rules->addWhenPresent($alias, [
+            'string',
+            'max:255',
+            'regex:/^[A-Za-z_][A-Za-z0-9_]*$/',
+            new IncludeAlias($context->resource, $name ?? '', count(array_keys($aliases, $alias->value, true))),
+        ]);
+
+        $search = $body?->node(null, null);
+
+        if ($name === null || $search === null || ($alias->value !== null && ! is_string($alias->value))) {
+            $rules->partial();
+
+            return null;
+        }
+
+        return new IncludeNode($name, is_string($alias->value) ? $alias->value : null, $search);
+    }
+
+    private function body(Cursor $entry, string $relation, Resource $related, ValidationContext $context): ?SearchBodyParser
+    {
+        $levels = count(explode('.', $relation));
+        $limit = $context->limits->includeDepth;
+
+        if ($context->includeDepth + $levels > $limit) {
+            $context->rules->reject(Violation::tooDeep($entry->at('relation')->path, $limit));
+
+            return null;
+        }
+
+        return SearchBodyParser::keys($entry, $context->related($related)->included($levels), false);
+    }
+}

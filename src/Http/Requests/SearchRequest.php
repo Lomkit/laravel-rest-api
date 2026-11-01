@@ -2,11 +2,14 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
+use Lomkit\Rest\Http\Requests\Traits\ParsesSearch;
 use Lomkit\Rest\Http\Routing\Endpoint;
-use Lomkit\Rest\Rules\Search\Search;
+use Lomkit\Rest\Search\SearchNode;
 
 class SearchRequest extends RestRequest
 {
+    use ParsesSearch;
+
     #[\Override]
     public function endpoint(): Endpoint
     {
@@ -17,10 +20,11 @@ class SearchRequest extends RestRequest
     #[\Override]
     public function rules(): array
     {
-        $resource = $this->context()->resource($this->controllerResourceClass());
+        return $this->searchRules($this->context()->resource($this->controllerResourceClass()));
+    }
 
-        return [
-            'search' => ['sometimes', 'array', (new Search)->setResource($resource)],
-        ];
+    public function payload(): SearchNode
+    {
+        return $this->searchNode();
     }
 }

@@ -50,6 +50,31 @@ class RefusedListChecksTest extends HelpdeskTestCase
     }
 
     #[Test]
+    public function it_checks_each_relation_of_an_include_that_goes_too_deep(): void
+    {
+        config(['rest.limits.include_depth' => 2]);
+
+        $this->postJson('/api/tickets/search', ['search' => ['includes' => [['relation' => 'team.tickets.tags']]]])
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'Teams are not listed.']);
+    }
+
+    #[Test]
+    public function it_checks_no_relation_in_the_body_of_an_include_that_goes_too_deep(): void
+    {
+        config(['rest.limits.include_depth' => 1]);
+        $message = 'The search.includes.0.relation field goes deeper than the limit of 1 include levels.';
+
+        $this->postJson('/api/tickets/search', ['search' => ['includes' => [
+            ['relation' => 'tags.labelledTickets', 'filters' => [['field' => 'team.name', 'value' => 'Billing']]],
+        ]]])
+            ->assertUnprocessable()
+            ->assertExactJson(['message' => $message, 'errors' => ['search.includes.0.relation' => [$message]]]);
+
+        $this->assertSame([], $this->teams->calls);
+    }
+
+    #[Test]
     public function it_checks_the_relations_of_the_lists_that_are_read(): void
     {
         config(['rest.limits.sizes.selects' => 1]);

@@ -35,4 +35,24 @@ final readonly class Violation
     {
         return new self($key, 'The :attribute field goes over the limit of :max list entries in one request.', ['max' => (string) $max]);
     }
+
+    public static function notArray(string $key): self
+    {
+        return new self($key, 'validation.array');
+    }
+
+    public static function unknown(string $key): self
+    {
+        return new self($key, 'validation.prohibited');
+    }
+
+    public static function unnamedKey(string $container, string $key): self
+    {
+        return new self($container, 'The :key key is not valid for the :attribute field.', ['key' => $key]);
+    }
+
+    public static function tooDeep(string $key, int $max): self
+    {
+        return new self($key, 'The :attribute field goes deeper than the limit of :max include levels.', ['max' => (string) $max]);
+    }
 }

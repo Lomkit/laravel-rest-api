@@ -78,6 +78,46 @@ class EngineArchitectureTest extends TestCase
         $this->assertEqualsCanonicalizing(array_values(self::ENGINE_GROUPS), array_values(array_unique(array_column($expected, 1))));
     }
 
+    #[Test]
+    public function it_names_no_backend_in_the_search_parser(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $sources = self::files("{$root}/src", '.php');
+        $grammars = ["{$root}/src/Validation/Search/SearchGrammar.php", "{$root}/src/Validation/Search/SqlSearchGrammar.php"];
+        $parser = [
+            ...array_diff(self::files("{$root}/src/Validation/Search", '.php'), $grammars),
+            "{$root}/src/Validation/InputSet.php",
+            "{$root}/src/Validation/PayloadReader.php",
+            "{$root}/src/Validation/ParsedRules.php",
+        ];
+
+        $this->assertSame([], self::matching($root, $parser, '/engine|TextBackend|ResolvedText|backend\(|context\(\)->text\(/i'));
+        $this->assertSame([], self::matching($root, $grammars, '/engine/i'));
+        $this->assertSame(['src/Text/Engine/EngineGrammar.php'], self::matching($root, $sources, '/new EngineSearchGrammar\b/'));
+        $this->assertSame(
+            ['src/Text/Engine/EngineSearchGrammar.php', 'src/Text/ResolvedText.php', 'src/Validation/Search/SqlSearchGrammar.php'],
+            self::matching($root, $sources, '/SqlSearchGrammar/'),
+        );
+        $this->assertSame([], self::matching($root, $sources, '/instanceof [A-Za-z\\\\]*SearchGrammar/'));
+    }
+
+    /**
+     * @param  list<string>  $paths
+     * @return list<string>
+     */
+    private static function matching(string $root, array $paths, string $pattern): array
+    {
+        $files = [];
+
+        foreach ($paths as $path) {
+            if (preg_match($pattern, (string) file_get_contents($path)) === 1) {
+                $files[] = substr($path, strlen($root) + 1);
+            }
+        }
+
+        return $files;
+    }
+
     private static function namesScout(string $code): bool
     {
         foreach (token_get_all($code) as $token) {

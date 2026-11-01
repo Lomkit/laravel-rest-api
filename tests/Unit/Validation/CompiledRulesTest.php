@@ -2,7 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Unit\Validation;
 
+use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\CompiledRules;
+use Lomkit\Rest\Validation\ParsedRules;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -53,5 +57,24 @@ class CompiledRulesTest extends TestCase
             ['fields.min_views' => 'minimum views', 'lineItems.0.unitPrice' => 'lineItems.0.unitPrice'],
             $compiled->attributeNames(['fields.min_views' => 'minimum views'], ['items.*.unit_price' => 'unit price', 'fields.status' => 'publication status']),
         );
+    }
+
+    #[Test]
+    public function it_adds_the_checks_inputs_and_labels_of_a_parse(): void
+    {
+        $resource = new class extends Resource {};
+        $compiledCheck = new Check($resource, 'update', Model::class, 'mutate.0');
+        $parsedCheck = new Check($resource, 'viewAny', Model::class, 'search.filters.0');
+        $parsed = new ParsedRules;
+        $parsed->label('search.filters.0.sort_by', 'search.filters.0.sort_by');
+        $parsed->project('search.instructions.0.fields.status', 'draft');
+        $parsed->reach($parsedCheck);
+
+        $compiled = (new CompiledRules(['mutate' => ['array']], ['fields.min_views' => 'min views'], ['fields.limit' => 25], [$compiledCheck]))->with($parsed);
+
+        $this->assertSame(['mutate' => ['array']], $compiled->rules);
+        $this->assertSame(['search.filters.0.sort_by' => 'search.filters.0.sort_by', 'fields.min_views' => 'min views'], $compiled->labels);
+        $this->assertSame(['search.instructions.0.fields.status' => 'draft', 'fields.limit' => 25], $compiled->projections);
+        $this->assertSame([$parsedCheck, $compiledCheck], $compiled->reach);
     }
 }

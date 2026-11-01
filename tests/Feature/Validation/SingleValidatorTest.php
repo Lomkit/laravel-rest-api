@@ -8,6 +8,7 @@ use Lomkit\Rest\Tests\Feature\Validation\Stubs\ValidationCount;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
@@ -56,6 +57,32 @@ class SingleValidatorTest extends PackageTestCase
         $response->assertOk()->assertJsonPath('data', [
             ['id' => $deskLamp->id, 'name' => 'Desk lamp', 'category' => ['id' => $lighting->id, 'name' => 'Lighting']],
         ]);
+        $this->assertOnePass();
+    }
+
+    #[Test]
+    public function it_validates_a_search_of_every_part_in_one_pass(): void
+    {
+        Post::factory()
+            ->for(Author::factory()->state(['first_name' => 'Ada', 'last_name' => 'Lovelace']))
+            ->create(['id' => 1, 'views' => 20]);
+
+        $response = $this->postJson('/api/posts/search', ['search' => [
+            'filters' => [
+                ['field' => 'views', 'operator' => '>', 'value' => 10],
+                ['type' => 'or', 'nested' => [['field' => 'author.first_name', 'value' => 'Ada']]],
+            ],
+            'sorts' => [['field' => 'views', 'direction' => 'desc'], ['field' => 'id']],
+            'selects' => [['field' => 'id'], ['field' => 'title']],
+            'scopes' => [['name' => 'popular', 'parameters' => [5]]],
+            'instructions' => [['name' => 'highlight-posts', 'fields' => [['name' => 'min_views', 'value' => 50]]]],
+            'includes' => [['relation' => 'author', 'alias' => 'writer', 'limit' => 10, 'filters' => [['field' => 'last_name', 'value' => 'Lovelace']]]],
+            'gates' => ['view'],
+            'limit' => 25,
+            'page' => 1,
+        ]]);
+
+        $response->assertOk();
         $this->assertOnePass();
     }
 

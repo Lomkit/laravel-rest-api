@@ -2,18 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Feature\Validation;
 
+use Illuminate\Routing\Redirector;
 use Lomkit\Rest\Http\Requests\OperateRequest;
-use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Rules\OneOf;
-use Lomkit\Rest\Rules\Search\SearchAggregate;
-use Lomkit\Rest\Rules\Search\SearchInstruction;
-use Lomkit\Rest\Rules\Search\SearchScope;
-use Lomkit\Rest\Rules\Search\SearchSelect;
-use Lomkit\Rest\Rules\Search\SearchSort;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
-use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
-use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -31,53 +24,54 @@ class NameListRulesTest extends PackageTestCase
     #[Test]
     public function it_checks_selected_fields_against_a_one_of_rule(): void
     {
-        $rules = (new SearchSelect)->setResource($this->products())->buildValidationRules('select', ['field' => 'name']);
+        $rules = $this->searchRequest('/api/products/search', ['selects' => [['field' => 'name']]])->rules();
 
-        $this->assertSame(self::PRODUCT_FIELDS, $this->oneOf($rules['select.field']));
+        $this->assertSame(self::PRODUCT_FIELDS, $this->oneOf($rules['search.selects.0.field'])->values());
     }
 
     #[Test]
     public function it_checks_sorted_fields_against_a_one_of_rule(): void
     {
-        $sql = (new SearchSort)->setResource($this->products())->buildValidationRules('sort', ['field' => 'name']);
+        $rules = $this->searchRequest('/api/products/search', ['sorts' => [['field' => 'name']]])->rules();
 
-        $this->assertSame(self::PRODUCT_FIELDS, $this->oneOf($sql['sort.field']));
+        $this->assertSame(self::PRODUCT_FIELDS, $this->oneOf($rules['search.sorts.0.field'])->values());
     }
 
     #[Test]
     public function it_checks_aggregated_fields_against_a_one_of_rule(): void
     {
-        $rules = (new SearchAggregate)->setResource($this->products())->buildValidationRules('aggregate', ['relation' => 'category', 'type' => 'min']);
+        $rules = $this->searchRequest('/api/products/search', ['aggregates' => [['relation' => 'category', 'type' => 'min']]])->rules();
 
-        $this->assertSame(['id', 'name'], $this->oneOf($rules['aggregate.field']));
+        $this->assertSame(['id', 'name'], $this->oneOf($rules['search.aggregates.0.field'])->values());
     }
 
     #[Test]
     public function it_checks_no_aggregated_field_name_without_a_known_type(): void
     {
-        $missing = (new SearchAggregate)->setResource($this->products())->buildValidationRules('aggregate', ['relation' => 'category']);
-        $unknown = (new SearchAggregate)->setResource($this->products())->buildValidationRules('aggregate', ['relation' => 'category', 'type' => 'median']);
+        $missing = $this->searchRequest('/api/products/search', ['aggregates' => [['relation' => 'category']]])->rules();
+        $unknown = $this->searchRequest('/api/products/search', ['aggregates' => [['relation' => 'category', 'type' => 'median']]])->rules();
 
-        $this->assertSame([], array_filter($missing['aggregate.field'], fn (mixed $rule): bool => $rule instanceof OneOf));
-        $this->assertSame([], array_filter($unknown['aggregate.field'], fn (mixed $rule): bool => $rule instanceof OneOf));
+        $this->assertSame([], array_filter($missing['search.aggregates.0.field'], fn (mixed $rule): bool => $rule instanceof OneOf));
+        $this->assertSame([], array_filter($unknown['search.aggregates.0.field'], fn (mixed $rule): bool => $rule instanceof OneOf));
     }
 
     #[Test]
     public function it_checks_instruction_names_and_their_field_names_against_a_one_of_rule(): void
     {
-        $instruction = ['name' => 'priced-at', 'fields' => [['name' => 'price', 'value' => 39]]];
-        $sql = (new SearchInstruction)->setResource($this->products())->buildValidationRules('instruction', $instruction);
+        $rules = $this->searchRequest('/api/products/search', ['instructions' => [
+            ['name' => 'priced-at', 'fields' => [['name' => 'price', 'value' => 39]]],
+        ]])->rules();
 
-        $this->assertSame(['priced-at'], $this->oneOf($sql['instruction.name']));
-        $this->assertSame(['price'], $this->oneOf($sql['instruction.fields.*.name']));
+        $this->assertSame(['priced-at'], $this->oneOf($rules['search.instructions.0.name'])->values());
+        $this->assertSame(['price'], $this->oneOf($rules['search.instructions.0.fields.0.name'])->values());
     }
 
     #[Test]
     public function it_checks_scope_names_against_a_one_of_rule(): void
     {
-        $rules = (new SearchScope)->setResource($this->resource(PostResource::class))->buildValidationRules('scope', ['name' => 'popular']);
+        $rules = $this->searchRequest('/api/posts/search', ['scopes' => [['name' => 'popular']]])->rules();
 
-        $this->assertSame(['publishedSince', 'popular', 'viewedBetween', 'featured', 'reaching'], $this->oneOf($rules['scope.name']));
+        $this->assertSame(['publishedSince', 'popular', 'viewedBetween', 'featured', 'reaching'], $this->oneOf($rules['search.scopes.0.name'])->values());
     }
 
     #[Test]
@@ -88,30 +82,66 @@ class NameListRulesTest extends PackageTestCase
         $route->getController();
         $request->setRouteResolver(fn () => $route);
 
-        $this->assertSame(['at', 'notify'], $this->oneOf($request->rules()['fields.*.name']));
+        $this->assertSame(['at', 'notify'], $this->oneOf($request->rules()['fields.*.name'])->values());
     }
 
-    private function products(): Resource
+    #[Test]
+    public function it_shares_one_list_between_the_entries_of_a_search(): void
     {
-        return $this->resource(ProductResource::class);
+        $rules = $this->searchRequest('/api/products/search', ['sorts' => [['field' => 'name'], ['field' => 'price']]])->rules();
+
+        $this->assertSame($this->oneOf($rules['search.sorts.0.field']), $this->oneOf($rules['search.sorts.1.field']));
     }
 
-    /** @param class-string<Resource> $class */
-    private function resource(string $class): Resource
+    #[Test]
+    public function it_returns_the_search_rules_on_explicit_keys(): void
     {
-        return RestRequest::create('/', 'POST')->setContainer($this->app)->context()->resource($class);
+        $rules = $this->searchRequest('/api/products/search', [
+            'filters' => [['nested' => [['field' => 'name', 'value' => 'Desk lamp']]]],
+            'sorts' => [['field' => 'name'], ['field' => 'price', 'direction' => 'desc']],
+            'includes' => [['relation' => 'category', 'filters' => [['field' => 'name', 'value' => 'Lighting']]]],
+            'instructions' => [['name' => 'priced-at', 'fields' => [['name' => 'price', 'value' => 39]]]],
+        ])->rules();
+
+        $this->assertContains('search.includes.0.filters.0.field', array_keys($rules));
+        $this->assertSame([], array_values(array_filter(array_keys($rules), fn (string $key): bool => str_contains($key, '*'))));
     }
 
-    /**
-     * @param  list<mixed>  $rules
-     * @return list<string>
-     */
-    private function oneOf(array $rules): array
+    #[Test]
+    public function it_parses_the_search_once_per_request(): void
+    {
+        config(['rest.limits.nodes' => 2]);
+        $request = $this->searchRequest('/api/products/search', ['sorts' => [['field' => 'name'], ['field' => 'price']]]);
+
+        $first = $request->rules();
+        $second = $request->rules();
+        $request->validateResolved();
+
+        $this->assertSame($first, $second);
+        $this->assertArrayHasKey('search.sorts.1.field', $second);
+        $this->assertSame(['search' => ['sorts' => [['field' => 'name'], ['field' => 'price']]]], $request->validated());
+    }
+
+    /** @param array<string, mixed> $search */
+    private function searchRequest(string $uri, array $search): SearchRequest
+    {
+        $request = SearchRequest::create($uri, 'POST', ['search' => $search])
+            ->setContainer($this->app)
+            ->setRedirector($this->app->make(Redirector::class));
+        $route = $this->app['router']->getRoutes()->match($request);
+        $route->getController();
+        $request->setRouteResolver(fn () => $route);
+
+        return $request;
+    }
+
+    /** @param list<mixed> $rules */
+    private function oneOf(array $rules): OneOf
     {
         $oneOf = array_values(array_filter($rules, fn (mixed $rule): bool => $rule instanceof OneOf));
 
         $this->assertCount(1, $oneOf);
 
-        return $oneOf[0]->values();
+        return $oneOf[0];
     }
 }

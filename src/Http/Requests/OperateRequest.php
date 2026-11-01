@@ -10,6 +10,7 @@ use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Http\Requests\Traits\ParsesResourceKeys;
+use Lomkit\Rest\Http\Requests\Traits\ParsesSearch;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
@@ -17,13 +18,13 @@ use Lomkit\Rest\Rules\Distinct;
 use Lomkit\Rest\Rules\Input\InputFields;
 use Lomkit\Rest\Rules\MaxItems;
 use Lomkit\Rest\Rules\OneOf;
-use Lomkit\Rest\Rules\Search\Search;
 use Lomkit\Rest\Validation\KeyList;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OperateRequest extends RestRequest
 {
     use ParsesResourceKeys;
+    use ParsesSearch;
 
     #[\Override]
     public function endpoint(): Endpoint
@@ -86,9 +87,9 @@ class OperateRequest extends RestRequest
         $searchable = ! $operatedAction->isStandalone() && ! $operatedAction->isTargeted();
 
         return [
-            'search' => $searchable
-                ? ['array', (new Search)->setResource($this->resource)]
-                : ['prohibited'],
+            ...$searchable
+                ? ['search' => ['array'], ...$this->searchRules($this->resource)]
+                : ['search' => ['prohibited']],
             ...$operatedAction->isTargeted()
                 ? $this->resourceKeyRules($this->resource, $operatedAction->maxResources)
                 : ['resources' => ['prohibited']],
