@@ -4,21 +4,22 @@ namespace Lomkit\Rest\Console\QuickStart;
 
 final readonly class FirstRequest
 {
-    private const string TOKEN = 'php artisan tinker --execute="echo %s::first()->createToken(\'cli\')->plainTextToken;"';
+    private const string SEARCH = 'curl -X POST %s/%s%s -H "Accept: application/json" -H "Content-Type: application/json" -d \'{"search":{"limit":10}}\'';
 
-    private const string SEARCH = 'curl -X POST %s/%s -H "Authorization: Bearer <token>" -H "Accept: application/json" -H "Content-Type: application/json" -d \'{"search":{"limit":10}}\'';
+    private const string BEARER = ' -H "Authorization: Bearer <token>"';
 
-    public function __construct(private string $userModel, private string $url, private ?string $search) {}
+    public function __construct(private string $userModel, private string $url, private ?string $search, private ApiGuard $guard) {}
 
     /** @return list<string> */
     public function commands(): array
     {
-        $token = sprintf(self::TOKEN, $this->userModel);
+        $package = $this->guard->kind->package();
+        $first = $package?->tokenCommand($this->userModel) ?? "Authenticate with the {$this->guard->name} guard to call the API.";
 
         if ($this->search === null) {
-            return [$token];
+            return [$first];
         }
 
-        return [$token, sprintf(self::SEARCH, rtrim($this->url, '/'), ltrim($this->search, '/'))];
+        return [$first, sprintf(self::SEARCH, rtrim($this->url, '/'), ltrim($this->search, '/'), $package === null ? '' : self::BEARER)];
     }
 }

@@ -8,8 +8,6 @@ use Illuminate\Support\Arr;
 
 final readonly class Outro
 {
-    private const string HAS_API_TOKENS = 'Laravel\Sanctum\HasApiTokens';
-
     /** @param  list<PlannedFile>  $created */
     public function __construct(
         private QuickStartPlan $plan,
@@ -17,6 +15,7 @@ final readonly class Outro
         private AppNamespace $app,
         private string $user,
         private string $url,
+        private ApiGuard $guard,
     ) {}
 
     public function render(OutputStyle $output, Factory $components, ?string $search): void
@@ -24,13 +23,15 @@ final readonly class Outro
         $output->newLine();
         $this->write($output, $this->remarks());
 
-        if (! $this->userHasApiTokens()) {
-            $components->warn('Add '.self::HAS_API_TOKENS." to {$this->user}.");
+        $trait = $this->guard->kind->package()?->tokensTrait();
+
+        if ($trait !== null && ! $this->userUses($trait)) {
+            $components->warn("Add {$trait} to {$this->user}.");
         }
 
         $output->writeln('  Next:');
 
-        foreach ((new FirstRequest($this->user, $this->url, $search))->commands() as $command) {
+        foreach ((new FirstRequest($this->user, $this->url, $search, $this->guard))->commands() as $command) {
             $output->writeln("    {$command}");
         }
 
@@ -63,9 +64,9 @@ final readonly class Outro
         return array_merge(...array_map(fn (PlannedFile $file): array => $file->remarks, $this->created));
     }
 
-    private function userHasApiTokens(): bool
+    private function userUses(string $trait): bool
     {
-        return class_exists($this->user) && in_array(self::HAS_API_TOKENS, class_uses_recursive($this->user), true);
+        return class_exists($this->user) && in_array($trait, class_uses_recursive($this->user), true);
     }
 
     /** @return list<string> */

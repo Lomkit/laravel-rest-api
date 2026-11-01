@@ -151,7 +151,7 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
         $this->generate('rest:policy', ['name' => 'LintedArticlePolicy', '--model' => Article::class, '--force' => true]);
         $this->generate('rest:policy', ['name' => 'Admin/LintedTagPolicy']);
         $this->quickStart();
-        file_put_contents(base_path('routes/rest.php'), (new RouteFile("<?php\n\ndeclare(strict_types=1);\n"))->withResource('admin-logs', 'App\Rest\Controllers\AdminLogsController')->withResource('admin-posts', 'App\Rest\Controllers\Admin\PostsController')->contents);
+        file_put_contents(base_path('routes/rest.php'), (new RouteFile("<?php\n\ndeclare(strict_types=1);\n"))->withResource('admin-logs', 'App\Rest\Controllers\AdminLogsController', 'auth:sanctum')->withResource('admin-posts', 'App\Rest\Controllers\Admin\PostsController', 'auth:sanctum')->contents);
 
         $this->assertSame(self::GENERATED_FILES, $this->filesIn(app_path('Rest')));
         $this->assertSame(self::GENERATED_POLICIES, $this->filesIn(app_path('Policies')));
@@ -163,6 +163,7 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
         $this->writeModel('App\Models\LintedLabel', self::LABEL_MODEL);
         $this->writeModel('App\Models\LintedMemo', "use \\Illuminate\\Database\\Eloquent\\SoftDeletes;\n\n    protected \$table = 'notes';");
         copy(FakeApiInstallCommand::routesStub(), base_path('routes/api.php'));
+        config(['auth.guards.sanctum' => ['driver' => 'session', 'provider' => 'users']]);
         Process::fake(['*rest:check*' => Process::result('{"routes":15,"policies":3,"problems":[],"search":"/api/linted-entries/search"}')]);
 
         $this->generate('rest:quick-start', ['--model' => ['LintedEntry', 'LintedLabel', 'LintedMemo']]);
