@@ -89,7 +89,7 @@ final readonly class FilterParser
     {
         $nested = $entry->at('nested');
 
-        if ($context->filterDepth >= $context->resource->context()->maxNestingDepth()) {
+        if ($context->filterDepth >= $context->limits->depths->filters) {
             $context->rules->add($nested->path, ['prohibited']);
 
             return $nested->value === [] ? [] : null;
@@ -100,7 +100,7 @@ final readonly class FilterParser
             'array',
         ]);
 
-        return $context->reader->entries($nested, $context->limits->filters, true);
+        return $context->reader->entries($nested, $context->limits->sizes->filters, true);
     }
 
     /**
@@ -115,7 +115,7 @@ final readonly class FilterParser
 
         $context->rules->add($value->path, $rules[$value->path]);
 
-        if (! isset($rules[$value->path.'.*']) || ! $context->reader->admit($value, $context->limits->values)) {
+        if (! isset($rules[$value->path.'.*']) || ! $context->reader->admit($value, $context->limits->sizes->values)) {
             return [];
         }
 

@@ -54,7 +54,7 @@ class DepthLimitsTest extends PackageTestCase
     #[Test]
     public function it_counts_each_relation_of_a_dotted_include(): void
     {
-        config(['rest.limits.include_depth' => 2]);
+        config(['rest.limits.depths.includes' => 2]);
         $message = 'The search.includes.0.relation field goes deeper than the limit of 2 include levels.';
 
         $response = $this->postJson('/api/posts/search', ['search' => ['includes' => [['relation' => 'author.posts.author']]]]);
@@ -65,7 +65,7 @@ class DepthLimitsTest extends PackageTestCase
     #[Test]
     public function it_refuses_includes_below_a_dotted_include_at_the_limit(): void
     {
-        config(['rest.limits.include_depth' => 2]);
+        config(['rest.limits.depths.includes' => 2]);
 
         $response = $this->postJson('/api/posts/search', ['search' => ['includes' => [
             ['relation' => 'author.posts', 'includes' => [['relation' => 'author']]],

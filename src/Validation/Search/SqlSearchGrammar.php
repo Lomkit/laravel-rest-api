@@ -53,7 +53,7 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     #[\Override]
     public function sortLimit(Limits $limits): int
     {
-        return $limits->sorts;
+        return $limits->sizes->sorts;
     }
 
     #[\Override]

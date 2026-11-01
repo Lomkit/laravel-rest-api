@@ -57,7 +57,7 @@ final readonly class InstructionParser
 
         $context->rules->add($name->path, [$names, 'required', 'string']);
         $context->rules->addWhenPresent($fields, ['array']);
-        $context->reader->admit($fields, $context->limits->fields);
+        $context->reader->admit($fields, $context->limits->sizes->fields);
 
         if ($instruction === null) {
             $context->rules->partial();

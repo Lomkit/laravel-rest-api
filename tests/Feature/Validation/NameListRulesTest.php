@@ -110,7 +110,7 @@ class NameListRulesTest extends PackageTestCase
     #[Test]
     public function it_parses_the_search_once_per_request(): void
     {
-        config(['rest.limits.nodes' => 2]);
+        config(['rest.limits.totals.entries' => 2]);
         $request = $this->searchRequest('/api/products/search', ['sorts' => [['field' => 'name'], ['field' => 'price']]]);
 
         $first = $request->rules();

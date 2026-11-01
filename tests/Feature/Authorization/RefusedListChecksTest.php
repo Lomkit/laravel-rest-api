@@ -52,7 +52,7 @@ class RefusedListChecksTest extends HelpdeskTestCase
     #[Test]
     public function it_checks_each_relation_of_an_include_that_goes_too_deep(): void
     {
-        config(['rest.limits.include_depth' => 2]);
+        config(['rest.limits.depths.includes' => 2]);
 
         $this->postJson('/api/tickets/search', ['search' => ['includes' => [['relation' => 'team.tickets.tags']]]])
             ->assertForbidden()
@@ -62,7 +62,7 @@ class RefusedListChecksTest extends HelpdeskTestCase
     #[Test]
     public function it_checks_no_relation_in_the_body_of_an_include_that_goes_too_deep(): void
     {
-        config(['rest.limits.include_depth' => 1]);
+        config(['rest.limits.depths.includes' => 1]);
         $message = 'The search.includes.0.relation field goes deeper than the limit of 1 include levels.';
 
         $this->postJson('/api/tickets/search', ['search' => ['includes' => [

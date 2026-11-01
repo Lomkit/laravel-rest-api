@@ -56,10 +56,10 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     public function sortLimit(Limits $limits): int
     {
         if ($this->engine->sortKeys === PHP_INT_MAX) {
-            return $limits->sorts;
+            return $limits->sizes->sorts;
         }
 
-        return min($limits->sorts, max(1, $this->engine->sortKeys));
+        return min($limits->sizes->sorts, max(1, $this->engine->sortKeys));
     }
 
     #[\Override]

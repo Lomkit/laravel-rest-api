@@ -81,7 +81,7 @@ final readonly class EngineFilterParser
 
         $context->rules->add($value->path, $rules[$value->path] ?? []);
 
-        if ($compared === $value->path || ! $context->reader->admit($value, $context->limits->values)) {
+        if ($compared === $value->path || ! $context->reader->admit($value, $context->limits->sizes->values)) {
             return;
         }
 

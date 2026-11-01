@@ -43,16 +43,16 @@ final readonly class SearchBodyParser
             $context->rules->addWhenPresent($page, ['integer', 'min:1', ...$grammar->pageRules($limit->value, $resource->defaultLimit)]);
         }
 
-        $filters = self::list($search->at('filters'), ['array'], $limits->filters, $context, true);
+        $filters = self::list($search->at('filters'), ['array'], $limits->sizes->filters, $context, true);
         $gates = self::gates($search->at('gates'), $context);
         $lists = [
             'filters' => $filters,
-            'scopes' => self::list($search->at('scopes'), ['array', ...$grammar->scopeRules()], $limits->scopes, $context),
+            'scopes' => self::list($search->at('scopes'), ['array', ...$grammar->scopeRules()], $limits->sizes->scopes, $context),
             'sorts' => self::list($sorts, ['array'], $grammar->sortLimit($limits), $context),
-            'selects' => self::list($search->at('selects'), ['array'], $limits->selects, $context),
-            'aggregates' => self::list($search->at('aggregates'), ['array'], $limits->aggregates, $context),
+            'selects' => self::list($search->at('selects'), ['array'], $limits->sizes->selects, $context),
+            'aggregates' => self::list($search->at('aggregates'), ['array'], $limits->sizes->aggregates, $context),
             'includes' => self::includes($search->at('includes'), $context),
-            'instructions' => self::list($search->at('instructions'), ['array'], $limits->instructions, $context),
+            'instructions' => self::list($search->at('instructions'), ['array'], $limits->sizes->instructions, $context),
         ];
 
         return new self(
@@ -137,20 +137,20 @@ final readonly class SearchBodyParser
     /** @return list<Cursor>|null */
     private static function includes(Cursor $includes, ValidationContext $context): ?array
     {
-        if ($context->includeDepth >= $context->limits->includeDepth) {
+        if ($context->includeDepth >= $context->limits->depths->includes) {
             $context->rules->add($includes->path, ['prohibited']);
 
             return null;
         }
 
-        return self::list($includes, ['array'], $context->limits->includes, $context);
+        return self::list($includes, ['array'], $context->limits->sizes->includes, $context);
     }
 
     /** @return list<string>|null */
     private static function gates(Cursor $gates, ValidationContext $context): ?array
     {
         $context->rules->addWhenPresent($gates, ['array', Rule::in(self::GATES)]);
-        $entries = $context->reader->entries($gates, $context->limits->gates);
+        $entries = $context->reader->entries($gates, $context->limits->sizes->gates);
 
         if (! $gates->present) {
             return null;

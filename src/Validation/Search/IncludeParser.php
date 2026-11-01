@@ -95,7 +95,7 @@ final readonly class IncludeParser
     private function body(Cursor $entry, string $relation, Resource $related, ValidationContext $context): ?SearchBodyParser
     {
         $levels = count(explode('.', $relation));
-        $limit = $context->limits->includeDepth;
+        $limit = $context->limits->depths->includes;
 
         if ($context->includeDepth + $levels > $limit) {
             $context->rules->reject(Violation::tooDeep($entry->at('relation')->path, $limit));
