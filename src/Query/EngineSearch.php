@@ -12,6 +12,8 @@ use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Search\Plan\KeyedRows;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
+use Lomkit\Rest\Search\Plan\PlannedPage;
+use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Text\Engine\EngineCriteria;
@@ -29,18 +31,18 @@ final readonly class EngineSearch
         private SearchNode $search,
     ) {}
 
-    /** @return LengthAwarePaginator<int, Model> */
-    public function paginate(): LengthAwarePaginator
+    public function paginate(): PlannedPage
     {
         $query = $this->query();
         $perPage = $this->search->limit ?? $this->resource->defaultLimit;
         $page = $this->search->page ?? 1;
         $result = $query->page($perPage, $page);
+        $plan = $this->plan($result->keys);
 
-        return new LengthAwarePaginator($this->rows($result->keys), $result->total, $perPage, $page, [
+        return new PlannedPage($plan, new LengthAwarePaginator($result->keys === [] ? new Collection : $this->load($plan), $result->total, $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
             'pageName' => 'page',
-        ]);
+        ]));
     }
 
     public function query(): EngineQuery
@@ -72,10 +74,21 @@ final readonly class EngineSearch
             return new Collection;
         }
 
+        return $this->load($this->plan($keys));
+    }
+
+    /** @param list<int|string> $keys */
+    private function plan(array $keys): QueryPlan
+    {
         $model = $this->resource::newModel();
         $keyed = new KeyedRows(EngineKeys::of(ScoutModel::tryFrom($model) ?? throw InvalidResourceException::unsearchableModel($model::class), $keys));
-        $plan = (new SearchPlanner($keyed))->plan($this->resource, $this->search, LimitPolicy::none());
 
+        return (new SearchPlanner($keyed))->plan($this->resource, $this->search, LimitPolicy::none());
+    }
+
+    /** @return Collection<int, Model> */
+    private function load(QueryPlan $plan): Collection
+    {
         return QueryBuilderFactory::make($this->resource)
             ->search($plan)
             ->get();

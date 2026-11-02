@@ -2,7 +2,10 @@
 
 namespace Lomkit\Rest\Concerns;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Response as IlluminateResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
@@ -13,11 +16,11 @@ use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
-use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Response;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Query\EngineSearch;
 use Lomkit\Rest\Query\QueryBuilderFactory;
+use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 
 trait PerformsRestOperations
@@ -49,7 +52,7 @@ trait PerformsRestOperations
 
             $this->afterSearch($request);
 
-            return $this->buildResponse($resource, $page);
+            return $this->buildResponse($page->plan, $page->rows);
         }
 
         $plan = SearchPlanner::paged($resource, $request->payload(), $text);
@@ -57,14 +60,15 @@ trait PerformsRestOperations
 
         $this->afterSearch($request);
 
-        return $this->buildResponse($resource, $text->run(fn () => $resource->paginate($query, $plan->limit->perPage(), $plan->limit->page())));
+        return $this->buildResponse($plan, $text->run(fn () => $resource->paginate($query, $plan->limit->perPage(), $plan->limit->page())));
     }
 
-    private function buildResponse(Resource $resource, mixed $responsable): Response
+    /** @param LengthAwarePaginator<int, Model>|Collection<int, Model> $rows */
+    private function buildResponse(QueryPlan $plan, LengthAwarePaginator|Collection $rows): Response
     {
-        return $resource::newResponse()
-            ->resource($resource)
-            ->responsable($responsable);
+        return $plan->resource::newResponse()
+            ->plan($plan)
+            ->responsable($rows);
     }
 
     /** @return array<string, mixed> */
@@ -129,9 +133,7 @@ trait PerformsRestOperations
 
         $this->afterDestroy($request);
 
-        return $resource::newResponse()
-            ->resource($resource)
-            ->responsable($models);
+        return $this->buildResponse(QueryPlan::bare($resource), $models);
     }
 
     public function restore(RestoreRequest $request): Response
@@ -160,9 +162,7 @@ trait PerformsRestOperations
 
         $this->afterRestore($request);
 
-        return $resource::newResponse()
-            ->resource($resource)
-            ->responsable($models);
+        return $this->buildResponse(QueryPlan::bare($resource), $models);
     }
 
     public function forceDestroy(ForceDestroyRequest $request): Response
@@ -191,8 +191,6 @@ trait PerformsRestOperations
 
         $this->afterForceDestroy($request);
 
-        return $resource::newResponse()
-            ->resource($resource)
-            ->responsable($models);
+        return $this->buildResponse(QueryPlan::bare($resource), $models);
     }
 }

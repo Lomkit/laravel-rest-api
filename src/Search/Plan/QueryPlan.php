@@ -22,6 +22,11 @@ final readonly class QueryPlan implements Clause
         public LimitPolicy $limit,
     ) {}
 
+    public static function bare(Resource $resource): self
+    {
+        return new self($resource, [], [], [], LimitPolicy::none());
+    }
+
     #[\Override]
     public function apply(Builder $query): void
     {

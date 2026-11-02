@@ -430,7 +430,7 @@ Query builder and requests:
 
 - A `SearchRequest` subclass whose `failedValidation()` does not throw gets the `LogicException` of `payload()` when the search runs: "The search was read before the request passed validation."
 - An include that a dotted include goes through, such as `posts` next to `posts.author`, keeps its filters, sorts, scopes, instructions, limit, includes, aggregates and the `searchQuery()` of its resource whatever their order in `includes`. Before, it lost them when it was listed first.
-- `OperationNode::search()` returns the search of the action, empty when it is not sent. `DispatchAction::modelsQuery(SearchNode $search)` takes it. `Lomkit\Rest\Query\EngineSearch` takes the search as a third constructor argument and reads it: `paginate()` and `query()` take no argument, and `rows(array $keys)` loads the rows of a page.
+- `OperationNode::search()` returns the search of the action, empty when it is not sent. `DispatchAction::modelsQuery(SearchNode $search)` takes it. `Lomkit\Rest\Query\EngineSearch` takes the search as a third constructor argument and reads it: `query()` takes no argument, `paginate()` takes none and returns a `Lomkit\Rest\Search\Plan\PlannedPage`, which holds the `plan` of the page and the paginator of its `rows`, and `rows(array $keys)` loads the rows of a page.
 
 ### Text search
 
@@ -907,6 +907,12 @@ Resource methods:
   - `authorizeToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): void` and `authorizedToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): bool`.
 - `authorizeTo()` calls `authorizedTo()`, so an override of `authorizedTo()` applies to the endpoints as well as to the gates. The checks made before validation, on the endpoint and on each reached resource, also go through the `authorizedTo()` of their resource.
 - `authorizedTo()` returns a new `Illuminate\Auth\Access\Response` built from the decision, with or without the cache. It keeps the result, the message and the status of the policy's response, and its code when the code is an integer or a string. It does not keep a code of another type, such as an enum or an object, or an instance of your own `Response` subclass.
+
+### Responses
+
+The package renders the rows of a response from the plan of the search.
+
+- `Lomkit\Rest\Http\Response::resource()` is replaced by `plan(QueryPlan $plan)`, which takes the `Lomkit\Rest\Search\Plan\QueryPlan` of the rows. `plan()` and `responsable()` return the response.
 
 ### Selects, sorts and aggregates
 

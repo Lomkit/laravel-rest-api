@@ -11,12 +11,13 @@ use Illuminate\Support\Str;
 use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Search\Plan\QueryPlan;
 
 class Response implements Responsable
 {
     protected $responsable;
 
-    protected Resource $resource;
+    private QueryPlan $plan;
 
     public function responsable($responsable)
     {
@@ -25,11 +26,11 @@ class Response implements Responsable
         });
     }
 
-    public function resource(Resource $resource)
+    public function plan(QueryPlan $plan): static
     {
-        return tap($this, function () use ($resource) {
-            $this->resource = $resource;
-        });
+        $this->plan = $plan;
+
+        return $this;
     }
 
     protected function buildGatesForModel(Model|string $model, Resource $resource, array $gates)
@@ -200,27 +201,27 @@ class Response implements Responsable
                 $this->responsable->perPage(),
                 $this->responsable->currentPage(),
                 $this->responsable->getOptions(),
-                $this->resource->isGatingEnabled() && in_array('create', $request->array('search.gates')) ? [
-                    $this->resource->context()->config()->gatesKey => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
+                $this->plan->resource->isGatingEnabled() && in_array('create', $request->array('search.gates')) ? [
+                    $this->plan->resource->context()->config()->gatesKey => $this->buildGatesForModel($this->plan->resource::newModel()::class, $this->plan->resource, ['create']),
                 ] : []
             );
 
             $restLengthAwarePaginator->through(function ($model) use ($request) {
-                return $this->map($model, $this->modelToResponse($model, $this->resource, $request->array('search')));
+                return $this->map($model, $this->modelToResponse($model, $this->plan->resource, $request->array('search')));
             });
 
             return $restLengthAwarePaginator;
         } elseif ($this->responsable instanceof Collection) {
             $data = $this->responsable->map(function ($model) use ($request) {
-                return $this->map($model, $this->modelToResponse($model, $this->resource, $request->array('search')));
+                return $this->map($model, $this->modelToResponse($model, $this->plan->resource, $request->array('search')));
             });
         }
 
         return [
-            'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->resource, $request->array('search'))),
+            'data' => $data ?? $this->map($this->responsable, $this->modelToResponse($this->responsable, $this->plan->resource, $request->array('search'))),
             'meta' => array_merge(
-                $this->resource->isGatingEnabled() && in_array('create', $request->array('search.gates')) ? [
-                    $this->resource->context()->config()->gatesKey => $this->buildGatesForModel($this->resource::newModel()::class, $this->resource, ['create']),
+                $this->plan->resource->isGatingEnabled() && in_array('create', $request->array('search.gates')) ? [
+                    $this->plan->resource->context()->config()->gatesKey => $this->buildGatesForModel($this->plan->resource::newModel()::class, $this->plan->resource, ['create']),
                 ] : []
             ),
         ];

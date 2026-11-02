@@ -177,31 +177,7 @@ parameters:
 			path: src/Fields/Filtering/Range.php
 
 		-
-			message: '#^Cannot call method responsable\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 4
-			path: src/Http/Controllers/Controller.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:buildResponse\(\) should return Lomkit\\Rest\\Http\\Response but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:destroy\(\) should return Lomkit\\Rest\\Http\\Response but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:forceDestroy\(\) should return Lomkit\\Rest\\Http\\Response but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Http\\Controllers\\Controller\:\:restore\(\) should return Lomkit\\Rest\\Http\\Response but returns mixed\.$#'
 			identifier: return.type
 			count: 1
 			path: src/Http/Controllers/Controller.php
@@ -368,12 +344,6 @@ parameters:
 			path: src/Http/Response.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:resource\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Http/Response.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Http\\Response\:\:responsable\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -404,7 +374,7 @@ parameters:
 
 		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 5
+			count: 4
 			path: src/Http/Response.php
 
 		-

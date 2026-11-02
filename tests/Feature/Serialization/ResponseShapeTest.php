@@ -2,6 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Feature\Serialization;
 
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Search\Plan\QueryPlan;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
+use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -75,6 +80,23 @@ class ResponseShapeTest extends PackageTestCase
         $this->assertSame(
             '{"data":[{"id":3,"title":"Orphans","summary":null,"status":"published","featured":false,"views":20,"rating":null,"published_on":"2026-01-01T00:00:00.000000Z","published_at":null,"metadata":null}],"meta":[]}',
             $response->getContent(),
+        );
+    }
+
+    #[Test]
+    public function it_renders_one_row(): void
+    {
+        $context = new RestContext(RestRequest::create('/api/posts', 'POST'), $this->app);
+        $resource = $context->resource(PostResource::class);
+
+        $response = PostResource::newResponse()
+            ->plan(QueryPlan::bare($resource))
+            ->responsable(Post::query()->findOrFail(1))
+            ->toResponse($context->request);
+
+        $this->assertSame(
+            '{"data":{"id":1,"title":"Engines","summary":null,"status":"published","featured":false,"views":150,"rating":null,"published_on":"2026-01-01T00:00:00.000000Z","published_at":null,"metadata":null},"meta":[]}',
+            json_encode($response),
         );
     }
 }
