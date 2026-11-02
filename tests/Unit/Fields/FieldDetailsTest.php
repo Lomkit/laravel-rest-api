@@ -39,7 +39,7 @@ class FieldDetailsTest extends TestCase
     public function it_describes_the_reference_price_entry_byte_for_byte(): void
     {
         $this->assertSame(
-            '{"name":"price","type":"number","nullable":true,"select":true,"sort":true,"filter":{"operators":["=","!=",">",">=","<","<=","between","not between","in","not in","is null","is not null"]},"create":true,"update":true,"rules":{"all":["nullable","numeric"],"create":[],"update":[]},"meta":{}}',
+            '{"name":"price","label":null,"type":"number","nullable":true,"select":true,"sort":true,"filter":{"operators":["=","!=",">",">=","<","<=","between","not between","in","not in","is null","is not null"]},"create":true,"update":true,"rules":{"all":["nullable","numeric"],"create":[],"update":[]},"meta":{}}',
             json_encode(FieldDetails::of(Number::make('price')->nullable())),
         );
     }
@@ -55,15 +55,15 @@ class FieldDetailsTest extends TestCase
     public static function builtInTypes(): array
     {
         return [
-            'an id' => [ID::make('id'), '{"name":"id","type":"id","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::ID4.'},"create":false,"update":false,"rules":{"all":["integer"],"create":[],"update":[]},"meta":{}}'],
-            'a text' => [Text::make('name'), '{"name":"name","type":"text","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::T8.'},"create":true,"update":true,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}}'],
-            'an integer' => [Integer::make('views'), '{"name":"views","type":"integer","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::N10.'},"create":true,"update":true,"rules":{"all":["integer"],"create":[],"update":[]},"meta":{}}'],
-            'a number' => [Number::make('rating'), '{"name":"rating","type":"number","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::N10.'},"create":true,"update":true,"rules":{"all":["numeric"],"create":[],"update":[]},"meta":{}}'],
-            'a boolean' => [Boolean::make('featured'), '{"name":"featured","type":"boolean","nullable":false,"select":true,"sort":true,"filter":{"operators":["=","!="]},"create":true,"update":true,"rules":{"all":["boolean"],"create":[],"update":[]},"meta":{}}'],
-            'a date' => [Date::make('published_on'), '{"name":"published_on","type":"date","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::D8.'},"create":true,"update":true,"rules":{"all":["date"],"create":[],"update":[]},"meta":{}}'],
-            'a date and time' => [DateTime::make('published_at'), '{"name":"published_at","type":"datetime","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::D8.'},"create":true,"update":true,"rules":{"all":["date"],"create":[],"update":[]},"meta":{}}'],
-            'an enum' => [Enum::make('status', PostStatus::class), '{"name":"status","type":"enum","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::ID4.'},"create":true,"update":true,"rules":{"all":["enum"],"create":[],"update":[]},"meta":{},"values":["draft","review","published"]}'],
-            'a json' => [Json::make('metadata'), '{"name":"metadata","type":"json","nullable":false,"select":true,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["array"],"create":[],"update":[]},"meta":{}}'],
+            'an id' => [ID::make('id'), '{"name":"id","label":null,"type":"id","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::ID4.'},"create":false,"update":false,"rules":{"all":["integer"],"create":[],"update":[]},"meta":{}}'],
+            'a text' => [Text::make('name'), '{"name":"name","label":null,"type":"text","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::T8.'},"create":true,"update":true,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}}'],
+            'an integer' => [Integer::make('views'), '{"name":"views","label":null,"type":"integer","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::N10.'},"create":true,"update":true,"rules":{"all":["integer"],"create":[],"update":[]},"meta":{}}'],
+            'a number' => [Number::make('rating'), '{"name":"rating","label":null,"type":"number","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::N10.'},"create":true,"update":true,"rules":{"all":["numeric"],"create":[],"update":[]},"meta":{}}'],
+            'a boolean' => [Boolean::make('featured'), '{"name":"featured","label":null,"type":"boolean","nullable":false,"select":true,"sort":true,"filter":{"operators":["=","!="]},"create":true,"update":true,"rules":{"all":["boolean"],"create":[],"update":[]},"meta":{}}'],
+            'a date' => [Date::make('published_on'), '{"name":"published_on","label":null,"type":"date","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::D8.'},"create":true,"update":true,"rules":{"all":["date"],"create":[],"update":[]},"meta":{}}'],
+            'a date and time' => [DateTime::make('published_at'), '{"name":"published_at","label":null,"type":"datetime","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::D8.'},"create":true,"update":true,"rules":{"all":["date"],"create":[],"update":[]},"meta":{}}'],
+            'an enum' => [Enum::make('status', PostStatus::class), '{"name":"status","label":null,"type":"enum","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::ID4.'},"create":true,"update":true,"rules":{"all":["enum"],"create":[],"update":[]},"meta":{},"values":["draft","review","published"]}'],
+            'a json' => [Json::make('metadata'), '{"name":"metadata","label":null,"type":"json","nullable":false,"select":true,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["array"],"create":[],"update":[]},"meta":{}}'],
         ];
     }
 
@@ -122,14 +122,29 @@ class FieldDetailsTest extends TestCase
     }
 
     #[Test]
+    public function it_describes_the_label_of_a_field(): void
+    {
+        $this->assertSame(
+            '{"name":"title","label":"headline","type":"text","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::T8.'},"create":true,"update":true,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}}',
+            json_encode(FieldDetails::of(Text::make('title')->label('headline'))),
+        );
+    }
+
+    #[Test]
+    public function it_shows_a_blank_label_as_none(): void
+    {
+        $this->assertNull(FieldDetails::of(Text::make('title')->label('  '))->jsonSerialize()['label']);
+    }
+
+    #[Test]
     public function it_describes_pivot_fields_without_sort(): void
     {
         $this->assertSame(
             '['
-            .'{"name":"position","type":"integer","nullable":true,"select":true,"sort":false,"filter":{"operators":'.self::N12.'},"create":true,"update":true,"rules":{"all":["nullable","integer"],"create":[],"update":[]},"meta":{}},'
-            .'{"name":"wall","type":"text","nullable":false,"select":true,"sort":false,"filter":{"operators":'.self::T8.'},"create":true,"update":false,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}},'
-            .'{"name":"note","type":"text","nullable":false,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}},'
-            .'{"name":"created_at","type":"datetime","nullable":false,"select":true,"sort":false,"filter":{"operators":'.self::D8.'},"create":false,"update":false,"rules":{"all":["date"],"create":[],"update":[]},"meta":{}}'
+            .'{"name":"position","label":null,"type":"integer","nullable":true,"select":true,"sort":false,"filter":{"operators":'.self::N12.'},"create":true,"update":true,"rules":{"all":["nullable","integer"],"create":[],"update":[]},"meta":{}},'
+            .'{"name":"wall","label":null,"type":"text","nullable":false,"select":true,"sort":false,"filter":{"operators":'.self::T8.'},"create":true,"update":false,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}},'
+            .'{"name":"note","label":null,"type":"text","nullable":false,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}},'
+            .'{"name":"created_at","label":null,"type":"datetime","nullable":false,"select":true,"sort":false,"filter":{"operators":'.self::D8.'},"create":false,"update":false,"rules":{"all":["date"],"create":[],"update":[]},"meta":{}}'
             .']',
             json_encode(FieldDetails::forPivotFields($this->pivotFields(), true)),
         );
@@ -140,10 +155,10 @@ class FieldDetailsTest extends TestCase
     {
         $this->assertSame(
             '['
-            .'{"name":"position","type":"integer","nullable":true,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["nullable","integer"],"create":[],"update":[]},"meta":{}},'
-            .'{"name":"wall","type":"text","nullable":false,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":false,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}},'
-            .'{"name":"note","type":"text","nullable":false,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}},'
-            .'{"name":"created_at","type":"datetime","nullable":false,"select":false,"sort":false,"filter":{"operators":[]},"create":false,"update":false,"rules":{"all":["date"],"create":[],"update":[]},"meta":{}}'
+            .'{"name":"position","label":null,"type":"integer","nullable":true,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["nullable","integer"],"create":[],"update":[]},"meta":{}},'
+            .'{"name":"wall","label":null,"type":"text","nullable":false,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":false,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}},'
+            .'{"name":"note","label":null,"type":"text","nullable":false,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}},'
+            .'{"name":"created_at","label":null,"type":"datetime","nullable":false,"select":false,"sort":false,"filter":{"operators":[]},"create":false,"update":false,"rules":{"all":["date"],"create":[],"update":[]},"meta":{}}'
             .']',
             json_encode(FieldDetails::forPivotFields($this->pivotFields(), false)),
         );
@@ -153,7 +168,7 @@ class FieldDetailsTest extends TestCase
     public function it_describes_every_field_of_a_set_in_declared_order(): void
     {
         $this->assertSame(
-            '[{"name":"title","type":"text","nullable":false,"select":true,"sort":true,"filter":{"operators":["=","!=","like","not like","ilike","not ilike","in","not in"]},"create":true,"update":true,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}},{"name":"featured","type":"boolean","nullable":false,"select":true,"sort":true,"filter":{"operators":["=","!="]},"create":true,"update":true,"rules":{"all":["boolean"],"create":[],"update":[]},"meta":{}}]',
+            '[{"name":"title","label":null,"type":"text","nullable":false,"select":true,"sort":true,"filter":{"operators":["=","!=","like","not like","ilike","not ilike","in","not in"]},"create":true,"update":true,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}},{"name":"featured","label":null,"type":"boolean","nullable":false,"select":true,"sort":true,"filter":{"operators":["=","!="]},"create":true,"update":true,"rules":{"all":["boolean"],"create":[],"update":[]},"meta":{}}]',
             json_encode(FieldDetails::forFields(FieldSet::of([Text::make('title'), Boolean::make('featured')]))),
         );
     }

@@ -15,7 +15,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class RelationDetailsTest extends PackageTestCase
 {
-    private const string POSITION = '{"name":"position","type":"integer","nullable":true,"select":true,"sort":false,"filter":{"operators":["=","!=",">",">=","<","<=","between","not between","in","not in","is null","is not null"]},"create":true,"update":true,"rules":{"all":["nullable","integer"],"create":[],"update":[]},"meta":{}}';
+    private const string POSITION = '{"name":"position","label":null,"type":"integer","nullable":true,"select":true,"sort":false,"filter":{"operators":["=","!=",">",">=","<","<=","between","not between","in","not in","is null","is not null"]},"create":true,"update":true,"rules":{"all":["nullable","integer"],"create":[],"update":[]},"meta":{}}';
 
     #[\Override]
     protected function setUp(): void
@@ -72,7 +72,7 @@ class RelationDetailsTest extends PackageTestCase
         $relations = $this->relations('/api/team-pivot-tickets');
 
         $this->assertSame(
-            '[{"name":"position","type":"integer","nullable":true,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["nullable","integer"],"create":[],"update":[]},"meta":{}}]',
+            '[{"name":"position","label":null,"type":"integer","nullable":true,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["nullable","integer"],"create":[],"update":[]},"meta":{}}]',
             json_encode($relations[0]->pivot_fields),
         );
     }

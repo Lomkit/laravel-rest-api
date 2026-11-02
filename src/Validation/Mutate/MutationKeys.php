@@ -72,7 +72,6 @@ final class MutationKeys
 
         foreach ($items as $item) {
             $this->rules->add($item->path, $id->baseRules());
-            $this->reader->labelAsWritten($item->path);
             $parsed = $this->parsed($id->parseKey($item->value));
 
             if ($parsed !== null) {

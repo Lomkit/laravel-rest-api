@@ -4,11 +4,8 @@ namespace Lomkit\Rest\Fields;
 
 final readonly class WriteRules
 {
-    /**
-     * @param  array<string, list<mixed>>  $rules
-     * @param  list<string>  $names
-     */
-    private function __construct(private array $rules, private array $names) {}
+    /** @param array<string, list<mixed>> $rules */
+    private function __construct(private array $rules, private FieldSet $fields) {}
 
     /**
      * @param  array<array-key, mixed>  $operationRules
@@ -24,7 +21,7 @@ final readonly class WriteRules
             }
         }
 
-        return new self($rules, $fields->names());
+        return new self($rules, $fields);
     }
 
     /** @return list<mixed> */
@@ -43,9 +40,14 @@ final readonly class WriteRules
         return $this->rules;
     }
 
+    public function fields(): FieldSet
+    {
+        return $this->fields;
+    }
+
     /** @return list<string> */
     public function names(): array
     {
-        return $this->names;
+        return $this->fields->names();
     }
 }

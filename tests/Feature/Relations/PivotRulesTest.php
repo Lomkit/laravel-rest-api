@@ -84,7 +84,7 @@ class PivotRulesTest extends WeightedPivotTestCase
         $response = $this->mutate($relation, $this->entry($relation, $operation, ['weight' => 1, 'note' => 'Seen twice']));
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.relations.'.$relation.'.0.pivot.added_by' => ['The '.self::shown($relation).'.pivot.added by field is required when '.self::shown($relation).'.pivot.note is present.'],
+            'mutate.0.relations.'.$relation.'.0.pivot.added_by' => ['The '.self::shown($relation).'.pivot.added_by field is required when '.self::shown($relation).'.pivot.note is present.'],
         ]);
         $this->assertSame([], $this->pivotRows($relation));
     }

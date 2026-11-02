@@ -112,6 +112,7 @@ final class DetailsEntryTypes
     {
         return self::objectOf([
             'name' => new StringType,
+            'label' => (new StringType)->nullable(true)->setDescription('The name of the field in validation messages, set with label(); null without one'),
             'type' => new StringType,
             'nullable' => new BooleanType,
             'default' => new MixedType,
@@ -130,6 +131,7 @@ final class DetailsEntryTypes
 
         return self::objectOf([
             'name' => new StringType,
+            'label' => (new StringType)->nullable(true)->setDescription('The name of the field in validation messages, set with label(); null without one'),
             'type' => new StringType,
             'nullable' => new BooleanType,
             'select' => (new BooleanType)->setDescription($select),

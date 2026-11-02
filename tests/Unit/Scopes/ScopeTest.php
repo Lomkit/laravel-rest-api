@@ -46,7 +46,7 @@ class ScopeTest extends TestCase
             ->meta(['label' => 'Popular']);
 
         $this->assertSame(
-            '{"name":"popular","fields":[{"name":"min_views","type":"integer","nullable":false,"default":100,"rules":["integer","min:0"],"meta":{}}],"meta":{"label":"Popular"}}',
+            '{"name":"popular","fields":[{"name":"min_views","label":null,"type":"integer","nullable":false,"default":100,"rules":["integer","min:0"],"meta":{}}],"meta":{"label":"Popular"}}',
             json_encode($scope),
         );
     }

@@ -36,7 +36,7 @@ class FieldRulesTest extends PackageTestCase
             'mutate.0.attributes.featured' => ['The mutate.0.attributes.featured field must be true or false.'],
             'mutate.0.attributes.views' => ['The mutate.0.attributes.views field must be an integer.'],
             'mutate.0.attributes.rating' => ['The mutate.0.attributes.rating field must be a number.'],
-            'mutate.0.attributes.published_on' => ['The mutate.0.attributes.published on field must be a valid date.'],
+            'mutate.0.attributes.published_on' => ['The mutate.0.attributes.published_on field must be a valid date.'],
             'mutate.0.attributes.metadata' => ['The mutate.0.attributes.metadata field must be an array.'],
         ]);
         $this->assertSame(0, Post::query()->count());
@@ -58,7 +58,7 @@ class FieldRulesTest extends PackageTestCase
             'mutate.0.attributes.summary' => ['The mutate.0.attributes.summary field must be a string.'],
             'mutate.0.attributes.status' => ['The selected mutate.0.attributes.status is invalid.'],
             'mutate.0.attributes.views' => ['The mutate.0.attributes.views field must be an integer.'],
-            'mutate.0.attributes.published_at' => ['The mutate.0.attributes.published at field must be a valid date.'],
+            'mutate.0.attributes.published_at' => ['The mutate.0.attributes.published_at field must be a valid date.'],
             'mutate.0.attributes.metadata' => ['The mutate.0.attributes.metadata field must be an array.'],
         ]);
         $this->assertSame(['Annual report', null], [$post->fresh()?->title, $post->fresh()?->summary]);
@@ -82,7 +82,7 @@ class FieldRulesTest extends PackageTestCase
         $response->assertUnprocessable()->assertJsonPath('errors', [
             'mutate.0.attributes.title' => ['The mutate.0.attributes.title field is required.'],
             'mutate.0.attributes.status' => ['The mutate.0.attributes.status field is required.'],
-            'mutate.0.attributes.published_on' => ['The mutate.0.attributes.published on field is required.'],
+            'mutate.0.attributes.published_on' => ['The mutate.0.attributes.published_on field is required.'],
         ]);
         $this->assertSame(0, Post::query()->count());
     }
@@ -128,7 +128,7 @@ class FieldRulesTest extends PackageTestCase
         $response->assertUnprocessable()->assertJsonPath('errors', [
             'mutate.0.attributes.title' => ['The mutate.0.attributes.title field is required.'],
             'mutate.0.attributes.status' => ['The mutate.0.attributes.status field is required.'],
-            'mutate.0.attributes.published_on' => ['The mutate.0.attributes.published on field is required.'],
+            'mutate.0.attributes.published_on' => ['The mutate.0.attributes.published_on field is required.'],
         ]);
     }
 
@@ -183,7 +183,7 @@ class FieldRulesTest extends PackageTestCase
         ]], 'published_on' => '2026-01-01']);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.relations.posts.1.attributes.published_at' => ['The mutate.0.relations.posts.1.attributes.published at field must be a date after or equal to mutate.0.relations.posts.1.attributes.published on.'],
+            'mutate.0.relations.posts.1.attributes.published_at' => ['The mutate.0.relations.posts.1.attributes.published_at field must be a date after or equal to mutate.0.relations.posts.1.attributes.published_on.'],
         ]);
         $this->assertSame(0, Post::query()->count());
     }

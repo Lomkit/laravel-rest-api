@@ -58,8 +58,8 @@ class ActionTextTest extends TextSearchTestCase
         $response = $this->postJson('/api/posts/actions/publish-posts', ['search' => ['text' => ['value' => 'lamp']]]);
 
         $response->assertUnprocessable()->assertExactJson([
-            'message' => 'Text search is not available on this resource.',
-            'errors' => ['search.text' => ['Text search is not available on this resource.']],
+            'message' => 'The search.text field is prohibited.',
+            'errors' => ['search.text' => ['The search.text field is prohibited.']],
         ]);
         $this->assertSame([PostStatus::Draft], $this->statuses());
     }

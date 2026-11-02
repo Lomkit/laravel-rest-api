@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Http\Requests;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Arr;
 use Illuminate\Validation\Validator;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
@@ -113,8 +112,7 @@ class RestRequest extends FormRequest
         $validator = parent::createDefaultValidator($factory);
 
         if ($validator instanceof Validator) {
-            $translated = $validator->getTranslator()->get('validation.attributes');
-            $validator->setAttributeNames($this->compiledRules()->attributeNames($validator->customAttributes, is_array($translated) ? Arr::dot($translated) : []));
+            $this->compiledRules()->configure($validator);
         }
 
         return $validator;

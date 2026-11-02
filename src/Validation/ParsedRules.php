@@ -19,16 +19,16 @@ final class ParsedRules
     /** @var array<string, mixed> */
     private array $projections = [];
 
-    /** @var array<string, string> */
-    private array $labels = [];
-
     private bool $partial = false;
 
     private readonly Violations $violations;
 
+    private readonly MessageBook $book;
+
     public function __construct()
     {
         $this->violations = new Violations;
+        $this->book = new MessageBook;
     }
 
     /** @param list<mixed> $rules */
@@ -61,6 +61,11 @@ final class ParsedRules
         return $this->violations;
     }
 
+    public function book(): MessageBook
+    {
+        return $this->book;
+    }
+
     public function reach(Check $check): void
     {
         $this->checks[$check->path."\0".$check->key()] ??= $check;
@@ -69,11 +74,6 @@ final class ParsedRules
     public function project(string $key, mixed $value): void
     {
         $this->projections[$key] = $value;
-    }
-
-    public function label(string $key, string $label): void
-    {
-        $this->labels[KeyPath::unescape($key)] = $label;
     }
 
     public function partial(): void
@@ -138,11 +138,5 @@ final class ParsedRules
         }
 
         return $input;
-    }
-
-    /** @return array<string, string> */
-    public function labels(): array
-    {
-        return $this->labels;
     }
 }

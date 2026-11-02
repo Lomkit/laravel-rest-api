@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Validation;
 
+use Illuminate\Support\Arr;
+use Illuminate\Validation\Validator;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Fields\WriteRules;
 
@@ -9,13 +11,12 @@ final readonly class CompiledRules
 {
     /**
      * @param  array<string, list<mixed>>  $rules
-     * @param  array<string, string>  $labels
      * @param  array<string, mixed>  $projections
      * @param  list<Check>  $reach
      */
     public function __construct(
         public array $rules,
-        public array $labels,
+        public MessageBook $book,
         public array $projections,
         public array $reach = [],
     ) {}
@@ -37,8 +38,9 @@ final readonly class CompiledRules
         }
 
         $wildcards = array_map(WriteRules::listOf(...), $budget->open($wildcards));
+        $parsed->book()->written(array_keys($parsed->rules()));
 
-        return new self($budget->applyTo($explicit + $wildcards), $parsed->labels(), $parsed->projections(), $parsed->checks());
+        return new self($budget->applyTo($explicit + $wildcards), $parsed->book(), $parsed->projections(), $parsed->checks());
     }
 
     /**
@@ -54,40 +56,11 @@ final readonly class CompiledRules
         return $input;
     }
 
-    /**
-     * @param  array<array-key, mixed>  $custom
-     * @param  array<array-key, mixed>  $translated
-     * @return array<array-key, mixed>
-     */
-    public function attributeNames(array $custom, array $translated = []): array
+    public function configure(Validator $validator): void
     {
-        $names = array_keys($custom + $translated);
-        $patterns = [];
+        $translated = $validator->getTranslator()->get('validation.attributes');
 
-        foreach ($names as $name) {
-            if (str_contains((string) $name, '*')) {
-                $patterns[] = '#^'.str_replace('\*', '([^.]*)', preg_quote((string) $name, '#')).'\z#u';
-            }
-        }
-
-        $labels = array_filter(
-            array_diff_key($this->labels, array_flip($names)),
-            fn (string $key): bool => ! self::matchesAny($key, $patterns),
-            ARRAY_FILTER_USE_KEY,
-        );
-
-        return $custom + $labels;
-    }
-
-    /** @param list<string> $patterns */
-    private static function matchesAny(string $key, array $patterns): bool
-    {
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $key) === 1) {
-                return true;
-            }
-        }
-
-        return false;
+        $validator->setAttributeNames($this->book->attributeNames($validator->customAttributes, is_array($translated) ? Arr::dot($translated) : []));
+        $validator->setCustomMessages(array_diff_key($this->book->messages(), $validator->customMessages));
     }
 }

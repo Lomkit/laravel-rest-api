@@ -171,7 +171,7 @@ class EngineGrammarTest extends EngineSearchTestCase
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'includes' => [['relation' => $method]]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'search.includes.0.relation' => ['The relation is not valid or allowed for this resource.'],
+            'search.includes.0.relation' => ['The search.includes.0.relation field is not a valid or allowed relation for this resource.'],
         ]);
         $this->assertSame(6, Voucher::withTrashed()->count());
         $this->assertSame([], $this->engine->searches);

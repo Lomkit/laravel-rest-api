@@ -115,8 +115,8 @@ class InstructionsTest extends PackageTestCase
                 'name' => 'Highlight Posts',
                 'uriKey' => 'highlight-posts',
                 'fields' => [
-                    ['name' => 'featured', 'type' => 'boolean', 'nullable' => false, 'default' => true, 'rules' => ['boolean'], 'meta' => []],
-                    ['name' => 'min_views', 'type' => 'integer', 'nullable' => true, 'default' => null, 'rules' => ['nullable', 'integer'], 'meta' => []],
+                    ['name' => 'featured', 'label' => null, 'type' => 'boolean', 'nullable' => false, 'default' => true, 'rules' => ['boolean'], 'meta' => []],
+                    ['name' => 'min_views', 'label' => null, 'type' => 'integer', 'nullable' => true, 'default' => null, 'rules' => ['nullable', 'integer'], 'meta' => []],
                 ],
                 'meta' => ['group' => 'ranking'],
                 'text' => false,
@@ -125,8 +125,8 @@ class InstructionsTest extends PackageTestCase
                 'name' => 'In Status',
                 'uriKey' => 'in-status',
                 'fields' => [
-                    ['name' => 'status', 'type' => 'enum', 'nullable' => false, 'default' => null, 'rules' => ['enum', 'required'], 'meta' => [], 'values' => ['draft', 'review', 'published']],
-                    ['name' => 'since', 'type' => 'date', 'nullable' => false, 'default' => null, 'rules' => ['date', 'required_if:status,published'], 'meta' => []],
+                    ['name' => 'status', 'label' => null, 'type' => 'enum', 'nullable' => false, 'default' => null, 'rules' => ['enum', 'required'], 'meta' => [], 'values' => ['draft', 'review', 'published']],
+                    ['name' => 'since', 'label' => null, 'type' => 'date', 'nullable' => false, 'default' => null, 'rules' => ['date', 'required_if:status,published'], 'meta' => []],
                 ],
                 'meta' => [],
                 'text' => false,

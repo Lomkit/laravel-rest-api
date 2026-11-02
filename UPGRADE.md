@@ -239,6 +239,7 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 - `getFields()` returns a `Lomkit\Rest\Fields\FieldSet` instead of an array of names. Call `->names()` to get the old list.
 - `rest:resource` generates `ID::make()` with the key name of the model, `ID::make('id')` by default. See [Generators](#generators).
 - `Lomkit\Rest\Fields\DateTime` has the same short name as PHP's `\DateTime`. In a file that uses both, alias one of them.
+- A field can declare `label()` and `messages()`. The label names the field's key in validation messages, and the messages replace Laravel's text for the rules of that key. See "Labels and messages" in [Validation engine](#validation-engine).
 
 ### Typed inputs
 
@@ -387,7 +388,7 @@ Text search (`search.text`). A resource now declares its text search with `text(
 - `search.text.trashed` is removed and gives a 422. Send `search.trashed` instead, see [Text search](#text-search).
 - `viewAny` is checked before any search runs, including a text search without hits and a page past the last one.
 - Includes and aggregates are validated as in a search without text, also next to a text search, because they run in SQL: their filters, sorts, selects and scopes use the fields and operators of the related resource. An include or an aggregate whose `relation` is missing or not declared gives a 422.
-- The actions of a resource that does not declare `text()` refuse `search.text` with a 422 under `search.text`: "Text search is not available on this resource." The actions of a resource that declares it act on the matching rows, see [Text search](#text-search).
+- The actions of a resource that does not declare `text()` refuse `search.text` with a 422 under `search.text`: "The search.text field is prohibited.", as on the search endpoint. The actions of a resource that declares it act on the matching rows, see [Text search](#text-search).
 
 Validation:
 
@@ -456,7 +457,7 @@ Declaration:
 
 Request:
 
-- `search.text` is an object: `{"value": "desk lamp", "mode": "words"}`. `value` is a string of at most 255 characters. A blank, `null` or missing value, or a value without a letter or a digit, runs the search without text and returns the normal list. A text made only of words that FullText ignores, such as stopwords, returns no row: see the database differences below.
+- `search.text` is an object: `{"value": "desk lamp", "mode": "phrase"}`. `value` is a string of at most 255 characters. A blank, `null` or missing value, or a value without a letter or a digit, runs the search without text and returns the normal list. A text made only of words that FullText ignores, such as stopwords, returns no row: see the database differences below.
 - `mode`, `words` by default, is a case of `Lomkit\Rest\Text\TextMode`. A mode that the strategy does not support gives a 422 under `search.text.mode`.
   - `words`: the words of the text, in any order. With Contains and on PostgreSQL, a row must hold every word. On MySQL and MariaDB, a row matches when it holds one of the words, and without `sorts` the rows that hold more of them come first.
   - `phrase`: the words of the text, next to each other and in this order.
@@ -638,8 +639,8 @@ Custom rules:
 
 - `Lomkit\Rest\Rules\RestRule`, `Lomkit\Rest\Rules\MaxItems`, `Lomkit\Rest\Rules\ArrayWithKey`, the classes of `Lomkit\Rest\Rules\Mutate` and `Lomkit\Rest\Rules\Resource`, and `Lomkit\Rest\Validation\RuleCompiler` are removed. The check of the `relation` of includes and aggregates is now `Lomkit\Rest\Validation\Search\KnownRelation`. `WriteRules::under()`, `PivotRelation::pivotRules()` and `HasPivotFields::pivotRules()` are removed too, see [Pivot fields](#pivot-fields).
 - The `rules()` of a request hold Laravel rules only. Use Laravel's `max` rule in place of `MaxItems`, such as `'tags' => ['array', 'max:20']`.
-- `Lomkit\Rest\Rules\Concerns\ValidatesFields` and `Lomkit\Rest\Rules\Operate\OperateFields` are removed. `Lomkit\Rest\Rules\Input\InputFields` is removed. The parsers validate the fields of actions and of instructions. Their error keys do not change. A `validation.custom.<name>.<rule>` translation line no longer applies to an input field: key it by the full key, `validation.custom.fields.<name>.<rule>` for an action or `validation.custom.search.instructions.*.fields.<name>.<rule>` for an instruction. The `validation.attributes.<name>` line still names the field.
-- Laravel expands the wildcard rules of a request's `rules()` and of the resource rules, such as `mutate.*.attributes.name` or `metadata.tags.*`. It replaces `*` in the parameters of its dependent rules there, such as `required_if`, and in those of a rule registered with `Validator::extendDependent()`, and `Validator::setImplicitAttributesFormatter()` applies to the keys it expands. A data key that holds `*` under such a rule is validated as written. Before, it gave "The * key is not valid for the X field.".
+- `Lomkit\Rest\Rules\Concerns\ValidatesFields` and `Lomkit\Rest\Rules\Operate\OperateFields` are removed. `Lomkit\Rest\Rules\Input\InputFields` is removed. The parsers validate the fields of actions and of instructions. Their error keys do not change. A `validation.custom.<name>.<rule>` translation line no longer applies to an input field: key it by the full key, `validation.custom.fields.<name>.<rule>` for an action or `validation.custom.search.instructions.*.fields.<name>.<rule>` for an instruction. The `validation.attributes.<name>` line still names the field, unless the field declares `label()`.
+- Laravel expands the wildcard rules of a request's `rules()` and of the resource rules, such as `mutate.*.attributes.name` or `metadata.tags.*`. It replaces `*` in the parameters of its dependent rules there, such as `required_if`, and in those of a rule registered with `Validator::extendDependent()`. `Validator::setImplicitAttributesFormatter()` applies to a key that Laravel expands only when no other name applies to it, see "Labels and messages" below. The package gives a key that it parses its name as written only when the key holds `_`, whitespace or an uppercase letter, so the formatter still applies to the other parsed keys that such a rule meets, such as `mutate.0.attributes.name` or `search.filters.0.field`. A data key that holds `*` under such a rule is validated as written. Before, it gave "The * key is not valid for the X field.".
 - The errors of the keys that Laravel expands from a wildcard of the resource rules, such as `mutate.0.attributes.metadata.tags.1`, come after the other errors of the request. Before, they came with the attribute errors of their entry.
 - The rules of action fields, instruction fields and scope parameters run in the request's validator. A rule that names another input of the same action, instruction or scope compares with that input: this covers the field parameters of Laravel's dependent rules (`required_if`, `gte`, `after`, `same`, …), `date_equals` and `in_array`, written as strings or arrays, in `Rule::date()`, `Rule::numeric()`, `Rule::string()` and `Rule::array()` objects, and inside `Rule::when()`.
 - Other rule objects and closures on these inputs see the whole request: a `DataAwareRule` receives the whole payload, where each input value sits under `<attribute>.<name>` (`fields.min`), a `ValidatorAwareRule` receives the request's validator, a `Rule::when()` condition receives the whole payload, and the attribute passed to `validate()` or to a closure is the full key, such as `fields.min` or `search.instructions.0.fields.min`.
@@ -674,13 +675,45 @@ Requests:
 - `OperateRequest::payload()` returns the validated operation as a `Lomkit\Rest\Actions\OperationNode`. The node has `action`, `fields`, a `Lomkit\Rest\Fields\InputValues`, and `target`. The target is one of these: a `Lomkit\Rest\Search\SearchNode` for an action that is neither standalone nor targeted, which is empty when `search` is left out; the `Lomkit\Rest\Validation\KeyList` of a targeted action; `null` for a standalone action. `keys()` returns the `KeyList`. `payload()` throws a `LogicException` before the request passed validation: "The operation was read before the request passed validation."
 - `MutateRequest::payload()` returns the validated mutation as a list of `Lomkit\Rest\Mutations\MutationNode`, one per entry of `mutate`. A node has `operation` (a `Lomkit\Rest\Fields\MutationOperation`), `key`, `attributes`, `pivot`, `withoutDetaching`, `relations`, which holds the nodes of each relation that the entry sends, and `depth`. `context()` returns its `MutationContext`, and `toArray()` rebuilds the entry as an array. `payload()` throws a `LogicException` before the request passed validation: "The mutation was read before the request passed validation."
 - Every package request records its validation pass in `passedValidation()`. An override of `passedValidation()` must call the parent.
-- To adjust the validator, use `withValidator()`, or override `createDefaultValidator()` and call the parent. A request that defines `validator()` builds the validator itself: it must use `validationData()` and `validationRules()`, and its messages then name input fields and expanded keys by their full key, such as `fields.status`.
-- The keys of an entry of a to-many relation in `mutate`, such as `mutate.0.relations.lineItems.0.operation`, are still named as written in messages, as Laravel names wildcard keys, unless the request's `attributes()` or a `validation.attributes` translation line names them. `Validator::setImplicitAttributesFormatter()` does not apply to these keys. A key that Laravel expands from a wildcard rule of the request or of the resource rules, such as `mutate.0.attributes.metadata.tags.1`, is named as written too, and `Validator::setImplicitAttributesFormatter()` applies to it.
+- To adjust the validator, use `withValidator()`, or override `createDefaultValidator()` and call the parent. A request that defines `validator()` builds the validator itself: it must use `validationData()` and `validationRules()`. The `label()` and `messages()` of fields do not apply there, and Laravel names its keys, such as `fields.status` for an input field.
+- Every key that the package parses in `mutate` is named as written in messages, at every level, as Laravel names wildcard keys, unless the request's `attributes()`, the field's `label()` or a `validation.attributes` translation line names it. Examples: `mutate.0.without_detaching`, `mutate.0.attributes.published_on`, `mutate.0.relations.latestLoan.operation`, `mutate.0.relations.lineItems.0.operation`, a relation that the entry does not send, such as `mutate.0.relations.featuredProducts`, and an explicit key of the resource rules, such as `mutate.0.attributes.metadata.source_url`. A key that Laravel expands from a wildcard rule of the request or of the resource rules, such as `mutate.0.attributes.metadata.tags.1`, is named as written too. The package gives a parsed key its name as written only where Laravel's formatting would change the key: when it holds `_`, whitespace or an uppercase letter. Laravel's formatting leaves the other parsed keys as written. `Validator::setImplicitAttributesFormatter()` applies to a key that Laravel expands only when no other name applies to it. So it does not apply to a parsed key that a wildcard rule meets when the key holds `_`, whitespace or an uppercase letter, such as `mutate.0.attributes.published_on` under `mutate.*.attributes.published_on`, or when its field declares `label()`. It still applies to the other parsed keys, such as `mutate.0.attributes.name` under `mutate.*.attributes.name` or `mutate.0.relations.products.0.operation` under `mutate.*.relations.products.*.operation`.
 - The input values added by `validationData()` also appear in `validated()` and `safe()`, under `fields.<name>` for an action. `resolveFields()` returns the cast map of `payload()`, and `handle()` receives the same map.
 - When the payload has no `fields`, `all()` and `validated()` no longer hold `fields: []`. A rule that a request adds on `fields` itself now meets an absent key. So `min:1` and `filled` no longer fail there, and `present` now fails. Before, the request merged `fields: []` before validation.
-- The request's `messages()` and `attributes()` now apply to the fields of actions and instructions, under `fields.<name>` and `search.instructions.<i>.fields.<name>`. Without them, such a field is still named by the `validation.attributes.<name>` translation, or else by its name.
+- The request's `messages()` and `attributes()` now apply to the fields of actions and instructions, under `fields.<name>` and `search.instructions.<i>.fields.<name>`. Without them, the field's `label()` names such a field, then the `validation.attributes.<name>` translation, or else its name.
 - `FormRequest::failOnUnknownFields()` and the `#[FailOnUnknownFields]` attribute do not apply to package requests: `shouldFailOnUnknownFields()` returns `false`.
 - With Precognition enabled, a name in `Precognition-Validate-Only` also covers the keys under it: `search` validates `search.limit` and `search.filters.0.field`. Before, a payload with invalid nested values could return `204`.
+
+Labels and messages:
+
+- Fields take `label(string $label)` and `messages(array $messages)`, read through `getLabel(): ?string` and `getMessages(): array`. The label names the field's key in validation messages. A blank label counts as no label. The messages replace Laravel's text for the rules of that key. They are keyed by rule name, such as `required`, `max` or `enum`. A later `label()` replaces the label, and `messages()` merges with the messages already declared.
+- They apply to the attributes of `mutate` at every level, to the pivot fields of a many-to-many entry, to the fields of actions and instructions, and to the parameters of scopes. Error keys do not change. On `create`, this field gives "The email address field is required." and "This email address is already registered." under `mutate.0.attributes.email`:
+
+  ```php
+  Text::make('email')
+      ->label(__('email address'))
+      ->creationRules('required', 'unique:users,email')
+      ->messages(['unique' => __('This :attribute is already registered.')]),
+  ```
+
+- The package does not translate a label or a message: pass a translated string, as above. The declarations are read while the request is handled, so `__()` follows the locale of the request.
+- A key is named in messages by, in this order:
+  - the request's `attributes()`;
+  - the field's `label()`;
+  - a `validation.attributes` line of the full key or of a pattern;
+  - for a field of an action or an instruction, the `validation.attributes.<name>` line, or else its name in snake case with spaces;
+  - for a key that the package parses: the key as written, see "Requests" above.
+
+  Laravel names the other keys, such as a key that only the request's `rules()` add.
+- The labels of fields are added under the request's `attributes()` as patterns, such as `mutate.*.attributes.email`, or as full keys where two declarations meet on one pattern. A pattern of the request's `attributes()`, such as `mutate.*.attributes.email` or `search.instructions.*.fields.min_views`, names each key that it matches before the field's `label()`, in both cases.
+- A rule's text comes from, in this order:
+  - the request's `messages()` for the key and the rule, such as `mutate.0.attributes.email.unique` or `mutate.*.attributes.email.unique`;
+  - the field's `messages()`;
+  - a request message keyed by the rule alone, such as `unique`, or by the key alone;
+  - a `validation.custom` line;
+  - Laravel's line.
+
+  For a rule object, such as the rule of an `Enum` field, a `ValidationRule` class or a closure, a request message keyed by the key alone, by the class name or by `<key>.<class name>` comes before the field's message, and no `validation.custom` line applies. The field's message is keyed by the snake class name, such as `enum`.
+- Every key that the package parses in `mutate` is named as written at every level when no other name applies, such as `mutate.0.without_detaching` and `mutate.0.relations.latestLoan.operation`. `Validator::setImplicitAttributesFormatter()` still applies to a parsed key that a wildcard rule meets when the key holds no `_`, no whitespace and no uppercase letter and no other name covers it, such as `mutate.0.attributes.name`, see "Requests" above.
 
 Payloads:
 
@@ -713,7 +746,7 @@ Mutate payload:
 - Inside a mutate entry, a key that the package does not know gives a 422 on that key, named as written: "The mutate.0.atributes field is prohibited." Before, the key was ignored. The keys of an entry are `operation`, `attributes`, `key`, `relations` and `without_detaching`, plus `pivot` in an entry of a `BelongsToMany`, `MorphToMany` or `MorphedByMany` relation, and `type` in an entry of a `MorphTo` relation, which is accepted and not passed to the write. `pivot` and `type` get the same 422 in the other entries. The other keys of the entry are still validated.
 - An entry or a to-one relation given as a list gets this 422 on each of its items, then the errors of the keys it lacks: "The mutate.0.relations.category.0 field is prohibited." and "The mutate.0.relations.category.operation field is required.".
 - A rule that a request adds in `rules()` for a key that the package does not know inside a mutate entry, such as `'mutate.*.flag' => ['boolean']`, does not make that key valid: the key keeps the 422 above.
-- A name in `relations` that the resource does not declare gives "The suppliers key is not valid for the mutate.0.relations field." on `relations`. The message names its field as other messages do, such as `mutate.0.relations.latest loan.relations` under a to-one relation.
+- A name in `relations` that the resource does not declare gives "The suppliers key is not valid for the mutate.0.relations field." on `relations`. The message names its field as other messages do, such as `mutate.0.relations.latestLoan.relations` under a to-one relation.
 - `mutate`, each to-many relation and each `key` list must be JSON lists. An object gives a 422 on the list, "The mutate field must be a list.", and its entries are not checked: a denied creation in it gets this 422, where it got a 403 before. Before, an object was read entry by entry, and `{"*": ...}` gave "The * key is not valid for the mutate field.".
 - A `key` is typed like the `ID` field of its resource: "The mutate.0.key field must be an integer." (or a string, a UUID or a ULID, by key type; a resource without an `ID` field uses the model's key type). A `null` key gets the type message too. Before, a key of the wrong type gave "The selected mutate.0.key is invalid.", or a 500 on PostgreSQL.
 - A key list is accepted only in an entry of a to-many relation. At the root and in a to-one relation, a list gets the type message. Before, it was validated, and then the request failed. Each item of a key list gets its type message under `key.0`, `key.1`, ….
@@ -754,7 +787,7 @@ Limits:
   - the not-writable errors of `attributes` and `pivot` in `mutate`, and a name in `relations` that the resource does not declare: `Rejected` instead of the package rules `WritableAttributes` and `ArrayWithKey`;
   - `list` on the lists of a search and on `mutate`, its to-many relations and its key lists, `prohibited` on a key that the package does not know in a search object, in an entry of the `fields` of an action or in a mutate entry, the `*` key error on such an entry, and the include depth error of a dotted include: `Rejected`. These errors are new.
 - Laravel's `list` rule still checks the `fields` of actions and instructions, the values of a filter and the `parameters` of a scope, and Laravel's `max` rule still limits the `parameters` of a scope. Custom messages keyed by these rules still apply there. A filter value or the `fields` of an action or of an instruction given as an object only gets the `list` message: its items are no longer checked. The other rules of a search key do not change, so custom messages keyed by them still apply.
-- Laravel's lines `validation.max.array`, `validation.list`, `validation.distinct`, `validation.exists`, `validation.prohibited` and the type lines still apply. The two total texts and the include depth text are JSON translation keys. The texts of the include alias rule and of the rule that checks a filter value on a search engine are JSON translation keys too, with the same English text. So are the not-writable text of `mutate` ("The :key attribute is not writable on :operation."), the text of a relation name that the resource does not declare ("The :key key is not valid for the :attribute field.") and the relation text of includes and aggregates ("The relation is not valid or allowed for this resource.").
+- Laravel's lines `validation.max.array`, `validation.list`, `validation.distinct`, `validation.exists`, `validation.prohibited` and the type lines still apply. The two total texts and the include depth text are JSON translation keys. The texts of the include alias rule and of the rule that checks a filter value on a search engine are JSON translation keys too, with the same English text. So are the not-writable text of `mutate` ("The :key key of the :attribute field is not writable on :operation."), the text of a relation name that the resource does not declare ("The :key key is not valid for the :attribute field.") and the relation text of includes and aggregates ("The :attribute field is not a valid or allowed relation for this resource."). These texts name their field with `:attribute`: "The slug key of the mutate.0.attributes field is not writable on create." and "The search.includes.0.relation field is not a valid or allowed relation for this resource.".
 - These limits are not the page sizes of a resource, which `limits()` returns.
 
 Resource keys:
@@ -1015,7 +1048,7 @@ Attributes:
 
 - `attributes` accepts only the fields that the operation can write: the creatable fields on `create`, and the updatable fields on `update`, `sync` and `toggle`. A field is creatable and updatable by default. `ID` fields and fields declared `readonly()` are refused: declare `->creatable()` on a key that clients send, such as a UUID. `creatable(false)` and `updatable(false)` refuse a field on one operation. A `writeOnly()` field is accepted.
 - A `virtual()` field is refused unless it declares `fillUsing()`. The callback receives the model and the value and fills the model. It runs after the other fields of the entry are filled.
-- An attribute that the operation cannot write gives a 422 under the `attributes` key of the entry, as an undeclared attribute did. The message changes for both: `The created_at attribute is not writable on create.` On `sync` and `toggle`, it ends with `on update.` Precognition responses change the same way.
+- An attribute that the operation cannot write gives a 422 under the `attributes` key of the entry, as an undeclared attribute did. The message changes for both: `The created_at key of the mutate.0.attributes field is not writable on create.` On `sync` and `toggle`, it ends with `on update.` Precognition responses change the same way.
 - The model is filled with the writable fields of the operation only, field by field, after the `mutating()` hook.
 
 Rules:
@@ -1073,7 +1106,7 @@ Declaration:
 Writes:
 
 - `pivot` accepts only the pivot fields that the operation of its entry can write. `create` and `attach` add a pivot row, so they accept the creatable pivot fields. `update`, `sync` and `toggle` accept the updatable pivot fields. `detach` still refuses `pivot`. `Lomkit\Rest\Fields\MutationOperation::pivotWriteOperation()` maps the operations. A pivot field declared `readonly()` is refused on every operation, and a `writeOnly()` pivot field is accepted.
-- A pivot key that the operation cannot write gives a 422 under the `pivot` key of the entry, as an undeclared pivot key does, with a new message for both: `The created_at attribute is not writable on create.` On `update`, `sync` and `toggle`, it ends with `on update.` A `pivot` that is not an object gives `The mutate.0.relations.tags.0.pivot field must be an array.`
+- A pivot key that the operation cannot write gives a 422 under the `pivot` key of the entry, as an undeclared pivot key does, with a new message for both: `The created_at key of the mutate.0.relations.tags.0.pivot field is not writable on create.` On `update`, `sync` and `toggle`, it ends with `on update.` A `pivot` that is not an object gives `The mutate.0.relations.tags.0.pivot field must be an array.`
 - The rules of each writable pivot field validate its value under `mutate.0.relations.tags.0.pivot.weight`: the base rule of its type, `nullable`, `rules()`, and `creationRules()` on `create` and `attach` or `updateRules()` on `update`, `sync` and `toggle`. `null` is refused unless the field is `nullable()`. The rules run when `pivot` is missing too, so a pivot field with `creationRules('required')` is required on `attach`. Each entry is validated with its own operation.
 - A rule that names another pivot field, such as `required_with:note`, compares with that key in the pivot of the same entry, and a `Rule::when()` condition receives the pivot values of its entry.
 - The relation writes the writable pivot fields of the operation only, also when it is called without validation.
@@ -1096,13 +1129,13 @@ The details endpoint, `GET /{resource}`, describes the resource with typed entri
 ```json
 {"data": {
   "fields": [
-    {"name": "title", "type": "text", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["string", "max:120"], "create": ["required"], "update": ["filled"]}, "meta": {"label": "Title"}},
-    {"name": "medium", "type": "enum", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["enum"], "create": [], "update": []}, "meta": {}, "values": ["oil", "ink", "watercolor"]}],
+    {"name": "title", "label": "Title", "type": "text", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["string", "max:120"], "create": ["required"], "update": ["filled"]}, "meta": {}},
+    {"name": "medium", "label": null, "type": "enum", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["enum"], "create": [], "update": []}, "meta": {}, "values": ["oil", "ink", "watercolor"]}],
   "relations": [
     {"resource": "App\\Rest\\Resources\\ExhibitionResource", "relation": "exhibitions",
      "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsToMany",
      "pivot_fields": [
-       {"name": "wall", "type": "text", "nullable": false, "select": true, "sort": false, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": false, "rules": {"all": ["string"], "create": [], "update": []}, "meta": {}}]},
+       {"name": "wall", "label": null, "type": "text", "nullable": false, "select": true, "sort": false, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": false, "rules": {"all": ["string"], "create": [], "update": []}, "meta": {}}]},
     {"resource": "App\\Rest\\Resources\\CollectorResource", "relation": "owner",
      "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "MorphTo",
      "types": {"App\\Models\\Collector": "App\\Rest\\Resources\\CollectorResource"},
@@ -1115,6 +1148,7 @@ The details endpoint, `GET /{resource}`, describes the resource with typed entri
 Fields:
 
 - `fields` is a list of entries instead of a list of names. Read the names with `fields[].name`. The entries keep the declared order.
+- `label` follows `name`. It is the field's `label()`, or `null` without one. Pivot field entries and the input entries of actions, instructions and scopes have it too, and Scramble documents it.
 - `select` is `true` when `search.selects` accepts the field and the response returns it.
 - `sort` is `true` when `search.sorts` accepts the field.
 - `filter.operators` lists the operators that `search.filters` accept on the field. It is `[]` when the field is not filterable.
@@ -1130,7 +1164,7 @@ Rules:
 Inputs:
 
 - `scopes` is a list of `{name, fields, meta}` instead of a list of names.
-- The `fields` of actions, instructions and scopes are input entries `{name, type, nullable, default, rules, meta}`, with `meta` as an object. `Enum` entries add `values`.
+- The `fields` of actions, instructions and scopes are input entries `{name, label, type, nullable, default, rules, meta}`, with `meta` as an object. `Enum` entries add `values`.
 
 Relations:
 

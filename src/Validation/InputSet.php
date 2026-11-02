@@ -22,6 +22,7 @@ final readonly class InputSet
 
         foreach ($this->fields as $position => $field) {
             $paths[$field->name] = $parameters->at($position)->path;
+            $rules->book()->field($parameters->at($position), $field);
         }
 
         $rules->addWhenPresent($parameters, ['array', 'list', 'max:'.count($this->fields)]);
@@ -64,7 +65,7 @@ final readonly class InputSet
         }
 
         if ($inputsFirst) {
-            $entries = $this->inputs($fields->path, $value, $context);
+            $entries = $this->inputs($fields, $value, $context);
             $this->names($fields, $value, $list, $context);
 
             return InputValues::fromNamed($this->fields, $entries);
@@ -72,7 +73,7 @@ final readonly class InputSet
 
         $this->names($fields, $value, $list, $context);
 
-        return InputValues::fromNamed($this->fields, $this->inputs($fields->path, $value, $context));
+        return InputValues::fromNamed($this->fields, $this->inputs($fields, $value, $context));
     }
 
     /** @param list<mixed> $value */
@@ -91,13 +92,13 @@ final readonly class InputSet
      * @param  list<mixed>  $value
      * @return list<array{name: string, value?: mixed}>
      */
-    private function inputs(string $path, array $value, ValidationContext $context): array
+    private function inputs(Cursor $fields, array $value, ValidationContext $context): array
     {
         $paths = [];
         $entries = [];
 
         foreach ($this->fields as $field) {
-            $paths[$field->name] = $path.'.'.$field->name;
+            $paths[$field->name] = $fields->at($field->name)->path;
         }
 
         foreach ($value as $entry) {
@@ -116,7 +117,8 @@ final readonly class InputSet
         $given = array_column($entries, 'name', 'name');
 
         foreach ($this->fields as $field) {
-            $context->rules->label($paths[$field->name], self::label($field->name));
+            $context->rules->book()->field($fields->at($field->name), $field);
+            $context->rules->book()->label($paths[$field->name], self::label($field->name));
             $this->addInput($paths[$field->name], RuleReferences::rewrite($field->getRules()->shared(), $paths), isset($given[$field->name]), $context);
         }
 

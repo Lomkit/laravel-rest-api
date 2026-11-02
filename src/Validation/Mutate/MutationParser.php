@@ -83,10 +83,6 @@ final readonly class MutationParser
             $this->rules->reach(Check::onClass($resource, 'create', $entry->path));
         }
 
-        if ($listed) {
-            $this->reader->labelAsWritten($entry->path);
-        }
-
         if (! $this->reader->object($entry)) {
             return null;
         }
@@ -154,14 +150,6 @@ final readonly class MutationParser
         ]);
         $key = $this->keys->read($entry->at('key'), $resource, $operation, $listed);
         $this->rules->add($entry->at('without_detaching')->path, ['boolean', 'prohibited_unless:'.$entry->at('operation')->path.','.MutationOperation::Sync->value]);
-
-        if (! $listed) {
-            return $key;
-        }
-
-        foreach (self::KEYS as $name) {
-            $this->reader->labelAsWritten($entry->at($name)->path);
-        }
 
         return $key;
     }

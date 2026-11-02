@@ -94,13 +94,6 @@ class OperateRequest extends RestRequest
         return $query;
     }
 
-    /** @return array<string, string> */
-    #[\Override]
-    public function messages(): array
-    {
-        return ['search.text.prohibited' => 'Text search is not available on this resource.'];
-    }
-
     public function actionKey(): string
     {
         $key = $this->route('action');

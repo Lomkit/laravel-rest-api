@@ -83,6 +83,10 @@ final readonly class EntryRules
         foreach ($rules->all() as $key => $list) {
             $this->emitKey($values->path.'.'.$key, $key, RuleReferences::rewrite($this->resolve($list, $mutation, $given), $paths), $given);
         }
+
+        foreach ($rules->fields() as $field) {
+            $this->rules->book()->field($values->at($field->name), $field);
+        }
     }
 
     /**

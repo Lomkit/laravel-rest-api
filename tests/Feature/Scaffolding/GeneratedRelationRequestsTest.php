@@ -58,7 +58,7 @@ class GeneratedRelationRequestsTest extends ScaffoldingTestCase
                 'mutate.0.relations.desk' => ['The mutate.0.relations.desk field is required.'],
             ]],
             'the key of a belongs to relation' => ['KeyedDesk', ['desk_id' => 1], true, [
-                'mutate.0.attributes' => ['The desk_id attribute is not writable on create.'],
+                'mutate.0.attributes' => ['The desk_id key of the mutate.0.attributes field is not writable on create.'],
             ]],
         ];
     }
@@ -129,7 +129,7 @@ class GeneratedRelationRequestsTest extends ScaffoldingTestCase
     {
         return [
             'a readonly pivot timestamp' => ['StampedPivot', ['pinned' => true, 'created_at' => '2026-01-01 09:00:00'], [
-                'mutate.0.relations.topics.0.pivot' => ['The created_at attribute is not writable on create.'],
+                'mutate.0.relations.topics.0.pivot' => ['The created_at key of the mutate.0.relations.topics.0.pivot field is not writable on create.'],
             ]],
             'a missing required pivot column' => ['UnpinnedPivot', ['position' => 1], [
                 'mutate.0.relations.topics.0.pivot.pinned' => ['The mutate.0.relations.topics.0.pivot.pinned field is required.'],

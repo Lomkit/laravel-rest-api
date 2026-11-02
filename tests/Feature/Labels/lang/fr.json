@@ -1,0 +1,5 @@
+{
+    "unit price": "prix unitaire",
+    "The :key key of the :attribute field is not writable on :operation.": "La clé :key du champ :attribute n'est pas modifiable en :operation.",
+    "The :attribute field is not a valid or allowed relation for this resource.": "Le champ :attribute n'est pas une relation valide ou autorisée de cette ressource."
+}

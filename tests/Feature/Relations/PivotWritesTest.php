@@ -48,7 +48,7 @@ class PivotWritesTest extends WeightedPivotTestCase
         $response = $this->mutate($relation, $this->entry($relation, $operation, ['weight' => 2, 'added_by' => 'Grace']));
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.relations.'.$relation.'.0.pivot' => ['The added_by attribute is not writable on update.'],
+            'mutate.0.relations.'.$relation.'.0.pivot' => ['The added_by key of the mutate.0.relations.'.$relation.'.0.pivot field is not writable on update.'],
         ]);
         $this->assertSame([['position' => 1, 'weight' => 1, 'added_by' => 'Ada', 'note' => null, 'created_at' => self::NOW]], $this->pivotRows($relation));
     }
@@ -63,8 +63,8 @@ class PivotWritesTest extends WeightedPivotTestCase
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
             'mutate.0.relations.'.$relation.'.0.pivot' => [
-                'The created_at attribute is not writable on '.$write.'.',
-                'The colour attribute is not writable on '.$write.'.',
+                'The created_at key of the mutate.0.relations.'.$relation.'.0.pivot field is not writable on '.$write.'.',
+                'The colour key of the mutate.0.relations.'.$relation.'.0.pivot field is not writable on '.$write.'.',
             ],
         ]);
         $this->assertSame([], $this->pivotRows($relation));
