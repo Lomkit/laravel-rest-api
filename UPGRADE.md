@@ -676,7 +676,7 @@ Payloads:
   - `limit`, `page`, `trashed` and `text.mode`;
   - `field`, `operator` and `type` of a filter, `field` and `direction` of a sort, `field` of a select, `name` of a scope, of an instruction and of an instruction field, `relation`, `type` and `alias` of an aggregate, the `field` of an aggregate whose type needs one, and `relation` and `alias` of an include;
   - a scope parameter or an instruction field that is not nullable and whose type is not a string, a filter value of an operator that takes one when the field type is not a string, and the list of an `in`, `not in`, `between` or `not between` filter.
-- These keys get the `filled` error in nested filters, in includes and aggregates, and in the search of an action. A blank `nested` at the filter depth limit passes, as `null` does. A blank `search.text.value` still runs the normal search. With the middleware, a blank string becomes `null` and keeps its message. Before, a blank string passed validation on most of these keys.
+- These keys get the `filled` error in nested filters, in includes and aggregates, and in the search of an action. A blank `search.text.value` still runs the normal search. With the middleware, a blank string becomes `null` and keeps its message. Before, a blank string passed validation on most of these keys.
 - Under a to-many relation in `mutate`, the errors are listed entry by entry.
 - `sync` and `toggle` are accepted on many-to-many relations only: `BelongsToMany`, `MorphToMany` and `MorphedByMany`. On another relation they give a 422 under the `operation` key of the entry, such as `The selected mutate.0.relations.author.operation is invalid.` Send `attach` there instead. A relation lists the operations it accepts in `mutationOperations()`.
 

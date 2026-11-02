@@ -47,7 +47,6 @@ class EnginePayloadTest extends EngineSearchTestCase
         return [
             'a null group' => [null],
             'an empty group' => [[]],
-            'a blank group' => [''],
         ];
     }
 }

@@ -55,7 +55,6 @@ class EmptySearchPartsTest extends PackageTestCase
     {
         return [
             'a null group' => [null],
-            'a blank group' => [''],
         ];
     }
 
@@ -90,7 +89,6 @@ class EmptySearchPartsTest extends PackageTestCase
     {
         return [
             'an empty list' => [[]],
-            'a blank string' => [''],
         ];
     }
 

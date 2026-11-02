@@ -70,7 +70,7 @@ final readonly class PayloadReader
 
     public function filled(Cursor $value): bool
     {
-        return $value->value !== null && $value->value !== [] && ! self::isBlank($value->value);
+        return $value->value !== null && $value->value !== [];
     }
 
     /** @return list<Cursor> */
@@ -133,10 +133,5 @@ final readonly class PayloadReader
         }
 
         $this->rules->label($key, $written);
-    }
-
-    private static function isBlank(mixed $value): bool
-    {
-        return is_string($value) && trim($value) === '';
     }
 }

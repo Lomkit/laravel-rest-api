@@ -102,7 +102,7 @@ class PayloadReaderTest extends TestCase
     {
         $filled = array_map(fn (mixed $value): bool => $this->reader()->filled($this->cursor($value)), [null, [], '', '  ', 'a', 0, false, [1]]);
 
-        $this->assertSame([false, false, false, false, true, true, true, true], $filled);
+        $this->assertSame([false, false, true, true, true, true, true, true], $filled);
     }
 
     #[Test]
