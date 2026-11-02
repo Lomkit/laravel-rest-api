@@ -6,7 +6,6 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use LogicException;
 use Lomkit\Rest\Query\Clauses\Clause;
 
 final readonly class AliasedIncludeClause implements Clause
@@ -29,48 +28,29 @@ final readonly class AliasedIncludeClause implements Clause
      */
     private function load(Collection $models): Collection
     {
-        $parents = $models->all();
+        $first = $models->first();
 
-        if ($parents === []) {
+        if ($first === null) {
             return $models;
         }
 
-        $model = reset($parents);
-        $relation = Relation::noConstraints(fn (): mixed => $model->newInstance()->{$this->relation}());
+        $parents = $models->all();
+        $copies = array_map(self::copy(...), $parents);
 
-        if (! $relation instanceof Relation) {
-            throw new LogicException($model::class.'::'.$this->relation.'() does not return an Eloquent relation.');
-        }
-
-        $relation->addEagerConstraints($parents);
-        $this->plan->apply($relation);
-
-        $loadedBeforeAliasing = [];
+        $first->newCollection($copies)->load([$this->relation => function (Relation $relation): void {
+            $this->plan->apply($relation);
+        }]);
 
         foreach ($parents as $index => $parent) {
-            if ($parent->relationLoaded($this->relation)) {
-                $loadedBeforeAliasing[$index] = $parent->getRelation($this->relation);
-            }
-        }
-
-        $relation->match(
-            $relation->initRelation($parents, $this->relation),
-            $relation->getEager(),
-            $this->relation
-        );
-
-        foreach ($parents as $index => $parent) {
-            $parent->setRelation($this->alias, $parent->getRelation($this->relation));
-
-            if (array_key_exists($index, $loadedBeforeAliasing)) {
-                $parent->setRelation($this->relation, $loadedBeforeAliasing[$index]);
-
-                continue;
-            }
-
-            $parent->unsetRelation($this->relation);
+            $parent->setRelation($this->alias, $copies[$index]->getRelation($this->relation));
         }
 
         return $models;
+    }
+
+    private static function copy(Model $model): Model
+    {
+        return $model->newInstance([], true)
+            ->setRawAttributes($model->getAttributes(), true);
     }
 }
