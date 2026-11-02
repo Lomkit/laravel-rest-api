@@ -1,0 +1,53 @@
+{
+    "queries": {
+        "mysql": 2,
+        "pgsql": 2
+    },
+    "shape": {
+        "current_page": null,
+        "data": [
+            {
+                "id": 2,
+                "title": null,
+                "summary": null,
+                "status": null,
+                "featured": null,
+                "views": null,
+                "rating": null,
+                "published_on": null,
+                "published_at": null,
+                "metadata": null
+            },
+            {
+                "id": 3,
+                "title": null,
+                "summary": null,
+                "status": null,
+                "featured": null,
+                "views": null,
+                "rating": null,
+                "published_on": null,
+                "published_at": null,
+                "metadata": null
+            },
+            {
+                "id": 1,
+                "title": null,
+                "summary": null,
+                "status": null,
+                "featured": null,
+                "views": null,
+                "rating": null,
+                "published_on": null,
+                "published_at": null,
+                "metadata": null
+            }
+        ],
+        "from": null,
+        "last_page": null,
+        "per_page": null,
+        "to": null,
+        "total": null,
+        "meta": []
+    }
+}

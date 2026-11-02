@@ -1,0 +1,21 @@
+{
+    "queries": {
+        "sqlite": 2,
+        "mysql": 2,
+        "pgsql": 2
+    },
+    "shape": {
+        "data": {
+            "impacted": null
+        }
+    },
+    "response": {
+        "data": {
+            "impacted": 10
+        }
+    },
+    "raw_queries": [
+        "select * from \"posts\" where (\"posts\".\"status\" = 'draft') order by \"posts\".\"id\" desc limit 10 offset 0",
+        "update \"posts\" set \"status\" = 'published', \"updated_at\" = '2026-01-02 00:00:00' where \"id\" = 2"
+    ]
+}

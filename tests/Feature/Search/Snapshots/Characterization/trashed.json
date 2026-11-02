@@ -1,0 +1,81 @@
+{
+    "queries": {
+        "sqlite": 2,
+        "mysql": 2,
+        "pgsql": 2
+    },
+    "shape": {
+        "current_page": null,
+        "data": [
+            {
+                "id": 1,
+                "first_name": null,
+                "last_name": null,
+                "settings": null
+            },
+            {
+                "id": 3,
+                "first_name": null,
+                "last_name": null,
+                "settings": null
+            },
+            {
+                "id": 4,
+                "first_name": null,
+                "last_name": null,
+                "settings": null
+            },
+            {
+                "id": 2,
+                "first_name": null,
+                "last_name": null,
+                "settings": null
+            }
+        ],
+        "from": null,
+        "last_page": null,
+        "per_page": null,
+        "to": null,
+        "total": null,
+        "meta": []
+    },
+    "response": {
+        "current_page": 1,
+        "data": [
+            {
+                "id": 1,
+                "first_name": "Ada",
+                "last_name": "Lovelace",
+                "settings": null
+            },
+            {
+                "id": 3,
+                "first_name": "Alan",
+                "last_name": "Turing",
+                "settings": null
+            },
+            {
+                "id": 4,
+                "first_name": "Edsger",
+                "last_name": "Dijkstra",
+                "settings": null
+            },
+            {
+                "id": 2,
+                "first_name": "Grace",
+                "last_name": "Hopper",
+                "settings": null
+            }
+        ],
+        "from": 1,
+        "last_page": 1,
+        "per_page": 50,
+        "to": 4,
+        "total": 4,
+        "meta": []
+    },
+    "raw_queries": [
+        "select count(*) as \"aggregate\" from \"authors\"",
+        "select * from \"authors\" order by \"authors\".\"first_name\" asc limit 50 offset 0"
+    ]
+}

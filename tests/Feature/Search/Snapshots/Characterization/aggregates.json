@@ -1,0 +1,87 @@
+{
+    "queries": {
+        "sqlite": 2,
+        "mysql": 2,
+        "pgsql": 2
+    },
+    "shape": {
+        "current_page": null,
+        "data": [
+            {
+                "id": 3,
+                "first_name": null,
+                "last_name": null,
+                "settings": null,
+                "posts_count": null,
+                "posts_max_views": null,
+                "total_views": null
+            },
+            {
+                "id": 2,
+                "first_name": null,
+                "last_name": null,
+                "settings": null,
+                "posts_count": null,
+                "posts_max_views": null,
+                "total_views": null
+            },
+            {
+                "id": 1,
+                "first_name": null,
+                "last_name": null,
+                "settings": null,
+                "posts_count": null,
+                "posts_max_views": null,
+                "total_views": null
+            }
+        ],
+        "from": null,
+        "last_page": null,
+        "per_page": null,
+        "to": null,
+        "total": null,
+        "meta": []
+    },
+    "response": {
+        "current_page": 1,
+        "data": [
+            {
+                "id": 3,
+                "first_name": "Alan",
+                "last_name": "Turing",
+                "settings": null,
+                "posts_count": 0,
+                "posts_max_views": null,
+                "total_views": null
+            },
+            {
+                "id": 2,
+                "first_name": "Grace",
+                "last_name": "Hopper",
+                "settings": null,
+                "posts_count": 1,
+                "posts_max_views": 20,
+                "total_views": 20
+            },
+            {
+                "id": 1,
+                "first_name": "Ada",
+                "last_name": "Lovelace",
+                "settings": null,
+                "posts_count": 2,
+                "posts_max_views": 150,
+                "total_views": 155
+            }
+        ],
+        "from": 1,
+        "last_page": 1,
+        "per_page": 50,
+        "to": 3,
+        "total": 3,
+        "meta": []
+    },
+    "raw_queries": [
+        "select count(*) as \"aggregate\" from \"authors\" where \"authors\".\"deleted_at\" is null",
+        "select \"authors\".*, (select count(*) from \"posts\" where \"authors\".\"id\" = \"posts\".\"author_id\") as \"posts_count\", (select max(\"posts\".\"views\") from \"posts\" where \"authors\".\"id\" = \"posts\".\"author_id\" and (\"posts\".\"status\" = 'published')) as \"posts_max_views\", (select sum(\"posts\".\"views\") from \"posts\" where \"authors\".\"id\" = \"posts\".\"author_id\") as \"total_views\" from \"authors\" where \"authors\".\"deleted_at\" is null order by \"authors\".\"id\" desc limit 50 offset 0"
+    ]
+}
