@@ -19,7 +19,6 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Validation\CompiledRules;
 use Lomkit\Rest\Validation\NodeBudget;
 use Lomkit\Rest\Validation\ParsedRules;
-use Lomkit\Rest\Validation\RuleCompiler;
 
 class RestRequest extends FormRequest
 {
@@ -186,8 +185,6 @@ class RestRequest extends FormRequest
     /** @param array<array-key, mixed> $rules */
     private function compile(array $rules): CompiledRules
     {
-        $parsed = $this->parsedRules();
-
-        return RuleCompiler::compile($parsed->merge($rules), $parsed->data($this->all()), $this->budget())->with($parsed);
+        return CompiledRules::of($this->parsedRules(), $rules, $this->budget());
     }
 }

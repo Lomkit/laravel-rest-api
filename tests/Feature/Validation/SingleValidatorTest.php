@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Validation;
 
 use Illuminate\Contracts\Translation\Translator;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\PricedCategoryController;
 use Lomkit\Rest\Tests\Feature\Validation\Stubs\CountedValidator;
 use Lomkit\Rest\Tests\Feature\Validation\Stubs\PayloadPostController;
 use Lomkit\Rest\Tests\Feature\Validation\Stubs\ValidationCount;
@@ -36,6 +37,7 @@ class SingleValidatorTest extends PackageTestCase
 
         $this->count = new ValidationCount;
         $this->app['validator']->resolver(fn (Translator $translator, array $data, array $rules, array $messages, array $attributes): CountedValidator => (new CountedValidator($translator, $data, $rules, $messages, $attributes))->countIn($this->count));
+        Rest::resource('priced-categories', PricedCategoryController::class)->register();
     }
 
     #[Test]
@@ -118,6 +120,30 @@ class SingleValidatorTest extends PackageTestCase
 
         $response->assertOk();
         $this->assertSame(['Desk lamp', 'Floor lamp'], Product::query()->orderBy('id')->pluck('name')->all());
+        $this->assertOnePass();
+    }
+
+    #[Test]
+    public function it_validates_a_mutation_of_every_part_in_one_pass(): void
+    {
+        Category::factory()->create(['id' => 1, 'name' => 'Lighting']);
+        $deskLamp = Product::factory()->create(['category_id' => 1, 'name' => 'Desk lamp']);
+        $floorLamp = Product::factory()->create(['category_id' => 1, 'name' => 'Floor lamp']);
+
+        $response = $this->postJson('/priced-categories/mutate', ['mutate' => [[
+            'operation' => 'update',
+            'key' => 1,
+            'attributes' => ['name' => 'Lamps'],
+            'relations' => [
+                'products' => [
+                    ['operation' => 'attach', 'key' => [$floorLamp->id]],
+                    ['operation' => 'create', 'attributes' => ['name' => 'Floor lamp', 'price' => 129]],
+                ],
+                'featuredProducts' => [['operation' => 'attach', 'key' => $deskLamp->id, 'pivot' => ['price' => 10]]],
+            ],
+        ]]]);
+
+        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [1]]);
         $this->assertOnePass();
     }
 

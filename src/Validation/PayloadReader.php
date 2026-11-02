@@ -127,7 +127,7 @@ final readonly class PayloadReader
         return null;
     }
 
-    private function labelAsWritten(string $key): void
+    public function labelAsWritten(string $key): void
     {
         $written = KeyPath::unescape($key);
 

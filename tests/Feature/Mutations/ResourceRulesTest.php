@@ -5,6 +5,9 @@ namespace Lomkit\Rest\Tests\Feature\Mutations;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Mutations\Stubs\CountedRulesPostController;
+use Lomkit\Rest\Tests\Feature\Mutations\Stubs\CountedRulesPostResource;
+use Lomkit\Rest\Tests\Feature\Mutations\Stubs\RuledAuthorController;
 use Lomkit\Rest\Tests\Feature\Mutations\Stubs\RuledPostController;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\OpenPublishingPolicy;
@@ -31,6 +34,29 @@ class ResourceRulesTest extends PackageTestCase
         parent::setUp();
 
         Rest::resource('ruled-posts', RuledPostController::class)->register();
+        Rest::resource('ruled-authors', RuledAuthorController::class)->register();
+        Rest::resource('counted-rules-posts', CountedRulesPostController::class)->register();
+        CountedRulesPostResource::$rulesCalls = 0;
+        CountedRulesPostResource::$createRulesCalls = 0;
+        CountedRulesPostResource::$updateRulesCalls = 0;
+    }
+
+    #[Test]
+    public function it_reads_the_resource_rules_once_per_request(): void
+    {
+        $quarterly = Post::factory()->create(['title' => 'Quarterly report']);
+        $daily = Post::factory()->create(['title' => 'Daily report']);
+
+        $response = $this->mutate('/counted-rules-posts/mutate', [
+            ['operation' => 'create', 'attributes' => [...self::POST, 'title' => 'Annual report']],
+            ['operation' => 'create', 'attributes' => [...self::POST, 'title' => 'Monthly report']],
+            ['operation' => 'create', 'attributes' => [...self::POST, 'title' => 'Weekly report']],
+            ['operation' => 'update', 'key' => $quarterly->id, 'attributes' => ['views' => 1]],
+            ['operation' => 'update', 'key' => $daily->id, 'attributes' => ['views' => 1]],
+        ]);
+
+        $response->assertOk();
+        $this->assertSame([1, 1, 1], [CountedRulesPostResource::$rulesCalls, CountedRulesPostResource::$createRulesCalls, CountedRulesPostResource::$updateRulesCalls]);
     }
 
     #[Test]
@@ -106,6 +132,50 @@ class ResourceRulesTest extends PackageTestCase
     public static function pivotOperations(): array
     {
         return ['sync' => ['sync'], 'toggle' => ['toggle']];
+    }
+
+    /** @param list<array<string, mixed>> $mutations */
+    #[Test]
+    #[DataProvider('wildcardEntries')]
+    public function it_sends_a_wildcard_key_of_the_resource_rules_to_laravel(string $uri, array $mutations, string $key): void
+    {
+        Gate::policy(Author::class, OpenPublishingPolicy::class);
+        Author::factory()->create(['id' => 1]);
+        $message = 'The '.$key.' field must not be greater than 5 characters.';
+
+        $response = $this->mutate($uri, $mutations);
+
+        $response->assertUnprocessable()->assertExactJson(['message' => $message, 'errors' => [$key => [$message]]]);
+        $this->assertSame(0, Post::query()->count());
+    }
+
+    /** @return array<string, array{string, list<array<string, mixed>>, string}> */
+    public static function wildcardEntries(): array
+    {
+        $post = ['operation' => 'create', 'attributes' => [...self::POST, 'metadata' => ['tags' => ['ok', 'toolong']]]];
+
+        return [
+            'a root entry' => ['/ruled-posts/mutate', [$post], 'mutate.0.attributes.metadata.tags.1'],
+            'a to-many entry' => ['/ruled-authors/mutate', [
+                ['operation' => 'update', 'key' => 1, 'relations' => ['posts' => [$post]]],
+            ], 'mutate.0.relations.posts.0.attributes.metadata.tags.1'],
+        ];
+    }
+
+    #[Test]
+    public function it_reports_a_wildcard_key_of_the_resource_rules_after_the_package_keys(): void
+    {
+        $response = $this->mutate('/ruled-posts/mutate', [[
+            'operation' => 'create',
+            'attributes' => [...self::POST, 'metadata' => ['tags' => ['toolong']]],
+            'without_detaching' => true,
+        ]]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', [
+            'mutate.0.without_detaching' => ['The mutate.0.without detaching field is prohibited unless mutate.0.operation is in sync.'],
+            'mutate.0.attributes.metadata.tags.0' => ['The mutate.0.attributes.metadata.tags.0 field must not be greater than 5 characters.'],
+        ]);
+        $this->assertSame(0, Post::query()->count());
     }
 
     /** @param list<array<string, mixed>> $mutations */

@@ -2,8 +2,6 @@
 
 namespace Lomkit\Rest\Fields;
 
-use Lomkit\Rest\Validation\RuleReferences;
-
 final readonly class WriteRules
 {
     /**
@@ -45,21 +43,9 @@ final readonly class WriteRules
         return $this->rules;
     }
 
-    /** @return array<string, list<mixed>> */
-    public function under(string $prefix): array
+    /** @return list<string> */
+    public function names(): array
     {
-        $paths = [];
-
-        foreach ($this->names as $name) {
-            $paths[$name] = $prefix.$name;
-        }
-
-        $rules = [];
-
-        foreach ($this->rules as $key => $list) {
-            $rules[$prefix.$key] = RuleReferences::rewrite($list, $paths);
-        }
-
-        return $rules;
+        return $this->names;
     }
 }

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Validation;
 
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Fields\WriteRules;
 
 final readonly class CompiledRules
 {
@@ -19,9 +20,25 @@ final readonly class CompiledRules
         public array $reach = [],
     ) {}
 
-    public function with(ParsedRules $parsed): self
+    /** @param array<array-key, mixed> $rules */
+    public static function of(ParsedRules $parsed, array $rules, NodeBudget $budget): self
     {
-        return new self($this->rules, $parsed->labels() + $this->labels, $parsed->projections() + $this->projections, [...$parsed->checks(), ...$this->reach]);
+        $explicit = [];
+        $wildcards = [];
+
+        foreach ($parsed->merge($rules) as $key => $list) {
+            if (str_contains((string) $key, '*')) {
+                $wildcards[(string) $key] = $list;
+
+                continue;
+            }
+
+            $explicit[(string) $key] = WriteRules::listOf($list);
+        }
+
+        $wildcards = array_map(WriteRules::listOf(...), $budget->open($wildcards));
+
+        return new self($budget->applyTo($explicit + $wildcards), $parsed->labels(), $parsed->projections(), $parsed->checks());
     }
 
     /**

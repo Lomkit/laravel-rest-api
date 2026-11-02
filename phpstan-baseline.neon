@@ -242,12 +242,6 @@ parameters:
 			path: src/Http/Controllers/Controller.php
 
 		-
-			message: '#^Parameter \#1 \$parameters of method Lomkit\\Rest\\Contracts\\EloquentQueryBuilder\:\:mutate\(\) expects array\<string, mixed\>, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
 			message: '#^Parameter \#1 \$parameters of method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:search\(\) expects array\<string, mixed\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1

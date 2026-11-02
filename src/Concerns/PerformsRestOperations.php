@@ -16,6 +16,7 @@ use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Response;
+use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Query\EngineSearch;
 
 trait PerformsRestOperations
@@ -76,7 +77,7 @@ trait PerformsRestOperations
             $queryBuilder = app()->make(EloquentQueryBuilder::class, ['resource' => $resource, 'query' => null]);
             $resource->mutateQuery($request, $queryBuilder->toBase());
 
-            return $queryBuilder->mutate($request->all());
+            return $queryBuilder->mutate(['mutate' => array_map(fn (MutationNode $node): array => $node->toArray(), $request->payload())]);
         });
 
         $this->afterMutate($request);

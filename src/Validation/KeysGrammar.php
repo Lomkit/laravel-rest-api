@@ -77,7 +77,7 @@ final readonly class KeysGrammar
         };
     }
 
-    private static function idOf(Resource $resource, RestRequest $request): ID
+    public static function idOf(Resource $resource, RestRequest $request): ID
     {
         $model = $resource::newModel();
         $field = $resource->getFields($request)->find($model->getKeyName());

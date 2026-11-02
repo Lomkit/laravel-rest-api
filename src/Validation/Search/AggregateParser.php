@@ -6,7 +6,6 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Rules\OneOf;
-use Lomkit\Rest\Rules\Resource\ResourceRelationOrNested;
 use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ValidationContext;
@@ -51,7 +50,7 @@ final readonly class AggregateParser
         $function = is_string($type->value) ? AggregateFunction::tryFrom($type->value) : null;
 
         $rules->add($alias->path, ['string']);
-        $rules->add($relation->path, ['required', (new ResourceRelationOrNested)->setResource($context->resource)]);
+        $rules->add($relation->path, ['required', new KnownRelation($context->resource)]);
         $rules->add($type->path, ['required', Rule::enum(AggregateFunction::class)]);
 
         if ($related === null) {

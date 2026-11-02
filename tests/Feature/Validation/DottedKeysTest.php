@@ -83,7 +83,7 @@ class DottedKeysTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_validates_a_mutation_whose_key_holds_a_dot(): void
+    public function it_refuses_a_mutate_list_given_as_an_object(): void
     {
         $lighting = Category::factory()->create(['name' => 'Lighting']);
 
@@ -93,13 +93,13 @@ class DottedKeysTest extends PackageTestCase
         ]]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.a.b.attributes' => ['The created_at attribute is not writable on create.'],
+            'mutate' => ['The mutate field must be a list.'],
         ]);
         $this->assertSame(0, Product::query()->count());
     }
 
     #[Test]
-    public function it_validates_a_to_many_entry_whose_key_holds_a_dot(): void
+    public function it_refuses_a_to_many_relation_given_as_an_object(): void
     {
         $response = $this->postJson('/api/categories/mutate', ['mutate' => [[
             'operation' => 'create',
@@ -111,7 +111,7 @@ class DottedKeysTest extends PackageTestCase
         ]]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.relations.products.a.b.attributes' => ['The created_at attribute is not writable on create.'],
+            'mutate.0.relations.products' => ['The mutate.0.relations.products field must be a list.'],
         ]);
         $this->assertSame(0, Category::query()->count());
         $this->assertSame(0, Product::query()->count());

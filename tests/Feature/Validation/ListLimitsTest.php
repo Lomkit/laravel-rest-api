@@ -67,8 +67,8 @@ class ListLimitsTest extends PackageTestCase
                 'relations' => ['products' => self::three(['operation' => 'secret'])],
             ]]], 'mutate.0.relations.products'],
             'the keys of a mutation' => ['values', 'POST', '/api/categories/mutate', ['mutate' => [
-                ['operation' => 'update', 'key' => [1, 2, 3], 'attributes' => ['name' => 'Lighting']],
-            ]], 'mutate.0.key'],
+                ['operation' => 'create', 'attributes' => ['name' => 'Lighting'], 'relations' => ['products' => [['operation' => 'attach', 'key' => [1, 2, 3]]]]],
+            ]], 'mutate.0.relations.products.0.key'],
             'resources' => ['resources', 'DELETE', '/api/authors', ['resources' => [1, 2, 3]], 'resources'],
         ];
     }

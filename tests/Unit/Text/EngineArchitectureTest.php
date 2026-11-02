@@ -87,6 +87,8 @@ class EngineArchitectureTest extends TestCase
         $parser = [
             ...array_diff(self::files("{$root}/src/Validation/Search", '.php'), $grammars),
             ...self::files("{$root}/src/Validation/Operate", '.php'),
+            ...self::files("{$root}/src/Validation/Mutate", '.php'),
+            ...self::files("{$root}/src/Mutations", '.php'),
             "{$root}/src/Validation/InputSet.php",
             "{$root}/src/Validation/PayloadReader.php",
             "{$root}/src/Validation/ParsedRules.php",
