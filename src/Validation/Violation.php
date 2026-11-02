@@ -36,11 +36,6 @@ final readonly class Violation
         return new self($key, 'The :attribute field goes over the limit of :max list entries in one request.', ['max' => (string) $max]);
     }
 
-    public static function notArray(string $key): self
-    {
-        return new self($key, 'validation.array');
-    }
-
     public static function unknown(string $key): self
     {
         return new self($key, 'validation.prohibited');

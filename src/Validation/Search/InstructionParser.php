@@ -56,7 +56,9 @@ final readonly class InstructionParser
         $instruction = self::find($declared, $name->value);
 
         $context->rules->add($name->path, [$names, 'required', 'string']);
+        $context->rules->needsValue($name->path, $name->value);
         $context->rules->addWhenPresent($fields, ['array']);
+        $context->rules->needsValue($fields->path, $fields->value);
         $context->reader->admit($fields, $context->limits->sizes->fields);
 
         if ($instruction === null) {

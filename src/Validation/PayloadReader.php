@@ -22,12 +22,7 @@ final readonly class PayloadReader
         }
 
         $this->rules->partial();
-
-        if (self::isBlank($value->value)) {
-            $this->rules->reject(Violation::notArray($value->path));
-
-            return false;
-        }
+        $this->rules->needsValue($value->path, $value->value);
 
         if (! $this->rules->holds($value->path, 'array')) {
             $this->rules->add($value->path, ['array']);
@@ -43,6 +38,7 @@ final readonly class PayloadReader
             return null;
         }
 
+        $this->rules->needsValue($list->path, $list->value);
         $entries = $this->admitted($list, $max, $filters);
 
         if ($entries === null) {
@@ -115,12 +111,6 @@ final readonly class PayloadReader
     /** @return list<Cursor>|null */
     private function admitted(Cursor $list, int $max, bool $filters): ?array
     {
-        if (self::isBlank($list->value)) {
-            $this->rules->reject(Violation::notArray($list->path));
-
-            return null;
-        }
-
         if (is_array($list->value) && array_is_list($list->value)) {
             return $this->budget->admit($list->path, count($list->value), $max, $filters) ? $list->items(PHP_INT_MAX) : null;
         }

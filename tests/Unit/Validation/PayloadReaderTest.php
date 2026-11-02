@@ -42,12 +42,11 @@ class PayloadReaderTest extends TestCase
     }
 
     #[Test]
-    public function it_rejects_a_blank_string_where_an_object_is_expected(): void
+    public function it_gives_the_filled_rule_to_a_blank_string_where_an_object_is_expected(): void
     {
         $this->assertFalse($this->reader()->object($this->cursor('  ')));
-        $this->assertSame(['f'], array_keys($this->rules->rules()));
-        $this->assertRejected(Violation::notArray('f'), $this->rules->rules()['f']);
-        $this->assertSame('validation.array', Violation::notArray('f')->message);
+        $this->assertSame(['f' => ['array', 'filled']], $this->rules->rules());
+        $this->assertTrue($this->rules->isPartial());
     }
 
     #[Test]
@@ -69,10 +68,10 @@ class PayloadReaderTest extends TestCase
     }
 
     #[Test]
-    public function it_rejects_a_blank_string_where_a_list_is_expected(): void
+    public function it_gives_the_filled_rule_to_a_blank_string_where_a_list_is_expected(): void
     {
         $this->assertNull($this->reader()->entries($this->cursor(''), 2));
-        $this->assertRejected(Violation::notArray('f'), $this->rules->rules()['f']);
+        $this->assertSame(['f' => ['filled']], $this->rules->rules());
         $this->assertTrue($this->rules->isPartial());
     }
 

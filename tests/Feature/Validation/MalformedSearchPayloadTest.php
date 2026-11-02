@@ -143,7 +143,7 @@ class MalformedSearchPayloadTest extends PackageTestCase
     #[DataProvider('blankShapes')]
     public function it_rejects_a_blank_string_where_an_object_or_a_list_is_expected(mixed $search, string $key): void
     {
-        $message = "The {$key} field must be an array.";
+        $message = "The {$key} field must have a value.";
 
         $response = $this
             ->withoutMiddleware(ConvertEmptyStringsToNull::class)

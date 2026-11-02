@@ -48,7 +48,9 @@ final readonly class SortParser
         $direction = $entry->at('direction');
 
         $context->rules->add($field->path, [$fields, 'required', 'string']);
+        $context->rules->needsValue($field->path, $field->value);
         $context->rules->addWhenPresent($direction, [$context->grammar->sortDirection($field->value)]);
+        $context->rules->needsValue($direction->path, $direction->value);
 
         $parsed = is_string($direction->value) ? SortDirection::tryFrom($direction->value) : null;
 

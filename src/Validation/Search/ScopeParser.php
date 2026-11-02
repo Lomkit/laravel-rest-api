@@ -54,6 +54,7 @@ final readonly class ScopeParser
         $parameters = $entry->at('parameters');
 
         $context->rules->add($name->path, ['required', 'string', $names]);
+        $context->rules->needsValue($name->path, $name->value);
 
         $scope = is_string($name->value) ? $resource->scope($resource->context()->request, $name->value) : null;
 
