@@ -50,7 +50,7 @@ class AggregateClauseTest extends PackageTestCase
         $this->aggregate('drafts', DraftResource::class, AggregateFunction::Max, $field())->apply($query);
 
         $this->assertSame(
-            'select "authors".*, (select max("drafts"."id"::text) from "drafts" where "authors"."id" = "drafts"."author_id") as "drafts_max_id" from "authors" where "authors"."deleted_at" is null',
+            'select "authors".*, (select max("drafts"."id"::text) from "drafts" where "authors"."id" = "drafts"."author_id") as "@aggregate_0" from "authors" where "authors"."deleted_at" is null',
             $query->toSql(),
         );
     }
@@ -79,8 +79,8 @@ class AggregateClauseTest extends PackageTestCase
     public static function otherDrivers(): array
     {
         return [
-            'mysql' => ['mysql_grammar', 'select `authors`.*, (select min(`drafts`.`id`) from `drafts` where `authors`.`id` = `drafts`.`author_id`) as `drafts_min_id` from `authors` where `authors`.`deleted_at` is null'],
-            'sqlite' => ['sqlite_grammar', 'select "authors".*, (select min("drafts"."id") from "drafts" where "authors"."id" = "drafts"."author_id") as "drafts_min_id" from "authors" where "authors"."deleted_at" is null'],
+            'mysql' => ['mysql_grammar', 'select `authors`.*, (select min(`drafts`.`id`) from `drafts` where `authors`.`id` = `drafts`.`author_id`) as `@aggregate_0` from `authors` where `authors`.`deleted_at` is null'],
+            'sqlite' => ['sqlite_grammar', 'select "authors".*, (select min("drafts"."id") from "drafts" where "authors"."id" = "drafts"."author_id") as "@aggregate_0" from "authors" where "authors"."deleted_at" is null'],
         ];
     }
 
@@ -94,7 +94,7 @@ class AggregateClauseTest extends PackageTestCase
         $this->aggregate('drafts', DraftResource::class, AggregateFunction::Max, $field())->apply($query);
 
         $this->assertSame(
-            "select \"authors\".*, (select max(\"drafts\".\"{$column}\") from \"drafts\" where \"authors\".\"id\" = \"drafts\".\"author_id\") as \"drafts_max_{$column}\" from \"authors\" where \"authors\".\"deleted_at\" is null",
+            "select \"authors\".*, (select max(\"drafts\".\"{$column}\") from \"drafts\" where \"authors\".\"id\" = \"drafts\".\"author_id\") as \"@aggregate_0\" from \"authors\" where \"authors\".\"deleted_at\" is null",
             $query->toSql(),
         );
     }
@@ -111,16 +111,18 @@ class AggregateClauseTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_names_a_uuid_aggregate_after_the_alias_on_postgresql(): void
+    public function it_selects_an_aliased_uuid_aggregate_under_a_name_of_its_own_on_postgresql(): void
     {
         $query = Author::on('pgsql_grammar');
+        $clause = $this->aggregate('drafts', DraftResource::class, AggregateFunction::Max, ID::make('id')->keyType('uuid'), 'latest_draft');
 
-        $this->aggregate('drafts', DraftResource::class, AggregateFunction::Max, ID::make('id')->keyType('uuid'), 'latest_draft')->apply($query);
+        $clause->apply($query);
 
         $this->assertSame(
-            'select "authors".*, (select max("drafts"."id"::text) from "drafts" where "authors"."id" = "drafts"."author_id") as "latest_draft" from "authors" where "authors"."deleted_at" is null',
+            'select "authors".*, (select max("drafts"."id"::text) from "drafts" where "authors"."id" = "drafts"."author_id") as "@aggregate_0" from "authors" where "authors"."deleted_at" is null',
             $query->toSql(),
         );
+        $this->assertSame('latest_draft', $clause->key->value);
     }
 
     #[Test]
@@ -131,7 +133,7 @@ class AggregateClauseTest extends PackageTestCase
         $this->aggregate('children', FolderResource::class, AggregateFunction::Min, ID::make('id')->keyType('uuid'))->apply($query);
 
         $this->assertMatchesRegularExpression(
-            '/^select "folders"\.\*, \(select min\("(laravel_reserved_\d+)"\."id"::text\) from "folders" as "\1" where "folders"\."id" = "\1"\."parent_id"\) as "children_min_id" from "folders"$/',
+            '/^select "folders"\.\*, \(select min\("(laravel_reserved_\d+)"\."id"::text\) from "folders" as "\1" where "folders"\."id" = "\1"\."parent_id"\) as "@aggregate_0" from "folders"$/',
             $query->toSql(),
         );
     }
@@ -144,7 +146,7 @@ class AggregateClauseTest extends PackageTestCase
         $this->aggregate('drafts', DraftResource::class, AggregateFunction::Count, null)->apply($query);
 
         $this->assertSame(
-            'select authors.*, (select count(*) from drafts where authors.id = drafts.author_id) as drafts_count from authors where authors.deleted_at is null',
+            'select authors.*, (select count(*) from drafts where authors.id = drafts.author_id) as @aggregate_0 from authors where authors.deleted_at is null',
             $this->sql($query),
         );
     }
@@ -167,8 +169,8 @@ class AggregateClauseTest extends PackageTestCase
         $from = 'from posts where authors.id = posts.author_id and views > ?)';
 
         return [
-            'a field' => [AggregateFunction::Sum, fn (): Field => Integer::make('views'), null, "select authors.*, (select sum(posts.views) {$from} as posts_sum_views from authors where authors.deleted_at is null"],
-            'an alias' => [AggregateFunction::Max, fn (): Field => ID::make('id'), 'last_post', "select authors.*, (select max(posts.id) {$from} as last_post from authors where authors.deleted_at is null"],
+            'a field' => [AggregateFunction::Sum, fn (): Field => Integer::make('views'), null, "select authors.*, (select sum(posts.views) {$from} as @aggregate_0 from authors where authors.deleted_at is null"],
+            'an alias' => [AggregateFunction::Max, fn (): Field => ID::make('id'), 'last_post', "select authors.*, (select max(posts.id) {$from} as @aggregate_0 from authors where authors.deleted_at is null"],
         ];
     }
 
@@ -178,7 +180,7 @@ class AggregateClauseTest extends PackageTestCase
         $related = (new RestContext(RestRequest::create('/api/authors/search', 'POST'), $this->app))->resource($resource);
         $node = new AggregateNode($relation, $related, $function, $field, $alias, AggregateKey::of($relation, $function, $field, $alias), new FilterGroup);
 
-        return AggregateClause::of($node, $constraint ?? new QueryPlan($related, [], [], [], LimitPolicy::none()));
+        return AggregateClause::of($node, $constraint ?? new QueryPlan($related, [], [], [], LimitPolicy::none()), 0);
     }
 
     private function sql(Builder $query): string

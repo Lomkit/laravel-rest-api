@@ -100,7 +100,7 @@ class SearchPlannerTest extends PackageTestCase
         $this->assertSame('select * from posts', $this->limited($this->all($posts, [])->limit));
         $this->assertInstanceOf(IncludeClause::class, $include);
         $this->assertSame('select * from posts limit 10', $this->limited($include->plan->limit));
-        $this->assertSame('select authors.*, (select count(*) from posts where authors.id = posts.author_id) as posts_count from authors where authors.deleted_at is null', str_replace(['"', '`'], '', $aggregate->toRawSql()));
+        $this->assertSame('select authors.*, (select count(*) from posts where authors.id = posts.author_id) as @aggregate_0 from authors where authors.deleted_at is null', str_replace(['"', '`'], '', $aggregate->toRawSql()));
     }
 
     /** @param Closure(Resource): mixed $plan */

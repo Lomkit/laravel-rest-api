@@ -46,7 +46,7 @@ final readonly class SearchPlanner
             $resource,
             [new PerimeterClause($resource), ...$this->rows->clauses($resource, $search)],
             self::includes($includes),
-            array_map(self::aggregate(...), $search->aggregates),
+            array_map(self::aggregate(...), $search->aggregates, array_keys($search->aggregates)),
             $limit,
             $search->selects,
             $search->gates,
@@ -111,7 +111,7 @@ final readonly class SearchPlanner
         return (new self(new SqlRows(null)))->level($include->resource, $include->search, [...$children, ...$include->search->includes], LimitPolicy::explicit($include->search->limit));
     }
 
-    private static function aggregate(AggregateNode $aggregate): AggregateClause
+    private static function aggregate(AggregateNode $aggregate, int $position): AggregateClause
     {
         $clauses = [new PerimeterClause($aggregate->resource)];
 
@@ -119,6 +119,6 @@ final readonly class SearchPlanner
             $clauses[] = FilterGroupClause::of($aggregate->filters);
         }
 
-        return AggregateClause::of($aggregate, new QueryPlan($aggregate->resource, $clauses, [], [], LimitPolicy::none()));
+        return AggregateClause::of($aggregate, new QueryPlan($aggregate->resource, $clauses, [], [], LimitPolicy::none()), $position);
     }
 }

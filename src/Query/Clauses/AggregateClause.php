@@ -17,17 +17,20 @@ use Lomkit\Rest\Search\AggregateNode;
 
 final readonly class AggregateClause implements Clause
 {
+    private const string LABEL = '@aggregate_';
+
     private function __construct(
         private string $relation,
         private AggregateFunction $function,
         private ?Field $field,
         public AggregateKey $key,
+        public string $label,
         private Clause $constraint,
     ) {}
 
-    public static function of(AggregateNode $node, Clause $constraint): self
+    public static function of(AggregateNode $node, Clause $constraint, int $position): self
     {
-        return new self($node->relation, $node->function, $node->field, $node->key, $constraint);
+        return new self($node->relation, $node->function, $node->field, $node->key, self::LABEL.$position, $constraint);
     }
 
     #[\Override]
@@ -36,7 +39,7 @@ final readonly class AggregateClause implements Clause
         $query = self::eloquent($query);
 
         $query->withAggregate(
-            [$this->relation.' as '.$this->key->value => function (EloquentBuilder $query): void {
+            [$this->relation.' as '.$this->label => function (EloquentBuilder $query): void {
                 $this->constraint->apply($query);
             }],
             $this->column($query),
