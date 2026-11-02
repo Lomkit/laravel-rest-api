@@ -18,6 +18,7 @@ use Lomkit\Rest\Config\RestConfig;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Text\ResolvedText;
 use Lomkit\Rest\Validation\Limits;
+use Lomkit\Rest\Validation\Vocabulary;
 use WeakMap;
 
 final class RestContext
@@ -30,6 +31,8 @@ final class RestContext
     private ?RestConfig $config = null;
 
     private ?Limits $limits = null;
+
+    private ?Vocabulary $vocabulary = null;
 
     private ?Authorizer $authorizer = null;
 
@@ -69,6 +72,11 @@ final class RestContext
     public function limits(): Limits
     {
         return $this->limits ??= Limits::fromConfig($this->container->make(ConfigRepository::class)->get('rest.limits'));
+    }
+
+    public function vocabulary(): Vocabulary
+    {
+        return $this->vocabulary ??= new Vocabulary;
     }
 
     public function authorizer(): Authorizer

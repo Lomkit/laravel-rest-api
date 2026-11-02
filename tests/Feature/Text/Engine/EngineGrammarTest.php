@@ -116,6 +116,12 @@ class EngineGrammarTest extends EngineSearchTestCase
             'an aggregate without relation' => ['vouchers', ['aggregates' => [['type' => 'count']]], [
                 'search.aggregates.0.relation' => ['The search.aggregates.0.relation field is required.'],
             ]],
+            'an unknown key in a filter' => ['vouchers', ['filters' => [['field' => 'number', 'value' => 3, 'operater' => '!=']]], [
+                'search.filters.0.operater' => ['The search.filters.0.operater field is prohibited.'],
+            ]],
+            'filters given as an object' => ['vouchers', ['filters' => ['first' => ['field' => 'number', 'value' => 3]]], [
+                'search.filters' => ['The search.filters field must be a list.'],
+            ]],
         ];
     }
 

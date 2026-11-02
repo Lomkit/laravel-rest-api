@@ -18,6 +18,7 @@ use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Validation\CompiledRules;
 use Lomkit\Rest\Validation\NodeBudget;
+use Lomkit\Rest\Validation\ParsedRules;
 use Lomkit\Rest\Validation\RuleCompiler;
 
 class RestRequest extends FormRequest
@@ -28,6 +29,12 @@ class RestRequest extends FormRequest
     private ?RestContext $context = null;
 
     private ?CompiledRules $compiled = null;
+
+    private ?NodeBudget $budget = null;
+
+    private ?ParsedRules $parsedRules = null;
+
+    private bool $passed = false;
 
     public function context(): RestContext
     {
@@ -148,10 +155,27 @@ class RestRequest extends FormRequest
         return $controller::resourceClass();
     }
 
-    /** @return list<string> */
-    protected function refusedLists(): array
+    protected function budget(): NodeBudget
     {
-        return [];
+        return $this->budget ??= NodeBudget::of($this->context()->limits());
+    }
+
+    protected function parsedRules(): ParsedRules
+    {
+        return $this->parsedRules ??= new ParsedRules;
+    }
+
+    #[\Override]
+    protected function passedValidation(): void
+    {
+        parent::passedValidation();
+
+        $this->passed = true;
+    }
+
+    protected function hasPassedValidation(): bool
+    {
+        return $this->passed;
     }
 
     private function compiledRules(): CompiledRules
@@ -162,12 +186,8 @@ class RestRequest extends FormRequest
     /** @param array<array-key, mixed> $rules */
     private function compile(array $rules): CompiledRules
     {
-        $budget = NodeBudget::of($this->context()->limits());
+        $parsed = $this->parsedRules();
 
-        foreach ($this->refusedLists() as $key) {
-            $budget->close($key);
-        }
-
-        return RuleCompiler::compile($rules, $this->all(), $budget);
+        return RuleCompiler::compile($parsed->merge($rules), $parsed->data($this->all()), $this->budget())->with($parsed);
     }
 }

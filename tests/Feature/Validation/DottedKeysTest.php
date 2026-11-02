@@ -18,43 +18,28 @@ class DottedKeysTest extends PackageTestCase
         return [new Catalog, new Publishing];
     }
 
-    /**
-     * @param  array<string, mixed>  $search
-     * @param  array<string, list<string>>  $errors
-     */
+    /** @param array<string, mixed> $search */
     #[Test]
     #[DataProvider('searches')]
-    public function it_validates_a_search_entry_whose_key_holds_a_dot(array $search, array $errors): void
+    public function it_refuses_a_search_list_given_as_an_object(array $search, string $key): void
     {
         $response = $this->postJson('/api/products/search', ['search' => $search]);
 
-        $response->assertUnprocessable()->assertJsonPath('errors', $errors);
+        $response->assertUnprocessable()->assertJsonPath('errors', [$key => ["The {$key} field must be a list."]]);
     }
 
-    /** @return array<string, array{array<string, mixed>, array<string, list<string>>}> */
+    /** @return array<string, array{array<string, mixed>, string}> */
     public static function searches(): array
     {
         $undeclared = ['field' => 'created_at', 'value' => '2001-01-01'];
 
         return [
-            'a filter' => [['filters' => ['a.b' => $undeclared]], [
-                'search.filters.a.b.field' => ['The selected search.filters.a.b.field is invalid.'],
-            ]],
-            'a filter whose key ends with a dot' => [['filters' => ['a.' => $undeclared]], [
-                'search.filters.a..field' => ['The selected search.filters.a..field is invalid.'],
-            ]],
-            'a nested filter' => [['filters' => [['nested' => ['a.b' => $undeclared]]]], [
-                'search.filters.0.nested.a.b.field' => ['The selected search.filters.0.nested.a.b.field is invalid.'],
-            ]],
-            'a filter of an include' => [['includes' => [['relation' => 'category', 'filters' => ['a.b' => $undeclared]]]], [
-                'search.includes.0.filters.a.b.field' => ['The selected search.includes.0.filters.a.b.field is invalid.'],
-            ]],
-            'a select' => [['selects' => ['a.b' => ['field' => 'created_at']]], [
-                'search.selects.a.b.field' => ['The selected search.selects.a.b.field is invalid.'],
-            ]],
-            'a sort' => [['sorts' => ['a.b' => ['field' => 'created_at']]], [
-                'search.sorts.a.b.field' => ['The selected search.sorts.a.b.field is invalid.'],
-            ]],
+            'a filter' => [['filters' => ['a.b' => $undeclared]], 'search.filters'],
+            'a filter whose key ends with a dot' => [['filters' => ['a.' => $undeclared]], 'search.filters'],
+            'a nested filter' => [['filters' => [['nested' => ['a.b' => $undeclared]]]], 'search.filters.0.nested'],
+            'a filter of an include' => [['includes' => [['relation' => 'category', 'filters' => ['a.b' => $undeclared]]]], 'search.includes.0.filters'],
+            'a select' => [['selects' => ['a.b' => ['field' => 'created_at']]], 'search.selects'],
+            'a sort' => [['sorts' => ['a.b' => ['field' => 'created_at']]], 'search.sorts'],
         ];
     }
 
@@ -67,7 +52,33 @@ class DottedKeysTest extends PackageTestCase
         ]]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'search.filters' => ['The * key is not valid for the search.filters field.'],
+            'search.filters' => ['The search.filters field must be a list.'],
+        ]);
+    }
+
+    #[Test]
+    public function it_names_an_unknown_key_that_holds_a_dot(): void
+    {
+        $response = $this->postJson('/api/products/search', ['search' => ['filters' => [
+            ['field' => 'name', 'value' => 'Desk lamp', 'a.b' => 1],
+        ]]]);
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The search.filters.0.a.b field is prohibited.',
+            'errors' => ['search.filters.0.a.b' => ['The search.filters.0.a.b field is prohibited.']],
+        ]);
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_key_that_holds_a_wildcard_on_its_object(): void
+    {
+        $response = $this->postJson('/api/products/search', ['search' => ['filters' => [
+            ['field' => 'name', 'value' => 'Desk lamp', '*' => 1],
+        ]]]);
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The * key is not valid for the search.filters.0 field.',
+            'errors' => ['search.filters.0' => ['The * key is not valid for the search.filters.0 field.']],
         ]);
     }
 

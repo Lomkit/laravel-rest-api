@@ -59,4 +59,10 @@ class OneOfTest extends PackageTestCase
     {
         $this->assertSame(['name', 'price', '42'], (new OneOf(['name', 'price', '42']))->values());
     }
+
+    #[Test]
+    public function it_describes_the_names_as_an_in_rule(): void
+    {
+        $this->assertSame('in:name,price,42', (string) new OneOf(['name', 'price', '42']));
+    }
 }

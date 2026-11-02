@@ -4,6 +4,8 @@ namespace Lomkit\Rest\Text\Engine;
 
 use JsonSerializable;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Text\TextCapabilities;
+use Lomkit\Rest\Validation\Search\SearchGrammar;
 
 final readonly class EngineGrammar implements JsonSerializable
 {
@@ -28,6 +30,12 @@ final readonly class EngineGrammar implements JsonSerializable
     public function sorts(string $attribute): bool
     {
         return in_array($attribute, $this->sorts, true);
+    }
+
+    /** @internal */
+    public function searchGrammar(TextCapabilities $text): SearchGrammar
+    {
+        return new EngineSearchGrammar($this, $text);
     }
 
     /** @return array{filters: list<IndexAttribute>, sorts: list<string>, max_sorts: int|null, max_page_size: int|null, window: int|null} */

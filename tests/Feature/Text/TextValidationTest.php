@@ -57,6 +57,9 @@ class TextValidationTest extends TextSearchTestCase
             'a text that is not an object' => ['contains-posts', ['text' => 'lamp'], [
                 'search.text' => ['The search.text field must be an array.'],
             ]],
+            'an unknown key in the text' => ['contains-posts', ['text' => ['value' => 'lamp', 'fuzzy' => true]], [
+                'search.text.fuzzy' => ['The search.text.fuzzy field is prohibited.'],
+            ]],
         ];
     }
 

@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Tests\Feature\Search;
 
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Search\Stubs\MinimumViewsPostController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -114,6 +116,34 @@ class InstructionValidationTest extends PackageTestCase
             'errors' => [
                 'search.instructions.0.name' => ['The selected search.instructions.0.name is invalid.'],
             ],
+        ]);
+    }
+
+    #[Test]
+    public function it_applies_an_input_rule_that_holds_sometimes_to_a_sent_input(): void
+    {
+        Rest::resource('minimum-views-posts', MinimumViewsPostController::class)->register();
+
+        $sent = $this->postJson('/minimum-views-posts/search', [
+            'search' => ['instructions' => [['name' => 'minimum-views', 'fields' => [['name' => 'views', 'value' => 3]]]]],
+        ]);
+        $unsent = $this->postJson('/minimum-views-posts/search', ['search' => ['instructions' => [['name' => 'minimum-views']]]]);
+
+        $sent->assertUnprocessable()->assertExactJson([
+            'message' => 'The views field must be at least 10.',
+            'errors' => ['search.instructions.0.fields.views' => ['The views field must be at least 10.']],
+        ]);
+        $unsent->assertOk();
+    }
+
+    #[Test]
+    public function it_requires_the_inputs_of_an_instruction_sent_without_fields(): void
+    {
+        $response = $this->postJson('/api/posts/search', ['search' => ['instructions' => [['name' => 'in-status']]]]);
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The status field is required.',
+            'errors' => ['search.instructions.0.fields.status' => ['The status field is required.']],
         ]);
     }
 }

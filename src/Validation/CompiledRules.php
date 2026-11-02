@@ -19,6 +19,11 @@ final readonly class CompiledRules
         public array $reach = [],
     ) {}
 
+    public function with(ParsedRules $parsed): self
+    {
+        return new self($this->rules, $parsed->labels() + $this->labels, $parsed->projections() + $this->projections, [...$parsed->checks(), ...$this->reach]);
+    }
+
     /**
      * @param  array<array-key, mixed>  $input
      * @return array<array-key, mixed>

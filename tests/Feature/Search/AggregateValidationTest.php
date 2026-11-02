@@ -3,6 +3,8 @@
 namespace Lomkit\Rest\Tests\Feature\Search;
 
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
+use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
+use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -77,6 +79,33 @@ class AggregateValidationTest extends PackageTestCase
                 'search.aggregates.0.filters' => ['The search.aggregates.0.filters field must be an array.'],
             ]],
         ];
+    }
+
+    #[Test]
+    public function it_rejects_a_null_alias(): void
+    {
+        $message = 'The search.aggregates.0.alias field must be a string.';
+
+        $response = $this->postJson('/api/categories/search', [
+            'search' => ['aggregates' => [['relation' => 'products', 'type' => 'count', 'alias' => null]]],
+        ]);
+
+        $response->assertUnprocessable()->assertExactJson(['message' => $message, 'errors' => ['search.aggregates.0.alias' => [$message]]]);
+    }
+
+    #[Test]
+    public function it_names_an_aggregate_without_an_alias_after_its_relation_and_type(): void
+    {
+        $lighting = Category::factory()->create(['id' => 1, 'name' => 'Lighting']);
+        Product::factory()->for($lighting)->create(['id' => 1, 'name' => 'Desk lamp', 'price' => 39]);
+
+        $response = $this->postJson('/api/categories/search', [
+            'search' => ['aggregates' => [['relation' => 'products', 'type' => 'count']]],
+        ]);
+
+        $response->assertOk();
+        $this->assertSame(['id', 'name', 'products_count'], array_keys($response->json('data.0')));
+        $this->assertSame(1, (int) $response->json('data.0.products_count'));
     }
 
     #[Test]
