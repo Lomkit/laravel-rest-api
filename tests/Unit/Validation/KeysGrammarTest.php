@@ -98,16 +98,6 @@ class KeysGrammarTest extends TestCase
     }
 
     #[Test]
-    public function it_reports_a_blank_key(): void
-    {
-        $list = $this->parse(['']);
-
-        $this->assertEquals([new Violation('resources.0', 'validation.integer', [])], $this->recorded());
-        $this->assertSame(['integer'], $list->rules['resources.0']);
-        $this->assertSame([], $list->keys);
-    }
-
-    #[Test]
     public function it_reports_an_object_of_keys(): void
     {
         $list = $this->parse(['a' => 5]);

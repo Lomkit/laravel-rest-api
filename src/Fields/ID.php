@@ -66,10 +66,6 @@ class ID extends Field
 
     public function parseKey(mixed $value): int|string|null
     {
-        if (is_string($value) && trim($value) === '') {
-            return null;
-        }
-
         return match ($this->resolvedKeyType()) {
             'int' => is_int($key = filter_var($value, FILTER_VALIDATE_INT)) ? $key : null,
             'string' => is_string($value) ? $value : null,

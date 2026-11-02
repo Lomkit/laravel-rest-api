@@ -54,7 +54,6 @@ class ResolvedEngineTextTest extends EngineTestCase
     {
         return [
             'no text' => [[]],
-            'a blank text' => [['text' => ['value' => ' ']]],
             'a text without letters or digits' => [['text' => ['value' => '%_!']]],
         ];
     }

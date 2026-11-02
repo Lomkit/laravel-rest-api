@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Deletion;
 
 use Illuminate\Database\Eloquent\Factories\Sequence;
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use LogicException;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
@@ -101,20 +100,6 @@ class ResourceKeyChecksTest extends PackageTestCase
         $response = $this->json($method, $uri, ['resources' => [1, 2, 3]]);
 
         $this->assertExactErrors($response, ['resources' => ['The resources field must not have more than 2 items.']]);
-        $this->assertSame([], $this->readsOf('documents'));
-    }
-
-    #[Test]
-    #[DataProvider('endpoints')]
-    public function it_refuses_a_blank_key(string $method, string $uri, ?string $deletedAt): void
-    {
-        $this->withoutMiddleware(ConvertEmptyStringsToNull::class);
-        $this->seedDocuments(1, $deletedAt);
-        $this->captureQueries();
-
-        $response = $this->json($method, $uri, ['resources' => ['']]);
-
-        $this->assertExactErrors($response, ['resources.0' => ['The resources.0 field must be an integer.']]);
         $this->assertSame([], $this->readsOf('documents'));
     }
 

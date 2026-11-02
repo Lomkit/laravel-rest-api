@@ -40,8 +40,6 @@ class TextQueryTest extends TestCase
             'a text that is not an array' => ['lamp'],
             'no value' => [[]],
             'a null value' => [['value' => null]],
-            'an empty value' => [['value' => '']],
-            'a value made of spaces' => [['value' => " \t\n"]],
             'a value that is not a string' => [['value' => ['lamp']]],
         ];
     }

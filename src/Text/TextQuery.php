@@ -13,7 +13,7 @@ final readonly class TextQuery
     {
         $value = is_array($text) ? ($text['value'] ?? null) : null;
 
-        if (! is_array($text) || ! is_string($value) || trim($value) === '') {
+        if (! is_array($text) || ! is_string($value)) {
             return null;
         }
 
