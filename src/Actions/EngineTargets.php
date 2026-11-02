@@ -28,11 +28,11 @@ final readonly class EngineTargets
             return null;
         }
 
-        $search = new EngineSearch($request->resource, $text, $request->payload()->search());
-        $limit = $request->input('search.limit');
-        $keys = (new EngineTargetKeys($search->query($request), $action->chunkCount, $action->maxResources, is_numeric($limit) ? (int) $limit : null))->resolve();
+        $search = $request->payload()->search();
+        $engine = new EngineSearch($request->resource, $text, $search);
+        $keys = (new EngineTargetKeys($engine->query(), $action->chunkCount, $action->maxResources, $search->limit))->resolve();
 
-        return new self($search, array_chunk($keys, max(1, $action->chunkCount)));
+        return new self($engine, array_chunk($keys, max(1, $action->chunkCount)));
     }
 
     /** @param Closure(Collection<int, Model>): void $dispatch */

@@ -79,7 +79,7 @@ class EngineSearchAuthorizationTest extends EngineSearchTestCase
         $search = new EngineSearch($resource, $context->text($resource), SearchNode::empty());
 
         try {
-            $search->paginate($context->request);
+            $search->paginate();
             $this->fail('The engine search ran without planning the listing.');
         } catch (UnplannedCheckException $exception) {
             $this->assertSame('The [viewAny] check on ['.VoucherResource::class.'] was not planned before validation. Record it in the reach of the request.', $exception->getMessage());

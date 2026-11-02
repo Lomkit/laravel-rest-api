@@ -6,11 +6,6 @@ use LogicException;
 
 final class InvalidInstructionException extends LogicException
 {
-    public static function undeclared(string $resource, string $name): self
-    {
-        return new self("{$resource} does not declare the instruction [{$name}].");
-    }
-
     public static function engineOnly(string $instruction): self
     {
         return new self("{$instruction} implements AppliesToEngine without its own handle(): it only applies to a text search on a search engine.");
