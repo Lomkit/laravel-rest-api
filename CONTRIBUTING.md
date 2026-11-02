@@ -165,10 +165,6 @@ The analysis also requires native type coverage of 100 % in `src` for returns, p
 
 It does not check the return values of closures, arrow functions and functions, the parameters of a method that a parent class or an interface also has, including a constructor when the parent class has one, the parameters of a function or a method whose PHPDoc has a `@param callable` tag, or properties whose PHPDoc mentions `callable` or `resource`. Check these by hand in review. A member that a parent class or an interface in the vendor declares without a type is not reported, so it needs no ignore entry.
 
-These members have no native type and the extension does not report them. Type them when you change their file, then remove them from this list:
-
-- `$items`, `$total`, `$perPage`, `$currentPage` and `$meta` of `Lomkit\Rest\Pagination\LengthAwarePaginator::__construct()`
-
 `phpstan-baseline.neon` lists the errors that existed when the analysis was added or made stricter. The baseline must only shrink:
 
 - Do not add entries to the baseline. Fix the new error instead.

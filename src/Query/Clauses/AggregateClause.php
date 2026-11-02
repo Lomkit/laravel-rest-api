@@ -21,7 +21,7 @@ final readonly class AggregateClause implements Clause
         private string $relation,
         private AggregateFunction $function,
         private ?Field $field,
-        private AggregateKey $key,
+        public AggregateKey $key,
         private Clause $constraint,
     ) {}
 

@@ -4,47 +4,34 @@ namespace Lomkit\Rest\Pagination;
 
 use Illuminate\Pagination\LengthAwarePaginator as BaseLengthAwarePaginator;
 
+/** @extends BaseLengthAwarePaginator<int, array<string, mixed>> */
 class LengthAwarePaginator extends BaseLengthAwarePaginator
 {
     /**
-     * The meta returned by the api.
+     * @param  array<int, array<string, mixed>>  $items
+     * @param  array<string, mixed>  $options
+     * @param  array<string, mixed>  $meta
      */
-    protected array $meta;
-
-    /**
-     * Create a new paginator instance.
-     *
-     * @param  mixed  $items
-     * @param  int  $total
-     * @param  int  $perPage
-     * @param  int|null  $currentPage
-     * @param  array  $options  (path, query, fragment, pageName)
-     * @return void
-     */
-    public function __construct($items, $total, $perPage, $currentPage = null, array $options = [], $meta = [])
-    {
+    public function __construct(
+        array $items,
+        int $total,
+        int $perPage,
+        int $currentPage,
+        array $options = [],
+        private readonly array $meta = [],
+    ) {
         parent::__construct($items, $total, $perPage, $currentPage, $options);
-
-        $this->meta = $meta;
     }
 
-    /**
-     * Get the meta of items being paginated.
-     *
-     * @return array
-     */
-    public function meta()
+    /** @return array<string, mixed> */
+    public function meta(): array
     {
         return $this->meta;
     }
 
-    /**
-     * Get the instance as an array.
-     *
-     * @return array
-     */
+    /** @return array<string, mixed> */
     #[\Override]
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'current_page' => $this->currentPage(),

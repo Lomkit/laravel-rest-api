@@ -2,9 +2,12 @@
 
 namespace Lomkit\Rest\Tests\Feature\Serialization;
 
+use Illuminate\Http\JsonResponse;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Search\Plan\QueryPlan;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
+use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
@@ -94,9 +97,29 @@ class ResponseShapeTest extends PackageTestCase
             ->responsable(Post::query()->findOrFail(1))
             ->toResponse($context->request);
 
+        $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertSame(
             '{"data":{"id":1,"title":"Engines","summary":null,"status":"published","featured":false,"views":150,"rating":null,"published_on":"2026-01-01T00:00:00.000000Z","published_at":null,"metadata":null},"meta":[]}',
-            json_encode($response),
+            $response->getContent(),
+        );
+    }
+
+    #[Test]
+    public function it_renders_a_relation_set_to_a_support_collection(): void
+    {
+        $context = new RestContext(RestRequest::create('/api/authors', 'POST'), $this->app);
+        $resource = $context->resource(AuthorResource::class);
+        $author = Author::query()->findOrFail(1);
+        $author->setRelation('posts', collect([Post::query()->findOrFail(1)]));
+
+        $response = AuthorResource::newResponse()
+            ->plan(QueryPlan::bare($resource))
+            ->responsable($author)
+            ->toResponse($context->request);
+
+        $this->assertSame(
+            '{"data":{"id":1,"first_name":"Ada","last_name":"Lovelace","settings":null,"posts":[{"id":1,"title":"Engines","summary":null,"status":"published","featured":false,"views":150,"rating":null,"published_on":"2026-01-01T00:00:00.000000Z","published_at":null,"metadata":null}]},"meta":[]}',
+            $response->getContent(),
         );
     }
 }
