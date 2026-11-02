@@ -46,27 +46,22 @@ final readonly class FilterParser
         $nested = $entry->at('nested');
         $operator = $entry->at('operator');
         $value = $entry->at('value');
-        $type = $entry->at('type');
         $name = is_string($field->value) ? $field->value : null;
         $path = $name === null ? null : $this->path($name, $entry, $context);
 
         $rules->add($field->path, ['string', 'required_without:'.$nested->path, new OneOf($path === null ? [] : [$name])]);
-        $rules->needsValue($field->path, $field->value);
         $children = $this->nested($entry, $context);
         $rules->add($operator->path, self::operatorRules($path));
-        $rules->needsValue($operator->path, $operator->value);
-        $rules->addWhenPresent($type, [Rule::in(['or', 'and'])]);
-        $rules->needsValue($type->path, $type->value);
+        $rules->addWhenPresent($entry->at('type'), [Rule::in(['or', 'and'])]);
 
         $resolved = $path === null ? null : self::operator($operator->value ?? FilterOperator::Equal->value, $path);
         $valueRules = $path === null || $resolved === null ? [] : $path->field->filterValueRules($resolved, $value->path);
         $items = $this->values($value, $valueRules, $context);
-        $boolean = $this->boolean($type, $context);
+        $boolean = $this->boolean($entry->at('type'), $context);
         $group = $children === null ? null : $this->group($children, $context->deeper(), $boolean);
 
         foreach ($items as $item) {
             $rules->add($item->path, $valueRules[$value->path.'.*'] ?? []);
-            $rules->needsValue($item->path, $item->value, $valueRules[$value->path.'.*'] ?? []);
         }
 
         if ($group !== null) {
@@ -119,7 +114,6 @@ final readonly class FilterParser
         }
 
         $context->rules->add($value->path, $rules[$value->path]);
-        $context->rules->needsValue($value->path, $value->value, $rules[$value->path]);
 
         if (! isset($rules[$value->path.'.*']) || ! $context->reader->admit($value, $context->limits->sizes->values)) {
             return [];

@@ -21,9 +21,6 @@ final class ParsedRules
     /** @var array<string, string> */
     private array $labels = [];
 
-    /** @var array<string, true> */
-    private array $blanks = [];
-
     private bool $partial = false;
 
     private readonly Violations $violations;
@@ -45,17 +42,6 @@ final class ParsedRules
         if ($value->present) {
             $this->add($value->path, $rules);
         }
-    }
-
-    /** @param list<mixed> $rules */
-    public function needsValue(string $key, mixed $value, array $rules = []): void
-    {
-        if (! is_string($value) || trim($value) !== '' || RuleList::of($rules)->takesBlank()) {
-            return;
-        }
-
-        $this->rules[$key] ??= [];
-        $this->blanks[$key] = true;
     }
 
     public function holds(string $key, mixed $rule): bool
@@ -102,7 +88,7 @@ final class ParsedRules
     /** @return array<string, list<mixed>> */
     public function rules(): array
     {
-        return $this->built ??= $this->violations->applyTo($this->withFilled());
+        return $this->built ??= $this->violations->applyTo($this->rules);
     }
 
     /**
@@ -158,19 +144,5 @@ final class ParsedRules
     public function labels(): array
     {
         return $this->labels;
-    }
-
-    /** @return array<string, list<mixed>> */
-    private function withFilled(): array
-    {
-        $rules = $this->rules;
-
-        foreach (array_keys($this->blanks) as $key) {
-            if (! $this->holds($key, 'filled')) {
-                $rules[$key][] = 'filled';
-            }
-        }
-
-        return $rules;
     }
 }

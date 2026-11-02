@@ -42,14 +42,6 @@ class PayloadReaderTest extends TestCase
     }
 
     #[Test]
-    public function it_gives_the_filled_rule_to_a_blank_string_where_an_object_is_expected(): void
-    {
-        $this->assertFalse($this->reader()->object($this->cursor('  ')));
-        $this->assertSame(['f' => ['array', 'filled']], $this->rules->rules());
-        $this->assertTrue($this->rules->isPartial());
-    }
-
-    #[Test]
     public function it_reads_the_entries_of_a_list(): void
     {
         $entries = $this->reader()->entries($this->cursor([1, 2]), 2);
@@ -64,14 +56,6 @@ class PayloadReaderTest extends TestCase
         $this->assertNull($this->reader()->entries($this->cursor(['a' => 1]), 2));
         $this->assertRejected(Violation::notList('f'), $this->rules->rules()['f']);
         $this->assertTrue($this->budget->refused('f'));
-        $this->assertTrue($this->rules->isPartial());
-    }
-
-    #[Test]
-    public function it_gives_the_filled_rule_to_a_blank_string_where_a_list_is_expected(): void
-    {
-        $this->assertNull($this->reader()->entries($this->cursor(''), 2));
-        $this->assertSame(['f' => ['filled']], $this->rules->rules());
         $this->assertTrue($this->rules->isPartial());
     }
 
@@ -100,9 +84,9 @@ class PayloadReaderTest extends TestCase
     #[Test]
     public function it_tells_a_filled_value_from_an_empty_one(): void
     {
-        $filled = array_map(fn (mixed $value): bool => $this->reader()->filled($this->cursor($value)), [null, [], '', '  ', 'a', 0, false, [1]]);
+        $filled = array_map(fn (mixed $value): bool => $this->reader()->filled($this->cursor($value)), [null, [], 'a', 0, false, [1]]);
 
-        $this->assertSame([false, false, true, true, true, true, true, true], $filled);
+        $this->assertSame([false, false, true, true, true, true], $filled);
     }
 
     #[Test]

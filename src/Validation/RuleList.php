@@ -41,11 +41,6 @@ final readonly class RuleList
         return in_array($rule, $this->plain, true);
     }
 
-    public function takesBlank(): bool
-    {
-        return $this->holds('string') || $this->holds('nullable') || $this->holds('prohibited');
-    }
-
     public function without(string $rule): self
     {
         return new self(array_values(array_filter($this->plain, fn (mixed $plain): bool => $plain !== $rule)), $this->nodes);

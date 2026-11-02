@@ -67,23 +67,19 @@ final readonly class IncludeParser
         $rules = $context->rules;
         $relation = $entry->at('relation');
         $alias = $entry->at('alias');
-        $trashed = $entry->at('trashed');
         $name = is_string($relation->value) ? $relation->value : null;
         $related = $name === null ? null : $context->reachRelation($name, $entry->path);
         $body = $name === null || $related === null ? null : $this->body($entry, $name, $related, $context);
 
         $rules->add($relation->path, ['required', (new ResourceRelationOrNested)->setResource($context->resource)]);
-        $rules->needsValue($relation->path, $relation->value);
         $rules->add($entry->at('text')->path, ['prohibited']);
-        $rules->add($trashed->path, ['prohibited']);
-        $rules->needsValue($trashed->path, $trashed->value);
+        $rules->add($entry->at('trashed')->path, ['prohibited']);
         $rules->addWhenPresent($alias, [
             'string',
             'max:255',
             'regex:/^[A-Za-z_][A-Za-z0-9_]*$/',
             new IncludeAlias($context->resource, $name ?? '', count(array_keys($aliases, $alias->value, true))),
         ]);
-        $rules->needsValue($alias->path, $alias->value);
 
         $search = $body?->node(null, null);
 

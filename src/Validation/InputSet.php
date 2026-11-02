@@ -25,14 +25,9 @@ final readonly class InputSet
         }
 
         $rules->addWhenPresent($parameters, ['array', 'list', 'max:'.count($this->fields)]);
-        $rules->needsValue($parameters->path, $parameters->value);
 
-        foreach ($this->fields as $position => $field) {
-            $parameter = $parameters->at($position);
-            $fieldRules = [...self::presence($field), ...RuleReferences::rewrite($field->getRules()->shared(), $paths)];
-
-            $rules->add($parameter->path, $fieldRules);
-            $rules->needsValue($parameter->path, $parameter->value, $fieldRules);
+        foreach ($this->fields as $field) {
+            $rules->add($paths[$field->name], [...self::presence($field), ...RuleReferences::rewrite($field->getRules()->shared(), $paths)]);
         }
 
         $given = is_array($parameters->value) && array_is_list($parameters->value) ? $parameters->value : [];
@@ -62,11 +57,8 @@ final readonly class InputSet
         $names = $context->vocabulary->of($context->resource, $context->grammar, $list, fn (): array => $this->fields->names());
 
         foreach ($reader->items($fields) as $entry) {
-            $name = $entry->at('name');
-
             $reader->known($entry, self::ENTRY_KEYS);
-            $context->rules->add($name->path, ['required', 'string', Distinct::among($value, 'name'), $names]);
-            $context->rules->needsValue($name->path, $name->value);
+            $context->rules->add($entry->at('name')->path, ['required', 'string', Distinct::among($value, 'name'), $names]);
         }
 
         return InputValues::fromNamed($this->fields, $this->inputs($fields->path, $value, $context));
@@ -98,15 +90,11 @@ final readonly class InputSet
             }
         }
 
-        $given = array_column($entries, 'value', 'name');
+        $given = array_column($entries, 'name', 'name');
 
         foreach ($this->fields as $field) {
-            $key = $paths[$field->name];
-            $rules = RuleReferences::rewrite($field->getRules()->shared(), $paths);
-
-            $context->rules->label($key, self::label($field->name));
-            $this->addInput($key, $rules, array_key_exists($field->name, $given), $context);
-            $context->rules->needsValue($key, $given[$field->name] ?? null, $rules);
+            $context->rules->label($paths[$field->name], self::label($field->name));
+            $this->addInput($paths[$field->name], RuleReferences::rewrite($field->getRules()->shared(), $paths), isset($given[$field->name]), $context);
         }
 
         return $entries;

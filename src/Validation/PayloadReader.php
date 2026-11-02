@@ -22,7 +22,6 @@ final readonly class PayloadReader
         }
 
         $this->rules->partial();
-        $this->rules->needsValue($value->path, $value->value);
 
         if (! $this->rules->holds($value->path, 'array')) {
             $this->rules->add($value->path, ['array']);
@@ -38,7 +37,6 @@ final readonly class PayloadReader
             return null;
         }
 
-        $this->rules->needsValue($list->path, $list->value);
         $entries = $this->admitted($list, $max, $filters);
 
         if ($entries === null) {

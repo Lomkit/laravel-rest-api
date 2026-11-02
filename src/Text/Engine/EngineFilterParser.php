@@ -49,12 +49,9 @@ final readonly class EngineFilterParser
         $declared = $name === null ? null : ($this->engine->filters[$name] ?? null);
 
         $rules->add($field->path, ['required', 'string', $context->vocabulary->of($context->resource, $context->grammar, 'filters', fn (): array => array_keys($this->engine->filters))]);
-        $rules->needsValue($field->path, $field->value);
         $rules->add($nested->path, ['prohibited']);
         $rules->addWhenPresent($type, [Rule::in(['and'])]);
-        $rules->needsValue($type->path, $type->value);
         $rules->add($operator->path, self::operatorRules($declared));
-        $rules->needsValue($operator->path, $operator->value);
 
         $resolved = $declared === null ? null : self::operator($operator->value ?? FilterOperator::Equal->value, $declared);
 
@@ -83,7 +80,6 @@ final readonly class EngineFilterParser
         $rules[$compared] = ['bail', ...$rules[$compared] ?? [], new EngineComparable($declared)];
 
         $context->rules->add($value->path, $rules[$value->path] ?? []);
-        $context->rules->needsValue($value->path, $value->value, $rules[$value->path] ?? []);
 
         if ($compared === $value->path || ! $context->reader->admit($value, $context->limits->sizes->values)) {
             return;
@@ -91,7 +87,6 @@ final readonly class EngineFilterParser
 
         foreach ($context->reader->items($value) as $item) {
             $context->rules->add($item->path, $rules[$items]);
-            $context->rules->needsValue($item->path, $item->value, $rules[$items]);
         }
     }
 

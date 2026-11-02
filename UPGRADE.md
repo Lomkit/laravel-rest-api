@@ -391,7 +391,7 @@ Text search (`search.text`). A resource now declares its text search with `text(
 Validation:
 
 - `search.page` must be an integer of at least 1, with or without text. Before, a page below 1 was accepted.
-- `search.aggregates.*.type` is required, and `search.aggregates.*.alias` must be a string when it is sent.
+- `search.aggregates.*.type` is required, and `search.aggregates.*.alias` must be a string when it is sent. A `null` alias gives a 422, "The search.aggregates.0.alias field must be a string.": leave the key out to keep the default name.
 - An include or an aggregate whose `relation` is a dotted path with an unknown first relation (`suppliers.country`) gives a 422 under its `relation` key.
 - A filter whose `field` is not a string gives a 422 under its `field` key, in `search.filters`, in nested filters and in the filters of includes and aggregates.
 - On an action, `search` must be an object (a JSON array of keys and values) when it is sent.
@@ -671,12 +671,6 @@ Payloads:
 - In a search, a key that holds `*` or ends with `\` inside an object, such as a filter, gives a 422 on that object: `The * key is not valid for the search.filters.0 field.`
 - The lists of a search must be JSON lists: `filters`, each `nested` group, `sorts`, `selects`, `scopes`, `aggregates`, `includes`, `instructions`, `gates`, and the `filters` of includes and aggregates. An object gives a 422 on the list, `The search.filters field must be a list.`, and its entries are not validated. Before, an object was read entry by entry, and a `*` entry key gave `The * key is not valid for the search.filters field.`
 - A list entry that is not an object, such as `"includes": ["category"]` or `"mutate": ["create"]`, gives a 422 on that entry: `The search.includes.0 field must be an array.` A to-one relation given a list or `null` in `mutate` also gives a 422. Some of these payloads gave a 500 before.
-- In an application without the `ConvertEmptyStringsToNull` middleware, a blank string on a key that a search reads gives Laravel's `filled` error on that key: "The search.limit field must have a value." Custom messages keyed by `filled` apply. Where Laravel already refuses a blank string, its own error stays, such as "The search.sorts.0.field field is required." on a required key. It covers:
-  - `search`, `text`, the lists of a search and their entries (the entries of `gates` excepted), the `parameters` of a scope and the `fields` of an instruction;
-  - `limit`, `page`, `trashed` and `text.mode`;
-  - `field`, `operator` and `type` of a filter, `field` and `direction` of a sort, `field` of a select, `name` of a scope, of an instruction and of an instruction field, `relation`, `type` and `alias` of an aggregate, the `field` of an aggregate whose type needs one, and `relation` and `alias` of an include;
-  - a scope parameter or an instruction field that is not nullable and whose type is not a string, a filter value of an operator that takes one when the field type is not a string, and the list of an `in`, `not in`, `between` or `not between` filter.
-- These keys get the `filled` error in nested filters, in includes and aggregates, and in the search of an action. A blank `search.text.value` still runs the normal search. With the middleware, a blank string becomes `null` and keeps its message. Before, a blank string passed validation on most of these keys.
 - Under a to-many relation in `mutate`, the errors are listed entry by entry.
 - `sync` and `toggle` are accepted on many-to-many relations only: `BelongsToMany`, `MorphToMany` and `MorphedByMany`. On another relation they give a 422 under the `operation` key of the entry, such as `The selected mutate.0.relations.author.operation is invalid.` Send `attach` there instead. A relation lists the operations it accepts in `mutationOperations()`.
 

@@ -50,12 +50,9 @@ final readonly class AggregateParser
         $related = is_string($relation->value) ? $context->reachRelation($relation->value, $entry->path) : null;
         $function = is_string($type->value) ? AggregateFunction::tryFrom($type->value) : null;
 
-        $rules->add($alias->path, ['nullable', 'string']);
-        $rules->needsValue($alias->path, $alias->value);
+        $rules->add($alias->path, ['string']);
         $rules->add($relation->path, ['required', (new ResourceRelationOrNested)->setResource($context->resource)]);
-        $rules->needsValue($relation->path, $relation->value);
         $rules->add($type->path, ['required', Rule::enum(AggregateFunction::class)]);
-        $rules->needsValue($type->path, $type->value);
 
         if ($related === null) {
             $rules->partial();
@@ -68,7 +65,7 @@ final readonly class AggregateParser
         $nested = $context->related($related);
         $group = $nested->grammar->filters($context->reader->entries($filters, $context->limits->sizes->filters, true) ?? [], $nested);
 
-        if ($function === null || ($alias->value !== null && ! is_string($alias->value))) {
+        if ($function === null || ($alias->present && ! is_string($alias->value))) {
             $rules->partial();
 
             return null;
@@ -94,7 +91,6 @@ final readonly class AggregateParser
 
         $accepted = new OneOf($function->acceptedFieldNames($related->getFields($context->resource->context()->request)));
         $context->rules->add($field->path, [...$rules, $accepted]);
-        $context->rules->needsValue($field->path, $field->value);
 
         if (! is_string($field->value) || ! $accepted->accepts($field->value)) {
             $context->rules->partial();

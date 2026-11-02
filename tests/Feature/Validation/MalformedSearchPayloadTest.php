@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Validation;
 
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -136,32 +135,6 @@ class MalformedSearchPayloadTest extends PackageTestCase
                 'search.instructions.0.fields',
                 'The search.instructions.0.fields field must be a list.',
             ],
-        ];
-    }
-
-    #[Test]
-    #[DataProvider('blankShapes')]
-    public function it_rejects_a_blank_string_where_an_object_or_a_list_is_expected(mixed $search, string $key): void
-    {
-        $message = "The {$key} field must have a value.";
-
-        $response = $this
-            ->withoutMiddleware(ConvertEmptyStringsToNull::class)
-            ->postJson(self::POSTS, ['search' => $search]);
-
-        $response->assertUnprocessable()->assertExactJson(['message' => $message, 'errors' => [$key => [$message]]]);
-    }
-
-    /** @return array<string, array{mixed, string}> */
-    public static function blankShapes(): array
-    {
-        return [
-            'a blank search' => ['', 'search'],
-            'blank filters' => [['filters' => ''], 'search.filters'],
-            'a blank filter' => [['filters' => ['']], 'search.filters.0'],
-            'a blank sort' => [['sorts' => ['']], 'search.sorts.0'],
-            'a blank include' => [['includes' => ['']], 'search.includes.0'],
-            'a blank text' => [['text' => ''], 'search.text'],
         ];
     }
 }

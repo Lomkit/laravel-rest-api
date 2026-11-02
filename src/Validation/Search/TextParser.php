@@ -25,7 +25,6 @@ final readonly class TextParser
 
         if ($mode->present) {
             $rules->add($mode->path, ['string', Rule::enum(TextMode::class)->only($this->text->modes)]);
-            $rules->needsValue($mode->path, $mode->value);
         }
 
         $rules->add($text->at('trashed')->path, ['prohibited']);

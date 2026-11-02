@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Search\FilterCondition;
@@ -21,7 +20,6 @@ class EnginePayloadTest extends EngineSearchTestCase
 
         PayloadReadingSearchRequest::$read = null;
         $this->app->bind(SearchRequest::class, PayloadReadingSearchRequest::class);
-        $this->withoutMiddleware(ConvertEmptyStringsToNull::class);
         config(['scout.driver' => 'collection']);
     }
 

@@ -110,7 +110,6 @@ final readonly class SearchBodyParser
             $context->reader->known($entry, self::SELECT_KEYS);
             $field = $entry->at('field');
             $context->rules->add($field->path, [$fields, 'required', 'string']);
-            $context->rules->needsValue($field->path, $field->value);
 
             if (! is_string($field->value) || ! $fields->accepts($field->value)) {
                 $context->rules->partial();
@@ -140,7 +139,6 @@ final readonly class SearchBodyParser
     {
         if ($context->includeDepth >= $context->limits->depths->includes) {
             $context->rules->add($includes->path, ['prohibited']);
-            $context->rules->needsValue($includes->path, $includes->value);
 
             return null;
         }
@@ -179,7 +177,6 @@ final readonly class SearchBodyParser
             return null;
         }
 
-        $context->rules->needsValue($value->path, $value->value);
         $integer = filter_var($value->value, FILTER_VALIDATE_INT);
 
         if ($integer === false) {

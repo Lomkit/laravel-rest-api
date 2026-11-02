@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Search;
 
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Http\Requests\SearchRequest;
@@ -31,7 +30,6 @@ class EmptySearchPartsTest extends PackageTestCase
 
         PayloadReadingSearchRequest::$read = null;
         $this->app->bind(SearchRequest::class, PayloadReadingSearchRequest::class);
-        $this->withoutMiddleware(ConvertEmptyStringsToNull::class);
     }
 
     #[Test]
