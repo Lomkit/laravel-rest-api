@@ -3,9 +3,11 @@
 namespace Lomkit\Rest\Tests\Feature\Validation;
 
 use Illuminate\Routing\Redirector;
+use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Rules\OneOf;
+use Lomkit\Rest\Tests\Feature\Validation\Stubs\HighlightingPostController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -77,12 +79,24 @@ class NameListRulesTest extends PackageTestCase
     #[Test]
     public function it_checks_action_field_names_against_a_one_of_rule(): void
     {
-        $request = OperateRequest::create('/api/posts/actions/publish-posts', 'POST')->setContainer($this->app);
-        $route = $this->app['router']->getRoutes()->match($request);
-        $route->getController();
-        $request->setRouteResolver(fn () => $route);
+        $request = $this->operateRequest('/api/posts/actions/publish-posts', ['fields' => [['name' => 'at']]]);
 
-        $this->assertSame(['at', 'notify'], $this->oneOf($request->rules()['fields.*.name'])->values());
+        $this->assertSame(['at', 'notify'], $this->oneOf($request->rules()['fields.0.name'])->values());
+    }
+
+    #[Test]
+    public function it_keeps_the_field_names_of_an_action_apart_from_those_of_an_instruction(): void
+    {
+        Rest::resource('highlighting-posts', HighlightingPostController::class)->register();
+        $request = $this->operateRequest('/highlighting-posts/actions/highlight-posts', [
+            'search' => ['instructions' => [['name' => 'highlight-posts', 'fields' => [['name' => 'featured']]]]],
+            'fields' => [['name' => 'label']],
+        ]);
+
+        $rules = $request->rules();
+
+        $this->assertSame(['label'], $this->oneOf($rules['fields.0.name'])->values());
+        $this->assertSame(['featured', 'min_views'], $this->oneOf($rules['search.instructions.0.fields.0.name'])->values());
     }
 
     #[Test]
@@ -120,6 +134,17 @@ class NameListRulesTest extends PackageTestCase
         $this->assertSame($first, $second);
         $this->assertArrayHasKey('search.sorts.1.field', $second);
         $this->assertSame(['search' => ['sorts' => [['field' => 'name'], ['field' => 'price']]]], $request->validated());
+    }
+
+    /** @param array<string, mixed> $body */
+    private function operateRequest(string $uri, array $body): OperateRequest
+    {
+        $request = OperateRequest::create($uri, 'POST', $body)->setContainer($this->app);
+        $route = $this->app['router']->getRoutes()->match($request);
+        $route->getController();
+        $request->setRouteResolver(fn () => $route);
+
+        return $request;
     }
 
     /** @param array<string, mixed> $search */

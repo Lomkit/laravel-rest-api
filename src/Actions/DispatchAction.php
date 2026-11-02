@@ -145,10 +145,9 @@ class DispatchAction
      */
     public function handleTargeted(int $chunkCount)
     {
-        return $this->dispatchInChunks(
-            $this->request->targetKeys()->constrain($this->modelsQuery()),
-            $chunkCount
-        );
+        $keys = $this->request->payload()->keys();
+
+        return $this->dispatchInChunks($keys->constrain($this->modelsQuery()), $chunkCount);
     }
 
     /**

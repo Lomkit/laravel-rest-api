@@ -116,6 +116,6 @@ class Action implements JsonSerializable
 
     public function handleRequest(OperateRequest $request): int
     {
-        return (new DispatchAction($request, $this, $request->resolveFields($this)))->dispatch($this->chunkCount);
+        return (new DispatchAction($request, $this, $request->resolveFields()))->dispatch($this->chunkCount);
     }
 }

@@ -119,6 +119,19 @@ class RequestTotalsTest extends PackageTestCase
         $this->assertRefused($response, 'search.instructions.0.fields', 'The search.instructions.0.fields field goes over the limit of 2 list entries in one request.');
     }
 
+    #[Test]
+    public function it_counts_the_action_fields_after_the_search_lists(): void
+    {
+        config(['rest.limits.totals.entries' => 2]);
+
+        $response = $this->postJson('/api/posts/actions/publish-posts', [
+            'search' => ['sorts' => [['field' => 'views'], ['field' => 'title']]],
+            'fields' => [['name' => 'notify', 'value' => true]],
+        ]);
+
+        $this->assertRefused($response, 'fields', 'The fields field goes over the limit of 2 list entries in one request.');
+    }
+
     private function assertRefused(TestResponse $response, string $key, string $message): void
     {
         $response->assertUnprocessable()->assertExactJson(['message' => $message, 'errors' => [$key => [$message]]]);

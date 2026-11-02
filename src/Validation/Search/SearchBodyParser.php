@@ -28,7 +28,7 @@ final readonly class SearchBodyParser
         private ?int $page,
     ) {}
 
-    public static function keys(Cursor $search, ValidationContext $context, bool $root): self
+    public static function keys(Cursor $search, ValidationContext $context, bool $paged): self
     {
         $resource = $context->resource;
         $grammar = $context->grammar;
@@ -39,7 +39,7 @@ final readonly class SearchBodyParser
 
         $context->rules->addWhenPresent($limit, ['integer', Rule::in($resource->getLimits($resource->context()->request)), ...$grammar->limitRules()]);
 
-        if ($root) {
+        if ($paged) {
             $context->rules->addWhenPresent($page, ['integer', 'min:1', ...$grammar->pageRules($limit->value, $resource->defaultLimit)]);
         }
 
@@ -61,7 +61,7 @@ final readonly class SearchBodyParser
             is_array($sorts->value) ? count($sorts->value) : 0,
             $gates,
             self::integer($limit, $context),
-            $root ? self::integer($page, $context) : null,
+            $paged ? self::integer($page, $context) : null,
         );
     }
 

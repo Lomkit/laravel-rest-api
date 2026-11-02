@@ -23,8 +23,9 @@ final readonly class SearchParser
         'includes' => true,
         'instructions' => true,
         'limit' => true,
-        'page' => true,
     ];
+
+    public function __construct(private bool $paged = true) {}
 
     public function parse(Cursor $search, ValidationContext $context): SearchNode
     {
@@ -34,9 +35,9 @@ final readonly class SearchParser
             return SearchNode::empty();
         }
 
-        $context->reader->known($search, self::KEYS);
+        $context->reader->known($search, $this->paged ? [...self::KEYS, 'page' => true] : self::KEYS);
 
-        $body = SearchBodyParser::keys($search, $context, true);
+        $body = SearchBodyParser::keys($search, $context, $this->paged);
         $text = $this->text($search->at('text'), $context);
 
         return $body->node($text, $this->trashed($search->at('trashed'), $context));

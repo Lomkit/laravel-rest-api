@@ -66,6 +66,11 @@ final readonly class PayloadReader
         return $this->budget->refused($list->path);
     }
 
+    public function close(Cursor $list): void
+    {
+        $this->budget->close($list->path);
+    }
+
     public function filled(Cursor $value): bool
     {
         return $value->value !== null && $value->value !== [];

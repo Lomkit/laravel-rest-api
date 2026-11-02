@@ -4,27 +4,22 @@ namespace Lomkit\Rest\Http\Requests;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use LogicException;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\OperationNode;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
-use Lomkit\Rest\Exceptions\InvalidActionStateException;
-use Lomkit\Rest\Fields\InputValues;
-use Lomkit\Rest\Http\Requests\Traits\ParsesResourceKeys;
-use Lomkit\Rest\Http\Requests\Traits\ParsesSearch;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
-use Lomkit\Rest\Rules\Distinct;
-use Lomkit\Rest\Rules\Input\InputFields;
-use Lomkit\Rest\Rules\MaxItems;
-use Lomkit\Rest\Rules\OneOf;
-use Lomkit\Rest\Validation\KeyList;
+use Lomkit\Rest\Validation\Cursor;
+use Lomkit\Rest\Validation\Operate\OperationParser;
+use Lomkit\Rest\Validation\ValidationContext;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OperateRequest extends RestRequest
 {
-    use ParsesResourceKeys;
-    use ParsesSearch;
+    private ?OperationNode $operation = null;
 
     #[\Override]
     public function endpoint(): Endpoint
@@ -65,56 +60,31 @@ class OperateRequest extends RestRequest
     #[\Override]
     public function rules(): array
     {
-        return $this
-            ->resource($this->context()->resource($this->controllerResourceClass()))
-            ->operateRules();
+        $this->resource($resource = $this->context()->resource($this->controllerResourceClass()));
+
+        $this->operation ??= $this->parse($resource);
+
+        return $this->parsedRules()->rules();
+    }
+
+    public function payload(): OperationNode
+    {
+        $rules = $this->parsedRules();
+
+        if ($this->operation === null || ! $rules->violations()->isEmpty() || $rules->isPartial() || ! $this->hasPassedValidation()) {
+            throw new LogicException('The operation was read before the request passed validation.');
+        }
+
+        return $this->operation;
     }
 
     /** @return array<string, mixed> */
-    public function operateRules(): array
+    public function resolveFields(): array
     {
-        if (! $this->resource->actionExists($this, $this->actionKey())) {
-            throw new HttpException(404);
-        }
-
-        $operatedAction = $this->resource->action($this, $this->actionKey());
-
-        if ($operatedAction->isStandalone() && $operatedAction->isTargeted()) {
-            throw new InvalidActionStateException('An action cannot be both standalone and targeted.');
-        }
-
-        $fields = $operatedAction->getFields($this);
-        $searchable = ! $operatedAction->isStandalone() && ! $operatedAction->isTargeted();
-
-        return [
-            ...$searchable
-                ? ['search' => ['array'], ...$this->searchRules($this->resource)]
-                : ['search' => ['prohibited']],
-            ...$operatedAction->isTargeted()
-                ? $this->resourceKeyRules($this->resource, $operatedAction->maxResources)
-                : ['resources' => ['prohibited']],
-            'fields' => [
-                'sometimes',
-                'array',
-                new MaxItems($this->context()->limits()->sizes->fields),
-                new InputFields($fields),
-            ],
-            'fields.*.name' => [
-                'required',
-                'string',
-                Distinct::among($this->input('fields'), 'name'),
-                new OneOf($fields->names()),
-            ],
-        ];
-    }
-
-    public function targetKeys(): KeyList
-    {
-        return $this->resourceKeys();
+        return $this->payload()->fields->toArray();
     }
 
     /** @return Builder<Model> */
-    #[\Override]
     public function keysQuery(Resource $resource): Builder
     {
         $query = $resource::newModel()->newQuery();
@@ -142,17 +112,16 @@ class OperateRequest extends RestRequest
         return $key;
     }
 
-    #[\Override]
-    protected function prepareForValidation(): void
+    private function parse(Resource $resource): OperationNode
     {
-        $this->merge([
-            'fields' => $this->input('fields', []),
-        ]);
-    }
+        if (! $resource->actionExists($this, $this->actionKey())) {
+            throw new HttpException(404);
+        }
 
-    /** @return array<string, mixed> */
-    public function resolveFields(Action $action): array
-    {
-        return InputValues::fromNamed($action->getFields($this), $this->input('fields', []))->toArray();
+        return (new OperationParser(fn (): Builder => $this->keysQuery($resource)))->parse(
+            Cursor::of($this->all(), $this->parsedRules()->violations()),
+            $resource->action($this, $this->actionKey()),
+            ValidationContext::root($resource, $this->budget(), $this->parsedRules()),
+        );
     }
 }

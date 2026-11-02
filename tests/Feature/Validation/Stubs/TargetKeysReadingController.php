@@ -12,6 +12,6 @@ class TargetKeysReadingController extends Controller
     #[\Override]
     protected function beforeOperate(OperateRequest $request): void
     {
-        $request->targetKeys();
+        $request->payload()->keys();
     }
 }

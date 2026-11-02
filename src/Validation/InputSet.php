@@ -41,10 +41,19 @@ final readonly class InputSet
 
     public function named(Cursor $fields, ValidationContext $context, string $list): InputValues
     {
-        $reader = $context->reader;
+        return $this->read($fields, $context, $list, false);
+    }
+
+    public function inputsFirst(Cursor $fields, ValidationContext $context, string $list): InputValues
+    {
+        return $this->read($fields, $context, $list, true);
+    }
+
+    private function read(Cursor $fields, ValidationContext $context, string $list, bool $inputsFirst): InputValues
+    {
         $value = $fields->value ?? [];
 
-        if ($reader->refused($fields) || ! is_array($value)) {
+        if ($context->reader->refused($fields) || ! is_array($value)) {
             return $this->partial($context);
         }
 
@@ -54,14 +63,28 @@ final readonly class InputSet
             return $this->partial($context);
         }
 
+        if ($inputsFirst) {
+            $entries = $this->inputs($fields->path, $value, $context);
+            $this->names($fields, $value, $list, $context);
+
+            return InputValues::fromNamed($this->fields, $entries);
+        }
+
+        $this->names($fields, $value, $list, $context);
+
+        return InputValues::fromNamed($this->fields, $this->inputs($fields->path, $value, $context));
+    }
+
+    /** @param list<mixed> $value */
+    private function names(Cursor $fields, array $value, string $list, ValidationContext $context): void
+    {
+        $reader = $context->reader;
         $names = $context->vocabulary->of($context->resource, $context->grammar, $list, fn (): array => $this->fields->names());
 
         foreach ($reader->items($fields) as $entry) {
             $reader->known($entry, self::ENTRY_KEYS);
             $context->rules->add($entry->at('name')->path, ['required', 'string', Distinct::among($value, 'name'), $names]);
         }
-
-        return InputValues::fromNamed($this->fields, $this->inputs($fields->path, $value, $context));
     }
 
     /**
