@@ -5,9 +5,15 @@ namespace Lomkit\Rest\Tests\Feature\Query;
 use Illuminate\Contracts\Database\Eloquent\Builder as QueryBuilder;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
+use Lomkit\Rest\Fields\FieldPath;
+use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
-use Lomkit\Rest\Query\Builder;
+use Lomkit\Rest\Query\Clauses\FilterGroupClause;
+use Lomkit\Rest\Search\FilterCondition;
+use Lomkit\Rest\Search\FilterGroup;
+use Lomkit\Rest\Tests\Feature\Search\Plan\ParsesSearchNodes;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
@@ -17,8 +23,10 @@ use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
-class ApplyFiltersTest extends PackageTestCase
+class FilterGroupClauseTest extends PackageTestCase
 {
+    use ParsesSearchNodes;
+
     #[\Override]
     protected function fixtures(): array
     {
@@ -28,14 +36,14 @@ class ApplyFiltersTest extends PackageTestCase
     #[Test]
     public function it_applies_the_filters_as_one_group_after_the_constraints_of_the_query(): void
     {
-        $builder = new Builder($this->context()->resource(PostResource::class), Post::query()->where('id', 5));
+        $query = Post::query()->where('id', 5);
 
-        $builder->applyFilters([
+        $this->clause($this->context()->resource(PostResource::class), [
             ['field' => 'views', 'value' => 1, 'type' => 'or'],
             ['field' => 'views', 'value' => 2, 'type' => 'or'],
-        ]);
+        ])->apply($query);
 
-        $this->assertSame('select * from posts where id = ? and (posts.views = ? or posts.views = ?)', $this->sql($builder->toBase()));
+        $this->assertSame('select * from posts where id = ? and (posts.views = ? or posts.views = ?)', $this->sql($query));
     }
 
     /**
@@ -53,18 +61,20 @@ class ApplyFiltersTest extends PackageTestCase
         Post::factory()->create(['author_id' => $grace->id, 'title' => 'Team offsite', 'views' => 5]);
         $context = $this->context();
         $context->authorizer()->plan([Check::onClass($context->resource(AuthorResource::class), 'viewAny')]);
-        $builder = new Builder($context->resource(PostResource::class));
+        $query = Post::query();
 
-        $builder->applyFilters($filters);
+        $this->clause($context->resource(PostResource::class), $filters)->apply($query);
 
-        $this->assertSame($titles, $builder->toBase()->orderBy('title')->pluck('title')->all());
+        $this->assertSame($titles, $query
+            ->orderBy('title')
+            ->pluck('title')
+            ->all());
     }
 
     /** @return array<string, array{list<array<string, mixed>>, list<string>}> */
     public static function payloads(): array
     {
         return [
-            'an upper case operator' => [[['field' => 'title', 'operator' => 'LIKE', 'value' => 'Annual%']], ['Annual report']],
             'an or' => [[
                 ['field' => 'views', 'value' => 10],
                 ['field' => 'views', 'operator' => '>', 'value' => 20, 'type' => 'or'],
@@ -82,32 +92,17 @@ class ApplyFiltersTest extends PackageTestCase
         ];
     }
 
-    /** @param array<string, mixed> $filter */
     #[Test]
-    #[DataProvider('refusedFilters')]
-    public function it_refuses_a_filter_that_the_field_cannot_run(array $filter, string $message): void
+    public function it_refuses_a_filter_that_the_field_cannot_run(): void
     {
-        $builder = new Builder($this->context()->resource(PostResource::class));
+        $resource = $this->context()->resource(PostResource::class);
+        $path = FieldPath::resolve($resource, 'views');
+        $this->assertNotNull($path);
+        $clause = FilterGroupClause::of(new FilterGroup([new FilterCondition('views', $path, FilterOperator::Like, '1%')]));
 
-        $this->expectExceptionObject(new InvalidFieldException($message));
+        $this->expectExceptionObject(new InvalidFieldException('The field [views] does not support the operator [like].'));
 
-        $builder->applyFilters([$filter]);
-    }
-
-    /** @return array<string, array{array<string, mixed>, string}> */
-    public static function refusedFilters(): array
-    {
-        return [
-            'an undeclared field' => [['field' => 'nickname', 'value' => 'Ada'], 'The field [nickname] is not filterable.'],
-            'a json field' => [['field' => 'metadata', 'value' => 'draft'], 'The field [metadata] is not filterable.'],
-            'a write-only field of a relation' => [['field' => 'author.api_token', 'value' => 'Lovelace'], 'The field [author.api_token] is not filterable.'],
-            'an operator of another type' => [['field' => 'views', 'operator' => 'like', 'value' => '1%'], 'The field [views] does not support the operator [like].'],
-            'an unknown operator' => [['field' => 'title', 'operator' => 'contains', 'value' => 'report'], 'Unknown filter operator [contains].'],
-            'an unknown relation' => [['relation' => 'comments'], 'Unknown relation [comments].'],
-            'a relation path as a relation' => [['relation' => 'author.tags'], 'Unknown relation [author.tags].'],
-            'a null relation' => [['relation' => null, 'nested' => [['field' => 'title', 'value' => 'Annual report']]], 'Unknown relation [].'],
-            'a relation that is not a string' => [['relation' => ['author']], 'Unknown relation [].'],
-        ];
+        $clause->apply(Post::query());
     }
 
     /** @param list<array<string, mixed>> $filters */
@@ -117,11 +112,11 @@ class ApplyFiltersTest extends PackageTestCase
     {
         $context = $this->context();
         $context->authorizer()->plan([Check::onClass($context->resource(PostResource::class), 'viewAny')]);
-        $builder = new Builder($context->resource(AuthorResource::class));
+        $query = Author::query();
 
-        $builder->applyFilters($filters);
+        $this->clause($context->resource(AuthorResource::class), $filters)->apply($query);
 
-        $this->assertSame($sql, $this->sql($builder->toBase()));
+        $this->assertSame($sql, $this->sql($query));
     }
 
     /** @return array<string, array{list<array<string, mixed>>, string}> */
@@ -146,11 +141,13 @@ class ApplyFiltersTest extends PackageTestCase
                 [['relation' => 'posts', 'exists' => false]],
                 'select * from authors where (not exists (select * from posts where authors.id = posts.author_id)) and authors.deleted_at is null',
             ],
-            'exists as a number' => [
-                [['relation' => 'posts', 'exists' => 0]],
-                'select * from authors where (exists (select * from posts where authors.id = posts.author_id)) and authors.deleted_at is null',
-            ],
         ];
+    }
+
+    /** @param list<array<string, mixed>> $filters */
+    private function clause(Resource $resource, array $filters): FilterGroupClause
+    {
+        return FilterGroupClause::of($this->parse($resource, ['filters' => $filters])->filters);
     }
 
     private function context(): RestContext

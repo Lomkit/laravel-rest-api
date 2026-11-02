@@ -5,13 +5,16 @@ namespace Lomkit\Rest\Actions;
 use Illuminate\Bus\PendingBatch;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Lomkit\Rest\Contracts\BatchableAction;
-use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Http\Requests\OperateRequest;
+use Lomkit\Rest\Query\QueryBuilderFactory;
+use Lomkit\Rest\Search\Plan\SearchPlanner;
+use Lomkit\Rest\Search\SearchNode;
 
 class DispatchAction
 {
@@ -125,7 +128,7 @@ class DispatchAction
             return $this->engineTargets->dispatch($this->forModels(...));
         }
 
-        $query = $this->modelsQuery($this->request->input('search', []));
+        $query = $this->modelsQuery($this->request->payload()->search());
 
         return $this->request
             ->context()
@@ -147,23 +150,13 @@ class DispatchAction
     {
         $keys = $this->request->payload()->keys();
 
-        return $this->dispatchInChunks($keys->constrain($this->modelsQuery()), $chunkCount);
+        return $this->dispatchInChunks($keys->constrain($this->modelsQuery(SearchNode::empty())), $chunkCount);
     }
 
-    /**
-     * Build the query resolving the models the action applies to.
-     *
-     * The resource search pipeline is how the authorization perimeter and the default ordering get
-     * applied, so a targeted action goes through it too, passing no search parameters.
-     *
-     * @param  array  $searchParameters  The search parameters to apply, empty when the caller names the models.
-     * @return Builder
-     */
-    protected function modelsQuery(array $searchParameters = [])
+    /** @return Builder<Model> */
+    protected function modelsQuery(SearchNode $search): Builder
     {
-        return app()->make(EloquentQueryBuilder::class, ['resource' => $this->request->resource, 'query' => null])
-            ->disableDefaultLimit()
-            ->search($searchParameters);
+        return QueryBuilderFactory::make($this->request->resource)->search(SearchPlanner::all($this->request->resource, $search, $this->request->context()->text($this->request->resource)));
     }
 
     /**

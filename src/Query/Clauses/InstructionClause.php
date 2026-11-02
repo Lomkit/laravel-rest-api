@@ -9,37 +9,31 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use InvalidArgumentException;
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
 use Lomkit\Rest\Fields\InputValues;
-use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Instructions\InstructionSupport;
+use Lomkit\Rest\Search\InstructionNode;
 use Lomkit\Rest\Text\TextBackend;
 
 final readonly class InstructionClause implements Clause
 {
-    /** @param list<array{name: string, value?: mixed}> $fields */
-    public function __construct(
-        private Resource $resource,
-        private string $name,
-        private array $fields = [],
+    private function __construct(
+        private Instruction $instruction,
+        private InputValues $fields,
     ) {}
+
+    public static function of(InstructionNode $node): self
+    {
+        return new self($node->instruction, $node->fields);
+    }
 
     #[\Override]
     public function apply(Builder $query): void
     {
-        $instruction = $this->resource->instruction($this->resource->context()->request, $this->name)
-            ?? throw InvalidInstructionException::undeclared($this->resource::class, $this->name);
-
-        if (! InstructionSupport::of($instruction)->runsOn(TextBackend::Query)) {
-            throw InvalidInstructionException::engineOnly($instruction::class);
+        if (! InstructionSupport::of($this->instruction)->runsOn(TextBackend::Query)) {
+            throw InvalidInstructionException::engineOnly($this->instruction::class);
         }
 
-        $instruction->handle($this->values($instruction), self::eloquent($query));
-    }
-
-    /** @return array<string, mixed> */
-    private function values(Instruction $instruction): array
-    {
-        return InputValues::fromNamed($instruction->getFields($this->resource->context()->request), $this->fields)->toArray();
+        $this->instruction->handle($this->fields->toArray(), self::eloquent($query));
     }
 
     /** @return EloquentBuilder<Model> */

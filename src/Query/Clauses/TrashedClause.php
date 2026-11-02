@@ -12,9 +12,9 @@ final readonly class TrashedClause implements Clause
 {
     public function __construct(private Trashed $trashed) {}
 
-    public static function fromPayload(mixed $trashed): ?self
+    public static function of(?Trashed $trashed): ?self
     {
-        return is_string($trashed) ? new self(Trashed::from($trashed)) : null;
+        return $trashed === null ? null : new self($trashed);
     }
 
     #[\Override]

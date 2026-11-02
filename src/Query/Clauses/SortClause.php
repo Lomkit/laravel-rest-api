@@ -5,8 +5,8 @@ namespace Lomkit\Rest\Query\Clauses;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Lomkit\Rest\Fields\Field;
-use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Search\FieldSort;
 
 final readonly class SortClause implements Clause
 {
@@ -15,12 +15,9 @@ final readonly class SortClause implements Clause
         private SortDirection $direction = SortDirection::Asc,
     ) {}
 
-    /** @param array{field: string, direction?: SortDirection|string|null} $sort */
-    public static function fromSort(FieldSet $fields, array $sort): self
+    public static function of(FieldSort $sort): self
     {
-        $direction = $sort['direction'] ?? null;
-
-        return new self($fields->get($sort['field']), $direction === null ? SortDirection::Asc : SortDirection::parse($direction));
+        return new self($sort->field, $sort->direction());
     }
 
     #[\Override]

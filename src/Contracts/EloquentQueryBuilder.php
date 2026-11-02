@@ -7,19 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 interface EloquentQueryBuilder extends QueryBuilder
 {
-    /**
-     * @param  array<string, mixed>  $parameters
-     * @return EloquentBuilder<Model>
-     */
-    #[\Override]
-    public function search(array $parameters = []);
-
     /** @return EloquentBuilder<Model> */
     #[\Override]
     public function toBase();
-
-    /** @return $this */
-    public function disableDefaultLimit(bool $disable = true);
 
     /**
      * @param  array<string, mixed>  $parameters
@@ -39,11 +29,4 @@ interface EloquentQueryBuilder extends QueryBuilder
      * @return list<Model>
      */
     public function mutations(array $mutation = [], array $attributes = []): array;
-
-    /**
-     * @param  list<int|string>  $keys
-     * @param  array<string, mixed>  $parameters
-     * @return EloquentBuilder<Model>
-     */
-    public function searchKeys(array $keys, array $parameters = []): EloquentBuilder;
 }

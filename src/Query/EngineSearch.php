@@ -7,13 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Lomkit\Rest\Authorization\Check;
-use Lomkit\Rest\Contracts\EloquentQueryBuilder;
+use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Search\Plan\KeyedRows;
+use Lomkit\Rest\Search\Plan\LimitPolicy;
+use Lomkit\Rest\Search\Plan\SearchPlanner;
+use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Text\Engine\EngineCriteria;
 use Lomkit\Rest\Text\Engine\EngineInstruction;
+use Lomkit\Rest\Text\Engine\EngineKeys;
 use Lomkit\Rest\Text\Engine\EngineQuery;
+use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\ResolvedText;
 
 final readonly class EngineSearch
@@ -21,6 +27,7 @@ final readonly class EngineSearch
     public function __construct(
         private Resource $resource,
         private ResolvedText $text,
+        private SearchNode $search,
     ) {}
 
     /** @return LengthAwarePaginator<int, Model> */
@@ -31,7 +38,7 @@ final readonly class EngineSearch
         $page = $request->integer('search.page', 1);
         $result = $query->page($perPage, $page);
 
-        return new LengthAwarePaginator($this->rows($result->keys, $request), $result->total, $perPage, $page, [
+        return new LengthAwarePaginator($this->rows($result->keys), $result->total, $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
             'pageName' => 'page',
         ]);
@@ -62,15 +69,18 @@ final readonly class EngineSearch
      * @param  list<int|string>  $keys
      * @return Collection<int, Model>
      */
-    public function rows(array $keys, RestRequest $request): Collection
+    public function rows(array $keys): Collection
     {
         if ($keys === []) {
             return new Collection;
         }
 
-        return app()
-            ->make(EloquentQueryBuilder::class, ['resource' => $this->resource, 'query' => null])
-            ->searchKeys($keys, self::parameters($request))
+        $model = $this->resource::newModel();
+        $keyed = new KeyedRows(EngineKeys::of(ScoutModel::tryFrom($model) ?? throw InvalidResourceException::unsearchableModel($model::class), $keys));
+        $plan = (new SearchPlanner($keyed))->plan($this->resource, $this->search, LimitPolicy::none());
+
+        return QueryBuilderFactory::make($this->resource)
+            ->search($plan)
             ->get();
     }
 

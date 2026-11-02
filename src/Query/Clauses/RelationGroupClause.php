@@ -5,10 +5,9 @@ namespace Lomkit\Rest\Query\Clauses;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Exceptions\InvalidFieldException;
-use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Search\RelationFilterGroup;
 
 final readonly class RelationGroupClause implements Clause
 {
@@ -19,24 +18,9 @@ final readonly class RelationGroupClause implements Clause
         private string $boolean = 'and',
     ) {}
 
-    /** @param array<array-key, mixed> $filter */
-    public static function fromPayload(Resource $resource, array $filter, string $boolean): self
+    public static function of(RelationFilterGroup $group): self
     {
-        $name = is_string($filter['relation'] ?? null) ? $filter['relation'] : '';
-        $relation = str_contains($name, '.') ? null : $resource->relation($name);
-
-        if ($relation === null) {
-            throw InvalidFieldException::unknownRelation($name);
-        }
-
-        $nested = $filter['nested'] ?? [];
-
-        return new self(
-            $relation,
-            ($filter['exists'] ?? true) !== false,
-            FilterGroupClause::fromPayload($relation->resource(), is_array($nested) ? $nested : []),
-            $boolean,
-        );
+        return new self($group->relation, $group->exists, FilterGroupClause::of($group->filters), $group->boolean());
     }
 
     #[\Override]
