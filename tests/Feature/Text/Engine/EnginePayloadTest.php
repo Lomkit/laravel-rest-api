@@ -3,9 +3,13 @@
 namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Http\Requests\SearchRequest;
-use Lomkit\Rest\Search\FilterCondition;
+use Lomkit\Rest\Search\RelevanceSort;
+use Lomkit\Rest\Search\SortNode;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\PayloadReadingSearchRequest;
+use Lomkit\Rest\Text\Engine\EngineFilterCondition;
+use Lomkit\Rest\Text\Engine\EngineSort;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -35,8 +39,8 @@ class EnginePayloadTest extends EngineSearchTestCase
 
         $this->assertIsArray($filters);
         $this->assertCount(1, $filters);
-        $this->assertInstanceOf(FilterCondition::class, $filters[0]);
-        $this->assertSame(['number', FilterOperator::Equal, 3], [$filters[0]->path, $filters[0]->operator, $filters[0]->value]);
+        $this->assertInstanceOf(EngineFilterCondition::class, $filters[0]);
+        $this->assertSame(['number', 'number', FilterOperator::Equal, 3], [$filters[0]->name, $filters[0]->attribute->field->name, $filters[0]->operator, $filters[0]->value]);
     }
 
     /** @return array<string, array{mixed}> */
@@ -45,6 +49,31 @@ class EnginePayloadTest extends EngineSearchTestCase
         return [
             'a null group' => [null],
             'an empty group' => [[]],
+        ];
+    }
+
+    /**
+     * @param  list<array<string, string>>  $sorts
+     * @param  list<mixed>  $read
+     */
+    #[Test]
+    #[DataProvider('engineSorts')]
+    public function it_reads_an_engine_sort_per_kind(array $sorts, array $read): void
+    {
+        $this->search('vouchers', ['text' => ['value' => 'report'], 'sorts' => $sorts])->assertOk();
+
+        $this->assertSame($read, array_map(
+            fn (SortNode $sort): array => $sort instanceof EngineSort ? [$sort::class, $sort->attribute, $sort->direction()] : [$sort::class, $sort->direction()],
+            PayloadReadingSearchRequest::$read->sorts ?? [],
+        ));
+    }
+
+    /** @return array<string, array{list<array<string, string>>, list<mixed>}> */
+    public static function engineSorts(): array
+    {
+        return [
+            'an index attribute' => [[['field' => 'price']], [[EngineSort::class, 'price', SortDirection::Asc]]],
+            'the relevance order' => [[['field' => '@relevance']], [[RelevanceSort::class, SortDirection::Desc]]],
         ];
     }
 }

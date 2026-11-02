@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Validation;
 
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Validation\Search\SearchGrammar;
 
 final readonly class ValidationContext
@@ -51,21 +52,25 @@ final readonly class ValidationContext
         return $this->copy($this->resource, $this->grammar, $this->filterDepth, $this->includeDepth + $levels);
     }
 
-    public function reachRelation(string $relation, string $path): ?Resource
+    /** @return non-empty-list<Relation>|null */
+    public function reachRelation(string $relation, string $path): ?array
     {
         $resource = $this->resource;
+        $relations = [];
 
         foreach (explode('.', $relation) as $segment) {
-            $resource = $resource->relation($segment)?->resource();
+            $declared = $resource->relation($segment);
 
-            if ($resource === null) {
+            if ($declared === null) {
                 return null;
             }
 
+            $relations[] = $declared;
+            $resource = $declared->resource();
             $this->rules->reach(Check::onClass($resource, 'viewAny', $path));
         }
 
-        return $resource;
+        return $relations;
     }
 
     private function copy(Resource $resource, SearchGrammar $grammar, int $filterDepth, int $includeDepth): self

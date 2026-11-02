@@ -11,6 +11,8 @@ use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Relations\HasMany;
+use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Search\FieldSort;
 use Lomkit\Rest\Search\FilterCondition;
 use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\RelationFilterGroup;
@@ -20,7 +22,9 @@ use Lomkit\Rest\Tests\Feature\Search\Stubs\EarlyReadingSearchRequest;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\FailureIgnoringSearchRequest;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\PayloadReadingSearchRequest;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
+use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
+use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -59,23 +63,28 @@ class SearchPayloadTest extends PackageTestCase
 
         $this->assertSame('and', $read->filters->boolean());
         $this->assertInstanceOf(FilterCondition::class, $views);
-        $this->assertInstanceOf(Integer::class, $views->field);
-        $this->assertSame(['views', 'views', FilterOperator::GreaterThan, 10, 'and'], [$views->path, $views->field->name, $views->operator, $views->value, $views->boolean()]);
+        $this->assertInstanceOf(Integer::class, $views->path->field);
+        $this->assertSame(['views', 'views', FilterOperator::GreaterThan, 10, 'and'], [$views->name, $views->path->field->name, $views->operator, $views->value, $views->boolean()]);
         $this->assertInstanceOf(FilterGroup::class, $group);
         $this->assertSame('or', $group->boolean());
         $this->assertCount(1, $group->filters);
         $this->assertInstanceOf(FilterCondition::class, $group->filters[0]);
-        $this->assertInstanceOf(Text::class, $group->filters[0]->field);
-        $this->assertSame(['author.first_name', 'first_name', FilterOperator::Equal, 'Ada', 'and'], [$group->filters[0]->path, $group->filters[0]->field->name, $group->filters[0]->operator, $group->filters[0]->value, $group->filters[0]->boolean()]);
-        $this->assertEquals([new SortNode('views', SortDirection::Desc), new SortNode('id', null)], $read->sorts);
+        $this->assertInstanceOf(Text::class, $group->filters[0]->path->field);
+        $this->assertSame(['author.first_name', 'first_name', FilterOperator::Equal, 'Ada', 'and'], [$group->filters[0]->name, $group->filters[0]->path->field->name, $group->filters[0]->operator, $group->filters[0]->value, $group->filters[0]->boolean()]);
+        $this->assertSame(
+            [[FieldSort::class, 'views', SortDirection::Desc], [FieldSort::class, 'id', SortDirection::Asc]],
+            array_map(fn (SortNode $sort): array => [$sort::class, $sort instanceof FieldSort ? $sort->field->name : null, $sort->direction()], $read->sorts),
+        );
         $this->assertSame(['id', 'title'], $read->selects);
         $this->assertCount(1, $read->scopes);
         $this->assertSame(['popular', ['min_views' => 5]], [$read->scopes[0]->scope->name, $read->scopes[0]->parameters->toArray()]);
         $this->assertCount(1, $read->instructions);
         $this->assertSame(['highlight-posts', ['featured' => true, 'min_views' => 50]], [$read->instructions[0]->instruction->uriKey(), $read->instructions[0]->fields->toArray()]);
         $this->assertSame(['author', 'writer', 10, null, null], [$include->relation, $include->alias, $include->search->limit, $include->search->page, $include->search->text]);
+        $this->assertSame(['author'], array_map(fn (Relation $relation): string => $relation->relation, $include->relations));
+        $this->assertInstanceOf(AuthorResource::class, $include->resource);
         $this->assertInstanceOf(FilterCondition::class, $include->search->filters->filters[0]);
-        $this->assertSame(['last_name', FilterOperator::Equal, 'Lovelace'], [$include->search->filters->filters[0]->path, $include->search->filters->filters[0]->operator, $include->search->filters->filters[0]->value]);
+        $this->assertSame(['last_name', FilterOperator::Equal, 'Lovelace'], [$include->search->filters->filters[0]->name, $include->search->filters->filters[0]->operator, $include->search->filters->filters[0]->value]);
         $this->assertSame([['view'], 25, 1, null, null, []], [$read->gates, $read->limit, $read->page, $read->text, $read->trashed, $read->aggregates]);
     }
 
@@ -89,9 +98,12 @@ class SearchPayloadTest extends PackageTestCase
         $aggregate = $this->read()->aggregates[0];
         $filter = $aggregate->filters->filters[0];
 
-        $this->assertSame(['products', AggregateFunction::Max, 'price', 'top_price'], [$aggregate->relation, $aggregate->function, $aggregate->field, $aggregate->alias]);
+        $this->assertSame(['products', AggregateFunction::Max, 'top_price', 'top_price'], [$aggregate->relation, $aggregate->function, $aggregate->alias, $aggregate->key->value]);
+        $this->assertInstanceOf(ProductResource::class, $aggregate->resource);
+        $this->assertInstanceOf(Integer::class, $aggregate->field);
+        $this->assertSame('price', $aggregate->field->name);
         $this->assertInstanceOf(FilterCondition::class, $filter);
-        $this->assertSame(['price', FilterOperator::LessThan, 100], [$filter->path, $filter->operator, $filter->value]);
+        $this->assertSame(['price', FilterOperator::LessThan, 100], [$filter->name, $filter->operator, $filter->value]);
     }
 
     #[Test]
@@ -111,10 +123,21 @@ class SearchPayloadTest extends PackageTestCase
         $this->assertSame(['posts', false, 'or', 'and'], [$posts->relation->relation, $posts->exists, $posts->boolean(), $posts->filters->boolean()]);
         $this->assertCount(1, $posts->filters->filters);
         $this->assertInstanceOf(FilterCondition::class, $posts->filters->filters[0]);
-        $this->assertInstanceOf(Enum::class, $posts->filters->filters[0]->field);
-        $this->assertSame(['status', FilterOperator::Equal, 'draft', 'and'], [$posts->filters->filters[0]->path, $posts->filters->filters[0]->operator, $posts->filters->filters[0]->value, $posts->filters->filters[0]->boolean()]);
+        $this->assertInstanceOf(Enum::class, $posts->filters->filters[0]->path->field);
+        $this->assertSame(['status', FilterOperator::Equal, 'draft', 'and'], [$posts->filters->filters[0]->name, $posts->filters->filters[0]->operator, $posts->filters->filters[0]->value, $posts->filters->filters[0]->boolean()]);
         $this->assertInstanceOf(RelationFilterGroup::class, $tags);
         $this->assertSame(['tags', true, 'and', []], [$tags->relation->relation, $tags->exists, $tags->boolean(), $tags->filters->filters]);
+    }
+
+    #[Test]
+    public function it_reads_the_relations_of_a_dotted_include(): void
+    {
+        $this->postJson('/api/authors/search', ['search' => ['includes' => [['relation' => 'posts.author']]]])->assertOk();
+
+        $include = $this->read()->includes[0];
+
+        $this->assertSame(['posts', 'author'], array_map(fn (Relation $relation): string => $relation->relation, $include->relations));
+        $this->assertInstanceOf(AuthorResource::class, $include->resource);
     }
 
     #[Test]

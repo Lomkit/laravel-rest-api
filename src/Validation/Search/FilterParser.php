@@ -76,7 +76,7 @@ final readonly class FilterParser
             return $this->partial($context);
         }
 
-        return new FilterCondition($name, $path->field, $resolved, $value->value, $boolean);
+        return new FilterCondition($name, $path, $resolved, $value->value, $boolean);
     }
 
     private function path(string $name, Cursor $entry, ValidationContext $context): ?FieldPath
