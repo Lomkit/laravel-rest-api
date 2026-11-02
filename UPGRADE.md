@@ -194,7 +194,7 @@ These items change:
 - `Controller::newResource()` is removed. In a controller action, use `$request->context()->resource(static::resourceClass())`.
 - `app(RestRequest::class)` no longer returns the request in progress. It builds a new request. In a resource, read the request from the method parameter or from `$this->context()->request`.
 - A package request reads its resource from the class of the route controller, which must extend `Lomkit\Rest\Http\Controllers\Controller`. On another route, such as a closure route, the request throws `Lomkit\Rest\Exceptions\InvalidControllerException`. Before, it failed with a PHP error.
-- The query builder methods that only exist on Eloquent (`mutate()`, `mutations()`, `applyMutation()`, `disableDefaultLimit()`) are declared on a new contract, `Lomkit\Rest\Contracts\EloquentQueryBuilder`. If you bind your own `QueryBuilder` implementation, it must implement `EloquentQueryBuilder`. The package resolves `EloquentQueryBuilder` through your `QueryBuilder` binding.
+- The query builder methods that only exist on Eloquent (`mutate()`, `mutations()`, `applyMutation()`) are declared on a new contract, `Lomkit\Rest\Contracts\EloquentQueryBuilder`. If you bind your own `QueryBuilder` implementation, it must implement `EloquentQueryBuilder`. The package resolves `EloquentQueryBuilder` through your `QueryBuilder` binding. Searches and actions resolve your `QueryBuilder` binding once, for the searched resource, and pass `search()` a `Lomkit\Rest\Search\Plan\QueryPlan`, see [Search](#search). Only mutations resolve `EloquentQueryBuilder`.
 
 ### Resource definitions
 
@@ -267,13 +267,13 @@ Scopes:
 - Parameters are validated against the field rules, cast to the field type and filled from `default()`. A position is required unless its field declares `default()`, and a nullable field accepts an explicit `null`. A missing or wrongly typed parameter now gives a 422 instead of a 500. Extra positions used to be ignored and named parameters used to bind by PHP argument name; both are now rejected with a 422, so clients that send them must switch to an exact positional list. The errors are under `search.scopes.<i>.parameters` or `search.scopes.<i>.parameters.<p>`.
 - The model scope receives the cast values: a `Date` arrives as a `CarbonImmutable` at the start of the day, an `Integer` as an `int`. Update the scope's parameter types.
 - Scopes run through Eloquent's `Builder::scopes()`, so the name must be a local scope of the model (a `scopeX()` method or a `#[Scope]` method). Builder methods and macros can no longer be called as scopes.
-- `Lomkit\Rest\Query\Builder::scope()` returns the query builder instead of the scope's return value.
+- `Builder::scope()` and `applyScopes()` are removed. Each scope of the search runs through `Lomkit\Rest\Query\Clauses\ScopeClause::of()`, with the cast values of its `ScopeNode`.
 
 Instructions:
 
 - `fields()` returns `Field` objects instead of a map of rules: `['min_views' => ['integer']]` becomes `[Integer::make('min_views')]`. The field rules are the type rules, `nullable` and `rules()`; rules that compare fields, such as `required_if:status,published`, `date_equals:since` or `Rule::date()->after('since')`, compare with the other inputs of the instruction, as described under Validation engine.
 - `handle()` and `handleEngine()` receive a name-to-value map, with each value cast to its field type and defaults filled in. A field that is absent and has no default is missing from the array, so read optional fields with `$fields['name'] ?? null`. An entry sent without `value` counts as absent.
-- `Builder::instruction()` throws `Lomkit\Rest\Exceptions\InvalidInstructionException`, a `\LogicException`, for a name the resource does not declare.
+- `Builder::instruction()` and `applyInstructions()` are removed. Each instruction of the search runs through `InstructionClause::of()`, with the cast values of its `InstructionNode`.
 - An instruction applied to an include receives the relation's Eloquent builder.
 
 Actions:
@@ -358,7 +358,7 @@ Other resource methods:
 
 - `newModel(): Model`, `relation(): ?Relation`, `getRelations(): array` and `instruction(): ?Instruction`.
 - `performDelete()`, `performRestore()` and `performForceDelete()` return `void`.
-- `paginate()` returns `Illuminate\Contracts\Pagination\LengthAwarePaginator`, so an override cannot return a simple or a cursor paginator.
+- `paginate(Builder $query, int $perPage, int $page)` receives the query of the search, the page size and the page number, and returns `Illuminate\Contracts\Pagination\LengthAwarePaginator`. Read the size and the page from these parameters, not from the request: the package passes `search.limit`, or `$defaultLimit` when it is not sent, and `search.page`, or 1.
 
 Controller endpoints:
 
@@ -377,7 +377,7 @@ Service provider and facade:
 Query builder:
 
 - `Lomkit\Rest\Query\Builder::$resource` is declared `protected Resource $resource`, where `Resource` is `Lomkit\Rest\Http\Resource`. A query builder that extends `Builder` and redeclares `$resource` keeps that type.
-- `Builder::disableDefaultLimit()` takes `bool $disable`, as the `EloquentQueryBuilder` contract declares it.
+- `Builder::disableDefaultLimit()` and its property are removed. Remove the calls: an action applies `search.limit` when it is sent, and loads every row of its search otherwise.
 
 ### Search
 
@@ -408,6 +408,13 @@ Query builder and requests:
 - `RestRequest::isScoutMode()` is removed. `$request->context()->text($resource)` returns the text search of the resource for the request, a `Lomkit\Rest\Text\ResolvedText`: its `usesEngine()` is true when the request runs its text on a search engine, see [Search engines](#search-engines), and its `query` holds the text of the search, or `null` when the request has no text to search.
 - The search parser validates `text` and `trashed` at the root of the search, and an include refuses them: "The search.includes.0.text field is prohibited."
 - `Resource::relation()` returns `null` for a dotted path whose first relation is not declared. Before, it failed with an error.
+- `Lomkit\Rest\Query\Builder::search()` and the `QueryBuilder` contract take a `QueryPlan`: `search(QueryPlan $plan): Builder`. The package builds the plan from `$request->payload()`, then resolves `QueryBuilder` once per search, for the root resource: the search endpoint, the search of an action and the rows of a search engine page. Includes and aggregates are applied by the plan and no longer resolve the binding. Actions and search engine pages resolve `QueryBuilder`, no longer `EloquentQueryBuilder`: an app that binds only `EloquentQueryBuilder` binds `QueryBuilder` too. To change a search, work on the query that `search()` returns in your binding, or use the hooks of the resource: `searchQuery()`, `scopes()`, `instructions()`, `defaultOrderBy()` and `paginate()`.
+- `Builder` loses `applyFilters()`, `applySorts()`, `scope()`, `applyScopes()`, `instruction()`, `applyInstructions()`, `include()`, `includeAliased()`, `applyIncludes()`, `aggregate()`, `applyAggregates()`, `disableDefaultLimit()`, `newQueryBuilder()` and `searchKeys()`. The `Lomkit\Rest\Query\Traits\PerformSearch` and `SearchesKeys` traits are removed, and `EloquentQueryBuilder` no longer declares `searchKeys()`.
+- The clauses of `Lomkit\Rest\Query\Clauses` are built from the nodes of `payload()`: `FilterGroupClause::of()`, `RelationGroupClause::of()`, `SortClause::of()`, `TrashedClause::of()`, `ScopeClause::of()`, `InstructionClause::of()` and `AggregateClause::of()`. `fromPayload()`, `fromSort()`, `fromAggregate()`, `RelevanceClause::requestedBy()` and `RelevanceClause::fromSort()` are removed.
+- `beforeSearch()` runs after validation. An edit of the `search` input there no longer changes the rows, the page or the page size of a search run by the database. Read the search with `$request->payload()`.
+- A `SearchRequest` subclass whose `failedValidation()` does not throw gets the `LogicException` of `payload()` when the search runs: "The search was read before the request passed validation."
+- An include that a dotted include goes through, such as `posts` next to `posts.author`, keeps its filters, sorts, scopes, instructions, limit, includes, aggregates and the `searchQuery()` of its resource whatever their order in `includes`. Before, it lost them when it was listed first.
+- `OperationNode::search()` returns the search of the action, empty when it is not sent. `DispatchAction::modelsQuery(SearchNode $search)` takes it. `Lomkit\Rest\Query\EngineSearch` takes the search as a third constructor argument, and `rows(array $keys)` loads the rows of a page.
 
 ### Text search
 
@@ -486,7 +493,7 @@ Database differences:
 
 Query builder:
 
-- `Lomkit\Rest\Query\Builder::applySorts($sorts, ?ResolvedText $text = null)` takes the text search of the request as a second parameter, to sort by `@relevance`. An override of `applySorts()` must declare it.
+- `Builder::applySorts()` is removed. `@relevance` is a `RelevanceSort` in `payload()`.
 
 Scramble:
 
@@ -623,8 +630,8 @@ From the Scout text search of 2.x:
 
 - A resource that still declares `scoutFields()`, `scoutInstructions()` or `searchScoutQuery()` throws `Lomkit\Rest\Exceptions\InvalidResourceException` when a request first reads its declarations, and an instruction that declares `handleScout()` throws `InvalidInstructionException` when its resource reads its instructions. The message names the method and its replacement.
 - These methods and `isModelSearchable()` no longer exist on the package classes: an override marked `#[\Override]` is a fatal error when PHP loads the class. Delete them.
-- `Lomkit\Rest\Query\ScoutBuilder` is removed, and the `search()` and `toBase()` methods of `Lomkit\Rest\Contracts\QueryBuilder` no longer return it.
-- `Lomkit\Rest\Contracts\EloquentQueryBuilder` adds `searchKeys(array $keys, array $parameters = []): Builder`, which loads the rows of an engine page by key. `Lomkit\Rest\Query\Builder` implements it: an implementation of the contract that does not extend it must add the method.
+- `Lomkit\Rest\Query\ScoutBuilder` is removed.
+- The rows of a search engine page are loaded by key through your `QueryBuilder` binding, with `searchQuery()`, `search.trashed` and the includes and aggregates of the search.
 - The details response no longer has the `scout_fields` and `scout_instructions` keys.
 
 Scramble:
@@ -859,10 +866,10 @@ Denials:
 
 Checks the request did not plan:
 
-- The queries still check `viewAny` on each resource they search, and `create` on each resource they create. A check that the request already made before validation is reused; another one is evaluated when the query runs.
+- The queries still check `viewAny` on each resource they search, and `create` on each resource they create. A check that the request already made before validation is reused; another one is evaluated when the query runs, or, for the `viewAny` of each level of a search, when the search is planned.
 - The resource of the endpoint is the exception: its endpoint abilities stand in for `viewAny`. When they leave `viewAny` out (by default for `mutate`, `destroy`, `restore` and `forceDestroy`, through an override of the resource's `abilities()`, or for an action whose `abilities()` returns `[]`), the queries do not check it on that resource, and strict mode does not report it. The other resources the queries search are checked, or reported, as above.
 - With `authorizations.strict` set to `true` (`false` by default, see [Configuration](#configuration)), a check that the request did not make before validation throws `Lomkit\Rest\Exceptions\UnplannedCheckException` instead. Turn it on in your test suite to find a resource that the request reaches without checking it first.
-- A `Lomkit\Rest\Query\Builder` used outside a request evaluates `viewAny` when it searches. In strict mode, plan it first: `$resource->context()->authorizer()->plan([Check::onClass($resource, 'viewAny')])` (`Lomkit\Rest\Authorization\Check`).
+- `Lomkit\Rest\Search\Plan\SearchPlanner` evaluates `viewAny` on each level it plans, when `paged()`, `all()` or `plan()` builds the plan, even an include level whose parents have no row. In strict mode, plan it first: `$resource->context()->authorizer()->plan([Check::onClass($resource, 'viewAny')])` (`Lomkit\Rest\Authorization\Check`).
 
 Cache:
 
@@ -912,8 +919,8 @@ Sorts:
 
 - The other fields are ordered by their column, qualified with the table of the model: `posts.views`.
 - `direction` accepts the values of `Lomkit\Rest\Fields\SortDirection`, `asc` and `desc`. A sort without a direction is ascending.
-- `Lomkit\Rest\Query\Builder::sort($field, $direction)` is removed. `applySorts($sorts, ?ResolvedText $text = null)` applies each sort with a `Lomkit\Rest\Query\Clauses\SortClause`, which calls `Field::sort()`, and takes the text search of the request as a second parameter: an override must declare it, see [Text search](#text-search). A sort passed to `search()` or `applySorts()` must name a declared, sortable field of the resource, or `@relevance`: another field throws `Lomkit\Rest\Exceptions\InvalidFieldException`. `@relevance` orders by relevance (`Lomkit\Rest\Query\Clauses\RelevanceClause`) when the search has a text and a strategy that orders by relevance, and throws `InvalidFieldException` otherwise.
-- `defaultOrderBy()` still orders by the columns it names. The default `Resource::defaultOrderBy()` returns the key of the model in descending order, `[static::newModel()->getKeyName() => 'desc']`, instead of `['id' => 'desc']`: a search without `sorts` on a model whose key is not `id`, such as `code`, now works instead of failing on an unknown `id` column.
+- `Builder::sort()` and `applySorts()` are removed. Each sort of the search is a `SortClause` built from its `FieldSort`, which calls `Field::sort()`, or the relevance order (`RelevanceClause`) for `@relevance`.
+- `defaultOrderBy()` still orders by the columns it names. The default `Resource::defaultOrderBy()` returns the key of the model in descending order, `[static::newModel()->getKeyName() => 'desc']`, instead of `['id' => 'desc']`: a search without `sorts` on a model whose key is not `id`, such as `code`, now works instead of failing on an unknown `id` column. Each column goes through the model's `qualifyColumn()`: a column that names its table, such as `posts.views`, works. Before, the table was prefixed again.
 
 Aggregates:
 
@@ -922,8 +929,7 @@ Aggregates:
 - `min` and `max` refuse a `Boolean` field, and an app type that extends `Boolean`, with the same 422, on every database.
 - `min` and `max` accept an `ID` field with UUID keys (a model using `HasUuids`, or `keyType('uuid')`) on every database, and return the same string on each of them. On PostgreSQL the aggregate reads the key as text, which keeps the order of the UUIDs.
 - `avg` and `sum` also need a `Number` field: `Number`, `Integer`, or an app type that extends `Number`. Another field, such as a `Text`, `Date`, `Boolean` or `ID` field, or an app type that extends `Field` directly, gives a 422. To average or sum the values of an app type, make it extend `Number`.
-- `count` and `exists` still refuse `field`. A direct call to `Lomkit\Rest\Query\Builder::aggregate()` with `count` or `exists` ignores `field`.
-- `aggregate()` keeps its signature and applies each aggregate with a `Lomkit\Rest\Query\Clauses\AggregateClause`. With `min`, `max`, `avg` or `sum`, the `field` passed to `search()` or `aggregate()` must name a declared field of the related resource: another field throws `Lomkit\Rest\Exceptions\InvalidFieldException`. The response key does not change: the `alias`, or `<relation>_<type>_<field>`.
+- `count` and `exists` still refuse `field`. `Builder::aggregate()` is removed: `AggregateClause::of()` applies an `AggregateNode` under the name of its `AggregateKey`. The response key does not change: the `alias`, or `<relation>_<type>_<field>`.
 
 Include aliases:
 
@@ -1020,7 +1026,7 @@ Database differences:
 
 Query builder and custom relations:
 
-- `Lomkit\Rest\Query\Builder::filter()` is removed. `applyFilters(array $filters)` keeps its signature and applies the filters as one group of clauses (`Lomkit\Rest\Query\Clauses\FilterGroupClause`, with a `FieldConditionClause`, a `RelationConditionClause` or a `RelationGroupClause` per filter), which call `Field::filter()`. A filter passed to `search()` or `applyFilters()` must name a filterable field, or a path to one, with an operator of that field: another field or operator throws `Lomkit\Rest\Exceptions\InvalidFieldException`. A filter that holds `relation` is applied as a relation group: `has()` on the Eloquent relation of that name, with `<` when `exists` is `false`. On a `MorphTo`, it uses `hasMorph()` on the model of the declared resource, inside `whereNot()` when `exists` is `false`, and the rows without a type are kept. Only `false` in `exists` means absence there. A name that is not a relation of the resource, or a dotted path, throws `InvalidFieldException`: "Unknown relation [comments]."
+- `Builder::filter()` and `applyFilters()` are removed. `FilterGroupClause::of()` applies the filters of a search as one group of clauses (a `FieldConditionClause`, a `RelationConditionClause` or a `RelationGroupClause` per filter), which call `Field::filter()`. A relation group uses `has()` on the Eloquent relation of that name, with `<` when `exists` is `false`. On a `MorphTo`, it uses `hasMorph()` on the model of the declared resource, inside `whereNot()` when `exists` is `false`, and the rows without a type are kept.
 - `Relation::filter()` and the `Lomkit\Rest\Contracts\RelationResource` interface are removed. Remove `implements RelationResource` from your custom relations: an override of `filter()` is no longer called, and a filter through the relation uses `has()` on the Eloquent relation of the same name.
 - `Resource::isNestedField()`, the `Lomkit\Rest\Rules\Resource\ResourceFieldOrNested` rule and the `relation_without_pivot()` helper are removed, with no public replacement: filters, includes and aggregates validate their dotted paths themselves.
 - The package no longer autoloads a file of global functions.
