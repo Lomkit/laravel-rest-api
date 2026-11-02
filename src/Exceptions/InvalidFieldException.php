@@ -77,6 +77,11 @@ final class InvalidFieldException extends LogicException
         return new self("Unknown filter operator [{$operator}].");
     }
 
+    public static function unknownRelation(string $name): self
+    {
+        return new self("Unknown relation [{$name}].");
+    }
+
     public static function unsupportedOperator(string $field, string $operator): self
     {
         return new self("The field [{$field}] does not support the operator [{$operator}].");

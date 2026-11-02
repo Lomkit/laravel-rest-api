@@ -50,6 +50,33 @@ class RefusedListChecksTest extends HelpdeskTestCase
     }
 
     #[Test]
+    public function it_checks_no_relation_below_the_filters_of_a_relation_group_that_go_too_deep(): void
+    {
+        config(['rest.limits.depths.filters' => 1]);
+        $message = 'The search.filters.0.nested.0.nested field is prohibited.';
+
+        $this->postJson('/api/tickets/search', ['search' => ['filters' => [
+            ['relation' => 'tags', 'nested' => [['relation' => 'labelledTickets', 'nested' => [['field' => 'team.name', 'value' => 'Billing']]]]],
+        ]]])
+            ->assertUnprocessable()
+            ->assertExactJson(['message' => $message, 'errors' => ['search.filters.0.nested.0.nested' => [$message]]]);
+
+        $this->assertSame([], $this->teams->calls);
+    }
+
+    #[Test]
+    public function it_checks_the_relation_of_a_relation_group_whose_filters_go_too_deep(): void
+    {
+        config(['rest.limits.depths.filters' => 1]);
+
+        $this->postJson('/api/tickets/search', ['search' => ['filters' => [
+            ['nested' => [['relation' => 'team', 'nested' => [['field' => 'name', 'value' => 'Billing']]]]],
+        ]]])
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'Teams are not listed.']);
+    }
+
+    #[Test]
     public function it_checks_each_relation_of_an_include_that_goes_too_deep(): void
     {
         config(['rest.limits.depths.includes' => 2]);

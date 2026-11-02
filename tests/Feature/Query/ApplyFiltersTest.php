@@ -78,6 +78,7 @@ class ApplyFiltersTest extends PackageTestCase
             ], ['Annual report', 'Team offsite']],
             'a relation path' => [[['field' => 'author.first_name', 'value' => 'Grace']], ['Spring launch', 'Team offsite']],
             'a custom filter through a relation' => [[['field' => 'author.full_name', 'operator' => 'like', 'value' => 'Love%']], ['Annual report']],
+            'a relation group' => [[['relation' => 'author', 'nested' => [['field' => 'first_name', 'value' => 'Grace']]]], ['Spring launch', 'Team offsite']],
         ];
     }
 
@@ -102,6 +103,53 @@ class ApplyFiltersTest extends PackageTestCase
             'a write-only field of a relation' => [['field' => 'author.api_token', 'value' => 'Lovelace'], 'The field [author.api_token] is not filterable.'],
             'an operator of another type' => [['field' => 'views', 'operator' => 'like', 'value' => '1%'], 'The field [views] does not support the operator [like].'],
             'an unknown operator' => [['field' => 'title', 'operator' => 'contains', 'value' => 'report'], 'Unknown filter operator [contains].'],
+            'an unknown relation' => [['relation' => 'comments'], 'Unknown relation [comments].'],
+            'a relation path as a relation' => [['relation' => 'author.tags'], 'Unknown relation [author.tags].'],
+            'a null relation' => [['relation' => null, 'nested' => [['field' => 'title', 'value' => 'Annual report']]], 'Unknown relation [].'],
+            'a relation that is not a string' => [['relation' => ['author']], 'Unknown relation [].'],
+        ];
+    }
+
+    /** @param list<array<string, mixed>> $filters */
+    #[Test]
+    #[DataProvider('relationGroupQueries')]
+    public function it_compiles_a_relation_group_to_one_existence_query(array $filters, string $sql): void
+    {
+        $context = $this->context();
+        $context->authorizer()->plan([Check::onClass($context->resource(PostResource::class), 'viewAny')]);
+        $builder = new Builder($context->resource(AuthorResource::class));
+
+        $builder->applyFilters($filters);
+
+        $this->assertSame($sql, $this->sql($builder->toBase()));
+    }
+
+    /** @return array<string, array{list<array<string, mixed>>, string}> */
+    public static function relationGroupQueries(): array
+    {
+        $publishedAndFeatured = [['field' => 'status', 'value' => 'published'], ['field' => 'featured', 'value' => true]];
+
+        return [
+            'one post that matches both filters' => [
+                [['relation' => 'posts', 'nested' => $publishedAndFeatured]],
+                'select * from authors where (exists (select * from posts where authors.id = posts.author_id and (posts.status = ? and posts.featured = ?))) and authors.deleted_at is null',
+            ],
+            'no post that matches' => [
+                [['relation' => 'posts', 'exists' => false, 'nested' => [['field' => 'status', 'value' => 'draft']]]],
+                'select * from authors where (not exists (select * from posts where authors.id = posts.author_id and (posts.status = ?))) and authors.deleted_at is null',
+            ],
+            'a group after an or' => [
+                [['field' => 'first_name', 'value' => 'Alan'], ['type' => 'or', 'relation' => 'posts', 'nested' => $publishedAndFeatured]],
+                'select * from authors where (authors.first_name = ? or exists (select * from posts where authors.id = posts.author_id and (posts.status = ? and posts.featured = ?))) and authors.deleted_at is null',
+            ],
+            'no post' => [
+                [['relation' => 'posts', 'exists' => false]],
+                'select * from authors where (not exists (select * from posts where authors.id = posts.author_id)) and authors.deleted_at is null',
+            ],
+            'exists as a number' => [
+                [['relation' => 'posts', 'exists' => 0]],
+                'select * from authors where (exists (select * from posts where authors.id = posts.author_id)) and authors.deleted_at is null',
+            ],
         ];
     }
 

@@ -62,6 +62,12 @@ class EngineGrammarTest extends EngineSearchTestCase
             'a relation path' => ['vouchers', ['filters' => [['field' => 'lines.label', 'value' => 'l1a']]], [
                 'search.filters.0.field' => ['The selected search.filters.0.field is invalid.'],
             ]],
+            'a relation group' => ['vouchers', ['filters' => [['relation' => 'lines', 'exists' => false, 'nested' => [['field' => 'label', 'value' => 'l1a']]]]], [
+                'search.filters.0.relation' => ['The search.filters.0.relation field is prohibited.'],
+                'search.filters.0.exists' => ['The search.filters.0.exists field is prohibited.'],
+                'search.filters.0.field' => ['The search.filters.0.field field is required.'],
+                'search.filters.0.nested' => ['The search.filters.0.nested field is prohibited.'],
+            ]],
             'a pattern operator' => ['vouchers', ['filters' => [['field' => 'code', 'operator' => 'like', 'value' => 'V-%']]], [
                 'search.filters.0.operator' => ['The selected search.filters.0.operator is invalid.'],
             ]],

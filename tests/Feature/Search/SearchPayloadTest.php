@@ -4,13 +4,16 @@ namespace Lomkit\Rest\Tests\Feature\Search;
 
 use LogicException;
 use Lomkit\Rest\Fields\AggregateFunction;
+use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\SearchRequest;
+use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Search\FilterCondition;
 use Lomkit\Rest\Search\FilterGroup;
+use Lomkit\Rest\Search\RelationFilterGroup;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Search\SortNode;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\EarlyReadingSearchRequest;
@@ -89,6 +92,56 @@ class SearchPayloadTest extends PackageTestCase
         $this->assertSame(['products', AggregateFunction::Max, 'price', 'top_price'], [$aggregate->relation, $aggregate->function, $aggregate->field, $aggregate->alias]);
         $this->assertInstanceOf(FilterCondition::class, $filter);
         $this->assertSame(['price', FilterOperator::LessThan, 100], [$filter->path, $filter->operator, $filter->value]);
+    }
+
+    #[Test]
+    public function it_reads_a_relation_group_as_a_typed_node(): void
+    {
+        $this->postJson('/api/authors/search', ['search' => ['filters' => [
+            ['field' => 'first_name', 'value' => 'Ada'],
+            ['type' => 'or', 'relation' => 'posts', 'exists' => false, 'nested' => [['field' => 'status', 'value' => 'draft']]],
+            ['relation' => 'tags'],
+        ]]])->assertOk();
+
+        [$name, $posts, $tags] = $this->read()->filters->filters;
+
+        $this->assertInstanceOf(FilterCondition::class, $name);
+        $this->assertInstanceOf(RelationFilterGroup::class, $posts);
+        $this->assertInstanceOf(HasMany::class, $posts->relation);
+        $this->assertSame(['posts', false, 'or', 'and'], [$posts->relation->relation, $posts->exists, $posts->boolean(), $posts->filters->boolean()]);
+        $this->assertCount(1, $posts->filters->filters);
+        $this->assertInstanceOf(FilterCondition::class, $posts->filters->filters[0]);
+        $this->assertInstanceOf(Enum::class, $posts->filters->filters[0]->field);
+        $this->assertSame(['status', FilterOperator::Equal, 'draft', 'and'], [$posts->filters->filters[0]->path, $posts->filters->filters[0]->operator, $posts->filters->filters[0]->value, $posts->filters->filters[0]->boolean()]);
+        $this->assertInstanceOf(RelationFilterGroup::class, $tags);
+        $this->assertSame(['tags', true, 'and', []], [$tags->relation->relation, $tags->exists, $tags->boolean(), $tags->filters->filters]);
+    }
+
+    #[Test]
+    public function it_reads_relation_groups_without_filters_at_the_deepest_level(): void
+    {
+        $this->postJson('/api/authors/search', ['search' => ['filters' => [['nested' => [
+            ['relation' => 'posts', 'exists' => false],
+            ['relation' => 'tags', 'nested' => [], 'type' => 'or'],
+            ['relation' => 'drafts', 'nested' => null],
+        ]]]]])->assertOk();
+
+        [$group] = $this->read()->filters->filters;
+
+        $this->assertInstanceOf(FilterGroup::class, $group);
+        $this->assertCount(3, $group->filters);
+        [$posts, $tags, $drafts] = $group->filters;
+        $this->assertInstanceOf(RelationFilterGroup::class, $posts);
+        $this->assertInstanceOf(RelationFilterGroup::class, $tags);
+        $this->assertInstanceOf(RelationFilterGroup::class, $drafts);
+        $this->assertSame(
+            [['posts', false, 'and', []], ['tags', true, 'or', []], ['drafts', true, 'and', []]],
+            [
+                [$posts->relation->relation, $posts->exists, $posts->boolean(), $posts->filters->filters],
+                [$tags->relation->relation, $tags->exists, $tags->boolean(), $tags->filters->filters],
+                [$drafts->relation->relation, $drafts->exists, $drafts->boolean(), $drafts->filters->filters],
+            ],
+        );
     }
 
     #[Test]

@@ -39,6 +39,10 @@ final readonly class FilterParser
             return null;
         }
 
+        if ($entry->at('relation')->present) {
+            return (new RelationGroupParser($this))->parse($entry, $context);
+        }
+
         $context->reader->known($entry, self::KEYS);
 
         $rules = $context->rules;
@@ -122,7 +126,7 @@ final readonly class FilterParser
         return $context->reader->items($value);
     }
 
-    private function boolean(Cursor $type, ValidationContext $context): string
+    public function boolean(Cursor $type, ValidationContext $context): string
     {
         if (! $type->present) {
             return 'and';
