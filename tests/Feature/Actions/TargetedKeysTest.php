@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Actions;
 
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
@@ -55,16 +54,6 @@ class TargetedKeysTest extends PackageTestCase
     public function it_refuses_a_key_of_another_type(): void
     {
         $response = $this->pin(['one']);
-
-        $this->assertExactErrors($response, ['resources.0' => ['The resources.0 field must be an integer.']]);
-    }
-
-    #[Test]
-    public function it_refuses_a_blank_key(): void
-    {
-        $this->withoutMiddleware(ConvertEmptyStringsToNull::class);
-
-        $response = $this->pin(['']);
 
         $this->assertExactErrors($response, ['resources.0' => ['The resources.0 field must be an integer.']]);
     }

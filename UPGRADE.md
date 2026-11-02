@@ -805,7 +805,6 @@ Resource keys:
 - An object in place of a list gives "The resources field must be a list.", on every endpoint that takes keys.
 - `destroy`, `restore` and `forceDestroy` accept at most `rest.limits.sizes.resources` keys: "The resources field must not have more than 1000 items." A targeted action over its `$maxResources` gets only the error on `resources`. Before, every key was also checked.
 - On a targeted action, a key of the wrong type gives "The resources.0 field must be an integer." (or a string, a UUID or a ULID, by key type). Before, it gave "The selected resources.0 is invalid.", and a 500 on PostgreSQL.
-- In an application without the `ConvertEmptyStringsToNull` middleware, a blank string key gives the type message on every endpoint that takes keys. Before, it passed and nothing was done for it.
 - A custom message for `exists` or `distinct` on `resources.*` no longer applies, see "Limits" above.
 - `OperateRequest::rules()`, and the `rules()` of `DestroyRequest`, `RestoreRequest` and `ForceDestroyRequest`, return rules on `resources.0`, `resources.1`, … instead of `resources.*`.
 - The query hooks of `destroy`, `restore` and `forceDestroy` now run during validation, before `beforeDestroy()`, `beforeRestore()` and `beforeForceDestroy()`, and run again to load the models. `$request->resource` is set in `rules()`.

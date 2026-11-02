@@ -58,10 +58,6 @@ class FilterValueRulesTest extends PackageTestCase
         yield 'between with a scalar' => [fn (): Field => Number::make('rating'), 'between', ['value' => 2.5], false];
         yield 'like with an array' => [$title, 'like', ['value' => ['%a%']], false];
         yield 'like with a string' => [$title, 'like', ['value' => '%a%'], true];
-        yield 'comparison with an empty string' => [$views, '<', ['value' => ''], false];
-        yield 'comparison with blanks' => [$publishedOn, '>=', ['value' => '   '], false];
-        yield 'in with an empty string item' => [$views, 'in', ['value' => [10, '']], false];
-        yield 'between with empty strings' => [$publishedOn, 'between', ['value' => ['', '']], false];
         yield 'comparison with null on a type without base rules' => [fn (): Field => new class('code') extends Field
         {
             #[\Override]

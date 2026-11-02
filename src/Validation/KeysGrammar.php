@@ -38,13 +38,6 @@ final readonly class KeysGrammar
 
         foreach ($items as $item) {
             $rules[$item->path] = $this->id->baseRules();
-
-            if (is_string($item->value) && trim($item->value) === '') {
-                $item->reject($this->typeMessage());
-
-                continue;
-            }
-
             $key = $this->id->parseKey($item->value);
 
             if ($key !== null) {
@@ -65,16 +58,6 @@ final readonly class KeysGrammar
         }
 
         return new KeyList(array_values(array_map(fn (array $group): int|string => $group[0][1], $groups)), $rules, $this->id);
-    }
-
-    private function typeMessage(): string
-    {
-        return match ($this->id->resolvedKeyType()) {
-            'int' => 'validation.integer',
-            'string' => 'validation.string',
-            'uuid' => 'validation.uuid',
-            'ulid' => 'validation.ulid',
-        };
     }
 
     public static function idOf(Resource $resource, RestRequest $request): ID
