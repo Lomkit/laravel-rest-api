@@ -48,4 +48,34 @@ class SelfRelationFiltersTest extends PackageTestCase
 
         $response->assertOk()->assertJsonPath('data.*.id', [$comments[$match]->id]);
     }
+
+    /** @return array<string, array{array<string, mixed>, list<string>}> */
+    public static function selfGroups(): array
+    {
+        return [
+            'the replies of a comment' => [['relation' => 'replies', 'nested' => [['field' => 'body', 'value' => 'Reply to A']]], ['Root A']],
+            'no parent' => [['relation' => 'parent', 'exists' => false], ['Root A', 'Root B']],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  list<string>  $bodies
+     */
+    #[Test]
+    #[DataProvider('selfGroups')]
+    public function it_filters_through_a_relation_group_on_the_same_table(array $filter, array $bodies): void
+    {
+        Rest::resource('threaded-comments', ThreadedCommentController::class)->register();
+        Desk::create(['id' => 1, 'name' => 'City']);
+        Story::create(['id' => 1, 'desk_id' => 1, 'headline' => 'Bridge reopens']);
+        Comment::create(['id' => 1, 'story_id' => 1, 'body' => 'Root A']);
+        Comment::create(['id' => 2, 'story_id' => 1, 'body' => 'Root B']);
+        Comment::create(['id' => 3, 'story_id' => 1, 'parent_id' => 1, 'body' => 'Reply to A']);
+        Comment::create(['id' => 4, 'story_id' => 1, 'parent_id' => 2, 'body' => 'Reply to B']);
+
+        $response = $this->postJson('/threaded-comments/search', ['search' => ['filters' => [$filter], 'sorts' => [['field' => 'id']]]]);
+
+        $response->assertOk()->assertJsonPath('data.*.body', $bodies);
+    }
 }

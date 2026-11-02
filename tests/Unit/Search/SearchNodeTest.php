@@ -4,9 +4,12 @@ namespace Lomkit\Rest\Tests\Unit\Search;
 
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Search\FilterCondition;
 use Lomkit\Rest\Search\FilterGroup;
+use Lomkit\Rest\Search\RelationFilterGroup;
 use Lomkit\Rest\Search\SearchNode;
+use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -33,5 +36,13 @@ class SearchNodeTest extends TestCase
         $this->assertSame('and', $group->boolean());
         $this->assertSame('or', $group->filters[1]->boolean());
         $this->assertSame('or', (new FilterGroup([$group], 'or'))->boolean());
+    }
+
+    #[Test]
+    public function it_joins_a_relation_group_with_and_by_default(): void
+    {
+        $group = new RelationFilterGroup(HasMany::make('posts', PostResource::class), true, new FilterGroup);
+
+        $this->assertSame('and', $group->boolean());
     }
 }

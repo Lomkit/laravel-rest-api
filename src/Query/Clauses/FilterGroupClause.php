@@ -43,6 +43,10 @@ final readonly class FilterGroupClause implements Clause
     {
         $boolean = ($filter['type'] ?? 'and') === 'or' ? 'or' : 'and';
 
+        if (array_key_exists('relation', $filter)) {
+            return RelationGroupClause::fromPayload($resource, $filter, $boolean);
+        }
+
         if (isset($filter['nested']) && is_array($filter['nested'])) {
             return self::fromPayload($resource, $filter['nested'], $boolean);
         }

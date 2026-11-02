@@ -73,6 +73,22 @@ class EngineDatabaseGrammarTest extends EngineSearchTestCase
         $this->assertSame([], $this->engine->searches);
     }
 
+    #[Test]
+    public function it_reads_a_relation_group_in_an_include_of_a_search_on_an_engine(): void
+    {
+        $response = $this->search('vouchers', [
+            'text' => ['value' => 'report'],
+            'includes' => [['relation' => 'lines', 'sorts' => [['field' => 'id']], 'filters' => [
+                ['relation' => 'voucher', 'nested' => [['field' => 'price', 'operator' => '<', 'value' => 2]]],
+            ]]],
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.*.id', [5, 1, 3])
+            ->assertJsonPath('data.*.lines.*.label', ['l1a', 'l1b']);
+        $this->assertCount(1, $this->engine->searches);
+    }
+
     /** @param array<string, mixed> $text */
     #[Test]
     #[DataProvider('emptyIncludeTexts')]

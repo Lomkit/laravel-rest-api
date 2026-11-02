@@ -170,6 +170,31 @@ class ReachChecksTest extends HelpdeskTestCase
         $this->assertSame([['viewAny'], ['viewAny'], ['viewAny']], [$this->tickets->calls, $this->teams->calls, $this->tags->calls]);
     }
 
+    /** @return array<string, array{string, string, array<string, mixed>, string}> */
+    public static function relationGroupReach(): array
+    {
+        return [
+            'the relation of the group' => ['teams', 'Teams are not listed.', ['relation' => 'team', 'nested' => [['field' => 'name', 'value' => 'Billing']]], 'search.filters.0'],
+            'a group without filters' => ['teams', 'Teams are not listed.', ['relation' => 'team', 'exists' => false], 'search.filters.0'],
+            'a relation path inside the group' => ['tags', 'Tags are not listed.', ['relation' => 'team', 'nested' => [['field' => 'tickets.tags.name', 'value' => 'Hardware']]], 'search.filters.0.nested.0'],
+        ];
+    }
+
+    /** @param array<string, mixed> $filter */
+    #[Test]
+    #[DataProvider('relationGroupReach')]
+    public function it_checks_the_relations_that_a_relation_group_reaches(string $policy, string $message, array $filter, string $path): void
+    {
+        $this->{$policy}->answers['viewAny'] = Response::deny($message);
+        $this->logQueries();
+
+        $this->postJson('/api/tickets/search', ['search' => ['filters' => [$filter]]])
+            ->assertForbidden()
+            ->assertExactJson($this->denied($message, $path));
+
+        $this->assertNoQueries();
+    }
+
     /** @return array{message: string, denials: list<array{path: string, ability: string, message: string}>} */
     private function denied(string $message, string $path): array
     {
