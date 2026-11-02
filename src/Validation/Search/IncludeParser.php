@@ -30,21 +30,12 @@ final readonly class IncludeParser
      * @param  list<Cursor>  $entries
      * @return list<IncludeNode>
      */
-    public function parse(array $entries, ValidationContext $context): array
+    public function parse(array $entries, ValidationContext $context, RowKeys $keys): array
     {
-        $aliases = [];
         $includes = [];
 
         foreach ($entries as $entry) {
-            $alias = $entry->at('alias');
-
-            if ($alias->present) {
-                $aliases[] = $alias->value;
-            }
-        }
-
-        foreach ($entries as $entry) {
-            $include = $this->include($entry, $aliases, $context);
+            $include = $this->include($entry, $keys, $context);
 
             if ($include !== null) {
                 $includes[] = $include;
@@ -54,8 +45,7 @@ final readonly class IncludeParser
         return $includes;
     }
 
-    /** @param list<mixed> $aliases */
-    private function include(Cursor $entry, array $aliases, ValidationContext $context): ?IncludeNode
+    private function include(Cursor $entry, RowKeys $keys, ValidationContext $context): ?IncludeNode
     {
         if (! $context->reader->object($entry)) {
             return null;
@@ -77,8 +67,8 @@ final readonly class IncludeParser
         $rules->addWhenPresent($alias, [
             'string',
             'max:255',
-            'regex:/^[A-Za-z_][A-Za-z0-9_]*$/',
-            new IncludeAlias($context->resource, $name ?? '', count(array_keys($aliases, $alias->value, true))),
+            'regex:'.RowKeys::PATTERN,
+            new IncludeAlias($keys, $name ?? ''),
         ]);
 
         $search = $body?->node(null, null);
