@@ -2,8 +2,6 @@
 
 namespace Lomkit\Rest\Validation;
 
-use Illuminate\Support\Str;
-
 final readonly class PayloadReader
 {
     public function __construct(
@@ -83,7 +81,7 @@ final readonly class PayloadReader
             return [];
         }
 
-        return array_map($list->at(...), array_keys($list->value));
+        return array_map($list->item(...), array_keys($list->value));
     }
 
     /** @param array<string, true> $keys */
@@ -104,10 +102,7 @@ final readonly class PayloadReader
                 continue;
             }
 
-            $path = $object->at($key)->path;
-
-            $this->rules->reject(Violation::unknown($path));
-            $this->labelAsWritten($path);
+            $this->rules->reject(Violation::unknown($object->at($key)->path));
         }
     }
 
@@ -125,16 +120,5 @@ final readonly class PayloadReader
         }
 
         return null;
-    }
-
-    public function labelAsWritten(string $key): void
-    {
-        $written = KeyPath::unescape($key);
-
-        if (array_key_exists($written, $this->rules->labels()) || str_replace('_', ' ', Str::snake($written)) === $written) {
-            return;
-        }
-
-        $this->rules->label($key, $written);
     }
 }

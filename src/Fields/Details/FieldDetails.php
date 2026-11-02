@@ -40,12 +40,13 @@ final readonly class FieldDetails implements JsonSerializable
         return array_map(fn (Field $field): self => self::ofPivot($field, $queryable), iterator_to_array($fields, false));
     }
 
-    /** @return array{name: string, type: string, nullable: bool, select: bool, sort: bool, filter: array{operators: list<string>}, create: bool, update: bool, rules: array{all: list<string>, create: list<string>, update: list<string>}, meta: stdClass, values?: list<int|string>} */
+    /** @return array{name: string, label: string|null, type: string, nullable: bool, select: bool, sort: bool, filter: array{operators: list<string>}, create: bool, update: bool, rules: array{all: list<string>, create: list<string>, update: list<string>}, meta: stdClass, values?: list<int|string>} */
     #[\Override]
     public function jsonSerialize(): array
     {
         $details = [
             'name' => $this->field->name,
+            'label' => $this->field->getLabel(),
             'type' => $this->field->type(),
             'nullable' => $this->field->isNullable(),
             'select' => $this->queryable && $this->field->isSelectable(),

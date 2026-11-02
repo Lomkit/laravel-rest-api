@@ -42,7 +42,7 @@ class WritableFieldsTest extends PackageTestCase
         ]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.attributes' => ['The id attribute is not writable on create.', 'The created_at attribute is not writable on create.', 'The nickname attribute is not writable on create.'],
+            'mutate.0.attributes' => ['The id key of the mutate.0.attributes field is not writable on create.', 'The created_at key of the mutate.0.attributes field is not writable on create.', 'The nickname key of the mutate.0.attributes field is not writable on create.'],
         ]);
         $this->assertSame(0, Author::query()->count());
     }
@@ -59,7 +59,7 @@ class WritableFieldsTest extends PackageTestCase
         ]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.attributes' => ['The id attribute is not writable on update.', 'The created_at attribute is not writable on update.', 'The nickname attribute is not writable on update.'],
+            'mutate.0.attributes' => ['The id key of the mutate.0.attributes field is not writable on update.', 'The created_at key of the mutate.0.attributes field is not writable on update.', 'The nickname key of the mutate.0.attributes field is not writable on update.'],
         ]);
         $this->assertSame([[$ada->id, 'Ada', '2026-01-01 09:00:00']], Author::query()->get()->map(fn (Author $author): array => [$author->id, $author->first_name, $author->created_at?->toDateTimeString()])->all());
     }
@@ -92,7 +92,7 @@ class WritableFieldsTest extends PackageTestCase
         ]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.relations.drafts.0.attributes' => ['The id attribute is not writable on update.'],
+            'mutate.0.relations.drafts.0.attributes' => ['The id key of the mutate.0.relations.drafts.0.attributes field is not writable on update.'],
         ]);
         $this->assertSame([self::OUTLINE => 'Outline'], Draft::query()->pluck('title', 'id')->all());
     }
@@ -126,7 +126,7 @@ class WritableFieldsTest extends PackageTestCase
         ]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.relations.tags.0.attributes' => ['The slug attribute is not writable on update.'],
+            'mutate.0.relations.tags.0.attributes' => ['The slug key of the mutate.0.relations.tags.0.attributes field is not writable on update.'],
         ]);
         $this->assertSame(['Laravel', 'laravel'], [$laravel->fresh()?->name, $laravel->fresh()?->slug]);
     }
@@ -169,7 +169,7 @@ class WritableFieldsTest extends PackageTestCase
         ]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.relations.tags.0.attributes' => ['The archived_at attribute is not writable on create.'],
+            'mutate.0.relations.tags.0.attributes' => ['The archived_at key of the mutate.0.relations.tags.0.attributes field is not writable on create.'],
         ]);
         $this->assertSame(0, Tag::query()->count());
     }

@@ -40,9 +40,9 @@ class MutateErrorOrderTest extends PackageTestCase
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
             'mutate.0.attributes.name' => ['The mutate.0.attributes.name field must be a string.'],
-            'mutate.0.attributes' => ['The slug attribute is not writable on create.'],
+            'mutate.0.attributes' => ['The slug key of the mutate.0.attributes field is not writable on create.'],
             'mutate.0.key' => ['The mutate.0.key field is prohibited when mutate.0.operation is create.'],
-            'mutate.0.without_detaching' => ['The mutate.0.without detaching field is prohibited unless mutate.0.operation is in sync.'],
+            'mutate.0.without_detaching' => ['The mutate.0.without_detaching field is prohibited unless mutate.0.operation is in sync.'],
         ]);
     }
 
@@ -63,8 +63,8 @@ class MutateErrorOrderTest extends PackageTestCase
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
             'mutate.0.relations.featuredProducts.0.attributes' => ['The mutate.0.relations.featuredProducts.0.attributes field is prohibited when mutate.0.relations.featuredProducts.0.operation is attach.'],
-            'mutate.0.relations.featuredProducts.0.relations.category.key' => ['The mutate.0.relations.featured products.0.relations.category.key field must be present when mutate.0.relations.featured products.0.relations.category.operation is detach.'],
-            'mutate.0.relations.featuredProducts.0.pivot' => ['The rank attribute is not writable on create.'],
+            'mutate.0.relations.featuredProducts.0.relations.category.key' => ['The mutate.0.relations.featuredProducts.0.relations.category.key field must be present when mutate.0.relations.featuredProducts.0.relations.category.operation is detach.'],
+            'mutate.0.relations.featuredProducts.0.pivot' => ['The rank key of the mutate.0.relations.featuredProducts.0.pivot field is not writable on create.'],
         ]);
     }
 
@@ -85,7 +85,7 @@ class MutateErrorOrderTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_names_a_missing_relation_as_laravel_does(): void
+    public function it_names_a_missing_relation_as_written(): void
     {
         $response = $this->postJson('/constrained-categories/mutate', ['mutate' => [[
             'operation' => 'create',
@@ -95,7 +95,7 @@ class MutateErrorOrderTest extends PackageTestCase
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
             'mutate.0.relations.products' => ['The mutate.0.relations.products field is required.'],
-            'mutate.0.relations.featuredProducts' => ['The mutate.0.relations.featured products field is required.'],
+            'mutate.0.relations.featuredProducts' => ['The mutate.0.relations.featuredProducts field is required.'],
         ]);
     }
 }

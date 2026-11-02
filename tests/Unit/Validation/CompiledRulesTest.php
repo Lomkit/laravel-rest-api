@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\CompiledRules;
+use Lomkit\Rest\Validation\MessageBook;
 use Lomkit\Rest\Validation\NodeBudget;
 use Lomkit\Rest\Validation\ParsedRules;
 use Lomkit\Rest\Validation\Rejected;
@@ -18,7 +19,7 @@ class CompiledRulesTest extends TestCase
     #[Test]
     public function it_adds_the_projected_values_to_the_input(): void
     {
-        $compiled = new CompiledRules([], [], ['fields.limit' => 25, 'search.fields.status' => 'draft']);
+        $compiled = new CompiledRules([], new MessageBook, ['fields.limit' => 25, 'search.fields.status' => 'draft']);
 
         $this->assertSame(
             ['fields' => [['name' => 'limit', 'value' => 25], 'limit' => 25], 'search' => ['fields' => ['status' => 'draft']]],
@@ -27,56 +28,27 @@ class CompiledRulesTest extends TestCase
     }
 
     #[Test]
-    public function it_gives_the_application_attribute_names_precedence_over_the_labels(): void
-    {
-        $compiled = new CompiledRules([], [
-            'fields.min_views' => 'min views',
-            'mutate.0.relations.lineItems.0.operation' => 'mutate.0.relations.lineItems.0.operation',
-            'mutate.0.relations.lineItems.1.operation' => 'mutate.0.relations.lineItems.1.operation',
-            'fields.status' => 'status',
-        ], []);
-
-        $this->assertSame(
-            [
-                'fields.min_views' => 'minimum views',
-                'mutate.*.relations.lineItems.*.operation' => 'line operation',
-                'fields.status' => 'status',
-            ],
-            $compiled->attributeNames(['fields.min_views' => 'minimum views', 'mutate.*.relations.lineItems.*.operation' => 'line operation']),
-        );
-    }
-
-    #[Test]
-    public function it_leaves_out_the_labels_of_keys_that_a_translation_names(): void
-    {
-        $compiled = new CompiledRules([], [
-            'items.0.unit_price' => 'items.0.unit_price',
-            'lineItems.0.unitPrice' => 'lineItems.0.unitPrice',
-            'fields.status' => 'status',
-            'fields.min_views' => 'min views',
-        ], []);
-
-        $this->assertSame(
-            ['fields.min_views' => 'minimum views', 'lineItems.0.unitPrice' => 'lineItems.0.unitPrice'],
-            $compiled->attributeNames(['fields.min_views' => 'minimum views'], ['items.*.unit_price' => 'unit price', 'fields.status' => 'publication status']),
-        );
-    }
-
-    #[Test]
     public function it_merges_the_parsed_rules_with_the_rules_of_the_request(): void
     {
         $check = new Check(new class extends Resource {}, 'viewAny', Model::class, 'search.filters.0');
         $parsed = $this->parsed(['items' => ['array']]);
-        $parsed->label('search.filters.0.sort_by', 'search.filters.0.sort_by');
         $parsed->project('search.instructions.0.fields.status', 'draft');
         $parsed->reach($check);
 
         $compiled = CompiledRules::of($parsed, ['items' => 'min:1', 'name' => 'string|max:3'], new NodeBudget);
 
         $this->assertSame(['items' => ['array', 'min:1'], 'name' => ['string', 'max:3']], $compiled->rules);
-        $this->assertSame(['search.filters.0.sort_by' => 'search.filters.0.sort_by'], $compiled->labels);
+        $this->assertSame($parsed->book(), $compiled->book);
         $this->assertSame(['search.instructions.0.fields.status' => 'draft'], $compiled->projections);
         $this->assertSame([$check], $compiled->reach);
+    }
+
+    #[Test]
+    public function it_names_only_the_parsed_keys_as_written(): void
+    {
+        $compiled = CompiledRules::of($this->parsed(['mutate.0.without_detaching' => ['boolean']]), ['notify_users' => 'boolean'], new NodeBudget);
+
+        $this->assertSame(['mutate.0.without_detaching' => 'mutate.0.without_detaching'], $compiled->book->attributeNames([], []));
     }
 
     #[Test]

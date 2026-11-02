@@ -85,7 +85,7 @@ class InputSetTest extends TestCase
         ksort($inputsFirstRules);
 
         $this->assertSame($named->projections(), $this->rules->projections());
-        $this->assertSame($named->labels(), $this->rules->labels());
+        $this->assertSame($named->book()->attributeNames([], []), $this->rules->book()->attributeNames([], []));
         $this->assertSame($namedValues->toArray(), $inputsFirstValues->toArray());
         $this->assertSame($named->isPartial(), $this->rules->isPartial());
         $this->assertEquals($namedRules, $inputsFirstRules);
@@ -100,7 +100,7 @@ class InputSetTest extends TestCase
 
         $this->assertSame(
             ['fields.minViews' => 'min views', 'fields.status' => 'publication status', 'fields.publishedAfter' => 'published after'],
-            $this->rules->labels(),
+            $this->rules->book()->attributeNames([], []),
         );
     }
 
@@ -127,7 +127,7 @@ class InputSetTest extends TestCase
         $this->read(['fields' => 'minViews']);
 
         $this->assertSame([], $this->rules->rules());
-        $this->assertSame([], $this->rules->labels());
+        $this->assertSame([], $this->rules->book()->attributeNames([], []));
         $this->assertTrue($this->rules->isPartial());
     }
 
@@ -165,7 +165,7 @@ class InputSetTest extends TestCase
         ]];
 
         $this->read($payload, fields: $fields);
-        $validator = Validator::make($this->rules->data($payload), $this->rules->rules(), [], $this->rules->labels());
+        $validator = Validator::make($this->rules->data($payload), $this->rules->rules(), [], $this->rules->book()->attributeNames([], []));
 
         $this->assertSame([
             'fields.until' => ['The until field must be a date after since.'],

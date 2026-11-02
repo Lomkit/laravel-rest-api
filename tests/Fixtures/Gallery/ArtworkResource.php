@@ -31,7 +31,7 @@ class ArtworkResource extends Resource
                 ->rules('max:120')
                 ->creationRules('required')
                 ->updateRules('filled')
-                ->meta(['label' => 'Title']),
+                ->label('Title'),
             Enum::make('medium'),
             Json::make('dimensions')->nullable(),
             Number::make('price')

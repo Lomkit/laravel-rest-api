@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Relations;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
-use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTagController;
@@ -133,7 +132,7 @@ abstract class WeightedPivotTestCase extends PackageTestCase
 
     protected static function shown(string $relation, int $entry = 0): string
     {
-        return 'mutate.0.relations.'.str_replace('_', ' ', Str::snake($relation)).'.'.$entry;
+        return 'mutate.0.relations.'.$relation.'.'.$entry;
     }
 
     /** @return array<string, mixed> */

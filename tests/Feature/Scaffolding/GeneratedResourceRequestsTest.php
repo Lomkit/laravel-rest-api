@@ -77,10 +77,10 @@ class GeneratedResourceRequestsTest extends ScaffoldingTestCase
     {
         return [
             'a readonly timestamp' => ['ReadonlyArticle', [...self::ARTICLE, 'created_at' => '2026-01-01 09:00:00'], [
-                'mutate.0.attributes' => ['The created_at attribute is not writable on create.'],
+                'mutate.0.attributes' => ['The created_at key of the mutate.0.attributes field is not writable on create.'],
             ]],
             'a generated column' => ['GeneratedColumnArticle', [...self::ARTICLE, 'reading_minutes' => 3], [
-                'mutate.0.attributes' => ['The reading_minutes attribute is not writable on create.'],
+                'mutate.0.attributes' => ['The reading_minutes key of the mutate.0.attributes field is not writable on create.'],
             ]],
             'a missing required column' => ['RequiredArticle', array_diff_key(self::ARTICLE, ['title' => true]), [
                 'mutate.0.attributes.title' => ['The mutate.0.attributes.title field is required.'],
@@ -92,7 +92,7 @@ class GeneratedResourceRequestsTest extends ScaffoldingTestCase
                 'mutate.0.attributes.slug' => ['The mutate.0.attributes.slug has already been taken.'],
             ]],
             'a column left out' => ['LeftOutArticle', [...self::ARTICLE, 'internal_token' => 'secret'], [
-                'mutate.0.attributes' => ['The internal_token attribute is not writable on create.'],
+                'mutate.0.attributes' => ['The internal_token key of the mutate.0.attributes field is not writable on create.'],
             ]],
         ];
     }

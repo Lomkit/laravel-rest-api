@@ -59,9 +59,9 @@ class RelationOperationsTest extends PackageTestCase
             yield 'belongs to, '.$operation => ['loans', 'book', 'book', 'book', $operation];
             yield 'morph to, '.$operation => ['labels', 'labelable', 'labelable', 'book', $operation];
             yield 'has one, '.$operation => ['books', 'loan', 'loan', 'loan', $operation];
-            yield 'has one of many, '.$operation => ['books', 'latestLoan', 'latest loan', 'loan', $operation];
+            yield 'has one of many, '.$operation => ['books', 'latestLoan', 'latestLoan', 'loan', $operation];
             yield 'morph one, '.$operation => ['books', 'label', 'label', 'label', $operation];
-            yield 'morph one of many, '.$operation => ['books', 'latestLabel', 'latest label', 'label', $operation];
+            yield 'morph one of many, '.$operation => ['books', 'latestLabel', 'latestLabel', 'label', $operation];
         }
     }
 

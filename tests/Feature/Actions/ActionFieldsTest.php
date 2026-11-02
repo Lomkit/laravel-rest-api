@@ -112,8 +112,8 @@ class ActionFieldsTest extends PackageTestCase
             'name' => 'Publish Posts',
             'uriKey' => 'publish-posts',
             'fields' => [
-                ['name' => 'at', 'type' => 'datetime', 'nullable' => true, 'default' => null, 'rules' => ['nullable', 'date'], 'meta' => []],
-                ['name' => 'notify', 'type' => 'boolean', 'nullable' => false, 'default' => true, 'rules' => ['boolean'], 'meta' => []],
+                ['name' => 'at', 'label' => null, 'type' => 'datetime', 'nullable' => true, 'default' => null, 'rules' => ['nullable', 'date'], 'meta' => []],
+                ['name' => 'notify', 'label' => null, 'type' => 'boolean', 'nullable' => false, 'default' => true, 'rules' => ['boolean'], 'meta' => []],
             ],
             'meta' => ['color' => '#FFFFFF'],
             'standalone' => false,

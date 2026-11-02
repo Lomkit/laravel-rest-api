@@ -50,7 +50,7 @@ final readonly class Violation
 
     public static function notWritable(string $key, string $attribute, WriteOperation $operation): self
     {
-        return new self($key, 'The :key attribute is not writable on :operation.', ['key' => $attribute, 'operation' => $operation->value]);
+        return new self($key, 'The :key key of the :attribute field is not writable on :operation.', ['key' => $attribute, 'operation' => $operation->value]);
     }
 
     public static function tooDeep(string $key, int $max): self

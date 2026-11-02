@@ -114,6 +114,7 @@ class PayloadReaderTest extends TestCase
         $paths = fn (array $items): array => array_map(fn (Cursor $item): string => $item->path, $items);
 
         $this->assertSame(['f.0', 'f.1'], $paths($reader->items($this->cursor([1, 2]))));
+        $this->assertSame(['f.*', 'f.*'], array_map(fn (Cursor $item): string => $item->pattern, $reader->items($this->cursor([1, 2]))));
         $this->assertSame([], $reader->items($this->cursor(['a' => 1])));
         $this->assertSame([], $reader->items($this->cursor('x')));
         $this->assertSame([], $this->rules->rules());
@@ -129,15 +130,15 @@ class PayloadReaderTest extends TestCase
         $this->assertSame(['o.x', 'o.y'], array_keys($rules));
         $this->assertRejected(Violation::unknown('o.x'), $rules['o.x']);
         $this->assertRejected(Violation::unknown('o.y'), $rules['o.y']);
-        $this->assertSame([], $this->rules->labels());
+        $this->assertSame([], $this->rules->book()->attributeNames([], []));
     }
 
     #[Test]
-    public function it_names_an_unknown_key_as_written(): void
+    public function it_names_no_key_itself(): void
     {
         $this->reader()->known($this->object(['sort_by' => 1]), ['field' => true]);
 
-        $this->assertSame(['o.sort_by' => 'o.sort_by'], $this->rules->labels());
+        $this->assertSame([], $this->rules->book()->attributeNames([], []));
         $this->assertRejected(Violation::unknown('o.sort_by'), $this->rules->rules()['o.sort_by']);
     }
 

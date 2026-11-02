@@ -120,8 +120,6 @@ final readonly class RelationMutationParser
     /** @return MutationNode|list<MutationNode>|null */
     private function relation(Cursor $value, Relation $relation, int $depth, MutationParser $parser): MutationNode|array|null
     {
-        $this->reader->labelAsWritten($value->path);
-
         if (! $this->reader->object($value)) {
             return null;
         }
@@ -160,7 +158,6 @@ final readonly class RelationMutationParser
 
         $value = $relations->at($name);
 
-        $this->reader->labelAsWritten($value->path);
         $this->reader->object($value);
     }
 

@@ -79,7 +79,7 @@ class WriteOnlyAndVirtualFieldsTest extends PackageTestCase
         ]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.attributes' => ['The initials attribute is not writable on create.'],
+            'mutate.0.attributes' => ['The initials key of the mutate.0.attributes field is not writable on create.'],
         ]);
         $this->assertSame(0, Author::query()->count());
     }

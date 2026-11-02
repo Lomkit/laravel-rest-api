@@ -172,7 +172,7 @@ class ResourceRulesTest extends PackageTestCase
         ]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.without_detaching' => ['The mutate.0.without detaching field is prohibited unless mutate.0.operation is in sync.'],
+            'mutate.0.without_detaching' => ['The mutate.0.without_detaching field is prohibited unless mutate.0.operation is in sync.'],
             'mutate.0.attributes.metadata.tags.0' => ['The mutate.0.attributes.metadata.tags.0 field must not be greater than 5 characters.'],
         ]);
         $this->assertSame(0, Post::query()->count());

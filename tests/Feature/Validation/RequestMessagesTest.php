@@ -49,7 +49,7 @@ class RequestMessagesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_keeps_the_package_messages_next_to_the_request_messages(): void
+    public function it_keeps_laravels_messages_next_to_the_request_messages(): void
     {
         $response = $this->postJson('/api/posts/actions/change-status', [
             'search' => ['text' => ['value' => 'report']],
@@ -57,8 +57,8 @@ class RequestMessagesTest extends PackageTestCase
         ]);
 
         $response->assertUnprocessable()->assertExactJson([
-            'message' => 'Text search is not available on this resource.',
-            'errors' => ['search.text' => ['Text search is not available on this resource.']],
+            'message' => 'The search.text field is prohibited.',
+            'errors' => ['search.text' => ['The search.text field is prohibited.']],
         ]);
     }
 }

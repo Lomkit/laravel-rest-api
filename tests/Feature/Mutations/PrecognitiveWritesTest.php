@@ -43,8 +43,8 @@ class PrecognitiveWritesTest extends PackageTestCase
             'an attribute that is not writable' => [
                 ['id' => 5, 'title' => 'Annual report', 'status' => 'draft', 'published_on' => '2026-01-01'],
                 [
-                    'message' => 'The id attribute is not writable on create.',
-                    'errors' => ['mutate.0.attributes' => ['The id attribute is not writable on create.']],
+                    'message' => 'The id key of the mutate.0.attributes field is not writable on create.',
+                    'errors' => ['mutate.0.attributes' => ['The id key of the mutate.0.attributes field is not writable on create.']],
                 ],
             ],
             'a value refused by a field rule' => [

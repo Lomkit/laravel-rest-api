@@ -66,7 +66,7 @@ class MorphPivotRulesTest extends PackageTestCase
         ]]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.relations.labelledTickets.0.attributes.title' => ['The mutate.0.relations.labelled tickets.0.attributes.title field must not be greater than 20 characters.'],
+            'mutate.0.relations.labelledTickets.0.attributes.title' => ['The mutate.0.relations.labelledTickets.0.attributes.title field must not be greater than 20 characters.'],
         ]);
         $this->assertSame('Printer jam', $this->jam->fresh()?->title);
         $this->assertSame([], $this->hardware->labelledTickets()->pluck('tickets.id')->all());

@@ -37,13 +37,13 @@ class AggregateValidationTest extends PackageTestCase
     {
         return [
             'an unknown relation' => [['relation' => 'suppliers', 'type' => 'count'], [
-                'search.aggregates.0.relation' => ['The relation is not valid or allowed for this resource.'],
+                'search.aggregates.0.relation' => ['The search.aggregates.0.relation field is not a valid or allowed relation for this resource.'],
             ]],
             'an unknown nested relation' => [['relation' => 'suppliers.country', 'type' => 'count'], [
-                'search.aggregates.0.relation' => ['The relation is not valid or allowed for this resource.'],
+                'search.aggregates.0.relation' => ['The search.aggregates.0.relation field is not a valid or allowed relation for this resource.'],
             ]],
             'a pivot segment' => [['relation' => 'featuredProducts.pivot', 'type' => 'count'], [
-                'search.aggregates.0.relation' => ['The relation is not valid or allowed for this resource.'],
+                'search.aggregates.0.relation' => ['The search.aggregates.0.relation field is not a valid or allowed relation for this resource.'],
             ]],
             'a missing type' => [['relation' => 'products'], [
                 'search.aggregates.0.type' => ['The search.aggregates.0.type field is required.'],
@@ -136,7 +136,7 @@ class AggregateValidationTest extends PackageTestCase
         ]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'search.includes.0.relation' => ['The relation is not valid or allowed for this resource.'],
+            'search.includes.0.relation' => ['The search.includes.0.relation field is not a valid or allowed relation for this resource.'],
         ]);
     }
 }

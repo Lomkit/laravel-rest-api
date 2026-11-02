@@ -36,6 +36,32 @@ class CursorTest extends TestCase
     }
 
     #[Test]
+    public function it_marks_each_list_entry_in_the_pattern(): void
+    {
+        $entries = Cursor::of(['mutate' => [['relations' => ['products' => [['attributes' => ['price' => 1]]]]]]], new Violations)
+            ->at('mutate')
+            ->items(5);
+        $this->assertNotNull($entries);
+
+        $products = $entries[0]
+            ->at('relations')
+            ->at('products')
+            ->items(5);
+        $this->assertNotNull($products);
+
+        $price = $products[0]
+            ->at('attributes')
+            ->at('price');
+        $dotted = Cursor::of(['a.b' => [1]], new Violations)->at('a.b');
+
+        $this->assertSame('mutate.0.relations.products.0.attributes.price', $price->path);
+        $this->assertSame('mutate.*.relations.products.*.attributes.price', $price->pattern);
+        $this->assertSame('a\.b.0', $dotted->at(0)->pattern);
+        $this->assertSame('a\.b.*', $dotted->item(0)->pattern);
+        $this->assertSame('', Cursor::of([], new Violations)->pattern);
+    }
+
+    #[Test]
     public function it_reports_an_object_where_a_list_is_expected(): void
     {
         $violations = new Violations;

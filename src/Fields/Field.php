@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\Concerns\ConfiguresFiltering;
+use Lomkit\Rest\Fields\Concerns\ConfiguresMessages;
 use Lomkit\Rest\Fields\Concerns\ConfiguresReading;
 use Lomkit\Rest\Fields\Concerns\ConfiguresRules;
 use Lomkit\Rest\Fields\Concerns\ConfiguresSearching;
@@ -17,6 +18,7 @@ use Lomkit\Rest\Fields\Filtering\FilterOperator;
 abstract class Field
 {
     use ConfiguresFiltering;
+    use ConfiguresMessages;
     use ConfiguresReading;
     use ConfiguresRules;
     use ConfiguresSearching;

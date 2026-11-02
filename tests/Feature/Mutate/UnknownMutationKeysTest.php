@@ -109,7 +109,7 @@ class UnknownMutationKeysTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_names_the_relations_of_a_to_one_entry_as_laravel_does(): void
+    public function it_names_the_relations_of_a_to_one_entry_as_written(): void
     {
         $response = $this->postJson('/api/books/mutate', ['mutate' => [[
             'operation' => 'create',
@@ -122,7 +122,7 @@ class UnknownMutationKeysTest extends PackageTestCase
         ]]]);
 
         $this->assertExactErrors($response, [
-            'mutate.0.relations.latestLoan.relations' => ['The suppliers key is not valid for the mutate.0.relations.latest loan.relations field.'],
+            'mutate.0.relations.latestLoan.relations' => ['The suppliers key is not valid for the mutate.0.relations.latestLoan.relations field.'],
         ]);
     }
 
