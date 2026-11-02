@@ -922,14 +922,22 @@ The package renders the rows of a response from the plan of the search: the `sel
 
 ### Selects, sorts and aggregates
 
-A search reads each field through its declaration: `writeOnly()`, `selectable(false)` and `virtual()` decide what a row can return, and `sortable()` and `sortUsing()` decide how the field is sorted.
+A search reads each field through its declaration: `writeOnly()`, `selectable(false)`, `virtual()` and `resolveUsing()` decide what a row can return, and `sortable()` and `sortUsing()` decide how the field is sorted.
 
 Selects and rows:
 
-- `selects` accepts the selectable fields only. A field declared `writeOnly()`, `selectable(false)` or `virtual()` gives a 422 under `search.selects.<i>.field`, as an undeclared field does. The `selects` of an include are checked against the fields of the related resource.
-- Without `selects`, a row holds the selectable fields of its resource only, at every level of the includes. A `writeOnly()` field is never returned, by any endpoint: declare `writeOnly()` on a field that clients may write but not read. A `virtual()` field is not returned either.
+- `selects` accepts the selectable fields only. A field declared `writeOnly()` or `selectable(false)`, and a `virtual()` field without `resolveUsing()`, give a 422 under `search.selects.<i>.field`, as an undeclared field does. The `selects` of an include are checked against the fields of the related resource.
+- Without `selects`, a row holds the selectable fields of its resource only, at every level of the includes. A `writeOnly()` field is never returned, by any endpoint: declare `writeOnly()` on a field that clients may write but not read. A `virtual()` field is returned only when it declares `resolveUsing()`.
 - `destroy`, `restore` and `forceDestroy` refuse `search`: an empty array is accepted, and any other `search` gives a 422 under `search`, "The search field is prohibited." for a value that is not empty and "The search field must be an array." for `null` or a blank string. No row is deleted or restored then. Their response holds the selectable fields of each row, without gates or aggregates.
-- Virtual fields cannot be selected yet, and `requires()` has no effect yet.
+- `resolveUsing(Closure $callback)` gives a field its value in a row. The callback receives the model of the row, and the response sends the value as the callback returns it: a `Json` field does not decode it. A `virtual()` field with `resolveUsing()` is selectable: `selects` accepts it, a row without `selects` returns it, at every include level, and its details say `"select": true`. A field that is not virtual can declare `resolveUsing()` too: the callback then gives its value instead of the column. In a row, the values of the callbacks come after the columns and the aggregates. The callback runs once for each returned row, so a query in it runs once per row. A `virtual()` field is still sorted and filtered only through `sortUsing()` and `filterUsing()`, and `requires()` has no effect yet.
+
+```php
+use Illuminate\Database\Eloquent\Model;
+
+Text::make('display_name')
+    ->virtual()
+    ->resolveUsing(fn (Model $author): string => $author->first_name.' '.$author->last_name),
+```
 
 Sorts:
 
@@ -1144,7 +1152,7 @@ BelongsToMany::make('tags', TagResource::class)->pivotFields([
 Declaration:
 
 - `withPivotFields()` and `withPivotRules()` are removed. Declare `pivotFields([...])` with `Field` objects instead of column names, and move each rule of `withPivotRules()` to the field of its key: `->withPivotFields(['number'])->withPivotRules(['number' => 'numeric'])` becomes `->pivotFields([Number::make('number')])`. A string, or a name declared twice, throws `Lomkit\Rest\Exceptions\InvalidFieldException`.
-- A pivot field is a column of the pivot table, and a pivot value is written to its column as sent, encoded first by a `Json` pivot field as described under [Typed fields](#typed-fields). A pivot field declared `virtual()`, or with `fillUsing()`, throws `Lomkit\Rest\Exceptions\InvalidFieldException` when `pivotFields()` is called.
+- A pivot field is a column of the pivot table, and a pivot value is written to its column as sent, encoded first by a `Json` pivot field as described under [Typed fields](#typed-fields). A pivot field declared `virtual()`, or with `fillUsing()` or `resolveUsing()`, throws `Lomkit\Rest\Exceptions\InvalidFieldException` when `pivotFields()` is called.
 - `getPivotFields()` returns a `Lomkit\Rest\Fields\FieldSet` instead of an array of names. Call `->names()` to get the old list. `getPivotRules()` and the `$pivotFields` and `$pivotRules` properties are removed.
 - The pivot fields are bound to the pivot class of the Eloquent relation: the class given to `using()`, or Laravel's `Pivot`. An `Enum` pivot field reads its enum class from the casts of that class.
 - A custom relation that carries pivot fields implements `Lomkit\Rest\Contracts\PivotRelation`, which declares `getPivotFields(): FieldSet` only. The `Lomkit\Rest\Concerns\Relations\HasPivotFields` trait implements it. The package checks this interface instead of the trait.

@@ -66,6 +66,10 @@ final readonly class FieldSet implements Countable, IteratorAggregate
             if ($field->fillsThroughCallback()) {
                 throw InvalidFieldException::filledPivotField($owner, $field->name);
             }
+
+            if ($field->resolvesThroughCallback()) {
+                throw InvalidFieldException::resolvedPivotField($owner, $field->name);
+            }
         }
 
         return $set;
