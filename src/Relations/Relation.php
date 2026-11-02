@@ -94,7 +94,7 @@ class Relation implements \JsonSerializable
     /** @return array<string, mixed> */
     public function rules(Resource $resource, string $prefix)
     {
-        return $this instanceof PivotRelation ? $this->pivotRules($prefix) : [];
+        return [];
     }
 
     #[\Override]

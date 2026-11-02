@@ -12,11 +12,16 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\Draft;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Lomkit\Rest\Validation\KeyLookup;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 class KeyLookupTest extends PackageTestCase
 {
     use CapturesQueries;
+
+    private const string DRAFT = '019a35f0-7c2e-7a41-9b3d-5e8f1c2a4b60';
+
+    private const string UPPER_DRAFT = '019A35F0-7C2E-7A41-9B3D-5E8F1C2A4B60';
 
     #[\Override]
     protected function fixtures(): array
@@ -90,5 +95,41 @@ class KeyLookupTest extends PackageTestCase
                 ->exists(),
             $found,
         );
+    }
+
+    #[Test]
+    #[DataProvider('caseVariants')]
+    public function it_checks_each_case_of_a_uuid_key_as_it_was_sent(string $first, string $second): void
+    {
+        Draft::factory()
+            ->for(Author::factory())
+            ->create(['id' => self::DRAFT]);
+        $lookup = new KeyLookup(fn (): Builder => Draft::query(), ID::make('id')->keyType('uuid'));
+        $lookup->expect($first);
+        $lookup->expectAll([$second]);
+        $this->captureQueries();
+
+        $found = [$lookup->has(self::DRAFT), $lookup->has(self::UPPER_DRAFT)];
+
+        $this->assertSame([[$first], [$second]], array_column($this->keyQueries('drafts'), 1));
+        $this->assertCount(2, $this->statements);
+        $this->assertSame(
+            [
+                true,
+                Draft::query()
+                    ->whereKey(self::UPPER_DRAFT)
+                    ->exists(),
+            ],
+            $found,
+        );
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function caseVariants(): array
+    {
+        return [
+            'the lowercase form first' => [self::DRAFT, self::UPPER_DRAFT],
+            'the uppercase form first' => [self::UPPER_DRAFT, self::DRAFT],
+        ];
     }
 }

@@ -2,6 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Relations;
 
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Relations\Stubs\ConditionalPivotTicketController;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -94,5 +97,30 @@ class PivotRulesTest extends WeightedPivotTestCase
 
         $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$this->parent($relation)->getKey()]]);
         $this->assertSame([['position' => null, 'weight' => 0, 'added_by' => null, 'note' => null, 'created_at' => self::NOW]], $this->pivotRows($relation));
+    }
+
+    #[Test]
+    public function it_resolves_a_conditional_pivot_rule_against_the_pivot_of_its_entry(): void
+    {
+        Rest::resource('conditional-pivot-tickets', ConditionalPivotTicketController::class)->register();
+        $network = Tag::create(['name' => 'Network']);
+
+        $response = $this->postJson('/conditional-pivot-tickets/mutate', ['mutate' => [[
+            'operation' => 'update',
+            'key' => $this->jam->id,
+            'relations' => ['tags' => [
+                ['operation' => 'attach', 'key' => $this->hardware->id, 'pivot' => ['position' => 1]],
+                ['operation' => 'attach', 'key' => $network->id, 'pivot' => ['position' => 2]],
+            ]],
+        ]]]);
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The mutate.0.relations.tags.0.pivot.weight field is required.',
+            'errors' => ['mutate.0.relations.tags.0.pivot.weight' => ['The mutate.0.relations.tags.0.pivot.weight field is required.']],
+        ]);
+        $tags = $this->jam->tags()
+            ->pluck('tags.id')
+            ->all();
+        $this->assertSame([], $tags);
     }
 }

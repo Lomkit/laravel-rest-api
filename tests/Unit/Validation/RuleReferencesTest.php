@@ -86,28 +86,4 @@ class RuleReferencesTest extends TestCase
     {
         $this->assertSame(['required_if:status,draft'], RuleReferences::rewrite(['required_if:status,draft'], []));
     }
-
-    #[Test]
-    public function it_fills_the_wildcards_of_dependent_parameters_with_the_matched_values(): void
-    {
-        $this->assertSame(
-            ['required_with:items.2.tags.0.name,items.2.code', 'gte:items.2.min', 'in:*'],
-            RuleReferences::substituteWildcards(['required_with:items.*.tags.*.name,items.*.code', 'gte:items.*.min', 'in:*'], ['2', '0']),
-        );
-    }
-
-    #[Test]
-    public function it_keeps_the_wildcards_without_matched_values(): void
-    {
-        $this->assertSame(['gte:items.*.min'], RuleReferences::substituteWildcards(['gte:items.*.min'], []));
-    }
-
-    #[Test]
-    public function it_fills_the_wildcards_of_rule_objects_and_leaves_other_rules_as_laravel_does(): void
-    {
-        $this->assertSame(
-            ['date', 'after:items.2.start', 'in_array:items.*.code'],
-            RuleReferences::substituteWildcards([Rule::date()->after('items.*.start'), 'in_array:items.*.code'], ['2']),
-        );
-    }
 }

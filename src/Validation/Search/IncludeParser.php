@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Validation\Search;
 
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Rules\Resource\ResourceRelationOrNested;
 use Lomkit\Rest\Search\IncludeNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ValidationContext;
@@ -71,7 +70,7 @@ final readonly class IncludeParser
         $related = $name === null ? null : $context->reachRelation($name, $entry->path);
         $body = $name === null || $related === null ? null : $this->body($entry, $name, $related, $context);
 
-        $rules->add($relation->path, ['required', (new ResourceRelationOrNested)->setResource($context->resource)]);
+        $rules->add($relation->path, ['required', new KnownRelation($context->resource)]);
         $rules->add($entry->at('text')->path, ['prohibited']);
         $rules->add($entry->at('trashed')->path, ['prohibited']);
         $rules->addWhenPresent($alias, [

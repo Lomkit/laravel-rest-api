@@ -15,6 +15,7 @@ class RuledPostResource extends PostResource
         return [
             'title' => 'string|min:3',
             'metadata.source' => 'string',
+            'metadata.tags.*' => 'string|max:5',
         ];
     }
 

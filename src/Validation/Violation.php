@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Validation;
 
+use Lomkit\Rest\Fields\WriteOperation;
+
 final readonly class Violation
 {
     /** @param array<string, string> $replace */
@@ -44,6 +46,11 @@ final readonly class Violation
     public static function unnamedKey(string $container, string $key): self
     {
         return new self($container, 'The :key key is not valid for the :attribute field.', ['key' => $key]);
+    }
+
+    public static function notWritable(string $key, string $attribute, WriteOperation $operation): self
+    {
+        return new self($key, 'The :key attribute is not writable on :operation.', ['key' => $attribute, 'operation' => $operation->value]);
     }
 
     public static function tooDeep(string $key, int $max): self

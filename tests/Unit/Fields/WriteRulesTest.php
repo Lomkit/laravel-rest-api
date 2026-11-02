@@ -78,16 +78,12 @@ class WriteRulesTest extends TestCase
     }
 
     #[Test]
-    public function it_prefixes_the_keys_and_points_the_references_to_declared_fields_at_the_same_entry(): void
+    public function it_names_the_declared_fields_and_not_the_other_rule_keys(): void
     {
         $fields = FieldSet::of([Date::make('published_on'), DateTime::make('published_at')->rules('after_or_equal:published_on')]);
 
         $rules = WriteRules::of($fields, WriteOperation::Create, ['summary' => 'required_if:featured,true'], ['published_at' => 'before:published_on']);
 
-        $this->assertSame([
-            'mutate.0.attributes.published_on' => ['date'],
-            'mutate.0.attributes.published_at' => ['date', 'after_or_equal:mutate.0.attributes.published_on', 'before:mutate.0.attributes.published_on'],
-            'mutate.0.attributes.summary' => ['required_if:featured,true'],
-        ], $rules->under('mutate.0.attributes.'));
+        $this->assertSame(['published_on', 'published_at'], $rules->names());
     }
 }

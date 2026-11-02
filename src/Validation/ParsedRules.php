@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Validation;
 
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Fields\WriteRules;
 
 final class ParsedRules
 {
@@ -107,8 +108,7 @@ final class ParsedRules
                 continue;
             }
 
-            $list = RuleList::of($entry);
-            $added = array_filter([...$list->plain, ...$list->nodes], fn (mixed $rule): bool => ! in_array($rule, $parsed[$key], true));
+            $added = array_filter(WriteRules::listOf($entry), fn (mixed $rule): bool => ! in_array($rule, $parsed[$key], true));
             $merged[$key] = [...$parsed[$key], ...array_values($added)];
         }
 

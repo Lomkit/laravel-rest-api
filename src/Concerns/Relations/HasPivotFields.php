@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\FieldSet;
-use Lomkit\Rest\Rules\Mutate\MutatePivot;
 use ReflectionClass;
 
 trait HasPivotFields
@@ -42,12 +41,6 @@ trait HasPivotFields
         $this->pivotFieldsBound = true;
 
         return $this->pivotFieldSet = $fields->bindTo($pivot);
-    }
-
-    /** @return array<string, list<mixed>> */
-    public function pivotRules(string $prefix): array
-    {
-        return [$prefix.($this->hasMultipleEntries() ? '.*' : '') => [new MutatePivot($this)]];
     }
 
     private function pivotModel(): ?Model

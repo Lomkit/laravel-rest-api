@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Validation;
 
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
+use Lomkit\Rest\Tests\Feature\Validation\Stubs\RuledFirstSearchRequest;
 use Lomkit\Rest\Tests\Feature\Validation\Stubs\RuledSearchRequest;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -62,6 +63,18 @@ class AddedSearchRulesTest extends PackageTestCase
             'a package rule' => ['x', 'The price field must be an integer.'],
             'the application rule' => [600, 'The price field must not be greater than 500.'],
         ];
+    }
+
+    #[Test]
+    public function it_expands_an_application_wildcard_rule_written_before_the_parent_rules(): void
+    {
+        $this->app->bind(SearchRequest::class, RuledFirstSearchRequest::class);
+
+        $response = $this->postJson('/api/products/search', ['search' => ['instructions' => [
+            ['name' => 'priced-at', 'fields' => [['name' => 'price', 'value' => 600]]],
+        ]]]);
+
+        $this->assertExactErrors($response, ['search.instructions.0.fields.price' => ['The price field must not be greater than 500.']]);
     }
 
     #[Test]

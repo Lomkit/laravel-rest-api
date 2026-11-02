@@ -57,6 +57,18 @@ class CreationChecksTest extends HelpdeskTestCase
         $this->assertSame([['create'], ['create']], [$this->tickets->calls, $this->teams->calls]);
     }
 
+    #[Test]
+    public function it_checks_no_creation_inside_a_mutate_list_given_as_an_object(): void
+    {
+        $this->teams->answers['create'] = Response::deny('Teams are created by the helpdesk lead.');
+
+        $this->postJson('/api/tickets/mutate', ['mutate' => ['first' => $this->ticketWithTeam('Printer jam', 'Billing')]])
+            ->assertUnprocessable()
+            ->assertExactJson(['message' => 'The mutate field must be a list.', 'errors' => ['mutate' => ['The mutate field must be a list.']]]);
+
+        $this->assertSame([], $this->teams->calls);
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      * @return array<string, mixed>

@@ -86,6 +86,7 @@ class MalformedPayloadTest extends PackageTestCase
             'a to-one relation given a list' => [[['operation' => 'create', 'attributes' => ['name' => 'Desk lamp', 'price' => 39], 'relations' => [
                 'category' => [['operation' => 'attach', 'key' => 1]],
             ]]], [
+                'mutate.0.relations.category.0' => ['The mutate.0.relations.category.0 field is prohibited.'],
                 'mutate.0.relations.category.operation' => ['The mutate.0.relations.category.operation field is required.'],
             ]],
             'a to-one relation given null' => [[['operation' => 'create', 'attributes' => ['name' => 'Desk lamp', 'price' => 39], 'relations' => [
@@ -117,8 +118,7 @@ class MalformedPayloadTest extends PackageTestCase
     {
         return [
             'a to-many relation given an object' => [['operation' => 'create', 'attributes' => ['name' => 'Desk lamp', 'price' => 39]], [
-                'mutate.0.relations.products.operation' => ['The mutate.0.relations.products.operation field must be an array.'],
-                'mutate.0.relations.products.attributes.operation' => ['The mutate.0.relations.products.attributes.operation field is required.'],
+                'mutate.0.relations.products' => ['The mutate.0.relations.products field must be a list.'],
             ]],
             'to-many entries that are malformed one by one' => [['create', [], ['operation' => 'replace']], [
                 'mutate.0.relations.products.0' => ['The mutate.0.relations.products.0 field must be an array.'],

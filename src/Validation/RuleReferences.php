@@ -29,22 +29,6 @@ final class RuleReferences
 
     /**
      * @param  list<mixed>  $rules
-     * @param  list<string>  $indices
-     * @return list<mixed>
-     */
-    public static function substituteWildcards(array $rules, array $indices): array
-    {
-        if ($indices === []) {
-            return $rules;
-        }
-
-        return self::map($rules, fn (string $rule, int $position, string $parameter): string => self::isDependent($rule)
-            ? self::fill($parameter, $indices)
-            : $parameter);
-    }
-
-    /**
-     * @param  list<mixed>  $rules
      * @param  array<string, string>  $paths
      * @return list<mixed>
      */
@@ -162,19 +146,6 @@ final class RuleReferences
         $name = strstr($parameter, '.', true);
 
         return $name !== false && isset($paths[$name]) ? $paths[$name].substr($parameter, strlen($name)) : null;
-    }
-
-    /** @param list<string> $indices */
-    private static function fill(string $parameter, array $indices): string
-    {
-        $parts = explode('*', $parameter);
-        $filled = array_shift($parts);
-
-        foreach ($parts as $position => $part) {
-            $filled .= ($indices[$position] ?? '*').$part;
-        }
-
-        return $filled;
     }
 
     private static function readsAField(string $name): bool
