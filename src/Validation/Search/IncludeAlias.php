@@ -34,6 +34,7 @@ final readonly class IncludeAlias implements ValidationRule
             $this->keys->isField($value) => 'The :attribute conflicts with a field of this resource.',
             $this->keys->isRelation($value) => 'The :attribute conflicts with a relation of this resource.',
             $this->keys->includeUses($value) > 1 => 'The :attribute is already used by another include.',
+            $this->keys->aggregateUses($value) > 0 => 'The :attribute is already used by an aggregate.',
             default => null,
         };
     }

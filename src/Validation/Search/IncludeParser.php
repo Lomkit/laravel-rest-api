@@ -71,6 +71,10 @@ final readonly class IncludeParser
             new IncludeAlias($keys, $name ?? ''),
         ]);
 
+        if (! $alias->present && $name !== null && $keys->aggregateUses(RowKeys::includeKey($name)) > 0) {
+            $rules->reject(Violation::takenKey($alias->path, RowKeys::includeKey($name)));
+        }
+
         $search = $body?->node(null, null);
 
         if ($name === null || $relations === null || $search === null || ($alias->value !== null && ! is_string($alias->value))) {

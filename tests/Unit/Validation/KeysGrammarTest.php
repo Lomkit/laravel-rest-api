@@ -3,7 +3,9 @@
 namespace Lomkit\Rest\Tests\Unit\Validation;
 
 use Closure;
+use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\Field;
@@ -172,8 +174,10 @@ class KeysGrammarTest extends TestCase
         };
 
         $resource::$model = $model::class;
+        $container = new Container;
+        $container->instance(ConfigRepository::class, new Repository(['rest' => require __DIR__.'/../../../config/rest.php']));
 
-        return $resource->withinContext(new RestContext(new RestRequest, new Container));
+        return $resource->withinContext(new RestContext(new RestRequest, $container));
     }
 
     private static function model(string $keyType): Model

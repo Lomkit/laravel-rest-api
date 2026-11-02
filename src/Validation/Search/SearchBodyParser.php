@@ -68,14 +68,14 @@ final readonly class SearchBodyParser
     public function node(?TextQuery $text, ?Trashed $trashed): SearchNode
     {
         $context = $this->context;
-        $keys = RowKeys::of($context, $this->lists['includes'] ?? []);
+        $keys = RowKeys::of($context, $this->lists['includes'] ?? [], $this->lists['aggregates'] ?? []);
 
         return new SearchNode(
             filters: $context->grammar->filters($this->lists['filters'] ?? [], $context),
             scopes: $context->grammar->scopes($this->lists['scopes'] ?? [], $context),
             sorts: (new SortParser)->parse($this->lists['sorts'] ?? [], $this->sorts, $context),
             selects: $this->selects(),
-            aggregates: (new AggregateParser)->parse($this->lists['aggregates'] ?? [], $context),
+            aggregates: (new AggregateParser)->parse($this->lists['aggregates'] ?? [], $context, $keys),
             includes: (new IncludeParser)->parse($this->lists['includes'] ?? [], $context, $keys),
             instructions: (new InstructionParser)->parse($this->lists['instructions'] ?? [], $context),
             text: $text,
