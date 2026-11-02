@@ -25,7 +25,7 @@ final readonly class DefaultOrderClause implements Clause
         $orders = $this->resource->defaultOrderBy($this->resource->context()->request);
 
         foreach ($orders as $column => $order) {
-            $query->orderBy($model->getTable().'.'.$column, $order);
+            $query->orderBy($model->qualifyColumn($column), $order);
         }
     }
 }
