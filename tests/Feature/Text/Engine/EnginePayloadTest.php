@@ -5,7 +5,9 @@ namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Http\Requests\SearchRequest;
+use Lomkit\Rest\Search\FlatFilter;
 use Lomkit\Rest\Search\RelevanceSort;
+use Lomkit\Rest\Search\SearchContext;
 use Lomkit\Rest\Search\SortNode;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\PayloadReadingSearchRequest;
 use Lomkit\Rest\Text\Engine\EngineFilterCondition;
@@ -74,6 +76,42 @@ class EnginePayloadTest extends EngineSearchTestCase
         return [
             'an index attribute' => [[['field' => 'price']], [[EngineSort::class, 'price', SortDirection::Asc]]],
             'the relevance order' => [[['field' => '@relevance']], [[RelevanceSort::class, SortDirection::Desc]]],
+        ];
+    }
+
+    /**
+     * @param  list<array<string, string>>  $sorts
+     * @param  list<bool>  $sorted
+     */
+    #[Test]
+    #[DataProvider('contextSorts')]
+    public function it_builds_the_search_context_of_an_engine_search(array $sorts, array $sorted): void
+    {
+        $response = $this->search('vouchers', [
+            'text' => ['value' => 'report'],
+            'filters' => [['field' => 'number', 'operator' => '>=', 'value' => 3]],
+            'sorts' => $sorts,
+        ]);
+
+        $response->assertOk();
+        $this->assertNotNull(PayloadReadingSearchRequest::$read);
+
+        $context = SearchContext::of(PayloadReadingSearchRequest::$read);
+
+        $this->assertSame([['number', '>=', 3, true]], array_map(
+            fn (FlatFilter $filter): array => [$filter->path, $filter->operator->value, $filter->value, $filter->exists],
+            $context->filters,
+        ));
+        $this->assertSame($sorted, [$context->sortsOn('price'), $context->sortsOn('@relevance')]);
+        $this->assertSame('report', $context->text?->value);
+    }
+
+    /** @return array<string, array{list<array<string, string>>, list<bool>}> */
+    public static function contextSorts(): array
+    {
+        return [
+            'an index attribute' => [[['field' => 'price', 'direction' => 'desc']], [true, false]],
+            'the relevance order' => [[['field' => '@relevance']], [false, true]],
         ];
     }
 }

@@ -412,6 +412,22 @@ Query builder and requests:
 - `Builder` loses `applyFilters()`, `applySorts()`, `scope()`, `applyScopes()`, `instruction()`, `applyInstructions()`, `include()`, `includeAliased()`, `applyIncludes()`, `aggregate()`, `applyAggregates()`, `disableDefaultLimit()`, `newQueryBuilder()` and `searchKeys()`. The `Lomkit\Rest\Query\Traits\PerformSearch` and `SearchesKeys` traits are removed, and `EloquentQueryBuilder` no longer declares `searchKeys()`.
 - The clauses of `Lomkit\Rest\Query\Clauses` are built from the nodes of `payload()`: `FilterGroupClause::of()`, `RelationGroupClause::of()`, `SortClause::of()`, `TrashedClause::of()`, `ScopeClause::of()`, `InstructionClause::of()` and `AggregateClause::of()`. `fromPayload()`, `fromSort()`, `fromAggregate()`, `RelevanceClause::requestedBy()` and `RelevanceClause::fromSort()` are removed.
 - `beforeSearch()` and `beforeOperate()` run after validation. An edit of the `search` input there no longer changes the rows, the page or the page size of a search, nor the rows that an action runs on, on the database or on a search engine. Read the search with `$request->payload()`.
+- `SearchRequest::searchContext()` returns a `Lomkit\Rest\Search\SearchContext`, built once from `payload()`, for checks that read several parts of a search. Its `filters` list each filter as a `Lomkit\Rest\Search\FlatFilter` with its `path`, `operator`, `value` and `exists`: the filters of nested groups come with the others, a filter of a relation group takes the relation as a prefix (`posts.status`), and `exists` is `false` under a relation group whose `exists` is `false`. `filtersOn($path)` and `sortsOn($field)` tell whether the search filters or sorts on a name, `scopes()` and `includes()` list the names of its scopes and includes, and `text` and `trashed` hold those parts of the search. Like `payload()`, it throws a `LogicException` before the request passed validation. To refuse a search, throw a `ValidationException` from `beforeSearch()`: the response is a 422, and the search does not run.
+
+  ```php
+  use Illuminate\Validation\ValidationException;
+  use Lomkit\Rest\Http\Requests\SearchRequest;
+
+  protected function beforeSearch(SearchRequest $request): void
+  {
+      $search = $request->searchContext();
+
+      if ($search->filtersOn('starts_at') && ! $search->filtersOn('ends_at')) {
+          throw ValidationException::withMessages(['search.filters' => 'A starts_at filter needs an ends_at filter.']);
+      }
+  }
+  ```
+
 - A `SearchRequest` subclass whose `failedValidation()` does not throw gets the `LogicException` of `payload()` when the search runs: "The search was read before the request passed validation."
 - An include that a dotted include goes through, such as `posts` next to `posts.author`, keeps its filters, sorts, scopes, instructions, limit, includes, aggregates and the `searchQuery()` of its resource whatever their order in `includes`. Before, it lost them when it was listed first.
 - `OperationNode::search()` returns the search of the action, empty when it is not sent. `DispatchAction::modelsQuery(SearchNode $search)` takes it. `Lomkit\Rest\Query\EngineSearch` takes the search as a third constructor argument and reads it: `paginate()` and `query()` take no argument, and `rows(array $keys)` loads the rows of a page.
