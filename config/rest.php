@@ -43,7 +43,9 @@ return [
     | that no field or include uses.
     |
     | "names" renames the answers. Each key is the default name of an
-    | answer. A resource can turn gates off with the DisableGates trait.
+    | answer: "authorized_to_" and the ability in snake case. Add a key to
+    | rename a gate that a resource declares in gates(). A resource can
+    | turn gates off with the DisableGates trait.
     |
     */
 

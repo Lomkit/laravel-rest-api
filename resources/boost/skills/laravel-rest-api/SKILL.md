@@ -50,7 +50,7 @@ Use this skill when working with the `lomkit/laravel-rest-api` package — build
   ```
 
 - **Soft-delete endpoints**: opt-in `restore` and `force` routes via `->withSoftDeletes()` chained on `Rest::resource(...)`.
-- **Authorization**: automatic per-model Policy checks (`viewAny`, `view`, `create`, `update`, `delete`, `restore`, `forceDelete`, `attach{Model}`, `detach{Model}`) plus client-requested per-row `gates`. Class-level checks (`viewAny` of every reached resource, `create`) run before validation, so a denied check answers `403` before any `422`.
+- **Authorization**: automatic per-model Policy checks (`viewAny`, `view`, `create`, `update`, `delete`, `restore`, `forceDelete`, `attach{Model}`, `detach{Model}`) plus client-requested per-row `gates`, with the abilities that a resource declares in `gates()`. Class-level checks (`viewAny` of every reached resource, `create`) run before validation, so a denied check answers `403` before any `422`.
 - **Custom Response**: override the output shape per Resource via `public static string $response = UserResponse::class;`. Generate with:
 
   ```bash
@@ -100,7 +100,7 @@ php artisan rest:resource UserResource --model=User
 php artisan rest:resource UserResource --model=User --generate   # one field per column of the users table, plus the relations that have a resource
 ```
 
-Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $request`, so any list can be conditionally narrowed by user/permission). `fields()`, `relations()`, `scopes()`, `limits()`, `actions()`, `instructions()` and `text()` run once per request, the first time the package reads them, and the resource keeps nothing between requests:
+Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $request`, so any list can be conditionally narrowed by user/permission). `fields()`, `relations()`, `scopes()`, `limits()`, `actions()`, `instructions()`, `text()` and `gates()` run once per request, the first time the package reads them, and the resource keeps nothing between requests:
 
 - `fields()` — list of typed `Lomkit\Rest\Fields\*` objects the client may select / filter / sort / mutate on: `ID`, `Text`, `Number`, `Integer`, `Boolean`, `Date`, `DateTime`, `Enum`, `Json`, or an app type extending `Field`. Strings and duplicate names throw `InvalidFieldException`. `getFields($request)` returns a `FieldSet`; `->names()` gives the list of names.
 
@@ -191,6 +191,7 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
 - `actions()` — `Lomkit\Rest\Actions\Action` instances exposed under `/actions/{uriKey}`.
 - `instructions()` — `Lomkit\Rest\Instructions\Instruction` instances exposed under the `instructions` search key.
 - `text(RestRequest $request): ?\Lomkit\Rest\Text\TextSearch` — the text search strategy of `search.text` (`Contains::make()`, `FullText::make()` or `ScoutEngine::make()`), `null` by default (no text search). See "Text search" and "Search engines" below.
+- `gates(RestRequest $request): array` — the names of extra policy methods that `search.gates` accepts next to the built-in abilities, `[]` by default. See "2. Gates" below.
 - `rules(RestRequest $request): array`, `createRules(...): array`, `updateRules(...): array` — resource-level rules applied during mutate, for rules that compare attributes and for nested keys (`metadata.source`). Put the rules of one attribute on its field instead. Each key gets one list: the field rules, then `createRules()` (on `create`) or `updateRules()` (on `update`, `sync`, `toggle`), then `rules()`; pipe strings are split first. The three methods are read once per request, so every entry shares the rule objects they return. For a rule that depends on the entry, use `\Lomkit\Rest\Mutations\Contextual::rule(fn (MutationContext $mutation) => Rule::unique(Post::class, 'title')->ignore($mutation->key))` or a rule object that implements `\Lomkit\Rest\Mutations\MutationAwareRule` (`setMutation(MutationContext $mutation): static`, called on a clone per entry); `MutationContext` holds the `operation`, `key` and `depth` of the entry. A `Rule::when()` condition reads the attributes of its entry. The same holds for field rules.
 - `defaultOrderBy()` — default sort (defaults to the model key in descending order, `[$model->getKeyName() => 'desc']`); a column may name its table (`posts.views`).
 - Resource hooks (model-lifecycle): `mutating`, `mutated`, `destroying`, `destroyed`, `forceDestroying`, `forceDestroyed`, `restoring`, `restored`. Signatures: `mutating(MutateRequest $request, array $requestBody, Model $model): void`; the others take the endpoint's request and the model, e.g. `destroying(DestroyRequest $request, Model $model): void`.
@@ -282,7 +283,7 @@ Rest::resource('posts', PostsController::class)
 
 | Method | URI | Endpoint | Purpose |
 | --- | --- | --- | --- |
-| `GET` | `/users` | `details` | Schema for the resource (fields, relations, scopes, limits, actions, instructions, rules, text search) |
+| `GET` | `/users` | `details` | Schema for the resource (fields, relations, scopes, limits, actions, instructions, rules, text search, gates) |
 | `POST` | `/users/search` | `search` | Filterable/sortable/paginated read |
 | `POST` | `/users/mutate` | `mutate` | Batch create/update + relation operations |
 | `POST` | `/users/actions/{action}` | `operate` | Run a custom action (`{action}` is its `uriKey`) |
@@ -294,7 +295,7 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
 
 ## `details` endpoint
 
-`GET /api/artworks` describes the resource. It lists what the declarations of the resource (`fields()`, `relations()`, `scopes()`, `actions()`, `instructions()`, the rules methods and `text()`) return for the current request, which can depend on `$request->user()`. It checks `viewAny` only and applies no policy to the entries. With a `collector` morph-map alias:
+`GET /api/artworks` describes the resource. It lists what the declarations of the resource (`fields()`, `relations()`, `scopes()`, `actions()`, `instructions()`, the rules methods, `text()` and `gates()`) return for the current request, which can depend on `$request->user()`. It checks `viewAny` only and applies no policy to the entries. With a `collector` morph-map alias:
 
 ```json
 {"data": {
@@ -326,7 +327,8 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
      "types": {"collector": "App\\Rest\\Resources\\CollectorResource"},
      "morph": {"type_column": "owner_type", "key_column": "owner_id"}}],
   "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
-  "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null}
+  "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null},
+  "gates": ["view", "create", "update", "delete", "restore", "forceDelete"]
 }}
 ```
 
@@ -334,8 +336,9 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
 - `rules` holds the resource rules (`rules()`, `createRules()`, `updateRules()`), keyed by attribute, as lists of strings.
 - `relations`: `resource` is the class name of the related resource, and `name` is the short class name of the relation (or its `$name`). Many-to-many relations (every `PivotRelation`) add `pivot_fields`: `create` means `create` and `attach`, `update` means `update`, `sync` and `toggle`, `select` means returned in the `pivot` of an included row, `filter.operators` applies to `<relation>.pivot.<field>` filters, and `sort` is always `false`. When the model method is not an Eloquent many-to-many relation, `select` is `false` and `filter.operators` is `[]`. `MorphTo` adds `types` (each morph type, the morph-map alias or the model class, mapped to its resource class) and `morph` (`type_column`, `key_column`). Detect `pivot_fields`, `types` and `morph` by their presence, not by `name`.
 - `text` is `null` without `text()`. Otherwise: `fields` (the searchable fields, `[]` on `ScoutEngine`), `modes`, `relevance` (`@relevance` accepted with a text), `trashed` (`search.trashed` accepted with a text), `max_length`, and `engine`, `null` on `Contains` and `FullText`. On `ScoutEngine`, `engine` holds `filters` (the `filterable()` attributes with `name`, `type`, `operators`, and `values` for an `Enum`; never the perimeter attributes), `sorts`, `max_sorts`, `max_page_size` and `window` (`null` when unbounded). With a filled text on `ScoutEngine`, `text.engine` replaces the `sort` and `filter` of the field entries, within the grammar of [Search engines](#search-engines).
+- `gates` lists the abilities that `search.gates` accepts: `view`, `create`, `update`, `delete`, `restore`, `forceDelete`, then the names that `gates()` declares. It is `[]` with `DisableGates`.
 - `actions`, `instructions` and `relations` are lists, also when a declaration method returns a keyed array. Maps are objects, also when empty (`"meta": {}`, `"all": {}`). Ignore unknown keys: later releases can add keys.
-- A declaration error also throws on `details`: `InvalidTextSearchException` for the text search, `InvalidResourceException` for a `MorphTo` whose model method is not a `MorphTo`, `InvalidFieldException` for an `Enum` field without an enum class or cast, `BadMethodCallException` for a many-to-many relation or a `MorphTo` without its model method.
+- A declaration error also throws on `details`: `InvalidTextSearchException` for the text search, `InvalidResourceException` for a `MorphTo` whose model method is not a `MorphTo` or an invalid name in `gates()`, `InvalidFieldException` for an `Enum` field without an enum class or cast, `BadMethodCallException` for a many-to-many relation or a `MorphTo` without its model method.
 
 The `fields` of actions, instructions and scopes take `rules()` only: declaring `creationRules()` or `updateRules()` on them throws `InvalidFieldException` when the fields are built. They are described as input entries, which a frontend can render as a form:
 
@@ -403,7 +406,7 @@ Frontends typically call `details` once to drive form rendering, then `search`/`
 **`page`** is an integer of at least `1`; `limit` must be one of the resource's `limits()`.
 **`includes`** accept `relation`, `alias`, `filters`, `sorts`, `scopes`, `instructions`, `aggregates`, `selects`, `gates`, `limit` and `includes`; `page`, `text` and `trashed` are a `422`. They nest up to `rest.limits.depths.includes` levels (default `3`), and each relation of a dotted include counts toward it (`author.posts` takes two levels). Includes and aggregates always run in SQL, so they are validated against the related resource's fields and operators, also next to `text`; a missing or undeclared `relation` is a `422`. A row returns only the relations the search includes: a relation that the model loads itself (`$with`, a hook) stays loaded for policies, hooks and `map()` but is not returned. A `MorphTo` include returns each target with its type first, under `@type` (`rest.morph.type_key`): the morph-map alias or the class name of its model. A row whose stored type is not the type of the declared resource returns `null`, with no query. Filters, aggregates and nested includes apply on the target query; its `limit` and `sorts` have no effect, and it comes after the includes without an alias in the row.
 **Include `alias`** renames the response key for that include, which lets the same relation appear several times under different constraints. It must look like an identifier (`^[A-Za-z_][A-Za-z0-9_]*$`), be unique across the includes, and not collide with a field, a relation, the key of an aggregate or of another include, the gates key of the resource, the type key inside a `MorphTo` include, or the pivot key inside a many-to-many include. An include without alias whose key is the name of a field needs an alias. It is used verbatim — no snake_casing — and is rejected on a dotted relation path (use a nested include there).
-**`gates`** asks the server to evaluate the listed policy abilities per row and embed the result under the configured key (default `gates`). Each answer is `{"allowed": bool, "message": string|null}`, the message coming from a `Response::deny('...')` of the policy, and the `create` answer goes to `meta`. A row without answers (`"gates": []`, or `create` alone) returns `{}`. It takes `view`, `create`, `update`, `delete`, `restore` and `forceDelete`, each once: `viewAny`, another name or a repeated one is a `422` under `search.gates.{index}`, and `create` is a `422` inside an include.
+**`gates`** asks the server to evaluate the listed policy abilities per row and embed the result under the configured key (default `gates`). Each answer is `{"allowed": bool, "message": string|null}`, the message coming from a `Response::deny('...')` of the policy, and the `create` answer goes to `meta`. A row without answers (`"gates": []`, or `create` alone) returns `{}`. It takes `view`, `create`, `update`, `delete`, `restore`, `forceDelete` and the gates that the resource of the level declares in `gates()`, each once: `viewAny`, another name or a repeated one is a `422` under `search.gates.{index}`, and `create` is a `422` inside an include.
 **`text`** runs the text search of the resource, see "Text search" below: `{"value": "desk lamp", "mode": "phrase"}`, `value` at most 255 characters. A blank, `null` or missing `text.value` runs the normal search and returns the normal list. A resource that declares no `text()` refuses `text` with a `422`. `viewAny` is checked before any search runs.
 **`trashed`** (`with` adds the soft-deleted rows, `only` returns them alone) works with and without `text`, on a model that uses `SoftDeletes` only (a `422` otherwise), and not in includes. Next to a filled text on a `ScoutEngine` resource, it also needs `scout.soft_delete` set to `true`. `text.trashed` is a `422`.
 **List limits** (`rest.limits`, at every level of the search): `sizes.filters` (default `100`) applies to `search.filters`, to each `nested` list and to the `filters` of includes and aggregates; `totals.filters` (default `500`) counts every filter of one search, at every depth and in its includes and aggregates; `sizes.values` (default `100`) applies to the values of `in`, `not in`, `between` and `not between`. `sorts`, `selects`, `scopes`, `aggregates`, `includes`, `instructions` and the `fields` of an instruction have their own limit in `sizes`; `gates` takes each ability once. Next to a search engine text, `sizes.sorts` also stays within what the engine runs. `totals.entries` (default `1000`) counts the entries of every list that takes a `rest.limits.sizes` value in one request, `gates`, `mutate` and the `fields` of actions included, except `resources`; the `parameters` of a scope keep their own limit, one value per field of the scope. A list over its limit is a `422` on its own key (`The search.filters field must not have more than 100 items.`), and nothing under it is validated or checked. A total gives `The search.filters.0.nested field goes over the limit of 500 filters in one search.` or `... goes over the limit of 1000 list entries in one request.` on the list that goes over it.
@@ -788,6 +791,17 @@ When the client passes `"gates": [...]` in `search`, the listed abilities are ev
 
 Each answer is `{allowed, message}`, where `message` comes from a `Response::deny('...')` returned from the policy method, or `null`; in a custom response, `map()` reads the answers of a row as an object. Use the `\Lomkit\Rest\Concerns\Resource\DisableGates` trait on a resource to turn its gates off, or on the base resource `app/Rest/Resources/Resource.php` for every resource; there is no config switch.
 
+A resource declares more gates, as policy methods that receive the user and the model:
+
+```php
+public function gates(RestRequest $request): array
+{
+    return ['download'];
+}
+```
+
+Clients list `download` in `gates` next to the built-in abilities, at every level of that resource, and each row answers `authorized_to_download` (renamed in `rest.gates.names` like the others) from `download($user, $model)` on the policy. A declared gate is row-level only, never in `meta`, and a policy without the method denies it. A name is camelCase, listed once, neither `viewAny` nor a built-in ability: another value throws `InvalidResourceException` when the gates are first read (details, or a search with `gates`). The details list every accepted gate under `gates`.
+
 ## Custom Response
 
 `php artisan rest:response UserResponse` scaffolds a class with a `map($model, $responseModel)` method that returns the array shape sent to the client. `map()` is the only method to override: it receives each row of the page or the list as the package rendered it from the search (`selects`, `gates`, `aggregates`, `includes`), and the package builds the rest of the response. Assign on the Resource:
@@ -808,7 +822,7 @@ composer require dedoc/scramble:^0.13
 
 The package registers the extension itself: `config/scramble.php` needs no change.
 
-Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The search `filters` list the filterable fields (dotted paths are not listed) and every `FilterOperator`. The search `text` (with the `mode`s of its strategy), `trashed` (on `SoftDeletes` models) and the `@relevance` sort only appear on the resources that support them. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`. Relations come from the relation objects of `relations()` (their class name, `mutationOperations()` and number of entries), and the `pivot` of a many-to-many entry lists the writable pivot fields with their rules for `create` and `attach`, then `update`, `sync` and `toggle`. The details response is documented with its entries: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, and the input entries of actions, instructions and scopes.
+Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The search `filters` list the filterable fields (dotted paths are not listed) and every `FilterOperator`. The search `text` (with the `mode`s of its strategy), `trashed` (on `SoftDeletes` models) and the `@relevance` sort only appear on the resources that support them. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`. Relations come from the relation objects of `relations()` (their class name, `mutationOperations()` and number of entries), and the `pivot` of a many-to-many entry lists the writable pivot fields with their rules for `create` and `attach`, then `update`, `sync` and `toggle`. The details response is documented with its entries: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, and the input entries of actions, instructions and scopes.
 
 ## Precognition
 

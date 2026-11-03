@@ -23,7 +23,7 @@ final class DetailsResponseType
         $schema->type = DetailsEntryTypes::objectOf(['data' => self::data()]);
 
         $response = new Response(200);
-        $response->setDescription('The fields, relations, scopes, actions, instructions, rules and text search of the resource');
+        $response->setDescription('The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource');
         $response->setContent('application/json', $schema);
 
         $operation->responses = [
@@ -46,6 +46,7 @@ final class DetailsResponseType
             'relations' => DetailsEntryTypes::listOf(self::relation()),
             'rules' => self::rules(),
             'text' => self::text(),
+            'gates' => DetailsEntryTypes::listOf(new StringType, 'The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off'),
         ]);
     }
 

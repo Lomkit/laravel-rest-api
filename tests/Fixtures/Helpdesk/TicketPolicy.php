@@ -38,6 +38,18 @@ class TicketPolicy extends RecordingPolicy
         return $user?->getAuthIdentifier() === self::LEAD ? Response::allow() : Response::deny('Only the helpdesk lead deletes tickets.');
     }
 
+    public function escalate(?Authenticatable $user, Ticket $ticket): Response
+    {
+        $this->record('escalate '.$ticket->getKey());
+
+        return $ticket->getAttribute('status') === 'closed' ? Response::deny('Closed tickets are not escalated.') : Response::allow();
+    }
+
+    public function reassignTeam(?Authenticatable $user, Ticket $ticket): bool|Response
+    {
+        return $this->record('reassignTeam '.$ticket->getKey());
+    }
+
     public function attachTag(?Authenticatable $user, Ticket $ticket, Tag $tag): Response
     {
         $this->record('attachTag '.$ticket->getKey().' '.$tag->getKey());

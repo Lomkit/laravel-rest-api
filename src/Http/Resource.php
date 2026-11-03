@@ -116,6 +116,7 @@ class Resource implements \JsonSerializable
             'relations' => array_values(array_map(fn (Relation $relation): mixed => $relation->jsonSerialize(), $this->getRelations($request))),
             'rules' => ResourceRuleDetails::of($this, $request)->jsonSerialize(),
             'text' => $this->context()->text($this)->capabilities?->jsonSerialize(),
+            'gates' => $this->isGatingEnabled() ? $this->context()->definition($this)->gates()->names() : [],
         ];
     }
 }

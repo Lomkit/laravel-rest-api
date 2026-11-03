@@ -46,7 +46,7 @@ The keys that change:
 | `morph.type_key` | Added. `@type` by default, see [Responses](#responses). |
 | `gates.message.enabled` | Removed. Each answer of `gates` holds `allowed` and `message`, see [Responses](#responses). |
 
-`authorizations.cache.default`, `gates.key`, `gates.names` and `precognition.enabled` keep their name and their default. The blocks are now in this order: `authorizations`, `gates`, `morph`, `limits`, `precognition`.
+`authorizations.cache.default`, `gates.key`, `gates.names` and `precognition.enabled` keep their name and their default. `gates.names` also renames the gates that a resource declares, by their default name, such as `'authorized_to_download' => 'can_download'`, see [Responses](#responses). The blocks are now in this order: `authorizations`, `gates`, `morph`, `limits`, `precognition`.
 
 Before, in the file that 2.x published, without its comments and its `documentation` block:
 
@@ -200,7 +200,7 @@ These items change:
 
 ### Resource definitions
 
-A resource holds no request state. Its context evaluates `fields()`, `scopes()`, `relations()`, `instructions()`, `actions()`, `limits()` and `text()` once per request, when they are first read, and keeps the results until the request ends. The next request evaluates them again, with its own user.
+A resource holds no request state. Its context evaluates `fields()`, `scopes()`, `relations()`, `instructions()`, `actions()`, `limits()`, `text()` and `gates()` once per request, when they are first read, and keeps the results until the request ends. The next request evaluates them again, with its own user.
 
 - The `calculatedFields`, `calculatedScopes`, `calculatedRelations`, `calculatedInstructions`, `calculatedActions`, `calculatedLimits`, `calculatedScoutFields` and `calculatedScoutInstructions` properties of resources are removed. Read the declarations with `getFields()`, `getScopes()`, `getRelations()`, `getInstructions()`, `getActions()` and `getLimits()`. They still take a request, but they evaluate the declarations with the request of the resource's context, whatever request they receive. `getScoutFields()`, `getScoutInstructions()` and `scoutInstruction()` are removed with the declarations they read, and so is the `Lomkit\Rest\Concerns\Resource\Scoutable` trait, see [Search engines](#search-engines).
 - A serialized resource holds its own properties and an empty context, without its declarations. A queued or batched action therefore evaluates them again in the worker, where the request has no user: declarations that depend on the user see a guest there. Closures in the declarations, such as field rules, scope fields, relation constraints, or actions and instructions built with closures, stay out of the queued job. The action that runs and the field values it receives are still serialized with the job, so they cannot hold closures.
@@ -949,11 +949,22 @@ Gates:
   Before, each answer was `true` or `false` unless `gates.message.enabled` was `true`, and that format triggered a deprecation. `gates.message.enabled` and `Lomkit\Rest\Config\RestConfig::$gateMessages` are removed, see [Configuration](#configuration).
 - A row whose `gates` hold no answer returns `{}`: with `"gates": []`, or with `create` alone, whose answer goes to `meta`. Before, it returned `[]`. A search without `gates` returns no `gates` key, and `meta` stays `[]` without the `create` gate, as before.
 - `map()` receives the answers of a row as an object (`stdClass`) whose properties are the names of the answers: read `$responseModel['gates']->authorized_to_view['allowed']`. Before, it received an array.
-- `gates` takes the abilities `view`, `create`, `update`, `delete`, `restore` and `forceDelete`, each once. `viewAny`, another name or a value that is not a string gives a 422 under its entry, `The selected search.gates.0 is invalid.`, and an ability listed twice gives `The search.gates.0 field has a duplicate value.` on each copy. Before, `viewAny` was accepted and never answered, a repeated ability was answered once, and another name gave the 422 on the whole list, `The selected search.gates is invalid.`
+- `gates` takes the abilities `view`, `create`, `update`, `delete`, `restore` and `forceDelete`, and the gates that the resource of its level declares (below), each once. `viewAny`, another name or a value that is not a string gives a 422 under its entry, `The selected search.gates.0 is invalid.`, and an ability listed twice gives `The search.gates.0 field has a duplicate value.` on each copy. Before, `viewAny` was accepted and never answered, a repeated ability was answered once, and another name gave the 422 on the whole list, `The selected search.gates is invalid.`
 - `create` is accepted at the root of a search only, since its answer goes to `meta`. In an include, at any depth, it gives a 422 under its entry: `The search.includes.0.gates.0 field is prohibited.` Before, it was accepted and left out of the response.
 - The search of an action checks `gates` the same way, and the action still returns no answer.
 - A `gates` list has no size limit of its own: it holds each ability once at most, and its entries still count in `limits.totals.entries`. `limits.sizes.gates` and `Lomkit\Rest\Validation\ListSizes::$gates` are removed.
-- `Lomkit\Rest\Search\SearchNode::$gates` and `Lomkit\Rest\Search\Plan\QueryPlan::$gates` hold `Lomkit\Rest\Search\GateAbility` objects instead of strings. A `GateAbility` holds an `ability`, a case of the `Lomkit\Rest\Authorization\Ability` enum, and gives the ability that the policy answers (`name()`), the default name of its answer (`key()`, such as `authorized_to_force_delete`) and whether its answer goes to `meta` (`isClassLevel()`). `Lomkit\Rest\Validation\Search\GatesParser` reads `gates`.
+- `Lomkit\Rest\Search\SearchNode::$gates` and `Lomkit\Rest\Search\Plan\QueryPlan::$gates` hold `Lomkit\Rest\Search\GateAbility` objects instead of strings. A `GateAbility` holds an `ability`: a case of the `Lomkit\Rest\Authorization\Ability` enum, or the name of a declared gate (`new GateAbility('create')` holds `Ability::Create`). It gives the ability that the policy answers (`name()`), the default name of its answer (`key()`, such as `authorized_to_force_delete`) and whether its answer goes to `meta` (`isClassLevel()`). `Lomkit\Rest\Validation\Search\GatesParser` reads `gates` and accepts the gates of the `Lomkit\Rest\Search\GateVocabulary` that `$resource->context()->definition($resource)->gates()` returns.
+- A resource declares more gates in `gates(RestRequest $request): array`, which returns the names of policy methods:
+
+  ```php
+  public function gates(RestRequest $request): array
+  {
+      return ['download'];
+  }
+  ```
+
+  A search of that resource then accepts `download` in `gates`, at the root and in each include of that resource, and each row answers it under `authorized_to_download`, the name in snake case, from the `download()` method of the policy, which receives the user and the model. `gates.names` renames it like the other answers. A declared gate is answered on each row, never in `meta`. A policy without the method denies it, with a `null` message, as Laravel does: the package does not read the policies. Each answer goes through `authorizedTo()`, so the policy runs once per row and gate in a request.
+- A declared name is the camelCase name of a policy method, listed once, other than `viewAny` and the six abilities above. Another value throws `Lomkit\Rest\Exceptions\InvalidResourceException` when the gates of the resource are first read: by the details, or by a search that lists `gates`. A resource that already defines a method named `gates()` must give it this signature.
 
 ### Selects, sorts and aggregates
 
@@ -1246,7 +1257,7 @@ Scramble:
 
 ### Details
 
-The details endpoint, `GET /{resource}`, describes the resource with typed entries. Its keys are `actions`, `instructions`, `fields`, `limits`, `scopes`, `relations`, `rules` and `text`. An excerpt:
+The details endpoint, `GET /{resource}`, describes the resource with typed entries. Its keys are `actions`, `instructions`, `fields`, `limits`, `scopes`, `relations`, `rules`, `text` and `gates`. An excerpt:
 
 ```json
 {"data": {
@@ -1310,12 +1321,16 @@ Text search:
 - On `ScoutEngine`, `engine` describes the search with a filled text. `filters` lists the `filterable()` attributes with their `name`, `type` and `operators`, and `values` for an `Enum`. The perimeter attributes are not listed. `sorts` lists the `sortable()` attributes. `max_sorts`, `max_page_size` and `window` are the limits of the engine, `null` when it has none. `max_sorts` is `0` when only `@relevance` is accepted.
 - With a filled text on `ScoutEngine`, `text.engine` replaces the `sort` and `filter` of the field entries. The rest of the grammar is described under [Search engines](#search-engines).
 
+Gates:
+
+- `gates` is a new key. It lists the abilities that `search.gates` accepts on the resource: `view`, `create`, `update`, `delete`, `restore` and `forceDelete`, then the gates that `gates()` declares, see [Responses](#responses). It is `[]` when the resource uses `DisableGates`.
+
 Behaviour:
 
 - Empty maps are `{}`: the `meta` of every entry, input entries, actions, instructions and scopes included, and the maps of `rules`. Lists stay `[]`.
 - Details builds every field entry, the pivot fields and the text search, so it now throws where it listed names:
   - `Lomkit\Rest\Exceptions\InvalidTextSearchException` for a text search declaration error, as on the first search;
-  - `Lomkit\Rest\Exceptions\InvalidResourceException` for a `MorphTo` whose model method does not return a `MorphTo` relation;
+  - `Lomkit\Rest\Exceptions\InvalidResourceException` for a `MorphTo` whose model method does not return a `MorphTo` relation, or for an invalid name in `gates()`;
   - `Lomkit\Rest\Exceptions\InvalidFieldException` for an `Enum` field or pivot field with no enum class and no enum cast;
   - `BadMethodCallException` for a many-to-many relation or a `MorphTo` whose model method is missing.
 - Details checks `viewAny` only and applies no policy to the entries. It lists what the declarations of the resource return for the current request, which can depend on `$request->user()`.
@@ -1323,7 +1338,7 @@ Behaviour:
 
 Scramble:
 
-- Scramble documents the details response: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, and the input entries of actions, instructions and scopes.
+- Scramble documents the details response: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, and the input entries of actions, instructions and scopes.
 
 ### Framework integration
 

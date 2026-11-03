@@ -36,4 +36,10 @@ class TicketResource extends Resource
     {
         return [CloseTickets::make(), RefreshTickets::make(), ImportTickets::make(), ReportOutage::make(), WatchTickets::make()];
     }
+
+    #[\Override]
+    public function gates(RestRequest $request): array
+    {
+        return ['escalate', 'reassignTeam', 'archive'];
+    }
 }
