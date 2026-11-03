@@ -41,12 +41,13 @@ The keys that change:
 | `authorizations.strict` | Added. `false` by default, or the value of `REST_AUTHORIZATIONS_STRICT`. |
 | `authorizations.cache.enabled` | Its default goes from `true` to `false`, or the value of `REST_AUTHORIZATIONS_CACHE_ENABLED`. |
 | `limits` | Added, in three groups: `sizes`, `depths` and `totals`. |
-| `search.max_nesting_depth` | Moved to `limits.depths.filters`. The `search` block is removed. |
+| `search.max_nesting_depth` | Moved to `limits.depths.filters`. |
 | `documentation` | Removed with the documentation generator. |
 | `morph.type_key` | Added. `@type` by default, see [Responses](#responses). |
+| `search.select_columns` | Added. `true` by default, see [Selects, sorts and aggregates](#selects-sorts-and-aggregates). |
 | `gates.message.enabled` | Removed. Each answer of `gates` holds `allowed` and `message`, see [Responses](#responses). |
 
-`authorizations.cache.default`, `gates.key`, `gates.names` and `precognition.enabled` keep their name and their default. `gates.names` also renames the gates that a resource declares, by their default name, such as `'authorized_to_download' => 'can_download'`, see [Responses](#responses). The blocks are now in this order: `authorizations`, `gates`, `morph`, `limits`, `precognition`.
+`authorizations.cache.default`, `gates.key`, `gates.names` and `precognition.enabled` keep their name and their default. `gates.names` also renames the gates that a resource declares, by their default name, such as `'authorized_to_download' => 'can_download'`, see [Responses](#responses). The blocks are now in this order: `authorizations`, `gates`, `morph`, `search`, `limits`, `precognition`.
 
 Before, in the file that 2.x published, without its comments and its `documentation` block:
 
@@ -108,6 +109,10 @@ After, in 3.0:
     'type_key' => '@type',
 ],
 
+'search' => [
+    'select_columns' => true,
+],
+
 'limits' => [
     'sizes' => [
         'filters' => 100,
@@ -149,7 +154,7 @@ Authorizations:
 Limits:
 
 - The `limits` block sets the most entries of each list of a request, how deep filters, includes and relations nest, and two totals. See "Limits" in [Validation engine](#validation-engine) for what each key covers.
-- `search.max_nesting_depth` moved to `limits.depths.filters`, with the same default of 1 and the same meaning. Move its value to the new key and remove the `search` block.
+- `search.max_nesting_depth` moved to `limits.depths.filters`, with the same default of 1 and the same meaning. Move its value to the new key, and remove `max_nesting_depth` from the `search` block, which now holds `select_columns`.
 - `limits.sizes` has no `gates` key: a `gates` list takes each ability once, see [Responses](#responses). Remove `limits.sizes.gates` from your file if it lists it.
 
 Published files:
@@ -161,7 +166,7 @@ Published files:
 Types:
 
 - Each request reads the values once, and checks their type. A value of the wrong type throws an exception that names the key. Before, the values were cast without a check: the string `"false"` turned strict mode, the cache and Precognition on.
-  - `authorizations.strict`, `authorizations.cache.enabled` and `precognition.enabled` take `true`, `false`, or the strings `"1"`, `"0"`, `"true"` and `"false"`. Anything else throws, `null` included: "The [rest.authorizations.strict] option must be a boolean."
+  - `authorizations.strict`, `authorizations.cache.enabled`, `search.select_columns` and `precognition.enabled` take `true`, `false`, or the strings `"1"`, `"0"`, `"true"` and `"false"`. Anything else throws, `null` included: "The [rest.authorizations.strict] option must be a boolean."
   - `authorizations.cache.default` and each value of `limits` take an integer of 0 or more, or a string of digits, as `env()` gives it: "The [rest.limits.sizes.filters] option must be an integer of 0 or more."
   - `gates.key` and `morph.type_key` take a string that is not empty: "The [rest.gates.key] option must be a non-empty string."
   - `gates.names` takes a map of strings that holds the six names above: "The [rest.gates.names] option must be a map of strings." for another value, and "The [rest.gates.names.authorized_to_view] option must be a string." for a missing name or one that is not a string.
@@ -937,7 +942,7 @@ The package renders the rows of a response from the plan of the search: the `sel
 - A paginator that `paginate()` returns renders as a page when it implements `Illuminate\Contracts\Pagination\LengthAwarePaginator`, whatever its class. Before, only an `Illuminate\Pagination\LengthAwarePaginator` did.
 - `Lomkit\Rest\Pagination\LengthAwarePaginator` declares native types: `__construct(array $items, int $total, int $perPage, int $currentPage, array $options = [], array $meta = [])`. Its items are the rendered rows.
 - The classes of `Lomkit\Rest\Http\Serialization` render the rows: `RowSerializer` renders the rows of one level of the plan with `RowFields`, `GateTable`, `RelationRenderer` and `PivotRenderer`, and `PageEnvelope` or `PlainEnvelope` wraps them. Each gate is still read through the `authorizedTo()` of the resource.
-- `RowFields` converts only the columns that a row returns: the casts, the accessors and the date format of the other attributes of the model no longer run when a row is rendered. The rows do not change.
+- `RowFields` converts only the columns that a row returns: the casts, the accessors and the date format of the other attributes of the model no longer run when a row is rendered, and the appended attributes (`$appends`) never do, see [Selects, sorts and aggregates](#selects-sorts-and-aggregates).
 - A row returns the relations that its search includes, and no other relation. A relation that the model loads by itself, through `$with`, a `with()` in a relation method, `searchQuery()`, a scope, an instruction or a hook, is still loaded, so the policies, the hooks and `map()` can read it, but the response no longer returns it: add it to `includes` to return it. The rows of `destroy`, `restore` and `forceDestroy` return no relation. A loaded relation that the resource does not declare no longer gives a 500. The `pivot` of a row reached through a `BelongsToMany`, `MorphToMany` or `MorphedByMany` include is still returned. Before, each loaded relation was returned with the selectable fields of its resource.
 
 MorphTo includes:
@@ -986,18 +991,38 @@ Gates:
 
 A search reads each field through its declaration: `writeOnly()`, `selectable(false)`, `virtual()` and `resolveUsing()` decide what a row can return, and `sortable()` and `sortUsing()` decide how the field is sorted.
 
+Loaded columns:
+
+- A search loads only the columns that its rows need, at every level: the columns of the returned fields, the key of the model, the columns that a returned field lists in `requires()`, the columns that the resource lists in `alwaysSelect()`, and the keys that its includes need, on the parent row and on the related rows. Before, each query loaded every column (`select *`). The page of a text search run by a search engine and the records of a mutation (see [Writes](#writes)) load their columns the same way. The rows of an action, the rows of `destroy`, `restore` and `forceDestroy`, and the rows that a mutation looks up still load every column. The page of a search engine also loads the column that `getScoutKeyName()` names, which orders it: a `getScoutKey()` that reads another column needs that column in `alwaysSelect()`.
+- A policy, an accessor, an observer, a hook or `map()` that reads a column that the search did not load gets `null`, or a `Illuminate\Database\Eloquent\MissingAttributeException` when the application calls `Model::preventAccessingMissingAttributes()`. List the column in `alwaysSelect()`, or in the `requires()` of the field whose value needs it, or set `search.select_columns` to `false` in `config/rest.php` to load every column again. Call `Model::preventAccessingMissingAttributes()` in your tests to find these reads. For example, for a policy that reads the `status` of a ticket:
+
+  ```php
+  public function alwaysSelect(RestRequest $request): array
+  {
+      return ['status'];
+  }
+  ```
+
+- `alwaysSelect(RestRequest $request): array` returns the columns of the table of the resource that its searches always load, without returning them. It returns `[]` by default. A resource that already defines a method named `alwaysSelect()` must give it this signature.
+- A field that is not a column of the table, such as an accessor or an appended attribute, must be declared `virtual()`, with `resolveUsing()` to return its value: a field that is not virtual is loaded as a column, and the query fails when the table has no such column.
+- The appended attributes of a model (`$appends`) are not evaluated on the rows of a response: an appended value is returned only through a field whose `resolveUsing()` reads it. Before, each appended attribute was evaluated on every row, and a field named like one returned its value.
+- A relation that the model loads by itself, through `$with` or a `with()` in a scope, a global scope, an instruction or `searchQuery()`, still loads: the search adds the keys that it needs on the parent row. A scope or an instruction that calls `select()` keeps its columns, and the search adds its own. A `<table>.*` in that `select()`, alone or next to a subquery such as the count of `$withCount`, is replaced by the columns of the search: list in `alwaysSelect()` the other columns that the application reads. A global scope applies when the query runs, after the search has chosen its columns: a `select()` in a global scope replaces them. A scope that joins another table and reads its columns selects them itself.
+- The columns are qualified with the table of the model, as in `"posts"."title"`. The fields of a row come in the order of `selects`, or in the order of `fields()` without `selects`. Before, they came in the order of the columns of the table, as they still do when `search.select_columns` is `false`.
+- `Lomkit\Rest\Search\Plan\QueryPlan` holds the columns of its level in `$columns`, a `Lomkit\Rest\Search\Plan\Columns\ColumnSet`, or `null` when the level loads every column. `SearchPlanner` builds them with `ColumnSelection` and with `RelationKeys`, which reads the keys of each kind of Eloquent relation, and its constructor takes a `ColumnSelection` after the `RowSource`. `RowSource` and `KeySet` gain `columns(): array`, the columns that the row source reads on each row: a custom row source or key set adds it. `RestConfig` gains `$selectColumns`.
+
 Selects and rows:
 
 - `selects` accepts the selectable fields only. A field declared `writeOnly()` or `selectable(false)`, and a `virtual()` field without `resolveUsing()`, give a 422 under `search.selects.<i>.field`, as an undeclared field does. The `selects` of an include are checked against the fields of the related resource.
 - Without `selects`, a row holds the selectable fields of its resource only, at every level of the includes. A `writeOnly()` field is never returned, by any endpoint: declare `writeOnly()` on a field that clients may write but not read. A `virtual()` field is returned only when it declares `resolveUsing()`.
 - `destroy`, `restore` and `forceDestroy` refuse `search`: an empty array is accepted, and any other `search` gives a 422 under `search`, "The search field is prohibited." for a value that is not empty and "The search field must be an array." for `null` or a blank string. No row is deleted or restored then. Their response holds the selectable fields of each row, without gates or aggregates.
-- `resolveUsing(Closure $callback)` gives a field its value in a row. The callback receives the model of the row, and the response sends the value as the callback returns it: a `Json` field does not decode it. A `virtual()` field with `resolveUsing()` is selectable: `selects` accepts it, a row without `selects` returns it, at every include level, and its details say `"select": true`. A field that is not virtual can declare `resolveUsing()` too: the callback then gives its value instead of the column. In a row, the values of the callbacks come after the columns and the aggregates. The callback runs once for each returned row, so a query in it runs once per row. A `virtual()` field is still sorted and filtered only through `sortUsing()` and `filterUsing()`, and `requires()` has no effect yet.
+- `resolveUsing(Closure $callback)` gives a field its value in a row. The callback receives the model of the row, and the response sends the value as the callback returns it: a `Json` field does not decode it. A `virtual()` field with `resolveUsing()` is selectable: `selects` accepts it, a row without `selects` returns it, at every include level, and its details say `"select": true`. A field that is not virtual can declare `resolveUsing()` too: the callback then gives its value instead of the column. In a row, the values of the callbacks come after the columns and the aggregates. The callback runs once for each returned row, so a query in it runs once per row. A `virtual()` field is still sorted and filtered only through `sortUsing()` and `filterUsing()`. `requires()` lists the columns that the callback reads: they load when the field is returned, see "Loaded columns" above.
 
 ```php
 use Illuminate\Database\Eloquent\Model;
 
 Text::make('display_name')
     ->virtual()
+    ->requires(['first_name', 'last_name'])
     ->resolveUsing(fn (Model $author): string => $author->first_name.' '.$author->last_name),
 ```
 

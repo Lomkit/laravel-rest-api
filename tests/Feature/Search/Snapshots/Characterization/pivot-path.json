@@ -52,6 +52,6 @@
     },
     "raw_queries": [
         "select count(*) as \"aggregate\" from \"tickets\" where (exists (select * from \"tags\" inner join \"tag_ticket\" on \"tags\".\"id\" = \"tag_ticket\".\"tag_id\" where \"tickets\".\"id\" = \"tag_ticket\".\"ticket_id\" and \"tag_ticket\".\"position\" between 1 and 2 and \"tags\".\"deleted_at\" is null))",
-        "select * from \"tickets\" where (exists (select * from \"tags\" inner join \"tag_ticket\" on \"tags\".\"id\" = \"tag_ticket\".\"tag_id\" where \"tickets\".\"id\" = \"tag_ticket\".\"ticket_id\" and \"tag_ticket\".\"position\" between 1 and 2 and \"tags\".\"deleted_at\" is null)) order by \"tickets\".\"id\" desc limit 50 offset 0"
+        "select \"tickets\".\"id\", \"tickets\".\"team_id\", \"tickets\".\"title\", \"tickets\".\"status\" from \"tickets\" where (exists (select * from \"tags\" inner join \"tag_ticket\" on \"tags\".\"id\" = \"tag_ticket\".\"tag_id\" where \"tickets\".\"id\" = \"tag_ticket\".\"ticket_id\" and \"tag_ticket\".\"position\" between 1 and 2 and \"tags\".\"deleted_at\" is null)) order by \"tickets\".\"id\" desc limit 50 offset 0"
     ]
 }

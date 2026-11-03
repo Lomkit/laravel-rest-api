@@ -15,30 +15,38 @@ use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Search\IncludeNode;
+use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
+use Lomkit\Rest\Search\Plan\Columns\RelationKeys;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Text\ResolvedText;
 
 final readonly class SearchPlanner
 {
-    public function __construct(private RowSource $rows) {}
+    public function __construct(
+        private RowSource $rows,
+        private ColumnSelection $columns,
+    ) {}
 
     public static function paged(Resource $resource, SearchNode $search, ResolvedText $text): QueryPlan
     {
-        return (new self(new SqlRows($text)))->plan($resource, $search, LimitPolicy::paged($search->limit ?? self::limits($resource)->defaultLimit, $search->page ?? 1));
+        return (new self(new SqlRows($text), ColumnSelection::of($resource)))->plan($resource, $search, LimitPolicy::paged($search->limit ?? self::limits($resource)->defaultLimit, $search->page ?? 1));
     }
 
     public static function all(Resource $resource, SearchNode $search, ResolvedText $text): QueryPlan
     {
-        return (new self(new SqlRows($text)))->plan($resource, $search, LimitPolicy::explicit($search->limit));
+        return (new self(new SqlRows($text), ColumnSelection::Every))->plan($resource, $search, LimitPolicy::explicit($search->limit));
     }
 
     public function plan(Resource $resource, SearchNode $search, LimitPolicy $limit): QueryPlan
     {
-        return $this->level($resource, $search, $search->includes, $limit);
+        return $this->level($resource, $search, $search->includes, $limit, []);
     }
 
-    /** @param list<IncludeNode> $includes */
-    private function level(Resource $resource, SearchNode $search, array $includes, LimitPolicy $limit): QueryPlan
+    /**
+     * @param  list<IncludeNode>  $includes
+     * @param  list<string>  $keys
+     */
+    private function level(Resource $resource, SearchNode $search, array $includes, LimitPolicy $limit, array $keys): QueryPlan
     {
         $resource
             ->context()
@@ -50,11 +58,12 @@ final readonly class SearchPlanner
         return new QueryPlan(
             $resource,
             [new PerimeterClause($resource), ...$this->rows->clauses($resource, $search, $aggregates)],
-            self::includes($includes),
+            $this->includes($resource, $includes),
             $aggregates,
             $limit,
             $search->selects,
             $search->gates,
+            $this->columns->level($resource, $search->selects, self::names($includes), [...$keys, ...$this->rows->columns()]),
         );
     }
 
@@ -62,7 +71,7 @@ final readonly class SearchPlanner
      * @param  list<IncludeNode>  $includes
      * @return list<Clause>
      */
-    private static function includes(array $includes): array
+    private function includes(Resource $parent, array $includes): array
     {
         $entries = [];
         $groups = [];
@@ -70,8 +79,8 @@ final readonly class SearchPlanner
         foreach ($includes as $include) {
             if ($include->alias !== null) {
                 $entries[] = $include->relations[0] instanceof MorphTo
-                    ? MorphToIncludeClause::of($include->relations[0], $include->alias, self::explicit($include, []))
-                    : new AliasedIncludeClause($include->relation, $include->alias, self::explicit($include, []));
+                    ? MorphToIncludeClause::of($include->relations[0], $include->alias, $this->explicit($parent, $include, []))
+                    : new AliasedIncludeClause($include->relation, $include->alias, $this->explicit($parent, $include, []));
 
                 continue;
             }
@@ -95,7 +104,7 @@ final readonly class SearchPlanner
         }
 
         return array_map(
-            static fn (Clause|string $entry): Clause => is_string($entry) ? self::grouped($entry, $groups[$entry]['relation'], self::group($groups[$entry]['relation'], $groups[$entry]['level'], $groups[$entry]['children'])) : $entry,
+            fn (Clause|string $entry): Clause => is_string($entry) ? self::grouped($entry, $groups[$entry]['relation'], $this->group($parent, $groups[$entry]['relation'], $groups[$entry]['level'], $groups[$entry]['children'])) : $entry,
             $entries,
         );
     }
@@ -106,25 +115,35 @@ final readonly class SearchPlanner
     }
 
     /** @param list<IncludeNode> $children */
-    private static function group(Relation $relation, ?IncludeNode $level, array $children): QueryPlan
+    private function group(Resource $parent, Relation $relation, ?IncludeNode $level, array $children): QueryPlan
     {
         if ($level === null) {
             $resource = $relation->resource();
+            $columns = $this->columns->level($resource, null, self::names($children), RelationKeys::between($parent::newModel(), $relation->relation)->related());
 
             return $relation instanceof OwnerRelation
-                ? new QueryPlan($resource, [], self::includes($children), [], LimitPolicy::none())
-                : new QueryPlan($resource, [new DefaultOrderClause($resource)], self::includes($children), [], self::includeLimit($resource, null));
+                ? new QueryPlan($resource, [], $this->includes($resource, $children), [], LimitPolicy::none(), columns: $columns)
+                : new QueryPlan($resource, [new DefaultOrderClause($resource)], $this->includes($resource, $children), [], self::includeLimit($resource, null), columns: $columns);
         }
 
-        return self::explicit($level, $children);
+        return $this->explicit($parent, $level, $children);
     }
 
     /** @param list<IncludeNode> $children */
-    private static function explicit(IncludeNode $include, array $children): QueryPlan
+    private function explicit(Resource $parent, IncludeNode $include, array $children): QueryPlan
     {
         $owner = $include->relations[0] instanceof OwnerRelation;
 
-        return (new self(new SqlRows(null, ! $owner)))->level($include->resource, $include->search, [...$children, ...$include->search->includes], $owner ? LimitPolicy::none() : self::includeLimit($include->resource, $include->search->limit));
+        return (new self(new SqlRows(null, ! $owner), $this->columns))->level($include->resource, $include->search, [...$children, ...$include->search->includes], $owner ? LimitPolicy::none() : self::includeLimit($include->resource, $include->search->limit), RelationKeys::between($parent::newModel(), $include->relations[0]->relation)->related());
+    }
+
+    /**
+     * @param  list<IncludeNode>  $includes
+     * @return list<string>
+     */
+    private static function names(array $includes): array
+    {
+        return array_map(static fn (IncludeNode $include): string => Str::before($include->relation, '.'), $includes);
     }
 
     private static function includeLimit(Resource $resource, ?int $limit): LimitPolicy

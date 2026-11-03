@@ -36,6 +36,12 @@ final readonly class RecordKeys implements KeySet
         $this->id->whereKeys($query, array_values(array_unique(array_filter($this->keys, static fn (int|string|null $key): bool => $key !== null))));
     }
 
+    #[\Override]
+    public function columns(): array
+    {
+        return [];
+    }
+
     /**
      * @param  Collection<int, Model>  $rows
      * @return list<Model|null>

@@ -22,6 +22,12 @@ class TicketResource extends Resource
     }
 
     #[\Override]
+    public function alwaysSelect(RestRequest $request): array
+    {
+        return ['status'];
+    }
+
+    #[\Override]
     public function relations(RestRequest $request): array
     {
         return [

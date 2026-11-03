@@ -124,6 +124,6 @@
     },
     "raw_queries": [
         "select count(*) as \"aggregate\" from \"posts\"",
-        "select * from \"posts\" order by \"posts\".\"featured\" desc, \"posts\".\"title\" asc limit 50 offset 0"
+        "select \"posts\".\"id\", \"posts\".\"title\", \"posts\".\"summary\", \"posts\".\"status\", \"posts\".\"featured\", \"posts\".\"views\", \"posts\".\"rating\", \"posts\".\"published_on\", \"posts\".\"published_at\", \"posts\".\"metadata\" from \"posts\" order by \"posts\".\"featured\" desc, \"posts\".\"title\" asc limit 50 offset 0"
     ]
 }

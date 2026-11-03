@@ -77,6 +77,7 @@ final readonly class RowFields
 
         return (clone $model)
             ->setVisible($shown)
+            ->withoutAppends()
             ->attributesToArray();
     }
 

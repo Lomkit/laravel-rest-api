@@ -47,6 +47,12 @@ final readonly class EngineKeys implements KeySet
         $query->afterQuery(fn (mixed $result): mixed => $result instanceof Collection ? $this->keep($result) : $result);
     }
 
+    #[\Override]
+    public function columns(): array
+    {
+        return [$this->model->keyColumn()];
+    }
+
     /**
      * @param  Collection<array-key, Model>  $models
      * @return Collection<int, Model>

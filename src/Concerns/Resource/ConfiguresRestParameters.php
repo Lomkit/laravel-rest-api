@@ -40,6 +40,12 @@ trait ConfiguresRestParameters
         ];
     }
 
+    /** @return list<string> */
+    public function alwaysSelect(RestRequest $request): array
+    {
+        return [];
+    }
+
     /** @return list<int> */
     public function getLimits(RestRequest $request): array
     {

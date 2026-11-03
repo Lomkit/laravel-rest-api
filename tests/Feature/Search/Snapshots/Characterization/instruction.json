@@ -52,6 +52,6 @@
     },
     "raw_queries": [
         "select count(*) as \"aggregate\" from \"posts\" where \"status\" = 'draft'",
-        "select * from \"posts\" where \"status\" = 'draft' order by \"posts\".\"id\" desc limit 50 offset 0"
+        "select \"posts\".\"id\", \"posts\".\"title\", \"posts\".\"summary\", \"posts\".\"status\", \"posts\".\"featured\", \"posts\".\"views\", \"posts\".\"rating\", \"posts\".\"published_on\", \"posts\".\"published_at\", \"posts\".\"metadata\" from \"posts\" where \"status\" = 'draft' order by \"posts\".\"id\" desc limit 50 offset 0"
     ]
 }

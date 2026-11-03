@@ -107,8 +107,8 @@ class MorphToIncludeTest extends PackageTestCase
         $response = $this->postJson('/api/labels/search', ['search' => ['includes' => [$include], 'sorts' => [['field' => 'id']]]]);
 
         $response->assertOk()->assertJsonPath('data.*.labelable', [
-            ['@type' => Book::class, 'id' => 1, 'title' => 'Dune', 'loan' => ['id' => 1, 'book_id' => 1, 'borrower' => 'Ada']],
-            ['@type' => Book::class, 'id' => 2, 'title' => 'Emma', 'loan' => ['id' => 2, 'book_id' => 2, 'borrower' => 'Bob']],
+            ['@type' => Book::class, 'id' => 1, 'title' => 'Dune', 'loan' => ['id' => 1, 'borrower' => 'Ada', 'book_id' => 1]],
+            ['@type' => Book::class, 'id' => 2, 'title' => 'Emma', 'loan' => ['id' => 2, 'borrower' => 'Bob', 'book_id' => 2]],
         ]);
         $this->assertCount(4, DB::getQueryLog());
     }

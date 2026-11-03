@@ -41,6 +41,12 @@ final readonly class SqlRows implements RowSource
         ]));
     }
 
+    #[\Override]
+    public function columns(): array
+    {
+        return [];
+    }
+
     private function text(Resource $resource, SearchNode $search): ?Clause
     {
         if ($search->text === null || $this->text === null) {
