@@ -16,7 +16,7 @@ final readonly class KeyedRows implements Clause, RowSource
     public function __construct(private EngineKeys $keys) {}
 
     #[\Override]
-    public function clauses(Resource $resource, SearchNode $search): array
+    public function clauses(Resource $resource, SearchNode $search, array $aggregates = []): array
     {
         $trashed = TrashedClause::of($search->trashed);
 

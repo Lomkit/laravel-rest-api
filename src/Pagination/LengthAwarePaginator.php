@@ -29,7 +29,7 @@ class LengthAwarePaginator extends BaseLengthAwarePaginator
         return $this->meta;
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<array-key, mixed> */
     #[\Override]
     public function toArray(): array
     {

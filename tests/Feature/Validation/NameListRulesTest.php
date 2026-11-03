@@ -36,7 +36,7 @@ class NameListRulesTest extends PackageTestCase
     {
         $rules = $this->searchRequest('/api/products/search', ['sorts' => [['field' => 'name']]])->rules();
 
-        $this->assertSame(self::PRODUCT_FIELDS, $this->oneOf($rules['search.sorts.0.field'])->values());
+        $this->assertSame([...self::PRODUCT_FIELDS, 'category.id', 'category.name'], $this->oneOf($rules['search.sorts.0.field'])->values());
     }
 
     #[Test]

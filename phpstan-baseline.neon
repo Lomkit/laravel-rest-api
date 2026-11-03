@@ -348,12 +348,6 @@ parameters:
 			path: src/Query/Builder.php
 
 		-
-			message: '#^Anonymous function should return Illuminate\\Database\\Eloquent\\Relations\\Relation but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Query/Clauses/AggregateClause.php
-
-		-
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: src/Query/Traits/PerformMutation.php

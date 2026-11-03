@@ -42,11 +42,13 @@ final readonly class SearchPlanner
             ->authorizer()
             ->ensurePlanned(Check::onClass($resource, 'viewAny'));
 
+        $aggregates = array_map(self::aggregate(...), $search->aggregates, array_keys($search->aggregates));
+
         return new QueryPlan(
             $resource,
-            [new PerimeterClause($resource), ...$this->rows->clauses($resource, $search)],
+            [new PerimeterClause($resource), ...$this->rows->clauses($resource, $search, $aggregates)],
             self::includes($includes),
-            array_map(self::aggregate(...), $search->aggregates, array_keys($search->aggregates)),
+            $aggregates,
             $limit,
             $search->selects,
             $search->gates,
