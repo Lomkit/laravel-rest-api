@@ -95,7 +95,7 @@ class PivotRulesTest extends WeightedPivotTestCase
     {
         $response = $this->mutate($relation, $this->entry($relation, 'attach', ['position' => null, 'weight' => 0]));
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$this->parent($relation)->getKey()]]);
+        $response->assertOk()->assertExactJson($this->mutated($relation, 'attach'));
         $this->assertSame([['position' => null, 'weight' => 0, 'added_by' => null, 'note' => null, 'created_at' => self::NOW]], $this->pivotRows($relation));
     }
 

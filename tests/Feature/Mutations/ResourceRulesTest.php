@@ -103,7 +103,7 @@ class ResourceRulesTest extends PackageTestCase
             'mutate.0.attributes.title' => ['The mutate.0.attributes.title has already been taken.'],
         ]);
         $quarterly = Post::query()->where('title', 'Quarterly report')->sole();
-        $created->assertOk()->assertExactJson(['created' => [$quarterly->id], 'updated' => []]);
+        $created->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $quarterly->id]]]);
         $this->assertSame(2, Post::query()->count());
     }
 

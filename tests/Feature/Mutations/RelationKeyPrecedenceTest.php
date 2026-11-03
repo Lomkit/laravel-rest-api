@@ -43,7 +43,11 @@ class RelationKeyPrecedenceTest extends PackageTestCase
         ]]]);
 
         $stool = Product::query()->sole();
-        $response->assertOk()->assertExactJson(['created' => [$stool->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [[
+            'operation' => 'create',
+            'key' => $stool->id,
+            'relations' => ['category' => ['operation' => 'attach', 'key' => $seating->id]],
+        ]]]);
         $this->assertSame($clearance->id, $stool->category_id);
     }
 
@@ -63,7 +67,16 @@ class RelationKeyPrecedenceTest extends PackageTestCase
             ]]],
         ]]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$lighting->id]]);
+        $lamp = Product::query()->sole();
+        $response->assertOk()->assertExactJson(['operations' => [[
+            'operation' => 'update',
+            'key' => $lighting->id,
+            'relations' => ['products' => [[
+                'operation' => 'create',
+                'key' => $lamp->id,
+                'relations' => ['category' => ['operation' => 'attach', 'key' => $seating->id]],
+            ]]],
+        ]]]);
         $this->assertSame(['Lamp' => $lighting->id], Product::query()->pluck('category_id', 'name')->all());
     }
 
@@ -83,7 +96,15 @@ class RelationKeyPrecedenceTest extends PackageTestCase
         ]]]);
 
         $dune = Book::query()->where('title', 'Dune')->sole();
-        $response->assertOk()->assertExactJson(['created' => [$dune->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [[
+            'operation' => 'create',
+            'key' => $dune->id,
+            'relations' => ['loan' => [
+                'operation' => 'create',
+                'key' => Loan::query()->sole()->id,
+                'relations' => ['book' => ['operation' => 'attach', 'key' => $emma->id]],
+            ]],
+        ]]]);
         $this->assertSame(['Grace' => $dune->id], Loan::query()->pluck('book_id', 'borrower')->all());
     }
 
@@ -103,7 +124,15 @@ class RelationKeyPrecedenceTest extends PackageTestCase
         ]]]);
 
         $dune = Book::query()->where('title', 'Dune')->sole();
-        $response->assertOk()->assertExactJson(['created' => [$dune->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [[
+            'operation' => 'create',
+            'key' => $dune->id,
+            'relations' => ['labels' => [[
+                'operation' => 'create',
+                'key' => Label::query()->sole()->id,
+                'relations' => ['labelable' => ['operation' => 'attach', 'type' => Book::class, 'key' => $emma->id]],
+            ]]],
+        ]]]);
         $this->assertSame(['labelable_id' => $dune->id, 'labelable_type' => Book::class], Label::query()->sole()->only('labelable_id', 'labelable_type'));
     }
 }

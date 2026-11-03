@@ -69,7 +69,7 @@ trait InteractsWithResource
             array_map(function ($model) {
                 return $model->getKey();
             }, $updatedModels),
-            $response->json('updated')
+            array_column(array_filter($response->json('operations'), fn (array $operation): bool => $operation['operation'] === 'update'), 'key')
         );
 
         foreach ($createdModels as $model) {

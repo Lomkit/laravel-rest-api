@@ -146,7 +146,7 @@ class MutationKeysTest extends PackageTestCase
             ['operation' => 'update', 'key' => '2', 'attributes' => ['price' => 10]],
         ]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [2]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => 2]]]);
         $this->assertSame([39, 10], $this->prices());
     }
 

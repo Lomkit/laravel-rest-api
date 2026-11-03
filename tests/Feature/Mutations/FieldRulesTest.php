@@ -111,7 +111,7 @@ class FieldRulesTest extends PackageTestCase
         ]]);
 
         $post = Post::query()->sole();
-        $response->assertOk()->assertExactJson(['created' => [$post->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $post->id]]]);
         $this->assertSame([null, null, null, ['source' => 'web']], [$post->summary, $post->rating, $post->published_at, $post->metadata]);
     }
 

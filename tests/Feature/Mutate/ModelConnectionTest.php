@@ -39,7 +39,7 @@ class ModelConnectionTest extends PackageTestCase
             'attributes' => ['name' => 'Modern poetry'],
         ]]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$poetry->id]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => $poetry->id]]]);
         $this->assertSame(['Modern poetry'], ArchivedShelf::query()->pluck('name')->all());
         $this->assertSame(0, Shelf::query()->count());
     }

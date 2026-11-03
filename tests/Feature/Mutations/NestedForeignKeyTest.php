@@ -48,7 +48,14 @@ class NestedForeignKeyTest extends PackageTestCase
             ]],
         ]]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$seating->id]]);
+        $stool = Product::query()
+            ->where('name', 'Stool')
+            ->sole();
+        $response->assertOk()->assertExactJson(['operations' => [[
+            'operation' => 'update',
+            'key' => $seating->id,
+            'relations' => ['products' => [['operation' => 'create', 'key' => $stool->id], ['operation' => 'update', 'key' => $bench->id]]],
+        ]]]);
         $this->assertSame(['Bench' => $seating->id, 'Stool' => $seating->id], Product::query()->orderBy('name')->pluck('category_id', 'name')->all());
     }
 
@@ -65,7 +72,11 @@ class NestedForeignKeyTest extends PackageTestCase
         ]]]);
 
         $stool = Product::query()->sole();
-        $response->assertOk()->assertExactJson(['created' => [$stool->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [[
+            'operation' => 'create',
+            'key' => $stool->id,
+            'relations' => ['category' => ['operation' => 'attach', 'key' => $seating->id]],
+        ]]]);
         $this->assertSame($seating->id, $stool->category_id);
     }
 
@@ -82,7 +93,11 @@ class NestedForeignKeyTest extends PackageTestCase
         ]]]);
 
         $classic = Label::query()->sole();
-        $response->assertOk()->assertExactJson(['created' => [$classic->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [[
+            'operation' => 'create',
+            'key' => $classic->id,
+            'relations' => ['labelable' => ['operation' => 'attach', 'type' => Book::class, 'key' => $dune->id]],
+        ]]]);
         $this->assertSame([$dune->id, Book::class], [$classic->labelable_id, $classic->labelable_type]);
     }
 
@@ -95,7 +110,7 @@ class NestedForeignKeyTest extends PackageTestCase
         $response = $this->createDune([$relation => ['operation' => 'create', 'attributes' => ['borrower' => 'Grace', 'book_id' => $emma->id]]]);
 
         $dune = Book::query()->where('title', 'Dune')->sole();
-        $response->assertOk()->assertExactJson(['created' => [$dune->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson($this->createdDune($dune, [$relation => ['operation' => 'create', 'key' => Loan::query()->sole()->id]]));
         $this->assertSame($dune->id, Loan::query()->sole()->book_id);
     }
 
@@ -115,7 +130,8 @@ class NestedForeignKeyTest extends PackageTestCase
         $response = $this->createDune([$relation => $many ? [$creation] : $creation]);
 
         $dune = Book::query()->where('title', 'Dune')->sole();
-        $response->assertOk()->assertExactJson(['created' => [$dune->id], 'updated' => []]);
+        $created = ['operation' => 'create', 'key' => Label::query()->sole()->id];
+        $response->assertOk()->assertExactJson($this->createdDune($dune, [$relation => $many ? [$created] : $created]));
         $this->assertSame(['labelable_id' => $dune->id, 'labelable_type' => Book::class], Label::query()->sole()->only('labelable_id', 'labelable_type'));
     }
 
@@ -129,7 +145,8 @@ class NestedForeignKeyTest extends PackageTestCase
         $response = $this->createDune([$relation => $many ? [$creation] : $creation]);
 
         $dune = Book::query()->sole();
-        $response->assertOk()->assertExactJson(['created' => [$dune->id], 'updated' => []]);
+        $created = ['operation' => 'create', 'key' => Label::query()->sole()->id];
+        $response->assertOk()->assertExactJson($this->createdDune($dune, [$relation => $many ? [$created] : $created]));
         $this->assertSame(['labelable_id' => $dune->id, 'labelable_type' => 'book'], Label::query()->sole()->only('labelable_id', 'labelable_type'));
     }
 
@@ -141,6 +158,15 @@ class NestedForeignKeyTest extends PackageTestCase
             'morph one of many' => ['latestLabel', false],
             'morph many' => ['labels', true],
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $relations
+     * @return array{operations: list<array<string, mixed>>}
+     */
+    private function createdDune(Book $dune, array $relations): array
+    {
+        return ['operations' => [['operation' => 'create', 'key' => $dune->id, 'relations' => $relations]]];
     }
 
     /** @param array<string, mixed> $relations */

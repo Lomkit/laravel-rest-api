@@ -46,7 +46,7 @@ class MutateQueryHookTest extends PackageTestCase
             ['operation' => 'update', 'key' => 2, 'attributes' => ['views' => 4]],
         ]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [1, 2]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'update', 'key' => 2]]]);
         $this->assertSame([DraftOnlyPostResource::class, DraftOnlyPostResource::class], DraftOnlyPostResource::$hooked);
     }
 
@@ -62,7 +62,7 @@ class MutateQueryHookTest extends PackageTestCase
             'relations' => ['posts' => [['operation' => 'update', 'key' => 1, 'attributes' => ['views' => 3]]]],
         ]]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [1]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => 1, 'relations' => ['posts' => [['operation' => 'update', 'key' => 1]]]]]]);
         $this->assertSame(3, Post::query()->findOrFail(1)->views);
         $this->assertSame([DraftOnlyAuthorResource::class], DraftOnlyPostResource::$hooked);
     }

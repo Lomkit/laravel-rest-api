@@ -98,11 +98,11 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         $this->assertEquals(
             $morphToRelationToAttach->getKey(),
-            Model::find($response->json('created.0'))->morph_to_relation_id
+            Model::find($response->json('operations.0.key'))->morph_to_relation_id
         );
         $this->assertEquals(
             MorphToRelation::class,
-            Model::find($response->json('created.0'))->morph_to_relation_type
+            Model::find($response->json('operations.0.key'))->morph_to_relation_type
         );
     }
 
@@ -152,11 +152,11 @@ class MutateCreateMorphOperationsTest extends TestCase
         // Here we test that the model is correctly linked
         $this->assertEquals(
             $morphToRelationToUpdate->getKey(),
-            Model::find($response->json('created.0'))->morph_to_relation_id
+            Model::find($response->json('operations.0.key'))->morph_to_relation_id
         );
         $this->assertEquals(
             MorphToRelation::class,
-            Model::find($response->json('created.0'))->morph_to_relation_type
+            Model::find($response->json('operations.0.key'))->morph_to_relation_type
         );
     }
 
@@ -198,7 +198,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphManyRelation()->count(),
             1
         );
     }
@@ -245,7 +245,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphManyRelation()->count(),
             2
         );
     }
@@ -293,7 +293,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphManyRelation()->count(),
             1
         );
     }
@@ -346,7 +346,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphManyRelation()->count(),
             2
         );
     }
@@ -389,7 +389,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphManyRelation()->count(),
             0
         );
     }
@@ -444,7 +444,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphManyRelation()->count(),
             1
         );
     }
@@ -508,7 +508,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphManyRelation()->count(),
             2
         );
     }
@@ -549,7 +549,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphOneRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphOneRelation()->count(),
             1
         );
     }
@@ -595,7 +595,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphOneRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphOneRelation()->count(),
             1
         );
     }
@@ -648,7 +648,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphOneRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphOneRelation()->count(),
             1
         );
     }
@@ -701,15 +701,15 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphToManyRelation()->count(),
             2
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphToManyRelation()->orderBy('id')->get()[0]->morph_to_many_pivot->number,
+            Model::find($response->json('operations.0.key'))->morphToManyRelation()->orderBy('id')->get()[0]->morph_to_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphToManyRelation()->orderBy('id')->get()[1]->morph_to_many_pivot->number,
+            Model::find($response->json('operations.0.key'))->morphToManyRelation()->orderBy('id')->get()[1]->morph_to_many_pivot->number,
             30
         );
     }
@@ -752,7 +752,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphToManyRelation()->count(),
             1
         );
     }
@@ -799,7 +799,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphToManyRelation()->count(),
             2
         );
     }
@@ -847,7 +847,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphToManyRelation()->count(),
             1
         );
     }
@@ -900,7 +900,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphToManyRelation()->count(),
             2
         );
     }
@@ -955,7 +955,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphToManyRelation()->count(),
             1
         );
     }
@@ -1019,7 +1019,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphToManyRelation()->count(),
             2
         );
     }
@@ -1062,7 +1062,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphedByManyRelation()->count(),
             1
         );
     }
@@ -1115,10 +1115,10 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphedByManyRelation()->count(),
             2
         );
-        $related = Model::find($response->json('created.0'))
+        $related = Model::find($response->json('operations.0.key'))
             ->morphedByManyRelation()
             ->orderBy('morphed_by_many_relations.id')
             ->get();
@@ -1174,7 +1174,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphedByManyRelation()->count(),
             2
         );
     }
@@ -1222,7 +1222,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphedByManyRelation()->count(),
             1
         );
     }
@@ -1275,7 +1275,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphedByManyRelation()->count(),
             2
         );
     }
@@ -1330,7 +1330,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphedByManyRelation()->count(),
             1
         );
     }
@@ -1394,7 +1394,7 @@ class MutateCreateMorphOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->morphedByManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->morphedByManyRelation()->count(),
             2
         );
     }

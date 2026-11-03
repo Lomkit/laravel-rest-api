@@ -365,7 +365,7 @@ Other resource methods:
 
 Controller endpoints:
 
-- `details()` and `mutate()` return `array`, `operate()` returns `Illuminate\Http\Response`, and `search()`, `destroy()`, `restore()` and `forceDestroy()` return `Lomkit\Rest\Http\Response`.
+- `details()` returns `array`, `mutate()` returns `Lomkit\Rest\Http\MutateResponse`, `operate()` returns `Illuminate\Http\Response`, and `search()`, `destroy()`, `restore()` and `forceDestroy()` return `Lomkit\Rest\Http\Response`.
 
 Requests:
 
@@ -1194,6 +1194,28 @@ Nested writes:
 
 - The keys that the parent relation sets win over the attributes of the same name. On `HasOne`, `HasOneOfMany`, `HasMany`, `MorphOne`, `MorphOneOfMany` and `MorphMany`, the entry gets the key of the parent, and on the morph relations its morph type, also when the entry sends its own `BelongsTo` or `MorphTo` relation to another parent. On `BelongsTo` and `MorphTo`, the foreign key and the morph type that the relation sets win over the attributes of the entry. They are read after the `mutating()` hook, so a key that the hook sets on such a relation, for example with `associate()`, is the one written. Before, an attribute such as `category_id` replaced them.
 - `MorphOne`, `MorphOneOfMany` and `MorphMany` write the morph type with `getMorphClass()`: with a morph map, they write the alias instead of the class name, as `MorphTo` does.
+
+Response:
+
+- The mutate endpoint answers `operations` instead of `created` and `updated`: one entry for each entry of `mutate`, at the same index, and one for each entry of its `relations`. For example, a book created with a new shelf and two attached shelves, then a book updated:
+
+  ```json
+  {"operations": [
+    {"operation": "create", "key": 3, "relations": {"shelves": [{"operation": "create", "key": 9}, {"operation": "attach", "key": [1, 2]}]}},
+    {"operation": "update", "key": 2}
+  ]}
+  ```
+
+  Before, the response was `{"created": [3], "updated": [2]}`: the keys of the root entries, grouped by operation, without their relations.
+- `operation` is the operation of the entry. `key` is the key of the row that a `create` wrote. On another operation, it is the `key` that the entry sent, typed like the `ID` field of its resource, so `"2"` answers `2` on an integer key. An entry with a list of keys answers once, with the list.
+- An entry that sends `relations` answers `relations`, under the names that it sent, in the same order: an object for a to-one relation, a list for a to-many relation, with one entry for each entry that the relation sent. An entry that sends no relation answers no `relations` key.
+- An entry of a `MorphTo` relation also answers `type`, the morph type of its row: the morph-map alias of the model, or its class name without an alias, as `@type` in a search: `{"operation": "attach", "type": "book", "key": 2}`.
+- `sync` and `toggle` answer the keys that they sent. The rows that they detach or attach besides these keys are not listed.
+- An entry under an entry with a list of keys is written once for each of these keys, and answers once: a `create` there answers the list of the keys that it created, in the order of the keys above.
+- A `BelongsTo` or `MorphTo` entry is written before the row that holds it, and answers under that row, as sent.
+- The response holds `operations` only. When the mutation fails, for example on a denied row, the transaction is rolled back and the response is the error alone.
+- `Lomkit\Rest\Http\MutateResponse` runs the mutation in one transaction and renders `operations`. `beforeMutate()` runs before it and `afterMutate()` after it, as before.
+- `applyMutation()` and `mutations()` add the entries of the response to `$resource->context()->operations()`, a `Lomkit\Rest\Mutations\OperationLog`, and `mutateModel()` tells it which relation each `beforeMutating()` and `afterMutating()` call writes. In a custom relation, each call of `applyMutation()` without `$key`, and each call of `mutations()`, answers the next entry that the request sends to the relation. A call of `applyMutation()` with `$key` answers an entry of its own, with that key: a relation that calls it once for each key of an entry answers one entry for each key. An override of `mutateModel()` that does not call the parent must make the same calls, or the entries of its relations are not answered.
 
 Custom relations and query builders:
 

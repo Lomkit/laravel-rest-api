@@ -138,7 +138,7 @@ class UnknownMutationKeysTest extends PackageTestCase
             'relations' => ['featuredProducts' => [['operation' => 'attach', 'key' => 1, 'pivot' => ['price' => 10]]]],
         ]]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [1]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => 1, 'relations' => ['featuredProducts' => [['operation' => 'attach', 'key' => 1]]]]]]);
         $this->assertDatabaseCount('featured_products', 1);
         $this->assertDatabaseHas('featured_products', ['category_id' => 1, 'product_id' => 1, 'price' => 10]);
     }

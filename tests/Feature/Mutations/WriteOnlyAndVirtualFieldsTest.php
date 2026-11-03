@@ -35,7 +35,7 @@ class WriteOnlyAndVirtualFieldsTest extends PackageTestCase
         ]);
 
         $grace = Author::query()->sole();
-        $response->assertOk()->assertExactJson(['created' => [$grace->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $grace->id]]]);
         $this->assertSame('grace-token', $grace->api_token);
         $this->postJson('/api/authors/search')->assertOk()->assertJsonPath('data', [
             ['id' => $grace->id, 'first_name' => 'Grace', 'last_name' => 'Hopper', 'settings' => null],
@@ -51,7 +51,7 @@ class WriteOnlyAndVirtualFieldsTest extends PackageTestCase
         ]);
 
         $grace = Author::query()->sole();
-        $response->assertOk()->assertExactJson(['created' => [$grace->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $grace->id]]]);
         $this->assertSame(['Grace', 'Hopper'], [$grace->first_name, $grace->last_name]);
     }
 
@@ -66,7 +66,7 @@ class WriteOnlyAndVirtualFieldsTest extends PackageTestCase
             'attributes' => ['full_name' => 'Grace Hopper'],
         ]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$ada->id]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => $ada->id]]]);
         $this->assertSame(['Grace', 'Hopper'], [$ada->fresh()?->first_name, $ada->fresh()?->last_name]);
     }
 

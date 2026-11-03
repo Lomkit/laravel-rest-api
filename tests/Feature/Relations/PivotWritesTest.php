@@ -13,7 +13,7 @@ class PivotWritesTest extends WeightedPivotTestCase
     {
         $response = $this->mutate($relation, $this->entry($relation, $operation, ['position' => 1, 'weight' => 3, 'added_by' => 'Ada', 'note' => 'Seen twice']));
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$this->parent($relation)->getKey()]]);
+        $response->assertOk()->assertExactJson($this->mutated($relation, $operation));
         $this->assertSame([['position' => 1, 'weight' => 3, 'added_by' => 'Ada', 'note' => 'Seen twice', 'created_at' => self::NOW]], $this->pivotRows($relation));
     }
 
@@ -25,7 +25,7 @@ class PivotWritesTest extends WeightedPivotTestCase
 
         $response = $this->mutate($relation, $this->entry($relation, $operation, ['position' => 2, 'weight' => 5, 'note' => 'Escalated']));
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$this->parent($relation)->getKey()]]);
+        $response->assertOk()->assertExactJson($this->mutated($relation, $operation));
         $this->assertSame([['position' => 2, 'weight' => 5, 'added_by' => 'Ada', 'note' => 'Escalated', 'created_at' => self::NOW]], $this->pivotRows($relation));
     }
 
@@ -76,7 +76,7 @@ class PivotWritesTest extends WeightedPivotTestCase
     {
         $response = $this->mutate($relation, $this->entry($relation, $operation, ['position' => 4]));
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$this->parent($relation)->getKey()]]);
+        $response->assertOk()->assertExactJson($this->mutated($relation, $operation));
         $this->assertSame([['position' => 4, 'weight' => null, 'added_by' => null, 'note' => null, 'created_at' => self::NOW]], $this->pivotRows($relation));
     }
 

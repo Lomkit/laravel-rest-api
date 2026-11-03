@@ -103,7 +103,11 @@ class PivotFieldsTest extends WeightedPivotTestCase
         $invalid->assertUnprocessable()->assertJsonPath('errors', [
             'mutate.0.relations.tags.0.pivot.weight' => ['The selected mutate.0.relations.tags.0.pivot.weight is invalid.'],
         ]);
-        $valid->assertOk()->assertExactJson(['created' => [], 'updated' => [$this->jam->id]]);
+        $valid->assertOk()->assertExactJson(['operations' => [[
+            'operation' => 'update',
+            'key' => $this->jam->id,
+            'relations' => ['tags' => [['operation' => 'attach', 'key' => $this->hardware->id]]],
+        ]]]);
         $this->assertSame([3], $this->jam
             ->tags()
             ->pluck('tag_ticket.weight')

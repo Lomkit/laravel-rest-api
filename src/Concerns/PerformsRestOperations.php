@@ -69,8 +69,7 @@ trait PerformsRestOperations
             ->responsable($rows);
     }
 
-    /** @return array<string, mixed> */
-    public function mutate(MutateRequest $request): array
+    public function mutate(MutateRequest $request): MutateResponse
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
@@ -80,7 +79,7 @@ trait PerformsRestOperations
 
         $this->afterMutate($request);
 
-        return $response->toArray();
+        return $response;
     }
 
     public function operate(OperateRequest $request): IlluminateResponse

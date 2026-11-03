@@ -97,6 +97,14 @@ class ScrambleDocumentTest extends ScrambleTestCase
     }
 
     #[Test]
+    public function it_documents_the_mutate_response_as_an_object(): void
+    {
+        $response = $this->operation('/categories/mutate', 'post')['responses'][200];
+
+        $this->assertSame('object', $response['content']['application/json']['schema']['type']);
+    }
+
+    #[Test]
     public function it_documents_the_rules_of_the_writable_fields_in_the_mutate_body(): void
     {
         $attributes = $this->body($this->operation('/posts/mutate', 'post'))['properties']['mutate']['items']['properties']['attributes'];

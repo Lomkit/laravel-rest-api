@@ -263,7 +263,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         $this->assertEquals(
             $belongsToRelationToAttach->getKey(),
-            Model::find($response->json('updated.0'))->belongs_to_relation_id
+            Model::find($response->json('operations.0.key'))->belongs_to_relation_id
         );
     }
 
@@ -309,7 +309,7 @@ class MutateUpdateOperationsTest extends TestCase
         );
 
         $this->assertNull(
-            Model::find($response->json('updated.0'))->belongs_to_relation_id
+            Model::find($response->json('operations.0.key'))->belongs_to_relation_id
         );
     }
 
@@ -359,7 +359,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongs_to_relation_id,
+            Model::find($response->json('operations.0.key'))->belongs_to_relation_id,
             $belongsToRelationToUpdate->getKey()
         );
     }
@@ -404,7 +404,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             1
         );
     }
@@ -453,7 +453,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             2
         );
     }
@@ -500,7 +500,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             1
         );
     }
@@ -549,7 +549,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             2
         );
     }
@@ -594,7 +594,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             0
         );
     }
@@ -648,7 +648,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             1
         );
     }
@@ -696,7 +696,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             0
         );
     }
@@ -747,7 +747,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             0
         );
     }
@@ -804,7 +804,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             1
         );
     }
@@ -871,7 +871,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             2
         );
     }
@@ -914,7 +914,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneRelation()->count(),
             1
         );
     }
@@ -962,7 +962,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneRelation()->count(),
             1
         );
     }
@@ -1008,7 +1008,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneRelation()->count(),
             0
         );
     }
@@ -1063,7 +1063,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneRelation()->count(),
             1
         );
     }
@@ -1106,7 +1106,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneOfManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneOfManyRelation()->count(),
             1
         );
     }
@@ -1154,7 +1154,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneOfManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneOfManyRelation()->count(),
             1
         );
     }
@@ -1200,7 +1200,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneOfManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneOfManyRelation()->count(),
             0
         );
     }
@@ -1255,7 +1255,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->hasOneOfManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneOfManyRelation()->count(),
             1
         );
     }
@@ -1300,7 +1300,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
     }
@@ -1354,13 +1354,13 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->first()->getKey(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->first()->getKey(),
             $belongsToManyNotToggled->getKey()
         );
     }
@@ -1410,7 +1410,7 @@ class MutateUpdateOperationsTest extends TestCase
         // Here we test that toggling with empty key detaches all relations
         $this->assertEquals(
             1,
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count()
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count()
         );
     }
 
@@ -1464,13 +1464,13 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->first()->getKey(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->first()->getKey(),
             $belongsToManyNotToggled->getKey()
         );
     }
@@ -1532,7 +1532,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
 
@@ -1552,7 +1552,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->first()->getKey(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->first()->getKey(),
             $belongsToManyNotToggled->getKey()
         );
     }
@@ -1606,7 +1606,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
 
@@ -1621,7 +1621,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->first()->getKey(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->first()->getKey(),
             $belongsToManyNotSynced->getKey()
         );
     }
@@ -1676,7 +1676,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
 
@@ -1691,11 +1691,11 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->first()->getKey(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->first()->getKey(),
             $belongsToManyNotSynced1->getKey()
         );
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->get()->last()->getKey(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->get()->last()->getKey(),
             $belongsToManyNotSynced2->getKey()
         );
     }
@@ -1748,7 +1748,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             0
         );
     }
@@ -1808,7 +1808,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
 
@@ -1831,7 +1831,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEqualsCanonicalizing(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->pluck('id')->toArray(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->pluck('id')->toArray(),
             [
                 $belongsToManyToSync1->getKey(),
                 $belongsToManyToSync2->getKey(),
@@ -1889,7 +1889,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
 
@@ -1904,7 +1904,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEqualsCanonicalizing(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->pluck('id')->toArray(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->pluck('id')->toArray(),
             [
                 $belongsToManySynced->getKey(),
                 $belongsToManyNotSynced->getKey(),
@@ -1961,7 +1961,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
 
@@ -1976,7 +1976,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEqualsCanonicalizing(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->pluck('id')->toArray(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->pluck('id')->toArray(),
             [
                 $belongsToManyNotSynced->getKey(),
             ]
@@ -2033,10 +2033,10 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
-        $related = Model::find($response->json('updated.0'))
+        $related = Model::find($response->json('operations.0.key'))
             ->belongsToManyRelation()
             ->orderBy('belongs_to_many_relations.id')
             ->get();
@@ -2095,10 +2095,10 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
-        $related = Model::find($response->json('updated.0'))
+        $related = Model::find($response->json('operations.0.key'))
             ->belongsToManyRelation()
             ->orderBy('belongs_to_many_relations.id')
             ->get();
@@ -2154,10 +2154,10 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
-        $related = Model::find($response->json('updated.0'))
+        $related = Model::find($response->json('operations.0.key'))
             ->belongsToManyRelation()
             ->orderBy('belongs_to_many_relations.id')
             ->get();
@@ -2214,7 +2214,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             0
         );
     }
@@ -2263,7 +2263,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
     }
@@ -2313,7 +2313,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
     }
@@ -2368,7 +2368,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
     }
@@ -2423,7 +2423,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             0
         );
     }
@@ -2471,7 +2471,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             0
         );
     }
@@ -2521,7 +2521,7 @@ class MutateUpdateOperationsTest extends TestCase
         // Here we test that detaching with empty array preserves existing relations
         $this->assertEquals(
             1,
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count()
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count()
         );
     }
 
@@ -2571,7 +2571,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             0
         );
     }
@@ -2628,7 +2628,7 @@ class MutateUpdateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('updated.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
     }

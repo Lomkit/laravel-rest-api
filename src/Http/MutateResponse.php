@@ -2,13 +2,15 @@
 
 namespace Lomkit\Rest\Http;
 
+use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Mutations\OperationEntry;
 
-final readonly class MutateResponse
+final readonly class MutateResponse implements Responsable
 {
     /** @param list<OperationEntry> $operations */
     private function __construct(public array $operations) {}
@@ -23,16 +25,9 @@ final readonly class MutateResponse
         }));
     }
 
-    /** @return array<string, mixed> */
-    public function toArray(): array
+    #[\Override]
+    public function toResponse(mixed $request): JsonResponse
     {
-        $grouped = ['created' => [], 'updated' => []];
-
-        foreach ($this->operations as $operation) {
-            $entry = $operation->jsonSerialize();
-            $grouped[$entry['operation'] === 'create' ? 'created' : 'updated'][] = $entry['key'];
-        }
-
-        return $grouped;
+        return new JsonResponse(['operations' => $this->operations]);
     }
 }

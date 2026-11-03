@@ -25,7 +25,7 @@ class JsonModelEncodingTest extends PackageTestCase
         $response = $this->mutate(['operation' => 'create', 'attributes' => ['name' => 'Logger', $column => $value]]);
 
         $logger = Recorder::sole();
-        $response->assertOk()->assertExactJson(['created' => [$logger->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $logger->id]]]);
         $this->assertSame($value, $this->stored($column));
 
         $search = $this->postJson('/api/recorders/search');
@@ -50,7 +50,7 @@ class JsonModelEncodingTest extends PackageTestCase
 
         $response = $this->mutate(['operation' => 'update', 'key' => $logger->id, 'attributes' => [$column => $value]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$logger->id]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => $logger->id]]]);
         $this->assertSame($value, $this->stored($column));
     }
 
@@ -60,7 +60,7 @@ class JsonModelEncodingTest extends PackageTestCase
         $response = $this->mutate(['operation' => 'create', 'attributes' => ['name' => 'Logger', 'transcript' => ['lines' => 2, 'speaker' => 'Ada']]]);
 
         $logger = Recorder::sole();
-        $response->assertOk()->assertExactJson(['created' => [$logger->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $logger->id]]]);
         $this->assertSame(['lines' => 2, 'speaker' => 'Ada'], $this->stored('transcript'));
 
         $search = $this->postJson('/api/recorders/search');
