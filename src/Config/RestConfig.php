@@ -23,6 +23,7 @@ final readonly class RestConfig
         public string $gatesKey,
         public bool $gateMessages,
         public array $gateNames,
+        public string $morphTypeKey,
     ) {}
 
     public static function from(Repository $config): self
@@ -34,6 +35,7 @@ final readonly class RestConfig
             gatesKey: ConfigValue::of($config, 'rest.gates.key')->string(),
             gateMessages: ConfigValue::of($config, 'rest.gates.message.enabled')->boolean(),
             gateNames: ConfigValue::of($config, 'rest.gates.names')->strings(self::GATE_NAMES),
+            morphTypeKey: ConfigValue::of($config, 'rest.morph.type_key')->string(),
         );
     }
 }

@@ -41,7 +41,7 @@ final readonly class RowKeys
         return new self(
             $resource->getFields($request)->names(),
             array_column($resource->getRelations($request), 'relation'),
-            [$resource->context()->config()->gatesKey],
+            [$resource->context()->config()->gatesKey, ...$context->reserved],
             self::aliases($includes),
             self::includes($includes),
             self::aggregates($aggregates),

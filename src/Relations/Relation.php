@@ -68,6 +68,12 @@ class Relation implements \JsonSerializable
         return false;
     }
 
+    /** @return list<string> */
+    public function reservedKeys(): array
+    {
+        return [];
+    }
+
     /**
      * Get the resource associated with this relation.
      *

@@ -9,6 +9,7 @@ use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\Clause;
 use Lomkit\Rest\Query\Clauses\FilterGroupClause;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
+use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Search\IncludeNode;
@@ -66,7 +67,9 @@ final readonly class SearchPlanner
 
         foreach ($includes as $include) {
             if ($include->alias !== null) {
-                $entries[] = new AliasedIncludeClause($include->relation, $include->alias, self::explicit($include, []));
+                $entries[] = $include->relations[0] instanceof MorphTo
+                    ? MorphToIncludeClause::of($include->relations[0], $include->alias, self::explicit($include, []))
+                    : new AliasedIncludeClause($include->relation, $include->alias, self::explicit($include, []));
 
                 continue;
             }
@@ -90,11 +93,14 @@ final readonly class SearchPlanner
         }
 
         return array_map(
-            static fn (Clause|string $entry): Clause => is_string($entry)
-                ? new IncludeClause($entry, self::group($groups[$entry]['relation'], $groups[$entry]['level'], $groups[$entry]['children']))
-                : $entry,
+            static fn (Clause|string $entry): Clause => is_string($entry) ? self::grouped($entry, $groups[$entry]['relation'], self::group($groups[$entry]['relation'], $groups[$entry]['level'], $groups[$entry]['children'])) : $entry,
             $entries,
         );
+    }
+
+    private static function grouped(string $name, Relation $relation, QueryPlan $plan): Clause
+    {
+        return $relation instanceof MorphTo ? MorphToIncludeClause::of($relation, null, $plan) : new IncludeClause($name, $plan);
     }
 
     /** @param list<IncludeNode> $children */
@@ -110,7 +116,9 @@ final readonly class SearchPlanner
     /** @param list<IncludeNode> $children */
     private static function explicit(IncludeNode $include, array $children): QueryPlan
     {
-        return (new self(new SqlRows(null)))->level($include->resource, $include->search, [...$children, ...$include->search->includes], LimitPolicy::explicit($include->search->limit));
+        $owner = $include->relations[0] instanceof MorphTo;
+
+        return (new self(new SqlRows(null, ! $owner)))->level($include->resource, $include->search, [...$children, ...$include->search->includes], $owner ? LimitPolicy::none() : LimitPolicy::explicit($include->search->limit));
     }
 
     private static function aggregate(AggregateNode $aggregate, int $position): AggregateClause

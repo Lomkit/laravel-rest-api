@@ -33,6 +33,7 @@ class RestConfigTest extends TestCase
         $this->assertFalse($config->cacheEnabled);
         $this->assertSame(5, $config->cacheMinutes);
         $this->assertSame('gates', $config->gatesKey);
+        $this->assertSame('@type', $config->morphTypeKey);
         $this->assertFalse($config->gateMessages);
         $this->assertSame([
             'authorized_to_view' => 'authorized_to_view',
@@ -114,6 +115,7 @@ class RestConfigTest extends TestCase
             'the gate messages switch' => ['rest.gates.message.enabled', 'yes', 'The [rest.gates.message.enabled] option must be a boolean.'],
             'the gate names' => ['rest.gates.names', ['can_view'], 'The [rest.gates.names] option must be a map of strings.'],
             'one gate name' => ['rest.gates.names.authorized_to_delete', false, 'The [rest.gates.names.authorized_to_delete] option must be a string.'],
+            'the morph type key' => ['rest.morph.type_key', '', 'The [rest.morph.type_key] option must be a non-empty string.'],
         ];
     }
 

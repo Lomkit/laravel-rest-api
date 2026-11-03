@@ -25,6 +25,13 @@ class MorphTo extends MorphRelation
         return MorphColumns::of($relation);
     }
 
+    /** @return list<string> */
+    #[\Override]
+    public function reservedKeys(): array
+    {
+        return [$this->fromResource->context()->config()->morphTypeKey];
+    }
+
     /** @return array<string, mixed> */
     #[\Override]
     public function toDetails(): array

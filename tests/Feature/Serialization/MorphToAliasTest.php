@@ -43,7 +43,7 @@ class MorphToAliasTest extends PackageTestCase
             'sorts' => [['field' => 'id']],
         ]]);
 
-        $books = [['id' => 1, 'title' => 'Dune'], ['id' => 2, 'title' => 'Emma'], null, null];
+        $books = [['@type' => Book::class, 'id' => 1, 'title' => 'Dune'], ['@type' => Book::class, 'id' => 2, 'title' => 'Emma'], null, null];
         $response->assertOk()
             ->assertJsonPath('data.*.target', $books)
             ->assertJsonPath('data.*.labelable', $books);
@@ -61,8 +61,8 @@ class MorphToAliasTest extends PackageTestCase
         ]]);
 
         $response->assertOk()->assertJsonPath('data.*.target', [
-            ['id' => 1, 'title' => 'Dune', 'loan' => ['id' => 1, 'book_id' => 1, 'borrower' => 'Ada']],
-            ['id' => 2, 'title' => 'Emma', 'loan' => ['id' => 2, 'book_id' => 2, 'borrower' => 'Bob']],
+            ['@type' => Book::class, 'id' => 1, 'title' => 'Dune', 'loan' => ['id' => 1, 'book_id' => 1, 'borrower' => 'Ada']],
+            ['@type' => Book::class, 'id' => 2, 'title' => 'Emma', 'loan' => ['id' => 2, 'book_id' => 2, 'borrower' => 'Bob']],
             null,
             null,
         ]);
@@ -78,7 +78,29 @@ class MorphToAliasTest extends PackageTestCase
         ]]);
 
         $response->assertOk()
-            ->assertJsonPath('data.0.labels.0.target', ['id' => 1, 'title' => 'Dune'])
-            ->assertJsonPath('data.1.labels.0.target', ['id' => 2, 'title' => 'Emma']);
+            ->assertJsonPath('data.0.labels.0.target', ['@type' => Book::class, 'id' => 1, 'title' => 'Dune'])
+            ->assertJsonPath('data.1.labels.0.target', ['@type' => Book::class, 'id' => 2, 'title' => 'Emma']);
+    }
+
+    #[Test]
+    public function it_loads_an_aliased_include_of_an_aliased_morph_to(): void
+    {
+        $response = $this->postJson('/api/labels/search', ['search' => [
+            'includes' => [['relation' => 'labelable', 'alias' => 'target', 'includes' => [['relation' => 'loan', 'alias' => 'lent']]]],
+            'sorts' => [['field' => 'id']],
+        ]]);
+
+        $response->assertOk()->assertJsonPath('data.*.target.lent.borrower', ['Ada', 'Bob', null, null]);
+    }
+
+    #[Test]
+    public function it_counts_a_relation_of_an_aliased_morph_to(): void
+    {
+        $response = $this->postJson('/api/labels/search', ['search' => [
+            'includes' => [['relation' => 'labelable', 'alias' => 'target', 'aggregates' => [['relation' => 'labels', 'type' => 'count']]]],
+            'sorts' => [['field' => 'id']],
+        ]]);
+
+        $response->assertOk()->assertJsonPath('data.*.target.labels_count', [1, 1, null, null]);
     }
 }

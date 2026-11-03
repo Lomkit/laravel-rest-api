@@ -10,6 +10,7 @@ use LogicException;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\Plan\AliasedIncludeClause;
 use Lomkit\Rest\Search\Plan\IncludeClause;
+use Lomkit\Rest\Search\Plan\MorphToIncludeClause;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 
 final readonly class RelationRenderer
@@ -28,6 +29,7 @@ final readonly class RelationRenderer
             [$name, $key, $rows] = match (true) {
                 $include instanceof AliasedIncludeClause => [$include->alias, $include->alias, RowSerializer::of($include->plan, $plan->resource->relation($include->relation))],
                 $include instanceof IncludeClause => [$include->relation, Str::snake($include->relation), RowSerializer::of($include->plan, $plan->resource->relation($include->relation))],
+                $include instanceof MorphToIncludeClause => [$include->name(), $include->alias ?? Str::snake($include->relation), MorphToSerializer::of($include, $plan->resource)],
                 default => throw new LogicException($include::class.' is not an include of a plan.'),
             };
 

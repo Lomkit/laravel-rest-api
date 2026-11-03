@@ -26,7 +26,7 @@ use Lomkit\Rest\Text\ResolvedText;
 
 final readonly class SqlRows implements RowSource
 {
-    public function __construct(private ?ResolvedText $text) {}
+    public function __construct(private ?ResolvedText $text, private bool $ordered = true) {}
 
     #[\Override]
     public function clauses(Resource $resource, SearchNode $search, array $aggregates = []): array
@@ -60,6 +60,10 @@ final readonly class SqlRows implements RowSource
      */
     private function order(Resource $resource, SearchNode $search, array $aggregates): array
     {
+        if (! $this->ordered) {
+            return [];
+        }
+
         if ($search->sorts === []) {
             return [$search->text === null ? null : $this->text?->relevance(), new DefaultOrderClause($resource)];
         }
