@@ -411,7 +411,7 @@ Query builder and requests:
 - `Lomkit\Rest\Query\Builder::search()` and the `QueryBuilder` contract take a `QueryPlan`: `search(QueryPlan $plan): Builder`. The package builds the plan from `$request->payload()`, then resolves `QueryBuilder` once per search, for the root resource: the search endpoint, the search of an action and the rows of a search engine page. Includes and aggregates are applied by the plan and no longer resolve the binding. Actions and search engine pages resolve `QueryBuilder`, no longer `EloquentQueryBuilder`: an app that binds only `EloquentQueryBuilder` binds `QueryBuilder` too. To change a search, work on the query that `search()` returns in your binding, or use the hooks of the resource: `searchQuery()`, `scopes()`, `instructions()`, `defaultOrderBy()` and `paginate()`.
 - `Builder` loses `applyFilters()`, `applySorts()`, `scope()`, `applyScopes()`, `instruction()`, `applyInstructions()`, `include()`, `includeAliased()`, `applyIncludes()`, `aggregate()`, `applyAggregates()`, `disableDefaultLimit()`, `newQueryBuilder()` and `searchKeys()`. The `Lomkit\Rest\Query\Traits\PerformSearch` and `SearchesKeys` traits are removed, and `EloquentQueryBuilder` no longer declares `searchKeys()`.
 - The clauses of `Lomkit\Rest\Query\Clauses` are built from the nodes of `payload()`: `FilterGroupClause::of()`, `RelationGroupClause::of()`, `SortClause::of()`, `TrashedClause::of()`, `ScopeClause::of()`, `InstructionClause::of()` and `AggregateClause::of()`. `fromPayload()`, `fromSort()`, `fromAggregate()`, `RelevanceClause::requestedBy()` and `RelevanceClause::fromSort()` are removed.
-- `beforeSearch()` and `beforeOperate()` run after validation. An edit of the `search` input there no longer changes the rows, the page or the page size of a search, nor the rows that an action runs on, on the database or on a search engine. Read the search with `$request->payload()`.
+- `beforeSearch()` and `beforeOperate()` run after validation. An edit of the `search` input there no longer changes the search, on the database or on a search engine: neither its rows, its page and its page size, nor the rows that an action runs on, nor the fields, gates, aggregates and includes of the response. Read the search with `$request->payload()`.
 - `SearchRequest::searchContext()` returns a `Lomkit\Rest\Search\SearchContext`, built once from `payload()`, for checks that read several parts of a search. Its `filters` list each filter as a `Lomkit\Rest\Search\FlatFilter` with its `path`, `operator`, `value` and `exists`: the filters of nested groups come with the others, a filter of a relation group takes the relation as a prefix (`posts.status`), and `exists` is `false` under a relation group whose `exists` is `false`. `filtersOn($path)` and `sortsOn($field)` tell whether the search filters or sorts on a name, `scopes()` and `includes()` list the names of its scopes and includes, and `text` and `trashed` hold those parts of the search. Like `payload()`, it throws a `LogicException` before the request passed validation. To refuse a search, throw a `ValidationException` from `beforeSearch()`: the response is a 422, and the search does not run.
 
   ```php
@@ -430,7 +430,8 @@ Query builder and requests:
 
 - A `SearchRequest` subclass whose `failedValidation()` does not throw gets the `LogicException` of `payload()` when the search runs: "The search was read before the request passed validation."
 - An include that a dotted include goes through, such as `posts` next to `posts.author`, keeps its filters, sorts, scopes, instructions, limit, includes, aggregates and the `searchQuery()` of its resource whatever their order in `includes`. Before, it lost them when it was listed first.
-- `OperationNode::search()` returns the search of the action, empty when it is not sent. `DispatchAction::modelsQuery(SearchNode $search)` takes it. `Lomkit\Rest\Query\EngineSearch` takes the search as a third constructor argument and reads it: `paginate()` and `query()` take no argument, and `rows(array $keys)` loads the rows of a page.
+- When `includes` lists one relation twice without an alias, directly or through dotted paths, the response renders the last entry: its `selects`, `gates`, `aggregates` and `includes`, as its rows already did. Before, the response rendered the first entry over the rows of the last.
+- `OperationNode::search()` returns the search of the action, empty when it is not sent. `DispatchAction::modelsQuery(SearchNode $search)` takes it. `Lomkit\Rest\Query\EngineSearch` takes the search as a third constructor argument and reads it: `query()` takes no argument, `paginate()` takes none and returns a `Lomkit\Rest\Search\Plan\PlannedPage`, which holds the `plan` of the page and the paginator of its `rows`, and `rows(array $keys)` loads the rows of a page.
 
 ### Text search
 
@@ -908,6 +909,17 @@ Resource methods:
 - `authorizeTo()` calls `authorizedTo()`, so an override of `authorizedTo()` applies to the endpoints as well as to the gates. The checks made before validation, on the endpoint and on each reached resource, also go through the `authorizedTo()` of their resource.
 - `authorizedTo()` returns a new `Illuminate\Auth\Access\Response` built from the decision, with or without the cache. It keeps the result, the message and the status of the policy's response, and its code when the code is an integer or a string. It does not keep a code of another type, such as an enum or an object, or an instance of your own `Response` subclass.
 
+### Responses
+
+The package renders the rows of a response from the plan of the search: the `selects`, `gates`, `aggregates` and `includes` of `$request->payload()`, at every level.
+
+- A custom `Response` class keeps `map(Model $model, array $responseModel): array` only. It receives each row of the page or of the list as the package rendered it, and returns the row to send. `modelToResponse()`, `buildGatesForModel()` and `requestArrayForRelation()` are removed.
+- `Lomkit\Rest\Http\Response::resource()` is replaced by `plan(QueryPlan $plan)`, which takes the `Lomkit\Rest\Search\Plan\QueryPlan` of the rows. `responsable()` takes an `Illuminate\Contracts\Pagination\LengthAwarePaginator`, a `Collection` of models or one model. `plan()` and `responsable()` return the response.
+- `toResponse()` returns an `Illuminate\Http\JsonResponse`. The JSON does not change: a page holds `current_page`, `data`, `from`, `last_page`, `per_page`, `to`, `total` and `meta`, and a list or one model holds `data` and `meta`.
+- A paginator that `paginate()` returns renders as a page when it implements `Illuminate\Contracts\Pagination\LengthAwarePaginator`, whatever its class. Before, only an `Illuminate\Pagination\LengthAwarePaginator` did.
+- `Lomkit\Rest\Pagination\LengthAwarePaginator` declares native types: `__construct(array $items, int $total, int $perPage, int $currentPage, array $options = [], array $meta = [])`. Its items are the rendered rows.
+- The classes of `Lomkit\Rest\Http\Serialization` render the rows: `RowSerializer` renders the rows of one level of the plan with `RowFields`, `GateTable`, `RelationRenderer` and `PivotRenderer`, and `PageEnvelope` or `PlainEnvelope` wraps them. Each gate is still read through the `authorizedTo()` of the resource.
+
 ### Selects, sorts and aggregates
 
 A search reads each field through its declaration: `writeOnly()`, `selectable(false)` and `virtual()` decide what a row can return, and `sortable()` and `sortUsing()` decide how the field is sorted.
@@ -946,7 +958,7 @@ Aggregates:
 - `min` and `max` refuse a `Boolean` field, and an app type that extends `Boolean`, with the same 422, on every database.
 - `min` and `max` accept an `ID` field with UUID keys (a model using `HasUuids`, or `keyType('uuid')`) on every database, and return the same string on each of them. On PostgreSQL the aggregate reads the key as text, which keeps the order of the UUIDs.
 - `avg` and `sum` also need a `Number` field: `Number`, `Integer`, or an app type that extends `Number`. Another field, such as a `Text`, `Date`, `Boolean` or `ID` field, or an app type that extends `Field` directly, gives a 422. To average or sum the values of an app type, make it extend `Number`.
-- `count` and `exists` still refuse `field`. `Builder::aggregate()` is removed: `AggregateClause::of()` applies an `AggregateNode` under the name of its `AggregateKey`. The response key does not change: the `alias`, or `<relation>_<type>_<field>`.
+- `count` and `exists` still refuse a `field` with a value. `Builder::aggregate()` is removed: `AggregateClause::of()` applies an `AggregateNode` under the name of its `AggregateKey`, and the response returns the value under that name: the `alias`, or `<relation>_<type>_<field>` with the name of the field in lower case. Before, the value of a field whose name has capital letters was missing from the response, and `count` or `exists` sent with `"field": []` gave a 500.
 
 Include aliases:
 

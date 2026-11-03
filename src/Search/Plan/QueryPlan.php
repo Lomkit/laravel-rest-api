@@ -13,6 +13,8 @@ final readonly class QueryPlan implements Clause
      * @param  list<Clause>  $clauses
      * @param  list<Clause>  $includes
      * @param  list<AggregateClause>  $aggregates
+     * @param  list<string>|null  $selects
+     * @param  list<string>|null  $gates
      */
     public function __construct(
         public Resource $resource,
@@ -20,7 +22,14 @@ final readonly class QueryPlan implements Clause
         public array $includes,
         public array $aggregates,
         public LimitPolicy $limit,
+        public ?array $selects = null,
+        public ?array $gates = null,
     ) {}
+
+    public static function bare(Resource $resource): self
+    {
+        return new self($resource, [], [], [], LimitPolicy::none());
+    }
 
     #[\Override]
     public function apply(Builder $query): void

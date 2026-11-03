@@ -48,6 +48,8 @@ final readonly class SearchPlanner
             self::includes($includes),
             array_map(self::aggregate(...), $search->aggregates),
             $limit,
+            $search->selects,
+            $search->gates,
         );
     }
 
