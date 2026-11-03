@@ -11,8 +11,6 @@ use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class SearchBodyParser
 {
-    private const array GATES = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
-
     private const array SELECT_KEYS = ['field' => true];
 
     /**
@@ -44,7 +42,7 @@ final readonly class SearchBodyParser
         }
 
         $filters = self::list($search->at('filters'), ['array'], $limits->sizes->filters, $context, true);
-        $gates = self::gates($search->at('gates'), $context);
+        $gates = (new GatesParser)->parse($search->at('gates'), $context);
         $lists = [
             'filters' => $filters,
             'scopes' => self::list($search->at('scopes'), ['array', ...$grammar->scopeRules()], $limits->sizes->scopes, $context),
@@ -148,31 +146,6 @@ final readonly class SearchBodyParser
         }
 
         return self::list($includes, ['array'], $context->limits->sizes->includes, $context);
-    }
-
-    /** @return list<string>|null */
-    private static function gates(Cursor $gates, ValidationContext $context): ?array
-    {
-        $context->rules->addWhenPresent($gates, ['array', Rule::in(self::GATES)]);
-        $entries = $context->reader->entries($gates, $context->limits->sizes->gates);
-
-        if (! $gates->present) {
-            return null;
-        }
-
-        $known = [];
-
-        foreach ($entries ?? [] as $entry) {
-            if (is_string($entry->value) && in_array($entry->value, self::GATES, true)) {
-                $known[] = $entry->value;
-            }
-        }
-
-        if ($entries === null || count($known) !== count($entries)) {
-            $context->rules->partial();
-        }
-
-        return $known;
     }
 
     private static function integer(Cursor $value, ValidationContext $context): ?int
