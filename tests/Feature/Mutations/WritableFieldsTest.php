@@ -75,7 +75,7 @@ class WritableFieldsTest extends PackageTestCase
             'relations' => ['drafts' => [['operation' => 'create', 'attributes' => ['id' => self::OUTLINE, 'title' => 'Outline']]]],
         ]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$ada->id]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => $ada->id, 'relations' => ['drafts' => [['operation' => 'create', 'key' => self::OUTLINE]]]]]]);
         $this->assertSame([self::OUTLINE => 'Outline'], Draft::query()->pluck('title', 'id')->all());
     }
 
@@ -108,7 +108,10 @@ class WritableFieldsTest extends PackageTestCase
             'relations' => ['tags' => [['operation' => 'create', 'attributes' => ['name' => 'PHP', 'slug' => 'php']]]],
         ]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$ada->id]]);
+        $php = Tag::query()
+            ->where('slug', 'php')
+            ->sole();
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => $ada->id, 'relations' => ['tags' => [['operation' => 'create', 'key' => $php->id]]]]]]);
         $this->assertSame([['name' => 'PHP', 'slug' => 'php']], $ada->tags()->get()->map(fn (Tag $tag): array => $tag->only('name', 'slug'))->all());
     }
 
@@ -150,7 +153,7 @@ class WritableFieldsTest extends PackageTestCase
             'relations' => ['tags' => [['operation' => $operation, 'key' => $laravel->id, 'attributes' => ['name' => 'Laravel 13', 'archived_at' => '2026-03-01 09:00:00']]]],
         ]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$ada->id]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => $ada->id, 'relations' => ['tags' => [['operation' => $operation, 'key' => $laravel->id]]]]]]);
         $this->assertSame(
             [['name' => 'Laravel 13', 'slug' => 'laravel', 'archived_at' => '2026-03-01 09:00:00']],
             $ada->tags()->get()->map(fn (Tag $tag): array => $tag->only('name', 'slug', 'archived_at'))->all(),

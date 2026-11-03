@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Contracts;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Mutations\OperationEntry;
 
 interface EloquentQueryBuilder extends QueryBuilder
 {
@@ -13,7 +14,7 @@ interface EloquentQueryBuilder extends QueryBuilder
 
     /**
      * @param  array<string, mixed>  $parameters
-     * @return array<string, list<int|string>>
+     * @return list<OperationEntry>
      */
     public function mutate(array $parameters = []): array;
 

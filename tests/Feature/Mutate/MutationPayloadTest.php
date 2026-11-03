@@ -58,7 +58,18 @@ class MutationPayloadTest extends PackageTestCase
         $seating = Category::query()
             ->where('name', 'Seating')
             ->sole();
-        $response->assertOk()->assertExactJson(['created' => [$seating->id], 'updated' => [$lighting->id]]);
+        $chair = Product::query()
+            ->where('name', 'Office chair')
+            ->sole();
+        $response->assertOk()->assertExactJson(['operations' => [
+            ['operation' => 'create', 'key' => $seating->id, 'relations' => ['products' => [
+                ['operation' => 'create', 'key' => $chair->id],
+                ['operation' => 'attach', 'key' => [$floorLamp->id]],
+            ]]],
+            ['operation' => 'update', 'key' => $lighting->id, 'relations' => ['featuredProducts' => [
+                ['operation' => 'sync', 'key' => [$floorLamp->id]],
+            ]]],
+        ]]);
         [$created, $updated] = $this->read();
         $this->assertSame([MutationOperation::Create, null, ['name' => 'Seating'], 0], [$created->operation, $created->key, $created->attributes, $created->depth]);
         $products = $created->relations['products'] ?? null;
@@ -92,7 +103,7 @@ class MutationPayloadTest extends PackageTestCase
         ]]);
 
         $seating = Category::query()->sole();
-        $response->assertOk()->assertExactJson(['created' => [$seating->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $seating->id]]]);
         $this->assertSame(['Seating'], $this->names());
     }
 

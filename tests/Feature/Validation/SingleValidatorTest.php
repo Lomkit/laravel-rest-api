@@ -143,7 +143,20 @@ class SingleValidatorTest extends PackageTestCase
             ],
         ]]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [1]]);
+        $created = Product::query()
+            ->whereKeyNot([$deskLamp->id, $floorLamp->id])
+            ->sole();
+        $response->assertOk()->assertExactJson(['operations' => [[
+            'operation' => 'update',
+            'key' => 1,
+            'relations' => [
+                'products' => [
+                    ['operation' => 'attach', 'key' => [$floorLamp->id]],
+                    ['operation' => 'create', 'key' => $created->id],
+                ],
+                'featuredProducts' => [['operation' => 'attach', 'key' => $deskLamp->id]],
+            ],
+        ]]]);
         $this->assertOnePass();
     }
 

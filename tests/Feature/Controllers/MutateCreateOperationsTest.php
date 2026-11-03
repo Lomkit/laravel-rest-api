@@ -294,7 +294,7 @@ class MutateCreateOperationsTest extends TestCase
 
         $this->assertEquals(
             $belongsToRelationToAttach->getKey(),
-            Model::find($response->json('created.0'))->belongs_to_relation_id
+            Model::find($response->json('operations.0.key'))->belongs_to_relation_id
         );
     }
 
@@ -342,7 +342,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongs_to_relation_id,
+            Model::find($response->json('operations.0.key'))->belongs_to_relation_id,
             $belongsToRelationToUpdate->getKey()
         );
     }
@@ -385,7 +385,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             1
         );
     }
@@ -432,7 +432,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             2
         );
     }
@@ -480,7 +480,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             1
         );
     }
@@ -533,7 +533,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             2
         );
     }
@@ -576,7 +576,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             0
         );
     }
@@ -631,7 +631,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             1
         );
     }
@@ -695,7 +695,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasManyRelation()->count(),
             2
         );
     }
@@ -736,7 +736,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneRelation()->count(),
             1
         );
     }
@@ -782,7 +782,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneRelation()->count(),
             1
         );
     }
@@ -835,7 +835,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneRelation()->count(),
             1
         );
     }
@@ -876,7 +876,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneOfManyRelation()->count(),
             1
         );
     }
@@ -922,7 +922,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneOfManyRelation()->count(),
             1
         );
     }
@@ -975,7 +975,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->hasOneOfManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->hasOneOfManyRelation()->count(),
             1
         );
     }
@@ -1018,7 +1018,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
     }
@@ -1071,10 +1071,10 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
-        $related = Model::find($response->json('created.0'))
+        $related = Model::find($response->json('operations.0.key'))
             ->belongsToManyRelation()
             ->orderBy('belongs_to_many_relations.id')
             ->get();
@@ -1130,7 +1130,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
     }
@@ -1178,7 +1178,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
     }
@@ -1231,7 +1231,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
     }
@@ -1294,10 +1294,10 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
-        $related = Model::find($response->json('created.0'))
+        $related = Model::find($response->json('operations.0.key'))
             ->belongsToManyRelation()
             ->orderBy('belongs_to_many_relations.id')
             ->get();
@@ -1374,19 +1374,19 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             3
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation->find($belongsToManyRelationToAttach1)->belongs_to_many_pivot->number,
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation->find($belongsToManyRelationToAttach1)->belongs_to_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation->find($belongsToManyRelationToAttach3)->belongs_to_many_pivot->number,
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation->find($belongsToManyRelationToAttach3)->belongs_to_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation->find($belongsToManyRelationToAttach2)->belongs_to_many_pivot->number,
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation->find($belongsToManyRelationToAttach2)->belongs_to_many_pivot->number,
             30
         );
     }
@@ -1441,7 +1441,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             1
         );
     }
@@ -1505,7 +1505,7 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the model is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
     }
@@ -1580,10 +1580,10 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             2
         );
-        $related = Model::find($response->json('created.0'))
+        $related = Model::find($response->json('operations.0.key'))
             ->belongsToManyRelation()
             ->orderBy('belongs_to_many_relations.id')
             ->get();
@@ -1676,19 +1676,19 @@ class MutateCreateOperationsTest extends TestCase
 
         // Here we test that the relation is correctly linked
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->count(),
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->count(),
             3
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->where('belongs_to_many_relation_id', $belongsToManyRelationToUpdate1->getKey())->first()->belongs_to_many_pivot->number,
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->where('belongs_to_many_relation_id', $belongsToManyRelationToUpdate1->getKey())->first()->belongs_to_many_pivot->number,
             20
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->where('belongs_to_many_relation_id', $belongsToManyRelationToUpdate2->getKey())->first()->belongs_to_many_pivot->number,
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->where('belongs_to_many_relation_id', $belongsToManyRelationToUpdate2->getKey())->first()->belongs_to_many_pivot->number,
             30
         );
         $this->assertEquals(
-            Model::find($response->json('created.0'))->belongsToManyRelation()->where('belongs_to_many_relation_id', $belongsToManyRelationToUpdate3->getKey())->first()->belongs_to_many_pivot->number,
+            Model::find($response->json('operations.0.key'))->belongsToManyRelation()->where('belongs_to_many_relation_id', $belongsToManyRelationToUpdate3->getKey())->first()->belongs_to_many_pivot->number,
             20
         );
     }

@@ -41,7 +41,7 @@ class JsonPivotTest extends PackageTestCase
     {
         $response = $this->mutate('sensors', $this->entry($operation, ['wiring' => self::WIRING]));
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$this->scope->id]]);
+        $response->assertOk()->assertExactJson($this->updated('sensors', $operation));
         $this->assertSame([self::WIRING], $this->storedWiring());
         $this->assertSame([['wiring' => self::WIRING]], $this->includedPivots('sensors'));
     }
@@ -66,7 +66,7 @@ class JsonPivotTest extends PackageTestCase
 
         $response = $this->mutate('sensors', $this->entry($operation, ['wiring' => self::WIRING]));
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$this->scope->id]]);
+        $response->assertOk()->assertExactJson($this->updated('sensors', $operation));
         $this->assertSame([self::WIRING], $this->storedWiring());
     }
 
@@ -100,7 +100,7 @@ class JsonPivotTest extends PackageTestCase
     {
         $response = $this->mutate('sensors', $this->entry('attach', ['wiring' => null]));
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$this->scope->id]]);
+        $response->assertOk()->assertExactJson($this->updated('sensors', 'attach'));
         $this->assertSame([null], DB::table('instrument_sensor')->pluck('wiring')->all());
         $this->assertSame([['wiring' => null]], $this->includedPivots('sensors'));
     }
@@ -111,7 +111,7 @@ class JsonPivotTest extends PackageTestCase
     {
         $response = $this->mutate('mountedSensors', $this->entry($operation, ['wiring' => self::WIRING]));
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$this->scope->id]]);
+        $response->assertOk()->assertExactJson($this->updated('mountedSensors', $operation));
         $this->assertSame([self::WIRING], $this->storedWiring());
         $this->assertSame([['wiring' => self::WIRING]], $this->includedPivots('mountedSensors'));
     }
@@ -131,10 +131,28 @@ class JsonPivotTest extends PackageTestCase
 
         $thermocouple = Sensor::query()->where('name', 'Thermocouple')->sole();
         $logger = Instrument::query()->where('name', 'Logger')->sole();
-        $response->assertOk()->assertExactJson(['created' => [$thermocouple->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [[
+            'operation' => 'create',
+            'key' => $thermocouple->id,
+            'relations' => ['instruments' => [['operation' => 'create', 'key' => $logger->id]]],
+        ]]]);
         $this->assertSame(['ram' => 2, 'ports' => ['rs232']], json_decode((string) $logger->getRawOriginal('specs'), true, flags: JSON_THROW_ON_ERROR));
         $this->assertSame(['gain' => 2], json_decode((string) $logger->getRawOriginal('calibration'), true, flags: JSON_THROW_ON_ERROR));
         $this->assertSame([self::WIRING], $this->storedWiring());
+    }
+
+    /** @return array{operations: list<array<string, mixed>>} */
+    private function updated(string $relation, string $operation): array
+    {
+        $related = $this->scope
+            ->{$relation}()
+            ->sole();
+
+        return ['operations' => [[
+            'operation' => 'update',
+            'key' => $this->scope->id,
+            'relations' => [$relation => [['operation' => $operation, 'key' => $related->getKey()]]],
+        ]]];
     }
 
     /** @param array<string, mixed> $entry */

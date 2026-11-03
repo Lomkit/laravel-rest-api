@@ -87,7 +87,7 @@ class EntryChecksTest extends HelpdeskTestCase
 
         $this->postJson('/api/tickets/mutate', ['mutate' => [['operation' => 'update', 'key' => $jam->id, 'attributes' => ['title' => 'Paper jam']]]])
             ->assertOk()
-            ->assertExactJson(['created' => [], 'updated' => [$jam->id]]);
+            ->assertExactJson(['operations' => [['operation' => 'update', 'key' => $jam->id]]]);
 
         $this->assertSame($this->calls('update', $jam), $this->tickets->calls);
     }

@@ -116,7 +116,17 @@ class MutationContextTest extends PackageTestCase
             ]],
         ]]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [1]]);
+        $annual = Post::query()
+            ->where('title', 'Annual report')
+            ->sole();
+        $response->assertOk()->assertExactJson(['operations' => [[
+            'operation' => 'update',
+            'key' => 1,
+            'relations' => ['posts' => [
+                ['operation' => 'create', 'key' => $annual->id],
+                ['operation' => 'update', 'key' => $quarterly->id],
+            ]],
+        ]]]);
         $this->assertSame([['create', null, 1], ['update', $quarterly->id, 1]], RecordsMutation::$seen);
         $this->assertSame(4, $quarterly->fresh()?->views);
     }

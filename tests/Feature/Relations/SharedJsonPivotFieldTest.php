@@ -36,7 +36,10 @@ class SharedJsonPivotFieldTest extends PackageTestCase
             'relations' => [$first => $entries[$first], $second => $entries[$second]],
         ]]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$scope->id]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => $scope->id, 'relations' => [
+            'sensors' => [['operation' => 'attach', 'key' => $probe->id]],
+            'mountedSensors' => [['operation' => 'attach', 'key' => $gauge->id]],
+        ]]]]);
         $this->assertSame([['pins' => [1]], ['pins' => [2]]], $this->storedWiring());
     }
 

@@ -115,6 +115,20 @@ abstract class WeightedPivotTestCase extends PackageTestCase
             ->all();
     }
 
+    /** @return array{operations: list<array<string, mixed>>} */
+    protected function mutated(string $relation, string $operation): array
+    {
+        $related = $this->parent($relation)
+            ->{$relation}()
+            ->sole();
+
+        return ['operations' => [[
+            'operation' => 'update',
+            'key' => $this->parent($relation)->getKey(),
+            'relations' => [$relation => [['operation' => $operation, 'key' => $related->getKey()]]],
+        ]]];
+    }
+
     protected function endpoint(string $relation): string
     {
         return $relation === 'labelledTickets' ? '/weighted-tags' : '/weighted-tickets';

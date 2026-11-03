@@ -22,7 +22,7 @@ class EnumKeyedRowsTest extends HelpdeskTestCase
             ->assertJsonPath('data.1.gates.authorized_to_view.allowed', true);
         $this->postJson('/api/channels/mutate', ['mutate' => [['operation' => 'update', 'key' => 'phone', 'attributes' => ['name' => 'Hotline']]]])
             ->assertOk()
-            ->assertJsonPath('updated', ['phone']);
+            ->assertJsonPath('operations', [['operation' => 'update', 'key' => 'phone']]);
 
         $this->assertSame(['viewAny', 'view email', 'update email', 'view phone', 'update phone', 'update phone'], $this->channels->calls);
         $this->assertDatabaseHas('channels', ['code' => 'phone', 'name' => 'Hotline']);

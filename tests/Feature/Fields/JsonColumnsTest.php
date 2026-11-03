@@ -25,7 +25,7 @@ class JsonColumnsTest extends PackageTestCase
         $response = $this->mutate(['operation' => 'create', 'attributes' => ['name' => 'Scope', 'specs' => ['ram' => 8, 'ports' => ['usb', 'hdmi']]]]);
 
         $scope = Instrument::sole();
-        $response->assertOk()->assertExactJson(['created' => [$scope->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $scope->id]]]);
         $this->assertSame(['ram' => 8, 'ports' => ['usb', 'hdmi']], $this->stored('specs'));
 
         $search = $this->postJson('/api/instruments/search');
@@ -42,7 +42,7 @@ class JsonColumnsTest extends PackageTestCase
 
         $response = $this->mutate(['operation' => 'update', 'key' => $scope->id, 'attributes' => ['specs' => ['ram' => 16, 'ports' => []]]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$scope->id]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => $scope->id]]]);
         $this->assertSame(['ram' => 16, 'ports' => []], $this->stored('specs'));
     }
 
@@ -64,7 +64,7 @@ class JsonColumnsTest extends PackageTestCase
         $response = $this->mutate(['operation' => 'create', 'attributes' => ['name' => 'Scope', 'specs' => null]]);
 
         $scope = Instrument::sole();
-        $response->assertOk()->assertExactJson(['created' => [$scope->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $scope->id]]]);
         $this->assertNull(DB::table('instruments')->value('specs'));
 
         $search = $this->postJson('/api/instruments/search');
@@ -80,7 +80,7 @@ class JsonColumnsTest extends PackageTestCase
         $response = $this->mutate(['operation' => 'create', 'attributes' => ['name' => 'Scope', 'calibration' => ['gain' => 1.5, 'offset' => 2]]]);
 
         $scope = Instrument::sole();
-        $response->assertOk()->assertExactJson(['created' => [$scope->id], 'updated' => []]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $scope->id]]]);
         $this->assertSame(['gain' => 1.5, 'offset' => 2], $this->stored('calibration'));
         $this->assertSame(['gain' => 1.5, 'offset' => 2], $scope->calibration);
 

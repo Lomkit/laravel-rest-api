@@ -98,7 +98,7 @@ class RelationOperationsTest extends PackageTestCase
             'relations' => ['shelves' => [['operation' => $operation, 'key' => $scienceFiction->id]]],
         ]]]);
 
-        $response->assertOk()->assertExactJson(['created' => [], 'updated' => [$dune->id]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => $dune->id, 'relations' => ['shelves' => [['operation' => $operation, 'key' => $scienceFiction->id]]]]]]);
         $this->assertSame([$scienceFiction->id], $dune->shelves()->pluck('shelves.id')->all());
     }
 

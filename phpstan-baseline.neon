@@ -236,12 +236,6 @@ parameters:
 			path: src/Query/Builder.php
 
 		-
-			message: '#^Cannot access offset ''operation'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Query/Builder.php
-
-		-
 			message: '#^Cannot access offset string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -256,12 +250,6 @@ parameters:
 		-
 			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:__construct\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Relations\\Relation but does not specify its types\: TRelatedModel, TDeclaringModel, TResult$#'
 			identifier: missingType.generics
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutate\(\) should return array\<string, list\<int\|string\>\> but returns non\-empty\-array\<string, list\<mixed\>\>\.$#'
-			identifier: return.type
 			count: 1
 			path: src/Query/Builder.php
 
@@ -326,12 +314,6 @@ parameters:
 		-
 			message: '#^Parameter \#3 \$mutationRelations of method Lomkit\\Rest\\Relations\\Relation\:\:beforeMutating\(\) expects array, mixed given\.$#'
 			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: src/Query/Builder.php
 
