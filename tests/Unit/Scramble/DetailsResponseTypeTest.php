@@ -27,6 +27,6 @@ class DetailsResponseTypeTest extends TestCase
         $this->assertSame(422, $responses[0]->code);
         $this->assertInstanceOf(Response::class, $responses[1]);
         $this->assertSame(200, $responses[1]->code);
-        $this->assertSame('The fields, relations, scopes, actions, instructions, rules and text search of the resource', $responses[1]->description);
+        $this->assertSame('The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource', $responses[1]->description);
     }
 }

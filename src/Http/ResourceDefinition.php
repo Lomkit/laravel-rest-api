@@ -92,7 +92,7 @@ final class ResourceDefinition
 
     public function gates(): GateVocabulary
     {
-        return $this->gates ??= GateVocabulary::of();
+        return $this->gates ??= GateVocabulary::of($this->resource->gates($this->request), $this->resource::class.'::gates()');
     }
 
     private function declaredFields(): FieldSet

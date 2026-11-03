@@ -59,7 +59,7 @@ final readonly class GateTable
             }
 
             $response = $this->resource->authorizedTo($gate->name(), $subject);
-            $answers[$names[$gate->key()]] = ['allowed' => $response->allowed(), 'message' => $response->message()];
+            $answers[$names[$gate->key()] ?? $gate->key()] = ['allowed' => $response->allowed(), 'message' => $response->message()];
         }
 
         return (object) $answers;

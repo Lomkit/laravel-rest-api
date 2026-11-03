@@ -7,11 +7,16 @@ use Lomkit\Rest\Authorization\Ability;
 
 final readonly class GateAbility
 {
-    public function __construct(public Ability $ability) {}
+    public Ability|string $ability;
+
+    public function __construct(Ability|string $ability)
+    {
+        $this->ability = is_string($ability) ? Ability::tryFrom($ability) ?? $ability : $ability;
+    }
 
     public function name(): string
     {
-        return $this->ability->value;
+        return $this->ability instanceof Ability ? $this->ability->value : $this->ability;
     }
 
     public function key(): string
@@ -21,6 +26,6 @@ final readonly class GateAbility
 
     public function isClassLevel(): bool
     {
-        return $this->ability->isClassLevel();
+        return $this->ability instanceof Ability && $this->ability->isClassLevel();
     }
 }

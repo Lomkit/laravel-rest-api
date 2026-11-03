@@ -27,5 +27,6 @@
      "types": {"Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\Collector": "Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\CollectorResource"},
      "morph": {"type_column": "owner_type", "key_column": "owner_id"}}],
   "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
-  "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null}
+  "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null},
+  "gates": ["view", "create", "update", "delete", "restore", "forceDelete"]
 }}

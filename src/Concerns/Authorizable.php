@@ -17,6 +17,12 @@ trait Authorizable
         return $endpoint->abilities();
     }
 
+    /** @return list<string> */
+    public function gates(RestRequest $request): array
+    {
+        return [];
+    }
+
     public function authorizeTo(string $ability, Model|string $model): void
     {
         $this->authorizedTo($ability, $model)->authorize();

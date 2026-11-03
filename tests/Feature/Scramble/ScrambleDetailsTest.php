@@ -26,7 +26,7 @@ class ScrambleDetailsTest extends ScrambleTestCase
         $operation = $this->operation('/posts', 'get');
 
         $this->assertSame('Get Post details', $operation['summary']);
-        $this->assertSame('The fields, relations, scopes, actions, instructions, rules and text search of the resource', $operation['responses'][200]['description']);
+        $this->assertSame('The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource', $operation['responses'][200]['description']);
         $this->assertSame(['data'], $operation['responses'][200]['content']['application/json']['schema']['required']);
     }
 
@@ -60,6 +60,12 @@ class ScrambleDetailsTest extends ScrambleTestCase
     public function it_documents_the_text_search_of_the_resource(): void
     {
         $this->assertSame(self::TEXT, json_encode($this->details()['text']));
+    }
+
+    #[Test]
+    public function it_documents_the_gates_of_the_resource(): void
+    {
+        $this->assertSame('{"type":"array","description":"The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off","items":{"type":"string"}}', json_encode($this->details()['gates']));
     }
 
     #[Test]
