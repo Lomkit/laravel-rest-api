@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Http;
 
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\InvalidScopeException;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -89,6 +90,11 @@ final class ResourceDefinition
     private function declaredFields(): FieldSet
     {
         $fields = FieldSet::of($this->resource->fields($this->request), $this->resource::class.'::fields()');
+        $gatesKey = $this->resource->context()->config()->gatesKey;
+
+        if ($fields->has($gatesKey)) {
+            throw InvalidResourceException::gatesKeyField($this->resource::class, $gatesKey);
+        }
 
         if (! (new ReflectionClass($this->resource::modelClass()))->isInstantiable()) {
             return $fields;

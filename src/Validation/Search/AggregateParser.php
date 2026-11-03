@@ -11,6 +11,7 @@ use Lomkit\Rest\Search\AggregateKey;
 use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ValidationContext;
+use Lomkit\Rest\Validation\Violation;
 
 final readonly class AggregateParser
 {
@@ -20,12 +21,12 @@ final readonly class AggregateParser
      * @param  list<Cursor>  $entries
      * @return list<AggregateNode>
      */
-    public function parse(array $entries, ValidationContext $context): array
+    public function parse(array $entries, ValidationContext $context, RowKeys $keys): array
     {
         $aggregates = [];
 
         foreach ($entries as $entry) {
-            $aggregate = $this->aggregate($entry, $context);
+            $aggregate = $this->aggregate($entry, $keys, $context);
 
             if ($aggregate !== null) {
                 $aggregates[] = $aggregate;
@@ -35,7 +36,7 @@ final readonly class AggregateParser
         return $aggregates;
     }
 
-    private function aggregate(Cursor $entry, ValidationContext $context): ?AggregateNode
+    private function aggregate(Cursor $entry, RowKeys $keys, ValidationContext $context): ?AggregateNode
     {
         if (! $context->reader->object($entry)) {
             return null;
@@ -52,9 +53,18 @@ final readonly class AggregateParser
         $related = $relations === null ? null : $relations[array_key_last($relations)]->resource();
         $function = is_string($type->value) ? AggregateFunction::tryFrom($type->value) : null;
 
-        $rules->add($alias->path, ['string']);
+        $rules->add($alias->path, is_string($alias->value)
+            ? ['string', 'max:255', 'regex:'.RowKeys::PATTERN, new AggregateAlias($keys)]
+            : ['string']);
         $rules->add($relation->path, ['required', new KnownRelation($context->resource)]);
         $rules->add($type->path, ['required', Rule::enum(AggregateFunction::class)]);
+
+        if ($relations !== null && count($relations) > 1) {
+            $rules->reject(Violation::nestedAggregate($relation->path));
+            $rules->partial();
+
+            return null;
+        }
 
         if ($related === null) {
             $rules->partial();
@@ -74,8 +84,16 @@ final readonly class AggregateParser
         }
 
         $name = is_string($alias->value) ? $alias->value : null;
+        $key = AggregateKey::of($relation->value, $function, $field, $name);
 
-        return new AggregateNode($relation->value, $related, $function, $field, $name, AggregateKey::of($relation->value, $function, $field, $name), $group);
+        if ($name === null && (new AggregateAlias($keys))->conflict($key->value) !== null) {
+            $rules->reject(Violation::takenKey($alias->path, $key->value));
+            $rules->partial();
+
+            return null;
+        }
+
+        return new AggregateNode($relation->value, $related, $function, $field, $name, $key, $group);
     }
 
     private function field(Cursor $entry, ?AggregateFunction $function, Resource $related, ValidationContext $context): ?Field

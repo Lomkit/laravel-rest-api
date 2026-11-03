@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Fields\Concerns;
 
 use Closure;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\SortDirection;
 
@@ -20,6 +21,9 @@ trait ConfiguresReading
 
     /** @var (Closure(Builder, 'asc'|'desc'): mixed)|null */
     private ?Closure $sortUsing = null;
+
+    /** @var (Closure(Model): mixed)|null */
+    private ?Closure $resolveUsing = null;
 
     public function selectable(bool $selectable = true): static
     {
@@ -64,7 +68,7 @@ trait ConfiguresReading
 
     public function isSelectable(): bool
     {
-        return $this->selectable && ! $this->isWriteOnly() && ! $this->virtual;
+        return $this->selectable && ! $this->isWriteOnly() && (! $this->virtual || $this->resolveUsing !== null);
     }
 
     public function isVirtual(): bool
@@ -95,6 +99,28 @@ trait ConfiguresReading
     public function sortsThroughCallback(): bool
     {
         return $this->sortUsing !== null;
+    }
+
+    /** @param Closure(Model): mixed $callback */
+    public function resolveUsing(Closure $callback): static
+    {
+        $this->resolveUsing = $callback;
+
+        return $this;
+    }
+
+    public function resolvesThroughCallback(): bool
+    {
+        return $this->resolveUsing !== null;
+    }
+
+    public function resolve(Model $model): mixed
+    {
+        if ($this->resolveUsing === null) {
+            throw InvalidFieldException::unresolved($this->name);
+        }
+
+        return ($this->resolveUsing)($model);
     }
 
     public function isSortableByColumn(): bool

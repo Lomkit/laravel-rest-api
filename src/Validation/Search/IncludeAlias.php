@@ -4,15 +4,10 @@ namespace Lomkit\Rest\Validation\Search;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Lomkit\Rest\Http\Resource;
 
 final readonly class IncludeAlias implements ValidationRule
 {
-    public function __construct(
-        private Resource $resource,
-        private string $relation,
-        private int $uses,
-    ) {}
+    public function __construct(private RowKeys $keys, private string $relation) {}
 
     #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
@@ -26,14 +21,20 @@ final readonly class IncludeAlias implements ValidationRule
 
     private function conflict(mixed $value): ?string
     {
-        $request = $this->resource->context()->request;
+        if (str_contains($this->relation, '.')) {
+            return 'The :attribute is not allowed on a nested relation, use a nested include instead.';
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
 
         return match (true) {
-            str_contains($this->relation, '.') => 'The :attribute is not allowed on a nested relation, use a nested include instead.',
-            $value === $this->resource->context()->config()->gatesKey => 'The :attribute is reserved.',
-            in_array($value, $this->resource->getFields($request)->names(), true) => 'The :attribute conflicts with a field of this resource.',
-            in_array($value, array_column($this->resource->getRelations($request), 'relation'), true) => 'The :attribute conflicts with a relation of this resource.',
-            $this->uses > 1 => 'The :attribute is already used by another include.',
+            $this->keys->isReserved($value) => 'The :attribute is reserved.',
+            $this->keys->isField($value) => 'The :attribute conflicts with a field of this resource.',
+            $this->keys->isRelation($value) => 'The :attribute conflicts with a relation of this resource.',
+            $this->keys->includeUses($value) > 1 => 'The :attribute is already used by another include.',
+            $this->keys->aggregateUses($value) > 0 => 'The :attribute is already used by an aggregate.',
             default => null,
         };
     }

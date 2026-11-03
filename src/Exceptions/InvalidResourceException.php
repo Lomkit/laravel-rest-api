@@ -16,6 +16,11 @@ final class InvalidResourceException extends LogicException
         return new self("The resource [{$resource}] declares {$method}(), which the package no longer calls. {$replacement}");
     }
 
+    public static function gatesKeyField(string $resource, string $field): self
+    {
+        return new self("The resource [{$resource}] declares the field [{$field}], which is the key of the gates of its rows. Rename the field, or set rest.gates.key to another name.");
+    }
+
     public static function notAMorphTo(string $resource, string $relation): self
     {
         return new self("The relation [{$relation}] of the resource [{$resource}] is declared with MorphTo, but its model method does not return a MorphTo relation.");

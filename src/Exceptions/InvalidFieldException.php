@@ -52,6 +52,11 @@ final class InvalidFieldException extends LogicException
         return new self("{$owner} declares fillUsing() on the field [{$name}]. A pivot value is written to its column as sent.");
     }
 
+    public static function resolvedPivotField(string $owner, string $name): self
+    {
+        return new self("{$owner} declares resolveUsing() on the field [{$name}]. A pivot value is read from its column.");
+    }
+
     public static function notSearchableType(string $name, string $type): self
     {
         return new self("The field [{$name}] of type [{$type}] cannot be searchable: only text fields can be searched.");
@@ -90,6 +95,11 @@ final class InvalidFieldException extends LogicException
     public static function notSortable(string $field): self
     {
         return new self("The field [{$field}] is not sortable.");
+    }
+
+    public static function unresolved(string $name): self
+    {
+        return new self("The field [{$name}] has no resolveUsing() callback.");
     }
 
     public static function unknownSortDirection(string $direction): self

@@ -237,6 +237,7 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 
 - `Json` works with or without a JSON cast on the model, or on the pivot class for a pivot field. When the model writes the attribute as it is, with no cast or a `string`, `encrypted` or `AsStringable` cast, and no set mutator, the field encodes the value before Eloquent writes it, and the response returns the decoded value. Any other cast, such as `array`, `json`, `collection`, `AsArrayObject`, `AsCollection`, `AsFluent`, `AsVector` or a cast class of the application, and a set mutator (`setMetadataAttribute()` or an `Attribute` with a `set` callback) receive the value as sent and encode it, as before. A `fillUsing()` callback still receives the value as sent. A `json` pivot column on the default `Pivot` class needs no custom pivot model.
 - `getFields()` returns a `Lomkit\Rest\Fields\FieldSet` instead of an array of names. Call `->names()` to get the old list.
+- A field named like the gates key, `rest.gates.key` (`gates` by default), throws `Lomkit\Rest\Exceptions\InvalidResourceException` when the fields of its resource are first read, because the gates of a row are returned under that key. Rename the field, or set `rest.gates.key` to another name.
 - `rest:resource` generates `ID::make()` with the key name of the model, `ID::make('id')` by default. See [Generators](#generators).
 - `Lomkit\Rest\Fields\DateTime` has the same short name as PHP's `\DateTime`. In a file that uses both, alias one of them.
 - A field can declare `label()` and `messages()`. The label names the field's key in validation messages, and the messages replace Laravel's text for the rules of that key. See "Labels and messages" in [Validation engine](#validation-engine).
@@ -922,14 +923,22 @@ The package renders the rows of a response from the plan of the search: the `sel
 
 ### Selects, sorts and aggregates
 
-A search reads each field through its declaration: `writeOnly()`, `selectable(false)` and `virtual()` decide what a row can return, and `sortable()` and `sortUsing()` decide how the field is sorted.
+A search reads each field through its declaration: `writeOnly()`, `selectable(false)`, `virtual()` and `resolveUsing()` decide what a row can return, and `sortable()` and `sortUsing()` decide how the field is sorted.
 
 Selects and rows:
 
-- `selects` accepts the selectable fields only. A field declared `writeOnly()`, `selectable(false)` or `virtual()` gives a 422 under `search.selects.<i>.field`, as an undeclared field does. The `selects` of an include are checked against the fields of the related resource.
-- Without `selects`, a row holds the selectable fields of its resource only, at every level of the includes. A `writeOnly()` field is never returned, by any endpoint: declare `writeOnly()` on a field that clients may write but not read. A `virtual()` field is not returned either.
+- `selects` accepts the selectable fields only. A field declared `writeOnly()` or `selectable(false)`, and a `virtual()` field without `resolveUsing()`, give a 422 under `search.selects.<i>.field`, as an undeclared field does. The `selects` of an include are checked against the fields of the related resource.
+- Without `selects`, a row holds the selectable fields of its resource only, at every level of the includes. A `writeOnly()` field is never returned, by any endpoint: declare `writeOnly()` on a field that clients may write but not read. A `virtual()` field is returned only when it declares `resolveUsing()`.
 - `destroy`, `restore` and `forceDestroy` refuse `search`: an empty array is accepted, and any other `search` gives a 422 under `search`, "The search field is prohibited." for a value that is not empty and "The search field must be an array." for `null` or a blank string. No row is deleted or restored then. Their response holds the selectable fields of each row, without gates or aggregates.
-- Virtual fields cannot be selected yet, and `requires()` has no effect yet.
+- `resolveUsing(Closure $callback)` gives a field its value in a row. The callback receives the model of the row, and the response sends the value as the callback returns it: a `Json` field does not decode it. A `virtual()` field with `resolveUsing()` is selectable: `selects` accepts it, a row without `selects` returns it, at every include level, and its details say `"select": true`. A field that is not virtual can declare `resolveUsing()` too: the callback then gives its value instead of the column. In a row, the values of the callbacks come after the columns and the aggregates. The callback runs once for each returned row, so a query in it runs once per row. A `virtual()` field is still sorted and filtered only through `sortUsing()` and `filterUsing()`, and `requires()` has no effect yet.
+
+```php
+use Illuminate\Database\Eloquent\Model;
+
+Text::make('display_name')
+    ->virtual()
+    ->resolveUsing(fn (Model $author): string => $author->first_name.' '.$author->last_name),
+```
 
 Sorts:
 
@@ -958,11 +967,20 @@ Aggregates:
 - `min` and `max` refuse a `Boolean` field, and an app type that extends `Boolean`, with the same 422, on every database.
 - `min` and `max` accept an `ID` field with UUID keys (a model using `HasUuids`, or `keyType('uuid')`) on every database, and return the same string on each of them. On PostgreSQL the aggregate reads the key as text, which keeps the order of the UUIDs.
 - `avg` and `sum` also need a `Number` field: `Number`, `Integer`, or an app type that extends `Number`. Another field, such as a `Text`, `Date`, `Boolean` or `ID` field, or an app type that extends `Field` directly, gives a 422. To average or sum the values of an app type, make it extend `Number`.
-- `count` and `exists` still refuse a `field` with a value. `Builder::aggregate()` is removed: `AggregateClause::of()` applies an `AggregateNode` under the name of its `AggregateKey`, and the response returns the value under that name: the `alias`, or `<relation>_<type>_<field>` with the name of the field in lower case. Before, the value of a field whose name has capital letters was missing from the response, and `count` or `exists` sent with `"field": []` gave a 500.
+- `count` and `exists` still refuse a `field` with a value. `Builder::aggregate()` is removed: `AggregateClause::of(AggregateNode $node, Clause $constraint, int $position)` applies the aggregate at `$position` in its search. The query selects each value under a name of its own, and the response returns it under the `AggregateKey` of the node: the `alias`, or `<relation>_<type>_<field>` with the name of the field in lower case. Before, the value of a field whose name has capital letters was missing from the response, and `count` or `exists` sent with `"field": []` gave a 500.
+- The models of the rows no longer hold the value of an aggregate under its key, in a search as in the search of an action: they keep their own columns. Read the value in the row that `map()` receives, under its key. The `$visible` and `$hidden` of the model still apply to that key, but the casts and accessors that the model declares under it no longer apply to the value: change the value in `map()`. An alias of up to 255 characters is returned on every database. Before, PostgreSQL dropped the value of an alias of more than 63 characters.
+- `alias` must look like an identifier, `^[A-Za-z_][A-Za-z0-9_]*$`, of at most 255 characters. Another string gives a 422 under `search.aggregates.<i>.alias`, such as `The search.aggregates.0.alias field format is invalid.` Before, an alias with a dot or a space gave a 500.
+- Each key of a row names one value. The key of an aggregate, its `alias` or `<relation>_<type>_<field>`, must differ from the name of each field of the resource, `writeOnly()` and `virtual()` fields included, from the name of each relation, from the key of each include of the same search, from the key of each other aggregate of the same search, and from the gates key. Otherwise the aggregate gets a 422 under `search.aggregates.<i>.alias`: `The search.aggregates.0.alias conflicts with a field of this resource.`, `... conflicts with a relation of this resource.`, `... is already used by an include.`, `... is already used by another aggregate.` or `... is reserved.` An aggregate without `alias` gets `The search.aggregates.0.alias field is required, because the key posts_count is already used.` The include it clashes with gets a 422 too, under `search.includes.<i>.alias`.
+- `relation` names one relation of the resource. A nested relation, such as `author.posts`, gives a 422 under `search.aggregates.<i>.relation`: `The search.aggregates.0.relation field cannot be a nested relation. Request the aggregate inside an include instead.` Before, it gave a 500. For example, the posts of the author of each post:
+
+  ```json
+  {"search": {"includes": [{"relation": "author", "aggregates": [{"relation": "posts", "type": "count"}]}]}}
+  ```
 
 Include aliases:
 
 - An include `alias` is still checked against the name of every field of the resource, `writeOnly()` and `virtual()` fields included. Its messages start with the key instead of `The alias`, for example `The search.includes.0.alias conflicts with a field of this resource.`
+- An include `alias` is also checked against the keys of the aggregates of the same search, and against the key of each include without alias, the name of its relation in snake case (`featured_products` for `featuredProducts`): `The search.includes.0.alias is already used by an aggregate.` and `The search.includes.1.alias is already used by another include.` An include without alias whose key is the key of an aggregate gets `The search.includes.0.alias field is required, because the key posts is already used.`
 - The classes of `Lomkit\Rest\Rules\Search`, `SearchIncludeAlias` included, and `Lomkit\Rest\Rules\Concerns\ReachesRelations` are removed. A search can no longer be built from rule nodes, and `Search::nested()` is gone. The search payload is read by the package's search parser, see [Validation engine](#validation-engine).
 
 Scramble:
@@ -1144,7 +1162,7 @@ BelongsToMany::make('tags', TagResource::class)->pivotFields([
 Declaration:
 
 - `withPivotFields()` and `withPivotRules()` are removed. Declare `pivotFields([...])` with `Field` objects instead of column names, and move each rule of `withPivotRules()` to the field of its key: `->withPivotFields(['number'])->withPivotRules(['number' => 'numeric'])` becomes `->pivotFields([Number::make('number')])`. A string, or a name declared twice, throws `Lomkit\Rest\Exceptions\InvalidFieldException`.
-- A pivot field is a column of the pivot table, and a pivot value is written to its column as sent, encoded first by a `Json` pivot field as described under [Typed fields](#typed-fields). A pivot field declared `virtual()`, or with `fillUsing()`, throws `Lomkit\Rest\Exceptions\InvalidFieldException` when `pivotFields()` is called.
+- A pivot field is a column of the pivot table, and a pivot value is written to its column as sent, encoded first by a `Json` pivot field as described under [Typed fields](#typed-fields). A pivot field declared `virtual()`, or with `fillUsing()` or `resolveUsing()`, throws `Lomkit\Rest\Exceptions\InvalidFieldException` when `pivotFields()` is called.
 - `getPivotFields()` returns a `Lomkit\Rest\Fields\FieldSet` instead of an array of names. Call `->names()` to get the old list. `getPivotRules()` and the `$pivotFields` and `$pivotRules` properties are removed.
 - The pivot fields are bound to the pivot class of the Eloquent relation: the class given to `using()`, or Laravel's `Pivot`. An `Enum` pivot field reads its enum class from the casts of that class.
 - A custom relation that carries pivot fields implements `Lomkit\Rest\Contracts\PivotRelation`, which declares `getPivotFields(): FieldSet` only. The `Lomkit\Rest\Concerns\Relations\HasPivotFields` trait implements it. The package checks this interface instead of the trait.

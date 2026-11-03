@@ -57,4 +57,14 @@ final readonly class Violation
     {
         return new self($key, 'The :attribute field goes deeper than the limit of :max include levels.', ['max' => (string) $max]);
     }
+
+    public static function takenKey(string $key, string $name): self
+    {
+        return new self($key, 'The :attribute field is required, because the key :key is already used.', ['key' => $name]);
+    }
+
+    public static function nestedAggregate(string $key): self
+    {
+        return new self($key, 'The :attribute field cannot be a nested relation. Request the aggregate inside an include instead.');
+    }
 }

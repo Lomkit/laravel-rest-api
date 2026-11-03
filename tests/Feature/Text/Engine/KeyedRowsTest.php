@@ -120,7 +120,7 @@ class KeyedRowsTest extends KeyedRowsTestCase
         $this->assertSame(
             [[5, ['l5a'], 1], [1, ['l1b', 'l1a'], 2], [3, ['l3a'], 1]],
             $vouchers
-                ->map(fn (Model $voucher): array => [$voucher->getKey(), array_column($voucher->getRelation('lines')->all(), 'label'), (int) $voucher->getAttribute('line_count')])
+                ->map(fn (Model $voucher): array => [$voucher->getKey(), array_column($voucher->getRelation('lines')->all(), 'label'), (int) $voucher->getAttribute('@aggregate_0')])
                 ->all(),
         );
     }

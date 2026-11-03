@@ -114,17 +114,16 @@ class JsonColumnsTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_returns_an_aggregate_aliased_as_a_json_field_as_the_query_computes_it(): void
+    public function it_refuses_an_aggregate_aliased_as_a_json_field(): void
     {
-        $scope = Instrument::create(['name' => 'Scope']);
-        $scope->sensors()->attach(Sensor::create(['name' => 'Probe'])->id);
-
         $response = $this->postJson('/api/instruments/search', ['search' => [
             'selects' => [['field' => 'id']],
             'aggregates' => [['relation' => 'sensors', 'type' => 'max', 'field' => 'name', 'alias' => 'specs']],
         ]]);
 
-        $response->assertOk()->assertJsonPath('data', [['id' => $scope->id, 'specs' => 'Probe']]);
+        $response->assertUnprocessable()->assertJsonPath('errors', [
+            'search.aggregates.0.alias' => ['The search.aggregates.0.alias conflicts with a field of this resource.'],
+        ]);
     }
 
     #[Test]
