@@ -5,8 +5,10 @@ namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Fields\FieldSet;
+use Lomkit\Rest\Fields\InputValues;
+use Lomkit\Rest\Search\InstructionNode;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\ContainsVoucherController;
-use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\WithLines;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 use Lomkit\Rest\Text\Engine\EngineInstruction;
@@ -104,14 +106,9 @@ class EngineInstructionsTest extends EngineSearchTestCase
     #[Test]
     public function it_refuses_to_apply_a_database_instruction_to_an_engine_query(): void
     {
-        $resource = $this->resource(VoucherResource::class, $this->context(['search' => ['text' => ['value' => 'report']]]));
-        $text = $resource->context()->text($resource);
-        $query = $text->engineQuery($resource->context()->request);
-        $this->assertNotNull($query);
-
         $this->expectExceptionObject(InvalidInstructionException::queryOnly(WithLines::class));
 
-        (new EngineInstruction($resource, 'with-lines'))->apply($query);
+        EngineInstruction::of(new InstructionNode(WithLines::make(), InputValues::fromNamed(FieldSet::of([]), [])));
     }
 
     /** @param list<bool> $flags */

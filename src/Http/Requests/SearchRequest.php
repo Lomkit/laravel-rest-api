@@ -4,11 +4,14 @@ namespace Lomkit\Rest\Http\Requests;
 
 use Lomkit\Rest\Http\Requests\Traits\ParsesSearch;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Search\SearchContext;
 use Lomkit\Rest\Search\SearchNode;
 
 class SearchRequest extends RestRequest
 {
     use ParsesSearch;
+
+    private ?SearchContext $searchContext = null;
 
     #[\Override]
     public function endpoint(): Endpoint
@@ -26,5 +29,10 @@ class SearchRequest extends RestRequest
     public function payload(): SearchNode
     {
         return $this->searchNode();
+    }
+
+    public function searchContext(): SearchContext
+    {
+        return $this->searchContext ??= SearchContext::of($this->payload());
     }
 }

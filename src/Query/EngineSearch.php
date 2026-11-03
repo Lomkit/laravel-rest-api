@@ -9,7 +9,6 @@ use Illuminate\Pagination\Paginator;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Search\Plan\KeyedRows;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
@@ -31,11 +30,11 @@ final readonly class EngineSearch
     ) {}
 
     /** @return LengthAwarePaginator<int, Model> */
-    public function paginate(RestRequest $request): LengthAwarePaginator
+    public function paginate(): LengthAwarePaginator
     {
-        $query = $this->query($request);
-        $perPage = $request->integer('search.limit', $this->resource->defaultLimit);
-        $page = $request->integer('search.page', 1);
+        $query = $this->query();
+        $perPage = $this->search->limit ?? $this->resource->defaultLimit;
+        $page = $this->search->page ?? 1;
         $result = $query->page($perPage, $page);
 
         return new LengthAwarePaginator($this->rows($result->keys), $result->total, $perPage, $page, [
@@ -44,22 +43,20 @@ final readonly class EngineSearch
         ]);
     }
 
-    public function query(RestRequest $request): EngineQuery
+    public function query(): EngineQuery
     {
         $this->resource
             ->context()
             ->authorizer()
             ->ensurePlanned(Check::onClass($this->resource, 'viewAny'));
 
-        $search = self::parameters($request);
-        $trashed = $search['trashed'] ?? null;
-        $query = $this->text->engineQuery($request, is_string($trashed) ? Trashed::from($trashed) : null)
+        $query = $this->text->engineQuery($this->resource->context()->request, $this->search->trashed)
             ?? throw InvalidTextSearchException::notOnEngine($this->resource::class);
 
-        EngineCriteria::fromSearch($search)->applyTo($query);
+        EngineCriteria::of($this->search->filters, $this->search->sorts)->applyTo($query);
 
-        foreach (EngineInstruction::fromSearch($this->resource, $search) as $instruction) {
-            $instruction->apply($query);
+        foreach ($this->search->instructions as $instruction) {
+            EngineInstruction::of($instruction)->apply($query);
         }
 
         return $query;
@@ -82,13 +79,5 @@ final readonly class EngineSearch
         return QueryBuilderFactory::make($this->resource)
             ->search($plan)
             ->get();
-    }
-
-    /** @return array<string, mixed> */
-    private static function parameters(RestRequest $request): array
-    {
-        $search = $request->input('search');
-
-        return is_array($search) ? array_filter($search, is_string(...), ARRAY_FILTER_USE_KEY) : [];
     }
 }

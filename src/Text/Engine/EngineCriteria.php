@@ -2,77 +2,69 @@
 
 namespace Lomkit\Rest\Text\Engine;
 
+use LogicException;
 use Lomkit\Rest\Exceptions\InvalidEngineQueryException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
-use Lomkit\Rest\Fields\SortDirection;
-use Lomkit\Rest\Query\Clauses\RelevanceClause;
+use Lomkit\Rest\Search\FilterGroup;
+use Lomkit\Rest\Search\RelevanceSort;
+use Lomkit\Rest\Search\SortNode;
 
 final readonly class EngineCriteria
 {
     /**
-     * @param  list<array<array-key, mixed>>  $filters
-     * @param  list<array<array-key, mixed>>  $sorts
+     * @param  list<EngineFilterCondition>  $filters
+     * @param  list<EngineSort>  $sorts
      */
     private function __construct(
         private array $filters,
         private array $sorts,
     ) {}
 
-    /** @param array<array-key, mixed> $search */
-    public static function fromSearch(array $search): self
+    /** @param list<SortNode> $sorts */
+    public static function of(FilterGroup $filters, array $sorts): self
     {
-        return new self(self::entries($search['filters'] ?? null), self::entries($search['sorts'] ?? null));
+        $conditions = [];
+
+        foreach ($filters->filters as $node) {
+            $conditions[] = $node instanceof EngineFilterCondition ? $node : throw self::foreign($node);
+        }
+
+        $orders = [];
+
+        foreach ($sorts as $sort) {
+            if ($sort instanceof RelevanceSort) {
+                continue;
+            }
+
+            $orders[] = $sort instanceof EngineSort ? $sort : throw self::foreign($sort);
+        }
+
+        return new self($conditions, $orders);
     }
 
     public function applyTo(EngineQuery $query): void
     {
         foreach ($this->filters as $filter) {
-            self::filter($query, $filter);
+            match ($filter->operator) {
+                FilterOperator::In => $query->whereIn($filter->name, self::members($filter)),
+                FilterOperator::NotIn => $query->whereNotIn($filter->name, self::members($filter)),
+                default => $query->where($filter->name, $filter->operator, $filter->value),
+            };
         }
 
         foreach ($this->sorts as $sort) {
-            $attribute = self::name($sort['field'] ?? null);
-
-            if ($attribute !== RelevanceClause::FIELD) {
-                $query->orderBy($attribute, self::direction($sort['direction'] ?? null));
-            }
+            $query->orderBy($sort->attribute, $sort->direction());
         }
     }
 
-    /** @param array<array-key, mixed> $filter */
-    private static function filter(EngineQuery $query, array $filter): void
-    {
-        $attribute = self::name($filter['field'] ?? null);
-        $declared = $filter['operator'] ?? FilterOperator::Equal->value;
-        $operator = FilterOperator::parse(is_string($declared) ? $declared : '');
-        $value = $filter['value'] ?? null;
-
-        match ($operator) {
-            FilterOperator::In => $query->whereIn($attribute, self::members($attribute, $value)),
-            FilterOperator::NotIn => $query->whereNotIn($attribute, self::members($attribute, $value)),
-            default => $query->where($attribute, $operator, $value),
-        };
-    }
-
     /** @return array<mixed> */
-    private static function members(string $attribute, mixed $value): array
+    private static function members(EngineFilterCondition $filter): array
     {
-        return is_array($value) ? $value : throw InvalidEngineQueryException::invalidValue($attribute, $value);
+        return is_array($filter->value) ? $filter->value : throw InvalidEngineQueryException::invalidValue($filter->name, $filter->value);
     }
 
-    private static function name(mixed $name): string
+    private static function foreign(object $node): LogicException
     {
-        return is_string($name) ? $name : '';
-    }
-
-    private static function direction(mixed $direction): SortDirection
-    {
-        return $direction === null ? SortDirection::Asc : SortDirection::parse(is_string($direction) ? $direction : '');
-    }
-
-    /** @return list<array<array-key, mixed>> */
-    private static function entries(mixed $entries): array
-    {
-        return is_array($entries) ? array_values(array_filter($entries, is_array(...))) : [];
+        return new LogicException($node::class.' does not apply to a search engine query.');
     }
 }

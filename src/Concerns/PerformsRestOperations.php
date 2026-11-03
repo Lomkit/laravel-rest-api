@@ -45,7 +45,7 @@ trait PerformsRestOperations
         $text = $request->context()->text($resource);
 
         if ($text->usesEngine()) {
-            $page = (new EngineSearch($resource, $text, $request->payload()))->paginate($request);
+            $page = (new EngineSearch($resource, $text, $request->payload()))->paginate();
 
             $this->afterSearch($request);
 
