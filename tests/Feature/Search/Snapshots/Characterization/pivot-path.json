@@ -1,0 +1,57 @@
+{
+    "queries": {
+        "sqlite": 2,
+        "mysql": 2,
+        "pgsql": 2
+    },
+    "shape": {
+        "current_page": null,
+        "data": [
+            {
+                "id": 3,
+                "team_id": null,
+                "title": null,
+                "status": null
+            },
+            {
+                "id": 1,
+                "team_id": null,
+                "title": null,
+                "status": null
+            }
+        ],
+        "from": null,
+        "last_page": null,
+        "per_page": null,
+        "to": null,
+        "total": null,
+        "meta": []
+    },
+    "response": {
+        "current_page": 1,
+        "data": [
+            {
+                "id": 3,
+                "team_id": 2,
+                "title": "Password reset",
+                "status": "closed"
+            },
+            {
+                "id": 1,
+                "team_id": 1,
+                "title": "Printer jam",
+                "status": "open"
+            }
+        ],
+        "from": 1,
+        "last_page": 1,
+        "per_page": 50,
+        "to": 2,
+        "total": 2,
+        "meta": []
+    },
+    "raw_queries": [
+        "select count(*) as \"aggregate\" from \"tickets\" where (exists (select * from \"tags\" inner join \"tag_ticket\" on \"tags\".\"id\" = \"tag_ticket\".\"tag_id\" where \"tickets\".\"id\" = \"tag_ticket\".\"ticket_id\" and \"tag_ticket\".\"position\" between 1 and 2 and \"tags\".\"deleted_at\" is null))",
+        "select * from \"tickets\" where (exists (select * from \"tags\" inner join \"tag_ticket\" on \"tags\".\"id\" = \"tag_ticket\".\"tag_id\" where \"tickets\".\"id\" = \"tag_ticket\".\"ticket_id\" and \"tag_ticket\".\"position\" between 1 and 2 and \"tags\".\"deleted_at\" is null)) order by \"tickets\".\"id\" desc limit 50 offset 0"
+    ]
+}

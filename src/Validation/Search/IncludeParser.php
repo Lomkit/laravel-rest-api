@@ -67,7 +67,8 @@ final readonly class IncludeParser
         $relation = $entry->at('relation');
         $alias = $entry->at('alias');
         $name = is_string($relation->value) ? $relation->value : null;
-        $related = $name === null ? null : $context->reachRelation($name, $entry->path);
+        $relations = $name === null ? null : $context->reachRelation($name, $entry->path);
+        $related = $relations === null ? null : $relations[array_key_last($relations)]->resource();
         $body = $name === null || $related === null ? null : $this->body($entry, $name, $related, $context);
 
         $rules->add($relation->path, ['required', new KnownRelation($context->resource)]);
@@ -82,13 +83,13 @@ final readonly class IncludeParser
 
         $search = $body?->node(null, null);
 
-        if ($name === null || $search === null || ($alias->value !== null && ! is_string($alias->value))) {
+        if ($name === null || $relations === null || $search === null || ($alias->value !== null && ! is_string($alias->value))) {
             $rules->partial();
 
             return null;
         }
 
-        return new IncludeNode($name, is_string($alias->value) ? $alias->value : null, $search);
+        return new IncludeNode($name, $relations, $related, is_string($alias->value) ? $alias->value : null, $search);
     }
 
     private function body(Cursor $entry, string $relation, Resource $related, ValidationContext $context): ?SearchBodyParser

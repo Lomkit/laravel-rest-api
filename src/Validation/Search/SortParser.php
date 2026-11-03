@@ -58,6 +58,6 @@ final readonly class SortParser
             return null;
         }
 
-        return new SortNode($field->value, $parsed);
+        return $context->grammar->sort($field->value, $parsed, $context);
     }
 }

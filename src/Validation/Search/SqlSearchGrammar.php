@@ -10,7 +10,10 @@ use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Rules\OneOf;
+use Lomkit\Rest\Search\FieldSort;
 use Lomkit\Rest\Search\FilterGroup;
+use Lomkit\Rest\Search\RelevanceSort;
+use Lomkit\Rest\Search\SortNode;
 use Lomkit\Rest\Text\TextBackend;
 use Lomkit\Rest\Text\TextCapabilities;
 use Lomkit\Rest\Text\TextQuery;
@@ -76,6 +79,18 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     public function sortDirection(mixed $field): Enum
     {
         return Rule::enum(SortDirection::class);
+    }
+
+    #[\Override]
+    public function sort(string $name, ?SortDirection $direction, ValidationContext $context): SortNode
+    {
+        if ($name === RelevanceClause::FIELD) {
+            return new RelevanceSort($direction);
+        }
+
+        $resource = $context->resource;
+
+        return new FieldSort($resource->getFields($resource->context()->request)->get($name), $direction);
     }
 
     #[\Override]

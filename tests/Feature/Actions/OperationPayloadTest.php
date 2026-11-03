@@ -65,7 +65,7 @@ class OperationPayloadTest extends PackageTestCase
         $this->assertCount(1, $read->target->filters->filters);
         $filter = $read->target->filters->filters[0];
         $this->assertInstanceOf(FilterCondition::class, $filter);
-        $this->assertSame(['title', FilterOperator::Equal, 'Annual report'], [$filter->path, $filter->operator, $filter->value]);
+        $this->assertSame(['title', FilterOperator::Equal, 'Annual report'], [$filter->name, $filter->operator, $filter->value]);
     }
 
     #[Test]

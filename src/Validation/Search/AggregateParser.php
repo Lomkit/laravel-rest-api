@@ -4,8 +4,10 @@ namespace Lomkit\Rest\Validation\Search;
 
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Fields\AggregateFunction;
+use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Rules\OneOf;
+use Lomkit\Rest\Search\AggregateKey;
 use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ValidationContext;
@@ -46,7 +48,8 @@ final readonly class AggregateParser
         $type = $entry->at('type');
         $alias = $entry->at('alias');
         $filters = $entry->at('filters');
-        $related = is_string($relation->value) ? $context->reachRelation($relation->value, $entry->path) : null;
+        $relations = is_string($relation->value) ? $context->reachRelation($relation->value, $entry->path) : null;
+        $related = $relations === null ? null : $relations[array_key_last($relations)]->resource();
         $function = is_string($type->value) ? AggregateFunction::tryFrom($type->value) : null;
 
         $rules->add($alias->path, ['string']);
@@ -70,10 +73,12 @@ final readonly class AggregateParser
             return null;
         }
 
-        return new AggregateNode($relation->value, $function, $field, is_string($alias->value) ? $alias->value : null, $group);
+        $name = is_string($alias->value) ? $alias->value : null;
+
+        return new AggregateNode($relation->value, $related, $function, $field, $name, AggregateKey::of($relation->value, $function, $field, $name), $group);
     }
 
-    private function field(Cursor $entry, ?AggregateFunction $function, Resource $related, ValidationContext $context): ?string
+    private function field(Cursor $entry, ?AggregateFunction $function, Resource $related, ValidationContext $context): ?Field
     {
         $field = $entry->at('field');
         $type = $entry->at('type')->path;
@@ -88,7 +93,8 @@ final readonly class AggregateParser
             return $this->unused($field, $context);
         }
 
-        $accepted = new OneOf($function->acceptedFieldNames($related->getFields($context->resource->context()->request)));
+        $fields = $related->getFields($context->resource->context()->request);
+        $accepted = new OneOf($function->acceptedFieldNames($fields));
         $context->rules->add($field->path, [...$rules, $accepted]);
 
         if (! is_string($field->value) || ! $accepted->accepts($field->value)) {
@@ -97,7 +103,7 @@ final readonly class AggregateParser
             return null;
         }
 
-        return $field->value;
+        return $fields->get($field->value);
     }
 
     private function unused(Cursor $field, ValidationContext $context): null

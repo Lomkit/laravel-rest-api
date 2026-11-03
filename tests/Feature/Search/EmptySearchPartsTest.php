@@ -45,7 +45,7 @@ class EmptySearchPartsTest extends PackageTestCase
         $this->assertInstanceOf(FilterGroup::class, $group);
         $this->assertCount(1, $group->filters);
         $this->assertInstanceOf(FilterCondition::class, $group->filters[0]);
-        $this->assertSame(['views', FilterOperator::Equal, 1], [$group->filters[0]->path, $group->filters[0]->operator, $group->filters[0]->value]);
+        $this->assertSame(['views', FilterOperator::Equal, 1], [$group->filters[0]->name, $group->filters[0]->operator, $group->filters[0]->value]);
     }
 
     /** @return array<string, array{mixed}> */

@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Text\Engine;
 
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
-use Lomkit\Rest\Search\FilterCondition;
 use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\Search\FilterParser;
@@ -31,7 +30,7 @@ final readonly class EngineFilterParser
         return new FilterGroup($filters);
     }
 
-    private function filter(Cursor $entry, ValidationContext $context): ?FilterCondition
+    private function filter(Cursor $entry, ValidationContext $context): ?EngineFilterCondition
     {
         if (! $context->reader->object($entry)) {
             return null;
@@ -69,7 +68,7 @@ final readonly class EngineFilterParser
             return null;
         }
 
-        return new FilterCondition($name, $declared->field, $resolved, $value->value);
+        return new EngineFilterCondition($name, $declared, $resolved, $value->value);
     }
 
     private function values(Cursor $value, IndexAttribute $declared, FilterOperator $operator, ValidationContext $context): void

@@ -2,18 +2,20 @@
 
 namespace Lomkit\Rest\Tests\Unit\Search;
 
+use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
-use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Search\FilterCondition;
 use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\RelationFilterGroup;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
+use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
-class SearchNodeTest extends TestCase
+class SearchNodeTest extends PackageTestCase
 {
     #[Test]
     public function it_reads_a_missing_search_as_an_empty_node(): void
@@ -29,8 +31,11 @@ class SearchNodeTest extends TestCase
     #[Test]
     public function it_joins_filters_with_and_unless_told_otherwise(): void
     {
-        $condition = new FilterCondition('views', Integer::make('views'), FilterOperator::GreaterThan, 10);
-        $group = new FilterGroup([$condition, new FilterCondition('views', Integer::make('views'), FilterOperator::Equal, 3, 'or')]);
+        $path = FieldPath::resolve((new RestContext(RestRequest::create('/api/search', 'POST'), $this->app))->resource(PostResource::class), 'views');
+        $this->assertInstanceOf(FieldPath::class, $path);
+
+        $condition = new FilterCondition('views', $path, FilterOperator::GreaterThan, 10);
+        $group = new FilterGroup([$condition, new FilterCondition('views', $path, FilterOperator::Equal, 3, 'or')]);
 
         $this->assertSame('and', $condition->boolean());
         $this->assertSame('and', $group->boolean());
