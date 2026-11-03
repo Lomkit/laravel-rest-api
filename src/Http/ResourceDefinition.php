@@ -10,6 +10,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
+use Lomkit\Rest\Search\GateVocabulary;
 use Lomkit\Rest\Text\ResolvedText;
 use ReflectionClass;
 
@@ -33,6 +34,8 @@ final class ResourceDefinition
     private ?array $limits = null;
 
     private ?ResolvedText $text = null;
+
+    private ?GateVocabulary $gates = null;
 
     public function __construct(
         private readonly Resource $resource,
@@ -85,6 +88,11 @@ final class ResourceDefinition
     public function text(): ResolvedText
     {
         return $this->text ??= ResolvedText::of($this->resource, $this->request);
+    }
+
+    public function gates(): GateVocabulary
+    {
+        return $this->gates ??= GateVocabulary::of();
     }
 
     private function declaredFields(): FieldSet

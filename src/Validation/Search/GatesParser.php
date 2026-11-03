@@ -2,8 +2,6 @@
 
 namespace Lomkit\Rest\Validation\Search;
 
-use Illuminate\Validation\Rule;
-use Lomkit\Rest\Authorization\Ability;
 use Lomkit\Rest\Rules\Distinct;
 use Lomkit\Rest\Search\GateAbility;
 use Lomkit\Rest\Validation\Cursor;
@@ -33,15 +31,17 @@ final readonly class GatesParser
                 continue;
             }
 
-            $abilities[] = new GateAbility($ability);
+            $abilities[] = $ability;
         }
 
         return $abilities;
     }
 
-    private function ability(Cursor $entry, Distinct $distinct, ValidationContext $context): ?Ability
+    private function ability(Cursor $entry, Distinct $distinct, ValidationContext $context): ?GateAbility
     {
-        $ability = is_string($entry->value) ? Ability::tryFrom($entry->value) : null;
+        $resource = $context->resource;
+        $gates = $resource->context()->definition($resource)->gates();
+        $ability = $gates->find($entry->value);
 
         if ($ability !== null && $ability->isClassLevel() && $context->includeDepth > 0) {
             $context->rules->add($entry->path, ['prohibited']);
@@ -49,7 +49,7 @@ final readonly class GatesParser
             return null;
         }
 
-        $context->rules->add($entry->path, [Rule::enum(Ability::class), $distinct]);
+        $context->rules->add($entry->path, [$context->vocabulary->of($resource, $context->grammar, 'gates', $gates->names(...)), $distinct]);
 
         return $distinct->accepts($entry->value) ? $ability : null;
     }
