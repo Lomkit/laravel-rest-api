@@ -32,43 +32,47 @@ class IncludeSortTest extends PackageTestCase
     #[Test]
     public function it_sorts_an_include_on_a_field_of_a_relation(): void
     {
-        $response = $this->searchStories(['sorts' => [['field' => 'reporter.name'], ['field' => 'id']]]);
+        $response = $this->searchStories(['limit' => 10, 'sorts' => [['field' => 'reporter.name'], ['field' => 'id']]]);
 
         $response->assertOk()->assertJsonPath('data.*.stories.*.id', $this->byDriver([2, 1, 3, 4], [2, 1, 4, 3]));
     }
 
     /**
+     * @param  array<string, int>  $limit
      * @param  list<int>  $nullsFirst
      * @param  list<int>  $nullsLast
      */
     #[Test]
     #[DataProvider('directions')]
-    public function it_sorts_on_a_field_of_a_relation_within_the_limit_of_each_parent(string $direction, array $nullsFirst, array $nullsLast): void
+    public function it_sorts_on_a_field_of_a_relation_within_the_limit_of_each_parent(array $limit, string $direction, array $nullsFirst, array $nullsLast): void
     {
-        $response = $this->searchStories(['limit' => 1, 'sorts' => [['field' => 'reporter.name', 'direction' => $direction]]]);
+        $response = $this->searchStories([...$limit, 'sorts' => [['field' => 'reporter.name', 'direction' => $direction]]]);
 
         $response->assertOk()->assertJsonPath('data.*.stories.*.id', $this->byDriver($nullsFirst, $nullsLast));
     }
 
-    /** @return array<string, array{string, list<int>, list<int>}> */
+    /** @return array<string, array{array<string, int>, string, list<int>, list<int>}> */
     public static function directions(): array
     {
         return [
-            'ascending' => ['asc', [2, 3], [2, 4]],
-            'descending' => ['desc', [1, 4], [1, 3]],
+            'ascending' => [['limit' => 1], 'asc', [2, 3], [2, 4]],
+            'descending' => [['limit' => 1], 'desc', [1, 4], [1, 3]],
+            'ascending within the default limit' => [[], 'asc', [2, 3], [2, 4]],
+            'descending within the default limit' => [[], 'desc', [1, 4], [1, 3]],
         ];
     }
 
     /**
+     * @param  array<string, int>  $limit
      * @param  list<array<string, mixed>>  $sorts
      * @param  list<list<array<string, int>>>  $stories
      */
     #[Test]
     #[DataProvider('aggregateSorts')]
-    public function it_sorts_on_the_key_of_an_aggregate_within_the_limit_of_each_parent(array $sorts, array $stories): void
+    public function it_sorts_on_the_key_of_an_aggregate_within_the_limit_of_each_parent(array $limit, array $sorts, array $stories): void
     {
         $response = $this->searchStories([
-            'limit' => 1,
+            ...$limit,
             'aggregates' => [self::URGENT],
             'filters' => [['field' => 'headline', 'operator' => '!=', 'value' => 'Nothing']],
             'sorts' => $sorts,
@@ -77,12 +81,14 @@ class IncludeSortTest extends PackageTestCase
         $response->assertOk()->assertJsonPath('data.*.stories', $stories);
     }
 
-    /** @return array<string, array{list<array<string, mixed>>, list<list<array<string, int>>>}> */
+    /** @return array<string, array{array<string, int>, list<array<string, mixed>>, list<list<array<string, int>>>}> */
     public static function aggregateSorts(): array
     {
         return [
-            'the most urgent story' => [[['field' => 'urgent', 'direction' => 'desc'], ['field' => 'id']], [[['id' => 2, 'urgent' => 2]], [['id' => 3, 'urgent' => 0]], []]],
-            'the least urgent story' => [[['field' => 'urgent'], ['field' => 'id', 'direction' => 'desc']], [[['id' => 1, 'urgent' => 1]], [['id' => 4, 'urgent' => 0]], []]],
+            'the most urgent story' => [['limit' => 1], [['field' => 'urgent', 'direction' => 'desc'], ['field' => 'id']], [[['id' => 2, 'urgent' => 2]], [['id' => 3, 'urgent' => 0]], []]],
+            'the least urgent story' => [['limit' => 1], [['field' => 'urgent'], ['field' => 'id', 'direction' => 'desc']], [[['id' => 1, 'urgent' => 1]], [['id' => 4, 'urgent' => 0]], []]],
+            'the most urgent story within the default limit' => [[], [['field' => 'urgent', 'direction' => 'desc'], ['field' => 'id']], [[['id' => 2, 'urgent' => 2]], [['id' => 3, 'urgent' => 0]], []]],
+            'the least urgent story within the default limit' => [[], [['field' => 'urgent'], ['field' => 'id', 'direction' => 'desc']], [[['id' => 1, 'urgent' => 1]], [['id' => 4, 'urgent' => 0]], []]],
         ];
     }
 

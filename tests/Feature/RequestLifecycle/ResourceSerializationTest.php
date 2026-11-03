@@ -90,7 +90,7 @@ class ResourceSerializationTest extends PackageTestCase
         $restored = unserialize($serialized);
 
         $this->assertSame(
-            'O:72:"Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\ConstrainedPostResource":2:{s:12:"defaultLimit";i:50;'
+            'O:72:"Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\ConstrainedPostResource":3:{s:12:"defaultLimit";i:50;s:12:"includeLimit";i:10;'
                 ."s:34:\"\0Lomkit\Rest\Http\Resource\0context\";O:28:\"Lomkit\Rest\Http\RestContext\":0:{}}",
             $serialized,
         );
@@ -124,7 +124,7 @@ class ResourceSerializationTest extends PackageTestCase
         $restored = unserialize($serialized);
 
         $this->assertSame(
-            'O:50:"Lomkit\Rest\Tests\Fixtures\Publishing\PostResource":2:{s:12:"defaultLimit";i:50;'
+            'O:50:"Lomkit\Rest\Tests\Fixtures\Publishing\PostResource":3:{s:12:"defaultLimit";i:50;s:12:"includeLimit";i:10;'
                 ."s:34:\"\0Lomkit\Rest\Http\Resource\0context\";O:28:\"Lomkit\Rest\Http\RestContext\":0:{}}",
             $serialized,
         );

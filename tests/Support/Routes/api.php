@@ -8,7 +8,6 @@ use Lomkit\Rest\Tests\Support\Http\Controllers\GatedModelController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\ModelController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\ModelHooksController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\ModelWithController;
-use Lomkit\Rest\Tests\Support\Http\Controllers\ModelWithDefaultLimitController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\NoAuthorizationController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\NoRelationshipAuthorizationModelController;
 use Lomkit\Rest\Tests\Support\Http\Controllers\OrPerimeterModelController;
@@ -20,7 +19,6 @@ Route::group(['as' => 'api.', 'prefix' => 'api'], function () {
     Rest::resource('or-perimeter-models', OrPerimeterModelController::class);
     Rest::resource('model-hooks', ModelHooksController::class)->withSoftDeletes();
     Rest::resource('model-withs', ModelWithController::class);
-    Rest::resource('model-with-default-limit', ModelWithDefaultLimitController::class);
     Rest::resource('no-relationship-authorization-models', NoRelationshipAuthorizationModelController::class);
 
     Rest::resource('gated-models', GatedModelController::class);

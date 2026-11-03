@@ -5,9 +5,10 @@ namespace Lomkit\Rest\Relations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo as EloquentMorphTo;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
+use Lomkit\Rest\Contracts\OwnerRelation;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 
-class MorphTo extends MorphRelation
+class MorphTo extends MorphRelation implements OwnerRelation
 {
     public function targets(): MorphTargets
     {

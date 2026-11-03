@@ -205,6 +205,7 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 - The `calculatedFields`, `calculatedScopes`, `calculatedRelations`, `calculatedInstructions`, `calculatedActions`, `calculatedLimits`, `calculatedScoutFields` and `calculatedScoutInstructions` properties of resources are removed. Read the declarations with `getFields()`, `getScopes()`, `getRelations()`, `getInstructions()`, `getActions()` and `getLimits()`. They still take a request, but they evaluate the declarations with the request of the resource's context, whatever request they receive. `getScoutFields()`, `getScoutInstructions()` and `scoutInstruction()` are removed with the declarations they read, and so is the `Lomkit\Rest\Concerns\Resource\Scoutable` trait, see [Search engines](#search-engines).
 - A serialized resource holds its own properties and an empty context, without its declarations. A queued or batched action therefore evaluates them again in the worker, where the request has no user: declarations that depend on the user see a guest there. Closures in the declarations, such as field rules, scope fields, relation constraints, or actions and instructions built with closures, stay out of the queued job. The action that runs and the field values it receives are still serialized with the job, so they cannot hold closures.
 - `Resource` does not define `__sleep()`, and the `Lomkit\Rest\Concerns\Resource\ForgetsRequestState` trait is removed. A resource that overrides `__sleep()` must not call `parent::__sleep()`.
+- `$resource->context()->definition($resource)->limits()` returns a `Lomkit\Rest\Http\ResourceLimits`: `allowed` holds the values of `limits()`, and `defaultLimit` and `includeLimit` the properties of the resource, checked as described in [Search](#search). `getLimits()` still returns the list.
 
 ### Routing
 
@@ -404,6 +405,19 @@ Validation:
 - Each entry of `resources` on `destroy`, `restore` and `forceDestroy` must be a key typed like the resource's `ID` field: an integer for integer keys, and a string, a UUID or a ULID for the other key types (a resource without an `ID` field uses the model's key type). A list, an object or `null` gives a 422 under `resources.{index}`. The other checks of `resources` are listed under "Resource keys" in [Validation engine](#validation-engine).
 - In `mutate`, an `attributes`, `relations` or `pivot` value that is not an object gives one 422 message under its key.
 - The checks of field, scope, instruction and action field names use a new rule, `Lomkit\Rest\Rules\OneOf`, instead of `Rule::in()`. The message is still `validation.in` ("The selected :attribute is invalid."), but a custom message written for the `in` rule of these attributes no longer applies.
+
+Limits:
+
+- Each include returns at most a set number of rows for each parent row: its `limit`, or else the `$includeLimit` of the related resource, 10 by default. Before, an include without `limit` returned every related row. The rows kept are the first ones in the order of the include: its `sorts`, or else the `defaultOrderBy()` of its resource. This applies to every include other than `BelongsTo` and `MorphTo` (below), `HasOne` and the `*OfMany` relations included, at every level, aliased or not, in a search, in the search of an action, next to a text search on an engine, and in the `response` block of a mutation. An include that needs more rows sends a `limit` that the `limits()` of its resource holds, or the resource sets a higher `$includeLimit`, for example on the base resource class of the application:
+
+  ```php
+  public int $includeLimit = 25;
+  ```
+
+- The relation that a dotted include goes through, such as `posts` in `posts.comments`, is limited the same way: each parent row keeps the first `$includeLimit` rows of the relation in the `defaultOrderBy()` of its resource, and the rows below come from those. Before, it loaded every row, in no set order. List `posts` as an include of its own, with its `limit` and `sorts`, to choose its rows.
+- `$defaultLimit` and `$includeLimit` must be values that `limits()` returns. When one is not, the first read of the limits of the resource in a request (a search, an action, the details) throws `Lomkit\Rest\Exceptions\InvalidResourceException`: `The resource [App\Rest\Resources\PostResource] sets $defaultLimit to 32, which is not one of its limits() [10, 25, 50]. Return 32 from limits(), or set $defaultLimit to one of them.` Before, a `$defaultLimit` outside `limits()` sized the page. The default `limits()`, `[10, 25, 50]`, holds both defaults; a resource that returns other values from `limits()` returns 10 there or sets its `$includeLimit`.
+- A `BelongsTo` or `MorphTo` include loads the one related row of each parent row, with no limit and no order. `limit` and `sorts` there give a 422 under each key: `The search.includes.0.limit field is prohibited: this relation loads at most one record per parent.` Before, the `limit` of a `BelongsTo` include applied to the query of all the parent rows, so some rows returned `null` instead of their related row, and its `sorts` changed nothing in the response. `BelongsTo` and `MorphTo` implement `Lomkit\Rest\Contracts\OwnerRelation`, and a relation class that extends them keeps it.
+- Aggregates count every related row, the rows of an action keep the `limit` of its search, without a default, and the records of a mutation hold one row per entry.
 
 Query builder and requests:
 
@@ -935,7 +949,7 @@ MorphTo includes:
 
 - The parent rows are grouped by the exact type that they store. A row whose type is not the type of the resource that the relation declares returns `null` for the include, and its type runs no query: the type of another model, a type that differs only by case, a class name stored before a morph map, or any other string. A row without a type or without a key returns `null` too. Before, the type of another model returned that model with the fields of the declared resource, a type that differs only by case returned the model, and a type that is not a class gave a 500.
 - The targets of one type load with one query, which applies the search of the include: its filters, scopes, instructions, aggregates and includes, aliased ones included, and the `searchQuery()` of its resource. Before, a filter or an aggregate of a `MorphTo` include gave a 500, and an aliased include inside an aliased `MorphTo` include was left out.
-- The query of the targets has no order and no limit. The `sorts` and `limit` of a `MorphTo` include are still accepted and still have no effect.
+- The query of the targets has no order and no limit. `sorts` and `limit` on a `MorphTo` include give a 422, see [Search](#search).
 - A `MorphTo` include loads after the query of its rows, as an aliased include does, so it comes after the includes without an alias in the row.
 - `Lomkit\Rest\Search\Plan\SearchPlanner` plans a `MorphTo` include, aliased or not, as a `Lomkit\Rest\Search\Plan\MorphToIncludeClause`, which holds a `QueryPlan` per type. `MorphToSerializer` renders its rows; it implements `Lomkit\Rest\Http\Serialization\RowRenderer`, as `RowSerializer` does. `Lomkit\Rest\Relations\MorphTo::columns()` returns the type and key columns of the relation, which the details read too.
 

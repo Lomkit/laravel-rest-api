@@ -27,19 +27,24 @@ final readonly class SearchBodyParser
         private ?int $page,
     ) {}
 
-    public static function keys(Cursor $search, ValidationContext $context, bool $paged): self
+    public static function keys(Cursor $search, ValidationContext $context, LevelBounds $bounds): self
     {
         $resource = $context->resource;
         $grammar = $context->grammar;
         $limits = $context->limits;
+        $sizes = $resource->context()
+            ->definition($resource)
+            ->limits();
         $limit = $search->at('limit');
         $page = $search->at('page');
         $sorts = $search->at('sorts');
 
-        $context->rules->addWhenPresent($limit, ['integer', Rule::in($resource->getLimits($resource->context()->request)), ...$grammar->limitRules()]);
+        if ($bounds->bounded()) {
+            $context->rules->addWhenPresent($limit, ['integer', Rule::in($sizes->allowed), ...$grammar->limitRules()]);
+        }
 
-        if ($paged) {
-            $context->rules->addWhenPresent($page, ['integer', 'min:1', ...$grammar->pageRules($limit->value, $resource->defaultLimit)]);
+        if ($bounds->paged()) {
+            $context->rules->addWhenPresent($page, ['integer', 'min:1', ...$grammar->pageRules($limit->value, $sizes->defaultLimit)]);
         }
 
         $filters = self::list($search->at('filters'), ['array'], $limits->sizes->filters, $context, true);
@@ -47,7 +52,7 @@ final readonly class SearchBodyParser
         $lists = [
             'filters' => $filters,
             'scopes' => self::list($search->at('scopes'), ['array', ...$grammar->scopeRules()], $limits->sizes->scopes, $context),
-            'sorts' => self::list($sorts, ['array'], $grammar->sortLimit($limits), $context),
+            'sorts' => $bounds->bounded() ? self::list($sorts, ['array'], $grammar->sortLimit($limits), $context) : null,
             'selects' => self::list($search->at('selects'), ['array'], $limits->sizes->selects, $context),
             'aggregates' => self::list($search->at('aggregates'), ['array'], $limits->sizes->aggregates, $context),
             'includes' => self::includes($search->at('includes'), $context),
@@ -57,10 +62,10 @@ final readonly class SearchBodyParser
         return new self(
             $context,
             $lists,
-            is_array($sorts->value) ? count($sorts->value) : 0,
+            $bounds->bounded() && is_array($sorts->value) ? count($sorts->value) : 0,
             $gates,
-            self::integer($limit, $context),
-            $paged ? self::integer($page, $context) : null,
+            $bounds->bounded() ? self::integer($limit, $context) : null,
+            $bounds->paged() ? self::integer($page, $context) : null,
         );
     }
 

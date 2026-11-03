@@ -36,7 +36,7 @@ class TextValidationTest extends TextSearchTestCase
             'a relevance sort under contains' => ['contains-posts', ['text' => ['value' => 'lamp'], 'sorts' => [['field' => '@relevance']]], $relevance],
             'a relevance sort without text' => ['full-text-posts', ['sorts' => [['field' => '@relevance']]], $relevance],
             'a relevance sort with a blank text' => ['full-text-posts', ['text' => ['value' => ' '], 'sorts' => [['field' => '@relevance']]], $relevance],
-            'a relevance sort in an include' => ['contains-posts', ['text' => ['value' => 'lamp'], 'includes' => [['relation' => 'author', 'sorts' => [['field' => '@relevance']]]]], [
+            'a relevance sort in an include' => ['contains-authors', ['text' => ['value' => 'ada'], 'includes' => [['relation' => 'posts', 'sorts' => [['field' => '@relevance']]]]], [
                 'search.includes.0.sorts.0.field' => ['The selected search.includes.0.sorts.0.field is invalid.'],
             ]],
             'a relevance sort in an include of a resource that ranks' => ['full-text-posts-authors', ['text' => ['value' => 'ada'], 'includes' => [['relation' => 'posts', 'sorts' => [['field' => '@relevance']]]]], [

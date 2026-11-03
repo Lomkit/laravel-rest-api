@@ -20,6 +20,6 @@ class UnsortedVoucherResource extends VoucherResource
     #[\Override]
     public function limits(RestRequest $request): array
     {
-        return [2, 300];
+        return [2, 10, 50, 300];
     }
 }

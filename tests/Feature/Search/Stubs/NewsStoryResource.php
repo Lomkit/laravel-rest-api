@@ -14,6 +14,10 @@ class NewsStoryResource extends Resource
 {
     public static string $model = Story::class;
 
+    public int $defaultLimit = 10;
+
+    public int $includeLimit = 1;
+
     #[\Override]
     public function fields(RestRequest $request): array
     {

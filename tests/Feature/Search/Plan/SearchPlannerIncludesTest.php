@@ -33,19 +33,19 @@ class SearchPlannerIncludesTest extends PackageTestCase
     public function it_expands_a_dotted_include(): void
     {
         $published = ['relation' => 'posts', 'filters' => [['field' => 'status', 'value' => 'published']]];
-        $author = [IncludeClause::class, 'author', [PerimeterClause::class, DefaultOrderClause::class], []];
+        $author = [IncludeClause::class, 'author', [PerimeterClause::class], []];
         $merged = [[IncludeClause::class, 'posts', [PerimeterClause::class, FilterGroupClause::class, DefaultOrderClause::class], [$author]]];
         $dotted = $this->includes([['relation' => 'posts.author']]);
 
-        $this->assertSame([[IncludeClause::class, 'posts', [], [$author]]], self::tree($dotted));
+        $this->assertSame([[IncludeClause::class, 'posts', [DefaultOrderClause::class], [$author]]], self::tree($dotted));
         $this->assertInstanceOf(IncludeClause::class, $dotted[0]);
-        $this->assertEquals(LimitPolicy::none(), $dotted[0]->plan->limit);
+        $this->assertEquals(LimitPolicy::explicit(10), $dotted[0]->plan->limit);
         $this->assertSame($merged, self::tree($this->includes([$published, ['relation' => 'posts.author']])));
         $this->assertSame($merged, self::tree($this->includes([['relation' => 'posts.author'], $published])));
         $this->assertSame(
             [
                 [AliasedIncludeClause::class, 'posts', [PerimeterClause::class, DefaultOrderClause::class], []],
-                [IncludeClause::class, 'posts', [], [$author]],
+                [IncludeClause::class, 'posts', [DefaultOrderClause::class], [$author]],
             ],
             self::tree($this->includes([['relation' => 'posts', 'alias' => 'drafted'], ['relation' => 'posts.author']])),
         );

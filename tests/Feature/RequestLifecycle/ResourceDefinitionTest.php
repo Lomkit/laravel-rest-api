@@ -125,7 +125,7 @@ class ResourceDefinitionTest extends PackageTestCase
         $this->readEveryDeclaration($resource, 1);
 
         $this->assertSame(
-            'O:68:"Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\CountedPostResource":2:{s:12:"defaultLimit";i:50;'
+            'O:68:"Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\CountedPostResource":3:{s:12:"defaultLimit";i:50;s:12:"includeLimit";i:10;'
                 ."s:34:\"\0Lomkit\Rest\Http\Resource\0context\";O:28:\"Lomkit\Rest\Http\RestContext\":0:{}}",
             serialize($resource),
         );
@@ -138,7 +138,7 @@ class ResourceDefinitionTest extends PackageTestCase
 
         $this->readEveryDeclaration($resource, 1);
 
-        $this->assertSame(['defaultLimit', "\0Lomkit\Rest\Http\Resource\0context"], array_keys((array) $resource));
+        $this->assertSame(['defaultLimit', 'includeLimit', "\0Lomkit\Rest\Http\Resource\0context"], array_keys((array) $resource));
     }
 
     #[Test]

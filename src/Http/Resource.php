@@ -49,6 +49,8 @@ class Resource implements \JsonSerializable
 
     public int $defaultLimit = 50;
 
+    public int $includeLimit = 10;
+
     /** @return class-string<Model> */
     public static function modelClass(): string
     {

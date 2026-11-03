@@ -37,7 +37,7 @@ final readonly class SearchParser
 
         $context->reader->known($search, $this->paged ? [...self::KEYS, 'page' => true] : self::KEYS);
 
-        $body = SearchBodyParser::keys($search, $context, $this->paged);
+        $body = SearchBodyParser::keys($search, $context, $this->paged ? LevelBounds::Paged : LevelBounds::Limited);
         $text = $this->text($search->at('text'), $context);
 
         return $body->node($text, $this->trashed($search->at('trashed'), $context));

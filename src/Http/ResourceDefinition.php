@@ -30,8 +30,7 @@ final class ResourceDefinition
     /** @var array<int, Action>|null */
     private ?array $actions = null;
 
-    /** @var list<int>|null */
-    private ?array $limits = null;
+    private ?ResourceLimits $limits = null;
 
     private ?ResolvedText $text = null;
 
@@ -79,10 +78,9 @@ final class ResourceDefinition
         );
     }
 
-    /** @return list<int> */
-    public function limits(): array
+    public function limits(): ResourceLimits
     {
-        return $this->limits ??= $this->resource->limits($this->request);
+        return $this->limits ??= ResourceLimits::of($this->resource, $this->resource->limits($this->request));
     }
 
     public function text(): ResolvedText
