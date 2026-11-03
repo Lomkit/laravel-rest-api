@@ -41,7 +41,7 @@ final readonly class RowKeys
         return new self(
             $resource->getFields($request)->names(),
             array_column($resource->getRelations($request), 'relation'),
-            [$resource->context()->config()->gatesKey],
+            [$resource->context()->config()->gatesKey, ...$context->reserved],
             self::aliases($includes),
             self::includes($includes),
             self::aggregates($aggregates),
@@ -76,6 +76,11 @@ final readonly class RowKeys
     public function aggregateUses(string $key): int
     {
         return count(array_keys($this->aggregates, $key, true));
+    }
+
+    public function isTaken(string $key): bool
+    {
+        return $this->isReserved($key) || $this->isField($key) || $this->aggregateUses($key) > 0;
     }
 
     /**

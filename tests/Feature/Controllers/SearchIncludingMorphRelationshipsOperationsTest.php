@@ -30,45 +30,6 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\MorphToResource;
 
 class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
 {
-    public function test_getting_a_list_of_resources_including_morph_to_relation(): void
-    {
-        $morphTo = MorphToRelationFactory::new()->create();
-        $matchingModel = ModelFactory::new()
-            ->for($morphTo, 'morphToRelation')
-            ->create()->fresh();
-
-        $matchingModel2 = ModelFactory::new()->create()->fresh();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(MorphToRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/search',
-            [
-                'search' => [
-                    'includes' => [
-                        ['relation' => 'morphToRelation'],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertResourcePaginated(
-            $response,
-            [$matchingModel, $matchingModel2],
-            new ModelResource,
-            [
-                [
-                    'morph_to_relation' => $matchingModel->morphToRelation->only((new MorphToResource)->getFields(app()->make(RestRequest::class))->names()),
-                ],
-                [
-                    'morph_to_relation' => null,
-                ],
-            ]
-        );
-    }
-
     public function test_getting_a_list_of_resources_including_morph_to_relation_with_concrete_relation(): void
     {
         $morphTo = MorphToRelationFactory::new()->create();
@@ -99,7 +60,7 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
             new ModelResource,
             [
                 [
-                    'morph_to_force_model_relation' => $matchingModel->morphToForceModelRelation->only((new MorphToResource)->getFields(app()->make(RestRequest::class))->names()),
+                    'morph_to_force_model_relation' => ['@type' => MorphToRelation::class, ...$matchingModel->morphToForceModelRelation->only((new MorphToResource)->getFields(app()->make(RestRequest::class))->names())],
                 ],
                 [
                     'morph_to_force_model_relation' => null,

@@ -8,6 +8,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Http\Serialization\RowSerializer;
+use Lomkit\Rest\Search\Plan\IncludeClause;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Tests\Feature\Query\Stubs\MinimumViewsClause;
@@ -44,14 +45,15 @@ class RowSerializerTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_refuses_a_loaded_relation_that_the_resource_does_not_declare(): void
+    public function it_renders_no_loaded_relation_that_the_plan_does_not_include(): void
     {
         $post = Post::query()->findOrFail(1);
         $post->setRelation('reviews', new Collection);
+        $post->setRelation('author', null);
 
-        $this->expectExceptionObject(new LogicException('The reviews relation of '.Post::class.' is not declared by '.PostResource::class.'.'));
+        $row = RowSerializer::of(QueryPlan::bare($this->posts()))->row($post);
 
-        RowSerializer::of(QueryPlan::bare($this->posts()))->row($post);
+        $this->assertSame(['id', 'title', 'summary', 'status', 'featured', 'views', 'rating', 'published_on', 'published_at', 'metadata'], array_keys($row));
     }
 
     #[Test]
@@ -62,7 +64,7 @@ class RowSerializerTest extends PackageTestCase
 
         $this->expectExceptionObject(new LogicException('The author relation of '.Post::class.' holds neither a model nor a collection.'));
 
-        RowSerializer::of(QueryPlan::bare($this->posts()))->row($post);
+        RowSerializer::of(new QueryPlan($this->posts(), [], [new IncludeClause('author', QueryPlan::bare($this->posts()))], [], LimitPolicy::none()))->row($post);
     }
 
     private function posts(): Resource

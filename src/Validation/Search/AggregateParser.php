@@ -6,6 +6,7 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Search\AggregateKey;
 use Lomkit\Rest\Search\AggregateNode;
@@ -61,6 +62,13 @@ final readonly class AggregateParser
 
         if ($relations !== null && count($relations) > 1) {
             $rules->reject(Violation::nestedAggregate($relation->path));
+            $rules->partial();
+
+            return null;
+        }
+
+        if ($relations !== null && $relations[0] instanceof MorphTo) {
+            $rules->reject(Violation::morphToAggregate($relation->path));
             $rules->partial();
 
             return null;

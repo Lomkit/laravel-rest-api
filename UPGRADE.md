@@ -43,8 +43,9 @@ The keys that change:
 | `limits` | Added, in three groups: `sizes`, `depths` and `totals`. |
 | `search.max_nesting_depth` | Moved to `limits.depths.filters`. The `search` block is removed. |
 | `documentation` | Removed with the documentation generator. |
+| `morph.type_key` | Added. `@type` by default, see [Responses](#responses). |
 
-`authorizations.cache.default`, `gates.key`, `gates.message.enabled`, `gates.names` and `precognition.enabled` keep their name and their default. The blocks are now in this order: `authorizations`, `gates`, `limits`, `precognition`.
+`authorizations.cache.default`, `gates.key`, `gates.message.enabled`, `gates.names` and `precognition.enabled` keep their name and their default. The blocks are now in this order: `authorizations`, `gates`, `morph`, `limits`, `precognition`.
 
 Before, in the file that 2.x published, without its comments and its `documentation` block:
 
@@ -106,6 +107,10 @@ After, in 3.0:
     ],
 ],
 
+'morph' => [
+    'type_key' => '@type',
+],
+
 'limits' => [
     'sizes' => [
         'filters' => 100,
@@ -161,7 +166,7 @@ Types:
 - Each request reads the values once, and checks their type. A value of the wrong type throws an exception that names the key. Before, the values were cast without a check: the string `"false"` turned strict mode, the cache, the gate messages and Precognition on.
   - `authorizations.strict`, `authorizations.cache.enabled`, `gates.message.enabled` and `precognition.enabled` take `true`, `false`, or the strings `"1"`, `"0"`, `"true"` and `"false"`. Anything else throws, `null` included: "The [rest.authorizations.strict] option must be a boolean."
   - `authorizations.cache.default` and each value of `limits` take an integer of 0 or more, or a string of digits, as `env()` gives it: "The [rest.limits.sizes.filters] option must be an integer of 0 or more."
-  - `gates.key` takes a string that is not empty: "The [rest.gates.key] option must be a non-empty string."
+  - `gates.key` and `morph.type_key` take a string that is not empty: "The [rest.gates.key] option must be a non-empty string."
   - `gates.names` takes a map of strings that holds the six names above: "The [rest.gates.names] option must be a map of strings." for another value, and "The [rest.gates.names.authorized_to_view] option must be a string." for a missing name or one that is not a string.
 - `precognition.enabled` is read when the routes are registered, `limits` when a request first reads the limits, and the other values together, the first time a request needs one of them.
 - The exception is `Lomkit\Rest\Exceptions\InvalidConfigException`, which extends `InvalidArgumentException`.
@@ -920,6 +925,21 @@ The package renders the rows of a response from the plan of the search: the `sel
 - A paginator that `paginate()` returns renders as a page when it implements `Illuminate\Contracts\Pagination\LengthAwarePaginator`, whatever its class. Before, only an `Illuminate\Pagination\LengthAwarePaginator` did.
 - `Lomkit\Rest\Pagination\LengthAwarePaginator` declares native types: `__construct(array $items, int $total, int $perPage, int $currentPage, array $options = [], array $meta = [])`. Its items are the rendered rows.
 - The classes of `Lomkit\Rest\Http\Serialization` render the rows: `RowSerializer` renders the rows of one level of the plan with `RowFields`, `GateTable`, `RelationRenderer` and `PivotRenderer`, and `PageEnvelope` or `PlainEnvelope` wraps them. Each gate is still read through the `authorizedTo()` of the resource.
+- A row returns the relations that its search includes, and no other relation. A relation that the model loads by itself, through `$with`, a `with()` in a relation method, `searchQuery()`, a scope, an instruction or a hook, is still loaded, so the policies, the hooks and `map()` can read it, but the response no longer returns it: add it to `includes` to return it. The rows of `destroy`, `restore` and `forceDestroy` return no relation. A loaded relation that the resource does not declare no longer gives a 500. The `pivot` of a row reached through a `BelongsToMany`, `MorphToMany` or `MorphedByMany` include is still returned. Before, each loaded relation was returned with the selectable fields of its resource.
+
+MorphTo includes:
+
+- Each row that a `MorphTo` include returns starts with its type, under the `@type` key: the type that the parent row stores, which is the morph-map alias of the model, or its class name without an alias. `morph.type_key` in `config/rest.php` renames the key. Each `MorphTo` include carries it, aliased or nested, and no other row does. A field of the related resource named like the key is not returned. For example, a label with the book it is attached to:
+
+  ```json
+  {"id": 1, "text": "classic", "labelable": {"@type": "book", "id": 1, "title": "Dune"}}
+  ```
+
+- The parent rows are grouped by the exact type that they store. A row whose type is not the type of the resource that the relation declares returns `null` for the include, and its type runs no query: the type of another model, a type that differs only by case, a class name stored before a morph map, or any other string. A row without a type or without a key returns `null` too. Before, the type of another model returned that model with the fields of the declared resource, a type that differs only by case returned the model, and a type that is not a class gave a 500.
+- The targets of one type load with one query, which applies the search of the include: its filters, scopes, instructions, aggregates and includes, aliased ones included, and the `searchQuery()` of its resource. Before, a filter or an aggregate of a `MorphTo` include gave a 500, and an aliased include inside an aliased `MorphTo` include was left out.
+- The query of the targets has no order and no limit. The `sorts` and `limit` of a `MorphTo` include are still accepted and still have no effect.
+- A `MorphTo` include loads after the query of its rows, as an aliased include does, so it comes after the includes without an alias in the row.
+- `Lomkit\Rest\Search\Plan\SearchPlanner` plans a `MorphTo` include, aliased or not, as a `Lomkit\Rest\Search\Plan\MorphToIncludeClause`, which holds a `QueryPlan` per type. `MorphToSerializer` renders its rows; it implements `Lomkit\Rest\Http\Serialization\RowRenderer`, as `RowSerializer` does. `Lomkit\Rest\Relations\MorphTo::columns()` returns the type and key columns of the relation, which the details read too.
 
 ### Selects, sorts and aggregates
 
@@ -992,10 +1012,18 @@ Aggregates:
   {"search": {"includes": [{"relation": "author", "aggregates": [{"relation": "posts", "type": "count"}]}]}}
   ```
 
+- An aggregate whose `relation` is a `MorphTo` relation gives a 422 under `search.aggregates.<i>.relation`: `The search.aggregates.0.relation field cannot be a MorphTo relation.` Before, it gave a 500. Aggregate a relation of the target inside the include instead:
+
+  ```json
+  {"search": {"includes": [{"relation": "labelable", "aggregates": [{"relation": "labels", "type": "count"}]}]}}
+  ```
+
 Include aliases:
 
 - An include `alias` is still checked against the name of every field of the resource, `writeOnly()` and `virtual()` fields included. Its messages start with the key instead of `The alias`, for example `The search.includes.0.alias conflicts with a field of this resource.`
-- An include `alias` is also checked against the keys of the aggregates of the same search, and against the key of each include without alias, the name of its relation in snake case (`featured_products` for `featuredProducts`): `The search.includes.0.alias is already used by an aggregate.` and `The search.includes.1.alias is already used by another include.` An include without alias whose key is the key of an aggregate gets `The search.includes.0.alias field is required, because the key posts is already used.`
+- An include `alias` is also checked against the keys of the aggregates of the same search, and against the key of each include without alias, the name of its relation in snake case (`featured_products` for `featuredProducts`): `The search.includes.0.alias is already used by an aggregate.` and `The search.includes.1.alias is already used by another include.` An include without alias whose key is the name of a field of the resource, `writeOnly()` and `virtual()` fields included, a reserved key or the key of an aggregate gets `The search.includes.0.alias field is required, because the key posts is already used.` Before, such an include replaced the field in the row.
+- Inside a `MorphTo` include, the type key, `morph.type_key`, is reserved as the gates key is: an include or aggregate `alias` of that name gets `The search.includes.0.aggregates.0.alias is reserved.` `Relation::reservedKeys(): array` returns the keys that a relation adds to each row it loads: the type key for a `MorphTo`, the pivot key for a `BelongsToMany`, `MorphToMany` or `MorphedByMany`, none for the other relations.
+- Inside a `BelongsToMany`, `MorphToMany` or `MorphedByMany` include, the pivot key of the relation, `pivot` or the name given to `as()` in snake case, is reserved the same way. Before, an aggregate of that name was replaced by the pivot, and an include of that name gave a 500. A field of the related resource named like it is still replaced by the pivot.
 - The classes of `Lomkit\Rest\Rules\Search`, `SearchIncludeAlias` included, and `Lomkit\Rest\Rules\Concerns\ReachesRelations` are removed. A search can no longer be built from rule nodes, and `Search::nested()` is gone. The search payload is read by the package's search parser, see [Validation engine](#validation-engine).
 
 Scramble:

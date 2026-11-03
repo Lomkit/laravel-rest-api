@@ -5,6 +5,8 @@ namespace Lomkit\Rest\Tests\Feature\Serialization;
 use Illuminate\Http\JsonResponse;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Search\Plan\IncludeClause;
+use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
@@ -113,7 +115,7 @@ class ResponseShapeTest extends PackageTestCase
         $author->setRelation('posts', collect([Post::query()->findOrFail(1)]));
 
         $response = AuthorResource::newResponse()
-            ->plan(QueryPlan::bare($resource))
+            ->plan(new QueryPlan($resource, [], [new IncludeClause('posts', QueryPlan::bare($context->resource(PostResource::class)))], [], LimitPolicy::none()))
             ->responsable($author)
             ->toResponse($context->request);
 

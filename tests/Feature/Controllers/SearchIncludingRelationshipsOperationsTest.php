@@ -29,7 +29,6 @@ use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\BelongsToResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\HasManyThroughResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneOfManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\HasOneResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
@@ -233,14 +232,6 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             $response,
             [$matchingModel, $matchingModel2],
             new ModelResource,
-            [
-                [
-                    'belongs_to_relation' => $matchingModel->belongsToRelation->only((new BelongsToResource)->getFields(app()->make(RestRequest::class))->names()),
-                ],
-                [
-                    'belongs_to_relation' => null,
-                ],
-            ]
         );
     }
 
@@ -623,24 +614,8 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                     'has_many_relation_with_eager_loading_relation' => $matchingModel->hasManyRelationWithEagerLoadingRelation()
                         ->orderBy('id')
                         ->get()
-                        ->map(function ($relation) {
-                            $relation->has_many_through_relation = $relation->hasManyThroughRelation
-                                ->map(function ($relation) {
-                                    $relation->has_many_relation = $relation->hasManyRelation->only(
-                                        (new HasManyResource)->getFields(app()->make(RestRequest::class))->names()
-                                    );
-
-                                    return $relation->only(array_merge(
-                                        (new HasManyThroughResource)->getFields(app()->make(RestRequest::class))->names(),
-                                        ['has_many_relation']
-                                    ));
-                                })->toArray();
-
-                            return $relation->only(array_merge(
-                                (new HasManyResource)->getFields(app()->make(RestRequest::class))->names(),
-                                ['has_many_through_relation']
-                            ));
-                        })->toArray(),
+                        ->map(fn (HasManyRelation $relation): array => $relation->only((new HasManyResource)->getFields(app()->make(RestRequest::class))->names()))
+                        ->toArray(),
                 ],
             ]
         );

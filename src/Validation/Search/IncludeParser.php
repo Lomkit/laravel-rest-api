@@ -2,7 +2,7 @@
 
 namespace Lomkit\Rest\Validation\Search;
 
-use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\IncludeNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ValidationContext;
@@ -58,8 +58,9 @@ final readonly class IncludeParser
         $alias = $entry->at('alias');
         $name = is_string($relation->value) ? $relation->value : null;
         $relations = $name === null ? null : $context->reachRelation($name, $entry->path);
-        $related = $relations === null ? null : $relations[array_key_last($relations)]->resource();
-        $body = $name === null || $related === null ? null : $this->body($entry, $name, $related, $context);
+        $through = $relations === null ? null : $relations[array_key_last($relations)];
+        $related = $through?->resource();
+        $body = $name === null || $through === null ? null : $this->body($entry, $name, $through, $context);
 
         $rules->add($relation->path, ['required', new KnownRelation($context->resource)]);
         $rules->add($entry->at('text')->path, ['prohibited']);
@@ -71,13 +72,13 @@ final readonly class IncludeParser
             new IncludeAlias($keys, $name ?? ''),
         ]);
 
-        if (! $alias->present && $name !== null && $keys->aggregateUses(RowKeys::includeKey($name)) > 0) {
+        if (! $alias->present && $name !== null && $keys->isTaken(RowKeys::includeKey($name))) {
             $rules->reject(Violation::takenKey($alias->path, RowKeys::includeKey($name)));
         }
 
         $search = $body?->node(null, null);
 
-        if ($name === null || $relations === null || $search === null || ($alias->value !== null && ! is_string($alias->value))) {
+        if ($name === null || $relations === null || $related === null || $search === null || ($alias->value !== null && ! is_string($alias->value))) {
             $rules->partial();
 
             return null;
@@ -86,7 +87,7 @@ final readonly class IncludeParser
         return new IncludeNode($name, $relations, $related, is_string($alias->value) ? $alias->value : null, $search);
     }
 
-    private function body(Cursor $entry, string $relation, Resource $related, ValidationContext $context): ?SearchBodyParser
+    private function body(Cursor $entry, string $relation, Relation $through, ValidationContext $context): ?SearchBodyParser
     {
         $levels = count(explode('.', $relation));
         $limit = $context->limits->depths->includes;
@@ -97,6 +98,11 @@ final readonly class IncludeParser
             return null;
         }
 
-        return SearchBodyParser::keys($entry, $context->related($related)->included($levels), false);
+        $context = $context
+            ->related($through->resource())
+            ->included($levels)
+            ->reserving($through->reservedKeys());
+
+        return SearchBodyParser::keys($entry, $context, false);
     }
 }

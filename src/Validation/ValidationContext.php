@@ -10,7 +10,10 @@ use Lomkit\Rest\Validation\Search\SearchGrammar;
 
 final readonly class ValidationContext
 {
-    /** @param list<AggregateNode> $aggregates */
+    /**
+     * @param  list<AggregateNode>  $aggregates
+     * @param  list<string>  $reserved
+     */
     public function __construct(
         public Resource $resource,
         public SearchGrammar $grammar,
@@ -21,6 +24,7 @@ final readonly class ValidationContext
         public int $filterDepth = 0,
         public int $includeDepth = 0,
         public array $aggregates = [],
+        public array $reserved = [],
     ) {}
 
     public static function root(Resource $resource, NodeBudget $budget, ParsedRules $rules): self
@@ -58,7 +62,13 @@ final readonly class ValidationContext
     /** @param list<AggregateNode> $aggregates */
     public function withAggregates(array $aggregates): self
     {
-        return new self($this->resource, $this->grammar, $this->limits, $this->rules, $this->reader, $this->vocabulary, $this->filterDepth, $this->includeDepth, $aggregates);
+        return new self($this->resource, $this->grammar, $this->limits, $this->rules, $this->reader, $this->vocabulary, $this->filterDepth, $this->includeDepth, $aggregates, $this->reserved);
+    }
+
+    /** @param list<string> $keys */
+    public function reserving(array $keys): self
+    {
+        return new self($this->resource, $this->grammar, $this->limits, $this->rules, $this->reader, $this->vocabulary, $this->filterDepth, $this->includeDepth, $this->aggregates, $keys);
     }
 
     /** @return non-empty-list<Relation>|null */

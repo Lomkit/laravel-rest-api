@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 
-final readonly class RowSerializer
+final readonly class RowSerializer implements RowRenderer
 {
     private function __construct(
         private RowFields $fields,
@@ -20,6 +20,7 @@ final readonly class RowSerializer
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function row(Model $model): array
     {
         return array_merge($this->gates->addTo($this->fields->values($model), $model), $this->relations->render($model));
