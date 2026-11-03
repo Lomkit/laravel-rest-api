@@ -71,6 +71,8 @@ final readonly class SearchContext
             $sort instanceof FieldSort => $sort->field->name,
             $sort instanceof EngineSort => $sort->attribute,
             $sort instanceof RelevanceSort => RelevanceClause::FIELD,
+            $sort instanceof RelationSort => $sort->path(),
+            $sort instanceof AggregateSort => $sort->key->value,
             default => throw new LogicException($sort::class.' is not a sort of a search.'),
         };
     }

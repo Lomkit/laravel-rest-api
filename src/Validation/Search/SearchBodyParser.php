@@ -69,13 +69,16 @@ final readonly class SearchBodyParser
     {
         $context = $this->context;
         $keys = RowKeys::of($context, $this->lists['includes'] ?? [], $this->lists['aggregates'] ?? []);
+        $filters = $context->grammar->filters($this->lists['filters'] ?? [], $context);
+        $scopes = $context->grammar->scopes($this->lists['scopes'] ?? [], $context);
+        $aggregates = (new AggregateParser)->parse($this->lists['aggregates'] ?? [], $context, $keys);
 
         return new SearchNode(
-            filters: $context->grammar->filters($this->lists['filters'] ?? [], $context),
-            scopes: $context->grammar->scopes($this->lists['scopes'] ?? [], $context),
-            sorts: (new SortParser)->parse($this->lists['sorts'] ?? [], $this->sorts, $context),
+            filters: $filters,
+            scopes: $scopes,
+            sorts: (new SortParser)->parse($this->lists['sorts'] ?? [], $this->sorts, $context->withAggregates($aggregates)),
             selects: $this->selects(),
-            aggregates: (new AggregateParser)->parse($this->lists['aggregates'] ?? [], $context, $keys),
+            aggregates: $aggregates,
             includes: (new IncludeParser)->parse($this->lists['includes'] ?? [], $context, $keys),
             instructions: (new InstructionParser)->parse($this->lists['instructions'] ?? [], $context),
             text: $text,

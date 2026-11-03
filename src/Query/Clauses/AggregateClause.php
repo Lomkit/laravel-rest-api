@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Query\Clauses;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\RelationAggregate;
 use Lomkit\Rest\Search\AggregateKey;
 use Lomkit\Rest\Search\AggregateNode;
@@ -27,5 +28,10 @@ final readonly class AggregateClause implements Clause
     public function apply(Builder $query): void
     {
         $this->aggregate->select($query, $this->label, $this->constraint->apply(...));
+    }
+
+    public function order(Builder $query, SortDirection $direction): void
+    {
+        $this->aggregate->order($query, $this->constraint->apply(...), $direction);
     }
 }

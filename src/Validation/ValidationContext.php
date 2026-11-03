@@ -5,10 +5,12 @@ namespace Lomkit\Rest\Validation;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Validation\Search\SearchGrammar;
 
 final readonly class ValidationContext
 {
+    /** @param list<AggregateNode> $aggregates */
     public function __construct(
         public Resource $resource,
         public SearchGrammar $grammar,
@@ -18,6 +20,7 @@ final readonly class ValidationContext
         public Vocabulary $vocabulary,
         public int $filterDepth = 0,
         public int $includeDepth = 0,
+        public array $aggregates = [],
     ) {}
 
     public static function root(Resource $resource, NodeBudget $budget, ParsedRules $rules): self
@@ -50,6 +53,12 @@ final readonly class ValidationContext
     public function included(int $levels): self
     {
         return $this->copy($this->resource, $this->grammar, $this->filterDepth, $this->includeDepth + $levels);
+    }
+
+    /** @param list<AggregateNode> $aggregates */
+    public function withAggregates(array $aggregates): self
+    {
+        return new self($this->resource, $this->grammar, $this->limits, $this->rules, $this->reader, $this->vocabulary, $this->filterDepth, $this->includeDepth, $aggregates);
     }
 
     /** @return non-empty-list<Relation>|null */

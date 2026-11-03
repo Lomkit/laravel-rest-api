@@ -8,10 +8,14 @@ use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use InvalidArgumentException;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Query\Expressions\AggregateColumn;
+use Lomkit\Rest\Query\Expressions\ExistsQuery;
 use Lomkit\Rest\Query\Expressions\UuidColumn;
 
 final readonly class RelationAggregate
@@ -27,21 +31,69 @@ final readonly class RelationAggregate
     {
         $query = self::eloquent($query);
 
-        $query->withAggregate([$this->relation.' as '.$name => $constraint], $this->column($query), $this->function->value);
+        $query->withAggregate([$this->relation.' as '.$name => $constraint], $this->column($query, false), $this->function->value);
+    }
+
+    /** @param Closure(EloquentBuilder<Model>): void $constraint */
+    public function order(Builder $query, Closure $constraint, SortDirection $direction): void
+    {
+        $query = self::eloquent($query);
+        $subquery = $this->subquery($query, $constraint);
+
+        if ($this->function !== AggregateFunction::Exists) {
+            $query->orderBy($subquery, $direction->value);
+
+            return;
+        }
+
+        $query->orderBy(new ExistsQuery($subquery), $direction->value);
+        $query->getQuery()->addBinding($subquery->getBindings(), 'order');
+    }
+
+    /**
+     * @param  EloquentBuilder<Model>  $query
+     * @param  Closure(EloquentBuilder<Model>): void  $constraint
+     */
+    private function subquery(EloquentBuilder $query, Closure $constraint): QueryBuilder
+    {
+        $column = new AggregateColumn($this->function, $this->column($query, true));
+        $relation = $this->relation($query);
+        $subquery = $relation
+            ->getRelationExistenceQuery($relation->getRelated()->newQuery(), $query)
+            ->select($column)
+            ->where(function (EloquentBuilder $query) use ($constraint): void {
+                $constraint($query);
+            })
+            ->mergeConstraintsFrom($relation->getQuery())
+            ->toBase();
+
+        $subquery->orders = null;
+        $subquery->setBindings([], 'order');
+
+        if (count($subquery->columns ?? []) > 1) {
+            $subquery->columns = [$subquery->columns[0]];
+            $subquery->bindings['select'] = [];
+        }
+
+        return $subquery;
     }
 
     /** @param EloquentBuilder<Model> $query */
-    private function column(EloquentBuilder $query): Expression|string
+    private function column(EloquentBuilder $query, bool $qualified): Expression|string
     {
         if ($this->field === null) {
             return '*';
         }
 
-        if (! $this->field instanceof ID || $this->field->resolvedKeyType() !== 'uuid') {
+        $uuid = $this->field instanceof ID && $this->field->resolvedKeyType() === 'uuid';
+
+        if (! $uuid && ! $qualified) {
             return $this->field->name;
         }
 
-        return new UuidColumn($this->qualifiedColumn($query, $this->field->name));
+        $column = $this->qualifiedColumn($query, $this->field->name);
+
+        return $uuid ? new UuidColumn($column) : $column;
     }
 
     /** @param EloquentBuilder<Model> $query */

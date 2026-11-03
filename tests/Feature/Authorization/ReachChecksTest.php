@@ -195,6 +195,32 @@ class ReachChecksTest extends HelpdeskTestCase
         $this->assertNoQueries();
     }
 
+    /** @return array<string, array{string, string, string}> */
+    public static function sortReach(): array
+    {
+        return [
+            'a field of a to-one relation' => ['teams', 'Teams are not listed.', 'team.name'],
+            'an undeclared field' => ['teams', 'Teams are not listed.', 'team.budget'],
+            'a relation with several rows' => ['tags', 'Tags are not listed.', 'tags.name'],
+            'the second relation of a path' => ['replies', 'Replies are not listed.', 'team.replies.body'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('sortReach')]
+    public function it_checks_the_relations_that_a_sort_reaches(string $policy, string $message, string $field): void
+    {
+        $this->{$policy}->answers['viewAny'] = Response::deny($message);
+        $this->logQueries();
+
+        $this->postJson('/api/tickets/search', ['search' => ['sorts' => [['field' => $field]]]])
+            ->assertForbidden()
+            ->assertExactJson($this->denied($message, 'search.sorts.0'));
+
+        $this->assertNoQueries();
+        $this->assertSame(['viewAny'], $this->{$policy}->calls);
+    }
+
     /** @return array{message: string, denials: list<array{path: string, ability: string, message: string}>} */
     private function denied(string $message, string $path): array
     {

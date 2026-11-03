@@ -113,6 +113,17 @@ class SearchContextTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_names_the_relation_and_aggregate_sorts(): void
+    {
+        $context = $this->context(PostResource::class, [
+            'aggregates' => [['relation' => 'author', 'type' => 'count']],
+            'sorts' => [['field' => 'author.last_name'], ['field' => 'author_count', 'direction' => 'desc']],
+        ]);
+
+        $this->assertSame([true, true, false, false], array_map($context->sortsOn(...), ['author.last_name', 'author_count', 'author', 'last_name']));
+    }
+
+    #[Test]
     public function it_lists_the_includes_as_sent(): void
     {
         $context = $this->context(AuthorResource::class, [

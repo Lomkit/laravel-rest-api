@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Validation\Search;
 
+use Illuminate\Support\Str;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Search\SortNode;
@@ -49,6 +50,10 @@ final readonly class SortParser
 
         $context->rules->add($field->path, [$fields, 'required', 'string']);
         $context->rules->addWhenPresent($direction, [$context->grammar->sortDirection($field->value)]);
+
+        if (is_string($field->value) && str_contains($field->value, '.')) {
+            $context->reachRelation(Str::beforeLast($field->value, '.'), $entry->path);
+        }
 
         $parsed = is_string($direction->value) ? SortDirection::tryFrom($direction->value) : null;
 
