@@ -14,9 +14,7 @@ class MorphTo extends MorphRelation
         return MorphTargets::of($this->type);
     }
 
-    /** @return array<string, mixed> */
-    #[\Override]
-    public function toDetails(): array
+    public function columns(): MorphColumns
     {
         $relation = $this->modelRelation();
 
@@ -24,10 +22,17 @@ class MorphTo extends MorphRelation
             throw InvalidResourceException::notAMorphTo($this->fromResource::class, $this->relation);
         }
 
+        return MorphColumns::of($relation);
+    }
+
+    /** @return array<string, mixed> */
+    #[\Override]
+    public function toDetails(): array
+    {
         return [
             ...parent::toDetails(),
             'types' => (object) $this->targets()->byType(),
-            'morph' => MorphColumns::of($relation),
+            'morph' => $this->columns(),
         ];
     }
 

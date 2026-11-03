@@ -15,7 +15,7 @@ use Lomkit\Rest\Search\Plan\QueryPlan;
 
 final readonly class RelationRenderer
 {
-    /** @param array<string, array{string, RowSerializer}> $planned */
+    /** @param array<string, array{string, RowRenderer}> $planned */
     private function __construct(
         private Resource $resource,
         private PivotRenderer $pivot,
@@ -27,13 +27,13 @@ final readonly class RelationRenderer
         $planned = [];
 
         foreach ($plan->includes as $include) {
-            [$name, $key, $relation, $nested] = match (true) {
-                $include instanceof AliasedIncludeClause => [$include->alias, $include->alias, $include->relation, $include->plan],
-                $include instanceof IncludeClause => [$include->relation, Str::snake($include->relation), $include->relation, $include->plan],
+            [$name, $key, $rows] = match (true) {
+                $include instanceof AliasedIncludeClause => [$include->alias, $include->alias, RowSerializer::of($include->plan, $plan->resource->relation($include->relation))],
+                $include instanceof IncludeClause => [$include->relation, Str::snake($include->relation), RowSerializer::of($include->plan, $plan->resource->relation($include->relation))],
                 default => throw new LogicException($include::class.' is not an include of a plan.'),
             };
 
-            $planned[$name] = [$key, RowSerializer::of($nested, $plan->resource->relation($relation))];
+            $planned[$name] = [$key, $rows];
         }
 
         return new self($plan->resource, PivotRenderer::of($through), $planned);
@@ -52,7 +52,7 @@ final readonly class RelationRenderer
         return $rendered;
     }
 
-    private function value(Model $model, string $name, mixed $value, ?RowSerializer $rows): mixed
+    private function value(Model $model, string $name, mixed $value, ?RowRenderer $rows): mixed
     {
         if ($value === null) {
             return null;
