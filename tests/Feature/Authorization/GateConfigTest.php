@@ -10,30 +10,6 @@ class GateConfigTest extends HelpdeskTestCase
     private const array GATED_SEARCH = ['search' => ['gates' => ['view', 'create']]];
 
     #[Test]
-    public function it_answers_each_gate_with_a_boolean_when_the_message_option_is_the_string_false(): void
-    {
-        config(['rest.gates.message.enabled' => 'false']);
-        $this->seedTickets();
-
-        $this->postJson('/api/tickets/search', self::GATED_SEARCH)
-            ->assertOk()
-            ->assertJsonPath('data.0.gates', ['authorized_to_view' => true])
-            ->assertJsonPath('meta.gates', ['authorized_to_create' => true]);
-    }
-
-    #[Test]
-    public function it_answers_each_gate_with_allowed_and_message_when_the_message_option_is_the_string_true(): void
-    {
-        config(['rest.gates.message.enabled' => 'true']);
-        $this->seedTickets();
-
-        $this->postJson('/api/tickets/search', self::GATED_SEARCH)
-            ->assertOk()
-            ->assertJsonPath('data.0.gates', ['authorized_to_view' => ['allowed' => true, 'message' => null]])
-            ->assertJsonPath('meta.gates', ['authorized_to_create' => ['allowed' => true, 'message' => null]]);
-    }
-
-    #[Test]
     public function it_puts_the_gates_under_the_key_and_the_names_of_the_config(): void
     {
         config([
@@ -45,8 +21,8 @@ class GateConfigTest extends HelpdeskTestCase
 
         $this->postJson('/api/tickets/search', self::GATED_SEARCH)
             ->assertOk()
-            ->assertJsonPath('data.0.abilities', ['can_view' => true])
-            ->assertJsonPath('meta.abilities', ['can_create' => true])
+            ->assertJsonPath('data.0.abilities', ['can_view' => ['allowed' => true, 'message' => null]])
+            ->assertJsonPath('meta.abilities', ['can_create' => ['allowed' => true, 'message' => null]])
             ->assertJsonMissingPath('data.0.gates');
     }
 

@@ -39,11 +39,8 @@ return [
     | A search can list abilities in "gates" to learn, for each row,
     | whether the user may perform them. The answers go under "key" in
     | each row, and the "create" answer goes under "key" in the meta of
-    | the response. Pick a key that no field or include uses.
-    |
-    | When "message.enabled" is true, each answer holds "allowed" and
-    | "message". When it is false, each answer is true or false, a
-    | deprecated format.
+    | the response. Each answer holds "allowed" and "message". Pick a key
+    | that no field or include uses.
     |
     | "names" renames the answers. Each key is the default name of an
     | answer. A resource can turn gates off with the DisableGates trait.
@@ -52,10 +49,6 @@ return [
 
     'gates' => [
         'key' => 'gates',
-
-        'message' => [
-            'enabled' => false,
-        ],
 
         'names' => [
             'authorized_to_view' => 'authorized_to_view',

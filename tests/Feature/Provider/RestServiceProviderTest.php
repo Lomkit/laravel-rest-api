@@ -23,8 +23,7 @@ class RestServiceProviderTest extends PackageTestCase
         $this->assertSame('abilities', config('rest.gates.key'));
         $this->assertSame('can_view', config('rest.gates.names.authorized_to_view'));
         $this->assertSame('authorized_to_create', config('rest.gates.names.authorized_to_create'));
-        $this->assertFalse(config('rest.gates.message.enabled'));
-        $this->assertSame(['key', 'message', 'names'], array_keys((array) config('rest.gates')));
+        $this->assertSame(['key', 'names'], array_keys((array) config('rest.gates')));
         $this->assertSame(1, config('rest.limits.depths.filters'));
         $this->assertSame(100, config('rest.limits.sizes.filters'));
         $this->assertSame(1000, config('rest.limits.totals.entries'));

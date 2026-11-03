@@ -44,8 +44,9 @@ The keys that change:
 | `search.max_nesting_depth` | Moved to `limits.depths.filters`. The `search` block is removed. |
 | `documentation` | Removed with the documentation generator. |
 | `morph.type_key` | Added. `@type` by default, see [Responses](#responses). |
+| `gates.message.enabled` | Removed. Each answer of `gates` holds `allowed` and `message`, see [Responses](#responses). |
 
-`authorizations.cache.default`, `gates.key`, `gates.message.enabled`, `gates.names` and `precognition.enabled` keep their name and their default. The blocks are now in this order: `authorizations`, `gates`, `morph`, `limits`, `precognition`.
+`authorizations.cache.default`, `gates.key`, `gates.names` and `precognition.enabled` keep their name and their default. The blocks are now in this order: `authorizations`, `gates`, `morph`, `limits`, `precognition`.
 
 Before, in the file that 2.x published, without its comments and its `documentation` block:
 
@@ -92,10 +93,6 @@ After, in 3.0:
 
 'gates' => [
     'key' => 'gates',
-
-    'message' => [
-        'enabled' => false,
-    ],
 
     'names' => [
         'authorized_to_view' => 'authorized_to_view',
@@ -158,13 +155,13 @@ Limits:
 Published files:
 
 - The package defaults merge into your published `config/rest.php` at every level. A nested key that your file leaves out, such as `gates.names.authorized_to_restore` or `limits.sizes.filters`, gets its default value. Before, a top-level key such as `gates` replaced all the defaults under it.
-- Remove from your file the keys that 3.0 removed or moved: `authorizations.enabled`, `gates.enabled`, `search.max_nesting_depth` and the `documentation` block, after moving the value of `search.max_nesting_depth` to `limits.depths.filters`.
+- Remove from your file the keys that 3.0 removed or moved: `authorizations.enabled`, `gates.enabled`, `gates.message`, `search.max_nesting_depth` and the `documentation` block, after moving the value of `search.max_nesting_depth` to `limits.depths.filters`.
 - A key under `limits` that the package does not know throws an exception that names it, so that a typo does not keep the default without notice: "The [rest.limits.sizes.filter] option does not exist." An unknown key elsewhere is ignored.
 
 Types:
 
-- Each request reads the values once, and checks their type. A value of the wrong type throws an exception that names the key. Before, the values were cast without a check: the string `"false"` turned strict mode, the cache, the gate messages and Precognition on.
-  - `authorizations.strict`, `authorizations.cache.enabled`, `gates.message.enabled` and `precognition.enabled` take `true`, `false`, or the strings `"1"`, `"0"`, `"true"` and `"false"`. Anything else throws, `null` included: "The [rest.authorizations.strict] option must be a boolean."
+- Each request reads the values once, and checks their type. A value of the wrong type throws an exception that names the key. Before, the values were cast without a check: the string `"false"` turned strict mode, the cache and Precognition on.
+  - `authorizations.strict`, `authorizations.cache.enabled` and `precognition.enabled` take `true`, `false`, or the strings `"1"`, `"0"`, `"true"` and `"false"`. Anything else throws, `null` included: "The [rest.authorizations.strict] option must be a boolean."
   - `authorizations.cache.default` and each value of `limits` take an integer of 0 or more, or a string of digits, as `env()` gives it: "The [rest.limits.sizes.filters] option must be an integer of 0 or more."
   - `gates.key` and `morph.type_key` take a string that is not empty: "The [rest.gates.key] option must be a non-empty string."
   - `gates.names` takes a map of strings that holds the six names above: "The [rest.gates.names] option must be a map of strings." for another value, and "The [rest.gates.names.authorized_to_view] option must be a string." for a missing name or one that is not a string.
@@ -940,6 +937,18 @@ MorphTo includes:
 - The query of the targets has no order and no limit. The `sorts` and `limit` of a `MorphTo` include are still accepted and still have no effect.
 - A `MorphTo` include loads after the query of its rows, as an aliased include does, so it comes after the includes without an alias in the row.
 - `Lomkit\Rest\Search\Plan\SearchPlanner` plans a `MorphTo` include, aliased or not, as a `Lomkit\Rest\Search\Plan\MorphToIncludeClause`, which holds a `QueryPlan` per type. `MorphToSerializer` renders its rows; it implements `Lomkit\Rest\Http\Serialization\RowRenderer`, as `RowSerializer` does. `Lomkit\Rest\Relations\MorphTo::columns()` returns the type and key columns of the relation, which the details read too.
+
+Gates:
+
+- Each answer of `gates` is an object that holds `allowed` and `message`: the message of the policy's response, or `null`. The `create` answer in `meta` has the same form. For example, a row with the `view` and `update` gates, when the policy denies the update with `Response::deny('Closed tickets are read-only.')`:
+
+  ```json
+  {"id": 2, "gates": {"authorized_to_view": {"allowed": true, "message": null}, "authorized_to_update": {"allowed": false, "message": "Closed tickets are read-only."}}}
+  ```
+
+  Before, each answer was `true` or `false` unless `gates.message.enabled` was `true`, and that format triggered a deprecation. `gates.message.enabled` and `Lomkit\Rest\Config\RestConfig::$gateMessages` are removed, see [Configuration](#configuration).
+- A row whose `gates` hold no answer returns `{}`: with `"gates": []`, or with `create` alone, whose answer goes to `meta`. Before, it returned `[]`. A search without `gates` returns no `gates` key, and `meta` stays `[]` without the `create` gate, as before.
+- `map()` receives the answers of a row as an object (`stdClass`) whose properties are the names of the answers: read `$responseModel['gates']->authorized_to_view['allowed']`. Before, it received an array.
 
 ### Selects, sorts and aggregates
 

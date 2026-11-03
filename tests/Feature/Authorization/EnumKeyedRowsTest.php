@@ -18,8 +18,8 @@ class EnumKeyedRowsTest extends HelpdeskTestCase
         $this->postJson('/api/channels/search', self::GATED_SEARCH)
             ->assertOk()
             ->assertJsonPath('data.0.code', 'email')
-            ->assertJsonPath('data.0.gates.authorized_to_update', true)
-            ->assertJsonPath('data.1.gates.authorized_to_view', true);
+            ->assertJsonPath('data.0.gates.authorized_to_update.allowed', true)
+            ->assertJsonPath('data.1.gates.authorized_to_view.allowed', true);
         $this->postJson('/api/channels/mutate', ['mutate' => [['operation' => 'update', 'key' => 'phone', 'attributes' => ['name' => 'Hotline']]]])
             ->assertOk()
             ->assertJsonPath('updated', ['phone']);
@@ -37,7 +37,7 @@ class EnumKeyedRowsTest extends HelpdeskTestCase
         $this->postJson('/api/channels/search', self::GATED_SEARCH)->assertOk();
         $this->postJson('/api/channels/search', self::GATED_SEARCH)
             ->assertOk()
-            ->assertJsonPath('data.1.gates.authorized_to_update', true);
+            ->assertJsonPath('data.1.gates.authorized_to_update.allowed', true);
 
         $this->assertSame(['viewAny', 'view email', 'update email', 'view phone', 'update phone'], $this->channels->calls);
     }
