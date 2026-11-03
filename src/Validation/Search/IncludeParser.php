@@ -103,6 +103,6 @@ final readonly class IncludeParser
             ->included($levels)
             ->reserving($through->reservedKeys());
 
-        return SearchBodyParser::keys($entry, $context, false);
+        return SearchBodyParser::keys($entry, $context, LevelBounds::Limited);
     }
 }

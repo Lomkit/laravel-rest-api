@@ -43,6 +43,9 @@ trait ConfiguresRestParameters
     /** @return list<int> */
     public function getLimits(RestRequest $request): array
     {
-        return $this->context()->definition($this)->limits();
+        return $this->context()
+            ->definition($this)
+            ->limits()
+            ->allowed;
     }
 }

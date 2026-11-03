@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Search\Plan;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\ResourceLimits;
 use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\Clause;
 use Lomkit\Rest\Query\Clauses\FilterGroupClause;
@@ -22,7 +23,7 @@ final readonly class SearchPlanner
 
     public static function paged(Resource $resource, SearchNode $search, ResolvedText $text): QueryPlan
     {
-        return (new self(new SqlRows($text)))->plan($resource, $search, LimitPolicy::paged($search->limit ?? $resource->defaultLimit, $search->page ?? 1));
+        return (new self(new SqlRows($text)))->plan($resource, $search, LimitPolicy::paged($search->limit ?? self::limits($resource)->defaultLimit, $search->page ?? 1));
     }
 
     public static function all(Resource $resource, SearchNode $search, ResolvedText $text): QueryPlan
@@ -119,6 +120,13 @@ final readonly class SearchPlanner
         $owner = $include->relations[0] instanceof MorphTo;
 
         return (new self(new SqlRows(null, ! $owner)))->level($include->resource, $include->search, [...$children, ...$include->search->includes], $owner ? LimitPolicy::none() : LimitPolicy::explicit($include->search->limit));
+    }
+
+    private static function limits(Resource $resource): ResourceLimits
+    {
+        return $resource->context()
+            ->definition($resource)
+            ->limits();
     }
 
     private static function aggregate(AggregateNode $aggregate, int $position): AggregateClause

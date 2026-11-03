@@ -27,19 +27,22 @@ final readonly class SearchBodyParser
         private ?int $page,
     ) {}
 
-    public static function keys(Cursor $search, ValidationContext $context, bool $paged): self
+    public static function keys(Cursor $search, ValidationContext $context, LevelBounds $bounds): self
     {
         $resource = $context->resource;
         $grammar = $context->grammar;
         $limits = $context->limits;
+        $sizes = $resource->context()
+            ->definition($resource)
+            ->limits();
         $limit = $search->at('limit');
         $page = $search->at('page');
         $sorts = $search->at('sorts');
 
-        $context->rules->addWhenPresent($limit, ['integer', Rule::in($resource->getLimits($resource->context()->request)), ...$grammar->limitRules()]);
+        $context->rules->addWhenPresent($limit, ['integer', Rule::in($sizes->allowed), ...$grammar->limitRules()]);
 
-        if ($paged) {
-            $context->rules->addWhenPresent($page, ['integer', 'min:1', ...$grammar->pageRules($limit->value, $resource->defaultLimit)]);
+        if ($bounds->paged()) {
+            $context->rules->addWhenPresent($page, ['integer', 'min:1', ...$grammar->pageRules($limit->value, $sizes->defaultLimit)]);
         }
 
         $filters = self::list($search->at('filters'), ['array'], $limits->sizes->filters, $context, true);
@@ -60,7 +63,7 @@ final readonly class SearchBodyParser
             is_array($sorts->value) ? count($sorts->value) : 0,
             $gates,
             self::integer($limit, $context),
-            $paged ? self::integer($page, $context) : null,
+            $bounds->paged() ? self::integer($page, $context) : null,
         );
     }
 
