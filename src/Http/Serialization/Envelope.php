@@ -10,7 +10,7 @@ interface Envelope
     /**
      * @param  Closure(Model): array<string, mixed>  $row
      * @param  array<string, mixed>  $meta
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     public function wrap(Closure $row, array $meta): array;
 }
