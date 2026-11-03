@@ -9,6 +9,8 @@ use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class GatesParser
 {
+    public function __construct(private bool $classLevel = true) {}
+
     /** @return list<GateAbility>|null */
     public function parse(Cursor $gates, ValidationContext $context): ?array
     {
@@ -43,7 +45,7 @@ final readonly class GatesParser
         $gates = $resource->context()->definition($resource)->gates();
         $ability = $gates->find($entry->value);
 
-        if ($ability !== null && $ability->isClassLevel() && $context->includeDepth > 0) {
+        if ($ability !== null && $ability->isClassLevel() && (! $this->classLevel || $context->includeDepth > 0)) {
             $context->rules->add($entry->path, ['prohibited']);
 
             return null;

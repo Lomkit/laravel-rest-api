@@ -55,6 +55,18 @@ class OperationEntryTest extends TestCase
     }
 
     #[Test]
+    public function it_keeps_the_key_of_each_row_that_an_entry_wrote(): void
+    {
+        $entry = OperationEntry::of(['operation' => 'attach', 'key' => [3, 7]]);
+
+        $entry->wrote(new Book(['id' => 3]));
+        $entry->wrote(new Book(['id' => 7]));
+
+        $this->assertSame([3, 7], $entry->writtenKeys());
+        $this->assertSame(['operation' => 'attach', 'key' => [3, 7]], $entry->jsonSerialize());
+    }
+
+    #[Test]
     public function it_reports_the_key_of_each_row_that_a_create_wrote(): void
     {
         $once = OperationEntry::of(['operation' => 'create']);

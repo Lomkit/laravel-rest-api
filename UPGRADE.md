@@ -862,7 +862,7 @@ Checks before validation:
 - The endpoint abilities are `viewAny` for `details` and `search`, and none for `mutate`, `destroy`, `restore` and `forceDestroy`, which check each row and each creation. `operate` is described under "Actions" below.
 - To change them for one resource, override `abilities(Endpoint $endpoint, RestRequest $request): array` on the resource (`Lomkit\Rest\Http\Routing\Endpoint`), for example to require `deleteAny` on `Endpoint::Destroy`. The list replaces the default of the endpoint: a resource that returns `['export']` for `Endpoint::Search` no longer checks `viewAny` there, and its search runs without it. To add an ability, keep `viewAny` in the list, as in `['viewAny', 'export']`. `Endpoint::Operate` is the exception: its list adds to `viewAny`. A resource that already defines a method named `abilities()` must give it this signature.
 - `details` checks `viewAny` before the controller's `beforeDetails()` hook runs, so the hook no longer runs for a user who cannot list the resource.
-- Every resource the payload reaches needs `viewAny` on that resource: each level of an include (`team.replies` needs `viewAny` on the teams and on the replies), each level of an aggregate, each level of a filter on a relation, nested filters included, the relation of a relation group, each relation of a sort on a relation field (`author.last_name` needs `viewAny` on the authors), and a filter on a pivot column (`tags.pivot.position` needs `viewAny` on the tags). The same applies to the `search` of an action. A filter on a relation did not check the related resource before, and an include was checked only when the query returned rows.
+- Every resource the payload reaches needs `viewAny` on that resource: each level of an include (`team.replies` needs `viewAny` on the teams and on the replies), each level of an aggregate, each level of a filter on a relation, nested filters included, the relation of a relation group, each relation of a sort on a relation field (`author.last_name` needs `viewAny` on the authors), and a filter on a pivot column (`tags.pivot.position` needs `viewAny` on the tags). The same applies to the `search` of an action, and to the `response` block of a mutation, which also needs `viewAny` on the resource of the endpoint. A filter on a relation did not check the related resource before, and an include was checked only when the query returned rows.
 - Each `create` in `mutate`, at the root or under a relation, needs `create` on the created resource. It is checked once per resource class and request, before validation, with the model class as its argument, as `Gate::inspect('create', Model::class)` does. Before, it was checked for each new model, after validation, with an unsaved model instance: a `create` policy method that requires a model as its second parameter no longer receives one. A creation under a relation that the package refuses, such as a `HasManyThrough` relation or a relation marked `prohibitedOnCreation()`, is checked before the `422` as well.
 
 Actions:
@@ -916,8 +916,9 @@ Resource methods:
 
 The package renders the rows of a response from the plan of the search: the `selects`, `gates`, `aggregates` and `includes` of `$request->payload()`, at every level.
 
-- A custom `Response` class keeps `map(Model $model, array $responseModel): array` only. It receives each row of the page or of the list as the package rendered it, and returns the row to send. `modelToResponse()`, `buildGatesForModel()` and `requestArrayForRelation()` are removed.
+- A custom `Response` class keeps `map(Model $model, array $responseModel): array` only. It receives each row of the page or of the list, and each record of a mutation, as the package rendered it, and returns the row to send. `modelToResponse()`, `buildGatesForModel()` and `requestArrayForRelation()` are removed.
 - `Lomkit\Rest\Http\Response::resource()` is replaced by `plan(QueryPlan $plan)`, which takes the `Lomkit\Rest\Search\Plan\QueryPlan` of the rows. `responsable()` takes an `Illuminate\Contracts\Pagination\LengthAwarePaginator`, a `Collection` of models or one model. `plan()` and `responsable()` return the response.
+- `rows(array $models): array` renders models with the plan of the response and `map()`, and keeps their keys. The records of a mutation use it, see [Writes](#writes). A `Response` subclass that already defines a method named `rows()` must give it this signature.
 - `toResponse()` returns an `Illuminate\Http\JsonResponse`. The JSON does not change: a page holds `current_page`, `data`, `from`, `last_page`, `per_page`, `to`, `total` and `meta`, and a list or one model holds `data` and `meta`.
 - A paginator that `paginate()` returns renders as a page when it implements `Illuminate\Contracts\Pagination\LengthAwarePaginator`, whatever its class. Before, only an `Illuminate\Pagination\LengthAwarePaginator` did.
 - `Lomkit\Rest\Pagination\LengthAwarePaginator` declares native types: `__construct(array $items, int $total, int $perPage, int $currentPage, array $options = [], array $meta = [])`. Its items are the rendered rows.
@@ -1213,9 +1214,37 @@ Response:
 - `sync` and `toggle` answer the keys that they sent. The rows that they detach or attach besides these keys are not listed.
 - An entry under an entry with a list of keys is written once for each of these keys, and answers once: a `create` there answers the list of the keys that it created, in the order of the keys above.
 - A `BelongsTo` or `MorphTo` entry is written before the row that holds it, and answers under that row, as sent.
-- The response holds `operations` only. When the mutation fails, for example on a denied row, the transaction is rolled back and the response is the error alone.
-- `Lomkit\Rest\Http\MutateResponse` runs the mutation in one transaction and renders `operations`. `beforeMutate()` runs before it and `afterMutate()` after it, as before.
+- Without `response` (below), the response holds `operations` only. When the mutation fails, for example on a denied row, the transaction is rolled back and the response is the error alone.
+- `Lomkit\Rest\Http\MutateResponse` runs the mutation in one transaction and renders `operations`, and `records` when the request sends `response`. `beforeMutate()` runs before it and `afterMutate()` after it, as before.
 - `applyMutation()` and `mutations()` add the entries of the response to `$resource->context()->operations()`, a `Lomkit\Rest\Mutations\OperationLog`, and `mutateModel()` tells it which relation each `beforeMutating()` and `afterMutating()` call writes. In a custom relation, each call of `applyMutation()` without `$key`, and each call of `mutations()`, answers the next entry that the request sends to the relation. A call of `applyMutation()` with `$key` answers an entry of its own, with that key: a relation that calls it once for each key of an entry answers one entry for each key. An override of `mutateModel()` that does not call the parent must make the same calls, or the entries of its relations are not answered.
+
+Response block:
+
+- A mutation returns the rows that it wrote when it sends `response` next to `mutate`, with `selects`, `aggregates`, `includes` and `gates`, as in a search. For example:
+
+  ```json
+  {"mutate": [
+    {"operation": "update", "key": 2, "attributes": {"title": "Dune Messiah"}},
+    {"operation": "create", "attributes": {"title": "Ivanhoe"}}
+  ], "response": {"selects": [{"field": "title"}], "includes": [{"relation": "labels", "selects": [{"field": "text"}]}], "gates": ["update"]}}
+  ```
+
+  The response then holds `records` after `operations`: one record for each entry of `mutate`, at the same index, rendered as a search renders its rows:
+
+  ```json
+  {"operations": [{"operation": "update", "key": 2}, {"operation": "create", "key": 3}], "records": [
+    {"title": "Dune Messiah", "gates": {"authorized_to_update": {"allowed": true, "message": null}}, "labels": [{"text": "Classic"}]},
+    {"title": "Ivanhoe", "gates": {"authorized_to_update": {"allowed": true, "message": null}}, "labels": []}
+  ]}
+  ```
+
+- The records are read after the transaction, through the search of the resource: its `searchQuery()` applies, and a row that it leaves out, or that is no longer in the table, gives `null`. Two entries on the same row give the same record. The entries under `relations` give no record: request their rows through `includes`.
+- `selects`, `aggregates`, `includes` and `gates` follow the rules of a search, at every level, and an include keeps its `limit` for each record. Another key of a search gives a 422 under that key, for example `The response.filters field is prohibited.`, and so does `create` in `gates`, which has no row to answer on: `The response.gates.0 field is prohibited.`. A `response` that is not an object gives `The response field must be an array.`. Before, `response` was ignored.
+- The records are read from the database: the text search of the resource does not apply to them.
+- `response` needs `viewAny` on the resource, and on each resource that its `includes` and `aggregates` reach. These checks run with the other checks of the request, before validation and before any write: a denied one answers `403` and nothing is written.
+- The package drops its decisions on each row that it writes, so the gates of a record answer for the row as the mutation left it.
+- The records go through the `map()` of the resource's `Response`, as the rows of a search. They are read and rendered before `afterMutate()` runs: one query for the rows of every entry, plus one query for each include.
+- `MutateRequest::responseBlock()` returns the block as a `Lomkit\Rest\Search\SearchNode` once the request passed validation, or `null` without `response`. `Lomkit\Rest\Http\MutateResponse::$records` holds the rendered records, or `null`.
 
 Custom relations and query builders:
 

@@ -2,11 +2,14 @@
 
 namespace Lomkit\Rest\Text\Engine;
 
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
+use Lomkit\Rest\Search\Plan\KeySet;
 
-final readonly class EngineKeys
+final readonly class EngineKeys implements KeySet
 {
     /** @param array<int|string, int> $positions */
     private function __construct(
@@ -26,9 +29,13 @@ final readonly class EngineKeys
         return new self($model, $positions);
     }
 
-    /** @param Builder<Model> $query */
+    #[\Override]
     public function constrain(Builder $query): void
     {
+        if (! $query instanceof EloquentBuilder) {
+            throw new InvalidArgumentException('Engine keys constrain the Eloquent builder of the searched resource, not '.get_debug_type($query).'.');
+        }
+
         $keys = array_keys($this->positions);
 
         if ($this->model->integerKeys()) {
