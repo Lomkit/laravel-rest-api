@@ -46,6 +46,19 @@ class Response implements Responsable
     }
 
     /**
+     * @template TKey of array-key
+     *
+     * @param  array<TKey, Model>  $models
+     * @return array<TKey, array<string, mixed>>
+     */
+    public function rows(array $models): array
+    {
+        $rows = RowSerializer::of($this->plan);
+
+        return array_map(fn (Model $model): array => $this->map($model, $rows->row($model)), $models);
+    }
+
+    /**
      * @param  array<string, mixed>  $responseModel
      * @return array<string, mixed>
      */

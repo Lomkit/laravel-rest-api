@@ -9,13 +9,17 @@ use LogicException;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Mutations\MutationNode;
+use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\Mutate\MutationParser;
+use Lomkit\Rest\Validation\Mutate\ResponseBlockParser;
 
 class MutateRequest extends RestRequest
 {
     /** @var list<MutationNode>|null */
     private ?array $mutations = null;
+
+    private ?SearchNode $responseBlock = null;
 
     #[\Override]
     public function endpoint(): Endpoint
@@ -29,8 +33,12 @@ class MutateRequest extends RestRequest
     {
         $this->resource($resource = $this->context()->resource($this->controllerResourceClass()));
 
-        $this->mutations ??= MutationParser::of($this, $this->parsedRules(), $this->budget())
-            ->parse(Cursor::of($this->all(), $this->parsedRules()->violations())->at('mutate'), $resource);
+        if ($this->mutations === null) {
+            $input = Cursor::of($this->all(), $this->parsedRules()->violations());
+            $this->mutations = MutationParser::of($this, $this->parsedRules(), $this->budget())
+                ->parse($input->at('mutate'), $resource);
+            $this->responseBlock = (new ResponseBlockParser($this->parsedRules(), $this->budget()))->parse($input->at('response'), $resource);
+        }
 
         return $this->parsedRules()->rules();
     }
@@ -45,6 +53,13 @@ class MutateRequest extends RestRequest
         }
 
         return $this->mutations;
+    }
+
+    public function responseBlock(): ?SearchNode
+    {
+        $this->payload();
+
+        return $this->responseBlock;
     }
 
     /** @return EloquentBuilder<Model> */

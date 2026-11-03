@@ -64,6 +64,18 @@ final readonly class SearchBodyParser
         );
     }
 
+    public static function block(Cursor $block, ValidationContext $context): self
+    {
+        $sizes = $context->limits->sizes;
+        $lists = [
+            'selects' => self::list($block->at('selects'), ['array'], $sizes->selects, $context),
+            'aggregates' => self::list($block->at('aggregates'), ['array'], $sizes->aggregates, $context),
+            'includes' => self::includes($block->at('includes'), $context),
+        ];
+
+        return new self($context, $lists, 0, (new GatesParser(classLevel: false))->parse($block->at('gates'), $context), null, null);
+    }
+
     public function node(?TextQuery $text, ?Trashed $trashed): SearchNode
     {
         $context = $this->context;

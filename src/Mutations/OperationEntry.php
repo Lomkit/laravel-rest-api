@@ -11,7 +11,7 @@ use Lomkit\Rest\Relations\Relation;
 final class OperationEntry implements JsonSerializable
 {
     /** @var list<mixed> */
-    private array $created = [];
+    private array $written = [];
 
     private ?string $type = null;
 
@@ -82,13 +82,17 @@ final class OperationEntry implements JsonSerializable
 
     public function wrote(Model $model): void
     {
-        if ($this->operation === MutationOperation::Create) {
-            $this->created[] = $model->getKey();
-        }
+        $this->written[] = $model->getKey();
 
         if ($this->typed) {
             $this->type = $model->getMorphClass();
         }
+    }
+
+    /** @return list<mixed> */
+    public function writtenKeys(): array
+    {
+        return $this->written;
     }
 
     /** @return array<string, mixed> */
@@ -119,13 +123,13 @@ final class OperationEntry implements JsonSerializable
     private function createdKey(): mixed
     {
         if ($this->listed) {
-            return $this->created;
+            return $this->written;
         }
 
-        return match (count($this->created)) {
+        return match (count($this->written)) {
             0 => null,
-            1 => $this->created[0],
-            default => $this->created,
+            1 => $this->written[0],
+            default => $this->written,
         };
     }
 

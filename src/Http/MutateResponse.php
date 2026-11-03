@@ -12,22 +12,33 @@ use Lomkit\Rest\Mutations\OperationEntry;
 
 final readonly class MutateResponse implements Responsable
 {
-    /** @param list<OperationEntry> $operations */
-    private function __construct(public array $operations) {}
+    /**
+     * @param  list<OperationEntry>  $operations
+     * @param  list<array<string, mixed>|null>|null  $records
+     */
+    private function __construct(
+        public array $operations,
+        public ?array $records,
+    ) {}
 
     public static function of(MutateRequest $request, Resource $resource): self
     {
-        return new self(DB::transaction(function () use ($request, $resource): array {
+        $operations = DB::transaction(function () use ($request, $resource): array {
             $queryBuilder = app()->make(EloquentQueryBuilder::class, ['resource' => $resource, 'query' => null]);
             $resource->mutateQuery($request, $queryBuilder->toBase());
 
             return $queryBuilder->mutate(['mutate' => array_map(fn (MutationNode $node): array => $node->toArray(), $request->payload())]);
-        }));
+        });
+        $block = $request->responseBlock();
+
+        return new self($operations, $block === null ? null : WrittenRecords::read($resource, $block, $operations)->rows());
     }
 
     #[\Override]
     public function toResponse(mixed $request): JsonResponse
     {
-        return new JsonResponse(['operations' => $this->operations]);
+        return new JsonResponse($this->records === null
+            ? ['operations' => $this->operations]
+            : ['operations' => $this->operations, 'records' => $this->records]);
     }
 }

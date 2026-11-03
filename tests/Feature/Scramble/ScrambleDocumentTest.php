@@ -97,11 +97,11 @@ class ScrambleDocumentTest extends ScrambleTestCase
     }
 
     #[Test]
-    public function it_documents_the_mutate_response_as_an_object(): void
+    public function it_documents_each_mutate_response_as_an_object(): void
     {
-        $response = $this->operation('/categories/mutate', 'post')['responses'][200];
+        $schema = $this->operation('/categories/mutate', 'post')['responses'][200]['content']['application/json']['schema'];
 
-        $this->assertSame('object', $response['content']['application/json']['schema']['type']);
+        $this->assertSame(['object'], array_values(array_unique(array_column($schema['anyOf'] ?? [$schema], 'type'))));
     }
 
     #[Test]
