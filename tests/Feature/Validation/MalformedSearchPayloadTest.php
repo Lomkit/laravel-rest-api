@@ -46,7 +46,7 @@ class MalformedSearchPayloadTest extends PackageTestCase
             'a text in an include' => [
                 self::POSTS, ['includes' => [['relation' => 'author', 'text' => ['value' => 'ada']]]], 'search.includes.0.text', 'The search.includes.0.text field is prohibited.',
             ],
-            'an unknown gate' => [self::POSTS, ['gates' => ['view', 'approve']], 'search.gates', 'The selected search.gates is invalid.'],
+            'an unknown gate' => [self::POSTS, ['gates' => ['view', 'approve']], 'search.gates.1', 'The selected search.gates.1 is invalid.'],
             'an unknown direction' => [
                 self::POSTS, ['sorts' => [['field' => 'views', 'direction' => 'down']]], 'search.sorts.0.direction', 'The selected search.sorts.0.direction is invalid.',
             ],
@@ -73,7 +73,7 @@ class MalformedSearchPayloadTest extends PackageTestCase
                 self::POSTS, ['includes' => [['relation' => 'author', 'limit' => 5]]], 'search.includes.0.limit', 'The selected search.includes.0.limit is invalid.',
             ],
             'an unknown gate in an include' => [
-                self::POSTS, ['includes' => [['relation' => 'author', 'gates' => ['approve']]]], 'search.includes.0.gates', 'The selected search.includes.0.gates is invalid.',
+                self::POSTS, ['includes' => [['relation' => 'author', 'gates' => ['approve']]]], 'search.includes.0.gates.0', 'The selected search.includes.0.gates.0 is invalid.',
             ],
             'scope parameters given as an object' => [
                 self::POSTS,

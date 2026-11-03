@@ -24,7 +24,6 @@ class LimitsTest extends TestCase
         $this->assertSame(20, $limits->sizes->aggregates);
         $this->assertSame(20, $limits->sizes->includes);
         $this->assertSame(10, $limits->sizes->instructions);
-        $this->assertSame(7, $limits->sizes->gates);
         $this->assertSame(100, $limits->sizes->fields);
         $this->assertSame(100, $limits->sizes->values);
         $this->assertSame(100, $limits->sizes->mutate);
@@ -148,7 +147,6 @@ class LimitsTest extends TestCase
             'sizes.aggregates' => ['sizes', 'aggregates', static fn (Limits $limits): int => $limits->sizes->aggregates],
             'sizes.includes' => ['sizes', 'includes', static fn (Limits $limits): int => $limits->sizes->includes],
             'sizes.instructions' => ['sizes', 'instructions', static fn (Limits $limits): int => $limits->sizes->instructions],
-            'sizes.gates' => ['sizes', 'gates', static fn (Limits $limits): int => $limits->sizes->gates],
             'sizes.fields' => ['sizes', 'fields', static fn (Limits $limits): int => $limits->sizes->fields],
             'sizes.values' => ['sizes', 'values', static fn (Limits $limits): int => $limits->sizes->values],
             'sizes.mutate' => ['sizes', 'mutate', static fn (Limits $limits): int => $limits->sizes->mutate],

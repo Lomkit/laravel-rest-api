@@ -28,8 +28,8 @@ class RequestDecisionsTest extends HelpdeskTestCase
 
         $this->postJson('/api/tickets/search', self::GATED_SEARCH)
             ->assertOk()
-            ->assertJsonPath('data.0.team.gates.authorized_to_view', true)
-            ->assertJsonPath('data.2.team.gates.authorized_to_view', true);
+            ->assertJsonPath('data.0.team.gates.authorized_to_view.allowed', true)
+            ->assertJsonPath('data.2.team.gates.authorized_to_view.allowed', true);
 
         $this->assertSame(['viewAny', ...$this->calls('view', $laptop, $toner, $reset, $jam)], $this->tickets->calls);
         $this->assertSame(['viewAny', ...$this->calls('view', $laptop->team, $jam->team)], $this->teams->calls);
@@ -103,7 +103,7 @@ class RequestDecisionsTest extends HelpdeskTestCase
         $this->postJson('/api/public-tickets/search', ['search' => ['gates' => ['update']]])
             ->assertOk()
             ->assertJsonPath('data.0.id', $laptop->id)
-            ->assertJsonPath('data.0.gates.authorized_to_update', true);
+            ->assertJsonPath('data.0.gates.authorized_to_update.allowed', true);
 
         $this->assertSame([], $this->tickets->calls);
     }

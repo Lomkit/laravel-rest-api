@@ -44,7 +44,6 @@ class ListLimitsTest extends PackageTestCase
             'sorts' => ['sorts', 'POST', '/api/posts/search', ['search' => ['sorts' => $field]], 'search.sorts'],
             'selects' => ['selects', 'POST', '/api/posts/search', ['search' => ['selects' => $field]], 'search.selects'],
             'scopes' => ['scopes', 'POST', '/api/posts/search', ['search' => ['scopes' => $name]], 'search.scopes'],
-            'gates' => ['gates', 'POST', '/api/posts/search', ['search' => ['gates' => ['view', 'view', 'view']]], 'search.gates'],
             'includes' => ['includes', 'POST', '/api/posts/search', ['search' => ['includes' => self::three(['relation' => 'secret'])]], 'search.includes'],
             'the filters of an include' => ['filters', 'POST', '/api/posts/search', ['search' => ['includes' => [
                 ['relation' => 'author', 'filters' => $field],
@@ -119,16 +118,6 @@ class ListLimitsTest extends PackageTestCase
             ->assertExactJson(['message' => $message, 'errors' => ['search.filters' => [$message]]]);
 
         $this->postJson('/api/posts/search', ['search' => ['filters' => array_fill(0, 100, $filter)]])->assertOk();
-    }
-
-    #[Test]
-    public function it_accepts_every_gate_at_the_default_limit(): void
-    {
-        $response = $this->postJson('/api/posts/search', ['search' => [
-            'gates' => ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'],
-        ]]);
-
-        $response->assertOk();
     }
 
     #[Test]

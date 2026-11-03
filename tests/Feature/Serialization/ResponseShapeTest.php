@@ -62,7 +62,7 @@ class ResponseShapeTest extends PackageTestCase
                     'sorts' => [['field' => 'first_name']],
                 ],
                 '/api/authors/search',
-                '{"current_page":1,"data":[{"id":1,"first_name":"Ada","posts_count":2,"gates":{"authorized_to_view":true},"posts":[{"id":1,"title":"Engines"},{"id":2,"title":"Notes"}],"tags":[{"name":"Mathematics","pivot":[]}]},{"id":2,"first_name":"Grace","posts_count":0,"gates":{"authorized_to_view":true},"posts":[],"tags":[]}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{"gates":{"authorized_to_create":false}}}',
+                '{"current_page":1,"data":[{"id":1,"first_name":"Ada","posts_count":2,"gates":{"authorized_to_view":{"allowed":true,"message":null}},"posts":[{"id":1,"title":"Engines"},{"id":2,"title":"Notes"}],"tags":[{"name":"Mathematics","pivot":[]}]},{"id":2,"first_name":"Grace","posts_count":0,"gates":{"authorized_to_view":{"allowed":true,"message":null}},"posts":[],"tags":[]}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{"gates":{"authorized_to_create":{"allowed":false,"message":null}}}}',
             ],
             'a missing relation' => [
                 [

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Search;
 
 use LogicException;
+use Lomkit\Rest\Authorization\Ability;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
@@ -15,6 +16,7 @@ use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\FieldSort;
 use Lomkit\Rest\Search\FilterCondition;
 use Lomkit\Rest\Search\FilterGroup;
+use Lomkit\Rest\Search\GateAbility;
 use Lomkit\Rest\Search\RelationFilterGroup;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Search\SortNode;
@@ -85,7 +87,7 @@ class SearchPayloadTest extends PackageTestCase
         $this->assertInstanceOf(AuthorResource::class, $include->resource);
         $this->assertInstanceOf(FilterCondition::class, $include->search->filters->filters[0]);
         $this->assertSame(['last_name', FilterOperator::Equal, 'Lovelace'], [$include->search->filters->filters[0]->name, $include->search->filters->filters[0]->operator, $include->search->filters->filters[0]->value]);
-        $this->assertSame([['view'], 25, 1, null, null, []], [$read->gates, $read->limit, $read->page, $read->text, $read->trashed, $read->aggregates]);
+        $this->assertSame([[Ability::View], 25, 1, null, null, []], [array_map(fn (GateAbility $gate): Ability => $gate->ability, $read->gates ?? []), $read->limit, $read->page, $read->text, $read->trashed, $read->aggregates]);
     }
 
     #[Test]

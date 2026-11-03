@@ -21,12 +21,12 @@ class EngineResponseShapeTest extends EngineSearchTestCase
 
         $found->assertOk();
         $this->assertSame(
-            '{"current_page":1,"data":[{"id":5,"gates":{"authorized_to_view":true}},{"id":1,"gates":{"authorized_to_view":true}},{"id":3,"gates":{"authorized_to_view":true}}],"from":1,"last_page":1,"per_page":50,"to":3,"total":4,"meta":{"gates":{"authorized_to_create":true}}}',
+            '{"current_page":1,"data":[{"id":5,"gates":{"authorized_to_view":{"allowed":true,"message":null}}},{"id":1,"gates":{"authorized_to_view":{"allowed":true,"message":null}}},{"id":3,"gates":{"authorized_to_view":{"allowed":true,"message":null}}}],"from":1,"last_page":1,"per_page":50,"to":3,"total":4,"meta":{"gates":{"authorized_to_create":{"allowed":true,"message":null}}}}',
             $found->getContent(),
         );
         $empty->assertOk();
         $this->assertSame(
-            '{"current_page":1,"data":[],"from":null,"last_page":1,"per_page":50,"to":null,"total":0,"meta":{"gates":{"authorized_to_create":true}}}',
+            '{"current_page":1,"data":[],"from":null,"last_page":1,"per_page":50,"to":null,"total":0,"meta":{"gates":{"authorized_to_create":{"allowed":true,"message":null}}}}',
             $empty->getContent(),
         );
     }

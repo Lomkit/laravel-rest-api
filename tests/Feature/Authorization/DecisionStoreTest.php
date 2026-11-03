@@ -138,7 +138,7 @@ class DecisionStoreTest extends HelpdeskTestCase
         $rows = $this->postJson($uri, ['search' => ['gates' => ['view', 'update']]])->assertOk()->json('data');
 
         return collect($rows)
-            ->mapWithKeys(fn (array $row): array => [$row['title'] => [$row['gates']['authorized_to_view'], $row['gates']['authorized_to_update']]])
+            ->mapWithKeys(fn (array $row): array => [$row['title'] => [$row['gates']['authorized_to_view']['allowed'], $row['gates']['authorized_to_update']['allowed']]])
             ->all();
     }
 

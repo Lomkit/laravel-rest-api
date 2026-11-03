@@ -26,8 +26,13 @@ final readonly class Distinct implements ValidationRule
     #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (is_string($value) && isset($this->repeated[$value])) {
+        if (! $this->accepts($value)) {
             $fail('validation.distinct')->translate();
         }
+    }
+
+    public function accepts(mixed $value): bool
+    {
+        return ! is_string($value) || ! isset($this->repeated[$value]);
     }
 }
