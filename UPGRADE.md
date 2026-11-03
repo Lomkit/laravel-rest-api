@@ -117,7 +117,6 @@ After, in 3.0:
         'aggregates' => 20,
         'includes' => 20,
         'instructions' => 10,
-        'gates' => 7,
         'fields' => 100,
         'values' => 100,
         'mutate' => 100,
@@ -151,6 +150,7 @@ Limits:
 
 - The `limits` block sets the most entries of each list of a request, how deep filters, includes and relations nest, and two totals. See "Limits" in [Validation engine](#validation-engine) for what each key covers.
 - `search.max_nesting_depth` moved to `limits.depths.filters`, with the same default of 1 and the same meaning. Move its value to the new key and remove the `search` block.
+- `limits.sizes` has no `gates` key: a `gates` list takes each ability once, see [Responses](#responses). Remove `limits.sizes.gates` from your file if it lists it.
 
 Published files:
 
@@ -788,7 +788,7 @@ Limits:
 - Each list of a request accepts a limited number of entries, filters, includes and relation operations nest up to a set depth, and two totals bound one request. The values are in the new `limits` block of `config/rest.php`, in three groups, `sizes`, `depths` and `totals`. See [Configuration](#configuration) for the block, its defaults and the values it accepts.
 - Each key of `sizes` applies to these lists, at every level of a search, including the search of an include and of an action:
   - `filters`: `search.filters`, each `nested` group, and the `filters` of includes and aggregates;
-  - `sorts`, `selects`, `scopes`, `aggregates`, `includes`, `instructions` and `gates`: the list of that name;
+  - `sorts`, `selects`, `scopes`, `aggregates`, `includes` and `instructions`: the list of that name;
   - `fields`: the `fields` of an action and of each instruction;
   - `values`: the values of an `in`, `not in`, `between` or `not between` filter, and the `key` list of an entry of a to-many relation in `mutate`;
   - `mutate`: the entries of `mutate`;
@@ -797,7 +797,7 @@ Limits:
 - `depths` sets how deep filters, includes and relation operations nest: `filters`, `includes` and `mutations`.
 - `totals` sets two totals:
   - `filters`: the filters of one search, at every depth and in its includes and aggregates;
-  - `entries`: the entries of every list in `sizes` in one request, except `resources`.
+  - `entries`: the entries of every list in `sizes` and of every `gates` list in one request, except `resources`.
 - The `parameters` of a scope keep their limit: one value per field of the scope.
 - A list over its limit gets a 422 on its own key, such as `search.filters`: "The search.filters field must not have more than 100 items." This message comes first on the key, and the package does not validate the entries of the list. A wildcard rule of the request with more than one `*` can still meet them, see "Requests" above.
 - Includes nest up to `depths.includes` levels, 3 by default. A fourth level gives a 422: "The search.includes.0.includes.0.includes.0.includes field is prohibited." Each relation of a dotted include counts toward `depths.includes`: `team.tickets.tags` takes three levels. An include that goes deeper gives a 422 on its relation, "The search.includes.0.relation field goes deeper than the limit of 3 include levels.", and `includes` below a dotted include is prohibited sooner. Before, a dotted include counted as one level. Relations in `mutate` nest up to `depths.mutations` levels, 3 by default: "The mutate.0.relations.products.0.relations.category.relations.products.0.relations field is prohibited." An empty list passes at that depth.
@@ -949,6 +949,11 @@ Gates:
   Before, each answer was `true` or `false` unless `gates.message.enabled` was `true`, and that format triggered a deprecation. `gates.message.enabled` and `Lomkit\Rest\Config\RestConfig::$gateMessages` are removed, see [Configuration](#configuration).
 - A row whose `gates` hold no answer returns `{}`: with `"gates": []`, or with `create` alone, whose answer goes to `meta`. Before, it returned `[]`. A search without `gates` returns no `gates` key, and `meta` stays `[]` without the `create` gate, as before.
 - `map()` receives the answers of a row as an object (`stdClass`) whose properties are the names of the answers: read `$responseModel['gates']->authorized_to_view['allowed']`. Before, it received an array.
+- `gates` takes the abilities `view`, `create`, `update`, `delete`, `restore` and `forceDelete`, each once. `viewAny`, another name or a value that is not a string gives a 422 under its entry, `The selected search.gates.0 is invalid.`, and an ability listed twice gives `The search.gates.0 field has a duplicate value.` on each copy. Before, `viewAny` was accepted and never answered, a repeated ability was answered once, and another name gave the 422 on the whole list, `The selected search.gates is invalid.`
+- `create` is accepted at the root of a search only, since its answer goes to `meta`. In an include, at any depth, it gives a 422 under its entry: `The search.includes.0.gates.0 field is prohibited.` Before, it was accepted and left out of the response.
+- The search of an action checks `gates` the same way, and the action still returns no answer.
+- A `gates` list has no size limit of its own: it holds each ability once at most, and its entries still count in `limits.totals.entries`. `limits.sizes.gates` and `Lomkit\Rest\Validation\ListSizes::$gates` are removed.
+- `Lomkit\Rest\Search\SearchNode::$gates` and `Lomkit\Rest\Search\Plan\QueryPlan::$gates` hold `Lomkit\Rest\Search\GateAbility` objects instead of strings. A `GateAbility` holds an `ability`, a case of the `Lomkit\Rest\Authorization\Ability` enum, and gives the ability that the policy answers (`name()`), the default name of its answer (`key()`, such as `authorized_to_force_delete`) and whether its answer goes to `meta` (`isClassLevel()`). `Lomkit\Rest\Validation\Search\GatesParser` reads `gates`.
 
 ### Selects, sorts and aggregates
 

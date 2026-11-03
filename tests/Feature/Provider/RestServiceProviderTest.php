@@ -45,7 +45,6 @@ class RestServiceProviderTest extends PackageTestCase
                 'aggregates' => 20,
                 'includes' => 20,
                 'instructions' => 10,
-                'gates' => 7,
                 'fields' => 100,
                 'values' => 100,
                 'mutate' => 100,

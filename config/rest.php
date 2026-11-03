@@ -99,8 +99,8 @@ return [
     |
     | "totals" count across lists. "filters" is the most filters in one
     | search, at every level and in its includes and aggregates.
-    | "entries" is the most entries of all the lists above in one
-    | request, except "resources".
+    | "entries" is the most entries of all the lists above and of the
+    | "gates" lists in one request, except "resources".
     |
     */
 
@@ -113,7 +113,6 @@ return [
             'aggregates' => 20,
             'includes' => 20,
             'instructions' => 10,
-            'gates' => 7,
             'fields' => 100,
             'values' => 100,
             'mutate' => 100,

@@ -114,6 +114,49 @@ class GatesTest extends HelpdeskTestCase
         ];
     }
 
+    /**
+     * @param  array<string, mixed>  $search
+     * @param  array<string, list<string>>  $errors
+     */
+    #[Test]
+    #[DataProvider('refusedGates')]
+    public function it_refuses_a_gate_that_its_level_does_not_accept(string $uri, array $search, array $errors): void
+    {
+        $response = $this->postJson($uri, ['search' => $search]);
+
+        $response
+            ->assertUnprocessable()
+            ->assertJsonPath('errors', $errors);
+    }
+
+    /** @return array<string, array{string, array<string, mixed>, array<string, list<string>>}> */
+    public static function refusedGates(): array
+    {
+        $prohibited = static fn (string $key): array => [$key => ["The {$key} field is prohibited."]];
+        $invalid = static fn (string $key): array => [$key => ["The selected {$key} is invalid."]];
+
+        return [
+            'viewAny' => ['/api/tickets/search', ['gates' => ['view', 'viewAny']], $invalid('search.gates.1')],
+            'an unknown ability' => ['/api/tickets/search', ['gates' => ['approve']], $invalid('search.gates.0')],
+            'a value that is not a string' => ['/api/tickets/search', ['gates' => [null]], $invalid('search.gates.0')],
+            'a repeated ability' => ['/api/tickets/search', ['gates' => ['view', 'update', 'view']], [
+                'search.gates.0' => ['The search.gates.0 field has a duplicate value.'],
+                'search.gates.2' => ['The search.gates.2 field has a duplicate value.'],
+            ]],
+            'create in an include' => [
+                '/api/tickets/search', ['includes' => [['relation' => 'team', 'gates' => ['view', 'create']]]], $prohibited('search.includes.0.gates.1'),
+            ],
+            'create in a nested include' => [
+                '/api/tickets/search',
+                ['includes' => [['relation' => 'team', 'includes' => [['relation' => 'tickets', 'gates' => ['create']]]]]],
+                $prohibited('search.includes.0.includes.0.gates.0'),
+            ],
+            'viewAny in an include' => ['/api/tickets/search', ['includes' => [['relation' => 'team', 'gates' => ['viewAny']]]], $invalid('search.includes.0.gates.0')],
+            'a resource that turns its gates off' => ['/api/ungated-tickets/search', ['gates' => ['viewAny']], $invalid('search.gates.0')],
+            'the search of an action' => ['/api/tickets/actions/close-tickets', ['gates' => ['viewAny']], $invalid('search.gates.0')],
+        ];
+    }
+
     #[Test]
     public function it_counts_the_gates_in_the_entries_of_a_request(): void
     {

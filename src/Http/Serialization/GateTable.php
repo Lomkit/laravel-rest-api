@@ -4,21 +4,13 @@ namespace Lomkit\Rest\Http\Serialization;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Search\GateAbility;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 use stdClass;
 
 final readonly class GateTable
 {
-    private const array ABILITIES = [
-        'create' => 'authorized_to_create',
-        'view' => 'authorized_to_view',
-        'update' => 'authorized_to_update',
-        'delete' => 'authorized_to_delete',
-        'restore' => 'authorized_to_restore',
-        'forceDelete' => 'authorized_to_force_delete',
-    ];
-
-    /** @param list<string>|null $abilities */
+    /** @param list<GateAbility>|null $abilities */
     private function __construct(
         private Resource $resource,
         private ?array $abilities,
@@ -39,35 +31,35 @@ final readonly class GateTable
             return $row;
         }
 
-        $abilities = array_values(array_filter($this->abilities, static fn (string $ability): bool => $ability !== 'create'));
-        $row[$this->resource->context()->config()->gatesKey] = $this->answers($model, $abilities);
+        $row[$this->resource->context()->config()->gatesKey] = $this->answers($model, false);
 
         return $row;
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<string, stdClass> */
     public function meta(): array
     {
-        if ($this->abilities === null || ! in_array('create', $this->abilities, true)) {
+        $classLevel = array_filter($this->abilities ?? [], static fn (GateAbility $gate): bool => $gate->isClassLevel());
+
+        if ($classLevel === []) {
             return [];
         }
 
-        return [$this->resource->context()->config()->gatesKey => $this->answers($this->resource::newModel()::class, ['create'])];
+        return [$this->resource->context()->config()->gatesKey => $this->answers($this->resource::newModel()::class, true)];
     }
 
-    /** @param list<string> $abilities */
-    private function answers(Model|string $subject, array $abilities): stdClass
+    private function answers(Model|string $subject, bool $classLevel): stdClass
     {
         $names = $this->resource->context()->config()->gateNames;
         $answers = [];
 
-        foreach ($abilities as $ability) {
-            if (! isset(self::ABILITIES[$ability])) {
+        foreach ($this->abilities ?? [] as $gate) {
+            if ($gate->isClassLevel() !== $classLevel) {
                 continue;
             }
 
-            $response = $this->resource->authorizedTo($ability, $subject);
-            $answers[$names[self::ABILITIES[$ability]]] = ['allowed' => $response->allowed(), 'message' => $response->message()];
+            $response = $this->resource->authorizedTo($gate->name(), $subject);
+            $answers[$names[$gate->key()]] = ['allowed' => $response->allowed(), 'message' => $response->message()];
         }
 
         return (object) $answers;

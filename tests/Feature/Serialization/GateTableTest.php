@@ -2,9 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Feature\Serialization;
 
+use Lomkit\Rest\Authorization\Ability;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Http\Serialization\RowSerializer;
+use Lomkit\Rest\Search\GateAbility;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
@@ -29,7 +31,7 @@ class GateTableTest extends PackageTestCase
     {
         $this->seedPublishingRows();
         $posts = (new RestContext(RestRequest::create('/api/posts/search', 'POST'), $this->app))->resource(PostResource::class);
-        $rows = RowSerializer::of(new QueryPlan($posts, [], [], [], LimitPolicy::none(), ['id'], ['view', 'create']));
+        $rows = RowSerializer::of(new QueryPlan($posts, [], [], [], LimitPolicy::none(), ['id'], [new GateAbility(Ability::View), new GateAbility(Ability::Create)]));
         $allowed = ['allowed' => true, 'message' => null];
 
         $row = $rows->row(Post::query()->findOrFail(1));

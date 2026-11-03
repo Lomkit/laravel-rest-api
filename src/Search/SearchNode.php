@@ -14,7 +14,7 @@ final readonly class SearchNode
      * @param  list<IncludeNode>  $includes
      * @param  list<ScopeNode>  $scopes
      * @param  list<InstructionNode>  $instructions
-     * @param  list<string>|null  $gates
+     * @param  list<GateAbility>|null  $gates
      */
     public function __construct(
         public ?TextQuery $text,

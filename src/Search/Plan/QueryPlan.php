@@ -6,6 +6,7 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\Clause;
+use Lomkit\Rest\Search\GateAbility;
 
 final readonly class QueryPlan implements Clause
 {
@@ -14,7 +15,7 @@ final readonly class QueryPlan implements Clause
      * @param  list<Clause>  $includes
      * @param  list<AggregateClause>  $aggregates
      * @param  list<string>|null  $selects
-     * @param  list<string>|null  $gates
+     * @param  list<GateAbility>|null  $gates
      */
     public function __construct(
         public Resource $resource,

@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Validation\Search;
 
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Search\GateAbility;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Text\TextQuery;
 use Lomkit\Rest\Validation\Cursor;
@@ -15,7 +16,7 @@ final readonly class SearchBodyParser
 
     /**
      * @param  array<string, list<Cursor>|null>  $lists
-     * @param  list<string>|null  $gates
+     * @param  list<GateAbility>|null  $gates
      */
     private function __construct(
         private ValidationContext $context,

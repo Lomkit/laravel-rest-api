@@ -3,35 +3,54 @@
 namespace Lomkit\Rest\Validation\Search;
 
 use Illuminate\Validation\Rule;
+use Lomkit\Rest\Authorization\Ability;
+use Lomkit\Rest\Rules\Distinct;
+use Lomkit\Rest\Search\GateAbility;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class GatesParser
 {
-    private const array GATES = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
-
-    /** @return list<string>|null */
+    /** @return list<GateAbility>|null */
     public function parse(Cursor $gates, ValidationContext $context): ?array
     {
-        $context->rules->addWhenPresent($gates, ['array', Rule::in(self::GATES)]);
-        $entries = $context->reader->entries($gates, $context->limits->sizes->gates);
+        $context->rules->addWhenPresent($gates, ['array']);
+        $entries = $context->reader->entries($gates, PHP_INT_MAX);
 
-        if (! $gates->present) {
+        if ($entries === null) {
             return null;
         }
 
-        $known = [];
+        $distinct = new Distinct(array_map(static fn (Cursor $entry): mixed => $entry->value, $entries));
+        $abilities = [];
 
-        foreach ($entries ?? [] as $entry) {
-            if (is_string($entry->value) && in_array($entry->value, self::GATES, true)) {
-                $known[] = $entry->value;
+        foreach ($entries as $entry) {
+            $ability = $this->ability($entry, $distinct, $context);
+
+            if ($ability === null) {
+                $context->rules->partial();
+
+                continue;
             }
+
+            $abilities[] = new GateAbility($ability);
         }
 
-        if ($entries === null || count($known) !== count($entries)) {
-            $context->rules->partial();
+        return $abilities;
+    }
+
+    private function ability(Cursor $entry, Distinct $distinct, ValidationContext $context): ?Ability
+    {
+        $ability = is_string($entry->value) ? Ability::tryFrom($entry->value) : null;
+
+        if ($ability !== null && $ability->isClassLevel() && $context->includeDepth > 0) {
+            $context->rules->add($entry->path, ['prohibited']);
+
+            return null;
         }
 
-        return $known;
+        $context->rules->add($entry->path, [Rule::enum(Ability::class), $distinct]);
+
+        return $distinct->accepts($entry->value) ? $ability : null;
     }
 }
