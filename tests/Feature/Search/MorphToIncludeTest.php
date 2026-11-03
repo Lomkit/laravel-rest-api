@@ -118,7 +118,6 @@ class MorphToIncludeTest extends PackageTestCase
     {
         return [
             'the default order' => [['relation' => 'labelable']],
-            'a limit and a sort' => [['relation' => 'labelable', 'limit' => 10, 'sorts' => [['field' => 'title', 'direction' => 'desc']]]],
         ];
     }
 

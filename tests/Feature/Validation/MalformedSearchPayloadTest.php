@@ -70,7 +70,7 @@ class MalformedSearchPayloadTest extends PackageTestCase
             ],
             'a limit the resource does not allow' => [self::POSTS, ['limit' => 5], 'search.limit', 'The selected search.limit is invalid.'],
             'an include limit the related resource does not allow' => [
-                self::POSTS, ['includes' => [['relation' => 'author', 'limit' => 5]]], 'search.includes.0.limit', 'The selected search.includes.0.limit is invalid.',
+                self::CATEGORIES, ['includes' => [['relation' => 'products', 'limit' => 5]]], 'search.includes.0.limit', 'The selected search.includes.0.limit is invalid.',
             ],
             'an unknown gate in an include' => [
                 self::POSTS, ['includes' => [['relation' => 'author', 'gates' => ['approve']]]], 'search.includes.0.gates.0', 'The selected search.includes.0.gates.0 is invalid.',

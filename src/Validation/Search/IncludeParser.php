@@ -2,9 +2,11 @@
 
 namespace Lomkit\Rest\Validation\Search;
 
+use Lomkit\Rest\Contracts\OwnerRelation;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\IncludeNode;
 use Lomkit\Rest\Validation\Cursor;
+use Lomkit\Rest\Validation\ParsedRules;
 use Lomkit\Rest\Validation\ValidationContext;
 use Lomkit\Rest\Validation\Violation;
 
@@ -60,11 +62,16 @@ final readonly class IncludeParser
         $relations = $name === null ? null : $context->reachRelation($name, $entry->path);
         $through = $relations === null ? null : $relations[array_key_last($relations)];
         $related = $through?->resource();
-        $body = $name === null || $through === null ? null : $this->body($entry, $name, $through, $context);
+        $body = $name === null || $relations === null ? null : $this->body($entry, $name, $relations, $context);
 
         $rules->add($relation->path, ['required', new KnownRelation($context->resource)]);
         $rules->add($entry->at('text')->path, ['prohibited']);
         $rules->add($entry->at('trashed')->path, ['prohibited']);
+
+        if ($body !== null && $through instanceof OwnerRelation) {
+            self::refuseBounds($entry, $rules);
+        }
+
         $rules->addWhenPresent($alias, [
             'string',
             'max:255',
@@ -87,7 +94,17 @@ final readonly class IncludeParser
         return new IncludeNode($name, $relations, $related, is_string($alias->value) ? $alias->value : null, $search);
     }
 
-    private function body(Cursor $entry, string $relation, Relation $through, ValidationContext $context): ?SearchBodyParser
+    private static function refuseBounds(Cursor $entry, ParsedRules $rules): void
+    {
+        foreach (['limit', 'sorts'] as $key) {
+            if ($entry->at($key)->present) {
+                $rules->reject(Violation::ownerInclude($entry->at($key)->path));
+            }
+        }
+    }
+
+    /** @param non-empty-list<Relation> $relations */
+    private function body(Cursor $entry, string $relation, array $relations, ValidationContext $context): ?SearchBodyParser
     {
         $levels = count(explode('.', $relation));
         $limit = $context->limits->depths->includes;
@@ -98,11 +115,23 @@ final readonly class IncludeParser
             return null;
         }
 
+        $through = array_pop($relations);
+
+        foreach ($relations as $middle) {
+            if (! $middle instanceof OwnerRelation) {
+                $resource = $middle->resource();
+
+                $resource->context()
+                    ->definition($resource)
+                    ->limits();
+            }
+        }
+
         $context = $context
             ->related($through->resource())
             ->included($levels)
             ->reserving($through->reservedKeys());
 
-        return SearchBodyParser::keys($entry, $context, LevelBounds::Limited);
+        return SearchBodyParser::keys($entry, $context, $through instanceof OwnerRelation ? LevelBounds::Owner : LevelBounds::Limited);
     }
 }

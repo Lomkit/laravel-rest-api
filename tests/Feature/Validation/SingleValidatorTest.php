@@ -80,7 +80,7 @@ class SingleValidatorTest extends PackageTestCase
             'selects' => [['field' => 'id'], ['field' => 'title']],
             'scopes' => [['name' => 'popular', 'parameters' => [5]]],
             'instructions' => [['name' => 'highlight-posts', 'fields' => [['name' => 'min_views', 'value' => 50]]]],
-            'includes' => [['relation' => 'author', 'alias' => 'writer', 'limit' => 10, 'filters' => [['field' => 'last_name', 'value' => 'Lovelace']]]],
+            'includes' => [['relation' => 'author', 'alias' => 'writer', 'filters' => [['field' => 'last_name', 'value' => 'Lovelace']]]],
             'gates' => ['view'],
             'limit' => 25,
             'page' => 1,

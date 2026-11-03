@@ -179,7 +179,7 @@
     "raw_queries": [
         "select count(*) as \"aggregate\" from \"authors\" where \"authors\".\"deleted_at\" is null",
         "select * from \"authors\" where \"authors\".\"deleted_at\" is null order by \"authors\".\"id\" desc limit 50 offset 0",
-        "select * from \"posts\" where \"posts\".\"author_id\" in (1, 2, 3) order by \"posts\".\"id\" desc",
-        "select * from \"posts\" where \"posts\".\"author_id\" in (1, 2, 3) and (\"posts\".\"status\" = 'draft') order by \"posts\".\"id\" desc"
+        "select * from (select *, row_number() over (partition by \"posts\".\"author_id\" order by \"posts\".\"id\" desc) as \"laravel_row\" from \"posts\" where \"posts\".\"author_id\" in (1, 2, 3)) as \"laravel_table\" where \"laravel_row\" <= 10 order by \"laravel_row\"",
+        "select * from (select *, row_number() over (partition by \"posts\".\"author_id\" order by \"posts\".\"id\" desc) as \"laravel_row\" from \"posts\" where \"posts\".\"author_id\" in (1, 2, 3) and (\"posts\".\"status\" = 'draft')) as \"laravel_table\" where \"laravel_row\" <= 10 order by \"laravel_row\""
     ]
 }

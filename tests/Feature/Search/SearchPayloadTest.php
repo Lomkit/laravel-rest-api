@@ -82,7 +82,7 @@ class SearchPayloadTest extends PackageTestCase
         $this->assertSame(['popular', ['min_views' => 5]], [$read->scopes[0]->scope->name, $read->scopes[0]->parameters->toArray()]);
         $this->assertCount(1, $read->instructions);
         $this->assertSame(['highlight-posts', ['featured' => true, 'min_views' => 50]], [$read->instructions[0]->instruction->uriKey(), $read->instructions[0]->fields->toArray()]);
-        $this->assertSame(['author', 'writer', 10, null, null], [$include->relation, $include->alias, $include->search->limit, $include->search->page, $include->search->text]);
+        $this->assertSame(['author', 'writer', null, null, null], [$include->relation, $include->alias, $include->search->limit, $include->search->page, $include->search->text]);
         $this->assertSame(['author'], array_map(fn (Relation $relation): string => $relation->relation, $include->relations));
         $this->assertInstanceOf(AuthorResource::class, $include->resource);
         $this->assertInstanceOf(FilterCondition::class, $include->search->filters->filters[0]);
@@ -230,7 +230,7 @@ class SearchPayloadTest extends PackageTestCase
             'selects' => [['field' => 'id'], ['field' => 'title']],
             'scopes' => [['name' => 'popular', 'parameters' => [5]]],
             'instructions' => [['name' => 'highlight-posts', 'fields' => [['name' => 'min_views', 'value' => 50]]]],
-            'includes' => [['relation' => 'author', 'alias' => 'writer', 'limit' => 10, 'filters' => [['field' => 'last_name', 'value' => 'Lovelace']]]],
+            'includes' => [['relation' => 'author', 'alias' => 'writer', 'filters' => [['field' => 'last_name', 'value' => 'Lovelace']]]],
             'gates' => ['view'],
             'limit' => 25,
             'page' => 1,

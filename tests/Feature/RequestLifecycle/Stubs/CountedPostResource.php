@@ -59,7 +59,7 @@ class CountedPostResource extends PostResource
     {
         $this->evaluated('limits', $request);
 
-        return [10, 25];
+        return [10, 25, 50];
     }
 
     private function evaluated(string $declaration, RestRequest $request): void

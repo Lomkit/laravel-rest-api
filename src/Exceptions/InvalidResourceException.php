@@ -21,6 +21,14 @@ final class InvalidResourceException extends LogicException
         return new self("The resource [{$resource}] declares the field [{$field}], which is the key of the gates of its rows. Rename the field, or set rest.gates.key to another name.");
     }
 
+    /** @param list<int> $allowed */
+    public static function limitNotAllowed(string $resource, string $property, int $limit, array $allowed): self
+    {
+        $limits = implode(', ', $allowed);
+
+        return new self("The resource [{$resource}] sets \${$property} to {$limit}, which is not one of its limits() [{$limits}]. Return {$limit} from limits(), or set \${$property} to one of them.");
+    }
+
     public static function invalidGate(string $owner, int $index, mixed $gate): self
     {
         if (! is_string($gate)) {

@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Search\Plan;
 
 use Illuminate\Support\Str;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Contracts\OwnerRelation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\ResourceLimits;
 use Lomkit\Rest\Query\Clauses\AggregateClause;
@@ -108,7 +109,11 @@ final readonly class SearchPlanner
     private static function group(Relation $relation, ?IncludeNode $level, array $children): QueryPlan
     {
         if ($level === null) {
-            return new QueryPlan($relation->resource(), [], self::includes($children), [], LimitPolicy::none());
+            $resource = $relation->resource();
+
+            return $relation instanceof OwnerRelation
+                ? new QueryPlan($resource, [], self::includes($children), [], LimitPolicy::none())
+                : new QueryPlan($resource, [new DefaultOrderClause($resource)], self::includes($children), [], self::includeLimit($resource, null));
         }
 
         return self::explicit($level, $children);
@@ -117,9 +122,14 @@ final readonly class SearchPlanner
     /** @param list<IncludeNode> $children */
     private static function explicit(IncludeNode $include, array $children): QueryPlan
     {
-        $owner = $include->relations[0] instanceof MorphTo;
+        $owner = $include->relations[0] instanceof OwnerRelation;
 
-        return (new self(new SqlRows(null, ! $owner)))->level($include->resource, $include->search, [...$children, ...$include->search->includes], $owner ? LimitPolicy::none() : LimitPolicy::explicit($include->search->limit));
+        return (new self(new SqlRows(null, ! $owner)))->level($include->resource, $include->search, [...$children, ...$include->search->includes], $owner ? LimitPolicy::none() : self::includeLimit($include->resource, $include->search->limit));
+    }
+
+    private static function includeLimit(Resource $resource, ?int $limit): LimitPolicy
+    {
+        return LimitPolicy::explicit($limit ?? self::limits($resource)->includeLimit);
     }
 
     private static function limits(Resource $resource): ResourceLimits

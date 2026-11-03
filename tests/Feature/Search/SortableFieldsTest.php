@@ -98,10 +98,10 @@ class SortableFieldsTest extends PackageTestCase
     #[Test]
     public function it_rejects_a_field_that_cannot_be_sorted_on_an_include(): void
     {
-        $response = $this->postJson('/api/posts/search', [
+        $response = $this->postJson('/api/authors/search', [
             'search' => [
-                'sorts' => [['field' => 'id']],
-                'includes' => [['relation' => 'author', 'sorts' => [['field' => 'id']]]],
+                'sorts' => [['field' => 'first_name']],
+                'includes' => [['relation' => 'posts', 'sorts' => [['field' => 'author.id']]]],
             ],
         ]);
 
