@@ -6,9 +6,8 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Response as IlluminateResponse;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Authorization\Check;
-use Lomkit\Rest\Contracts\EloquentQueryBuilder;
+use Lomkit\Rest\Http\MutateResponse;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\DetailsRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
@@ -17,7 +16,6 @@ use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Response;
-use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Query\EngineSearch;
 use Lomkit\Rest\Query\QueryBuilderFactory;
 use Lomkit\Rest\Search\Plan\QueryPlan;
@@ -78,16 +76,11 @@ trait PerformsRestOperations
 
         $this->beforeMutate($request);
 
-        $operations = DB::transaction(function () use ($request, $resource) {
-            $queryBuilder = app()->make(EloquentQueryBuilder::class, ['resource' => $resource, 'query' => null]);
-            $resource->mutateQuery($request, $queryBuilder->toBase());
-
-            return $queryBuilder->mutate(['mutate' => array_map(fn (MutationNode $node): array => $node->toArray(), $request->payload())]);
-        });
+        $response = MutateResponse::of($request, $resource);
 
         $this->afterMutate($request);
 
-        return $operations;
+        return $response->toArray();
     }
 
     public function operate(OperateRequest $request): IlluminateResponse

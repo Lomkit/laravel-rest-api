@@ -6,32 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Requests\MutateRequest;
+use Lomkit\Rest\Mutations\OperationEntry;
 use Lomkit\Rest\Query\AttributeWriter;
 
 trait PerformMutation
 {
-    /** @var array<string, string> */
-    protected array $mutateOperationsVerbose = [
-        'create' => 'created',
-        'update' => 'updated',
-    ];
-
     /**
      * @param  array<string, mixed>  $parameters
-     * @return array<string, list<int|string>>
+     * @return list<OperationEntry>
      */
     public function mutate(array $parameters = []): array
     {
-        $operations = [
-            'created' => [],
-            'updated' => [],
-        ];
+        $operations = $this->resource->context()->operations();
+        $operations->start();
 
         foreach ($parameters['mutate'] as $parameter) {
-            $operations[$this->mutateOperationsVerbose[$parameter['operation']]][] = $this->applyMutation($parameter)->getKey();
+            $this->applyMutation($parameter);
         }
 
-        return $operations;
+        return $operations->entries();
     }
 
     /**
@@ -39,6 +32,21 @@ trait PerformMutation
      * @param  array<string, mixed>  $attributes
      */
     public function applyMutation(array $mutation = [], array $attributes = [], int|string|null $key = null): Model
+    {
+        $operations = $this->resource->context()->operations();
+
+        $operations->begin($key === null ? $mutation : [...$mutation, 'key' => $key]);
+        $model = $operations->wrote($this->writeMutation($mutation, $attributes, $key));
+        $operations->end();
+
+        return $model;
+    }
+
+    /**
+     * @param  array<string, mixed>  $mutation
+     * @param  array<string, mixed>  $attributes
+     */
+    private function writeMutation(array $mutation, array $attributes, int|string|null $key): Model
     {
         if (MutationOperation::from($mutation['operation']) === MutationOperation::Create) {
             $this->resource->context()->authorizer()->ensurePlanned(Check::onClass($this->resource, 'create'));
@@ -79,11 +87,16 @@ trait PerformMutation
     {
         $keys = $mutation['key'] ?? [];
         $keys = is_array($keys) ? array_values($keys) : [$keys];
+        $operations = $this->resource->context()->operations();
 
-        return array_map(
-            fn (int|string $key): Model => $this->applyMutation($mutation, $attributes, $key),
+        $operations->begin($mutation);
+        $models = array_map(
+            fn (int|string $key): Model => $operations->wrote($this->writeMutation($mutation, $attributes, $key)),
             $keys
         );
+        $operations->end();
+
+        return $models;
     }
 
     /**
@@ -95,6 +108,7 @@ trait PerformMutation
     {
         /** @var MutateRequest $request */
         $request = $this->resource->context()->request;
+        $operations = $this->resource->context()->operations();
         $relations = $mutation['relations'] ?? [];
 
         $restRelations = array_filter(
@@ -102,7 +116,10 @@ trait PerformMutation
             fn ($relation): bool => isset($relations[$relation->relation])
         );
 
+        $operations->rewind();
+
         foreach ($restRelations as $restRelation) {
+            $operations->within($restRelation);
             $restRelation->beforeMutating($model, $restRelation, $relations);
         }
 
@@ -123,6 +140,7 @@ trait PerformMutation
         $this->resource->context()->authorizer()->forget($model);
 
         foreach ($restRelations as $restRelation) {
+            $operations->within($restRelation);
             $restRelation->afterMutating($model, $restRelation, $relations);
         }
 
