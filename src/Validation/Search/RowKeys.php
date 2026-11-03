@@ -78,6 +78,11 @@ final readonly class RowKeys
         return count(array_keys($this->aggregates, $key, true));
     }
 
+    public function isTaken(string $key): bool
+    {
+        return $this->isReserved($key) || $this->isField($key) || $this->aggregateUses($key) > 0;
+    }
+
     /**
      * @param  list<Cursor>  $includes
      * @return list<string>
