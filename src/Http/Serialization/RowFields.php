@@ -44,8 +44,8 @@ final readonly class RowFields
     /** @return array<string, mixed> */
     public function values(Model $model): array
     {
-        $attributes = $model->attributesToArray();
-        $stored = $this->fields->fromStorage(array_diff_key($attributes, $this->aggregates));
+        $attributes = $this->attributes($model);
+        $stored = $this->fields->fromStorage($attributes);
         $row = [];
 
         foreach (array_keys($model->getAttributes() + $attributes) as $name) {
@@ -53,7 +53,7 @@ final readonly class RowFields
 
             if ($key !== null && self::shows($model, $key)) {
                 $row[$key] = $model->getAttributeValue($name);
-            } elseif (array_key_exists($name, $stored) && in_array($name, $this->columns, true)) {
+            } elseif (array_key_exists($name, $stored)) {
                 $row[$name] = $stored[$name];
             }
         }
@@ -63,6 +63,21 @@ final readonly class RowFields
         }
 
         return $row;
+    }
+
+    /** @return array<string, mixed> */
+    private function attributes(Model $model): array
+    {
+        $visible = $model->getVisible();
+        $shown = $visible === [] ? $this->columns : array_values(array_intersect($this->columns, $visible));
+
+        if ($shown === []) {
+            return [];
+        }
+
+        return (clone $model)
+            ->setVisible($shown)
+            ->attributesToArray();
     }
 
     private static function shows(Model $model, string $key): bool

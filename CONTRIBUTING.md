@@ -101,6 +101,7 @@ Add a test for each bug fix and each new feature.
 Write new tests in `tests/Feature` or `tests/Unit`:
 
 - Feature tests extend `Lomkit\Rest\Tests\PackageTestCase` and declare the fixtures they need in `fixtures()`.
+- `PackageTestCase` calls `Model::preventAccessingMissingAttributes()`: a test fails when the package reads an attribute that its query did not load. Give a test model or resource the columns that its code reads, as an application does with `alwaysSelect()` or `requires()`.
 - A fixture is a small domain in `tests/Fixtures/<Domain>`: models, factories, migrations, resources and routes. It implements `Lomkit\Rest\Tests\Fixtures\Fixture`.
 - Test methods use the `#[Test]` attribute and are named `it_...`.
 - Use fixed values, not Faker, and write the expected responses by hand.
