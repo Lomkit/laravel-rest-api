@@ -6,7 +6,6 @@ use Illuminate\Http\Response as IlluminateResponse;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
-use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\DetailsRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
@@ -18,6 +17,8 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Response;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Query\EngineSearch;
+use Lomkit\Rest\Query\QueryBuilderFactory;
+use Lomkit\Rest\Search\Plan\SearchPlanner;
 
 trait PerformsRestOperations
 {
@@ -44,19 +45,19 @@ trait PerformsRestOperations
         $text = $request->context()->text($resource);
 
         if ($text->usesEngine()) {
-            $page = (new EngineSearch($resource, $text))->paginate($request);
+            $page = (new EngineSearch($resource, $text, $request->payload()))->paginate($request);
 
             $this->afterSearch($request);
 
             return $this->buildResponse($resource, $page);
         }
 
-        $query = app()->make(QueryBuilder::class, ['resource' => $resource, 'query' => null])
-            ->search($request->input('search', []));
+        $plan = SearchPlanner::paged($resource, $request->payload(), $text);
+        $query = QueryBuilderFactory::make($resource)->search($plan);
 
         $this->afterSearch($request);
 
-        return $this->buildResponse($resource, $text->run(fn () => $resource->paginate($query, $request)));
+        return $this->buildResponse($resource, $text->run(fn () => $resource->paginate($query, $plan->limit->perPage(), $plan->limit->page())));
     }
 
     private function buildResponse(Resource $resource, mixed $responsable): Response

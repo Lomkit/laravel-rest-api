@@ -9,7 +9,8 @@ use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
-use Lomkit\Rest\Query\Builder;
+use Lomkit\Rest\Query\Clauses\FilterGroupClause;
+use Lomkit\Rest\Tests\Feature\Search\Plan\ParsesSearchNodes;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\ListedLabelController;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\UnlistedPolicy;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
@@ -24,6 +25,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 class MorphToRelationGroupsTest extends PackageTestCase
 {
+    use ParsesSearchNodes;
+
     #[\Override]
     protected function fixtures(): array
     {
@@ -121,15 +124,16 @@ class MorphToRelationGroupsTest extends PackageTestCase
     {
         $context = new RestContext(RestRequest::create('/api/labels/search', 'POST'), $this->app);
         $context->authorizer()->plan([Check::onClass($context->resource(BookResource::class), 'viewAny')]);
-        $builder = new Builder($context->resource(LabelResource::class));
+        $resource = $context->resource(LabelResource::class);
+        $query = Label::query();
 
-        $builder->applyFilters([['relation' => 'labelable', 'exists' => false, 'nested' => [['field' => 'title', 'value' => 'Dune']]]]);
+        FilterGroupClause::of($this->parse($resource, ['filters' => [['relation' => 'labelable', 'exists' => false, 'nested' => [['field' => 'title', 'value' => 'Dune']]]]])->filters)->apply($query);
 
         $this->assertSame(
             'select * from labels where ((not (((labels.labelable_type = ? and exists (select * from books where labels.labelable_id = books.id and (books.title = ?))))) or labels.labelable_type is null))',
-            $this->sql($builder->toBase()),
+            $this->sql($query),
         );
-        $this->assertSame([Book::class, 'Dune'], $builder->toBase()->getBindings());
+        $this->assertSame([Book::class, 'Dune'], $query->getBindings());
     }
 
     private function sql(QueryBuilder $query): string

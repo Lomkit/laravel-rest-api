@@ -3,7 +3,8 @@
 namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
-use Lomkit\Rest\Query\Builder;
+use Lomkit\Rest\Search\Plan\SqlRows;
+use Lomkit\Rest\Tests\Feature\Search\Plan\ParsesSearchNodes;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
@@ -13,6 +14,8 @@ use PHPUnit\Framework\Attributes\Test;
 #[Group('scout')]
 class EngineSearchBoundariesTest extends EngineSearchTestCase
 {
+    use ParsesSearchNodes;
+
     private RecordingCollectionEngine $engine;
 
     #[\Override]
@@ -51,7 +54,7 @@ class EngineSearchBoundariesTest extends EngineSearchTestCase
 
         $this->expectExceptionObject(InvalidTextSearchException::runsOnEngine(VoucherResource::class));
 
-        (new Builder($resource))->search(['text' => ['value' => 'report']]);
+        (new SqlRows($context->text($resource)))->clauses($resource, $this->parse($resource, ['text' => ['value' => 'report']]));
     }
 
     /** @return list<int> */

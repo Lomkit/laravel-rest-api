@@ -3,10 +3,13 @@
 namespace Lomkit\Rest\Tests\Feature\Query;
 
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
+use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Query\Clauses\InstructionClause;
+use Lomkit\Rest\Search\InstructionNode;
+use Lomkit\Rest\Tests\Feature\Search\Plan\ParsesSearchNodes;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
 use Lomkit\Rest\Tests\Fixtures\Catalog\PricedBetween;
@@ -20,6 +23,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 class InstructionClauseTest extends PackageTestCase
 {
+    use ParsesSearchNodes;
+
     #[\Override]
     protected function fixtures(): array
     {
@@ -31,7 +36,7 @@ class InstructionClauseTest extends PackageTestCase
     {
         $query = Post::query();
 
-        (new InstructionClause($this->resource(PostResource::class), 'highlight-posts', [['name' => 'min_views', 'value' => '150']]))->apply($query);
+        InstructionClause::of($this->instruction(PostResource::class, 'highlight-posts', [['name' => 'min_views', 'value' => '150']]))->apply($query);
 
         $this->assertSame([true, 150], $query->getBindings());
     }
@@ -44,28 +49,33 @@ class InstructionClauseTest extends PackageTestCase
         Product::factory()->for($lighting)->create(['name' => 'Floor lamp', 'price' => 129]);
         $products = $lighting->products();
 
-        (new InstructionClause($this->resource(ProductResource::class), 'priced-at', [['name' => 'price', 'value' => '129']]))->apply($products);
+        InstructionClause::of($this->instruction(ProductResource::class, 'priced-at', [['name' => 'price', 'value' => '129']]))->apply($products);
 
         $this->assertSame(['Floor lamp'], $products->pluck('name')->all());
-    }
-
-    #[Test]
-    public function it_refuses_an_instruction_the_resource_does_not_declare(): void
-    {
-        $this->expectException(InvalidInstructionException::class);
-        $this->expectExceptionMessage(PostResource::class.' does not declare the instruction [archive-posts].');
-
-        (new InstructionClause($this->resource(PostResource::class), 'archive-posts'))->apply(Post::query());
     }
 
     #[Test]
     public function it_refuses_to_apply_an_instruction_that_only_applies_to_a_search_engine(): void
     {
         $query = Product::query();
+        $resource = $this->resource(ProductResource::class);
+        $request = $resource->context()->request;
+        $instruction = $resource->instruction($request, 'priced-between');
+        $this->assertInstanceOf(PricedBetween::class, $instruction);
+        $node = new InstructionNode($instruction, InputValues::fromNamed($instruction->getFields($request), [['name' => 'max', 'value' => '39']]));
 
         $this->expectExceptionObject(InvalidInstructionException::engineOnly(PricedBetween::class));
 
-        (new InstructionClause($this->resource(ProductResource::class), 'priced-between', [['name' => 'max', 'value' => '39']]))->apply($query);
+        InstructionClause::of($node)->apply($query);
+    }
+
+    /**
+     * @param  class-string<Resource>  $resource
+     * @param  list<array{name: string, value: mixed}>  $fields
+     */
+    private function instruction(string $resource, string $name, array $fields): InstructionNode
+    {
+        return $this->parse($this->resource($resource), ['instructions' => [['name' => $name, 'fields' => $fields]]])->instructions[0];
     }
 
     /** @param class-string<Resource> $resource */

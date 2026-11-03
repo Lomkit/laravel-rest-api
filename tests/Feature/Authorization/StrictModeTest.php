@@ -7,13 +7,17 @@ use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\UnplannedCheckException;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
-use Lomkit\Rest\Query\Builder;
+use Lomkit\Rest\Query\QueryBuilderFactory;
+use Lomkit\Rest\Search\Plan\SearchPlanner;
+use Lomkit\Rest\Tests\Feature\Search\Plan\ParsesSearchNodes;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
 use PHPUnit\Framework\Attributes\Test;
 
 class StrictModeTest extends HelpdeskTestCase
 {
+    use ParsesSearchNodes;
+
     private const array TEAM_INCLUDE = ['search' => ['includes' => [['relation' => 'team']]]];
 
     #[Test]
@@ -97,7 +101,7 @@ class StrictModeTest extends HelpdeskTestCase
 
         $this->expectExceptionObject($this->unplanned('viewAny', TicketResource::class));
 
-        (new Builder($resource))->search();
+        SearchPlanner::paged($resource, $this->parse($resource, []), $resource->context()->text($resource));
     }
 
     #[Test]
@@ -107,13 +111,27 @@ class StrictModeTest extends HelpdeskTestCase
         $context = $this->contextFor(null);
         $resource = $context->resource(TicketResource::class);
         $context->authorizer()->plan([Check::onClass($resource, 'viewAny')]);
+        $text = $context->text($resource);
 
-        $sorted = (new Builder($resource))->search(['sorts' => [['field' => 'title', 'direction' => 'asc']]]);
-        $unsorted = (new Builder($resource))->search();
+        $sorted = QueryBuilderFactory::make($resource)->search(SearchPlanner::paged($resource, $this->parse($resource, ['sorts' => [['field' => 'title', 'direction' => 'asc']]]), $text));
+        $unsorted = QueryBuilderFactory::make($resource)->search(SearchPlanner::paged($resource, $this->parse($resource, []), $text));
 
         $this->assertSame(['Laptop setup', 'Password reset', 'Printer jam', 'Printer toner'], $sorted->pluck('title')->all());
         $this->assertSame(['Laptop setup', 'Printer toner', 'Password reset', 'Printer jam'], $unsorted->pluck('title')->all());
         $this->assertSame(['viewAny'], $this->tickets->calls);
+    }
+
+    #[Test]
+    public function it_throws_when_a_search_plans_an_include_without_planning_its_listing(): void
+    {
+        $context = $this->contextFor(null);
+        $resource = $context->resource(TicketResource::class);
+        $context->authorizer()->plan([Check::onClass($resource, 'viewAny')]);
+        $search = $this->parse($resource, ['includes' => [['relation' => 'team']]]);
+
+        $this->expectExceptionObject($this->unplanned('viewAny', TeamResource::class));
+
+        SearchPlanner::all($resource, $search, $context->text($resource));
     }
 
     /** @param class-string $resource */

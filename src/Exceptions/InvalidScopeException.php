@@ -14,9 +14,4 @@ final class InvalidScopeException extends LogicException
 
         return new self("{$owner} returned ".get_debug_type($entry)." at index {$index}. Return Scope objects.");
     }
-
-    public static function undeclared(string $resource, string $name): self
-    {
-        return new self("{$resource} does not declare the scope [{$name}].");
-    }
 }

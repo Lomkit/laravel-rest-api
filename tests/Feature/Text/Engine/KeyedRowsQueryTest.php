@@ -2,24 +2,35 @@
 
 namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Grammars\Grammar;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
+use LogicException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\UnplannedCheckException;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Query\Builder;
+use Lomkit\Rest\Query\QueryBuilderFactory;
+use Lomkit\Rest\Search\Plan\KeyedRows;
+use Lomkit\Rest\Search\Plan\LimitPolicy;
+use Lomkit\Rest\Search\Plan\SearchPlanner;
+use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\IntegerKeyVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\EitherTeamVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\NumberedVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherLineResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
+use Lomkit\Rest\Text\Engine\EngineKeys;
+use Lomkit\Rest\Text\Engine\ScoutModel;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 
 #[Group('scout')]
-class SearchKeysQueryTest extends SearchKeysTestCase
+class KeyedRowsQueryTest extends KeyedRowsTestCase
 {
     private const array INTEGER_KEY_TYPES = ['int' => NumberedVoucherResource::class, 'integer' => IntegerKeyVoucherResource::class];
 
@@ -30,7 +41,7 @@ class SearchKeysQueryTest extends SearchKeysTestCase
     {
         $this->expectExceptionObject(InvalidResourceException::integerScoutKey($resource::modelClass(), $key));
 
-        $this->builder($resource)->searchKeys([3, $key]);
+        $this->rows($this->resource($resource), [3, $key]);
     }
 
     /** @return iterable<string, array{class-string<Resource>, mixed}> */
@@ -50,7 +61,7 @@ class SearchKeysQueryTest extends SearchKeysTestCase
     {
         $this->expectExceptionObject(InvalidResourceException::invalidScoutKey(Voucher::class, ['V-a']));
 
-        $this->builder(VoucherResource::class)->searchKeys(['V-c', ['V-a']]);
+        $this->rows($this->resource(VoucherResource::class), ['V-c', ['V-a']]);
     }
 
     #[Test]
@@ -58,7 +69,7 @@ class SearchKeysQueryTest extends SearchKeysTestCase
     {
         $this->expectExceptionObject(InvalidResourceException::unsearchableModel(VoucherLineResource::$model));
 
-        $this->builder(VoucherLineResource::class)->searchKeys([1]);
+        $this->rows($this->resource(VoucherLineResource::class), [1]);
     }
 
     #[Test]
@@ -66,13 +77,23 @@ class SearchKeysQueryTest extends SearchKeysTestCase
     {
         $this->expectException(UnplannedCheckException::class);
 
-        (new Builder($this->context()->resource(VoucherResource::class)))->searchKeys(['V-c']);
+        $this->rows($this->context()->resource(VoucherResource::class), ['V-c']);
+    }
+
+    #[Test]
+    public function it_refuses_to_constrain_a_relation(): void
+    {
+        $keys = EngineKeys::of(ScoutModel::tryFrom(new Voucher) ?? throw new LogicException('Voucher is indexed.'), ['V-c']);
+
+        $this->expectExceptionObject(new InvalidArgumentException('Engine keys constrain the Eloquent builder of the searched resource, not '.HasMany::class.'.'));
+
+        (new KeyedRows($keys))->apply((new Voucher)->lines());
     }
 
     #[Test]
     public function it_binds_string_keys_after_the_perimeter_in_its_own_group(): void
     {
-        $query = $this->builder(EitherTeamVoucherResource::class)->searchKeys(['V-d', 'V-c']);
+        $query = $this->keyedQuery(EitherTeamVoucherResource::class, ['V-d', 'V-c']);
 
         $this->assertSame(
             'select * from '.$this->table().' where ('.$this->wrap('team').' = ? or '.$this->wrap('team').' = ?) and '
@@ -88,7 +109,7 @@ class SearchKeysQueryTest extends SearchKeysTestCase
     #[DataProvider('integerKeyTypes')]
     public function it_writes_integer_keys_into_the_sql_instead_of_binding_them(string $resource): void
     {
-        $query = $this->builder($resource)->searchKeys(['3', '1']);
+        $query = $this->keyedQuery($resource, ['3', '1']);
 
         $this->assertSame(
             'select * from '.$this->table().' where ('.$this->wrap('team').' = ?) and '
@@ -105,6 +126,20 @@ class SearchKeysQueryTest extends SearchKeysTestCase
         foreach (self::INTEGER_KEY_TYPES as $type => $resource) {
             yield "the {$type} key type" => [$resource];
         }
+    }
+
+    /**
+     * @param  class-string<Resource>  $class
+     * @param  list<int|string>  $keys
+     * @return Builder<Model>
+     */
+    private function keyedQuery(string $class, array $keys): Builder
+    {
+        $resource = $this->resource($class);
+        $model = ScoutModel::tryFrom($resource::newModel()) ?? throw new LogicException($class.' is indexed.');
+        $plan = (new SearchPlanner(new KeyedRows(EngineKeys::of($model, $keys))))->plan($resource, SearchNode::empty(), LimitPolicy::none());
+
+        return QueryBuilderFactory::make($resource)->search($plan);
     }
 
     private function wrap(string $value): string

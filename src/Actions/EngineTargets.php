@@ -13,7 +13,6 @@ final readonly class EngineTargets
     /** @param list<list<int|string>> $chunks */
     private function __construct(
         private EngineSearch $search,
-        private OperateRequest $request,
         private array $chunks,
     ) {}
 
@@ -29,11 +28,11 @@ final readonly class EngineTargets
             return null;
         }
 
-        $search = new EngineSearch($request->resource, $text);
+        $search = new EngineSearch($request->resource, $text, $request->payload()->search());
         $limit = $request->input('search.limit');
         $keys = (new EngineTargetKeys($search->query($request), $action->chunkCount, $action->maxResources, is_numeric($limit) ? (int) $limit : null))->resolve();
 
-        return new self($search, $request, array_chunk($keys, max(1, $action->chunkCount)));
+        return new self($search, array_chunk($keys, max(1, $action->chunkCount)));
     }
 
     /** @param Closure(Collection<int, Model>): void $dispatch */
@@ -42,7 +41,7 @@ final readonly class EngineTargets
         $impacted = 0;
 
         foreach ($this->chunks as $keys) {
-            $models = $this->search->rows($keys, $this->request);
+            $models = $this->search->rows($keys);
             $impacted += $models->count();
 
             $dispatch($models);

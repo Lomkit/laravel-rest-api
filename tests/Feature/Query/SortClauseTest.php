@@ -13,6 +13,7 @@ use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Query\Clauses\SortClause;
+use Lomkit\Rest\Search\FieldSort;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
@@ -74,36 +75,25 @@ class SortClauseTest extends PackageTestCase
         $this->assertSame('select * from posts order by title desc', $this->sql($query));
     }
 
-    /** @param array{field: string, direction?: string|null} $sort */
     #[Test]
     #[DataProvider('sortEntries')]
-    public function it_resolves_a_sort_entry_against_the_fields(array $sort, string $expected): void
+    public function it_resolves_a_sort_entry_against_the_fields(string $field, ?SortDirection $direction, string $expected): void
     {
         $query = Post::query();
         $fields = FieldSet::of([Text::make('title'), Integer::make('views')]);
 
-        SortClause::fromSort($fields, $sort)->apply($query);
+        SortClause::of(new FieldSort($fields->get($field), $direction))->apply($query);
 
         $this->assertSame($expected, $this->sql($query));
     }
 
-    /** @return array<string, array{array{field: string, direction?: string|null}, string}> */
+    /** @return array<string, array{string, SortDirection|null, string}> */
     public static function sortEntries(): array
     {
         return [
-            'a direction' => [['field' => 'views', 'direction' => 'desc'], 'select * from posts order by posts.views desc'],
-            'an upper case direction' => [['field' => 'views', 'direction' => 'DESC'], 'select * from posts order by posts.views desc'],
-            'no direction' => [['field' => 'title'], 'select * from posts order by posts.title asc'],
-            'a null direction' => [['field' => 'title', 'direction' => null], 'select * from posts order by posts.title asc'],
+            'a direction' => ['views', SortDirection::Desc, 'select * from posts order by posts.views desc'],
+            'no direction' => ['title', null, 'select * from posts order by posts.title asc'],
         ];
-    }
-
-    #[Test]
-    public function it_refuses_a_sort_entry_on_an_undeclared_field(): void
-    {
-        $this->expectExceptionObject(new InvalidFieldException('Unknown field [nickname].'));
-
-        SortClause::fromSort(FieldSet::of([Text::make('title')]), ['field' => 'nickname']);
     }
 
     #[Test]

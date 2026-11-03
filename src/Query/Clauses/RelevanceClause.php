@@ -5,10 +5,8 @@ namespace Lomkit\Rest\Query\Clauses;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use InvalidArgumentException;
-use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Text\QueryTextSearch;
-use Lomkit\Rest\Text\ResolvedText;
 use Lomkit\Rest\Text\TextQuery;
 use Lomkit\Rest\Text\TextTarget;
 
@@ -22,20 +20,6 @@ final readonly class RelevanceClause implements Clause
         private TextTarget $target,
         private SortDirection $direction = SortDirection::Desc,
     ) {}
-
-    /** @phpstan-assert-if-true array{field: string, direction?: SortDirection|string|null} $sort */
-    public static function requestedBy(mixed $sort): bool
-    {
-        return is_array($sort) && ($sort['field'] ?? null) === self::FIELD;
-    }
-
-    /** @param array{field: string, direction?: SortDirection|string|null} $sort */
-    public static function fromSort(array $sort, ?ResolvedText $text): self
-    {
-        $direction = SortDirection::parse($sort['direction'] ?? SortDirection::Desc);
-
-        return $text?->relevance($direction) ?? throw InvalidFieldException::notSortable(self::FIELD);
-    }
 
     #[\Override]
     public function apply(Builder $query): void

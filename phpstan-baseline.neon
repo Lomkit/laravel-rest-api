@@ -77,25 +77,13 @@ parameters:
 			path: src/Actions/DispatchAction.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:modelsQuery\(\) has parameter \$searchParameters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:modelsQuery\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 4
 			path: src/Actions/DispatchAction.php
 
 		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 9
+			count: 8
 			path: src/Actions/DispatchAction.php
 
 		-
@@ -122,19 +110,7 @@ parameters:
 			path: src/Actions/DispatchAction.php
 
 		-
-			message: '#^Parameter \#1 \$parameters of method Lomkit\\Rest\\Contracts\\EloquentQueryBuilder\:\:search\(\) expects array\<string, mixed\>, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
 			message: '#^Parameter \#1 \$queue of method Illuminate\\Contracts\\Queue\\Queue\:\:pushOn\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Parameter \#1 \$searchParameters of method Lomkit\\Rest\\Actions\\DispatchAction\:\:modelsQuery\(\) expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Actions/DispatchAction.php
@@ -176,27 +152,16 @@ parameters:
 		-
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
-			path: src/Concerns/Resource/Paginable.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Http\\Resource\:\:\$defaultLimit \(int\) on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.property
-			count: 1
-			path: src/Concerns/Resource/Paginable.php
-
-		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 1
 			path: src/Concerns/Resource/Relationable.php
 
 		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 3
+			count: 1
 			path: src/Contracts/EloquentQueryBuilder.php
 
 		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 2
+			count: 1
 			path: src/Contracts/QueryBuilder.php
 
 		-
@@ -242,12 +207,6 @@ parameters:
 			path: src/Http/Controllers/Controller.php
 
 		-
-			message: '#^Parameter \#1 \$parameters of method Lomkit\\Rest\\Contracts\\QueryBuilder\:\:search\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Controllers/Controller.php
-
-		-
 			message: '#^Parameter \#1 \$haystack of static method Illuminate\\Support\\Str\:\:contains\(\) expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
@@ -278,18 +237,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$object_or_class of function method_exists expects object\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Parameter \#1 \$perPage of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:paginate\(\) expects int\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
-			message: '#^Parameter \#4 \$page of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:paginate\(\) expects int\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Http/Resource.php
@@ -627,25 +574,7 @@ parameters:
 			path: src/Query/Builder.php
 
 		-
-			message: '#^Cannot access offset ''fields'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot access offset ''name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Query/Builder.php
-
-		-
 			message: '#^Cannot access offset ''operation'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot access offset ''parameters'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: src/Query/Builder.php
@@ -653,96 +582,6 @@ parameters:
 		-
 			message: '#^Cannot access offset string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method addEagerConstraints\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method afterQuery\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method getEager\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method getModel\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method getRelation\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method initRelation\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method limit\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method match\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method newInstance\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method orderBy\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method relationLoaded\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method search\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 3
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method setRelation\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method unsetRelation\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Cannot call method with\(\) on Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
-			identifier: method.nonObject
 			count: 1
 			path: src/Query/Builder.php
 
@@ -759,145 +598,7 @@ parameters:
 			path: src/Query/Builder.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:aggregate\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyAggregates\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyAggregates\(\) has parameter \$aggregates with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyFilters\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyIncludes\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyIncludes\(\) has parameter \$includes with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyInstructions\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyInstructions\(\) has parameter \$instructions with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyScopes\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applyScopes\(\) has parameter \$scopes with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applySorts\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:applySorts\(\) has parameter \$sorts with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:include\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:include\(\) has parameter \$include with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:includeAliased\(\) has parameter \$include with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:includeAliased\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:instruction\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:mutate\(\) should return array\<string, list\<int\|string\>\> but returns non\-empty\-array\<string, list\<mixed\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:newQueryBuilder\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:newQueryBuilder\(\) has parameter \$parameters with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:scope\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:search\(\) has parameter \$parameters with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:search\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:search\(\) should return Illuminate\\Database\\Eloquent\\Builder but returns Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
 			identifier: return.type
 			count: 1
 			path: src/Query/Builder.php
@@ -921,46 +622,11 @@ parameters:
 
 		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 3
-			path: src/Query/Builder.php
-
-		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#1 \$aggregate of method Lomkit\\Rest\\Query\\Builder\:\:aggregate\(\) expects array\{relation\: string, type\: string, field\?\: string\|null, alias\?\: string\|null, filters\?\: array\<mixed\>\}, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#1 \$aggregates of method Lomkit\\Rest\\Query\\Builder\:\:applyAggregates\(\) expects array, mixed given\.$#'
-			identifier: argument.type
 			count: 1
 			path: src/Query/Builder.php
 
 		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(int\|string\)\: Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#1 \$include of method Lomkit\\Rest\\Query\\Builder\:\:include\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#1 \$includes of method Lomkit\\Rest\\Query\\Builder\:\:applyIncludes\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#1 \$instructions of method Lomkit\\Rest\\Query\\Builder\:\:applyInstructions\(\) expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Query/Builder.php
@@ -972,43 +638,7 @@ parameters:
 			path: src/Query/Builder.php
 
 		-
-			message: '#^Parameter \#1 \$models of method Lomkit\\Rest\\Query\\Builder\:\:includeAliased\(\) expects Illuminate\\Support\\Collection, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
 			message: '#^Parameter \#1 \$mutation of method Lomkit\\Rest\\Query\\Builder\:\:applyMutation\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#1 \$name of method Lomkit\\Rest\\Http\\Resource\:\:relation\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#1 \$name of method Lomkit\\Rest\\Query\\Builder\:\:instruction\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#1 \$name of method Lomkit\\Rest\\Query\\Builder\:\:scope\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#1 \$scopes of method Lomkit\\Rest\\Query\\Builder\:\:applyScopes\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#1 \$sorts of method Lomkit\\Rest\\Query\\Builder\:\:applySorts\(\) expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Query/Builder.php
@@ -1021,30 +651,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$attributes of method Lomkit\\Rest\\Query\\Builder\:\:mutateModel\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#2 \$fields of method Lomkit\\Rest\\Query\\Builder\:\:instruction\(\) expects list\<array\{name\: string, value\?\: mixed\}\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#2 \$parameters of method Illuminate\\Foundation\\Application\:\:make\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#2 \$parameters of method Lomkit\\Rest\\Query\\Builder\:\:scope\(\) expects list\<mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Parameter \#2 \$sort of static method Lomkit\\Rest\\Query\\Clauses\\SortClause\:\:fromSort\(\) expects array\{field\: string, direction\?\: Lomkit\\Rest\\Fields\\SortDirection\|string\|null\}, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Query/Builder.php
@@ -1089,22 +695,6 @@ parameters:
 			identifier: typeCoverage.paramTypeCoverage
 			count: 1
 			path: src/Query/Traits/PerformMutation.php
-
-		-
-			message: '#^Left side of && is always true\.$#'
-			identifier: booleanAnd.leftAlwaysTrue
-			count: 1
-			path: src/Query/Traits/PerformSearch.php
-
-		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 11
-			path: src/Query/Traits/PerformSearch.php
-
-		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 13
-			path: src/Query/Traits/PerformSearch.php
 
 		-
 			message: '#^Cannot access offset ''operation'' on mixed\.$#'

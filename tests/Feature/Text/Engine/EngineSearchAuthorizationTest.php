@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Exceptions\UnplannedCheckException;
 use Lomkit\Rest\Query\EngineSearch;
+use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherLine;
@@ -75,7 +76,7 @@ class EngineSearchAuthorizationTest extends EngineSearchTestCase
     {
         $context = $this->context(['search' => ['text' => ['value' => 'report']]]);
         $resource = $context->resource(VoucherResource::class);
-        $search = new EngineSearch($resource, $context->text($resource));
+        $search = new EngineSearch($resource, $context->text($resource), SearchNode::empty());
 
         try {
             $search->paginate($context->request);

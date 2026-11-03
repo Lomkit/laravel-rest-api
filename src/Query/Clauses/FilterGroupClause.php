@@ -3,10 +3,11 @@
 namespace Lomkit\Rest\Query\Clauses;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
-use Lomkit\Rest\Exceptions\InvalidFieldException;
-use Lomkit\Rest\Fields\FieldPath;
-use Lomkit\Rest\Fields\Filtering\FilterOperator;
-use Lomkit\Rest\Http\Resource;
+use LogicException;
+use Lomkit\Rest\Search\FilterCondition;
+use Lomkit\Rest\Search\FilterGroup;
+use Lomkit\Rest\Search\FilterNode;
+use Lomkit\Rest\Search\RelationFilterGroup;
 
 final readonly class FilterGroupClause implements Clause
 {
@@ -16,16 +17,9 @@ final readonly class FilterGroupClause implements Clause
         private string $boolean = 'and',
     ) {}
 
-    /** @param array<array-key, mixed> $filters */
-    public static function fromPayload(Resource $resource, array $filters, string $boolean = 'and'): self
+    public static function of(FilterGroup $group): self
     {
-        $nodes = [];
-
-        foreach ($filters as $filter) {
-            $nodes[] = self::node($resource, is_array($filter) ? $filter : []);
-        }
-
-        return new self($nodes, $boolean);
+        return new self(array_map(self::clause(...), $group->filters), $group->boolean());
     }
 
     #[\Override]
@@ -38,36 +32,14 @@ final readonly class FilterGroupClause implements Clause
         }, null, null, $this->boolean);
     }
 
-    /** @param array<array-key, mixed> $filter */
-    private static function node(Resource $resource, array $filter): Clause
+    private static function clause(FilterNode $node): Clause
     {
-        $boolean = ($filter['type'] ?? 'and') === 'or' ? 'or' : 'and';
-
-        if (array_key_exists('relation', $filter)) {
-            return RelationGroupClause::fromPayload($resource, $filter, $boolean);
-        }
-
-        if (isset($filter['nested']) && is_array($filter['nested'])) {
-            return self::fromPayload($resource, $filter['nested'], $boolean);
-        }
-
-        $field = is_string($filter['field'] ?? null) ? $filter['field'] : '';
-        $path = FieldPath::resolve($resource, $field) ?? throw InvalidFieldException::notFilterable($field);
-        $operator = self::operator($filter['operator'] ?? FilterOperator::Equal);
-
-        if ($path->relations === []) {
-            return new FieldConditionClause($path, $operator, $filter['value'] ?? null, $boolean);
-        }
-
-        return new RelationConditionClause($path, $operator, $filter['value'] ?? null, $boolean);
-    }
-
-    private static function operator(mixed $operator): FilterOperator
-    {
-        if ($operator instanceof FilterOperator || is_string($operator)) {
-            return FilterOperator::parse($operator);
-        }
-
-        throw InvalidFieldException::unknownOperator(get_debug_type($operator));
+        return match (true) {
+            $node instanceof FilterGroup => self::of($node),
+            $node instanceof RelationFilterGroup => RelationGroupClause::of($node),
+            $node instanceof FilterCondition && $node->path->relations === [] => new FieldConditionClause($node->path, $node->operator, $node->value, $node->boolean()),
+            $node instanceof FilterCondition => new RelationConditionClause($node->path, $node->operator, $node->value, $node->boolean()),
+            default => throw new LogicException($node::class.' does not apply to a database query.'),
+        };
     }
 }

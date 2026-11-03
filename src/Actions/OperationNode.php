@@ -23,4 +23,9 @@ final readonly class OperationNode
 
         return $this->target;
     }
+
+    public function search(): SearchNode
+    {
+        return $this->target instanceof SearchNode ? $this->target : SearchNode::empty();
+    }
 }

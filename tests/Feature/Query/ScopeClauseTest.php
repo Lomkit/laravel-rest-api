@@ -5,11 +5,15 @@ namespace Lomkit\Rest\Tests\Feature\Query;
 use BadMethodCallException;
 use Carbon\CarbonImmutable;
 use Lomkit\Rest\Exceptions\InvalidScopeException;
+use Lomkit\Rest\Fields\FieldSet;
+use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Query\Clauses\ScopeClause;
 use Lomkit\Rest\Scopes\Scope;
+use Lomkit\Rest\Search\ScopeNode;
+use Lomkit\Rest\Tests\Feature\Search\Plan\ParsesSearchNodes;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
@@ -18,6 +22,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ScopeClauseTest extends PackageTestCase
 {
+    use ParsesSearchNodes;
+
     #[\Override]
     protected function fixtures(): array
     {
@@ -29,7 +35,7 @@ class ScopeClauseTest extends PackageTestCase
     {
         $query = Post::query();
 
-        (new ScopeClause($this->postResource(), 'popular', ['150']))->apply($query);
+        ScopeClause::of($this->scope('popular', ['150']))->apply($query);
 
         $this->assertSame([150], $query->getBindings());
     }
@@ -39,7 +45,7 @@ class ScopeClauseTest extends PackageTestCase
     {
         $query = Post::query();
 
-        (new ScopeClause($this->postResource(), 'popular'))->apply($query);
+        ScopeClause::of($this->scope('popular'))->apply($query);
 
         $this->assertSame([100], $query->getBindings());
     }
@@ -49,7 +55,7 @@ class ScopeClauseTest extends PackageTestCase
     {
         $query = Post::query();
 
-        (new ScopeClause($this->postResource(), 'publishedSince', ['2026-01-01 15:30:00']))->apply($query);
+        ScopeClause::of($this->scope('publishedSince', ['2026-01-01 15:30:00']))->apply($query);
 
         [$since] = $query->getBindings();
         $this->assertInstanceOf(CarbonImmutable::class, $since);
@@ -59,30 +65,10 @@ class ScopeClauseTest extends PackageTestCase
     #[Test]
     public function it_only_runs_scopes_the_model_declares(): void
     {
-        $resource = new class extends Resource
-        {
-            public static string $model = Post::class;
-
-            #[\Override]
-            public function scopes(RestRequest $request): array
-            {
-                return [Scope::make('latest')];
-            }
-        };
-
         $this->expectException(BadMethodCallException::class);
         $this->expectExceptionMessage('scopeLatest()');
 
-        (new ScopeClause($resource, 'latest'))->apply(Post::query());
-    }
-
-    #[Test]
-    public function it_refuses_a_scope_the_resource_does_not_declare(): void
-    {
-        $this->expectException(InvalidScopeException::class);
-        $this->expectExceptionMessage(PostResource::class.' does not declare the scope [archived].');
-
-        (new ScopeClause($this->postResource(), 'archived'))->apply(Post::query());
+        ScopeClause::of(new ScopeNode(Scope::make('latest'), InputValues::fromPositional(FieldSet::of([]), [])))->apply(Post::query());
     }
 
     #[Test]
@@ -114,6 +100,14 @@ class ScopeClauseTest extends PackageTestCase
         $this->expectExceptionMessage($resource::class."::scopes() returned a string at index 0 ('published'). Return Scope objects, for example Scope::make('published').");
 
         $resource->getScopes($resource->context()->request);
+    }
+
+    /** @param list<mixed> $parameters */
+    private function scope(string $name, array $parameters = []): ScopeNode
+    {
+        $entry = $parameters === [] ? ['name' => $name] : ['name' => $name, 'parameters' => $parameters];
+
+        return $this->parse($this->postResource(), ['scopes' => [$entry]])->scopes[0];
     }
 
     private function postResource(): Resource

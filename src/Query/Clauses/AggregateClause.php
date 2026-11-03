@@ -2,41 +2,32 @@
 
 namespace Lomkit\Rest\Query\Clauses;
 
-use Closure;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\Field;
-use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Query\Expressions\UuidColumn;
+use Lomkit\Rest\Search\AggregateKey;
+use Lomkit\Rest\Search\AggregateNode;
 
 final readonly class AggregateClause implements Clause
 {
-    /** @param (Closure(EloquentBuilder<Model>): mixed)|null $constraints */
-    public function __construct(
+    private function __construct(
         private string $relation,
         private AggregateFunction $function,
-        private ?Field $field = null,
-        private ?string $alias = null,
-        private ?Closure $constraints = null,
+        private ?Field $field,
+        private AggregateKey $key,
+        private Clause $constraint,
     ) {}
 
-    /**
-     * @param  array{relation: string, type: string, field?: string|null, alias?: string|null}  $aggregate
-     * @param  Closure(EloquentBuilder<Model>): mixed  $constraints
-     */
-    public static function fromAggregate(FieldSet $fields, array $aggregate, Closure $constraints): self
+    public static function of(AggregateNode $node, Clause $constraint): self
     {
-        $function = AggregateFunction::from($aggregate['type']);
-        $field = $function->needsField() ? $fields->get($aggregate['field'] ?? '') : null;
-
-        return new self($aggregate['relation'], $function, $field, $aggregate['alias'] ?? null, $constraints);
+        return new self($node->relation, $node->function, $node->field, $node->key, $constraint);
     }
 
     #[\Override]
@@ -45,17 +36,12 @@ final readonly class AggregateClause implements Clause
         $query = self::eloquent($query);
 
         $query->withAggregate(
-            [$this->relation.' as '.($this->alias ?? $this->defaultAlias()) => $this->constraints ?? fn (): null => null],
+            [$this->relation.' as '.$this->key->value => function (EloquentBuilder $query): void {
+                $this->constraint->apply($query);
+            }],
             $this->column($query),
             $this->function->value,
         );
-    }
-
-    private function defaultAlias(): string
-    {
-        $name = sprintf('%s %s %s', $this->relation, $this->function->value, strtolower($this->field->name ?? '*'));
-
-        return Str::snake((string) preg_replace('/[^[:alnum:][:space:]_]/u', '', $name));
     }
 
     /** @param EloquentBuilder<Model> $query */
