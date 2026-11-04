@@ -137,14 +137,18 @@ trait PerformMutation
             ->write($model, MutationOperation::from($mutation['operation']), $attributes, [...$relationKeys, ...$owned])
             ->save();
 
-        $this->resource->context()->authorizer()->forget($model);
+        if ($model->wasRecentlyCreated || $model->wasChanged()) {
+            $this->resource->context()->authorizer()->forget($model);
+        }
 
         foreach ($restRelations as $restRelation) {
             $operations->within($restRelation);
             $restRelation->afterMutating($model, $restRelation, $relations);
         }
 
-        $this->resource->context()->authorizer()->forget($model);
+        if ($restRelations !== []) {
+            $this->resource->context()->authorizer()->forget($model);
+        }
 
         $this
             ->resource

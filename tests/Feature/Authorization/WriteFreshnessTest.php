@@ -36,6 +36,30 @@ class WriteFreshnessTest extends HelpdeskTestCase
     }
 
     #[Test]
+    #[WithConfig('rest.authorizations.cache.enabled', true)]
+    public function it_checks_a_created_row_whatever_the_store_holds_for_its_key(): void
+    {
+        $last = $this->seedTickets()['Laptop setup'];
+        $stale = (new Ticket)->forceFill(['id' => $last->id + 1, 'team_id' => $last->team_id, 'title' => 'Printer jam', 'status' => 'open']);
+        $stale->exists = true;
+        $this->contextFor(null)
+            ->resource(TicketResource::class)
+            ->authorizedTo('update', $stale);
+        $this->tickets->calls = [];
+
+        $response = $this->postJson('/api/tickets/mutate', [
+            'mutate' => [['operation' => 'create', 'attributes' => ['team_id' => $last->team_id, 'title' => 'Monitor flicker', 'status' => 'closed']]],
+            'response' => ['selects' => [['field' => 'status']], 'gates' => ['update']],
+        ]);
+
+        $response->assertOk()->assertExactJson([
+            'operations' => [['operation' => 'create', 'key' => $stale->id]],
+            'records' => [['status' => 'closed', 'gates' => ['authorized_to_update' => ['allowed' => false, 'message' => 'Closed tickets are read-only.']]]],
+        ]);
+        $this->assertSame(['create', 'viewAny', 'update '.$stale->id], $this->tickets->calls);
+    }
+
+    #[Test]
     public function it_checks_a_row_again_once_it_is_forgotten(): void
     {
         $jam = $this->seedTickets()['Printer jam'];
