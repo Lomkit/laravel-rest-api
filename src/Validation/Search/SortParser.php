@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Validation\Search;
 
 use Illuminate\Support\Str;
 use Lomkit\Rest\Fields\SortDirection;
-use Lomkit\Rest\Rules\OneOf;
+use Lomkit\Rest\Rules\AllowedValues;
 use Lomkit\Rest\Search\SortNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ValidationContext;
@@ -37,7 +37,7 @@ final readonly class SortParser
         return $sorts;
     }
 
-    private function sort(Cursor $entry, OneOf $fields, ValidationContext $context): ?SortNode
+    private function sort(Cursor $entry, AllowedValues $fields, ValidationContext $context): ?SortNode
     {
         if (! $context->reader->object($entry)) {
             return null;

@@ -11,6 +11,7 @@ use Lomkit\Rest\Tests\Feature\Validation\Stubs\HighlightingPostController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
+use Lomkit\Rest\Validation\Search\SortPaths;
 use PHPUnit\Framework\Attributes\Test;
 
 class NameListRulesTest extends PackageTestCase
@@ -32,11 +33,15 @@ class NameListRulesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_checks_sorted_fields_against_a_one_of_rule(): void
+    public function it_checks_sorted_fields_against_the_fields_and_the_to_one_relation_paths(): void
     {
         $rules = $this->searchRequest('/api/products/search', ['sorts' => [['field' => 'name']]])->rules();
+        $paths = $this->sortPaths($rules['search.sorts.0.field']);
 
-        $this->assertSame([...self::PRODUCT_FIELDS, 'category.id', 'category.name'], $this->oneOf($rules['search.sorts.0.field'])->values());
+        $this->assertSame(
+            [true, true, true, false, false],
+            [$paths->accepts('price'), $paths->accepts('category.id'), $paths->accepts('category.name'), $paths->accepts('category.price'), $paths->accepts('category')],
+        );
     }
 
     #[Test]
@@ -104,7 +109,7 @@ class NameListRulesTest extends PackageTestCase
     {
         $rules = $this->searchRequest('/api/products/search', ['sorts' => [['field' => 'name'], ['field' => 'price']]])->rules();
 
-        $this->assertSame($this->oneOf($rules['search.sorts.0.field']), $this->oneOf($rules['search.sorts.1.field']));
+        $this->assertSame($this->sortPaths($rules['search.sorts.0.field']), $this->sortPaths($rules['search.sorts.1.field']));
     }
 
     #[Test]
@@ -168,5 +173,15 @@ class NameListRulesTest extends PackageTestCase
         $this->assertCount(1, $oneOf);
 
         return $oneOf[0];
+    }
+
+    /** @param list<mixed> $rules */
+    private function sortPaths(array $rules): SortPaths
+    {
+        $paths = array_values(array_filter($rules, fn (mixed $rule): bool => $rule instanceof SortPaths));
+
+        $this->assertCount(1, $paths);
+
+        return $paths[0];
     }
 }

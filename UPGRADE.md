@@ -409,7 +409,7 @@ Validation:
 - A name repeated in the `fields` of an action or an instruction gives a 422 under each repeated entry: `fields.{index}.name` for an action, `search.instructions.{index}.fields.{position}.name` for an instruction. Before, the last value won.
 - Each entry of `resources` on `destroy`, `restore` and `forceDestroy` must be a key typed like the resource's `ID` field: an integer for integer keys, and a string, a UUID or a ULID for the other key types (a resource without an `ID` field uses the model's key type). A list, an object or `null` gives a 422 under `resources.{index}`. The other checks of `resources` are listed under "Resource keys" in [Validation engine](#validation-engine).
 - In `mutate`, an `attributes`, `relations` or `pivot` value that is not an object gives one 422 message under its key.
-- The checks of field, scope, instruction and action field names use a new rule, `Lomkit\Rest\Rules\OneOf`, instead of `Rule::in()`. The message is still `validation.in` ("The selected :attribute is invalid."), but a custom message written for the `in` rule of these attributes no longer applies.
+- The checks of field, scope, instruction and action field names use a new rule, `Lomkit\Rest\Rules\OneOf`, instead of `Rule::in()`. The message is still `validation.in` ("The selected :attribute is invalid."), but a custom message written for the `in` rule of these attributes no longer applies. A sort field is checked by `Lomkit\Rest\Validation\Search\SortPaths`, which accepts the names of a `OneOf` and checks a `<relation>.<field>` path against its own relation: `SearchRequest::rules()` holds it under `search.sorts.<i>.field`. Both implement `Lomkit\Rest\Rules\AllowedValues`, which `SearchGrammar::sortFields()` returns.
 
 Limits:
 
@@ -1043,7 +1043,7 @@ Sorts:
 
 - The other fields are ordered by their column, qualified with the table of the model: `posts.views`.
 - `direction` accepts the values of `Lomkit\Rest\Fields\SortDirection`, `asc` and `desc`. A sort without a direction is ascending.
-- A sort can name a field of a to-one relation of the resource, `<relation>.<field>`: a `BelongsTo`, `HasOne`, `HasOneThrough`, `HasOneOfMany`, `MorphOne` or `MorphOneOfMany` relation. The field must be one that `max` accepts in an aggregate: sortable by its own column, neither `virtual()` nor `writeOnly()`, and not a `Boolean`. A `MorphTo` relation, a relation with several rows, a deeper path such as `author.posts.title` and any other field give a 422 under `search.sorts.<i>.field`, `The selected search.sorts.0.field is invalid.` For example, the posts by the last name of their author:
+- A sort can name a field of a to-one relation of the resource, `<relation>.<field>`: a `BelongsTo`, `HasOne`, `HasOneThrough`, `HasOneOfMany`, `MorphOne` or `MorphOneOfMany` relation. The field must be one that `max` accepts in an aggregate: sortable by its own column, neither `virtual()` nor `writeOnly()`, and not a `Boolean`. A `MorphTo` relation, a relation with several rows, a deeper path such as `author.posts.title` and any other field give a 422 under `search.sorts.<i>.field`, `The selected search.sorts.0.field is invalid.` The fields of a related resource are read only for a sort that names its relation. For example, the posts by the last name of their author:
 
   ```json
   {"search": {"sorts": [{"field": "author.last_name"}]}}

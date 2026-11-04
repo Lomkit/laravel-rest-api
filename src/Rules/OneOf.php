@@ -3,10 +3,9 @@
 namespace Lomkit\Rest\Rules;
 
 use Closure;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Stringable;
 
-final readonly class OneOf implements Stringable, ValidationRule
+final readonly class OneOf implements AllowedValues, Stringable
 {
     /** @var array<array-key, int> */
     private array $allowed;
@@ -27,6 +26,7 @@ final readonly class OneOf implements Stringable, ValidationRule
         $fail('validation.in')->translate();
     }
 
+    #[\Override]
     public function accepts(mixed $value): bool
     {
         return is_scalar($value) && isset($this->allowed[(string) $value]);
