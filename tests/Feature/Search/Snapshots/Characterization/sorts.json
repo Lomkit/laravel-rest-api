@@ -1,8 +1,8 @@
 {
     "queries": {
-        "sqlite": 2,
-        "mysql": 2,
-        "pgsql": 2
+        "sqlite": 1,
+        "mysql": 1,
+        "pgsql": 1
     },
     "shape": {
         "current_page": null,
@@ -123,7 +123,6 @@
         "meta": []
     },
     "raw_queries": [
-        "select count(*) as \"aggregate\" from \"posts\"",
         "select \"posts\".\"id\", \"posts\".\"title\", \"posts\".\"summary\", \"posts\".\"status\", \"posts\".\"featured\", \"posts\".\"views\", \"posts\".\"rating\", \"posts\".\"published_on\", \"posts\".\"published_at\", \"posts\".\"metadata\" from \"posts\" order by \"posts\".\"featured\" desc, \"posts\".\"title\" asc limit 50 offset 0"
     ]
 }

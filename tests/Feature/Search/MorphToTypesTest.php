@@ -79,7 +79,7 @@ class MorphToTypesTest extends PackageTestCase
         $response = $this->postJson('/api/labels/search', ['search' => ['includes' => [['relation' => 'labelable']], 'sorts' => [['field' => 'id']]]]);
 
         $response->assertOk()->assertJsonPath('data.*.labelable.id', [1, null, null, null]);
-        $this->assertCount(3, DB::getQueryLog());
+        $this->assertCount(2, DB::getQueryLog());
         $this->assertSame([], array_values(array_filter(array_column(DB::getQueryLog(), 'query'), fn (string $query): bool => str_contains($query, 'loans'))));
     }
 

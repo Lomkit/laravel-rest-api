@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Concerns\Resource;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Query\PageQuery;
 
 trait Paginable
 {
@@ -14,6 +15,6 @@ trait Paginable
      */
     public function paginate(Builder $query, int $perPage, int $page): LengthAwarePaginator
     {
-        return $query->paginate($perPage, ['*'], 'page', $page);
+        return (new PageQuery($query))->paginate($perPage, $page);
     }
 }

@@ -64,20 +64,16 @@ class ColumnSelectionTest extends PackageTestCase
     /** @return array<string, array{string, array<string, mixed>, list<string>}> */
     public static function levels(): array
     {
-        $books = 'select count(*) as aggregate from books';
-        $loans = 'select count(*) as aggregate from loans';
-        $labels = 'select count(*) as aggregate from labels';
-
         return [
-            'the root' => ['/api/books/search', ['selects' => [['field' => 'title']]], [$books, 'select books.title, books.id from books order by books.id desc limit 50 offset 0']],
-            'a belongs to' => ['/api/loans/search', ['selects' => self::ID, 'includes' => [['relation' => 'book', 'selects' => self::ID]]], [$loans, self::LOANS, 'select books.id from books where books.id in (1, 2)']],
-            'a has one' => ['/api/books/search', ['selects' => self::ID, 'includes' => [['relation' => 'loan', 'selects' => self::ID]]], [$books, self::BOOKS, 'select * from (select loans.id, loans.book_id, row_number() over (partition by loans.book_id order by loans.id desc) as laravel_row from loans where loans.book_id in (1, 2)) as laravel_table where laravel_row <= 10 order by laravel_row']],
-            'a has one of many' => ['/api/books/search', ['selects' => self::ID, 'includes' => [['relation' => 'latestLoan', 'selects' => self::ID]]], [$books, self::BOOKS, 'select * from (select loans.id, loans.book_id, row_number() over (partition by loans.book_id order by loans.id desc) as laravel_row from loans inner join (select MAX(loans.id) as id_aggregate, loans.book_id from loans where loans.book_id in (1, 2) group by loans.book_id) as latestOfMany on latestOfMany.id_aggregate = loans.id and latestOfMany.book_id = loans.book_id) as laravel_table where laravel_row <= 10 order by laravel_row']],
-            'a morph many' => ['/api/books/search', ['selects' => self::ID, 'includes' => [['relation' => 'labels', 'selects' => self::ID]]], [$books, self::BOOKS, self::LABELS]],
-            'an aliased include' => ['/api/books/search', ['selects' => self::ID, 'includes' => [['relation' => 'labels', 'alias' => 'notes', 'selects' => self::ID]]], [$books, self::BOOKS, self::LABELS]],
-            'a belongs to many' => ['/api/books/search', ['selects' => self::ID, 'includes' => [['relation' => 'shelves', 'selects' => self::ID]]], [$books, self::BOOKS, 'select * from (select shelves.id, book_shelf.book_id as pivot_book_id, book_shelf.shelf_id as pivot_shelf_id, row_number() over (partition by book_shelf.book_id order by shelves.id desc) as laravel_row from shelves inner join book_shelf on shelves.id = book_shelf.shelf_id where book_shelf.book_id in (1, 2)) as laravel_table where laravel_row <= 10 order by laravel_row']],
-            'a morph to' => ['/api/labels/search', ['selects' => self::ID, 'includes' => [['relation' => 'labelable', 'selects' => self::ID]]], [$labels, 'select labels.id, labels.labelable_type, labels.labelable_id from labels order by labels.id desc limit 50 offset 0', 'select books.id from books where books.id in (1, 2)']],
-            'a dotted include' => ['/api/loans/search', ['selects' => self::ID, 'includes' => [['relation' => 'book.labels', 'selects' => self::ID]]], [$loans, self::LOANS, 'select books.id, books.title from books where books.id in (1, 2)', self::LABELS]],
+            'the root' => ['/api/books/search', ['selects' => [['field' => 'title']]], ['select books.title, books.id from books order by books.id desc limit 50 offset 0']],
+            'a belongs to' => ['/api/loans/search', ['selects' => self::ID, 'includes' => [['relation' => 'book', 'selects' => self::ID]]], [self::LOANS, 'select books.id from books where books.id in (1, 2)']],
+            'a has one' => ['/api/books/search', ['selects' => self::ID, 'includes' => [['relation' => 'loan', 'selects' => self::ID]]], [self::BOOKS, 'select * from (select loans.id, loans.book_id, row_number() over (partition by loans.book_id order by loans.id desc) as laravel_row from loans where loans.book_id in (1, 2)) as laravel_table where laravel_row <= 10 order by laravel_row']],
+            'a has one of many' => ['/api/books/search', ['selects' => self::ID, 'includes' => [['relation' => 'latestLoan', 'selects' => self::ID]]], [self::BOOKS, 'select * from (select loans.id, loans.book_id, row_number() over (partition by loans.book_id order by loans.id desc) as laravel_row from loans inner join (select MAX(loans.id) as id_aggregate, loans.book_id from loans where loans.book_id in (1, 2) group by loans.book_id) as latestOfMany on latestOfMany.id_aggregate = loans.id and latestOfMany.book_id = loans.book_id) as laravel_table where laravel_row <= 10 order by laravel_row']],
+            'a morph many' => ['/api/books/search', ['selects' => self::ID, 'includes' => [['relation' => 'labels', 'selects' => self::ID]]], [self::BOOKS, self::LABELS]],
+            'an aliased include' => ['/api/books/search', ['selects' => self::ID, 'includes' => [['relation' => 'labels', 'alias' => 'notes', 'selects' => self::ID]]], [self::BOOKS, self::LABELS]],
+            'a belongs to many' => ['/api/books/search', ['selects' => self::ID, 'includes' => [['relation' => 'shelves', 'selects' => self::ID]]], [self::BOOKS, 'select * from (select shelves.id, book_shelf.book_id as pivot_book_id, book_shelf.shelf_id as pivot_shelf_id, row_number() over (partition by book_shelf.book_id order by shelves.id desc) as laravel_row from shelves inner join book_shelf on shelves.id = book_shelf.shelf_id where book_shelf.book_id in (1, 2)) as laravel_table where laravel_row <= 10 order by laravel_row']],
+            'a morph to' => ['/api/labels/search', ['selects' => self::ID, 'includes' => [['relation' => 'labelable', 'selects' => self::ID]]], ['select labels.id, labels.labelable_type, labels.labelable_id from labels order by labels.id desc limit 50 offset 0', 'select books.id from books where books.id in (1, 2)']],
+            'a dotted include' => ['/api/loans/search', ['selects' => self::ID, 'includes' => [['relation' => 'book.labels', 'selects' => self::ID]]], [self::LOANS, 'select books.id, books.title from books where books.id in (1, 2)', self::LABELS]],
         ];
     }
 
@@ -91,7 +87,7 @@ class ColumnSelectionTest extends PackageTestCase
         $expected = DB::connection()->getDriverName() === 'mysql'
             ? 'select `books`.`title`, `books`.`id` from `books` order by `books`.`id` desc limit 50 offset 0'
             : 'select "books"."title", "books"."id" from "books" order by "books"."id" desc limit 50 offset 0';
-        $this->assertSame($expected, DB::getQueryLog()[1]['query']);
+        $this->assertSame($expected, DB::getQueryLog()[0]['query']);
     }
 
     #[Test]

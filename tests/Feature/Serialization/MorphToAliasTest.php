@@ -47,7 +47,7 @@ class MorphToAliasTest extends PackageTestCase
         $response->assertOk()
             ->assertJsonPath('data.*.target', $books)
             ->assertJsonPath('data.*.labelable', $books);
-        $this->assertCount(4, DB::getQueryLog());
+        $this->assertCount(3, DB::getQueryLog());
     }
 
     #[Test]
@@ -66,7 +66,7 @@ class MorphToAliasTest extends PackageTestCase
             null,
             null,
         ]);
-        $this->assertCount(4, DB::getQueryLog());
+        $this->assertCount(3, DB::getQueryLog());
     }
 
     #[Test]

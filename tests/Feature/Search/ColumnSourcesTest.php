@@ -42,7 +42,7 @@ class ColumnSourcesTest extends PackageTestCase
         $response = $this->postJson('/signed-authors/search', ['search' => ['selects' => [['field' => 'signature']]]]);
 
         $response->assertOk()->assertJsonPath('data', [['signature' => 'Grace Hopper', 'token_hint' => 'grace'], ['signature' => 'Ada Lovelace', 'token_hint' => 'ada']]);
-        $this->assertSame(self::SIGNED, $this->loggedQuery(1));
+        $this->assertSame(self::SIGNED, $this->loggedQuery(0));
     }
 
     #[Test]
@@ -51,7 +51,7 @@ class ColumnSourcesTest extends PackageTestCase
         $response = $this->postJson('/signed-authors/search', ['search' => ['selects' => [['field' => 'id']]]]);
 
         $response->assertOk()->assertJsonPath('data', [['id' => 2, 'token_hint' => 'grace'], ['id' => 1, 'token_hint' => 'ada']]);
-        $this->assertSame('select authors.id, authors.api_token from authors where authors.deleted_at is null order by authors.id desc limit 50 offset 0', $this->loggedQuery(1));
+        $this->assertSame('select authors.id, authors.api_token from authors where authors.deleted_at is null order by authors.id desc limit 50 offset 0', $this->loggedQuery(0));
     }
 
     #[Test]
@@ -62,7 +62,7 @@ class ColumnSourcesTest extends PackageTestCase
         $response = $this->postJson('/signed-authors/search', ['search' => ['selects' => [['field' => 'signature']]]]);
 
         $response->assertOk()->assertJsonPath('data', [['signature' => 'Grace Hopper', 'token_hint' => 'grace'], ['signature' => 'Ada Lovelace', 'token_hint' => 'ada']]);
-        $this->assertSame('select * from authors where authors.deleted_at is null order by authors.id desc limit 50 offset 0', $this->loggedQuery(1));
+        $this->assertSame('select * from authors where authors.deleted_at is null order by authors.id desc limit 50 offset 0', $this->loggedQuery(0));
     }
 
     #[Test]
@@ -71,7 +71,7 @@ class ColumnSourcesTest extends PackageTestCase
         $response = $this->postJson('/api/authors/search', ['search' => ['selects' => [['field' => 'id']], 'aggregates' => [['relation' => 'posts', 'type' => 'count']]]]);
 
         $response->assertOk()->assertJsonPath('data', [['id' => 2, 'posts_count' => 1], ['id' => 1, 'posts_count' => 1]]);
-        $this->assertSame('select authors.id, (select count(*) from posts where authors.id = posts.author_id) as @aggregate_0 from authors where authors.deleted_at is null order by authors.id desc limit 50 offset 0', $this->loggedQuery(1));
+        $this->assertSame('select authors.id, (select count(*) from posts where authors.id = posts.author_id) as @aggregate_0 from authors where authors.deleted_at is null order by authors.id desc limit 50 offset 0', $this->loggedQuery(0));
     }
 
     #[Test]
@@ -80,7 +80,7 @@ class ColumnSourcesTest extends PackageTestCase
         $response = $this->postJson('/api/posts/search', ['search' => ['selects' => [['field' => 'id']], 'sorts' => [['field' => 'author.last_name']]]]);
 
         $response->assertOk()->assertJsonPath('data', [['id' => 2], ['id' => 1]]);
-        $this->assertSame('select posts.id from posts order by (select max(authors.last_name) from authors where posts.author_id = authors.id and authors.deleted_at is null) asc limit 50 offset 0', $this->loggedQuery(1));
+        $this->assertSame('select posts.id from posts order by (select max(authors.last_name) from authors where posts.author_id = authors.id and authors.deleted_at is null) asc limit 50 offset 0', $this->loggedQuery(0));
     }
 
     #[Test]
@@ -89,7 +89,7 @@ class ColumnSourcesTest extends PackageTestCase
         $response = $this->postJson('/measured-posts/search', ['search' => ['selects' => [['field' => 'title_length']], 'instructions' => [['name' => 'title-lengths']]]]);
 
         $response->assertOk()->assertJsonPath('data', [['title_length' => 5], ['title_length' => 13]]);
-        $this->assertSame('select length(posts.title) as title_length, posts.id from posts order by posts.id desc limit 50 offset 0', $this->loggedQuery(1));
+        $this->assertSame('select length(posts.title) as title_length, posts.id from posts order by posts.id desc limit 50 offset 0', $this->loggedQuery(0));
     }
 
     #[Test]

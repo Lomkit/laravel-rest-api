@@ -110,7 +110,7 @@ class MorphToIncludeTest extends PackageTestCase
             ['@type' => Book::class, 'id' => 1, 'title' => 'Dune', 'loan' => ['id' => 1, 'borrower' => 'Ada', 'book_id' => 1]],
             ['@type' => Book::class, 'id' => 2, 'title' => 'Emma', 'loan' => ['id' => 2, 'borrower' => 'Bob', 'book_id' => 2]],
         ]);
-        $this->assertCount(4, DB::getQueryLog());
+        $this->assertCount(3, DB::getQueryLog());
     }
 
     /** @return array<string, array{array<string, mixed>}> */
@@ -131,7 +131,7 @@ class MorphToIncludeTest extends PackageTestCase
         $response = $this->postJson('/api/labels/search', ['search' => ['includes' => [$include], 'sorts' => [['field' => 'id']]]]);
 
         $response->assertOk()->assertJsonPath('data.*.labelable.id', [1, 2]);
-        $query = DB::getQueryLog()[2]['query'];
+        $query = DB::getQueryLog()[1]['query'];
         $this->assertStringContainsString('books', $query);
         $this->assertStringNotContainsString('order by', $query);
         $this->assertStringNotContainsString('limit', $query);

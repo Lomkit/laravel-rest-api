@@ -1,7 +1,7 @@
 {
     "queries": {
-        "mysql": 2,
-        "pgsql": 2
+        "mysql": 1,
+        "pgsql": 1
     },
     "shape": {
         "current_page": null,

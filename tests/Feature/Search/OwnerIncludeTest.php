@@ -42,7 +42,7 @@ class OwnerIncludeTest extends PackageTestCase
         $response = $this->postJson($uri, ['search' => ['selects' => [['field' => 'id']], 'includes' => [['relation' => $relation]]]]);
 
         $response->assertOk()->assertJsonPath("data.*.{$relation}.id", range(12, 1));
-        $query = DB::getQueryLog()[2]['query'];
+        $query = DB::getQueryLog()[1]['query'];
         $this->assertStringContainsString('books', $query);
         $this->assertStringNotContainsString('order by', $query);
         $this->assertStringNotContainsString('limit', $query);
@@ -66,7 +66,7 @@ class OwnerIncludeTest extends PackageTestCase
         $response = $this->postJson($uri, ['search' => ['selects' => [['field' => 'id']], 'includes' => [['relation' => $relation]]]]);
 
         $response->assertOk()->assertJsonPath("data.*.{$owner}.id", range(12, 1));
-        $query = DB::getQueryLog()[2]['query'];
+        $query = DB::getQueryLog()[1]['query'];
         $this->assertStringContainsString('books', $query);
         $this->assertStringNotContainsString('order by', $query);
         $this->assertStringNotContainsString('limit', $query);

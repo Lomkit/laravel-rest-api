@@ -33,7 +33,7 @@ class IncludeAliasCopiesTest extends PackageTestCase
         $this->assertAuthors([
             ['relation' => 'posts', 'alias' => 'popular', 'filters' => [['field' => 'views', 'operator' => '>', 'value' => 10]], 'limit' => 10, 'selects' => [['field' => 'id']]],
             ['relation' => 'posts', 'alias' => 'drafted', 'filters' => [['field' => 'status', 'value' => 'draft']], 'selects' => [['field' => 'id']]],
-        ], '[{"id":1,"popular":[{"id":1}],"drafted":[{"id":2}]},{"id":2,"popular":[],"drafted":[]}]', 4);
+        ], '[{"id":1,"popular":[{"id":1}],"drafted":[{"id":2}]},{"id":2,"popular":[],"drafted":[]}]', 3);
     }
 
     #[Test]
@@ -42,7 +42,7 @@ class IncludeAliasCopiesTest extends PackageTestCase
         $this->assertAuthors([
             ['relation' => 'posts', 'selects' => [['field' => 'id']]],
             ['relation' => 'posts', 'alias' => 'drafted', 'filters' => [['field' => 'status', 'value' => 'draft']], 'selects' => [['field' => 'id']]],
-        ], '[{"id":1,"posts":[{"id":2},{"id":1}],"drafted":[{"id":2}]},{"id":2,"posts":[],"drafted":[]}]', 4);
+        ], '[{"id":1,"posts":[{"id":2},{"id":1}],"drafted":[{"id":2}]},{"id":2,"posts":[],"drafted":[]}]', 3);
     }
 
     #[Test]
@@ -50,7 +50,7 @@ class IncludeAliasCopiesTest extends PackageTestCase
     {
         $this->assertAuthors([
             ['relation' => 'tags', 'alias' => 'topics', 'selects' => [['field' => 'name']]],
-        ], '[{"id":1,"topics":[{"name":"Mathematics","pivot":[]}]},{"id":2,"topics":[]}]', 3);
+        ], '[{"id":1,"topics":[{"name":"Mathematics","pivot":[]}]},{"id":2,"topics":[]}]', 2);
     }
 
     #[Test]
