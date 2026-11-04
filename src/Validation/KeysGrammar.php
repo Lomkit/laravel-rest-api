@@ -18,11 +18,11 @@ final readonly class KeysGrammar
     ) {}
 
     /** @param Closure(): Builder<Model> $query */
-    public static function of(Resource $resource, RestRequest $request, Closure $query, int $max): self
+    public static function of(Resource $resource, RestRequest $request, Closure $query, int $max, KeyRead $read = KeyRead::Keys): self
     {
         $id = self::idOf($resource, $request);
 
-        return new self($id, new KeyLookup($query, $id), $max);
+        return new self($id, new KeyLookup($query, $id, $read), $max);
     }
 
     public function parse(Cursor $resources): KeyList
@@ -57,7 +57,7 @@ final readonly class KeysGrammar
             }
         }
 
-        return new KeyList(array_values(array_map(fn (array $group): int|string => $group[0][1], $groups)), $rules, $this->id);
+        return new KeyList(array_values(array_map(fn (array $group): int|string => $group[0][1], $groups)), $rules, $this->id, $this->lookup);
     }
 
     public static function idOf(Resource $resource, RestRequest $request): ID

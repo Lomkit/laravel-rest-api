@@ -48,6 +48,6 @@ class HookResourceTest extends PackageTestCase
 
         $this->json($method, $uri, ['resources' => [1]])->assertOk();
 
-        $this->assertSame([RecordingDocumentResource::class, RecordingDocumentResource::class], RecordingDocumentResource::$hooked);
+        $this->assertSame([RecordingDocumentResource::class], RecordingDocumentResource::$hooked);
     }
 }

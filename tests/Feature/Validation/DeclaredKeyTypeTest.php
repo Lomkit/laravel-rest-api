@@ -48,8 +48,8 @@ class DeclaredKeyTypeTest extends PackageTestCase
         $response = $this->deleteJson('/untyped-drafts', ['resources' => [self::NAMED]]);
 
         $response->assertOk()->assertExactJson(['data' => [['id' => self::NAMED, 'title' => 'Spring plan']], 'meta' => []]);
-        $this->assertCount(1, $this->keyQueries('drafts'));
-        $this->assertSame([[self::NAMED], [self::NAMED]], array_column($this->readsOf('drafts'), 1));
+        $this->assertSame([], $this->keyQueries('drafts'));
+        $this->assertSame([[self::NAMED]], array_column($this->readsOf('drafts'), 1));
         $this->assertSame(
             ['019b0000-0000-4000-8000-000000000001', 'a19b0000-0000-4000-8000-000000000002'],
             Draft::query()

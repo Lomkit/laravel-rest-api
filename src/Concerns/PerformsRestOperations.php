@@ -105,9 +105,7 @@ trait PerformsRestOperations
 
         $this->beforeDestroy($request);
 
-        $models = $request->payload()
-            ->constrain($request->keysQuery($resource))
-            ->get();
+        $models = $request->payload()->rows();
 
         foreach ($models as $model) {
             $resource->authorizeTo('delete', $model);
@@ -134,9 +132,7 @@ trait PerformsRestOperations
 
         $this->beforeRestore($request);
 
-        $models = $request->payload()
-            ->constrain($request->keysQuery($resource))
-            ->get();
+        $models = $request->payload()->rows();
 
         foreach ($models as $model) {
             $resource->authorizeTo('restore', $model);
@@ -163,9 +159,7 @@ trait PerformsRestOperations
 
         $this->beforeForceDestroy($request);
 
-        $models = $request->payload()
-            ->constrain($request->keysQuery($resource))
-            ->get();
+        $models = $request->payload()->rows();
 
         foreach ($models as $model) {
             $resource->authorizeTo('forceDelete', $model);

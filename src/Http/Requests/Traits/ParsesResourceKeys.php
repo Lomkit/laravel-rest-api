@@ -8,6 +8,7 @@ use LogicException;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\KeyList;
+use Lomkit\Rest\Validation\KeyRead;
 use Lomkit\Rest\Validation\KeysGrammar;
 use Lomkit\Rest\Validation\Violations;
 
@@ -25,7 +26,7 @@ trait ParsesResourceKeys
     {
         $violations = new Violations;
 
-        $this->keyList = KeysGrammar::of($resource, $this, fn (): EloquentBuilder => $this->keysQuery($resource), $max)
+        $this->keyList = KeysGrammar::of($resource, $this, fn (): EloquentBuilder => $this->keysQuery($resource), $max, KeyRead::Rows)
             ->parse(Cursor::of($this->all(), $violations)->at('resources'));
         $this->keyViolations = $violations;
 
