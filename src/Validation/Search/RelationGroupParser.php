@@ -49,7 +49,7 @@ final readonly class RelationGroupParser
         $name = $entry->at('relation');
         $names = $context->vocabulary->of($resource, $context->grammar, 'relations', fn (): array => array_values(array_map(
             fn (Relation $relation): string => $relation->relation,
-            $resource->getRelations($resource->context()->request),
+            $resource->getRelations(),
         )));
 
         $context->rules->add($name->path, ['required', 'string', $names]);

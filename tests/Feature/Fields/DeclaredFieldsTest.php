@@ -30,10 +30,9 @@ class DeclaredFieldsTest extends PackageTestCase
     public function it_builds_the_field_set_once_per_request(): void
     {
         $resource = $this->context()->resource(ProductResource::class);
-        $request = $resource->context()->request;
 
-        $this->assertSame($resource->getFields($request), $resource->getFields($request));
-        $this->assertNotSame($resource->getFields($request), $this->context()->resource(ProductResource::class)->getFields($request));
+        $this->assertSame($resource->getFields(), $resource->getFields());
+        $this->assertNotSame($resource->getFields(), $this->context()->resource(ProductResource::class)->getFields());
     }
 
     #[Test]
@@ -50,7 +49,7 @@ class DeclaredFieldsTest extends PackageTestCase
             }
         };
 
-        $this->assertSame(PostStatus::class, $resource->getFields($resource->context()->request)->get('status')->enumClass());
+        $this->assertSame(PostStatus::class, $resource->getFields()->get('status')->enumClass());
     }
 
     #[Test]
@@ -67,7 +66,7 @@ class DeclaredFieldsTest extends PackageTestCase
             }
         };
 
-        $this->assertSame(['id', 'name'], $resource->getFields($resource->context()->request)->names());
+        $this->assertSame(['id', 'name'], $resource->getFields()->names());
     }
 
     #[Test]
@@ -88,7 +87,7 @@ class DeclaredFieldsTest extends PackageTestCase
             $resource::class."::fields() returned a string at index 1 ('name'). Return Field objects, for example Text::make('name').",
         ));
 
-        $resource->getFields($resource->context()->request);
+        $resource->getFields();
     }
 
     #[Test]
@@ -107,7 +106,7 @@ class DeclaredFieldsTest extends PackageTestCase
 
         $this->expectExceptionObject(new InvalidFieldException($resource::class.'::fields() declares the field [name] twice.'));
 
-        $resource->getFields($resource->context()->request);
+        $resource->getFields();
     }
 
     private function context(): RestContext

@@ -36,7 +36,7 @@ final readonly class ResolvedText
 
         $query = TextQuery::fromSearch($request->input('search.text'));
 
-        return self::resolve($resource, $request, $strategy, $query?->hasTerms() ? $query : null);
+        return self::resolve($resource, $strategy, $query?->hasTerms() ? $query : null);
     }
 
     public function usesEngine(): bool
@@ -107,9 +107,9 @@ final readonly class ResolvedText
         return $this->strategy->run($query, $this->target);
     }
 
-    private static function resolve(Resource $resource, RestRequest $request, TextSearch $strategy, ?TextQuery $query): self
+    private static function resolve(Resource $resource, TextSearch $strategy, ?TextQuery $query): self
     {
-        $target = TextTarget::of($resource, $request);
+        $target = TextTarget::of($resource);
 
         return match (true) {
             $strategy instanceof QueryTextSearch => new self(TextBackend::Query, $query, $target, $strategy->capabilities($target), strategy: $strategy),

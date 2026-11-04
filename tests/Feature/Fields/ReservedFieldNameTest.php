@@ -52,6 +52,6 @@ class ReservedFieldNameTest extends PackageTestCase
     {
         $context = new RestContext(RestRequest::create('/api/posts/search', 'POST'), $this->app);
 
-        return $context->resource(GatesFieldResource::class)->getFields($context->request);
+        return $context->resource(GatesFieldResource::class)->getFields();
     }
 }

@@ -26,7 +26,7 @@ enum ColumnSelection
         }
 
         $model = $resource::newModel();
-        $fields = $resource->getFields($resource->context()->request);
+        $fields = $resource->getFields();
         $columns = [];
 
         foreach ($selects ?? $fields->selectable()->names() as $name) {

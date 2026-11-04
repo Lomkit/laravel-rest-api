@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Support\Facades\Gate;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\HasManyThroughRelationFactory;
@@ -54,7 +53,7 @@ class SearchIncludingThroughRelationshipsOperationsTest extends TestCase
             new ModelResource,
             [
                 [
-                    'has_one_through_relation' => $matchingModel->hasOneThroughRelation->only((new HasOneThroughResource)->getFields(app()->make(RestRequest::class))->names()),
+                    'has_one_through_relation' => $matchingModel->hasOneThroughRelation->only((new HasOneThroughResource)->getFields()->names()),
                 ],
                 [
                     'has_one_through_relation' => null,
@@ -99,7 +98,7 @@ class SearchIncludingThroughRelationshipsOperationsTest extends TestCase
                 [
                     'has_many_through_relation' => $matchingModel->hasManyThroughRelation->map(function ($relation) {
                         return $relation->only(
-                            (new HasManyThroughResource)->getFields(app()->make(RestRequest::class))->names()
+                            (new HasManyThroughResource)->getFields()->names()
                         );
                     })->toArray(),
                 ],

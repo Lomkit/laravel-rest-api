@@ -84,7 +84,7 @@ class ResourceSerializationTest extends PackageTestCase
     public function it_rebuilds_the_relations_after_a_serialization_round_trip(): void
     {
         $resource = (new RestContext(RestRequest::create('/constrained-posts/search', 'POST'), $this->app))->resource(ConstrainedPostResource::class);
-        $resource->getRelations($resource->context()->request);
+        $resource->getRelations();
 
         $serialized = serialize($resource);
         $restored = unserialize($serialized);
@@ -106,19 +106,19 @@ class ResourceSerializationTest extends PackageTestCase
     public function it_rebuilds_the_fields_after_a_serialization_round_trip(): void
     {
         $resource = $this->documentResource();
-        $fields = $resource->getFields($resource->context()->request);
+        $fields = $resource->getFields();
 
         $restored = unserialize(serialize($resource));
 
-        $this->assertNotSame($fields, $restored->getFields($restored->context()->request));
-        $this->assertSame(['id', 'title', 'archived'], $restored->getFields($restored->context()->request)->names());
+        $this->assertNotSame($fields, $restored->getFields());
+        $this->assertSame(['id', 'title', 'archived'], $restored->getFields()->names());
     }
 
     #[Test]
     public function it_rebuilds_the_scopes_after_a_serialization_round_trip(): void
     {
         $resource = (new RestContext(RestRequest::create('/api/posts/search', 'POST'), $this->app))->resource(PostResource::class);
-        $resource->getScopes($resource->context()->request);
+        $resource->getScopes();
 
         $serialized = serialize($resource);
         $restored = unserialize($serialized);
@@ -128,7 +128,7 @@ class ResourceSerializationTest extends PackageTestCase
                 ."s:34:\"\0Lomkit\Rest\Http\Resource\0context\";O:28:\"Lomkit\Rest\Http\RestContext\":0:{}}",
             $serialized,
         );
-        $this->assertSame(['publishedSince', 'popular', 'viewedBetween', 'featured', 'reaching'], array_map(fn (Scope $scope): string => $scope->name, $restored->getScopes($restored->context()->request)));
+        $this->assertSame(['publishedSince', 'popular', 'viewedBetween', 'featured', 'reaching'], array_map(fn (Scope $scope): string => $scope->name, $restored->getScopes()));
     }
 
     #[Test]
@@ -136,7 +136,7 @@ class ResourceSerializationTest extends PackageTestCase
     {
         $resource = $this->documentResource();
         $resource->defaultLimit = 25;
-        $resource->getFields($resource->context()->request);
+        $resource->getFields();
 
         $this->assertSame(25, unserialize(serialize($resource))->defaultLimit);
     }
@@ -147,13 +147,13 @@ class ResourceSerializationTest extends PackageTestCase
         $request = RestRequest::create('/api/staff-products/search', 'POST');
         $request->setUserResolver(fn (): User => User::factory()->staff()->make());
         $resource = (new RestContext($request, $this->app))->resource(StaffProductResource::class);
-        $resource->getFields($request);
+        $resource->getFields();
         $serialized = serialize($resource);
 
         $this->app->instance('request', Request::create('/'));
         $restored = unserialize($serialized);
 
-        $this->assertSame(['id', 'name'], $restored->getFields($restored->context()->request)->names());
+        $this->assertSame(['id', 'name'], $restored->getFields()->names());
     }
 
     private function documentResource(): Resource

@@ -8,7 +8,6 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Requests\MutateRequest;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Mutations\MutationNode;
@@ -27,7 +26,6 @@ final readonly class MutationParser
         private ParsedRules $rules,
         private PayloadReader $reader,
         private Limits $limits,
-        private RestRequest $request,
         private MutationKeys $keys,
         private EntryRules $entryRules,
         private RelationMutationParser $relations,
@@ -43,8 +41,7 @@ final readonly class MutationParser
             $rules,
             $reader,
             $limits,
-            $request,
-            new MutationKeys($rules, $reader, $limits->sizes->values, $request, fn (Resource $resource): Builder => $request->keysQuery($resource)),
+            new MutationKeys($rules, $reader, $limits->sizes->values, fn (Resource $resource): Builder => $request->keysQuery($resource)),
             $entryRules,
             new RelationMutationParser($rules, $reader, $limits, $request, $entryRules),
         );
@@ -141,7 +138,7 @@ final readonly class MutationParser
         $this->rules->add($attributes->path, ['array', ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => $candidate->writeOperation() === null)]);
 
         if ($write !== null) {
-            $this->entryRules->writable($attributes, $resource->getFields($this->request), $write);
+            $this->entryRules->writable($attributes, $resource->getFields(), $write);
         }
 
         $this->rules->add($entry->at('key')->path, [

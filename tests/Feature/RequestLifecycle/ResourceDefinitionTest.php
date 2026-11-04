@@ -53,18 +53,6 @@ class ResourceDefinitionTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_evaluates_the_declarations_with_the_context_request_whatever_request_the_getters_receive(): void
-    {
-        $resource = $this->contextFor(User::factory()->staff()->make())->resource(CountedPostResource::class);
-        $guestRequest = RestRequest::create('/counted-posts/search', 'POST');
-
-        $this->readEveryDeclaration($resource, 2, $guestRequest);
-
-        $this->assertSame(['id', 'title', 'views'], $resource->getFields($guestRequest)->names());
-        $this->assertSame(array_fill_keys(self::DECLARATIONS, ['Grace']), array_map($this->evaluated->usersOf(...), array_combine(self::DECLARATIONS, self::DECLARATIONS)));
-    }
-
-    #[Test]
     public function it_evaluates_each_declaration_once_in_a_request(): void
     {
         $author = Author::factory()->create();
@@ -150,14 +138,13 @@ class ResourceDefinitionTest extends PackageTestCase
 
         $this->app->instance('request', Request::create('/'));
         $restored = unserialize($serialized);
-        $request = $restored->context()->request;
-        $declared = [...$restored->getActions($request), ...$restored->getInstructions($request)];
+        $declared = [...$restored->getActions(), ...$restored->getInstructions()];
         $bound = array_map(fn (Action|Instruction $declaration): Resource => $declaration->resource, $declared);
         $this->readEveryDeclaration($restored, 2);
 
         $this->assertSame(array_fill_keys(self::DECLARATIONS, 2), $this->evaluated->counts());
         $this->assertSame(['Grace', null], $this->evaluated->usersOf('fields'));
-        $this->assertSame(['id', 'title'], $restored->getFields($request)->names());
+        $this->assertSame(['id', 'title'], $restored->getFields()->names());
         $this->assertSame(
             ['publish-posts', 'queued-publish-posts', 'batched-publish-posts', 'change-status', 'highlight-posts', 'in-status'],
             array_map(fn (Action|Instruction $declaration): string => $declaration->uriKey(), $declared),
@@ -167,22 +154,20 @@ class ResourceDefinitionTest extends PackageTestCase
         }
     }
 
-    private function readEveryDeclaration(Resource $resource, int $times, ?RestRequest $request = null): void
+    private function readEveryDeclaration(Resource $resource, int $times): void
     {
-        $request ??= $resource->context()->request;
-
         for ($read = 0; $read < $times; $read++) {
-            $resource->getFields($request);
-            $resource->getScopes($request);
-            $resource->getRelations($request);
-            $resource->getInstructions($request);
-            $resource->getActions($request);
-            $resource->getLimits($request);
+            $resource->getFields();
+            $resource->getScopes();
+            $resource->getRelations();
+            $resource->getInstructions();
+            $resource->getActions();
+            $resource->getLimits();
             $resource->relation('author');
-            $resource->scope($request, 'popular');
+            $resource->scope('popular');
             FieldPath::resolve($resource, 'title');
-            $resource->actionExists($request, 'publish-posts');
-            $resource->instruction($request, 'highlight-posts');
+            $resource->actionExists('publish-posts');
+            $resource->instruction('highlight-posts');
             $resource->jsonSerialize();
         }
     }

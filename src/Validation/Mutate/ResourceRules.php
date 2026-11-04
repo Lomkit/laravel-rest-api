@@ -24,7 +24,7 @@ final class ResourceRules
     public function for(Resource $resource, WriteOperation $operation): WriteRules
     {
         return $this->rules[$resource::class.':'.$operation->value] ??= WriteRules::of(
-            $resource->getFields($this->request),
+            $resource->getFields(),
             $operation,
             $operation === WriteOperation::Create ? $resource->createRules($this->request) : $resource->updateRules($this->request),
             $this->shared($resource),

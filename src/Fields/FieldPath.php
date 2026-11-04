@@ -87,7 +87,7 @@ final readonly class FieldPath
     private static function field(Resource $resource, array $relations, string $name): ?self
     {
         $resource = $relations === [] ? $resource : $relations[array_key_last($relations)]->resource();
-        $field = $resource->getFields($resource->context()->request)->find($name);
+        $field = $resource->getFields()->find($name);
 
         if ($field === null || ! $field->isFilterable()) {
             return null;

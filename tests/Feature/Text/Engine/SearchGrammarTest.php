@@ -133,7 +133,7 @@ class SearchGrammarTest extends EngineTestCase
     private function instructionNames(ValidationContext $context): array
     {
         $resource = $context->resource;
-        $declared = $resource->getInstructions($resource->context()->request);
+        $declared = $resource->getInstructions();
 
         return array_values(array_map(fn (Instruction $instruction): string => $instruction->uriKey(), $context->grammar->instructions($declared)));
     }

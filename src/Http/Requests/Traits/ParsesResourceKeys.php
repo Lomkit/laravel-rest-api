@@ -26,7 +26,7 @@ trait ParsesResourceKeys
     {
         $violations = new Violations;
 
-        $this->keyList = KeysGrammar::of($resource, $this, fn (): EloquentBuilder => $this->keysQuery($resource), $max, KeyRead::Rows)
+        $this->keyList = KeysGrammar::of($resource, fn (): EloquentBuilder => $this->keysQuery($resource), $max, KeyRead::Rows)
             ->parse(Cursor::of($this->all(), $violations)->at('resources'));
         $this->keyViolations = $violations;
 

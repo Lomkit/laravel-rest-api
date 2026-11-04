@@ -59,7 +59,7 @@ final readonly class OperationParser
     private function keys(Cursor $resources, int $max, ValidationContext $context): KeyList
     {
         $rules = $context->rules;
-        $keys = KeysGrammar::of($context->resource, $context->resource->context()->request, $this->keysQuery, $max)->parse($resources);
+        $keys = KeysGrammar::of($context->resource, $this->keysQuery, $max)->parse($resources);
 
         if ($rules->violations()->has($resources->path)) {
             $context->reader->close($resources);

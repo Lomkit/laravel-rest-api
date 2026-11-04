@@ -46,7 +46,7 @@ final readonly class SortPaths implements AllowedValues
 
         $related = $relation->resource();
         $declared = $related
-            ->getFields($related->context()->request)
+            ->getFields()
             ->find($field);
 
         return $declared !== null && AggregateFunction::Max->accepts($declared);

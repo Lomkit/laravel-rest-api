@@ -24,7 +24,7 @@ final readonly class WrittenRecords
     /** @param list<OperationEntry> $operations */
     public static function read(Resource $resource, SearchNode $block, array $operations): self
     {
-        $keys = RecordKeys::of(KeysGrammar::idOf($resource, $resource->context()->request), $operations);
+        $keys = RecordKeys::of(KeysGrammar::idOf($resource), $operations);
         $plan = (new SearchPlanner(new KeyedRows($keys), ColumnSelection::of($resource)))->plan($resource, $block, LimitPolicy::none());
         $rows = QueryBuilderFactory::make($resource)
             ->search($plan)

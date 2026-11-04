@@ -117,7 +117,7 @@ final readonly class SearchBodyParser
         $context = $this->context;
         $resource = $context->resource;
         $fields = $context->vocabulary->of($resource, $context->grammar, 'selects', fn (): array => $resource
-            ->getFields($resource->context()->request)
+            ->getFields()
             ->selectable()
             ->names());
         $selects = [];

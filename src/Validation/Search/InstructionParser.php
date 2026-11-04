@@ -24,7 +24,7 @@ final readonly class InstructionParser
         }
 
         $resource = $context->resource;
-        $declared = $context->grammar->instructions($resource->getInstructions($resource->context()->request));
+        $declared = $context->grammar->instructions($resource->getInstructions());
         $names = $context->vocabulary->of($resource, $context->grammar, 'instructions', fn (): array => array_values(array_map(
             fn (Instruction $instruction): string => $instruction->uriKey(),
             $declared,

@@ -23,7 +23,7 @@ final readonly class RowFields
 
     public static function of(QueryPlan $plan): self
     {
-        $fields = $plan->resource->getFields($plan->resource->context()->request);
+        $fields = $plan->resource->getFields();
         $names = array_values(array_unique($plan->selects ?? $fields->selectable()->names()));
         $named = array_map($fields->get(...), $names);
         $resolved = array_filter($named, static fn (Field $field): bool => $field->resolvesThroughCallback());
