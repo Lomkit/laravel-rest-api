@@ -596,7 +596,7 @@ Pages and totals:
 
 Engines:
 
-- `collection` and `database`: every operator and sort, exact totals. On PostgreSQL, Scout's `database` engine compares every key of `toSearchableArray()` with `ilike`, so return text columns only there.
+- `collection` and `database`: every operator and sort, exact totals. On PostgreSQL, Scout's `database` engine compares every key of `toSearchableArray()` with `ilike`, so return text columns only there. Scout's `database` engine selects only the `getScoutKeyName()` column of the rows that match, without the default eager loads of the model, then the package loads the rows of the page by those keys, as above: `getScoutKey()` returns the value of that column, as Scout's default does.
 - `meilisearch`: exact totals, up to the `pagination.maxTotalHits` setting of the index (1000 by default). The index declares the `filterable()` and perimeter attributes in `filterableAttributes` and the `sortable()` attributes in `sortableAttributes`, for example through `scout.meilisearch.index-settings` and `php artisan scout:sync-index-settings`, which adds `__soft_deleted` when `scout.soft_delete` is `true`.
 - `typesense`: exact totals. The model needs `query_by` in `scout.typesense.model-settings.<model class>.search-parameters`, or in `typesenseSearchParameters()`, otherwise the declaration throws. A page holds at most 250 rows: a larger `search.limit` gives a 422, so keep the `limits()` of the resource at 250 or below. A search takes at most 3 sorts.
 - `algolia`: exact totals, no sorts: Scout's Algolia engine ignores them, so `sortable()` throws, and `@relevance` alone is accepted.

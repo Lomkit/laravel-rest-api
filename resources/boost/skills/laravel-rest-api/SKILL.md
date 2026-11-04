@@ -490,7 +490,7 @@ public function text(RestRequest $request): ?TextSearch
 - The engine receives the letters and digits of the text, separated by spaces: the engine query syntax has no effect.
 - The page is loaded with `searchQuery()`, the model's global scopes and its soft deletes (`search.trashed`): a row the index returns but this query drops is left out of `data` while `total` still counts it. Put the `searchQuery()` constraints in the perimeter too. Keys follow `getScoutKeyType()` (`int`/`integer` or string): a model whose scout key is a string column declares it. The model's `search()` override, `getScoutModelsByIds()` and `queryScoutModelsByIds()` are not used.
 - Engines: `collection`, `database`, `meilisearch`, `typesense`, `algolia`, `turbopuffer`, `null`, and subclasses of them; another engine class is refused.
-  - `collection`, `database`: every operator and sort, exact totals.
+  - `collection`, `database`: every operator and sort, exact totals; the `database` engine reads only the scout key column of the rows that match, without the default eager loads of the model.
   - `meilisearch`: exact totals up to the index `pagination.maxTotalHits`; declare `filterableAttributes` (with the perimeter attributes) and `sortableAttributes` in the index settings.
   - `typesense`: `query_by` required in `scout.typesense.model-settings.<class>.search-parameters` (or `typesenseSearchParameters()`); pages of at most 250; at most 3 sorts.
   - `algolia`: no sorts (`sortable()` throws); `@relevance` alone is accepted.

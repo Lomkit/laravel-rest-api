@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Text\Engine\Profiles;
 
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\DatabaseEngine;
@@ -62,6 +63,8 @@ final readonly class DatabaseProfile implements EngineProfile
     #[\Override]
     public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage
     {
+        $builder->query(fn (EloquentBuilder $query): EloquentBuilder => $query->select($model->keyColumn())->setEagerLoads([]));
+
         $paginator = $this->engine->paginate($builder, $perPage, $page);
         $keys = array_map(fn (mixed $row): int|string => $row instanceof Model ? $model->keyOf($row) : $model->key($row), $paginator->items());
 
