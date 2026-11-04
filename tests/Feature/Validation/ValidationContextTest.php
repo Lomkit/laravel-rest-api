@@ -47,16 +47,13 @@ class ValidationContextTest extends PackageTestCase
     {
         $context = $this->root();
         $categories = $context->resource->context()->resource(CategoryResource::class);
-        $engine = (new EngineGrammar([], []))->searchGrammar(new TextCapabilities([], [TextMode::Words], true, false));
 
         $deeper = $context->deeper()->deeper();
         $other = $deeper->for($categories);
-        $engineMode = $deeper->inMode($engine);
         $included = $deeper->included(3);
 
         $this->assertSame([2, 0], [$deeper->filterDepth, $deeper->includeDepth]);
         $this->assertSame([$categories, $deeper->grammar, 2], [$other->resource, $other->grammar, $other->filterDepth]);
-        $this->assertSame([$deeper->resource, $engine, 2], [$engineMode->resource, $engineMode->grammar, $engineMode->filterDepth]);
         $this->assertSame([$deeper->grammar, 2, 3], [$included->grammar, $included->filterDepth, $included->includeDepth]);
         $this->assertSame([$context->rules, $context->reader, $context->vocabulary], [$included->rules, $included->reader, $included->vocabulary]);
     }
@@ -68,8 +65,7 @@ class ValidationContextTest extends PackageTestCase
         $categories = $context->resource->context()->resource(CategoryResource::class);
         $engine = (new EngineGrammar([], []))->searchGrammar(new TextCapabilities([], [TextMode::Words], true, false));
 
-        $related = $context
-            ->inMode($engine)
+        $related = (new ValidationContext($context->resource, $engine, $context->limits, $context->rules, $context->reader, $context->vocabulary))
             ->included(1)
             ->deeper()
             ->related($categories);

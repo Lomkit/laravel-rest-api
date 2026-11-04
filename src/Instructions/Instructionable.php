@@ -18,11 +18,6 @@ trait Instructionable
         return $this->context()->definition($this)->instructions();
     }
 
-    public function instructionExists(RestRequest $request, string $instructionKey): bool
-    {
-        return array_any($this->getInstructions($request), fn (Instruction $instruction): bool => $instruction->uriKey() === $instructionKey);
-    }
-
     public function instruction(RestRequest $request, string $instructionKey): ?Instruction
     {
         return array_find($this->getInstructions($request), fn (Instruction $instruction): bool => $instruction->uriKey() === $instructionKey)?->resource($this);

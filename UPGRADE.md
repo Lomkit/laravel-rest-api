@@ -366,6 +366,7 @@ Actions, instructions and relations:
 Other resource methods:
 
 - `newModel(): Model`, `relation(): ?Relation`, `getRelations(): array` and `instruction(): ?Instruction`.
+- `instructionExists()` is removed. `instruction($request, $key) !== null` gives the same answer.
 - `performDelete()`, `performRestore()` and `performForceDelete()` return `void`.
 - `paginate(Builder $query, int $perPage, int $page)` receives the query of the search, the page size and the page number, and returns `Illuminate\Contracts\Pagination\LengthAwarePaginator`. Read the size and the page from these parameters, not from the request: the package passes `search.limit`, or `$defaultLimit` when it is not sent, and `search.page`, or 1. The default `paginate()` runs the page query first and the count query only when the page is full, or empty after the first page: otherwise `total` is the number of rows before the page plus the rows of the page, and no count query runs. Before, the count ran first, on every search. An override that calls `$query->paginate()` keeps Laravel's count, which runs first; `(new Lomkit\Rest\Query\PageQuery($query))->paginate($perPage, $page)` gives the default behaviour.
 
