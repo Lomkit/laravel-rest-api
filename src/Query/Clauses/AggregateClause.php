@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Query\Clauses;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Query\AggregateQuery;
 use Lomkit\Rest\Query\RelationAggregate;
 use Lomkit\Rest\Search\AggregateKey;
 use Lomkit\Rest\Search\AggregateNode;
@@ -13,7 +14,7 @@ final readonly class AggregateClause implements Clause
     private const string LABEL = '@aggregate_';
 
     private function __construct(
-        private RelationAggregate $aggregate,
+        private AggregateQuery $aggregate,
         public AggregateKey $key,
         public string $label,
         private Clause $constraint,

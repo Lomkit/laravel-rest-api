@@ -78,7 +78,7 @@ final readonly class AggregateParser
             return null;
         }
 
-        $related = $relations === null ? null : $relations[0]->resource();
+        $related = $relations === null ? null : $relations[array_key_last($relations)]->resource();
 
         if ($related === null) {
             $rules->partial();
@@ -107,7 +107,7 @@ final readonly class AggregateParser
             return null;
         }
 
-        return new AggregateNode($relation->value, $related, $function, $field, $name, $key, $group);
+        return new AggregateNode($relation->value, $related, $function, $field, $name, $key, $group, array_slice($relations, 0, -1));
     }
 
     private function field(Cursor $entry, ?AggregateFunction $function, Resource $related, ValidationContext $context): ?Field
