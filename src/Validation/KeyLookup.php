@@ -24,6 +24,12 @@ final class KeyLookup
     /** @var list<Model> */
     private array $rows = [];
 
+    /** @var array<array-key, Model> */
+    private array $named = [];
+
+    /** @var Builder<Model>|null */
+    private ?Builder $base = null;
+
     /** @param Closure(): Builder<Model> $query */
     public function __construct(
         private readonly Closure $query,
@@ -67,6 +73,14 @@ final class KeyLookup
         return $this->rows;
     }
 
+    /** @return array<array-key, Model> */
+    public function found(): array
+    {
+        $this->rows();
+
+        return $this->named;
+    }
+
     private function register(int|string $key): void
     {
         if (! isset($this->expected[$key])) {
@@ -108,7 +122,7 @@ final class KeyLookup
     /** @param array<array-key, int|string> $round */
     private function check(array $round): void
     {
-        $base = ($this->query)();
+        $base = $this->base ??= ($this->query)();
 
         foreach (array_chunk($round, self::CHUNK) as $chunk) {
             $this->collect($round, $this->read->read($this->id->whereKeys(clone $base, $chunk)));
@@ -132,6 +146,7 @@ final class KeyLookup
 
             if ($row !== null) {
                 $this->rows[] = $row;
+                $this->named[$round[$normalized]] = $row;
             }
         }
     }

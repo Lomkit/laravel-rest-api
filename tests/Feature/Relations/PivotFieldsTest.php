@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Relations;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Contracts\PivotRelation;
@@ -17,6 +18,7 @@ use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Mutations\Mutator;
 use Lomkit\Rest\Mutations\OperationLog;
 use Lomkit\Rest\Mutations\RelationWrites;
+use Lomkit\Rest\Mutations\RowSet;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\MorphedByMany;
 use Lomkit\Rest\Relations\MorphToMany;
@@ -25,6 +27,7 @@ use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTagResource;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
+use Lomkit\Rest\Validation\KeysGrammar;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -74,7 +77,11 @@ class PivotFieldsTest extends WeightedPivotTestCase
 
         $node = new MutationNode(MutationOperation::from($operation), $this->related($relation)->getKey(), null, ['weight' => 3, 'added_by' => 'Grace', 'created_at' => '2026-01-01 09:00:00', 'colour' => 'red'], null, null, 1);
 
-        RelationWrites::of($this->parent($relation), $declared, [$node])->after($this->parent($relation), new Mutator($request), new OperationLog);
+        $related = $declared->resource();
+        $rows = new RowSet;
+        $rows->lookup($related, fn (): Builder => $related::newModel()->newQuery(), KeysGrammar::idOf($related))->expect($this->related($relation)->getKey());
+
+        RelationWrites::of($this->parent($relation), $declared, [$node])->after($this->parent($relation), new Mutator($request, $rows), new OperationLog);
 
         $this->assertSame([['position' => null, 'weight' => 3, 'added_by' => $addedBy, 'note' => null, 'created_at' => self::NOW]], $this->pivotRows($relation));
     }

@@ -13,7 +13,7 @@ final readonly class Mutator
 {
     public function __construct(
         private MutateRequest $request,
-        private RowLookup $rows = new RowLookup,
+        public RowSet $rows,
     ) {}
 
     /**

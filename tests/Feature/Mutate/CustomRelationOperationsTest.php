@@ -47,12 +47,10 @@ class CustomRelationOperationsTest extends WriteTraceTestCase
         ]], [
             ['operation' => 'update', 'key' => 102, 'relations' => ['tickets' => [['operation' => $operation, 'key' => [101]]]]],
         ], [
-            'sql select teams.id from teams where teams.id in (102)',
-            'sql select tickets.id from tickets where tickets.id in (101)',
-            'sql select * from teams where teams.id = ? limit 1',
+            'sql select * from teams where teams.id in (102)',
+            'sql select * from tickets where tickets.id in (101)',
             'policy update Team(Ops)',
             'saved Team(Ops)',
-            'sql select * from tickets where tickets.id = ? limit 1',
             'policy view Ticket(Printer jam)',
             'sql update tickets set team_id = ?, updated_at = ? where id = ?',
             'saved Ticket(Printer jam)',
@@ -72,11 +70,9 @@ class CustomRelationOperationsTest extends WriteTraceTestCase
         ]], [
             ['operation' => 'update', 'key' => 102, 'relations' => ['labelable' => ['operation' => $operation, 'type' => Shelf::class, 'key' => 101]]],
         ], [
-            'sql select labels.id from labels where labels.id in (102)',
-            'sql select shelves.id from shelves where shelves.id in (101)',
-            'sql select * from labels where labels.id = ? limit 1',
+            'sql select * from labels where labels.id in (102)',
+            'sql select * from shelves where shelves.id in (101)',
             'policy update Label(loose)',
-            'sql select * from shelves where shelves.id = ? limit 1',
             'policy view Shelf(Classics)',
             'saved Shelf(Classics)',
             'policy attachShelf Label(loose) Shelf(Classics)',

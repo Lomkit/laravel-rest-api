@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Mutations\RowSet;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\KeyLookup;
 use Lomkit\Rest\Validation\KeysGrammar;
@@ -19,15 +20,13 @@ final class MutationKeys
     /** @var array<string, ID> */
     private array $ids = [];
 
-    /** @var array<string, KeyLookup> */
-    private array $lookups = [];
-
     /** @param Closure(Resource): Builder<Model> $query */
     public function __construct(
         private readonly ParsedRules $rules,
         private readonly PayloadReader $reader,
         private readonly int $maxValues,
         private readonly Closure $query,
+        private readonly RowSet $rows,
     ) {}
 
     public function scalar(Cursor $key, Resource $resource): int|string|null
@@ -100,6 +99,6 @@ final class MutationKeys
 
     private function lookup(Resource $resource): KeyLookup
     {
-        return $this->lookups[$resource::class] ??= new KeyLookup(fn (): Builder => ($this->query)($resource), $this->id($resource));
+        return $this->rows->lookup($resource, fn (): Builder => ($this->query)($resource), $this->id($resource));
     }
 }

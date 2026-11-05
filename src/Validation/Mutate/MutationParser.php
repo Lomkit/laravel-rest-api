@@ -11,6 +11,7 @@ use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Mutations\MutationNode;
+use Lomkit\Rest\Mutations\RowSet;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\Limits;
@@ -31,7 +32,7 @@ final readonly class MutationParser
         private RelationMutationParser $relations,
     ) {}
 
-    public static function of(MutateRequest $request, ParsedRules $rules, NodeBudget $budget): self
+    public static function of(MutateRequest $request, ParsedRules $rules, NodeBudget $budget, RowSet $rows): self
     {
         $reader = new PayloadReader($rules, $budget);
         $limits = $request->context()->limits();
@@ -41,7 +42,7 @@ final readonly class MutationParser
             $rules,
             $reader,
             $limits,
-            new MutationKeys($rules, $reader, $limits->sizes->values, fn (Resource $resource): Builder => $request->keysQuery($resource)),
+            new MutationKeys($rules, $reader, $limits->sizes->values, fn (Resource $resource): Builder => $request->keysQuery($resource), $rows),
             $entryRules,
             new RelationMutationParser($rules, $reader, $limits, $entryRules),
         );

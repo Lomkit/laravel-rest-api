@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class PivotQueryCountTest extends WriteTraceTestCase
 {
-    private const string TICKET = 'select tickets.id from tickets where tickets.id in (101)';
+    private const string TICKET = 'select * from tickets where tickets.id in (101)';
 
     private const string RENAME = 'update tickets set title = ?, updated_at = ? where id = ?';
 
@@ -40,26 +40,15 @@ class PivotQueryCountTest extends WriteTraceTestCase
             ['operation' => 'toggle', 'key' => [102, 103]],
         ]), [
             self::TICKET,
-            'select tags.id from tags where tags.id in (101, 102, 103) and tags.deleted_at is null',
-            'select * from tickets where tickets.id = ? limit 1',
+            'select * from tags where tags.id in (101, 102, 103) and tags.deleted_at is null',
             self::RENAME,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             'insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?)',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             self::SYNC,
             self::ATTACH,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             self::TOGGLE,
             self::DETACH,
             self::ATTACH,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
         ]);
     }
 
@@ -76,29 +65,18 @@ class PivotQueryCountTest extends WriteTraceTestCase
             ['operation' => 'toggle', 'key' => [103]],
         ]), [
             self::TICKET,
-            'select tags.id from tags where tags.id in (101, 102, 103) and tags.deleted_at is null',
-            'select * from tickets where tickets.id = ? limit 1',
+            'select * from tags where tags.id in (101, 102, 103) and tags.deleted_at is null',
             self::RENAME,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             self::DETACH,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             self::DETACH,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             'insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?)',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             self::SYNC,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             self::SYNC,
             self::ATTACH,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             self::TOGGLE,
             self::ATTACH,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             self::TOGGLE,
             self::DETACH,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
         ]);
     }
 
@@ -112,23 +90,14 @@ class PivotQueryCountTest extends WriteTraceTestCase
             ['operation' => 'toggle', 'key' => [101]],
         ]), [
             self::TICKET,
-            'select tags.id from tags where tags.id in (101, 102) and tags.deleted_at is null',
-            'select * from tickets where tickets.id = ? limit 1',
+            'select * from tags where tags.id in (101, 102) and tags.deleted_at is null',
             self::RENAME,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?), (?, ?, ?)',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             self::DETACH,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             self::SYNC,
             self::ATTACH,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             self::TOGGLE,
             self::DETACH,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
         ]);
     }
 
@@ -142,16 +111,11 @@ class PivotQueryCountTest extends WriteTraceTestCase
             ['operation' => 'update', 'key' => 101, 'relations' => ['tags' => [['operation' => 'sync', 'key' => [102]]]]],
         ]], [
             self::TICKET,
-            'select tags.id from tags where tags.id in (102) and tags.deleted_at is null',
-            'select * from tickets where tickets.id = ? limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
+            'select * from tags where tags.id in (102) and tags.deleted_at is null',
             self::SYNC,
             'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?, ?)',
             self::ATTACH,
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
+            'select * from tags where tags.id in (101, 103, 104) and tags.deleted_at is null',
         ]);
         $this->assertSame(
             ['policy update Ticket(Printer jam)', 'policy view Tag(Network)', 'policy attachTag Ticket(Printer jam) Tag(Network)', 'policy detachTag Ticket(Printer jam) Tag(Hardware)', 'policy detachTag Ticket(Printer jam) Tag(Urgent)'],

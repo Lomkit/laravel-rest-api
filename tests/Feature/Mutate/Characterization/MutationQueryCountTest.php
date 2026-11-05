@@ -33,16 +33,11 @@ class MutationQueryCountTest extends WriteTraceTestCase
             ['operation' => 'update', 'key' => 104, 'attributes' => ['title' => 'Solaris (1961)']],
             ['operation' => 'update', 'key' => 105, 'attributes' => ['title' => 'Kindred (1979)']],
         ]], [
-            'select books.id from books where books.id in (101, 102, 103, 104, 105)',
-            'select * from books where books.id = ? limit 1',
+            'select * from books where books.id in (101, 102, 103, 104, 105)',
             self::UPDATE_BOOK,
-            'select * from books where books.id = ? limit 1',
             self::UPDATE_BOOK,
-            'select * from books where books.id = ? limit 1',
             self::UPDATE_BOOK,
-            'select * from books where books.id = ? limit 1',
             self::UPDATE_BOOK,
-            'select * from books where books.id = ? limit 1',
             self::UPDATE_BOOK,
         ]);
     }
@@ -53,12 +48,9 @@ class MutationQueryCountTest extends WriteTraceTestCase
         $this->assertQueries('/api/teams/mutate', ['mutate' => [
             ['operation' => 'update', 'key' => 102, 'relations' => ['tickets' => [['operation' => 'attach', 'key' => [101, 102]]]]],
         ]], [
-            'select teams.id from teams where teams.id in (102)',
-            'select tickets.id from tickets where tickets.id in (101, 102)',
-            'select * from teams where teams.id = ? limit 1',
-            'select * from tickets where tickets.id = ? limit 1',
+            'select * from teams where teams.id in (102)',
+            'select * from tickets where tickets.id in (101, 102)',
             self::UPDATE_TICKET,
-            'select * from tickets where tickets.id = ? limit 1',
             self::UPDATE_TICKET,
         ]);
     }
@@ -72,12 +64,9 @@ class MutationQueryCountTest extends WriteTraceTestCase
                 ['operation' => 'attach', 'key' => 102],
             ]]],
         ]], [
-            'select teams.id from teams where teams.id in (102)',
-            'select tickets.id from tickets where tickets.id in (101, 102)',
-            'select * from teams where teams.id = ? limit 1',
-            'select * from tickets where tickets.id = ? limit 1',
+            'select * from teams where teams.id in (102)',
+            'select * from tickets where tickets.id in (101, 102)',
             self::UPDATE_TICKET,
-            'select * from tickets where tickets.id = ? limit 1',
             self::UPDATE_TICKET,
         ]);
     }
@@ -89,13 +78,9 @@ class MutationQueryCountTest extends WriteTraceTestCase
             ['operation' => 'update', 'key' => 101, 'relations' => ['team' => ['operation' => 'attach', 'key' => 102]]],
             ['operation' => 'update', 'key' => 102, 'relations' => ['team' => ['operation' => 'attach', 'key' => 102]]],
         ]], [
-            'select tickets.id from tickets where tickets.id in (101, 102)',
-            'select teams.id from teams where teams.id in (102)',
-            'select * from tickets where tickets.id = ? limit 1',
-            'select * from teams where teams.id = ? limit 1',
+            'select * from tickets where tickets.id in (101, 102)',
+            'select * from teams where teams.id in (102)',
             self::UPDATE_TICKET,
-            'select * from tickets where tickets.id = ? limit 1',
-            'select * from teams where teams.id = ? limit 1',
             self::UPDATE_TICKET,
         ]);
     }
@@ -109,12 +94,9 @@ class MutationQueryCountTest extends WriteTraceTestCase
                 'tags' => [['operation' => 'attach', 'key' => [101, 102], 'pivot' => ['position' => 3]]],
             ]],
         ]], [
-            'select teams.id from teams where teams.id in (101)',
-            'select tags.id from tags where tags.id in (101, 102) and tags.deleted_at is null',
-            'select * from teams where teams.id = ? limit 1',
+            'select * from teams where teams.id in (101)',
+            'select * from tags where tags.id in (101, 102) and tags.deleted_at is null',
             'insert into tickets (team_id, title, status, updated_at, created_at) values (?, ?, ?, ?, ?)',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
-            'select * from tags where tags.id = ? and tags.deleted_at is null limit 1',
             'insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?), (?, ?, ?, ?)',
         ]);
     }
@@ -128,13 +110,11 @@ class MutationQueryCountTest extends WriteTraceTestCase
                 'shelves' => [['operation' => 'attach', 'key' => [101]], ['operation' => 'attach', 'key' => [102]]],
             ]],
         ]], [
-            'select shelves.id from shelves where shelves.id in (101, 102)',
+            'select * from shelves where shelves.id in (101, 102)',
             'insert into books (title, updated_at, created_at) values (?, ?, ?)',
             'insert into labels (text, labelable_id, labelable_type, updated_at, created_at) values (?, ?, ?, ?, ?)',
             'insert into labels (text, labelable_id, labelable_type, updated_at, created_at) values (?, ?, ?, ?, ?)',
-            'select * from shelves where shelves.id = ? limit 1',
             'insert into book_shelf (book_id, shelf_id) values (?, ?)',
-            'select * from shelves where shelves.id = ? limit 1',
             'insert into book_shelf (book_id, shelf_id) values (?, ?)',
         ]);
     }
@@ -153,8 +133,7 @@ class MutationQueryCountTest extends WriteTraceTestCase
             ->sole()
             ->getKey();
         $this->assertSame([
-            'sql select books.id from books where books.id in (102)',
-            'sql select * from books where books.id = ? limit 1',
+            'sql select * from books where books.id in (102)',
             'sql '.self::UPDATE_BOOK,
             'sql insert into books (title, updated_at, created_at) values (?, ?, ?)',
             "sql select books.id, books.title from books where books.id in (102, {$created})",

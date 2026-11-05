@@ -15,6 +15,7 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Tag;
 use Lomkit\Rest\Tests\PackageTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 class QueryBuilderBindingTest extends PackageTestCase
@@ -75,20 +76,29 @@ class QueryBuilderBindingTest extends PackageTestCase
         $this->assertSame([PostResource::class], $this->resolved);
     }
 
+    /** @param list<class-string<Resource>> $resolved */
     #[Test]
-    public function it_resolves_the_query_builder_binding_once_for_a_mutation(): void
+    #[DataProvider('mutations')]
+    public function it_resolves_the_query_builder_binding_only_for_the_records_of_a_mutation(array $block, array $resolved): void
     {
         $this->recordTheQueryBuilderBinding();
 
         $response = $this->postJson('/api/posts/mutate', ['mutate' => [
             ['operation' => 'update', 'key' => 4, 'relations' => ['author' => ['operation' => 'attach', 'key' => 1]]],
-        ]]);
+        ], ...$block]);
 
         $response->assertOk();
-        $this->assertSame([PostResource::class], $this->resolved);
+        $this->assertSame($resolved, $this->resolved);
         $this->assertSame(1, Post::query()
             ->findOrFail(4)
             ->getAttribute('author_id'));
+    }
+
+    /** @return iterable<string, array{array<string, mixed>, list<class-string<Resource>>}> */
+    public static function mutations(): iterable
+    {
+        yield 'without records' => [[], []];
+        yield 'with records' => [['response' => []], [PostResource::class]];
     }
 
     private function recordTheQueryBuilderBinding(): void
