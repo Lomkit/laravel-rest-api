@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Search\Stubs;
 
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\HasMany;
@@ -19,13 +18,13 @@ class NewsStoryResource extends Resource
     public int $includeLimit = 1;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [ID::make('id'), Text::make('headline')];
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsTo::make('reporter', NewsReporterResource::class),
@@ -34,7 +33,7 @@ class NewsStoryResource extends Resource
     }
 
     #[\Override]
-    public function limits(RestRequest $request): array
+    public function limits(): array
     {
         return [1, 10];
     }

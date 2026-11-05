@@ -19,6 +19,7 @@ use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Http\Requests\OperateRequest;
+use Lomkit\Rest\Http\Requests\RestRequest;
 
 /** @phpstan-consistent-constructor */
 class Action implements JsonSerializable
@@ -51,6 +52,11 @@ class Action implements JsonSerializable
     public function uriKey(): string
     {
         return Str::slug($this->name(), '-', null);
+    }
+
+    public function request(): RestRequest
+    {
+        return $this->resource->request();
     }
 
     public function standalone(): static
@@ -98,7 +104,7 @@ class Action implements JsonSerializable
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
-            'fields' => InputFieldDetails::forFields($this->getFields($this->resource->context()->request)),
+            'fields' => InputFieldDetails::forFields($this->getFields()),
             'meta' => (object) $this->getMeta(),
             'standalone' => $this->isStandalone(),
             'targeted' => $this->isTargeted(),

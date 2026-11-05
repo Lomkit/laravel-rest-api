@@ -5,17 +5,17 @@ namespace Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 
 class CountedPostResource extends PostResource
 {
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
-        $this->evaluated('fields', $request);
+        $this->evaluated('fields');
+        $user = $this->request()->user();
 
-        if ($request->user()?->getAttribute('is_staff')) {
+        if ($user?->getAttribute('is_staff')) {
             return [ID::make('id'), Text::make('title'), Integer::make('views')];
         }
 
@@ -23,47 +23,47 @@ class CountedPostResource extends PostResource
     }
 
     #[\Override]
-    public function scopes(RestRequest $request): array
+    public function scopes(): array
     {
-        $this->evaluated('scopes', $request);
+        $this->evaluated('scopes');
 
-        return parent::scopes($request);
+        return parent::scopes();
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
-        $this->evaluated('relations', $request);
+        $this->evaluated('relations');
 
-        return parent::relations($request);
+        return parent::relations();
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
-        $this->evaluated('instructions', $request);
+        $this->evaluated('instructions');
 
-        return parent::instructions($request);
+        return parent::instructions();
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
-        $this->evaluated('actions', $request);
+        $this->evaluated('actions');
 
-        return parent::actions($request);
+        return parent::actions();
     }
 
     #[\Override]
-    public function limits(RestRequest $request): array
+    public function limits(): array
     {
-        $this->evaluated('limits', $request);
+        $this->evaluated('limits');
 
         return [10, 25, 50];
     }
 
-    private function evaluated(string $declaration, RestRequest $request): void
+    private function evaluated(string $declaration): void
     {
-        app(EvaluatedDeclarations::class)->record($declaration, $request);
+        app(EvaluatedDeclarations::class)->record($declaration, $this->request());
     }
 }

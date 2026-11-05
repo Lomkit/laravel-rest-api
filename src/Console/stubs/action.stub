@@ -4,7 +4,6 @@ namespace {{ namespace }};
 
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action as RestAction;
-use Lomkit\Rest\Http\Requests\RestRequest;
 
 class {{ class }} extends RestAction
 {
@@ -17,7 +16,7 @@ class {{ class }} extends RestAction
     }
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [];
     }

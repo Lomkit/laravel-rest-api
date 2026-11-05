@@ -27,7 +27,7 @@ class GenerateResourceCommandTest extends ScaffoldingTestCase
             ->assertSuccessful();
 
         $this->assertStringContainsString(
-            "use Lomkit\\Rest\\Fields\\ID;\nuse Lomkit\\Rest\\Http\\Requests\\RestRequest;\nuse Lomkit\\Rest\\Tests\\Fixtures\\Newsroom\\Article;\n\nclass QuietArticleResource extends Resource\n{\n    public static string \$model = Article::class;\n\n    #[\\Override]\n    public function fields(RestRequest \$request): array\n    {\n        return [\n            ID::make('id'),\n        ];\n    }\n\n    #[\\Override]\n    public function relations(RestRequest \$request): array\n    {\n        return [];\n    }\n",
+            "use Lomkit\\Rest\\Fields\\ID;\nuse Lomkit\\Rest\\Tests\\Fixtures\\Newsroom\\Article;\n\nclass QuietArticleResource extends Resource\n{\n    public static string \$model = Article::class;\n\n    #[\\Override]\n    public function fields(): array\n    {\n        return [\n            ID::make('id'),\n        ];\n    }\n\n    #[\\Override]\n    public function relations(): array\n    {\n        return [];\n    }\n",
             $this->resource('QuietArticleResource'),
         );
     }

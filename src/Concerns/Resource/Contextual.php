@@ -20,4 +20,9 @@ trait Contextual
     {
         return $this->context ??= new RestContext(RestRequest::createFrom(request()), app());
     }
+
+    public function request(): RestRequest
+    {
+        return $this->context()->request;
+    }
 }

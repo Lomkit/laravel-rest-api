@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Fields\Details;
 
 use JsonSerializable;
 use Lomkit\Rest\Fields\WriteRules;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use stdClass;
 
@@ -21,9 +20,9 @@ final readonly class ResourceRuleDetails implements JsonSerializable
         private array $update,
     ) {}
 
-    public static function of(Resource $resource, RestRequest $request): self
+    public static function of(Resource $resource): self
     {
-        return new self($resource->rules($request), $resource->createRules($request), $resource->updateRules($request));
+        return new self($resource->rules(), $resource->createRules(), $resource->updateRules());
     }
 
     /** @return array{all: stdClass, create: stdClass, update: stdClass} */

@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Support\Rest\Actions;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 
 class ConditionalFieldAction extends Action
 {
@@ -14,7 +13,7 @@ class ConditionalFieldAction extends Action
         //
     }
 
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             Text::make('type')->nullable(),

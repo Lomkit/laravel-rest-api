@@ -3,14 +3,13 @@
 namespace Lomkit\Rest\Tests\Feature\Mutations\Stubs;
 
 use Illuminate\Validation\Rule;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 
 class RuledPostResource extends PostResource
 {
     #[\Override]
-    public function rules(RestRequest $request): array
+    public function rules(): array
     {
         return [
             'title' => 'string|min:3',
@@ -20,7 +19,7 @@ class RuledPostResource extends PostResource
     }
 
     #[\Override]
-    public function createRules(RestRequest $request): array
+    public function createRules(): array
     {
         return [
             'title' => [Rule::unique(Post::class, 'title')],
@@ -29,7 +28,7 @@ class RuledPostResource extends PostResource
     }
 
     #[\Override]
-    public function updateRules(RestRequest $request): array
+    public function updateRules(): array
     {
         return [
             'views' => 'integer|max:1000000',

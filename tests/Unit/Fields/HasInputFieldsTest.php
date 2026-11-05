@@ -6,7 +6,6 @@ use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -20,8 +19,8 @@ class HasInputFieldsTest extends TestCase
             use HasInputFields;
         };
 
-        $this->assertSame([], $owner->fields(new RestRequest));
-        $this->assertCount(0, $owner->getFields(new RestRequest));
+        $this->assertSame([], $owner->fields());
+        $this->assertCount(0, $owner->getFields());
     }
 
     #[Test]
@@ -33,7 +32,7 @@ class HasInputFieldsTest extends TestCase
 
             public int $calls = 0;
 
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 $this->calls++;
 
@@ -41,8 +40,8 @@ class HasInputFieldsTest extends TestCase
             }
         };
 
-        $first = $owner->getFields(new RestRequest);
-        $second = $owner->getFields(new RestRequest);
+        $first = $owner->getFields();
+        $second = $owner->getFields();
 
         $this->assertSame(['title', 'min_views'], $first->names());
         $this->assertNotSame($first, $second);
@@ -56,7 +55,7 @@ class HasInputFieldsTest extends TestCase
         {
             use HasInputFields;
 
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 return [Text::make('title'), Text::make('title')];
             }
@@ -64,7 +63,7 @@ class HasInputFieldsTest extends TestCase
 
         $this->expectExceptionObject(InvalidFieldException::duplicateName($owner::class.'::fields()', 'title'));
 
-        $owner->getFields(new RestRequest);
+        $owner->getFields();
     }
 
     #[Test]
@@ -74,7 +73,7 @@ class HasInputFieldsTest extends TestCase
         {
             use HasInputFields;
 
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 return [Text::make('title')->updateRules('max:1')];
             }
@@ -82,6 +81,6 @@ class HasInputFieldsTest extends TestCase
 
         $this->expectExceptionObject(InvalidFieldException::writeRulesOnInput($owner::class.'::fields()', 'title'));
 
-        $owner->getFields(new RestRequest);
+        $owner->getFields();
     }
 }

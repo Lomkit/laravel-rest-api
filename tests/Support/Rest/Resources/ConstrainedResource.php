@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
@@ -16,7 +15,7 @@ class ConstrainedResource extends Resource
 {
     public static string $model = Model::class;
 
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)
@@ -29,7 +28,7 @@ class ConstrainedResource extends Resource
         ];
     }
 
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),

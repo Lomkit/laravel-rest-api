@@ -9,7 +9,6 @@ use App\Rest\Resources\ScaffoldedProductResource;
 use App\Rest\Resources\ScaffoldedSuggestedResource;
 use App\Rest\Resources\ScaffoldedVerboseResource;
 use Lomkit\Rest\Fields\ID;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -30,8 +29,8 @@ class MakeResourceCommandTest extends ScaffoldingTestCase
         $this->assertInstanceOf(BaseResource::class, $resource);
         $this->assertSame('string', (string) (new ReflectionProperty(ScaffoldedProductResource::class, 'model'))->getType());
         $this->assertSame('App\Models\Product', ScaffoldedProductResource::modelClass());
-        $this->assertEquals([ID::make('id')], $resource->fields(new RestRequest));
-        $this->assertSame([10, 25, 50], $resource->limits(new RestRequest));
+        $this->assertEquals([ID::make('id')], $resource->fields());
+        $this->assertSame([10, 25, 50], $resource->limits());
     }
 
     #[Test]

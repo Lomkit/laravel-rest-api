@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Validation\Mutate;
 use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Fields\WriteRules;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Mutations\MutationNode;
@@ -23,7 +22,6 @@ final readonly class RelationMutationParser
         private ParsedRules $rules,
         private PayloadReader $reader,
         private Limits $limits,
-        private RestRequest $request,
         private EntryRules $entryRules,
     ) {}
 
@@ -176,8 +174,8 @@ final readonly class RelationMutationParser
     private function constraint(Relation $relation, MutationOperation $operation): ?string
     {
         $creation = $operation === MutationOperation::Create;
-        $prohibited = $creation ? $relation->isProhibitedOnCreation($this->request) : $relation->isProhibitedOnUpdate($this->request);
-        $required = $creation ? $relation->isRequiredOnCreation($this->request) : $relation->isRequiredOnUpdate($this->request);
+        $prohibited = $creation ? $relation->isProhibitedOnCreation() : $relation->isProhibitedOnUpdate();
+        $required = $creation ? $relation->isRequiredOnCreation() : $relation->isRequiredOnUpdate();
 
         return match (true) {
             $required => 'required',

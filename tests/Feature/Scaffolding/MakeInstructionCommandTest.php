@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
 use App\Rest\Instructions\ScaffoldedInstruction;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -22,6 +21,6 @@ class MakeInstructionCommandTest extends ScaffoldingTestCase
         $instruction = new ScaffoldedInstruction;
 
         $this->assertInstanceOf(Instruction::class, $instruction);
-        $this->assertSame([], $instruction->fields(new RestRequest));
+        $this->assertSame([], $instruction->fields());
     }
 }

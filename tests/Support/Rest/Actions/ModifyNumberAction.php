@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Fields\Number;
-use Lomkit\Rest\Http\Requests\RestRequest;
 
 class ModifyNumberAction extends Action
 {
@@ -26,7 +25,7 @@ class ModifyNumberAction extends Action
     /**
      * Called in an action failed.
      */
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             Number::make('number')->rules('min:100'),

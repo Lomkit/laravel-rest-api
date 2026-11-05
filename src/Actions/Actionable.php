@@ -2,12 +2,10 @@
 
 namespace Lomkit\Rest\Actions;
 
-use Lomkit\Rest\Http\Requests\RestRequest;
-
 trait Actionable
 {
     /** @return array<int, Action> */
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [];
     }

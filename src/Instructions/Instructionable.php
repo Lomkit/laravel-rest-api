@@ -2,12 +2,10 @@
 
 namespace Lomkit\Rest\Instructions;
 
-use Lomkit\Rest\Http\Requests\RestRequest;
-
 trait Instructionable
 {
     /** @return array<int, Instruction> */
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [];
     }

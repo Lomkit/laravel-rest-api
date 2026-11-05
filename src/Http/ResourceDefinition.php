@@ -51,7 +51,7 @@ final class ResourceDefinition
     /** @return list<Scope> */
     public function scopes(): array
     {
-        return $this->scopes ??= self::ensureScopes($this->resource->scopes($this->request), $this->resource::class.'::scopes()');
+        return $this->scopes ??= self::ensureScopes($this->resource->scopes(), $this->resource::class.'::scopes()');
     }
 
     /** @return array<int, Relation> */
@@ -59,14 +59,14 @@ final class ResourceDefinition
     {
         return $this->relations ??= array_map(
             fn (Relation $relation): Relation => $relation->fromResource($this->resource),
-            $this->resource->relations($this->request),
+            $this->resource->relations(),
         );
     }
 
     /** @return array<int, Instruction> */
     public function instructions(): array
     {
-        return $this->instructions ??= $this->boundInstructions($this->resource->instructions($this->request));
+        return $this->instructions ??= $this->boundInstructions($this->resource->instructions());
     }
 
     /** @return array<int, Action> */
@@ -74,13 +74,13 @@ final class ResourceDefinition
     {
         return $this->actions ??= array_map(
             fn (Action $action): Action => $action->resource($this->resource),
-            $this->resource->actions($this->request),
+            $this->resource->actions(),
         );
     }
 
     public function limits(): ResourceLimits
     {
-        return $this->limits ??= ResourceLimits::of($this->resource, $this->resource->limits($this->request));
+        return $this->limits ??= ResourceLimits::of($this->resource, $this->resource->limits());
     }
 
     public function text(): ResolvedText
@@ -90,12 +90,12 @@ final class ResourceDefinition
 
     public function gates(): GateVocabulary
     {
-        return $this->gates ??= GateVocabulary::of($this->resource->gates($this->request), $this->resource::class.'::gates()');
+        return $this->gates ??= GateVocabulary::of($this->resource->gates(), $this->resource::class.'::gates()');
     }
 
     private function declaredFields(): FieldSet
     {
-        $fields = FieldSet::of($this->resource->fields($this->request), $this->resource::class.'::fields()');
+        $fields = FieldSet::of($this->resource->fields(), $this->resource::class.'::fields()');
         $gatesKey = $this->resource->context()->config()->gatesKey;
 
         if ($fields->has($gatesKey)) {

@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
@@ -17,7 +16,7 @@ class BelongsToManyResource extends Resource
 
     public static string $model = BelongsToManyRelation::class;
 
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsTo::make('model', ModelQueryChangedResource::class),
@@ -32,7 +31,7 @@ class BelongsToManyResource extends Resource
      *
      * @return array Array of field names.
      */
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -49,7 +48,7 @@ class BelongsToManyResource extends Resource
      *
      * @return int[] Array of allowed limit values.
      */
-    public function limits(RestRequest $request): array
+    public function limits(): array
     {
         return [
             1,

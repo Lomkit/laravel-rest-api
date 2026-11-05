@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
@@ -22,7 +21,7 @@ class GatedModelResource extends Resource
         return true;
     }
 
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsToMany::make('belongsToManyRelation', GatedBelongsToManyResource::class),
@@ -32,7 +31,7 @@ class GatedModelResource extends Resource
         ];
     }
 
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),

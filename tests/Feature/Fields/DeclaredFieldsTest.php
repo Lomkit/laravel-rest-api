@@ -43,7 +43,7 @@ class DeclaredFieldsTest extends PackageTestCase
             public static string $model = Post::class;
 
             #[\Override]
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 return [ID::make('id'), Enum::make('status')];
             }
@@ -60,7 +60,7 @@ class DeclaredFieldsTest extends PackageTestCase
             public static string $model = Listing::class;
 
             #[\Override]
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 return [ID::make('id'), Text::make('name')];
             }
@@ -77,7 +77,7 @@ class DeclaredFieldsTest extends PackageTestCase
             public static string $model = Product::class;
 
             #[\Override]
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 return [ID::make('id'), 'name'];
             }
@@ -98,7 +98,7 @@ class DeclaredFieldsTest extends PackageTestCase
             public static string $model = Product::class;
 
             #[\Override]
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 return [ID::make('id'), Text::make('name'), Text::make('name')];
             }

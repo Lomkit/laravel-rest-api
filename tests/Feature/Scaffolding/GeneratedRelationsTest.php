@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Fields\FieldSet;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Comment;
@@ -48,14 +47,14 @@ class GeneratedRelationsTest extends ScaffoldingTestCase
         $resource = "App\\Rest\\Resources\\{$name}";
         $this->loadGeneratedClass($resource);
         $this->assertInstanceOf(Resource::class, $instance = new $resource);
-        $relations = $instance->relations(new RestRequest);
+        $relations = $instance->relations();
         $pivotFields = array_sum(array_map(
             fn (Relation $relation): int => $relation instanceof PivotRelation ? count($relation->getPivotFields()) : 0,
             $relations,
         ));
         $this->assertSame(
             substr_count($code, '::make('),
-            count(FieldSet::of($instance->fields(new RestRequest))) + count($relations) + $pivotFields,
+            count(FieldSet::of($instance->fields())) + count($relations) + $pivotFields,
         );
     }
 

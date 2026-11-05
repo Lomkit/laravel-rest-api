@@ -14,7 +14,6 @@ use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
@@ -27,7 +26,7 @@ class ModelWithHooksResource extends Resource
 
     public static string $model = SoftDeletedModel::class;
 
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsTo::make('belongsToRelation', BelongsToWithHooksResource::class),
@@ -35,7 +34,7 @@ class ModelWithHooksResource extends Resource
         ];
     }
 
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -45,14 +44,14 @@ class ModelWithHooksResource extends Resource
         ];
     }
 
-    public function defaultOrderBy(RestRequest $request): array
+    public function defaultOrderBy(): array
     {
         return [
             'id' => 'asc',
         ];
     }
 
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [
             ModifyNumberAction::make(),

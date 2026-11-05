@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Feature\Fields\Stubs;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
 
 class ResolvedAuthorResource extends AuthorResource
@@ -14,10 +13,10 @@ class ResolvedAuthorResource extends AuthorResource
     public static array $resolved = [];
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
-            ...parent::fields($request),
+            ...parent::fields(),
             Text::make('display_name')
                 ->virtual()
                 ->requires(['first_name', 'last_name'])

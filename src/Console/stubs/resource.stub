@@ -4,7 +4,6 @@ namespace {{ namespace }};
 
 use {{ rootNamespace }}Rest\Resources\Resource;
 use {{ namespacedModel }};
-use Lomkit\Rest\Http\Requests\RestRequest;
 {{ imports }}
 
 class {{ class }} extends Resource
@@ -12,7 +11,7 @@ class {{ class }} extends Resource
     public static string $model = {{ model }}::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             {{ fields }}
@@ -20,7 +19,7 @@ class {{ class }} extends Resource
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             {{ relations }}
@@ -28,13 +27,13 @@ class {{ class }} extends Resource
     }
 
     #[\Override]
-    public function scopes(RestRequest $request): array
+    public function scopes(): array
     {
         return [];
     }
 
     #[\Override]
-    public function limits(RestRequest $request): array
+    public function limits(): array
     {
         return [
             10,
@@ -44,13 +43,13 @@ class {{ class }} extends Resource
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [];
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [];
     }

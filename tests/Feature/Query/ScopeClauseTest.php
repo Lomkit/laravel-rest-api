@@ -89,7 +89,7 @@ class ScopeClauseTest extends PackageTestCase
             public static string $model = Post::class;
 
             #[\Override]
-            public function scopes(RestRequest $request): array
+            public function scopes(): array
             {
                 return ['published'];
             }

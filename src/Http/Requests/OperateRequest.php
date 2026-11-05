@@ -53,7 +53,7 @@ class OperateRequest extends RestRequest
     {
         $abilities = $action->abilities();
 
-        return $abilities === [] ? [] : ['viewAny', ...$resource->abilities(Endpoint::Operate, $this), ...$abilities];
+        return $abilities === [] ? [] : ['viewAny', ...$resource->abilities(Endpoint::Operate), ...$abilities];
     }
 
     /** @return array<string, mixed> */

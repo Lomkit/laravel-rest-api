@@ -39,7 +39,6 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
 
         $context = new RestContext(RestRequest::createFrom(request()), app());
         $resource = $context->resource($controller::resourceClass());
-        $fakeRequest = $context->request;
         $fields = $resource->getFields();
         $relations = $resource->getRelations();
         $resourceName = str_replace('Resource', '', class_basename($resource));
@@ -49,7 +48,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
 
         match ($action) {
             'search' => $this->documentSearch($operation, $resource, $fields, $relations, $resourceName),
-            'mutate' => $this->documentMutate($operation, $this->attributes($resource, $fakeRequest), $relations, $resourceName),
+            'mutate' => $this->documentMutate($operation, $this->attributes($resource), $relations, $resourceName),
             'details' => DetailsResponseType::document($operation, $resourceName),
             'destroy' => $this->documentDestroy($operation, $resourceName),
             'restore' => $this->documentRestore($operation, $resourceName),
@@ -137,7 +136,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         );
     }
 
-    private function attributes(Resource $resource, RestRequest $request): ObjectType
+    private function attributes(Resource $resource): ObjectType
     {
         $create = WriteOperation::Create;
         $update = WriteOperation::Update;
@@ -145,8 +144,8 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         return WritableFieldsType::of(
             $resource->getFields(),
             [$create->value => $create, $update->value => $update],
-            [$create->value => $resource->createRules($request), $update->value => $resource->updateRules($request)],
-            $resource->rules($request),
+            [$create->value => $resource->createRules(), $update->value => $resource->updateRules()],
+            $resource->rules(),
         )->toType();
     }
 

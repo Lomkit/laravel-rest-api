@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Feature\Labels\Stubs;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Tests\Fixtures\Catalog\CategoryResource;
@@ -13,13 +12,13 @@ use Lomkit\Rest\Tests\Fixtures\Catalog\CategoryResource;
 class LabelledCategoryResource extends CategoryResource
 {
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [ID::make('id'), Text::make('name')->label('category name')];
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             HasMany::make('products', LabelledProductResource::class),

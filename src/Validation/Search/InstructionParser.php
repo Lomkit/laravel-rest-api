@@ -65,7 +65,7 @@ final readonly class InstructionParser
             return null;
         }
 
-        $inputs = new InputSet($instruction->getFields($context->resource->context()->request));
+        $inputs = new InputSet($instruction->getFields());
 
         return new InstructionNode($instruction, $inputs->named($fields, $context, 'fields:'.$instruction->uriKey()));
     }

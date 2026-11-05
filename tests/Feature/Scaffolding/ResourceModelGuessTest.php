@@ -94,7 +94,7 @@ class ResourceModelGuessTest extends ScaffoldingTestCase
 
         $this->loadGeneratedClass(OrphanResource::class);
         $this->assertStringContainsString(
-            "namespace App\\Rest\\Resources;\n\nuse Lomkit\\Rest\\Fields\\ID;\nuse Lomkit\\Rest\\Http\\Requests\\RestRequest;\n\nclass OrphanResource extends Resource\n{\n    #[\\Override]\n    public function fields(",
+            "namespace App\\Rest\\Resources;\n\nuse Lomkit\\Rest\\Fields\\ID;\n\nclass OrphanResource extends Resource\n{\n    #[\\Override]\n    public function fields(",
             file_get_contents(app_path('Rest/Resources/OrphanResource.php')),
         );
 

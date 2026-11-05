@@ -12,7 +12,7 @@ use Lomkit\Rest\Text\TextSearch;
 class TeamVoucherResource extends VoucherResource
 {
     #[\Override]
-    public function text(RestRequest $request): ?TextSearch
+    public function text(): ?TextSearch
     {
         return ScoutEngine::make()
             ->filterable(['number', 'price', 'active', 'code'])

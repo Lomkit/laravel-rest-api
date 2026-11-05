@@ -12,7 +12,7 @@ use Lomkit\Rest\Text\TextSearch;
 class TitledVoucherResource extends TeamVoucherResource
 {
     #[\Override]
-    public function text(RestRequest $request): ?TextSearch
+    public function text(): ?TextSearch
     {
         return ScoutEngine::make()
             ->filterable(['number', 'price', 'active', 'code', 'title'])
@@ -21,14 +21,14 @@ class TitledVoucherResource extends TeamVoucherResource
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
-        return [...parent::instructions($request), ComparesPrice::make()];
+        return [...parent::instructions(), ComparesPrice::make()];
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
-        return [...parent::actions($request), DeactivateVouchersInLargeChunks::make()];
+        return [...parent::actions(), DeactivateVouchersInLargeChunks::make()];
     }
 }

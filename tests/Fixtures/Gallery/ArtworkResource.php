@@ -8,7 +8,6 @@ use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
@@ -22,7 +21,7 @@ class ArtworkResource extends Resource
     public static string $model = Artwork::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -44,7 +43,7 @@ class ArtworkResource extends Resource
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsTo::make('artist', ArtistResource::class),
@@ -57,31 +56,31 @@ class ArtworkResource extends Resource
     }
 
     #[\Override]
-    public function scopes(RestRequest $request): array
+    public function scopes(): array
     {
         return [Scope::make('pricedUnder')->fields([Number::make('max')])];
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [ByMedium::make()];
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [RetireArtworks::make()];
     }
 
     #[\Override]
-    public function createRules(RestRequest $request): array
+    public function createRules(): array
     {
         return ['price' => 'required|min:0'];
     }
 
     #[\Override]
-    public function text(RestRequest $request): TextSearch
+    public function text(): TextSearch
     {
         return Contains::make();
     }

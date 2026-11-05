@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Concerns\Resource;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
 
 trait Relationable
@@ -31,7 +30,7 @@ trait Relationable
     }
 
     /** @return array<int, Relation> */
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [];
     }

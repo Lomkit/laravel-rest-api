@@ -22,7 +22,7 @@ final readonly class DefaultOrderClause implements Clause
         };
 
         /** @var array<string, 'asc'|'desc'|\SortDirection> $orders */
-        $orders = $this->resource->defaultOrderBy($this->resource->context()->request);
+        $orders = $this->resource->defaultOrderBy();
 
         foreach ($orders as $column => $order) {
             $query->orderBy($model->qualifyColumn($column), $order);

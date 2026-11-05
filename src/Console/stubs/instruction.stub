@@ -3,7 +3,6 @@
 namespace {{ namespace }};
 
 use Illuminate\Database\Eloquent\Builder;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction as RestInstruction;
 
 class {{ class }} extends RestInstruction
@@ -15,7 +14,7 @@ class {{ class }} extends RestInstruction
     }
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [];
     }

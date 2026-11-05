@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Search\Stubs;
 
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Library\BookResource;
 
 class TalliedBookResource extends BookResource
@@ -10,10 +9,10 @@ class TalliedBookResource extends BookResource
     public static int $reads = 0;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         self::$reads++;
 
-        return parent::fields($request);
+        return parent::fields();
     }
 }

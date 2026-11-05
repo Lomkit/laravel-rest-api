@@ -28,7 +28,7 @@ final readonly class ResolvedText
 
     public static function of(Resource $resource, RestRequest $request): self
     {
-        $strategy = $resource->text($request);
+        $strategy = $resource->text();
 
         if ($strategy === null) {
             return new self(TextBackend::None);

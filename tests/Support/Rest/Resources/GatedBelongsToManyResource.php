@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
 
@@ -17,14 +16,14 @@ class GatedBelongsToManyResource extends Resource
         return true;
     }
 
-    public function updateRules(RestRequest $request): array
+    public function updateRules(): array
     {
         return [
             'number' => 'numeric|max:10',
         ];
     }
 
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),

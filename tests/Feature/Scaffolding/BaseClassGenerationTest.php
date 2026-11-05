@@ -130,7 +130,7 @@ class BaseClassGenerationTest extends ScaffoldingTestCase
         $this->loadGeneratedClass(NestedBaseResource::class);
 
         $this->assertStringNotContainsString('use App\Rest\Resources\Resource;', file_get_contents(app_path('Rest/Resources/TopLevelBaseResource.php')));
-        $this->assertStringContainsString("namespace App\\Rest\\Resources;\n\nuse App\\Models\\Post;\nuse Lomkit\\Rest\\Fields\\ID;\nuse Lomkit\\Rest\\Http\\Requests\\RestRequest;\n\nclass TopLevelBaseResource extends Resource", file_get_contents(app_path('Rest/Resources/TopLevelBaseResource.php')));
+        $this->assertStringContainsString("namespace App\\Rest\\Resources;\n\nuse App\\Models\\Post;\nuse Lomkit\\Rest\\Fields\\ID;\n\nclass TopLevelBaseResource extends Resource", file_get_contents(app_path('Rest/Resources/TopLevelBaseResource.php')));
         $this->assertStringContainsString('use App\Rest\Resources\Resource;', file_get_contents(app_path('Rest/Resources/Admin/NestedBaseResource.php')));
         $this->assertSame('App\Rest\Resources\Resource', get_parent_class(TopLevelBaseResource::class));
         $this->assertSame('App\Rest\Resources\Resource', get_parent_class(NestedBaseResource::class));

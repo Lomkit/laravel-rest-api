@@ -5,13 +5,12 @@ namespace Lomkit\Rest\Concerns\Resource;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Query\PageQuery;
 
 trait Paginable
 {
     /** @return list<int> */
-    public function limits(RestRequest $request): array
+    public function limits(): array
     {
         return [
             10,

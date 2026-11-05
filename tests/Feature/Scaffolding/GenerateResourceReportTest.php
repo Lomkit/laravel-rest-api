@@ -146,6 +146,6 @@ class GenerateResourceReportTest extends ScaffoldingTestCase
 
         $resource = (string) file_get_contents(app_path('Rest/Resources/BylineResource.php'));
         $this->assertStringContainsString("            Integer::make('writer_id')->creationRules('required'),\n", $resource);
-        $this->assertStringContainsString("    public function relations(RestRequest \$request): array\n    {\n        return [];\n    }", $resource);
+        $this->assertStringContainsString("    public function relations(): array\n    {\n        return [];\n    }", $resource);
     }
 }

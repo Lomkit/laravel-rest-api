@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Validation\Stubs;
 
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
 class UntypedDraftResource extends Resource
@@ -12,7 +11,7 @@ class UntypedDraftResource extends Resource
     public static string $model = UntypedDraft::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id')->keyType('uuid'),
@@ -21,7 +20,7 @@ class UntypedDraftResource extends Resource
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [RetitleUntypedDrafts::make(), CountUntypedDrafts::make()];
     }

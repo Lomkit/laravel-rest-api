@@ -4,16 +4,15 @@ namespace Lomkit\Rest\Tests\Feature\Search\Stubs;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\Integer;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 
 class MeasuredPostResource extends PostResource
 {
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
-            ...parent::fields($request),
+            ...parent::fields(),
             Integer::make('title_length')
                 ->virtual()
                 ->resolveUsing(fn (Model $post): mixed => $post->getAttribute('title_length')),
@@ -21,7 +20,7 @@ class MeasuredPostResource extends PostResource
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [TitleLengths::make()];
     }

@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Search\Stubs;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
 
 class SignedAuthorResource extends AuthorResource
@@ -12,10 +11,10 @@ class SignedAuthorResource extends AuthorResource
     public static string $response = SignedAuthorResponse::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
-            ...parent::fields($request),
+            ...parent::fields(),
             Text::make('signature')
                 ->virtual()
                 ->requires(['first_name', 'last_name'])
@@ -24,7 +23,7 @@ class SignedAuthorResource extends AuthorResource
     }
 
     #[\Override]
-    public function alwaysSelect(RestRequest $request): array
+    public function alwaysSelect(): array
     {
         return ['api_token'];
     }

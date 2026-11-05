@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Fixtures\Lab;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsToMany;
 
@@ -14,7 +13,7 @@ class InstrumentResource extends Resource
     public static string $model = Instrument::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -25,7 +24,7 @@ class InstrumentResource extends Resource
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         $pivotFields = [Json::make('wiring')->nullable()];
 

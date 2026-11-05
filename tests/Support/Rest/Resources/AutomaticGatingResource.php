@@ -7,7 +7,6 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
@@ -17,7 +16,7 @@ class AutomaticGatingResource extends Resource
 {
     public static string $model = Model::class;
 
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsToMany::make('belongsToManyRelation', BelongsToManyResource::class)->pivotFields([DateTime::make('created_at'), Number::make('number')]),
@@ -25,7 +24,7 @@ class AutomaticGatingResource extends Resource
         ];
     }
 
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),

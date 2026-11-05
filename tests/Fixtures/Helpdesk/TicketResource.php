@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Fixtures\Helpdesk;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
@@ -16,19 +15,19 @@ class TicketResource extends Resource
     public static string $model = Ticket::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [ID::make('id'), Integer::make('team_id'), Text::make('title'), Text::make('status')];
     }
 
     #[\Override]
-    public function alwaysSelect(RestRequest $request): array
+    public function alwaysSelect(): array
     {
         return ['status'];
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsTo::make('team', TeamResource::class),
@@ -38,13 +37,13 @@ class TicketResource extends Resource
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [CloseTickets::make(), RefreshTickets::make(), ImportTickets::make(), ReportOutage::make(), WatchTickets::make()];
     }
 
     #[\Override]
-    public function gates(RestRequest $request): array
+    public function gates(): array
     {
         return ['escalate', 'reassignTeam', 'archive'];
     }

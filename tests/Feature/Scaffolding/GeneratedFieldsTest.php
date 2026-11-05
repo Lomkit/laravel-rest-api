@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Fields\FieldSet;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Article;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Attachment;
@@ -41,7 +40,7 @@ class GeneratedFieldsTest extends ScaffoldingTestCase
         $this->assertSame($model, $resource::modelClass());
         $this->assertCount(
             substr_count((string) file_get_contents(app_path("Rest/Resources/{$name}.php")), '::make('),
-            FieldSet::of($instance->fields(new RestRequest)),
+            FieldSet::of($instance->fields()),
         );
     }
 
