@@ -42,7 +42,7 @@ final readonly class GatesParser
     private function ability(Cursor $entry, Distinct $distinct, ValidationContext $context): ?GateAbility
     {
         $resource = $context->resource;
-        $gates = $resource->context()->definition($resource)->gates();
+        $gates = $resource->definition()->gates();
         $ability = $gates->find($entry->value);
 
         if ($ability !== null && $ability->isClassLevel() && (! $this->classLevel || $context->includeDepth > 0)) {

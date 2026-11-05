@@ -27,8 +27,8 @@ final readonly class RelationRenderer
 
         foreach ($plan->includes as $include) {
             [$name, $key, $rows] = match (true) {
-                $include instanceof AliasedIncludeClause => [$include->alias, $include->alias, RowSerializer::of($include->plan, $plan->resource->relation($include->relation))],
-                $include instanceof IncludeClause => [$include->relation, Str::snake($include->relation), RowSerializer::of($include->plan, $plan->resource->relation($include->relation))],
+                $include instanceof AliasedIncludeClause => [$include->alias, $include->alias, RowSerializer::of($include->plan, $plan->resource->definition()->relation($include->relation))],
+                $include instanceof IncludeClause => [$include->relation, Str::snake($include->relation), RowSerializer::of($include->plan, $plan->resource->definition()->relation($include->relation))],
                 $include instanceof MorphToIncludeClause => [$include->name(), $include->alias ?? Str::snake($include->relation), MorphToSerializer::of($include, $plan->resource)],
                 default => throw new LogicException($include::class.' is not an include of a plan.'),
             };

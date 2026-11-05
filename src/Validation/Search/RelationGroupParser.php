@@ -24,7 +24,7 @@ final readonly class RelationGroupParser
     public function parse(Cursor $entry, ValidationContext $context): RelationFilterGroup|MorphFilterGroup|null
     {
         $name = $entry->at('relation')->value;
-        $declared = is_string($name) && ! str_contains($name, '.') ? $context->resource->relation($name) : null;
+        $declared = is_string($name) && ! str_contains($name, '.') ? $context->resource->definition()->relation($name) : null;
 
         $context->reader->known($entry, $declared instanceof PolymorphicRelation ? [...self::KEYS, 'types' => true] : self::KEYS);
 
@@ -63,7 +63,7 @@ final readonly class RelationGroupParser
         $name = $entry->at('relation');
         $names = $context->vocabulary->of($resource, $context->grammar, 'relations', fn (): array => array_values(array_map(
             fn (Relation $relation): string => $relation->relation,
-            $resource->getRelations(),
+            $resource->definition()->relations(),
         )));
 
         $context->rules->add($name->path, ['required', 'string', $names]);
@@ -72,7 +72,7 @@ final readonly class RelationGroupParser
             return null;
         }
 
-        return $resource->relation($name->value);
+        return $resource->definition()->relation($name->value);
     }
 
     /** @return non-empty-array<string, FilterGroup>|null */

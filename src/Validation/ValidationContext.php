@@ -74,7 +74,7 @@ final readonly class ValidationContext
         $relations = [];
 
         foreach (explode('.', $relation) as $segment) {
-            $declared = $resource->relation($segment);
+            $declared = $resource->definition()->relation($segment);
 
             if ($declared === null) {
                 return null;

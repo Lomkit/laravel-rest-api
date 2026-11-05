@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Concerns\Resource;
 
 use Lomkit\Rest\Fields\Field;
-use Lomkit\Rest\Fields\FieldSet;
 
 trait DeclaresFields
 {
@@ -17,10 +16,5 @@ trait DeclaresFields
     public function alwaysSelect(): array
     {
         return [];
-    }
-
-    public function getFields(): FieldSet
-    {
-        return $this->context()->definition($this)->fields();
     }
 }

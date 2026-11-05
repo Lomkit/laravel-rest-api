@@ -106,16 +106,18 @@ class Resource implements \JsonSerializable
     #[\Override]
     public function jsonSerialize(): mixed
     {
+        $definition = $this->definition();
+
         return [
-            'actions' => array_values(array_map(fn (Action $action): array => $action->jsonSerialize(), $this->getActions())),
-            'instructions' => array_values(array_map(fn (Instruction $instruction): array => $instruction->jsonSerialize(), $this->getInstructions())),
-            'fields' => FieldDetails::forFields($this->getFields()),
-            'limits' => $this->getLimits(),
-            'scopes' => array_map(fn (Scope $scope): array => $scope->jsonSerialize(), $this->getScopes()),
-            'relations' => array_values(array_map(fn (Relation $relation): mixed => $relation->jsonSerialize(), $this->getRelations())),
+            'actions' => array_values(array_map(fn (Action $action): array => $action->jsonSerialize(), $definition->actions())),
+            'instructions' => array_values(array_map(fn (Instruction $instruction): array => $instruction->jsonSerialize(), $definition->instructions())),
+            'fields' => FieldDetails::forFields($definition->fields()),
+            'limits' => $definition->limits()->allowed,
+            'scopes' => array_map(fn (Scope $scope): array => $scope->jsonSerialize(), $definition->scopes()),
+            'relations' => array_values(array_map(fn (Relation $relation): mixed => $relation->jsonSerialize(), $definition->relations())),
             'rules' => ResourceRuleDetails::of($this)->jsonSerialize(),
             'text' => $this->context()->text($this)->capabilities?->jsonSerialize(),
-            'gates' => $this->isGatingEnabled() ? $this->context()->definition($this)->gates()->names() : [],
+            'gates' => $this->isGatingEnabled() ? $definition->gates()->names() : [],
         ];
     }
 }

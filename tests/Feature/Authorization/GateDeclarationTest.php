@@ -24,7 +24,7 @@ class GateDeclarationTest extends HelpdeskTestCase
     public function it_reads_the_declared_gates_once_per_request(): void
     {
         $resource = $this->contextFor(null)->resource(TicketResource::class);
-        $definition = $resource->context()->definition($resource);
+        $definition = $resource->definition();
 
         $this->assertSame($definition->gates(), $definition->gates());
     }

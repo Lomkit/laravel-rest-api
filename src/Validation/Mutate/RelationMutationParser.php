@@ -44,7 +44,7 @@ final readonly class RelationMutationParser
 
         $relations = $entry->at('relations');
 
-        foreach ($resource->getRelations() as $relation) {
+        foreach ($resource->definition()->relations() as $relation) {
             $constraint = $this->constraint($relation, $operation);
 
             if ($constraint !== null) {
@@ -78,7 +78,7 @@ final readonly class RelationMutationParser
 
         $declared = [];
 
-        foreach ($resource->getRelations() as $relation) {
+        foreach ($resource->definition()->relations() as $relation) {
             $declared[$relation->relation] = $relation;
         }
 

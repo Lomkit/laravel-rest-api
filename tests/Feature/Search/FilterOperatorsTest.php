@@ -140,9 +140,10 @@ class FilterOperatorsTest extends PackageTestCase
     public function it_covers_every_operator_of_every_filterable_field_of_the_posts(): void
     {
         $resource = (new RestContext(RestRequest::create('/api/posts/search', 'POST'), $this->app))->resource(PostResource::class);
+        $fields = $resource->definition()->fields();
         $declared = [];
 
-        foreach ($resource->getFields()->filterable() as $field) {
+        foreach ($fields->filterable() as $field) {
             foreach ($field->filterOperators() as $operator) {
                 $declared[] = $field->name.' '.$operator->value;
             }

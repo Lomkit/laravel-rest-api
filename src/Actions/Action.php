@@ -104,7 +104,7 @@ class Action implements JsonSerializable
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
-            'fields' => InputFieldDetails::forFields($this->getFields()),
+            'fields' => InputFieldDetails::forFields($this->resource->definition()->inputFields($this)),
             'meta' => (object) $this->getMeta(),
             'standalone' => $this->isStandalone(),
             'targeted' => $this->isTargeted(),

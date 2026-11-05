@@ -58,7 +58,10 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
             [
                 [
                     'morph_one_relation' => $matchingModel->morphOneRelation->only(
-                        (new MorphOneResource)->getFields()->names()
+                        (new MorphOneResource)
+                            ->definition()
+                            ->fields()
+                            ->names()
                     ),
                 ],
                 [
@@ -100,7 +103,10 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
             [
                 [
                     'morph_one_of_many_relation' => $matchingModel->morphOneOfManyRelation->only(
-                        (new MorphOneOfManyResource)->getFields()->names()
+                        (new MorphOneOfManyResource)
+                            ->definition()
+                            ->fields()
+                            ->names()
                     ),
                 ],
                 [
@@ -149,7 +155,10 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) {
                             return $relation->only(
-                                (new MorphManyResource)->getFields()->names()
+                                (new MorphManyResource)
+                                    ->definition()
+                                    ->fields()
+                                    ->names()
                             );
                         })->toArray(),
                 ],
@@ -197,12 +206,22 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) use ($pivotAccessor) {
                             return collect($relation->only(
-                                array_merge((new MorphToManyResource)->getFields()->names(), [$pivotAccessor])
+                                array_merge(
+                                    (new MorphToManyResource)
+                                        ->definition()
+                                        ->fields()
+                                        ->names(),
+                                    [$pivotAccessor]
+                                )
                             ))
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource)->relation('morphToManyRelation')->getPivotFields()->names()
+                                            (new ModelResource)
+                                                ->definition()
+                                                ->relation('morphToManyRelation')
+                                                ->getPivotFields()
+                                                ->names()
                                         );
 
                                     return $relation;
@@ -254,12 +273,22 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) use ($pivotAccessor) {
                             return collect($relation->only(
-                                array_merge((new MorphedByManyResource)->getFields()->names(), [$pivotAccessor])
+                                array_merge(
+                                    (new MorphedByManyResource)
+                                        ->definition()
+                                        ->fields()
+                                        ->names(),
+                                    [$pivotAccessor]
+                                )
                             ))
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
                                         ->only(
-                                            (new ModelResource)->relation('morphedByManyRelation')->getPivotFields()->names()
+                                            (new ModelResource)
+                                                ->definition()
+                                                ->relation('morphedByManyRelation')
+                                                ->getPivotFields()
+                                                ->names()
                                         );
 
                                     return $relation;

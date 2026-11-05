@@ -59,9 +59,9 @@ class InstructionClauseTest extends PackageTestCase
     {
         $query = Product::query();
         $resource = $this->resource(ProductResource::class);
-        $instruction = $resource->instruction('priced-between');
+        $instruction = $resource->definition()->instruction('priced-between');
         $this->assertInstanceOf(PricedBetween::class, $instruction);
-        $node = new InstructionNode($instruction, InputValues::fromNamed($instruction->getFields(), [['name' => 'max', 'value' => '39']]));
+        $node = new InstructionNode($instruction, InputValues::fromNamed($resource->definition()->inputFields($instruction), [['name' => 'max', 'value' => '39']]));
 
         $this->expectExceptionObject(InvalidInstructionException::engineOnly(PricedBetween::class));
 

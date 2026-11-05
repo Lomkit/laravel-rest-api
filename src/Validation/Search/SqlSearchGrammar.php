@@ -99,14 +99,17 @@ final readonly class SqlSearchGrammar implements SearchGrammar
             return RelationSort::resolve($resource, $name, $direction);
         }
 
-        return new FieldSort($resource->getFields()->get($name), $direction);
+        $fields = $resource->definition()->fields();
+
+        return new FieldSort($fields->get($name), $direction);
     }
 
     private function resourceSorts(ValidationContext $context): OneOf
     {
         $resource = $context->resource;
         $names = fn (): array => $resource
-            ->getFields()
+            ->definition()
+            ->fields()
             ->sortable()
             ->names();
 

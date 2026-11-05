@@ -82,7 +82,7 @@ final readonly class OperationParser
     {
         $context->rules->addWhenPresent($fields, ['array']);
         $context->reader->admit($fields, $context->limits->sizes->fields);
-        $set = $action->getFields();
+        $set = $context->resource->definition()->inputFields($action);
 
         if ($fields->present && ! is_array($fields->value)) {
             $context->rules->partial();

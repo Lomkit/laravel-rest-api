@@ -2,7 +2,9 @@
 
 namespace Lomkit\Rest\Http;
 
+use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\InvalidScopeException;
 use Lomkit\Rest\Fields\FieldSet;
@@ -13,6 +15,7 @@ use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Search\GateVocabulary;
 use Lomkit\Rest\Text\ResolvedText;
 use ReflectionClass;
+use WeakMap;
 
 final class ResourceDefinition
 {
@@ -36,11 +39,15 @@ final class ResourceDefinition
 
     private ?GateVocabulary $gates = null;
 
+    /** @var WeakMap<Action|Instruction, FieldSet> */
+    private WeakMap $inputs;
+
     public function __construct(
         private readonly Resource $resource,
         private readonly RestRequest $request,
     ) {
         RemovedHooks::ensureAbsentFrom($resource);
+        $this->inputs = new WeakMap;
     }
 
     public function fields(): FieldSet
@@ -76,6 +83,48 @@ final class ResourceDefinition
             fn (Action $action): Action => $action->resource($this->resource),
             $this->resource->actions(),
         );
+    }
+
+    public function scope(string $name): ?Scope
+    {
+        return array_find($this->scopes(), fn (Scope $scope): bool => $scope->name === $name);
+    }
+
+    public function relation(string $name): ?Relation
+    {
+        $relation = array_find($this->relations(), fn (Relation $relation): bool => $relation->relation === Str::before($name, '.'));
+
+        if ($relation === null || ! str_contains($name, '.')) {
+            return $relation;
+        }
+
+        if ($relation instanceof PolymorphicRelation && $relation->targets()->isPolymorphic()) {
+            return null;
+        }
+
+        return $relation->resource()
+            ->definition()
+            ->relation(Str::after($name, '.'));
+    }
+
+    public function instruction(string $key): ?Instruction
+    {
+        return array_find($this->instructions(), fn (Instruction $instruction): bool => $instruction->uriKey() === $key);
+    }
+
+    public function actionExists(string $key): bool
+    {
+        return array_any($this->actions(), fn (Action $action): bool => $action->uriKey() === $key);
+    }
+
+    public function action(string $key): Action
+    {
+        return collect($this->actions())->sole(fn (Action $action): bool => $action->uriKey() === $key);
+    }
+
+    public function inputFields(Action|Instruction $declaration): FieldSet
+    {
+        return $this->inputs[$declaration] ??= FieldSet::forInputs($declaration->fields(), $declaration::class.'::fields()');
     }
 
     public function limits(): ResourceLimits

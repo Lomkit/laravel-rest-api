@@ -38,7 +38,7 @@ final readonly class SortPaths implements AllowedValues
         }
 
         [$name, $field] = explode('.', $value, 2);
-        $relation = $this->resource->relation($name);
+        $relation = $this->resource->definition()->relation($name);
 
         if ($relation === null || $relation->hasMultipleEntries() || $relation instanceof MorphTo) {
             return false;
@@ -46,7 +46,8 @@ final readonly class SortPaths implements AllowedValues
 
         $related = $relation->resource();
         $declared = $related
-            ->getFields()
+            ->definition()
+            ->fields()
             ->find($field);
 
         return $declared !== null && AggregateFunction::Max->accepts($declared);

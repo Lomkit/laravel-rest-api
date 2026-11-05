@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Concerns\Resource;
 
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\ResourceDefinition;
 use Lomkit\Rest\Http\RestContext;
 
 trait Contextual
@@ -19,6 +20,11 @@ trait Contextual
     public function context(): RestContext
     {
         return $this->context ??= new RestContext(RestRequest::createFrom(request()), app());
+    }
+
+    public function definition(): ResourceDefinition
+    {
+        return $this->context()->definition($this);
     }
 
     public function request(): RestRequest

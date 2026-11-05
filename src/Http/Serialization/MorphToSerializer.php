@@ -18,7 +18,7 @@ final readonly class MorphToSerializer implements RowRenderer
 
     public static function of(MorphToIncludeClause $include, Resource $resource): self
     {
-        $relation = $resource->relation($include->relation);
+        $relation = $resource->definition()->relation($include->relation);
 
         return new self(
             $resource->context()->config()->morphTypeKey,

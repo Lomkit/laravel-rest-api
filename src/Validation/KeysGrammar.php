@@ -62,7 +62,9 @@ final readonly class KeysGrammar
     public static function idOf(Resource $resource): ID
     {
         $model = $resource::newModel();
-        $field = $resource->getFields()->find($model->getKeyName());
+        $field = $resource->definition()
+            ->fields()
+            ->find($model->getKeyName());
 
         if ($field instanceof ID) {
             return $field;

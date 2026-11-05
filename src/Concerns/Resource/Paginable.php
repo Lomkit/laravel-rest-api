@@ -19,15 +19,6 @@ trait Paginable
         ];
     }
 
-    /** @return list<int> */
-    public function getLimits(): array
-    {
-        return $this->context()
-            ->definition($this)
-            ->limits()
-            ->allowed;
-    }
-
     /**
      * @param  Builder<Model>  $query
      * @return LengthAwarePaginator<int, Model>

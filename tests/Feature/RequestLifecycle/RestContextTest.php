@@ -25,11 +25,17 @@ class RestContextTest extends PackageTestCase
 
         $this->assertSame(
             ['id', 'name', 'price'],
-            $staffContext->resource(StaffProductResource::class)->getFields()->names(),
+            $staffContext->resource(StaffProductResource::class)
+                ->definition()
+                ->fields()
+                ->names(),
         );
         $this->assertSame(
             ['id', 'name'],
-            $customerContext->resource(StaffProductResource::class)->getFields()->names(),
+            $customerContext->resource(StaffProductResource::class)
+                ->definition()
+                ->fields()
+                ->names(),
         );
     }
 
@@ -50,7 +56,10 @@ class RestContextTest extends PackageTestCase
     {
         $context = $this->contextFor(null);
 
-        $category = $context->resource(ProductResource::class)->relation('category')->resource();
+        $category = $context->resource(ProductResource::class)
+            ->definition()
+            ->relation('category')
+            ->resource();
 
         $this->assertSame($context->resource(CategoryResource::class), $category);
     }

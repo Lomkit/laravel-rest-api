@@ -34,10 +34,12 @@ class DeclarationRequestTest extends PackageTestCase
     public function it_gives_an_action_and_an_instruction_the_request_of_their_resource(): void
     {
         $request = RestRequest::create('/api/posts/search', 'POST');
-        $resource = (new RestContext($request, $this->app))->resource(PostResource::class);
+        $definition = (new RestContext($request, $this->app))
+            ->resource(PostResource::class)
+            ->definition();
 
-        $this->assertSame($request, $resource->action('publish-posts')->request());
-        $this->assertSame($request, $resource->instruction('highlight-posts')?->request());
+        $this->assertSame($request, $definition->action('publish-posts')->request());
+        $this->assertSame($request, $definition->instruction('highlight-posts')?->request());
     }
 
     #[Test]

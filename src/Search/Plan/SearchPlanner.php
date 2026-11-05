@@ -178,9 +178,7 @@ final readonly class SearchPlanner
 
     private static function limits(Resource $resource): ResourceLimits
     {
-        return $resource->context()
-            ->definition($resource)
-            ->limits();
+        return $resource->definition()->limits();
     }
 
     private static function aggregate(AggregateNode $aggregate, int $position): AggregateClause

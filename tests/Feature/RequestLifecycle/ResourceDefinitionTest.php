@@ -138,13 +138,14 @@ class ResourceDefinitionTest extends PackageTestCase
 
         $this->app->instance('request', Request::create('/'));
         $restored = unserialize($serialized);
-        $declared = [...$restored->getActions(), ...$restored->getInstructions()];
+        $definition = $restored->definition();
+        $declared = [...$definition->actions(), ...$definition->instructions()];
         $bound = array_map(fn (Action|Instruction $declaration): Resource => $declaration->resource, $declared);
         $this->readEveryDeclaration($restored, 2);
 
         $this->assertSame(array_fill_keys(self::DECLARATIONS, 2), $this->evaluated->counts());
         $this->assertSame(['Grace', null], $this->evaluated->usersOf('fields'));
-        $this->assertSame(['id', 'title'], $restored->getFields()->names());
+        $this->assertSame(['id', 'title'], $definition->fields()->names());
         $this->assertSame(
             ['publish-posts', 'queued-publish-posts', 'batched-publish-posts', 'change-status', 'highlight-posts', 'in-status'],
             array_map(fn (Action|Instruction $declaration): string => $declaration->uriKey(), $declared),
@@ -157,17 +158,17 @@ class ResourceDefinitionTest extends PackageTestCase
     private function readEveryDeclaration(Resource $resource, int $times): void
     {
         for ($read = 0; $read < $times; $read++) {
-            $resource->getFields();
-            $resource->getScopes();
-            $resource->getRelations();
-            $resource->getInstructions();
-            $resource->getActions();
-            $resource->getLimits();
-            $resource->relation('author');
-            $resource->scope('popular');
+            $resource->definition()->fields();
+            $resource->definition()->scopes();
+            $resource->definition()->relations();
+            $resource->definition()->instructions();
+            $resource->definition()->actions();
+            $resource->definition()->limits()->allowed;
+            $resource->definition()->relation('author');
+            $resource->definition()->scope('popular');
             FieldPath::resolve($resource, 'title');
-            $resource->actionExists('publish-posts');
-            $resource->instruction('highlight-posts');
+            $resource->definition()->actionExists('publish-posts');
+            $resource->definition()->instruction('highlight-posts');
             $resource->jsonSerialize();
         }
     }

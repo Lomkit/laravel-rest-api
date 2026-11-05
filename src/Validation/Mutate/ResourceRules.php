@@ -21,7 +21,7 @@ final class ResourceRules
     public function for(Resource $resource, WriteOperation $operation): WriteRules
     {
         return $this->rules[$resource::class.':'.$operation->value] ??= WriteRules::of(
-            $resource->getFields(),
+            $resource->definition()->fields(),
             $operation,
             MorphTypeRules::of($resource, $operation)->addTo($operation === WriteOperation::Create ? $resource->createRules() : $resource->updateRules()),
             $this->shared($resource),

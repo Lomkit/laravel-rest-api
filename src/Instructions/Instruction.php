@@ -43,7 +43,7 @@ class Instruction
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
-            'fields' => InputFieldDetails::forFields($this->getFields()),
+            'fields' => InputFieldDetails::forFields($this->resource->definition()->inputFields($this)),
             'meta' => (object) $this->getMeta(),
             'text' => InstructionSupport::of($this)->runsWithText($this->resource->context()->text($this->resource)->backend),
         ];

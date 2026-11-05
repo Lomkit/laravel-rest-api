@@ -68,6 +68,7 @@ class PivotFieldsTest extends WeightedPivotTestCase
         $request = MutateRequest::create($this->endpoint($relation).'/mutate', 'POST');
         $declared = (new RestContext($request, $this->app))
             ->resource($relation === 'labelledTickets' ? WeightedTagResource::class : WeightedTicketResource::class)
+            ->definition()
             ->relation($relation);
         $this->assertInstanceOf(PivotRelation::class, $declared);
 

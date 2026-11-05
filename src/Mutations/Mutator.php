@@ -97,7 +97,7 @@ final readonly class Mutator
             $relationKeys = [...$relationKeys, ...$write->owned($model)];
         }
 
-        (new AttributeWriter($resource->getFields()))
+        (new AttributeWriter($resource->definition()->fields()))
             ->write($model, $node->operation, $node->attributes ?? [], [...$relationKeys, ...$owned])
             ->save();
 
@@ -131,7 +131,7 @@ final readonly class Mutator
         $entries = $node->relations ?? [];
         $writes = [];
 
-        foreach ($resource->getRelations() as $relation) {
+        foreach ($resource->definition()->relations() as $relation) {
             if (isset($entries[$relation->relation])) {
                 $writes[] = RelationWrites::of($model, $relation, $entries[$relation->relation]);
             }

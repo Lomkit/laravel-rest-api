@@ -138,7 +138,7 @@ final readonly class MutationParser
         $this->rules->add($attributes->path, ['array', ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => $candidate->writeOperation() === null)]);
 
         if ($write !== null) {
-            $this->entryRules->writable($attributes, $resource->getFields(), $write);
+            $this->entryRules->writable($attributes, $resource->definition()->fields(), $write);
         }
 
         $this->rules->add($entry->at('key')->path, [

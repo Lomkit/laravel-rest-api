@@ -39,8 +39,8 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
 
         $context = new RestContext(RestRequest::createFrom(request()), app());
         $resource = $context->resource($controller::resourceClass());
-        $fields = $resource->getFields();
-        $relations = $resource->getRelations();
+        $fields = $resource->definition()->fields();
+        $relations = $resource->definition()->relations();
         $resourceName = str_replace('Resource', '', class_basename($resource));
         $action = $routeInfo->route->getActionMethod();
 
@@ -142,7 +142,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $update = WriteOperation::Update;
 
         return WritableFieldsType::of(
-            $resource->getFields(),
+            $resource->definition()->fields(),
             [$create->value => $create, $update->value => $update],
             [$create->value => $resource->createRules(), $update->value => $resource->updateRules()],
             $resource->rules(),
