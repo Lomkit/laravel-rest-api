@@ -126,7 +126,7 @@ final readonly class RelationAggregate implements AggregateQuery
     }
 
     /** @return EloquentBuilder<Model> */
-    private static function eloquent(Builder $query): EloquentBuilder
+    public static function eloquent(Builder $query): EloquentBuilder
     {
         return match (true) {
             $query instanceof EloquentBuilder => $query,

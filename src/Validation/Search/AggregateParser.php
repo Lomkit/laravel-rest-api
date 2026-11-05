@@ -8,6 +8,7 @@ use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Search\AggregateKey;
 use Lomkit\Rest\Search\AggregateNode;
@@ -60,19 +61,21 @@ final readonly class AggregateParser
         $rules->add($relation->path, ['required', new KnownRelation($context->resource)]);
         $rules->add($type->path, ['required', Rule::enum(AggregateFunction::class)]);
 
-        if ($relations !== null && count($relations) > 1) {
-            $rules->reject(Violation::nestedAggregate($relation->path));
+        $morphTo = $relations === null ? null : array_find($relations, static fn (Relation $through): bool => $through instanceof PolymorphicRelation);
+
+        if ($morphTo instanceof PolymorphicRelation) {
+            foreach ($morphTo->targets() as $target) {
+                $rules->reach(Check::onClass($morphTo->resourceOf($target), 'viewAny', $entry->path));
+            }
+
+            $rules->reject($morphTo === $relations[array_key_last($relations)] ? Violation::morphToAggregate($relation->path) : Violation::throughMorphTo($relation->path));
             $rules->partial();
 
             return null;
         }
 
-        if ($relations !== null && $relations[0] instanceof PolymorphicRelation) {
-            foreach ($relations[0]->targets() as $target) {
-                $rules->reach(Check::onClass($relations[0]->resourceOf($target), 'viewAny', $entry->path));
-            }
-
-            $rules->reject(Violation::morphToAggregate($relation->path));
+        if ($relations !== null && count($relations) > max(1, $context->limits->depths->includes)) {
+            $rules->reject(Violation::tooDeep($relation->path, $context->limits->depths->includes));
             $rules->partial();
 
             return null;

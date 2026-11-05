@@ -55,7 +55,6 @@ class ResponseBlockRulesTest extends PackageTestCase
             'an unknown gate' => [['gates' => ['viewAny']], 'response.gates.0', 'The selected response.gates.0 is invalid.'],
             'an unknown relation' => [['includes' => [['relation' => 'author']]], 'response.includes.0.relation', 'The response.includes.0.relation field is not a valid or allowed relation for this resource.'],
             'an unknown field' => [['selects' => [['field' => 'isbn']]], 'response.selects.0.field', 'The selected response.selects.0.field is invalid.'],
-            'a nested aggregate' => [['aggregates' => [['relation' => 'loan.book', 'type' => 'count']]], 'response.aggregates.0.relation', 'The response.aggregates.0.relation field cannot be a nested relation. Request the aggregate inside an include instead.'],
         ];
     }
 }

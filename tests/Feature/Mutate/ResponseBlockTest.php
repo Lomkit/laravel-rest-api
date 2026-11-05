@@ -10,6 +10,7 @@ use Lomkit\Rest\Tests\Fixtures\Library\Book;
 use Lomkit\Rest\Tests\Fixtures\Library\BookResource;
 use Lomkit\Rest\Tests\Fixtures\Library\Label;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
+use Lomkit\Rest\Tests\Fixtures\Library\Loan;
 use Lomkit\Rest\Tests\Fixtures\Library\Shelf;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -80,6 +81,28 @@ class ResponseBlockTest extends PackageTestCase
                     ['title' => 'Ivanhoe', 'shelves_count' => 1, 'gates' => ['authorized_to_update' => self::GRANTED], 'labels' => []],
                     $dune,
                 ],
+            ]);
+    }
+
+    #[Test]
+    public function it_returns_an_aggregate_of_a_relation_path_in_each_record(): void
+    {
+        Loan::query()->create(['book_id' => $this->dune->id, 'borrower' => 'Zoe']);
+        Loan::query()->create(['book_id' => $this->dune->id, 'borrower' => 'Adam']);
+
+        $response = $this->postJson('/api/books/mutate', [
+            'mutate' => [
+                ['operation' => 'update', 'key' => $this->dune->id, 'attributes' => ['title' => 'Dune Messiah']],
+                ['operation' => 'update', 'key' => $this->emma->id, 'attributes' => ['title' => 'Emma Woodhouse']],
+            ],
+            'response' => ['selects' => [['field' => 'title']], 'aggregates' => [['relation' => 'loan.book', 'type' => 'count']]],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertExactJson([
+                'operations' => [['operation' => 'update', 'key' => $this->dune->id], ['operation' => 'update', 'key' => $this->emma->id]],
+                'records' => [['title' => 'Dune Messiah', 'loan_book_count' => 1], ['title' => 'Emma Woodhouse', 'loan_book_count' => 0]],
             ]);
     }
 

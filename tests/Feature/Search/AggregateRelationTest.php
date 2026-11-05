@@ -18,41 +18,44 @@ class AggregateRelationTest extends PackageTestCase
         return [new Publishing];
     }
 
-    /** @param array<string, mixed> $search */
+    /**
+     * @param  array<string, mixed>  $search
+     * @param  list<array<string, mixed>>  $data
+     */
     #[Test]
-    #[DataProvider('nested')]
-    public function it_refuses_an_aggregate_on_a_nested_relation(string $uri, array $search, string $key): void
+    #[DataProvider('paths')]
+    public function it_aggregates_a_relation_path(string $uri, array $search, array $data): void
     {
-        $message = "The {$key} field cannot be a nested relation. Request the aggregate inside an include instead.";
+        $this->seedPublishingRows();
 
-        $response = $this->postJson($uri, ['search' => $search]);
+        $response = $this->postJson($uri, ['search' => [...$search, 'selects' => [['field' => 'id']]]]);
 
-        $response->assertUnprocessable()->assertExactJson(['message' => $message, 'errors' => [$key => [$message]]]);
+        $response->assertOk()->assertJsonPath('data', $data);
     }
 
-    /** @return array<string, array{string, array<string, mixed>, string}> */
-    public static function nested(): array
+    /** @return array<string, array{string, array<string, mixed>, list<array<string, mixed>>}> */
+    public static function paths(): array
     {
         return [
-            'a nested relation' => [
+            'a relation path' => [
                 '/api/posts/search',
-                ['aggregates' => [['relation' => 'author.posts', 'type' => 'count']]],
-                'search.aggregates.0.relation',
+                ['aggregates' => [['relation' => 'author.posts', 'type' => 'count']], 'sorts' => [['field' => 'id']]],
+                [['id' => 1, 'author_posts_count' => 2], ['id' => 2, 'author_posts_count' => 2], ['id' => 3, 'author_posts_count' => 0]],
             ],
-            'a nested relation with an alias' => [
+            'a relation path with an alias' => [
                 '/api/posts/search',
-                ['aggregates' => [['relation' => 'author.posts', 'type' => 'count', 'alias' => 'siblings']]],
-                'search.aggregates.0.relation',
+                ['aggregates' => [['relation' => 'author.posts', 'type' => 'count', 'alias' => 'siblings']], 'sorts' => [['field' => 'id']]],
+                [['id' => 1, 'siblings' => 2], ['id' => 2, 'siblings' => 2], ['id' => 3, 'siblings' => 0]],
             ],
-            'a nested relation with a field' => [
+            'a relation path with a field' => [
                 '/api/authors/search',
-                ['aggregates' => [['relation' => 'posts.author', 'type' => 'max', 'field' => 'first_name']]],
-                'search.aggregates.0.relation',
+                ['aggregates' => [['relation' => 'posts.author', 'type' => 'max', 'field' => 'first_name']], 'sorts' => [['field' => 'first_name']]],
+                [['id' => 1, 'posts_author_max_first_name' => 'Ada'], ['id' => 2, 'posts_author_max_first_name' => null]],
             ],
-            'a nested relation in an include' => [
+            'a relation path in an include' => [
                 '/api/authors/search',
-                ['includes' => [['relation' => 'posts', 'aggregates' => [['relation' => 'author.tags', 'type' => 'count']]]]],
-                'search.includes.0.aggregates.0.relation',
+                ['includes' => [['relation' => 'posts', 'selects' => [['field' => 'id']], 'aggregates' => [['relation' => 'author.tags', 'type' => 'count']]]], 'sorts' => [['field' => 'first_name']]],
+                [['id' => 1, 'posts' => [['id' => 2, 'author_tags_count' => 1], ['id' => 1, 'author_tags_count' => 1]]], ['id' => 2, 'posts' => []]],
             ],
         ];
     }
