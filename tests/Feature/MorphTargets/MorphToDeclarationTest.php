@@ -58,7 +58,22 @@ class MorphToDeclarationTest extends MorphTargetsTestCase
 
         return [
             'keyed targets' => [MorphTo::make('labelable', ['book' => BookResource::class]), "The MorphTo relation [labelable] of the resource [{$resource}] declares its targets with a resource class or a list of resource classes."],
+            'a model method that returns another relation' => [MorphTo::make('target', [BookResource::class, ShelfResource::class]), "The relation [target] of the resource [{$resource}] is declared with MorphTo, but its model method returns the MorphTo relation [labelable]. Declare the relation under the name of the model method that defines it."],
         ];
+    }
+
+    #[Test]
+    public function it_refuses_a_target_that_declares_a_field_named_like_the_type_key(): void
+    {
+        config(['rest.morph.type_key' => 'name']);
+
+        $listed = $this->postJson('/api/labels/search', ['search' => ['includes' => [['relation' => 'labelable', 'types' => ['book' => []]]]]]);
+        $this->withoutExceptionHandling();
+
+        $listed->assertOk();
+        $this->expectExceptionObject(InvalidResourceException::morphTypeKeyField(ShelfResource::class, 'name', LabelResource::class, 'labelable'));
+
+        $this->postJson('/api/labels/search', ['search' => ['includes' => [['relation' => 'labelable']]]]);
     }
 
     #[Test]

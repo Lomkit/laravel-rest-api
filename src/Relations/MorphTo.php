@@ -60,7 +60,15 @@ class MorphTo extends MorphRelation implements OwnerRelation, PolymorphicRelatio
     #[\Override]
     public function resourceOf(MorphTarget $target): Resource
     {
-        return $this->fromResource->context()->resource($target->resource);
+        $context = $this->fromResource->context();
+        $resource = $context->resource($target->resource);
+        $key = $context->config()->morphTypeKey;
+
+        if ($resource->getFields()->has($key)) {
+            throw InvalidResourceException::morphTypeKeyField($resource::class, $key, $this->fromResource::class, $this->relation);
+        }
+
+        return $resource;
     }
 
     #[\Override]
@@ -93,6 +101,10 @@ class MorphTo extends MorphRelation implements OwnerRelation, PolymorphicRelatio
 
         if (! $relation instanceof EloquentMorphTo) {
             throw InvalidResourceException::notAMorphTo($this->fromResource::class, $this->relation);
+        }
+
+        if ($relation->getRelationName() !== $this->relation) {
+            throw InvalidResourceException::morphRelationName($this->fromResource::class, $this->relation, $relation->getRelationName());
         }
 
         return MorphColumns::of($relation);

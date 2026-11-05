@@ -108,6 +108,9 @@ class MorphTargetsTest extends TestCase
             'no target' => [[], [], $list],
             'a keyed list' => [[], ['book' => BookResource::class], $list],
             'a class that is not a resource' => [[], [Book::class], $list],
+            'a model declared twice' => [[], [BookResource::class, BookResource::class], $label.' declares two targets of the morph type ['.Book::class.']. Declare each target model once.'],
+            'a type with a star' => [['bo*k' => Book::class], [BookResource::class], $label.' declares a target of the morph type [bo*k], which contains * or ends with a backslash. Map the model to another alias in the morph map.'],
+            'a type that ends with a backslash' => [['book\\' => Book::class], [BookResource::class], $label.' declares a target of the morph type [book\\], which contains * or ends with a backslash. Map the model to another alias in the morph map.'],
         ];
     }
 }

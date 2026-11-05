@@ -952,7 +952,7 @@ The package renders the rows of a response from the plan of the search: the `sel
 MorphTo includes:
 
 - A `MorphTo` relation declares a list of targets: `MorphTo::make('labelable', [BookResource::class, ShelfResource::class])`. Each target is keyed by its morph type, the `getMorphClass()` of its model: the morph-map alias, or the class name without a map. A morph map is recommended; adding one to an existing app needs the stored types migrated (`UPDATE labels SET labelable_type = 'book' WHERE labelable_type = 'App\\Models\\Book'`), because a stored class name no longer matches. A declaration with one resource is the one-target case. `Relation::resource()` throws a `LogicException` on a relation with several targets: use `targets()` and `resourceOf()` of `Lomkit\Rest\Contracts\PolymorphicRelation`, which `MorphTo` implements. The model keeps one `morphTo()` method; relations declared per target through a `morphTo('<name>', ...)` with their own name keep working as one-target relations.
-- Each row that a `MorphTo` include returns starts with its type, under the `@type` key: the type that the parent row stores, which is the morph-map alias of the model, or its class name without an alias. `morph.type_key` in `config/rest.php` renames the key. Each `MorphTo` include carries it, aliased or nested, and no other row does. A field of the related resource named like the key is not returned. For example, a label with the book it is attached to:
+- Each row that a `MorphTo` include returns starts with its type, under the `@type` key: the type that the parent row stores, which is the morph-map alias of the model, or its class name without an alias. `morph.type_key` in `config/rest.php` renames the key. Each `MorphTo` include carries it, aliased or nested, and no other row does. A target resource that declares a field named like the key throws `Lomkit\Rest\Exceptions\InvalidResourceException` when a request resolves that target. For example, a label with the book it is attached to:
 
   ```json
   {"id": 1, "text": "classic", "labelable": {"@type": "book", "id": 1, "title": "Dune"}}
@@ -1428,7 +1428,7 @@ Behaviour:
 - Empty maps are `{}`: the `meta` of every entry, input entries, actions, instructions and scopes included, and the maps of `rules`. Lists stay `[]`.
 - Details builds every field entry, the pivot fields and the text search, so it now throws where it listed names:
   - `Lomkit\Rest\Exceptions\InvalidTextSearchException` for a text search declaration error, as on the first search;
-  - `Lomkit\Rest\Exceptions\InvalidResourceException` for a `MorphTo` whose model method does not return a `MorphTo` relation, or for an invalid name in `gates()`;
+  - `Lomkit\Rest\Exceptions\InvalidResourceException` for a `MorphTo` whose model method does not return a `MorphTo` relation of the same name, whose targets are not a list of resources, declare a model twice or a morph type with `*` or a trailing backslash, or for an invalid name in `gates()`;
   - `Lomkit\Rest\Exceptions\InvalidFieldException` for an `Enum` field or pivot field with no enum class and no enum cast;
   - `BadMethodCallException` for a many-to-many relation or a `MorphTo` whose model method is missing.
 - Details checks `viewAny` only and applies no policy to the entries. It lists what the declarations of the resource return for the current request, which can depend on `$request->user()`.

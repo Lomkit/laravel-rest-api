@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use IteratorAggregate;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Validation\KeyPath;
 
 /** @implements IteratorAggregate<string, MorphTarget> */
 final readonly class MorphTargets implements IteratorAggregate
@@ -29,6 +30,15 @@ final readonly class MorphTargets implements IteratorAggregate
             }
 
             $type = $resource::newModel()->getMorphClass();
+
+            if (isset($targets[$type])) {
+                throw InvalidResourceException::duplicateMorphType($owner, $relation, $type);
+            }
+
+            if (! KeyPath::canName($type)) {
+                throw InvalidResourceException::unnamedMorphType($owner, $relation, $type);
+            }
+
             $targets[$type] = new MorphTarget($type, $resource);
         }
 

@@ -12,6 +12,11 @@ class DeclaredLabel extends Label
 {
     protected $table = 'labels';
 
+    public function target(): MorphTo
+    {
+        return $this->labelable();
+    }
+
     public function book(): MorphTo
     {
         return $this->morphTo('book', 'labelable_type', 'labelable_id');
