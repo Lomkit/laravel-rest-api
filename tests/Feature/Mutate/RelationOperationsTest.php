@@ -28,9 +28,10 @@ class RelationOperationsTest extends PackageTestCase
         return [new Library, new Catalog];
     }
 
+    /** @param array<string, string> $type */
     #[Test]
     #[DataProvider('toOneRelations')]
-    public function it_refuses_sync_and_toggle_on_to_one_relations(string $endpoint, string $relation, string $name, string $target, string $operation): void
+    public function it_refuses_sync_and_toggle_on_to_one_relations(string $endpoint, string $relation, string $name, string $target, string $operation, array $type = []): void
     {
         $keys = [
             'book' => Book::query()->create(['title' => 'Dune'])->id,
@@ -41,7 +42,7 @@ class RelationOperationsTest extends PackageTestCase
         $response = $this->postJson('/api/'.$endpoint.'/mutate', ['mutate' => [[
             'operation' => 'create',
             'attributes' => self::CREATIONS[$endpoint],
-            'relations' => [$relation => ['operation' => $operation, 'key' => $keys[$target]]],
+            'relations' => [$relation => ['operation' => $operation, ...$type, 'key' => $keys[$target]]],
         ]]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
@@ -52,12 +53,12 @@ class RelationOperationsTest extends PackageTestCase
         $this->assertNull(Label::query()->sole()->labelable_id);
     }
 
-    /** @return iterable<string, array{string, string, string, string, string}> */
+    /** @return iterable<string, array{0: string, 1: string, 2: string, 3: string, 4: string, 5?: array<string, string>}> */
     public static function toOneRelations(): iterable
     {
         foreach (['sync', 'toggle'] as $operation) {
             yield 'belongs to, '.$operation => ['loans', 'book', 'book', 'book', $operation];
-            yield 'morph to, '.$operation => ['labels', 'labelable', 'labelable', 'book', $operation];
+            yield 'morph to, '.$operation => ['labels', 'labelable', 'labelable', 'book', $operation, ['type' => Book::class]];
             yield 'has one, '.$operation => ['books', 'loan', 'loan', 'loan', $operation];
             yield 'has one of many, '.$operation => ['books', 'latestLoan', 'latestLoan', 'loan', $operation];
             yield 'morph one, '.$operation => ['books', 'label', 'label', 'label', $operation];

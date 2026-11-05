@@ -89,7 +89,7 @@ class NestedForeignKeyTest extends PackageTestCase
         $response = $this->postJson('/api/labels/mutate', ['mutate' => [[
             'operation' => 'create',
             'attributes' => ['text' => 'Classic', 'labelable_id' => $emma->id, 'labelable_type' => Shelf::class],
-            'relations' => ['labelable' => ['operation' => 'attach', 'key' => $dune->id]],
+            'relations' => ['labelable' => ['operation' => 'attach', 'type' => Book::class, 'key' => $dune->id]],
         ]]]);
 
         $classic = Label::query()->sole();

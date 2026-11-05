@@ -77,6 +77,14 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $relationDesc = $this->buildRelationsDescription($relations);
         $text = TextSearchType::of($resource);
 
+        $include = new ObjectType;
+        $include->addProperty('relation', empty($relationEnum) ? new StringType : (new StringType)->enum($relationEnum)->setDescription($relationDesc));
+        $include->addProperty('alias', (new StringType)->setDescription('Optional output key for this include, used verbatim. Allows including the same relation several times under different keys. Must match ^[A-Za-z_][A-Za-z0-9_]*$, be unique across the includes, and not collide with a field, a relation, the key of an aggregate or the gates key. Not allowed on a dotted relation path.'));
+        $include->addProperty('limit', new IntegerType);
+        $include->addProperty('filters', new ArrayType);
+        $include->addProperty('sorts', new ArrayType);
+        $include->addProperty('types', (new ObjectType)->setDescription('MorphTo relations only: the search of each type, keyed by morph type, with selects, filters, scopes, includes, aggregates, instructions and gates'));
+
         $search = new ObjectType;
         $search
             ->addProperty('filters', (new ArrayType)->setItems(
@@ -95,22 +103,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
             ->addProperty('selects', (new ArrayType)->setItems(
                 (new ObjectType)->addProperty('field', (new StringType)->enum($fields->selectable()->names()))
             ))
-            ->addProperty('includes', (new ArrayType)->setItems(
-                (new ObjectType)
-                    ->addProperty(
-                        'relation',
-                        empty($relationEnum)
-                            ? new StringType
-                            : (new StringType)->enum($relationEnum)->setDescription($relationDesc)
-                    )
-                    ->addProperty(
-                        'alias',
-                        (new StringType)->setDescription('Optional output key for this include, used verbatim. Allows including the same relation several times under different keys. Must match ^[A-Za-z_][A-Za-z0-9_]*$, be unique across the includes, and not collide with a field, a relation, the key of an aggregate or the gates key. Not allowed on a dotted relation path.')
-                    )
-                    ->addProperty('limit', new IntegerType)
-                    ->addProperty('filters', new ArrayType)
-                    ->addProperty('sorts', new ArrayType)
-            ))
+            ->addProperty('includes', (new ArrayType)->setItems($include))
             ->addProperty('scopes', (new ArrayType)->setItems(
                 (new ObjectType)
                     ->addProperty('name', new StringType)

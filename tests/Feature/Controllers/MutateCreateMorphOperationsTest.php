@@ -9,157 +9,15 @@ use Lomkit\Rest\Tests\Support\Database\Factories\MorphedByManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\MorphToRelationFactory;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\MorphToRelation;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
-use Lomkit\Rest\Tests\Support\Rest\Resources\MorphToResource;
 
 class MutateCreateMorphOperationsTest extends TestCase
 {
-    public function test_creating_a_resource_with_creating_first_morph_to_relation(): void
-    {
-        $modelToCreate = ModelFactory::new()->makeOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(MorphToRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'morphToRelation' => [
-                                'operation' => 'create',
-                                'type' => MorphToResource::class,
-                                'attributes' => [],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertMutatedResponse(
-            $response,
-            [$modelToCreate],
-        );
-
-        $this->assertNotNull(Model::first()->morph_to_relation_id);
-        $this->assertNotNull(Model::first()->morph_to_relation_type);
-    }
-
-    public function test_creating_a_resource_with_attaching_morph_to_relation(): void
-    {
-        $modelToCreate = ModelFactory::new()->makeOne();
-        $morphToRelationToAttach = MorphToRelationFactory::new()->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(MorphToRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'morphToRelation' => [
-                                'operation' => 'attach',
-                                'type' => MorphToResource::class,
-                                'key' => $morphToRelationToAttach->getKey(),
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertMutatedResponse(
-            $response,
-            [$modelToCreate],
-        );
-
-        $this->assertEquals(
-            $morphToRelationToAttach->getKey(),
-            Model::find($response->json('operations.0.key'))->morph_to_relation_id
-        );
-        $this->assertEquals(
-            MorphToRelation::class,
-            Model::find($response->json('operations.0.key'))->morph_to_relation_type
-        );
-    }
-
-    public function test_creating_a_resource_with_updating_morph_to_relation(): void
-    {
-        $modelToCreate = ModelFactory::new()->makeOne();
-        $morphToRelationToUpdate = MorphToRelationFactory::new()->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(MorphToRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'morphToRelation' => [
-                                'operation' => 'update',
-                                'key' => $morphToRelationToUpdate->getKey(),
-                                'type' => MorphToResource::class,
-                                'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertMutatedResponse(
-            $response,
-            [$modelToCreate],
-        );
-
-        // Here we test that the number has been modified on the relation
-        $this->assertEquals(
-            $morphToRelationToUpdate->fresh()->number,
-            5001
-        );
-
-        // Here we test that the model is correctly linked
-        $this->assertEquals(
-            $morphToRelationToUpdate->getKey(),
-            Model::find($response->json('operations.0.key'))->morph_to_relation_id
-        );
-        $this->assertEquals(
-            MorphToRelation::class,
-            Model::find($response->json('operations.0.key'))->morph_to_relation_type
-        );
-    }
-
     public function test_creating_a_resource_with_creating_morph_many_relation(): void
     {
         $modelToCreate = ModelFactory::new()->makeOne();

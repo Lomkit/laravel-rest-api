@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Search\Stubs\BookLabelController;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\ListedLabelController;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\UnlistedPolicy;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
@@ -29,6 +30,8 @@ class MorphToFiltersTest extends PackageTestCase
     {
         parent::setUp();
 
+        Rest::resource('book-labels', BookLabelController::class)->register();
+
         $dune = Book::create(['title' => 'Dune']);
         $emma = Book::create(['title' => 'Emma']);
         $loan = Loan::create(['book_id' => $dune->id, 'borrower' => 'Ada']);
@@ -46,7 +49,7 @@ class MorphToFiltersTest extends PackageTestCase
     {
         DB::enableQueryLog();
 
-        $response = $this->postJson('/api/labels/search', ['search' => [
+        $response = $this->postJson('/book-labels/search', ['search' => [
             'filters' => [
                 ['field' => 'text', 'value' => 'ghost'],
                 ['field' => 'labelable.title', 'operator' => 'in', 'value' => ['Dune', 'Emma'], 'type' => 'or'],
@@ -62,12 +65,10 @@ class MorphToFiltersTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_filters_through_a_morph_to_relation_in_the_middle_of_a_path(): void
+    public function it_filters_through_a_relation_of_the_target_of_a_morph_to_relation(): void
     {
-        $books = $this->postJson('/api/books/search', ['search' => ['filters' => [['field' => 'labels.labelable.title', 'value' => 'Emma']]]]);
-        $labels = $this->postJson('/api/labels/search', ['search' => ['filters' => [['field' => 'labelable.loan.borrower', 'value' => 'Ada']]]]);
+        $labels = $this->postJson('/book-labels/search', ['search' => ['filters' => [['field' => 'labelable.loan.borrower', 'value' => 'Ada']]]]);
 
-        $books->assertOk()->assertJsonPath('data.*.title', ['Emma']);
         $labels->assertOk()->assertJsonPath('data.*.text', ['classic']);
     }
 
@@ -109,7 +110,7 @@ class MorphToFiltersTest extends PackageTestCase
         Gate::policy($model, UnlistedPolicy::class);
         DB::enableQueryLog();
 
-        $response = $this->postJson('/api/labels/search', ['search' => ['filters' => [['field' => $field, 'value' => 'Dune']]]]);
+        $response = $this->postJson('/book-labels/search', ['search' => ['filters' => [['field' => $field, 'value' => 'Dune']]]]);
 
         $response->assertForbidden()->assertJsonPath('message', 'This list is closed.');
         $this->assertSame([], DB::getQueryLog());

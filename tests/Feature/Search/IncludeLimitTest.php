@@ -52,7 +52,7 @@ class IncludeLimitTest extends PackageTestCase
     #[DataProvider('includes')]
     public function it_loads_the_default_number_of_rows_for_each_parent(array $include, string $key, array $ids): void
     {
-        $response = $this->searchBooks([['selects' => self::ID, ...$include]]);
+        $response = $this->searchBooks([$include]);
 
         $response->assertOk();
         $this->assertSame($ids, array_map(fn (array $book): array => array_column($book[$key], 'id'), $response->json('data')));
@@ -62,11 +62,11 @@ class IncludeLimitTest extends PackageTestCase
     public static function includes(): array
     {
         return [
-            'a morph many' => [['relation' => 'labels'], 'labels', [range(24, 15), range(12, 3)]],
-            'a belongs to many' => [['relation' => 'shelves'], 'shelves', [range(12, 3), range(12, 3)]],
-            'an aliased include' => [['relation' => 'labels', 'alias' => 'notes'], 'notes', [range(24, 15), range(12, 3)]],
-            'an explicit limit' => [['relation' => 'labels', 'limit' => 25], 'labels', [range(24, 13), range(12, 1)]],
-            'the middle level of a dotted include' => [['relation' => 'labels.labelable'], 'labels', [range(24, 15), range(12, 3)]],
+            'a morph many' => [['relation' => 'labels', 'selects' => self::ID], 'labels', [range(24, 15), range(12, 3)]],
+            'a belongs to many' => [['relation' => 'shelves', 'selects' => self::ID], 'shelves', [range(12, 3), range(12, 3)]],
+            'an aliased include' => [['relation' => 'labels', 'alias' => 'notes', 'selects' => self::ID], 'notes', [range(24, 15), range(12, 3)]],
+            'an explicit limit' => [['relation' => 'labels', 'limit' => 25, 'selects' => self::ID], 'labels', [range(24, 13), range(12, 1)]],
+            'the middle level of a dotted include' => [['relation' => 'labels.labelable', 'types' => [Book::class => ['selects' => self::ID]]], 'labels', [range(24, 15), range(12, 3)]],
         ];
     }
 

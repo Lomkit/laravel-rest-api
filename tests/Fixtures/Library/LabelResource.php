@@ -27,6 +27,6 @@ class LabelResource extends Resource
     #[\Override]
     public function relations(RestRequest $request): array
     {
-        return [MorphTo::make('labelable', BookResource::class)];
+        return [MorphTo::make('labelable', [BookResource::class, ShelfResource::class])];
     }
 }

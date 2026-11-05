@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Validation;
 
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\AggregateNode;
@@ -80,6 +81,11 @@ final readonly class ValidationContext
             }
 
             $relations[] = $declared;
+
+            if ($declared instanceof PolymorphicRelation && $declared->targets()->isPolymorphic()) {
+                return count($relations) === count(explode('.', $relation)) ? $relations : null;
+            }
+
             $resource = $declared->resource();
             $this->rules->reach(Check::onClass($resource, 'viewAny', $path));
         }

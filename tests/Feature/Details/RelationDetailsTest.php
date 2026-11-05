@@ -10,6 +10,8 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\Helpdesk;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
 use Lomkit\Rest\Tests\Fixtures\Library\BookResource;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
+use Lomkit\Rest\Tests\Fixtures\Library\Shelf;
+use Lomkit\Rest\Tests\Fixtures\Library\ShelfResource;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -60,7 +62,8 @@ class RelationDetailsTest extends PackageTestCase
     {
         $relation = $this->relations('/api/labels')[0];
 
-        $this->assertSame(json_encode([Book::class => BookResource::class]), json_encode($relation->types));
+        $this->assertSame(json_encode([Book::class => BookResource::class, Shelf::class => ShelfResource::class]), json_encode($relation->types));
+        $this->assertFalse(property_exists($relation, 'resource'));
         $this->assertSame('{"type_column":"labelable_type","key_column":"labelable_id"}', json_encode($relation->morph));
     }
 

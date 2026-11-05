@@ -9,13 +9,11 @@ use Lomkit\Rest\Tests\Support\Database\Factories\MorphManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneOfManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\MorphToRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\NoRelationshipAuthorizationModelFactory;
 use Lomkit\Rest\Tests\Support\Models\MorphManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneOfManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\MorphToRelation;
 use Lomkit\Rest\Tests\Support\Models\NoRelationshipAuthorizedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Policies\NoRelationshipAuthorizationModelPolicy;
@@ -27,38 +25,6 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
         parent::setUp();
 
         Gate::policy(NoRelationshipAuthorizedModel::class, NoRelationshipAuthorizationModelPolicy::class);
-    }
-
-    public function test_creating_a_resource_with_attaching_not_authorized_morph_to_relation(): void
-    {
-        $modelToCreate = NoRelationshipAuthorizationModelFactory::new()->makeOne();
-        $morphToRelationToAttach = MorphToRelationFactory::new()->createOne();
-
-        Gate::policy(MorphToRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/no-relationship-authorization-models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'morphToRelation' => [
-                                'operation' => 'attach',
-                                'key' => $morphToRelationToAttach->getKey(),
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(403);
     }
 
     public function test_creating_a_resource_with_attaching_not_authorized_morph_many_relation(): void
@@ -427,39 +393,6 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_creating_a_resource_with_updating_not_authorized_morph_to_relation(): void
-    {
-        $modelToCreate = NoRelationshipAuthorizationModelFactory::new()->makeOne();
-        $morphToRelationToUpdate = MorphToRelationFactory::new()->createOne();
-
-        Gate::policy(MorphToRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/no-relationship-authorization-models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'morphToRelation' => [
-                                'operation' => 'update',
-                                'key' => $morphToRelationToUpdate->getKey(),
-                                'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(403);
-    }
-
     public function test_creating_a_resource_with_updating_not_authorized_morph_many_relation(): void
     {
         $modelToCreate = NoRelationshipAuthorizationModelFactory::new()->makeOne();
@@ -656,38 +589,6 @@ class MutateNotAuthorizedMorphsRelationsOperationsTest extends TestCase
                                     ],
                                     'attributes' => ['number' => 5001], // 5001 because with factory it can't exceed 5000
                                 ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertStatus(403);
-    }
-
-    public function test_creating_a_resource_with_detaching_not_authorized_morph_to_relation(): void
-    {
-        $modelToCreate = NoRelationshipAuthorizationModelFactory::new()->makeOne();
-        $morphToRelationToDetach = MorphToRelationFactory::new()->createOne();
-
-        Gate::policy(MorphToRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/no-relationship-authorization-models/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'morphToRelation' => [
-                                'operation' => 'detach',
-                                'key' => $morphToRelationToDetach->getKey(),
                             ],
                         ],
                     ],

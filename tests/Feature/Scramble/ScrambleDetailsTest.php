@@ -45,7 +45,7 @@ class ScrambleDetailsTest extends ScrambleTestCase
         $morph = '{"type":"object","description":"MorphTo only: the columns of the relation","properties":{"type_column":{"type":"string"},"key_column":{"type":"string"}},"required":["type_column","key_column"]}';
 
         $this->assertSame(
-            '{"type":"object","properties":{"resource":{"type":"string"},"relation":{"type":"string"},"constraints":'.$constraints.',"name":{"type":"string"},"pivot_fields":'.$pivotFields.',"types":'.$types.',"morph":'.$morph.'},"required":["resource","relation","constraints","name"]}',
+            '{"type":"object","properties":{"resource":{"type":"string","description":"The related resource class; absent on a MorphTo relation with several types"},"relation":{"type":"string"},"constraints":'.$constraints.',"name":{"type":"string"},"pivot_fields":'.$pivotFields.',"types":'.$types.',"morph":'.$morph.'},"required":["relation","constraints","name"]}',
             json_encode($this->details()['relations']['items']),
         );
     }

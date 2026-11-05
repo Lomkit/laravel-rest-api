@@ -56,7 +56,7 @@ class MorphToAliasTest extends PackageTestCase
         DB::enableQueryLog();
 
         $response = $this->postJson('/api/labels/search', ['search' => [
-            'includes' => [['relation' => 'labelable', 'alias' => 'target', 'includes' => [['relation' => 'loan']]]],
+            'includes' => [['relation' => 'labelable', 'alias' => 'target', 'types' => [Book::class => ['includes' => [['relation' => 'loan']]]]]],
             'sorts' => [['field' => 'id']],
         ]]);
 
@@ -86,7 +86,7 @@ class MorphToAliasTest extends PackageTestCase
     public function it_loads_an_aliased_include_of_an_aliased_morph_to(): void
     {
         $response = $this->postJson('/api/labels/search', ['search' => [
-            'includes' => [['relation' => 'labelable', 'alias' => 'target', 'includes' => [['relation' => 'loan', 'alias' => 'lent']]]],
+            'includes' => [['relation' => 'labelable', 'alias' => 'target', 'types' => [Book::class => ['includes' => [['relation' => 'loan', 'alias' => 'lent']]]]]],
             'sorts' => [['field' => 'id']],
         ]]);
 
@@ -97,7 +97,7 @@ class MorphToAliasTest extends PackageTestCase
     public function it_counts_a_relation_of_an_aliased_morph_to(): void
     {
         $response = $this->postJson('/api/labels/search', ['search' => [
-            'includes' => [['relation' => 'labelable', 'alias' => 'target', 'aggregates' => [['relation' => 'labels', 'type' => 'count']]]],
+            'includes' => [['relation' => 'labelable', 'alias' => 'target', 'types' => [Book::class => ['aggregates' => [['relation' => 'labels', 'type' => 'count']]]]]],
             'sorts' => [['field' => 'id']],
         ]]);
 

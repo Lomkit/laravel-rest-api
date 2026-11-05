@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo as EloquentMorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use LogicException;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Query\Clauses\Clause;
 use Lomkit\Rest\Relations\MorphColumns;
-use Lomkit\Rest\Relations\MorphTo;
+use Lomkit\Rest\Relations\Relation as RestRelation;
 
 final readonly class MorphToIncludeClause implements Clause
 {
@@ -22,9 +23,10 @@ final readonly class MorphToIncludeClause implements Clause
         public array $branches,
     ) {}
 
-    public static function of(MorphTo $relation, ?string $alias, QueryPlan $plan): self
+    /** @param array<string, QueryPlan> $branches */
+    public static function of(RestRelation&PolymorphicRelation $relation, ?string $alias, array $branches): self
     {
-        return new self($relation->relation, $alias, $relation->columns(), array_fill_keys($relation->targets()->types(), $plan));
+        return new self($relation->relation, $alias, $relation->columns(), $branches);
     }
 
     public function name(): string

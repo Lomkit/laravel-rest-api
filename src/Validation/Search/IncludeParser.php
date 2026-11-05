@@ -3,8 +3,10 @@
 namespace Lomkit\Rest\Validation\Search;
 
 use Lomkit\Rest\Contracts\OwnerRelation;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\IncludeNode;
+use Lomkit\Rest\Search\MorphIncludeNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ParsedRules;
 use Lomkit\Rest\Validation\ValidationContext;
@@ -30,7 +32,7 @@ final readonly class IncludeParser
 
     /**
      * @param  list<Cursor>  $entries
-     * @return list<IncludeNode>
+     * @return list<IncludeNode|MorphIncludeNode>
      */
     public function parse(array $entries, ValidationContext $context, RowKeys $keys): array
     {
@@ -47,13 +49,11 @@ final readonly class IncludeParser
         return $includes;
     }
 
-    private function include(Cursor $entry, RowKeys $keys, ValidationContext $context): ?IncludeNode
+    private function include(Cursor $entry, RowKeys $keys, ValidationContext $context): IncludeNode|MorphIncludeNode|null
     {
         if (! $context->reader->object($entry)) {
             return null;
         }
-
-        $context->reader->known($entry, self::KEYS);
 
         $rules = $context->rules;
         $relation = $entry->at('relation');
@@ -61,14 +61,17 @@ final readonly class IncludeParser
         $name = is_string($relation->value) ? $relation->value : null;
         $relations = $name === null ? null : $context->reachRelation($name, $entry->path);
         $through = $relations === null ? null : $relations[array_key_last($relations)];
-        $related = $through?->resource();
-        $body = $name === null || $relations === null ? null : $this->body($entry, $name, $relations, $context);
+
+        $context->reader->known($entry, $through instanceof PolymorphicRelation ? [...self::KEYS, 'types' => true] : self::KEYS);
+
+        $levels = $name === null || $relations === null ? null : $this->levels($entry, $name, $relations, $context);
+        $body = $levels === null || $through === null || $through instanceof PolymorphicRelation ? null : self::body($entry, $through, $levels);
 
         $rules->add($relation->path, ['required', new KnownRelation($context->resource)]);
         $rules->add($entry->at('text')->path, ['prohibited']);
         $rules->add($entry->at('trashed')->path, ['prohibited']);
 
-        if ($body !== null && $through instanceof OwnerRelation) {
+        if ($levels !== null && $through instanceof OwnerRelation) {
             self::refuseBounds($entry, $rules);
         }
 
@@ -83,15 +86,22 @@ final readonly class IncludeParser
             $rules->reject(Violation::takenKey($alias->path, RowKeys::includeKey($name)));
         }
 
+        $aliased = is_string($alias->value) ? $alias->value : null;
         $search = $body?->node(null, null);
+        $node = match (true) {
+            $name === null || $relations === null || $levels === null => null,
+            $through instanceof PolymorphicRelation => (new MorphIncludeParser)->parse($entry, $name, $relations, $through, $aliased, $levels),
+            $search === null => null,
+            default => new IncludeNode($name, $relations, $relations[array_key_last($relations)]->resource(), $aliased, $search),
+        };
 
-        if ($name === null || $relations === null || $related === null || $search === null || ($alias->value !== null && ! is_string($alias->value))) {
+        if ($node === null || ($alias->value !== null && $aliased === null)) {
             $rules->partial();
 
             return null;
         }
 
-        return new IncludeNode($name, $relations, $related, is_string($alias->value) ? $alias->value : null, $search);
+        return $node;
     }
 
     private static function refuseBounds(Cursor $entry, ParsedRules $rules): void
@@ -104,7 +114,7 @@ final readonly class IncludeParser
     }
 
     /** @param non-empty-list<Relation> $relations */
-    private function body(Cursor $entry, string $relation, array $relations, ValidationContext $context): ?SearchBodyParser
+    private function levels(Cursor $entry, string $relation, array $relations, ValidationContext $context): ?ValidationContext
     {
         $levels = count(explode('.', $relation));
         $limit = $context->limits->depths->includes;
@@ -115,7 +125,7 @@ final readonly class IncludeParser
             return null;
         }
 
-        $through = array_pop($relations);
+        array_pop($relations);
 
         foreach ($relations as $middle) {
             if (! $middle instanceof OwnerRelation) {
@@ -127,9 +137,13 @@ final readonly class IncludeParser
             }
         }
 
+        return $context->included($levels);
+    }
+
+    private static function body(Cursor $entry, Relation $through, ValidationContext $context): SearchBodyParser
+    {
         $context = $context
             ->related($through->resource())
-            ->included($levels)
             ->reserving($through->reservedKeys());
 
         return SearchBodyParser::keys($entry, $context, $through instanceof OwnerRelation ? LevelBounds::Owner : LevelBounds::Limited);

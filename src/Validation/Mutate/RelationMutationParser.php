@@ -9,7 +9,6 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Mutations\MutationNode;
-use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\KeyPath;
@@ -32,8 +31,8 @@ final readonly class RelationMutationParser
     {
         $keys = match (true) {
             $relation instanceof PivotRelation => [...MutationParser::KEYS, 'pivot'],
-            $relation instanceof MorphTo => [...MutationParser::KEYS, 'type'],
-            default => MutationParser::KEYS,
+            $relation === null => MutationParser::KEYS,
+            default => [...MutationParser::KEYS, ...$relation->entryRule()->keys()],
         };
 
         $this->reader->known($entry, array_fill_keys($keys, true));
@@ -124,13 +123,19 @@ final readonly class RelationMutationParser
             return null;
         }
 
-        $resource = $relation->resource();
-
         if (! $relation->hasMultipleEntries()) {
-            $this->relationRules($value, $relation, $resource);
+            $target = $relation->entryRule()->target($value, $this->rules);
 
-            return $parser->entry($value, $resource, $depth + 1, $relation);
+            if ($target === null) {
+                return null;
+            }
+
+            $this->relationRules($value, $relation, $target->resource);
+
+            return $parser->entry($value, $target->resource, $depth + 1, $relation, $target->type);
         }
+
+        $resource = $relation->resource();
 
         $this->rules->add($value->path, ['array']);
         $this->relationRules($value, $relation, $resource);

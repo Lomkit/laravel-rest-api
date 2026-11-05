@@ -7,6 +7,7 @@ use LogicException;
 use Lomkit\Rest\Search\FilterCondition;
 use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\FilterNode;
+use Lomkit\Rest\Search\MorphFilterGroup;
 use Lomkit\Rest\Search\RelationFilterGroup;
 
 final readonly class FilterGroupClause implements Clause
@@ -37,6 +38,7 @@ final readonly class FilterGroupClause implements Clause
         return match (true) {
             $node instanceof FilterGroup => self::of($node),
             $node instanceof RelationFilterGroup => RelationGroupClause::of($node),
+            $node instanceof MorphFilterGroup => MorphGroupClause::of($node),
             $node instanceof FilterCondition && $node->path->relations === [] => new FieldConditionClause($node->path, $node->operator, $node->value, $node->boolean()),
             $node instanceof FilterCondition => new RelationConditionClause($node->path, $node->operator, $node->value, $node->boolean()),
             default => throw new LogicException($node::class.' does not apply to a database query.'),

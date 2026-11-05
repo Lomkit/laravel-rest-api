@@ -5,8 +5,8 @@ namespace Lomkit\Rest\Fields;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany as EloquentBelongsToMany;
 use Lomkit\Rest\Contracts\PivotRelation;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\Relation;
 
 final readonly class FieldPath
@@ -72,7 +72,7 @@ final readonly class FieldPath
         foreach ($segments as $segment) {
             $relation = $segment === '' || $segment === 'pivot' ? null : $resource->relation($segment);
 
-            if ($relation === null || ($relation instanceof MorphTo && $relation->targets()->isPolymorphic())) {
+            if ($relation === null || ($relation instanceof PolymorphicRelation && $relation->targets()->isPolymorphic())) {
                 break;
             }
 

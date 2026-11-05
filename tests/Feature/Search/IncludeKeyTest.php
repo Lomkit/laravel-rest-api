@@ -54,10 +54,10 @@ class IncludeKeyTest extends PackageTestCase
         Book::create(['id' => 1, 'title' => 'Dune']);
         Label::create(['id' => 1, 'text' => 'classic', 'labelable_type' => Book::class, 'labelable_id' => 1]);
 
-        $response = $this->postJson('/api/labels/search', ['search' => ['includes' => [['relation' => 'labelable', 'includes' => [['relation' => 'loan']]]]]]);
+        $response = $this->postJson('/api/labels/search', ['search' => ['includes' => [['relation' => 'labelable', 'types' => [Book::class => ['includes' => [['relation' => 'loan']]]]]]]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'search.includes.0.includes.0.alias' => ['The search.includes.0.includes.0.alias field is required, because the key loan is already used.'],
+            'search.includes.0.types.'.Book::class.'.includes.0.alias' => ['The search.includes.0.types.'.Book::class.'.includes.0.alias field is required, because the key loan is already used.'],
         ]);
     }
 }

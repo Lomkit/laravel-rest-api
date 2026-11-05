@@ -9,6 +9,7 @@ use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\AssignedTicketResource;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTicketResource;
+use Lomkit\Rest\Tests\Feature\Search\Stubs\BookLabelResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
@@ -40,9 +41,8 @@ class FieldPathTest extends PackageTestCase
             'a pivot field of a nested relation' => [TeamResource::class, 'tickets.tags.pivot.position', self::path(['tickets', 'tags'], 'position', TagResource::class, true, 'tag_ticket.position')],
             'a pivot field of a relation with a pivot class' => [AssignedTicketResource::class, 'tags.pivot.weight', self::path(['tags'], 'weight', TagResource::class, true, 'tag_ticket.weight')],
             'a pivot field whose table comes from the pivot class' => [LinkedTicketResource::class, 'tags.pivot.position', self::path(['tags'], 'position', TagResource::class, true, 'tag_ticket.position')],
-            'a field of a morph to relation' => [LabelResource::class, 'labelable.title', self::path(['labelable'], 'title', BookResource::class, false, 'books.title')],
-            'a morph to relation in the middle of a path' => [BookResource::class, 'labels.labelable.title', self::path(['labels', 'labelable'], 'title', BookResource::class, false, 'books.title')],
-            'a relation after a morph to relation' => [LabelResource::class, 'labelable.loan.borrower', self::path(['labelable', 'loan'], 'borrower', LoanResource::class, false, 'loans.borrower')],
+            'a field of a morph to relation' => [BookLabelResource::class, 'labelable.title', self::path(['labelable'], 'title', BookResource::class, false, 'books.title')],
+            'a relation after a morph to relation' => [BookLabelResource::class, 'labelable.loan.borrower', self::path(['labelable', 'loan'], 'borrower', LoanResource::class, false, 'loans.borrower')],
         ];
     }
 
@@ -73,6 +73,8 @@ class FieldPathTest extends PackageTestCase
             'an undeclared pivot field' => [TicketResource::class, 'tags.pivot.weight'],
             'a field of the related resource under the pivot segment' => [TicketResource::class, 'tags.pivot.name'],
             'a write-only pivot field' => [WeightedTicketResource::class, 'tags.pivot.note'],
+            'a field of a morph to relation with several targets' => [LabelResource::class, 'labelable.title'],
+            'a morph to relation with several targets in the middle of a path' => [BookResource::class, 'labels.labelable.title'],
         ];
     }
 
@@ -114,7 +116,8 @@ class FieldPathTest extends PackageTestCase
             'a relation after an unknown relation' => [PostResource::class, 'author.writer.posts.title', ['author']],
             'a pivot field' => [TicketResource::class, 'tags.pivot.position', ['tags']],
             'a pivot field of a nested relation' => [TeamResource::class, 'tickets.tags.pivot.colour', ['tickets', 'tags']],
-            'a relation after a morph to relation' => [LabelResource::class, 'labelable.loan.borrower', ['labelable', 'loan']],
+            'a relation after a morph to relation' => [BookLabelResource::class, 'labelable.loan.borrower', ['labelable', 'loan']],
+            'a morph to relation with several targets' => [LabelResource::class, 'labelable.loan.borrower', []],
         ];
     }
 

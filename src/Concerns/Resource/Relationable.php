@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Concerns\Resource;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
 
@@ -18,13 +19,15 @@ trait Relationable
             return $relation->relation === $relationName;
         });
 
-        if ($isSubRelation) {
-            $nestedRelation = Str::after($name, '.');
-
-            return $relation?->resource()->relation($nestedRelation);
+        if (! $isSubRelation) {
+            return $relation;
         }
 
-        return $relation;
+        if ($relation === null || ($relation instanceof PolymorphicRelation && $relation->targets()->isPolymorphic())) {
+            return null;
+        }
+
+        return $relation->resource()->relation(Str::after($name, '.'));
     }
 
     /** @return array<int, Relation> */

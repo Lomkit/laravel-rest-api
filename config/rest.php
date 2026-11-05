@@ -68,7 +68,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Each model loaded through a MorphTo relation holds its type under
-    | this key, before its other attributes.
+    | this key, before its other attributes. A resource that a MorphTo
+    | relation can load cannot declare a field with this name.
     |
     */
 

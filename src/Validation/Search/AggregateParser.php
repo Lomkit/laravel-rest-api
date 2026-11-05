@@ -3,10 +3,11 @@
 namespace Lomkit\Rest\Validation\Search;
 
 use Illuminate\Validation\Rule;
+use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Search\AggregateKey;
 use Lomkit\Rest\Search\AggregateNode;
@@ -51,7 +52,6 @@ final readonly class AggregateParser
         $alias = $entry->at('alias');
         $filters = $entry->at('filters');
         $relations = is_string($relation->value) ? $context->reachRelation($relation->value, $entry->path) : null;
-        $related = $relations === null ? null : $relations[array_key_last($relations)]->resource();
         $function = is_string($type->value) ? AggregateFunction::tryFrom($type->value) : null;
 
         $rules->add($alias->path, is_string($alias->value)
@@ -67,12 +67,18 @@ final readonly class AggregateParser
             return null;
         }
 
-        if ($relations !== null && $relations[0] instanceof MorphTo) {
+        if ($relations !== null && $relations[0] instanceof PolymorphicRelation) {
+            foreach ($relations[0]->targets() as $target) {
+                $rules->reach(Check::onClass($relations[0]->resourceOf($target), 'viewAny', $entry->path));
+            }
+
             $rules->reject(Violation::morphToAggregate($relation->path));
             $rules->partial();
 
             return null;
         }
+
+        $related = $relations === null ? null : $relations[0]->resource();
 
         if ($related === null) {
             $rules->partial();

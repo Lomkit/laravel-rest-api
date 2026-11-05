@@ -5,10 +5,10 @@ namespace Lomkit\Rest\Query\Clauses;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
-use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\Relation;
 
 final readonly class RelationConditionClause implements Clause
@@ -40,12 +40,12 @@ final readonly class RelationConditionClause implements Clause
 
             $this->through($query, $relations, 'and');
 
-            if ($relation instanceof MorphTo) {
+            if ($relation instanceof PolymorphicRelation) {
                 $this->perimeter($query, $relation);
             }
         };
 
-        if ($relation instanceof MorphTo) {
+        if ($relation instanceof PolymorphicRelation) {
             $query->hasMorph($relation->relation, $relation->targets()->modelClasses(), '>=', 1, $boolean, $constraint);
 
             return;
