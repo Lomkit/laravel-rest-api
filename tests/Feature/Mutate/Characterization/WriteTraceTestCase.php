@@ -74,6 +74,20 @@ abstract class WriteTraceTestCase extends PackageTestCase
         $this->assertSame(['operations' => $this->keys($operations)], $response->json());
     }
 
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  list<string>  $queries
+     */
+    protected function assertQueries(string $endpoint, array $payload, array $queries): void
+    {
+        $this->postJson($endpoint, $payload)->assertOk();
+
+        $this->assertSame($queries, array_values(array_map(
+            fn (string $line): string => substr($line, 4),
+            array_filter(TracingPolicy::$trace, fn (string $line): bool => str_starts_with($line, 'sql ')),
+        )));
+    }
+
     /** @return list<string> */
     protected static function rows(string $table): array
     {
