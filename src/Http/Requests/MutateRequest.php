@@ -9,6 +9,7 @@ use LogicException;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Mutations\MutationNode;
+use Lomkit\Rest\Mutations\RowSet;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\Mutate\MutationParser;
@@ -20,6 +21,8 @@ class MutateRequest extends RestRequest
     private ?array $mutations = null;
 
     private ?SearchNode $responseBlock = null;
+
+    private RowSet $rows;
 
     #[\Override]
     public function endpoint(): Endpoint
@@ -35,7 +38,8 @@ class MutateRequest extends RestRequest
 
         if ($this->mutations === null) {
             $input = Cursor::of($this->all(), $this->parsedRules()->violations());
-            $this->mutations = MutationParser::of($this, $this->parsedRules(), $this->budget())
+            $this->rows = new RowSet;
+            $this->mutations = MutationParser::of($this, $this->parsedRules(), $this->budget(), $this->rows)
                 ->parse($input->at('mutate'), $resource);
             $this->responseBlock = (new ResponseBlockParser($this->parsedRules(), $this->budget()))->parse($input->at('response'), $resource);
         }
@@ -60,6 +64,13 @@ class MutateRequest extends RestRequest
         $this->payload();
 
         return $this->responseBlock;
+    }
+
+    public function rows(): RowSet
+    {
+        $this->payload();
+
+        return $this->rows;
     }
 
     /** @return EloquentBuilder<Model> */

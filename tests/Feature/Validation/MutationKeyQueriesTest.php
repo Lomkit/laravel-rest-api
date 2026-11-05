@@ -41,7 +41,7 @@ class MutationKeyQueriesTest extends PackageTestCase
 
         $response->assertNoContent();
         $this->assertCount(1, $this->statements);
-        $this->assertSame($this->statements, [$this->keyQueries('products')[0]]);
+        $this->assertSame($this->statements, [$this->readsOf('products')[0]]);
         $this->assertStringContainsString('in (1, 2, 3, ', $this->statements[0][0]);
         $this->assertStringContainsString(', 100)', $this->statements[0][0]);
     }
@@ -67,8 +67,8 @@ class MutationKeyQueriesTest extends PackageTestCase
         ]], ['Precognition' => 'true']);
 
         $response->assertNoContent();
-        $this->assertCount(1, $this->keyQueries('categories'));
-        $this->assertCount(1, $this->keyQueries('products'));
+        $this->assertCount(1, $this->readsOf('categories'));
+        $this->assertCount(1, $this->readsOf('products'));
         $this->assertCount(2, $this->statements);
     }
 

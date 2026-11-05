@@ -162,4 +162,26 @@ class KeyLookupTest extends PackageTestCase
             'the uppercase form first' => [self::UPPER_DRAFT, self::DRAFT],
         ];
     }
+
+    #[Test]
+    public function it_builds_the_key_query_once_for_every_case_of_a_key(): void
+    {
+        $built = 0;
+        Draft::factory()
+            ->for(Author::factory())
+            ->create(['id' => self::DRAFT]);
+        $lookup = new KeyLookup(function () use (&$built): Builder {
+            $built++;
+
+            return Draft::query();
+        }, ID::make('id')->keyType('uuid'));
+        $lookup->expect(self::DRAFT);
+        $lookup->expect(self::UPPER_DRAFT);
+        $this->captureQueries();
+
+        $lookup->has(self::DRAFT);
+
+        $this->assertCount(2, $this->statements);
+        $this->assertSame(1, $built);
+    }
 }

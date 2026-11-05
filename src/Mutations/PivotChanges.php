@@ -10,25 +10,18 @@ final readonly class PivotChanges
     public function __construct(
         private Resource $resource,
         private Model $parent,
+        private RowSet $rows,
     ) {}
 
     /** @param array<array-key, mixed> $changes */
     public function authorize(array $changes): void
     {
-        foreach ($this->keys($changes, 'attached') as $attached) {
-            $related = $this->resource::modelClass()::find($attached);
-
-            if ($related instanceof Model) {
-                $this->resource->authorizeToAttach($this->parent, $related);
-            }
+        foreach ($this->rows->linked($this->resource, $this->keys($changes, 'attached')) as $attached) {
+            $this->resource->authorizeToAttach($this->parent, $attached);
         }
 
-        foreach ($this->keys($changes, 'detached') as $detached) {
-            $related = $this->resource::modelClass()::find($detached);
-
-            if ($related instanceof Model) {
-                $this->resource->authorizeToDetach($this->parent, $related);
-            }
+        foreach ($this->rows->linked($this->resource, $this->keys($changes, 'detached')) as $detached) {
+            $this->resource->authorizeToDetach($this->parent, $detached);
         }
     }
 

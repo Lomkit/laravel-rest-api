@@ -49,7 +49,7 @@ final readonly class PivotWrites extends RelationWrites
             ->forget($parent);
 
         if (in_array($node->operation, [MutationOperation::Toggle, MutationOperation::Sync], true) && is_array($changes)) {
-            (new PivotChanges($resource, $parent))->authorize($changes);
+            (new PivotChanges($resource, $parent, $mutator->rows))->authorize($changes);
         }
     }
 

@@ -149,7 +149,7 @@ class MorphToMutateTypesTest extends PackageTestCase
             'no type' => [['operation' => 'attach', 'key' => 101], [$type => ['The '.$type.' field is required.']]],
             'a type that the relation does not declare' => [['operation' => 'attach', 'type' => 'comment', 'key' => 101], $invalid],
             'the class of a mapped model' => [['operation' => 'attach', 'type' => Book::class, 'key' => 101], $invalid],
-            'a key that only another type holds' => [['operation' => 'attach', 'type' => 'shelf', 'key' => 102], ['mutate.0.relations.labelable.key' => ['The selected mutate.0.relations.labelable.key is invalid.']], ['select shelves.id from shelves where shelves.id in (102)']],
+            'a key that only another type holds' => [['operation' => 'attach', 'type' => 'shelf', 'key' => 102], ['mutate.0.relations.labelable.key' => ['The selected mutate.0.relations.labelable.key is invalid.']], ['select * from shelves where shelves.id in (102)']],
         ];
     }
 

@@ -47,7 +47,7 @@ class MutateQueryHookTest extends PackageTestCase
         ]]);
 
         $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => 1], ['operation' => 'update', 'key' => 2]]]);
-        $this->assertSame([DraftOnlyPostResource::class, DraftOnlyPostResource::class], DraftOnlyPostResource::$hooked);
+        $this->assertSame([DraftOnlyPostResource::class], DraftOnlyPostResource::$hooked);
     }
 
     #[Test]
@@ -65,5 +65,16 @@ class MutateQueryHookTest extends PackageTestCase
         $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => 1, 'relations' => ['posts' => [['operation' => 'update', 'key' => 1]]]]]]);
         $this->assertSame(3, Post::query()->findOrFail(1)->views);
         $this->assertSame([DraftOnlyAuthorResource::class], DraftOnlyPostResource::$hooked);
+    }
+
+    #[Test]
+    public function it_runs_no_mutate_query_for_a_mutation_that_names_no_key(): void
+    {
+        $response = $this->postJson('/draft-posts/mutate', ['mutate' => [
+            ['operation' => 'create', 'attributes' => ['title' => 'Annual report', 'status' => 'draft', 'published_on' => '2026-01-01']],
+        ]]);
+
+        $response->assertOk();
+        $this->assertSame([], DraftOnlyPostResource::$hooked);
     }
 }
