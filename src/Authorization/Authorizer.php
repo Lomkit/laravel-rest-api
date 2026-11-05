@@ -52,9 +52,7 @@ final class Authorizer
     /** @param list<Check> $checks */
     public function authorizeAll(array $checks): void
     {
-        foreach ($this->inspectAll($checks) as $decision) {
-            $decision->toResponse()->authorize();
-        }
+        self::enforce($checks, $this->inspectAll($checks));
     }
 
     /**
@@ -75,7 +73,7 @@ final class Authorizer
     {
         $checks = $models->map(fn (Model $model, int|string $key): Check => new Check($resource, $ability, $model, $path.'.'.$key));
 
-        $this->authorizeAll(array_values($checks->all()));
+        $this->plan(array_values($checks->all()));
     }
 
     /** @param list<Check> $checks */

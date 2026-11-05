@@ -21,9 +21,6 @@ final class KeyLookup
     /** @var array<array-key, true> */
     private array $found = [];
 
-    /** @var list<Model> */
-    private array $rows = [];
-
     /** @var array<array-key, Model> */
     private array $named = [];
 
@@ -70,7 +67,15 @@ final class KeyLookup
 
         $this->resolve();
 
-        return $this->rows;
+        $rows = [];
+
+        foreach (array_keys($this->expected) as $key) {
+            if (isset($this->named[$key])) {
+                $rows[] = $this->named[$key];
+            }
+        }
+
+        return $rows;
     }
 
     /** @return array<array-key, Model> */
@@ -145,7 +150,6 @@ final class KeyLookup
             $this->found[$round[$normalized]] = true;
 
             if ($row !== null) {
-                $this->rows[] = $row;
                 $this->named[$round[$normalized]] = $row;
             }
         }

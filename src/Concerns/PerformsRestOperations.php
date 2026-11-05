@@ -107,9 +107,9 @@ trait PerformsRestOperations
 
         $models = $request->payload()->rows();
 
-        foreach ($models as $model) {
-            $resource->authorizeTo('delete', $model);
-        }
+        $request->context()
+            ->authorizer()
+            ->authorizeEach($resource, 'delete', $models, 'resources');
 
         foreach ($models as $model) {
             $resource->destroying($request, $model);
@@ -134,9 +134,9 @@ trait PerformsRestOperations
 
         $models = $request->payload()->rows();
 
-        foreach ($models as $model) {
-            $resource->authorizeTo('restore', $model);
-        }
+        $request->context()
+            ->authorizer()
+            ->authorizeEach($resource, 'restore', $models, 'resources');
 
         foreach ($models as $model) {
             $resource->restoring($request, $model);
@@ -161,9 +161,9 @@ trait PerformsRestOperations
 
         $models = $request->payload()->rows();
 
-        foreach ($models as $model) {
-            $resource->authorizeTo('forceDelete', $model);
-        }
+        $request->context()
+            ->authorizer()
+            ->authorizeEach($resource, 'forceDelete', $models, 'resources');
 
         foreach ($models as $model) {
             $resource->forceDestroying($request, $model);

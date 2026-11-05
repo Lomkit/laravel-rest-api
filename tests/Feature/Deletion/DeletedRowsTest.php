@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Deletion;
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\Deletion\Concerns\SeedsDocuments;
 use Lomkit\Rest\Tests\Feature\Deletion\Stubs\DeletionTrace;
@@ -87,5 +88,32 @@ class DeletedRowsTest extends PackageTestCase
         $response->assertForbidden()->assertExactJson(['message' => 'This action is unauthorized.']);
         $this->assertSame("policy {$ability} 1", DeletionTrace::$lines[0]);
         $this->assertSame([[1, $deletedAt], [2, $deletedAt]], $this->rows());
+    }
+
+    /** @return array<string, array{string, string, ?string, string, string}> */
+    public static function orderedWrites(): array
+    {
+        return [
+            'destroy' => ['DELETE', '/api/documents', null, 'delete', 'deleted'],
+            'restore' => ['POST', '/api/documents/restore', self::TRASHED, 'restore', 'restored'],
+            'force destroy' => ['DELETE', '/api/documents/force', self::TRASHED, 'forceDelete', 'forceDeleted'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('orderedWrites')]
+    public function it_writes_and_returns_the_rows_in_the_order_of_the_request(string $method, string $uri, ?string $deletedAt, string $ability, string $event): void
+    {
+        $this->seedDocuments($deletedAt, $deletedAt, $deletedAt);
+        Document::withTrashed()
+            ->whereKey(1)
+            ->update(['archived' => true]);
+        Event::listen("eloquent.{$event}: ".Document::class, fn (Document $document) => DeletionTrace::record($event, $document));
+
+        $response = $this->json($method, $uri, ['resources' => [3, 1, 2]]);
+
+        $response->assertOk();
+        $this->assertSame([3, 1, 2], $response->json('data.*.id'));
+        $this->assertSame(["policy {$ability} 3", "policy {$ability} 1", "policy {$ability} 2", "{$event} 3", "{$event} 1", "{$event} 2"], DeletionTrace::$lines);
     }
 }

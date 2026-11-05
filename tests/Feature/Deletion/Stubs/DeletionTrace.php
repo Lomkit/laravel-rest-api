@@ -3,6 +3,13 @@
 namespace Lomkit\Rest\Tests\Feature\Deletion\Stubs;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Database\Events\TransactionBeginning;
+use Illuminate\Database\Events\TransactionCommitted;
+use Illuminate\Database\Events\TransactionRolledBack;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Lomkit\Rest\Tests\Fixtures\Archive\Document;
 use RuntimeException;
 
 final class DeletionTrace
@@ -29,6 +36,19 @@ final class DeletionTrace
 
         if (self::$failure === $line) {
             throw new RuntimeException("The step {$line} failed.");
+        }
+    }
+
+    public static function listen(): void
+    {
+        Document::observe(AfterCommitDocumentObserver::class);
+        DB::listen(fn (QueryExecuted $query) => self::$lines[] = 'sql '.preg_replace('/\w+\.updated_at = /', 'updated_at = ', str_replace(['"', '`'], '', $query->sql)));
+        Event::listen(TransactionBeginning::class, fn (TransactionBeginning $event) => self::$lines[] = 'begin level '.$event->connection->transactionLevel());
+        Event::listen(TransactionCommitted::class, fn (TransactionCommitted $event) => self::$lines[] = 'commit level '.$event->connection->transactionLevel());
+        Event::listen(TransactionRolledBack::class, fn (TransactionRolledBack $event) => self::$lines[] = 'rollback level '.$event->connection->transactionLevel());
+
+        foreach (['deleting', 'deleted', 'restoring', 'restored', 'forceDeleting', 'forceDeleted'] as $event) {
+            Event::listen("eloquent.{$event}: ".Document::class, fn (Document $document) => self::$lines[] = "model {$event} {$document->getKey()}");
         }
     }
 }
