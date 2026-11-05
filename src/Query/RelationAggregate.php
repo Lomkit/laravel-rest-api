@@ -18,7 +18,7 @@ use Lomkit\Rest\Query\Expressions\AggregateColumn;
 use Lomkit\Rest\Query\Expressions\ExistsQuery;
 use Lomkit\Rest\Query\Expressions\UuidColumn;
 
-final readonly class RelationAggregate
+final readonly class RelationAggregate implements AggregateQuery
 {
     public function __construct(
         private string $relation,
@@ -27,6 +27,7 @@ final readonly class RelationAggregate
     ) {}
 
     /** @param Closure(EloquentBuilder<Model>): void $constraint */
+    #[\Override]
     public function select(Builder $query, string $name, Closure $constraint): void
     {
         $query = self::eloquent($query);
@@ -35,6 +36,7 @@ final readonly class RelationAggregate
     }
 
     /** @param Closure(EloquentBuilder<Model>): void $constraint */
+    #[\Override]
     public function order(Builder $query, Closure $constraint, SortDirection $direction): void
     {
         $query = self::eloquent($query);
@@ -124,7 +126,7 @@ final readonly class RelationAggregate
     }
 
     /** @return EloquentBuilder<Model> */
-    private static function eloquent(Builder $query): EloquentBuilder
+    public static function eloquent(Builder $query): EloquentBuilder
     {
         return match (true) {
             $query instanceof EloquentBuilder => $query,

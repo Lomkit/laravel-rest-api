@@ -63,11 +63,6 @@ final readonly class Violation
         return new self($key, 'The :attribute field is required, because the key :key is already used.', ['key' => $name]);
     }
 
-    public static function nestedAggregate(string $key): self
-    {
-        return new self($key, 'The :attribute field cannot be a nested relation. Request the aggregate inside an include instead.');
-    }
-
     public static function ownerInclude(string $key): self
     {
         return new self($key, 'The :attribute field is prohibited: this relation loads at most one record per parent.');
@@ -81,5 +76,10 @@ final readonly class Violation
     public static function morphToAggregate(string $key): self
     {
         return new self($key, 'The :attribute field cannot be a MorphTo relation.');
+    }
+
+    public static function throughMorphTo(string $key): self
+    {
+        return new self($key, 'The :attribute field cannot go through a MorphTo relation.');
     }
 }

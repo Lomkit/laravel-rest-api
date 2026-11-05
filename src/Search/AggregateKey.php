@@ -17,7 +17,7 @@ final readonly class AggregateKey
 
     public static function named(string $relation, AggregateFunction $function, ?string $field, ?string $alias): self
     {
-        $name = sprintf('%s %s %s', $relation, $function->value, strtolower($field ?? '*'));
+        $name = sprintf('%s %s %s', str_replace('.', ' ', $relation), $function->value, strtolower($field ?? '*'));
 
         return new self($alias ?? Str::snake((string) preg_replace('/[^[:alnum:][:space:]_]/u', '', $name)));
     }

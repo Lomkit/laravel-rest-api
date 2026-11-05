@@ -3,7 +3,10 @@
 namespace Lomkit\Rest\Query\Clauses;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Query\AggregateQuery;
+use Lomkit\Rest\Query\NestedAggregate;
 use Lomkit\Rest\Query\RelationAggregate;
 use Lomkit\Rest\Search\AggregateKey;
 use Lomkit\Rest\Search\AggregateNode;
@@ -13,7 +16,7 @@ final readonly class AggregateClause implements Clause
     private const string LABEL = '@aggregate_';
 
     private function __construct(
-        private RelationAggregate $aggregate,
+        private AggregateQuery $aggregate,
         public AggregateKey $key,
         public string $label,
         private Clause $constraint,
@@ -21,7 +24,11 @@ final readonly class AggregateClause implements Clause
 
     public static function of(AggregateNode $node, Clause $constraint, int $position): self
     {
-        return new self(new RelationAggregate($node->relation, $node->function, $node->field), $node->key, self::LABEL.$position, $constraint);
+        $aggregate = $node->through === []
+            ? new RelationAggregate($node->relation, $node->function, $node->field)
+            : new NestedAggregate($node->through, Str::afterLast($node->relation, '.'), $node->resource::newModel(), $node->function, $node->field);
+
+        return new self($aggregate, $node->key, self::LABEL.$position, $constraint);
     }
 
     #[\Override]
