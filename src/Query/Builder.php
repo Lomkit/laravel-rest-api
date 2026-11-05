@@ -6,15 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Tappable;
-use Lomkit\Rest\Contracts\EloquentQueryBuilder;
+use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Query\Traits\PerformMutation;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 
-class Builder implements EloquentQueryBuilder
+class Builder implements QueryBuilder
 {
     use Conditionable;
-    use PerformMutation;
     use Tappable;
 
     /**

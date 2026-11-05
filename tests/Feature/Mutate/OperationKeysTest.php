@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Feature\Mutate;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Facades\Rest;
-use Lomkit\Rest\Tests\Feature\Mutate\Stubs\KeyedCategoryController;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\RetryingCategoryController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
@@ -132,37 +131,6 @@ class OperationKeysTest extends PackageTestCase
             ]]],
         ]]]);
         $this->assertCount(2, $annexes);
-    }
-
-    #[Test]
-    public function it_answers_one_entry_for_each_key_that_a_custom_relation_writes_on_its_own(): void
-    {
-        Rest::resource('keyed-categories', KeyedCategoryController::class)->register();
-        $lighting = Category::query()->create(['name' => 'Lighting']);
-        $deskLamp = Product::query()->create(['category_id' => $lighting->id, 'name' => 'Desk lamp', 'price' => 39]);
-        $floorLamp = Product::query()->create(['category_id' => $lighting->id, 'name' => 'Floor lamp', 'price' => 129]);
-
-        $response = $this->postJson('/keyed-categories/mutate', ['mutate' => [[
-            'operation' => 'create',
-            'attributes' => ['name' => 'Seating'],
-            'relations' => ['products' => [['operation' => 'update', 'key' => [$deskLamp->id, $floorLamp->id]]]],
-        ]]]);
-
-        $seating = Category::query()
-            ->where('name', 'Seating')
-            ->sole();
-        $response->assertOk()->assertExactJson(['operations' => [[
-            'operation' => 'create',
-            'key' => $seating->id,
-            'relations' => ['products' => [
-                ['operation' => 'update', 'key' => $deskLamp->id],
-                ['operation' => 'update', 'key' => $floorLamp->id],
-            ]],
-        ]]]);
-        $this->assertSame([$seating->id, $seating->id], Product::query()
-            ->orderBy('id')
-            ->pluck('category_id')
-            ->all());
     }
 
     #[Test]

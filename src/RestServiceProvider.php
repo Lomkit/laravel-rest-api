@@ -18,7 +18,6 @@ use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceMakeCommand;
 use Lomkit\Rest\Console\Commands\ResponseMakeCommand;
 use Lomkit\Rest\Console\Generation\Stub;
-use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Query\Builder;
@@ -98,6 +97,5 @@ class RestServiceProvider extends ServiceProvider
     protected function registerServices(): void
     {
         $this->app->bind(QueryBuilder::class, Builder::class);
-        $this->app->bind(EloquentQueryBuilder::class, fn ($app, array $parameters) => $app->make(QueryBuilder::class, $parameters));
     }
 }

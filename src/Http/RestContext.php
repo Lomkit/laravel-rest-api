@@ -16,7 +16,6 @@ use Lomkit\Rest\Authorization\NullDecisionStore;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Config\RestConfig;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Mutations\OperationLog;
 use Lomkit\Rest\Text\ResolvedText;
 use Lomkit\Rest\Validation\Limits;
 use Lomkit\Rest\Validation\Vocabulary;
@@ -40,8 +39,6 @@ final class RestContext
     private ?string $authorizerGuard = null;
 
     private ?Authenticatable $authorizerUser = null;
-
-    private ?OperationLog $operations = null;
 
     public function __construct(
         public readonly RestRequest $request,
@@ -99,11 +96,6 @@ final class RestContext
             $this->decisionStore($guard, $user),
             strict: $this->config()->strict,
         );
-    }
-
-    public function operations(): OperationLog
-    {
-        return $this->operations ??= new OperationLog;
     }
 
     public function __serialize(): array

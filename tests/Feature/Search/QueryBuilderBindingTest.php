@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Search;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Carbon;
-use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Builder;
@@ -69,7 +68,6 @@ class QueryBuilderBindingTest extends PackageTestCase
     public function it_resolves_the_query_builder_binding_for_an_action(): void
     {
         $this->recordTheQueryBuilderBinding();
-        $this->app->bind(EloquentQueryBuilder::class, fn (Application $app, array $parameters): Builder => new Builder($parameters['resource'], $parameters['query']));
 
         $response = $this->postJson('/api/posts/actions/publish-posts', ['search' => ['filters' => [['field' => 'status', 'value' => 'draft']]]]);
 
@@ -77,12 +75,28 @@ class QueryBuilderBindingTest extends PackageTestCase
         $this->assertSame([PostResource::class], $this->resolved);
     }
 
+    #[Test]
+    public function it_resolves_the_query_builder_binding_once_for_a_mutation(): void
+    {
+        $this->recordTheQueryBuilderBinding();
+
+        $response = $this->postJson('/api/posts/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => 4, 'relations' => ['author' => ['operation' => 'attach', 'key' => 1]]],
+        ]]);
+
+        $response->assertOk();
+        $this->assertSame([PostResource::class], $this->resolved);
+        $this->assertSame(1, Post::query()
+            ->findOrFail(4)
+            ->getAttribute('author_id'));
+    }
+
     private function recordTheQueryBuilderBinding(): void
     {
         $this->app->bind(QueryBuilder::class, function (Application $app, array $parameters): Builder {
             $this->resolved[] = $parameters['resource']::class;
 
-            return new Builder($parameters['resource'], $parameters['query']);
+            return new Builder($parameters['resource'], $parameters['query'] ?? null);
         });
     }
 }

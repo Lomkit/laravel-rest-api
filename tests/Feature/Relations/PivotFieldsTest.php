@@ -9,9 +9,14 @@ use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Mutations\MutationNode;
+use Lomkit\Rest\Mutations\Mutator;
+use Lomkit\Rest\Mutations\OperationLog;
+use Lomkit\Rest\Mutations\RelationWrites;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\MorphedByMany;
 use Lomkit\Rest\Relations\MorphToMany;
@@ -60,15 +65,15 @@ class PivotFieldsTest extends WeightedPivotTestCase
     #[DataProvider('directWrites')]
     public function it_writes_only_the_writable_pivot_keys_of_the_operation(string $relation, string $operation, ?string $addedBy): void
     {
-        $context = new RestContext(MutateRequest::create($this->endpoint($relation).'/mutate', 'POST'), $this->app);
-        $declared = $context->resource($relation === 'labelledTickets' ? WeightedTagResource::class : WeightedTicketResource::class)->relation($relation);
+        $request = MutateRequest::create($this->endpoint($relation).'/mutate', 'POST');
+        $declared = (new RestContext($request, $this->app))
+            ->resource($relation === 'labelledTickets' ? WeightedTagResource::class : WeightedTicketResource::class)
+            ->relation($relation);
         $this->assertInstanceOf(PivotRelation::class, $declared);
 
-        $declared->{$operation}($this->parent($relation), $declared, [
-            'operation' => $operation,
-            'key' => $this->related($relation)->getKey(),
-            'pivot' => ['weight' => 3, 'added_by' => 'Grace', 'created_at' => '2026-01-01 09:00:00', 'colour' => 'red'],
-        ]);
+        $node = new MutationNode(MutationOperation::from($operation), $this->related($relation)->getKey(), null, ['weight' => 3, 'added_by' => 'Grace', 'created_at' => '2026-01-01 09:00:00', 'colour' => 'red'], null, null, 1);
+
+        RelationWrites::of($this->parent($relation), $declared, [$node])->after($this->parent($relation), new Mutator($request), new OperationLog);
 
         $this->assertSame([['position' => null, 'weight' => 3, 'added_by' => $addedBy, 'note' => null, 'created_at' => self::NOW]], $this->pivotRows($relation));
     }

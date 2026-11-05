@@ -2,24 +2,10 @@
 
 namespace Lomkit\Rest\Relations;
 
-use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Resource;
 
 class HasOneThrough extends Relation
 {
-    /**
-     * Perform actions after mutating the HasOneThrough relation.
-     *
-     * @param  Model  $model  The Eloquent model.
-     * @param  Relation  $relation  The relation being mutated.
-     * @param  array  $mutationRelations  An array of mutation relations.
-     */
-    #[\Override]
-    public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
-    {
-        throw new \RuntimeException('You can\'t mutate a \'HasOneThrough\' relation.');
-    }
-
     /**
      * Define validation rules for the HasOneThrough relation.
      *
