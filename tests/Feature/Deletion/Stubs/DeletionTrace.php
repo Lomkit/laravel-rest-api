@@ -51,4 +51,16 @@ final class DeletionTrace
             Event::listen("eloquent.{$event}: ".Document::class, fn (Document $document) => self::$lines[] = "model {$event} {$document->getKey()}");
         }
     }
+
+    /**
+     * @param  list<string>  $steps
+     * @return list<string>
+     */
+    public static function forRows(array $steps, int ...$ids): array
+    {
+        return array_merge(...array_map(
+            fn (int $id): array => array_map(fn (string $step): string => str_replace('#', (string) $id, $step), $steps),
+            array_values($ids),
+        ));
+    }
 }
