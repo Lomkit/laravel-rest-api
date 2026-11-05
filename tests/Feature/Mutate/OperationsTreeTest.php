@@ -136,8 +136,8 @@ class OperationsTreeTest extends PackageTestCase
         $kept = Label::query()->create(['text' => 'Kept', 'labelable_id' => $this->dune->id, 'labelable_type' => $type]);
 
         $response = $this->postJson('/api/labels/mutate', ['mutate' => [
-            ['operation' => 'create', 'attributes' => ['text' => 'Classic'], 'relations' => ['labelable' => ['operation' => 'attach', 'key' => $this->emma->id]]],
-            ['operation' => 'update', 'key' => $kept->id, 'relations' => ['labelable' => ['operation' => 'detach', 'key' => $this->dune->id]]],
+            ['operation' => 'create', 'attributes' => ['text' => 'Classic'], 'relations' => ['labelable' => ['operation' => 'attach', 'type' => $type, 'key' => $this->emma->id]]],
+            ['operation' => 'update', 'key' => $kept->id, 'relations' => ['labelable' => ['operation' => 'detach', 'type' => $type, 'key' => $this->dune->id]]],
         ]]);
 
         $response->assertOk()->assertExactJson(['operations' => [

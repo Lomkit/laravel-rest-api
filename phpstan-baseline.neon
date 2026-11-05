@@ -1015,47 +1015,6 @@ parameters:
 			path: src/Relations/MorphRelation.php
 
 		-
-			message: '#^Cannot access offset ''operation'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Relations/MorphTo.php
-
-		-
-			message: '#^Cannot call method associate\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Relations/MorphTo.php
-
-		-
-			message: '#^Cannot call method dissociate\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Relations/MorphTo.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphTo\:\:beforeMutating\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Relations/MorphTo.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\MorphTo\:\:beforeMutating\(\) has parameter \$mutationRelations with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Relations/MorphTo.php
-
-		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 1
-			path: src/Relations/MorphTo.php
-
-		-
-			message: '#^Parameter \#1 \$mutation of method Lomkit\\Rest\\Contracts\\EloquentQueryBuilder\:\:applyMutation\(\) expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Relations/MorphTo.php
-
-		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 1
@@ -1585,7 +1544,7 @@ parameters:
 		-
 			message: '#^Cannot call method addProperty\(\) on mixed\.$#'
 			identifier: method.nonObject
-			count: 22
+			count: 18
 			path: src/Scramble/LomkitLaravelRestApiOperationExtension.php
 
 		-

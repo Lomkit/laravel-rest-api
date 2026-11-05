@@ -31,8 +31,8 @@ class RowKeyReservationTest extends PackageTestCase
     public static function targetKeys(): array
     {
         return [
-            'an aggregate alias' => [['relation' => 'labelable', 'aggregates' => [['relation' => 'labels', 'type' => 'count', 'alias' => 'kind']]], 'search.includes.0.aggregates.0.alias'],
-            'an include alias' => [['relation' => 'labelable', 'includes' => [['relation' => 'loan', 'alias' => 'kind']]], 'search.includes.0.includes.0.alias'],
+            'an aggregate alias' => [['relation' => 'labelable', 'types' => [Book::class => ['aggregates' => [['relation' => 'labels', 'type' => 'count', 'alias' => 'kind']]]]], 'search.includes.0.types.'.Book::class.'.aggregates.0.alias'],
+            'an include alias' => [['relation' => 'labelable', 'types' => [Book::class => ['includes' => [['relation' => 'loan', 'alias' => 'kind']]]]], 'search.includes.0.types.'.Book::class.'.includes.0.alias'],
         ];
     }
 

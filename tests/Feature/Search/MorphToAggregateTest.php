@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\UnlistedPolicy;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
+use Lomkit\Rest\Tests\Fixtures\Library\Shelf;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -48,6 +49,16 @@ class MorphToAggregateTest extends PackageTestCase
     public function it_checks_the_target_before_refusing_the_aggregate(): void
     {
         Gate::policy(Book::class, UnlistedPolicy::class);
+
+        $response = $this->postJson('/api/labels/search', ['search' => ['aggregates' => [['relation' => 'labelable', 'type' => 'count']]]]);
+
+        $response->assertForbidden()->assertJsonPath('message', 'This list is closed.');
+    }
+
+    #[Test]
+    public function it_checks_every_target_before_refusing_the_aggregate(): void
+    {
+        Gate::policy(Shelf::class, UnlistedPolicy::class);
 
         $response = $this->postJson('/api/labels/search', ['search' => ['aggregates' => [['relation' => 'labelable', 'type' => 'count']]]]);
 

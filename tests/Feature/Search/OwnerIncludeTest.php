@@ -3,6 +3,8 @@
 namespace Lomkit\Rest\Tests\Feature\Search;
 
 use Illuminate\Support\Facades\DB;
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Search\Stubs\BookLabelController;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
 use Lomkit\Rest\Tests\Fixtures\Library\Label;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
@@ -61,6 +63,7 @@ class OwnerIncludeTest extends PackageTestCase
     #[DataProvider('ownerMiddleLevels')]
     public function it_loads_the_owner_a_dotted_include_goes_through_without_a_limit_or_an_order(string $uri, string $relation, string $owner): void
     {
+        Rest::resource('book-labels', BookLabelController::class)->register();
         DB::enableQueryLog();
 
         $response = $this->postJson($uri, ['search' => ['selects' => [['field' => 'id']], 'includes' => [['relation' => $relation]]]]);
@@ -77,7 +80,7 @@ class OwnerIncludeTest extends PackageTestCase
     {
         return [
             'a belongs to' => ['/api/loans/search', 'book.labels', 'book'],
-            'a morph to' => ['/api/labels/search', 'labelable.loan', 'labelable'],
+            'a morph to' => ['/book-labels/search', 'labelable.loan', 'labelable'],
         ];
     }
 
@@ -96,7 +99,7 @@ class OwnerIncludeTest extends PackageTestCase
     public function it_gives_only_the_depth_error_for_an_owner_include_that_goes_too_deep(): void
     {
         $response = $this->postJson('/api/books/search', ['search' => ['includes' => [
-            ['relation' => 'labels.labelable.labels.labelable', 'limit' => 10, 'sorts' => [['field' => 'id']]],
+            ['relation' => 'loan.book.loan.book', 'limit' => 10, 'sorts' => [['field' => 'id']]],
         ]]]);
 
         $message = 'The search.includes.0.relation field goes deeper than the limit of 3 include levels.';

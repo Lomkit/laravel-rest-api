@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Validation\Mutate;
 
 use Lomkit\Rest\Contracts\PolymorphicRelation;
+use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ParsedRules;
 
@@ -20,7 +21,17 @@ final readonly class MorphToEntryRule implements EntryRule
     #[\Override]
     public function target(Cursor $entry, ParsedRules $rules): ?EntryTarget
     {
-        $target = $this->relation->targets()->single();
+        $targets = $this->relation->targets();
+        $type = $entry->at('type');
+        $typeRules = ['string', new OneOf($targets->types())];
+
+        if ($targets->isPolymorphic()) {
+            $rules->add($type->path, ['required', ...$typeRules]);
+        } else {
+            $rules->addWhenPresent($type, $typeRules);
+        }
+
+        $target = $targets->forType($type->value);
 
         if ($target === null) {
             $rules->partial();
@@ -28,6 +39,6 @@ final readonly class MorphToEntryRule implements EntryRule
             return null;
         }
 
-        return new EntryTarget($this->relation->resourceOf($target));
+        return new EntryTarget($this->relation->resourceOf($target), $target->type);
     }
 }

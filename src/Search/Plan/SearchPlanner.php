@@ -15,6 +15,7 @@ use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Search\IncludeNode;
+use Lomkit\Rest\Search\MorphIncludeNode;
 use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
 use Lomkit\Rest\Search\Plan\Columns\RelationKeys;
 use Lomkit\Rest\Search\SearchNode;
@@ -43,7 +44,7 @@ final readonly class SearchPlanner
     }
 
     /**
-     * @param  list<IncludeNode>  $includes
+     * @param  list<IncludeNode|MorphIncludeNode>  $includes
      * @param  list<string>  $keys
      */
     private function level(Resource $resource, SearchNode $search, array $includes, LimitPolicy $limit, array $keys): QueryPlan
@@ -68,7 +69,7 @@ final readonly class SearchPlanner
     }
 
     /**
-     * @param  list<IncludeNode>  $includes
+     * @param  list<IncludeNode|MorphIncludeNode>  $includes
      * @return list<Clause>
      */
     private function includes(Resource $parent, array $includes): array
@@ -78,8 +79,8 @@ final readonly class SearchPlanner
 
         foreach ($includes as $include) {
             if ($include->alias !== null) {
-                $entries[] = $include->relations[0] instanceof PolymorphicRelation
-                    ? MorphToIncludeClause::of($include->relations[0], $include->alias, array_fill_keys($include->relations[0]->targets()->types(), $this->explicit($parent, $include, [])))
+                $entries[] = $include instanceof MorphIncludeNode
+                    ? $this->morph($parent, $include, [])
                     : new AliasedIncludeClause($include->relation, $include->alias, $this->explicit($parent, $include, []));
 
                 continue;
@@ -92,29 +93,53 @@ final readonly class SearchPlanner
                 $groups[$segment] = ['relation' => $include->relations[0], 'level' => null, 'children' => []];
             }
 
-            $relations = array_slice($include->relations, 1);
+            $child = self::below($include);
 
-            if ($relations === []) {
+            if ($child === null) {
                 $groups[$segment]['level'] = $include;
 
                 continue;
             }
 
-            $groups[$segment]['children'][] = new IncludeNode(Str::after($include->relation, '.'), $relations, $include->resource, null, $include->search);
+            $groups[$segment]['children'][] = $child;
         }
 
         return array_map(
-            fn (Clause|string $entry): Clause => is_string($entry) ? self::grouped($entry, $groups[$entry]['relation'], $this->group($parent, $groups[$entry]['relation'], $groups[$entry]['level'], $groups[$entry]['children'])) : $entry,
+            fn (Clause|string $entry): Clause => is_string($entry) ? $this->grouped($parent, $entry, $groups[$entry]['relation'], $groups[$entry]['level'], $groups[$entry]['children']) : $entry,
             $entries,
         );
     }
 
-    private static function grouped(string $name, Relation $relation, QueryPlan $plan): Clause
+    private static function below(IncludeNode|MorphIncludeNode $include): IncludeNode|MorphIncludeNode|null
     {
+        if ($include instanceof MorphIncludeNode) {
+            return $include->below();
+        }
+
+        $relations = array_slice($include->relations, 1);
+
+        return $relations === [] ? null : new IncludeNode(Str::after($include->relation, '.'), $relations, $include->resource, null, $include->search);
+    }
+
+    /** @param list<IncludeNode|MorphIncludeNode> $children */
+    private function grouped(Resource $parent, string $name, Relation $relation, IncludeNode|MorphIncludeNode|null $level, array $children): Clause
+    {
+        if ($level instanceof MorphIncludeNode) {
+            return $this->morph($parent, $level, $children);
+        }
+
+        $plan = $this->group($parent, $relation, $level, $children);
+
         return $relation instanceof PolymorphicRelation ? MorphToIncludeClause::of($relation, null, array_fill_keys($relation->targets()->types(), $plan)) : new IncludeClause($name, $plan);
     }
 
-    /** @param list<IncludeNode> $children */
+    /** @param list<IncludeNode|MorphIncludeNode> $children */
+    private function morph(Resource $parent, MorphIncludeNode $include, array $children): MorphToIncludeClause
+    {
+        return MorphToIncludeClause::of($include->morphTo, $include->alias, array_map(fn (IncludeNode $branch): QueryPlan => $this->explicit($parent, $branch, $children), $include->branches));
+    }
+
+    /** @param list<IncludeNode|MorphIncludeNode> $children */
     private function group(Resource $parent, Relation $relation, ?IncludeNode $level, array $children): QueryPlan
     {
         if ($level === null) {
@@ -129,7 +154,7 @@ final readonly class SearchPlanner
         return $this->explicit($parent, $level, $children);
     }
 
-    /** @param list<IncludeNode> $children */
+    /** @param list<IncludeNode|MorphIncludeNode> $children */
     private function explicit(Resource $parent, IncludeNode $include, array $children): QueryPlan
     {
         $owner = $include->relations[0] instanceof OwnerRelation;
@@ -138,12 +163,12 @@ final readonly class SearchPlanner
     }
 
     /**
-     * @param  list<IncludeNode>  $includes
+     * @param  list<IncludeNode|MorphIncludeNode>  $includes
      * @return list<string>
      */
     private static function names(array $includes): array
     {
-        return array_map(static fn (IncludeNode $include): string => Str::before($include->relation, '.'), $includes);
+        return array_map(static fn (IncludeNode|MorphIncludeNode $include): string => Str::before($include->relation, '.'), $includes);
     }
 
     private static function includeLimit(Resource $resource, ?int $limit): LimitPolicy

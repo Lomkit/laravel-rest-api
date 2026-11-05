@@ -10,6 +10,7 @@ use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Support\Arr;
 use Lomkit\Rest\Contracts\PivotRelation;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Fields\WriteOperation;
 use Lomkit\Rest\Relations\Relation;
@@ -24,6 +25,10 @@ final readonly class RelationMutationType
         $entry->addProperty('operation', (new StringType)->enum($this->operations()));
         $entry->addProperty('key', (new MixedType)->setDescription('Integer for single operations; array of integers for bulk operations'));
         $entry->addProperty('attributes', (new ObjectType)->setDescription('Fields of the related resource'));
+
+        if ($this->relation instanceof PolymorphicRelation) {
+            $entry->addProperty('type', (new StringType)->enum($this->relation->targets()->types())->setDescription('The morph type of the related record; required when the relation has several types'));
+        }
 
         if ($this->relation instanceof PivotRelation) {
             $entry->addProperty('pivot', $this->pivot($this->relation));

@@ -72,12 +72,12 @@ class MorphToRelationGroupsTest extends PackageTestCase
         $emma = [['field' => 'title', 'value' => 'Emma']];
 
         return [
-            'a matching target' => [[['relation' => 'labelable', 'nested' => $dune]], [1]],
+            'a matching target' => [[['relation' => 'labelable', 'types' => [Book::class => $dune]]], [1]],
             'any target' => [[['relation' => 'labelable']], [1, 2]],
-            'no matching target' => [[['relation' => 'labelable', 'exists' => false, 'nested' => $dune]], [2, 3, 4, 5, 6]],
+            'no matching target' => [[['relation' => 'labelable', 'exists' => false, 'types' => [Book::class => $dune]]], [2, 3, 4, 5, 6]],
             'no target' => [[['relation' => 'labelable', 'exists' => false]], [3, 4, 5, 6]],
-            'a target after an or' => [[$due, ['type' => 'or', 'relation' => 'labelable', 'nested' => $emma]], [2, 3]],
-            'no target after an or' => [[$due, ['type' => 'or', 'relation' => 'labelable', 'exists' => false, 'nested' => $emma]], [1, 3, 4, 5, 6]],
+            'a target after an or' => [[$due, ['type' => 'or', 'relation' => 'labelable', 'types' => [Book::class => $emma]]], [2, 3]],
+            'no target after an or' => [[$due, ['type' => 'or', 'relation' => 'labelable', 'exists' => false, 'types' => [Book::class => $emma]]], [1, 3, 4, 5, 6]],
         ];
     }
 
@@ -127,7 +127,7 @@ class MorphToRelationGroupsTest extends PackageTestCase
         $resource = $context->resource(LabelResource::class);
         $query = Label::query();
 
-        FilterGroupClause::of($this->parse($resource, ['filters' => [['relation' => 'labelable', 'exists' => false, 'nested' => [['field' => 'title', 'value' => 'Dune']]]]])->filters)->apply($query);
+        FilterGroupClause::of($this->parse($resource, ['filters' => [['relation' => 'labelable', 'exists' => false, 'types' => [Book::class => [['field' => 'title', 'value' => 'Dune']]]]]])->filters)->apply($query);
 
         $this->assertSame(
             'select * from labels where ((not (((labels.labelable_type = ? and exists (select * from books where labels.labelable_id = books.id and (books.title = ?))))) or labels.labelable_type is null))',

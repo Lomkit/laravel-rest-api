@@ -4,6 +4,8 @@ namespace Lomkit\Rest\Tests\Feature\Search;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Search\Stubs\BookLabelController;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\UnlistedPolicy;
 use Lomkit\Rest\Tests\Fixtures\Gallery\Artist;
 use Lomkit\Rest\Tests\Fixtures\Gallery\Artwork;
@@ -79,8 +81,10 @@ class MorphToIncludeTest extends PackageTestCase
         $response = $this->postJson('/api/labels/search', ['search' => [
             'includes' => [[
                 'relation' => 'labelable',
-                'filters' => [['field' => 'title', 'value' => 'Dune']],
-                'aggregates' => [['relation' => 'labels', 'type' => 'count']],
+                'types' => [Book::class => [
+                    'filters' => [['field' => 'title', 'value' => 'Dune']],
+                    'aggregates' => [['relation' => 'labels', 'type' => 'count']],
+                ]],
             ]],
             'sorts' => [['field' => 'id']],
         ]]);
@@ -88,23 +92,24 @@ class MorphToIncludeTest extends PackageTestCase
         $response->assertOk()->assertJsonPath('data.*.labelable', [['@type' => Book::class, 'id' => 1, 'title' => 'Dune', 'labels_count' => 1], null]);
     }
 
-    /** @return array<string, array{array<string, mixed>}> */
+    /** @return array<string, array{string, array<string, mixed>}> */
     public static function nestedIncludes(): array
     {
         return [
-            'an include of the target' => [['relation' => 'labelable', 'includes' => [['relation' => 'loan']]]],
-            'a dotted include' => [['relation' => 'labelable.loan']],
+            'an include of a type' => ['/api/labels/search', ['relation' => 'labelable', 'types' => [Book::class => ['includes' => [['relation' => 'loan']]]]]],
+            'a dotted include through a single target' => ['/book-labels/search', ['relation' => 'labelable.loan']],
         ];
     }
 
     /** @param array<string, mixed> $include */
     #[Test]
     #[DataProvider('nestedIncludes')]
-    public function it_loads_the_includes_of_a_target(array $include): void
+    public function it_loads_the_includes_of_a_target(string $endpoint, array $include): void
     {
+        Rest::resource('book-labels', BookLabelController::class)->register();
         DB::enableQueryLog();
 
-        $response = $this->postJson('/api/labels/search', ['search' => ['includes' => [$include], 'sorts' => [['field' => 'id']]]]);
+        $response = $this->postJson($endpoint, ['search' => ['includes' => [$include], 'sorts' => [['field' => 'id']]]]);
 
         $response->assertOk()->assertJsonPath('data.*.labelable', [
             ['@type' => Book::class, 'id' => 1, 'title' => 'Dune', 'loan' => ['id' => 1, 'borrower' => 'Ada', 'book_id' => 1]],
@@ -135,14 +140,6 @@ class MorphToIncludeTest extends PackageTestCase
         $this->assertStringContainsString('books', $query);
         $this->assertStringNotContainsString('order by', $query);
         $this->assertStringNotContainsString('limit', $query);
-    }
-
-    #[Test]
-    public function it_refuses_the_types_of_a_morph_to_include(): void
-    {
-        $response = $this->postJson('/api/labels/search', ['search' => ['includes' => [['relation' => 'labelable', 'types' => []]]]]);
-
-        $response->assertUnprocessable()->assertJsonPath('errors', ['search.includes.0.types' => ['The search.includes.0.types field is prohibited.']]);
     }
 
     #[Test]

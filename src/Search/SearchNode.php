@@ -11,7 +11,7 @@ final readonly class SearchNode
      * @param  list<SortNode>  $sorts
      * @param  list<string>|null  $selects
      * @param  list<AggregateNode>  $aggregates
-     * @param  list<IncludeNode>  $includes
+     * @param  list<IncludeNode|MorphIncludeNode>  $includes
      * @param  list<ScopeNode>  $scopes
      * @param  list<InstructionNode>  $instructions
      * @param  list<GateAbility>|null  $gates

@@ -9,6 +9,9 @@ use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTicketController;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\CuratedTicketController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Helpdesk;
+use Lomkit\Rest\Tests\Fixtures\Library\Book;
+use Lomkit\Rest\Tests\Fixtures\Library\Library;
+use Lomkit\Rest\Tests\Fixtures\Library\Shelf;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -17,7 +20,7 @@ class ScrambleRelationsTest extends ScrambleTestCase
     #[\Override]
     protected function fixtures(): array
     {
-        return [new Catalog, new Helpdesk];
+        return [new Catalog, new Helpdesk, new Library];
     }
 
     #[Test]
@@ -91,5 +94,16 @@ class ScrambleRelationsTest extends ScrambleTestCase
             'description' => 'Writable on attach: position. Writable on detach: none.',
             'properties' => ['position' => ['type' => 'integer', 'description' => 'attach: nullable, integer']],
         ], $tags['items']['properties']['pivot']);
+    }
+
+    #[Test]
+    public function it_documents_the_type_of_a_morph_to_entry_and_the_types_of_a_morph_to_include(): void
+    {
+        $labelable = $this->mutateEntry('/labels')['relations']['properties']['labelable'];
+        $include = $this->body($this->operation('/labels/search', 'post'))['properties']['search']['properties']['includes']['items']['properties'];
+
+        $this->assertSame(['operation', 'key', 'attributes', 'type'], array_keys($labelable['properties']));
+        $this->assertSame(['type' => 'string', 'description' => 'The morph type of the related record; required when the relation has several types', 'enum' => [Book::class, Shelf::class]], $labelable['properties']['type']);
+        $this->assertSame(['type' => 'object', 'description' => 'MorphTo relations only: the search of each type, keyed by morph type, with selects, filters, scopes, includes, aggregates, instructions and gates'], $include['types']);
     }
 }

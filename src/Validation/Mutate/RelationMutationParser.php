@@ -132,7 +132,7 @@ final readonly class RelationMutationParser
 
             $this->relationRules($value, $relation, $target->resource);
 
-            return $parser->entry($value, $target->resource, $depth + 1, $relation);
+            return $parser->entry($value, $target->resource, $depth + 1, $relation, $target->type);
         }
 
         $resource = $relation->resource();

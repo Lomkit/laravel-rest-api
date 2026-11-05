@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Relations;
 use ArrayIterator;
 use Illuminate\Database\Eloquent\Model;
 use IteratorAggregate;
+use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Resource;
 
 /** @implements IteratorAggregate<string, MorphTarget> */
@@ -13,12 +14,20 @@ final readonly class MorphTargets implements IteratorAggregate
     /** @param non-empty-array<string, MorphTarget> $targets */
     private function __construct(private array $targets) {}
 
-    /** @param non-empty-list<class-string<Resource>> $resources */
+    /** @param array<array-key, mixed> $resources */
     public static function of(array $resources, string $owner, string $relation): self
     {
+        if ($resources === [] || ! array_is_list($resources)) {
+            throw InvalidResourceException::invalidMorphTargets($owner, $relation);
+        }
+
         $targets = [];
 
         foreach ($resources as $resource) {
+            if (! is_string($resource) || ! is_subclass_of($resource, Resource::class)) {
+                throw InvalidResourceException::invalidMorphTargets($owner, $relation);
+            }
+
             $type = $resource::newModel()->getMorphClass();
             $targets[$type] = new MorphTarget($type, $resource);
         }

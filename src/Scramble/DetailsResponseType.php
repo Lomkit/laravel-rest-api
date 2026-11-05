@@ -69,14 +69,14 @@ final class DetailsResponseType
         );
 
         return DetailsEntryTypes::objectOf([
-            'resource' => new StringType,
+            'resource' => (new StringType)->setDescription('The related resource class; absent on a MorphTo relation with several types'),
             'relation' => new StringType,
             'constraints' => $constraints,
             'name' => new StringType,
             'pivot_fields' => DetailsEntryTypes::listOf(DetailsEntryTypes::pivotField(), 'Many-to-many relations only: the pivot fields of the relation'),
             'types' => $types,
             'morph' => $morph,
-        ], ['pivot_fields', 'types', 'morph']);
+        ], ['resource', 'pivot_fields', 'types', 'morph']);
     }
 
     private static function rules(): ObjectType

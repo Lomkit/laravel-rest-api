@@ -31,7 +31,7 @@ final readonly class SearchContext
             (new FilterFlattener)->flatten($search->filters),
             array_map(self::sort(...), $search->sorts),
             array_map(static fn (ScopeNode $node): string => $node->scope->name, $search->scopes),
-            array_map(static fn (IncludeNode $node): string => $node->relation, $search->includes),
+            array_map(static fn (IncludeNode|MorphIncludeNode $node): string => $node->relation, $search->includes),
             $search->text,
             $search->trashed,
         );

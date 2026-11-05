@@ -20,6 +20,7 @@ final readonly class MutationNode
         public ?bool $withoutDetaching,
         public ?array $relations,
         public int $depth,
+        public ?string $type = null,
     ) {}
 
     public function context(): MutationContext
@@ -32,6 +33,7 @@ final readonly class MutationNode
     {
         $entry = [
             'operation' => $this->operation->value,
+            'type' => $this->type,
             'key' => $this->key,
             'attributes' => $this->attributes,
             'pivot' => $this->pivot,

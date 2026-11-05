@@ -26,7 +26,7 @@ final class ResourceRules
         return $this->rules[$resource::class.':'.$operation->value] ??= WriteRules::of(
             $resource->getFields(),
             $operation,
-            $operation === WriteOperation::Create ? $resource->createRules($this->request) : $resource->updateRules($this->request),
+            MorphTypeRules::of($resource, $operation)->addTo($operation === WriteOperation::Create ? $resource->createRules($this->request) : $resource->updateRules($this->request)),
             $this->shared($resource),
         );
     }

@@ -102,7 +102,7 @@ class MorphToTypesTest extends PackageTestCase
         Label::create(['id' => 3, 'text' => 'saga', 'labelable_type' => 'book', 'labelable_id' => 1]);
 
         $response = $this->postJson('/api/labels/search', ['search' => [
-            'includes' => [['relation' => 'labelable', 'filters' => [['field' => 'title', 'value' => 'Dune']]]],
+            'includes' => [['relation' => 'labelable', 'types' => ['book' => ['filters' => [['field' => 'title', 'value' => 'Dune']]]]]],
             'sorts' => [['field' => 'id']],
         ]]);
 

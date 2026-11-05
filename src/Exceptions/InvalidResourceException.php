@@ -43,6 +43,11 @@ final class InvalidResourceException extends LogicException
         return new self("The relation [{$relation}] of the resource [{$resource}] is declared with MorphTo, but its model method does not return a MorphTo relation.");
     }
 
+    public static function invalidMorphTargets(string $resource, string $relation): self
+    {
+        return new self("The MorphTo relation [{$relation}] of the resource [{$resource}] declares its targets with a resource class or a list of resource classes.");
+    }
+
     public static function unsearchableModel(string $model): self
     {
         return new self("The model [{$model}] is not indexed: it does not use Laravel\\Scout\\Searchable.");

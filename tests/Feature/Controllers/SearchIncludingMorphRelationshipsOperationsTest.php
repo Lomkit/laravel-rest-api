@@ -10,14 +10,12 @@ use Lomkit\Rest\Tests\Support\Database\Factories\MorphManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneOfManyRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphOneRelationFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\MorphToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\MorphToRelationFactory;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\MorphedByManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneOfManyRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 use Lomkit\Rest\Tests\Support\Models\MorphToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\MorphToRelation;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
 use Lomkit\Rest\Tests\Support\Rest\Resources\ModelResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\MorphedByManyResource;
@@ -25,49 +23,9 @@ use Lomkit\Rest\Tests\Support\Rest\Resources\MorphManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\MorphOneOfManyResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\MorphOneResource;
 use Lomkit\Rest\Tests\Support\Rest\Resources\MorphToManyResource;
-use Lomkit\Rest\Tests\Support\Rest\Resources\MorphToResource;
 
 class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
 {
-    public function test_getting_a_list_of_resources_including_morph_to_relation_with_concrete_relation(): void
-    {
-        $morphTo = MorphToRelationFactory::new()->create();
-        $matchingModel = ModelFactory::new()
-            ->for($morphTo, 'morphToForceModelRelation')
-            ->create()->fresh();
-
-        $matchingModel2 = ModelFactory::new()->create()->fresh();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(MorphToRelation::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/search',
-            [
-                'search' => [
-                    'includes' => [
-                        ['relation' => 'morphToForceModelRelation'],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertResourcePaginated(
-            $response,
-            [$matchingModel, $matchingModel2],
-            new ModelResource,
-            [
-                [
-                    'morph_to_force_model_relation' => ['@type' => MorphToRelation::class, ...$matchingModel->morphToForceModelRelation->only((new MorphToResource)->getFields()->names())],
-                ],
-                [
-                    'morph_to_force_model_relation' => null,
-                ],
-            ]
-        );
-    }
-
     public function test_getting_a_list_of_resources_including_morph_one_relation(): void
     {
         $matchingModel = ModelFactory::new()

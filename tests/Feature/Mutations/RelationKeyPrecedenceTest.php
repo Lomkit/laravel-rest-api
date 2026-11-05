@@ -119,7 +119,7 @@ class RelationKeyPrecedenceTest extends PackageTestCase
             'relations' => ['labels' => [[
                 'operation' => 'create',
                 'attributes' => ['text' => 'Classic'],
-                'relations' => ['labelable' => ['operation' => 'attach', 'key' => $emma->id]],
+                'relations' => ['labelable' => ['operation' => 'attach', 'type' => Book::class, 'key' => $emma->id]],
             ]]],
         ]]]);
 

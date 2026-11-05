@@ -71,7 +71,7 @@ final readonly class MutationParser
         return $nodes;
     }
 
-    public function entry(Cursor $entry, Resource $resource, int $depth, ?Relation $relation): ?MutationNode
+    public function entry(Cursor $entry, Resource $resource, int $depth, ?Relation $relation, ?string $type = null): ?MutationNode
     {
         $operation = MutationOperation::tryFromEntry($entry->value);
         $listed = $relation?->hasMultipleEntries() === true;
@@ -108,7 +108,7 @@ final readonly class MutationParser
             return null;
         }
 
-        return new MutationNode($operation, $key, $attributes, $pivot, $withoutDetaching, $relations, $depth);
+        return new MutationNode($operation, $key, $attributes, $pivot, $withoutDetaching, $relations, $depth, $type);
     }
 
     /**
