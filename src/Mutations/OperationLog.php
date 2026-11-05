@@ -13,26 +13,19 @@ final class OperationLog
     /** @var list<OperationEntry> */
     private array $open = [];
 
-    public function start(): void
-    {
-        $this->entries = [];
-        $this->open = [];
-    }
-
-    /** @param array<string, mixed> $mutation */
-    public function begin(array $mutation): void
+    public function begin(MutationNode $node): void
     {
         $parent = $this->current();
 
         if ($parent === null) {
-            $entry = OperationEntry::of($mutation);
+            $entry = OperationEntry::of($node);
             $this->entries[] = $entry;
             $this->open[] = $entry;
 
             return;
         }
 
-        $this->open[] = $parent->child($mutation);
+        $this->open[] = $parent->child($node);
     }
 
     public function end(): void

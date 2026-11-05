@@ -2,39 +2,20 @@
 
 namespace Lomkit\Rest\Relations;
 
-use Illuminate\Database\Eloquent\Model;
-use InvalidArgumentException;
 use Lomkit\Rest\Concerns\Relations\HasPivotFields;
-use Lomkit\Rest\Concerns\Relations\PerformsRelationOperations;
 use Lomkit\Rest\Contracts\PivotRelation;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
 
 class BelongsToMany extends Relation implements PivotRelation
 {
     use HasMultipleResults;
     use HasPivotFields;
-    use PerformsRelationOperations;
 
-    /**
-     * Perform actions after mutating the BelongsToMany relation.
-     *
-     * @param  Model  $model  The Eloquent model.
-     * @param  Relation  $relation  The relation being mutated.
-     * @param  array  $mutationRelations  An array of mutation relations.
-     */
+    /** @return list<MutationOperation> */
     #[\Override]
-    public function afterMutating(Model $model, Relation $relation, array $mutationRelations)
+    public function mutationOperations(): array
     {
-        foreach ($mutationRelations[$relation->relation] as $mutationRelation) {
-            match ($mutationRelation['operation']) {
-                'create' => $this->create($model, $relation, $mutationRelation),
-                'update' => $this->update($model, $relation, $mutationRelation),
-                'attach' => $this->attach($model, $relation, $mutationRelation),
-                'detach' => $this->detach($model, $relation, $mutationRelation),
-                'toggle' => $this->toggle($model, $relation, $mutationRelation),
-                'sync' => $this->sync($model, $relation, $mutationRelation, withoutDetaching: ! isset($mutationRelation['without_detaching']) || ! $mutationRelation['without_detaching']),
-                default => throw new InvalidArgumentException("Unknown operation: {$mutationRelation['operation']}"),
-            };
-        }
+        return MutationOperation::cases();
     }
 }

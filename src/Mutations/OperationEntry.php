@@ -35,17 +35,9 @@ final class OperationEntry implements JsonSerializable
         private array $relations,
     ) {}
 
-    /** @param array<string, mixed> $mutation */
-    public static function of(array $mutation, bool $typed = false, bool $listed = false): self
+    public static function of(MutationNode $node, bool $typed = false, bool $listed = false): self
     {
-        $operation = MutationOperation::from(is_string($mutation['operation'] ?? null) ? $mutation['operation'] : '');
-        $relations = [];
-
-        foreach (array_keys(is_array($mutation['relations'] ?? null) ? $mutation['relations'] : []) as $name) {
-            $relations[(string) $name] = [];
-        }
-
-        return new self($operation, self::key($mutation['key'] ?? null), $typed, $listed, $relations);
+        return new self($node->operation, $node->key, $typed, $listed, array_fill_keys(array_keys($node->relations ?? []), []));
     }
 
     public function within(Relation $relation): void
@@ -59,11 +51,10 @@ final class OperationEntry implements JsonSerializable
         $this->cursors = [];
     }
 
-    /** @param array<string, mixed> $mutation */
-    public function child(array $mutation): self
+    public function child(MutationNode $node): self
     {
         if ($this->relation === null) {
-            return self::of($mutation);
+            return self::of($node);
         }
 
         $name = $this->relation->relation;
@@ -74,7 +65,7 @@ final class OperationEntry implements JsonSerializable
             return $this->relations[$name][$index];
         }
 
-        $entry = self::of($mutation, $this->relation instanceof PolymorphicRelation, $this->listed || is_array($this->key));
+        $entry = self::of($node, $this->relation instanceof PolymorphicRelation, $this->listed || is_array($this->key));
         $this->relations[$name][] = $entry;
 
         return $entry;
@@ -131,15 +122,5 @@ final class OperationEntry implements JsonSerializable
             1 => $this->written[0],
             default => $this->written,
         };
-    }
-
-    /** @return int|string|list<int|string>|null */
-    private static function key(mixed $key): int|string|array|null
-    {
-        if (! is_array($key)) {
-            return is_int($key) || is_string($key) ? $key : null;
-        }
-
-        return array_values(array_filter($key, fn (mixed $item): bool => is_int($item) || is_string($item)));
     }
 }

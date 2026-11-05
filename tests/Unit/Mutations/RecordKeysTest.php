@@ -15,6 +15,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 class RecordKeysTest extends PackageTestCase
 {
+    use BuildsMutationNodes;
+
     private const string OUTLINE = '0B9E6C3A-2F4D-4E5B-8A7C-1D2E3F4A5B6C';
 
     #[Test]
@@ -81,7 +83,7 @@ class RecordKeysTest extends PackageTestCase
 
     private function wrote(string $operation, Book|Draft|Channel $model): OperationEntry
     {
-        $entry = OperationEntry::of(['operation' => $operation, 'key' => 1]);
+        $entry = OperationEntry::of(self::node($operation, 1));
         $entry->wrote($model);
 
         return $entry;

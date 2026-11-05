@@ -6,11 +6,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo as EloquentMorphTo;
 use LogicException;
-use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\OwnerRelation;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
-use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\Mutate\EntryRule;
 use Lomkit\Rest\Validation\Mutate\MorphToEntryRule;
@@ -132,49 +130,6 @@ class MorphTo extends MorphRelation implements OwnerRelation, PolymorphicRelatio
         }
 
         return $details;
-    }
-
-    /** @param array<string, array<string, mixed>> $mutationRelations */
-    #[\Override]
-    public function beforeMutating(Model $model, Relation $relation, array $mutationRelations): void
-    {
-        $entry = $mutationRelations[$this->relation];
-        $target = $this->targets()->forType($entry['type'] ?? null) ?? throw new LogicException("The entry of the MorphTo relation [{$this->relation}] names no target.");
-        $resource = $this->resourceOf($target);
-        $operation = MutationOperation::from(is_string($entry['operation'] ?? null) ? $entry['operation'] : '');
-        $related = app()->make(EloquentQueryBuilder::class, ['resource' => $resource])
-            ->applyMutation($entry);
-        $morphTo = $model->{$this->relation}();
-
-        if (! $morphTo instanceof EloquentMorphTo) {
-            throw InvalidResourceException::notAMorphTo($this->fromResource::class, $this->relation);
-        }
-
-        if ($operation === MutationOperation::Detach) {
-            $resource->authorizeToDetach($model, $related);
-            $morphTo->dissociate();
-
-            return;
-        }
-
-        $resource->authorizeToAttach($model, $related);
-        $morphTo->associate($related);
-    }
-
-    /** @return array<string, mixed> */
-    #[\Override]
-    public function ownedAttributes(Model $model): array
-    {
-        $relation = $model->{$this->relation}();
-
-        if (! $relation instanceof EloquentMorphTo) {
-            return [];
-        }
-
-        return [
-            $relation->getForeignKeyName() => $model->getAttribute($relation->getForeignKeyName()),
-            $relation->getMorphType() => $model->getAttribute($relation->getMorphType()),
-        ];
     }
 
     #[\Override]

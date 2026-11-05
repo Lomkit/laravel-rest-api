@@ -9,9 +9,9 @@ use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Fields\Details\FieldDetails;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
-use Lomkit\Rest\Relations\Traits\Mutates;
 use Lomkit\Rest\Validation\Mutate\EntryRule;
 use Lomkit\Rest\Validation\Mutate\RelatedEntryRule;
 
@@ -19,7 +19,6 @@ class Relation implements \JsonSerializable
 {
     use Constrained;
     use Makeable;
-    use Mutates;
 
     public string $relation;
 
@@ -83,17 +82,17 @@ class Relation implements \JsonSerializable
         return $this->fromResource->context()->resource($this->type);
     }
 
-    /**
-     * Set the "fromResource" property of the relation.
-     *
-     *
-     * @return $this
-     */
-    public function fromResource(Resource $fromResource)
+    public function fromResource(Resource $fromResource): static
     {
-        return tap($this, function () use ($fromResource) {
-            $this->fromResource = $fromResource;
-        });
+        $this->fromResource = $fromResource;
+
+        return $this;
+    }
+
+    /** @return list<MutationOperation> */
+    public function mutationOperations(): array
+    {
+        return [MutationOperation::Create, MutationOperation::Update, MutationOperation::Attach, MutationOperation::Detach];
     }
 
     public function entryRule(): EntryRule

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Unit\Mutations;
 
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Mutations\OperationEntry;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
@@ -23,6 +24,8 @@ use PHPUnit\Framework\TestCase;
 
 class OperationEntryTest extends TestCase
 {
+    use BuildsMutationNodes;
+
     #[\Override]
     protected function tearDown(): void
     {
@@ -32,32 +35,31 @@ class OperationEntryTest extends TestCase
     }
 
     /**
-     * @param  array<string, mixed>  $mutation
      * @param  array<string, mixed>  $entry
      */
     #[Test]
     #[DataProvider('entries')]
-    public function it_echoes_the_operation_and_the_key_of_an_entry(array $mutation, array $entry): void
+    public function it_echoes_the_operation_and_the_key_of_an_entry(MutationNode $node, array $entry): void
     {
-        $this->assertSame($entry, OperationEntry::of($mutation)->jsonSerialize());
+        $this->assertSame($entry, OperationEntry::of($node)->jsonSerialize());
     }
 
-    /** @return array<string, array{array<string, mixed>, array<string, mixed>}> */
+    /** @return array<string, array{MutationNode, array<string, mixed>}> */
     public static function entries(): array
     {
         return [
-            'an update' => [['operation' => 'update', 'key' => 7, 'attributes' => ['title' => 'Emma']], ['operation' => 'update', 'key' => 7]],
-            'a string key' => [['operation' => 'attach', 'key' => 'a-7'], ['operation' => 'attach', 'key' => 'a-7']],
-            'a key list' => [['operation' => 'sync', 'key' => [3, 7], 'without_detaching' => true], ['operation' => 'sync', 'key' => [3, 7]]],
-            'a create that wrote no row' => [['operation' => 'create', 'attributes' => ['title' => 'Emma']], ['operation' => 'create', 'key' => null]],
-            'empty relations' => [['operation' => 'update', 'key' => 7, 'relations' => []], ['operation' => 'update', 'key' => 7]],
+            'an update' => [self::node('update', 7, attributes: ['title' => 'Emma']), ['operation' => 'update', 'key' => 7]],
+            'a string key' => [self::node('attach', 'a-7'), ['operation' => 'attach', 'key' => 'a-7']],
+            'a key list' => [self::node('sync', [3, 7], withoutDetaching: true), ['operation' => 'sync', 'key' => [3, 7]]],
+            'a create that wrote no row' => [self::node('create', attributes: ['title' => 'Emma']), ['operation' => 'create', 'key' => null]],
+            'empty relations' => [self::node('update', 7, relations: []), ['operation' => 'update', 'key' => 7]],
         ];
     }
 
     #[Test]
     public function it_keeps_the_key_of_each_row_that_an_entry_wrote(): void
     {
-        $entry = OperationEntry::of(['operation' => 'attach', 'key' => [3, 7]]);
+        $entry = OperationEntry::of(self::node('attach', [3, 7]));
 
         $entry->wrote(new Book(['id' => 3]));
         $entry->wrote(new Book(['id' => 7]));
@@ -69,9 +71,9 @@ class OperationEntryTest extends TestCase
     #[Test]
     public function it_reports_the_key_of_each_row_that_a_create_wrote(): void
     {
-        $once = OperationEntry::of(['operation' => 'create']);
-        $twice = OperationEntry::of(['operation' => 'create']);
-        $channel = OperationEntry::of(['operation' => 'create']);
+        $once = OperationEntry::of(self::node('create'));
+        $twice = OperationEntry::of(self::node('create'));
+        $channel = OperationEntry::of(self::node('create'));
 
         $once->wrote(new Book(['id' => 5]));
         $twice->wrote(new Book(['id' => 5]));
@@ -86,15 +88,15 @@ class OperationEntryTest extends TestCase
     #[Test]
     public function it_lists_the_relations_in_the_order_of_the_request(): void
     {
-        $book = OperationEntry::of(['operation' => 'update', 'key' => 1, 'relations' => [
-            'shelves' => [['operation' => 'attach', 'key' => [2, 3]]],
-            'loan' => ['operation' => 'create'],
-        ]]);
+        $book = OperationEntry::of(self::node('update', 1, relations: [
+            'shelves' => [self::node('attach', [2, 3])],
+            'loan' => self::node('create'),
+        ]));
 
         $book->within(HasOne::make('loan', LoanResource::class));
-        $book->child(['operation' => 'create'])->wrote(new Loan(['id' => 9]));
+        $book->child(self::node('create'))->wrote(new Loan(['id' => 9]));
         $book->within(BelongsToMany::make('shelves', ShelfResource::class));
-        $book->child(['operation' => 'attach', 'key' => [2, 3]]);
+        $book->child(self::node('attach', [2, 3]));
 
         $this->assertSame(['operation' => 'update', 'key' => 1, 'relations' => [
             'shelves' => [['operation' => 'attach', 'key' => [2, 3]]],
@@ -105,14 +107,14 @@ class OperationEntryTest extends TestCase
     #[Test]
     public function it_gives_the_same_entry_to_each_row_of_a_relation_entry(): void
     {
-        $shelf = OperationEntry::of(['operation' => 'update', 'key' => 1, 'relations' => ['loan' => ['operation' => 'create']]]);
+        $shelf = OperationEntry::of(self::node('update', 1, relations: ['loan' => self::node('create')]));
         $shelf->within(HasOne::make('loan', LoanResource::class));
-        $first = $shelf->child(['operation' => 'create']);
+        $first = $shelf->child(self::node('create'));
 
         $shelf->rewind();
 
-        $this->assertSame($first, $shelf->child(['operation' => 'create']));
-        $this->assertNotSame($first, $shelf->child(['operation' => 'create']));
+        $this->assertSame($first, $shelf->child(self::node('create')));
+        $this->assertNotSame($first, $shelf->child(self::node('create')));
     }
 
     #[Test]
@@ -120,10 +122,10 @@ class OperationEntryTest extends TestCase
     public function it_echoes_the_type_of_a_morph_to_entry(array $map, string $type): void
     {
         Relation::morphMap($map, false);
-        $label = OperationEntry::of(['operation' => 'update', 'key' => 4, 'relations' => ['labelable' => ['operation' => 'attach', 'key' => 2]]]);
+        $label = OperationEntry::of(self::node('update', 4, relations: ['labelable' => self::node('attach', 2)]));
         $label->within(MorphTo::make('labelable', BookResource::class));
 
-        $label->child(['operation' => 'attach', 'key' => 2])->wrote(new Book(['id' => 2]));
+        $label->child(self::node('attach', 2))->wrote(new Book(['id' => 2]));
 
         $this->assertSame(['operation' => 'update', 'key' => 4, 'relations' => [
             'labelable' => ['operation' => 'attach', 'type' => $type, 'key' => 2],
@@ -142,10 +144,10 @@ class OperationEntryTest extends TestCase
     #[Test]
     public function it_answers_a_key_list_for_a_create_under_a_key_list(): void
     {
-        $loans = OperationEntry::of(['operation' => 'attach', 'key' => [3], 'relations' => ['book' => ['operation' => 'create']]]);
+        $loans = OperationEntry::of(self::node('attach', [3], relations: ['book' => self::node('create')]));
         $loans->within(BelongsTo::make('book', BookResource::class));
 
-        $loans->child(['operation' => 'create'])->wrote(new Book(['id' => 11]));
+        $loans->child(self::node('create'))->wrote(new Book(['id' => 11]));
 
         $this->assertSame(['operation' => 'attach', 'key' => [3], 'relations' => [
             'book' => ['operation' => 'create', 'key' => [11]],
@@ -155,13 +157,13 @@ class OperationEntryTest extends TestCase
     #[Test]
     public function it_answers_a_key_list_for_a_create_nested_under_a_create_under_a_key_list(): void
     {
-        $book = ['operation' => 'create', 'relations' => ['labels' => [['operation' => 'create']]]];
-        $loans = OperationEntry::of(['operation' => 'attach', 'key' => [3], 'relations' => ['book' => $book]]);
+        $book = self::node('create', relations: ['labels' => [self::node('create')]]);
+        $loans = OperationEntry::of(self::node('attach', [3], relations: ['book' => $book]));
         $loans->within(BelongsTo::make('book', BookResource::class));
         $created = $loans->child($book);
         $created->within(HasMany::make('labels', LabelResource::class));
 
-        $created->child(['operation' => 'create'])->wrote(new Label(['id' => 21]));
+        $created->child(self::node('create'))->wrote(new Label(['id' => 21]));
         $created->wrote(new Book(['id' => 11]));
 
         $this->assertSame(['operation' => 'attach', 'key' => [3], 'relations' => [

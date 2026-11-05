@@ -5,10 +5,10 @@ namespace Lomkit\Rest\Http;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
-use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Http\Requests\MutateRequest;
-use Lomkit\Rest\Mutations\MutationNode;
+use Lomkit\Rest\Mutations\Mutator;
 use Lomkit\Rest\Mutations\OperationEntry;
+use Lomkit\Rest\Query\QueryBuilderFactory;
 
 final readonly class MutateResponse implements Responsable
 {
@@ -24,10 +24,9 @@ final readonly class MutateResponse implements Responsable
     public static function of(MutateRequest $request, Resource $resource): self
     {
         $operations = DB::transaction(function () use ($request, $resource): array {
-            $queryBuilder = app()->make(EloquentQueryBuilder::class, ['resource' => $resource, 'query' => null]);
-            $resource->mutateQuery($request, $queryBuilder->toBase());
+            $resource->mutateQuery($request, QueryBuilderFactory::make($resource)->toBase());
 
-            return $queryBuilder->mutate(['mutate' => array_map(fn (MutationNode $node): array => $node->toArray(), $request->payload())]);
+            return (new Mutator($request))->execute($resource, $request->payload());
         });
         $block = $request->responseBlock();
 
