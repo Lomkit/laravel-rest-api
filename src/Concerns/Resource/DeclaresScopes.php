@@ -5,7 +5,7 @@ namespace Lomkit\Rest\Concerns\Resource;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Scopes\Scope;
 
-trait ConfiguresRestParameters
+trait DeclaresScopes
 {
     /** @return list<Scope> */
     public function scopes(RestRequest $request): array
@@ -28,30 +28,5 @@ trait ConfiguresRestParameters
         }
 
         return null;
-    }
-
-    /** @return list<int> */
-    public function limits(RestRequest $request): array
-    {
-        return [
-            10,
-            25,
-            50,
-        ];
-    }
-
-    /** @return list<string> */
-    public function alwaysSelect(RestRequest $request): array
-    {
-        return [];
-    }
-
-    /** @return list<int> */
-    public function getLimits(): array
-    {
-        return $this->context()
-            ->definition($this)
-            ->limits()
-            ->allowed;
     }
 }

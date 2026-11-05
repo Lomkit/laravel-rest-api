@@ -14,6 +14,12 @@ trait DeclaresFields
         return [];
     }
 
+    /** @return list<string> */
+    public function alwaysSelect(RestRequest $request): array
+    {
+        return [];
+    }
+
     public function getFields(): FieldSet
     {
         return $this->context()->definition($this)->fields();

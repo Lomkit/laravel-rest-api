@@ -8,9 +8,9 @@ use Lomkit\Rest\Actions\Actionable;
 use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
 use Lomkit\Rest\Concerns\PerformsQueries;
-use Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters;
 use Lomkit\Rest\Concerns\Resource\Contextual;
 use Lomkit\Rest\Concerns\Resource\DeclaresFields;
+use Lomkit\Rest\Concerns\Resource\DeclaresScopes;
 use Lomkit\Rest\Concerns\Resource\HasResourceHooks;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
@@ -29,9 +29,9 @@ class Resource implements \JsonSerializable
 {
     use Actionable;
     use Authorizable;
-    use ConfiguresRestParameters;
     use Contextual;
     use DeclaresFields;
+    use DeclaresScopes;
     use HasResourceHooks;
     use Instructionable;
     use Paginable;

@@ -211,6 +211,7 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 - A serialized resource holds its own properties and an empty context, without its declarations. A queued or batched action therefore evaluates them again in the worker, where the request has no user: declarations that depend on the user see a guest there. Closures in the declarations, such as field rules, scope fields, relation constraints, or actions and instructions built with closures, stay out of the queued job. The action that runs and the field values it receives are still serialized with the job, so they cannot hold closures.
 - `Resource` does not define `__sleep()`, and the `Lomkit\Rest\Concerns\Resource\ForgetsRequestState` trait is removed. A resource that overrides `__sleep()` must not call `parent::__sleep()`.
 - `$resource->context()->definition($resource)->limits()` returns a `Lomkit\Rest\Http\ResourceLimits`: `allowed` holds the values of `limits()`, and `defaultLimit` and `includeLimit` the properties of the resource, checked as described in [Search](#search). `getLimits()` still returns the list.
+- `Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters` is removed. `scopes()` is declared by `Lomkit\Rest\Concerns\Resource\DeclaresScopes`, `limits()` by `Paginable` and `alwaysSelect()` by `DeclaresFields`. A class that used the trait uses these three.
 
 ### Routing
 
