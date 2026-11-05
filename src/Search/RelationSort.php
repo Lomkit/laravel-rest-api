@@ -22,7 +22,7 @@ final readonly class RelationSort implements SortNode
         $relation = $resource->relation($name) ?? throw InvalidFieldException::notSortable($path);
         $related = $relation->resource();
 
-        return new self($relation, $related->getFields($related->context()->request)->get($field), $direction);
+        return new self($relation, $related->getFields()->get($field), $direction);
     }
 
     public function path(): string

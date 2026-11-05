@@ -13,7 +13,7 @@ trait Actionable
     }
 
     /** @return array<int, Action> */
-    public function getActions(RestRequest $request): array
+    public function getActions(): array
     {
         return $this->context()->definition($this)->actions();
     }
@@ -21,9 +21,9 @@ trait Actionable
     /**
      * Check if a specific action exists.
      */
-    public function actionExists(RestRequest $request, string $actionKey): bool
+    public function actionExists(string $actionKey): bool
     {
-        return collect($this->getActions($request))
+        return collect($this->getActions())
             ->contains(function (Action $action) use ($actionKey) {
                 return $action->uriKey() === $actionKey;
             });
@@ -32,9 +32,9 @@ trait Actionable
     /**
      * Get a specific action instance.
      */
-    public function action(RestRequest $request, string $actionKey): Action
+    public function action(string $actionKey): Action
     {
-        return collect($this->getActions($request))
+        return collect($this->getActions())
             ->sole(function (Action $action) use ($actionKey) {
                 return $action->uriKey() === $actionKey;
             })

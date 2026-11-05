@@ -6,7 +6,7 @@ use Illuminate\Validation\Rules\Enum;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\Instruction;
-use Lomkit\Rest\Rules\OneOf;
+use Lomkit\Rest\Rules\AllowedValues;
 use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\ScopeNode;
 use Lomkit\Rest\Search\SortNode;
@@ -35,7 +35,7 @@ interface SearchGrammar
 
     public function sortLimit(Limits $limits): int;
 
-    public function sortFields(ValidationContext $context, int $count): OneOf;
+    public function sortFields(ValidationContext $context, int $count): AllowedValues;
 
     public function sortDirection(mixed $field): Enum;
 

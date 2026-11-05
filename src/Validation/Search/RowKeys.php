@@ -36,11 +36,10 @@ final readonly class RowKeys
     public static function of(ValidationContext $context, array $includes, array $aggregates): self
     {
         $resource = $context->resource;
-        $request = $resource->context()->request;
 
         return new self(
-            $resource->getFields($request)->names(),
-            array_column($resource->getRelations($request), 'relation'),
+            $resource->getFields()->names(),
+            array_column($resource->getRelations(), 'relation'),
             [$resource->context()->config()->gatesKey, ...$context->reserved],
             self::aliases($includes),
             self::includes($includes),

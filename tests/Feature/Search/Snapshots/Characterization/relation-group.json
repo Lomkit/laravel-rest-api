@@ -1,8 +1,8 @@
 {
     "queries": {
-        "sqlite": 2,
-        "mysql": 2,
-        "pgsql": 2
+        "sqlite": 1,
+        "mysql": 1,
+        "pgsql": 1
     },
     "shape": {
         "current_page": null,
@@ -51,7 +51,6 @@
         "meta": []
     },
     "raw_queries": [
-        "select count(*) as \"aggregate\" from \"authors\" where (not exists (select * from \"posts\" where \"authors\".\"id\" = \"posts\".\"author_id\" and (\"posts\".\"status\" = 'draft'))) and \"authors\".\"deleted_at\" is null",
         "select \"authors\".\"id\", \"authors\".\"first_name\", \"authors\".\"last_name\", \"authors\".\"settings\" from \"authors\" where (not exists (select * from \"posts\" where \"authors\".\"id\" = \"posts\".\"author_id\" and (\"posts\".\"status\" = 'draft'))) and \"authors\".\"deleted_at\" is null order by \"authors\".\"id\" desc limit 50 offset 0"
     ]
 }

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\MutationOperation;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\KeyLookup;
@@ -28,7 +27,6 @@ final class MutationKeys
         private readonly ParsedRules $rules,
         private readonly PayloadReader $reader,
         private readonly int $maxValues,
-        private readonly RestRequest $request,
         private readonly Closure $query,
     ) {}
 
@@ -97,7 +95,7 @@ final class MutationKeys
 
     private function id(Resource $resource): ID
     {
-        return $this->ids[$resource::class] ??= KeysGrammar::idOf($resource, $this->request);
+        return $this->ids[$resource::class] ??= KeysGrammar::idOf($resource);
     }
 
     private function lookup(Resource $resource): KeyLookup

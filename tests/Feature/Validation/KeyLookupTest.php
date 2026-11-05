@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Validation;
 
 use Illuminate\Database\Eloquent\Builder;
+use LogicException;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Tests\Concerns\CapturesQueries;
 use Lomkit\Rest\Tests\Fixtures\Archive\Archive;
@@ -12,6 +13,7 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\Draft;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Lomkit\Rest\Validation\KeyLookup;
+use Lomkit\Rest\Validation\KeyRead;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -27,6 +29,34 @@ class KeyLookupTest extends PackageTestCase
     protected function fixtures(): array
     {
         return [new Archive, new Publishing];
+    }
+
+    #[Test]
+    public function it_loads_the_rows_of_the_keys_it_finds_with_the_same_query(): void
+    {
+        Document::factory()->create(['id' => 1, 'title' => 'Annual report']);
+        Document::factory()->create(['id' => 2, 'title' => 'Quarterly report']);
+        $lookup = new KeyLookup(fn (): Builder => Document::query(), ID::make('id'), KeyRead::Rows);
+        $lookup->expectAll([2, 3]);
+        $this->captureQueries();
+
+        $rows = $lookup->rows();
+
+        $this->assertSame([2], array_map(fn (Document $row): mixed => $row->getKey(), $rows));
+        $this->assertSame('Quarterly report', $rows[0]->getAttribute('title'));
+        $this->assertSame([true, false], [$lookup->has(2), $lookup->has(3)]);
+        $this->assertCount(1, $this->statements);
+        $this->assertStringStartsWith('select * from documents where documents.id in (2, 3)', $this->statements[0][0]);
+    }
+
+    #[Test]
+    public function it_refuses_to_give_rows_when_it_checks_the_keys_only(): void
+    {
+        $lookup = new KeyLookup(fn (): Builder => Document::query(), ID::make('id'));
+
+        $this->expectExceptionObject(new LogicException('The key lookup checks the keys without loading their rows.'));
+
+        $lookup->rows();
     }
 
     #[Test]

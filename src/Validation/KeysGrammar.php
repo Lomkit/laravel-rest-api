@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\ID;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
 final readonly class KeysGrammar
@@ -18,11 +17,11 @@ final readonly class KeysGrammar
     ) {}
 
     /** @param Closure(): Builder<Model> $query */
-    public static function of(Resource $resource, RestRequest $request, Closure $query, int $max): self
+    public static function of(Resource $resource, Closure $query, int $max, KeyRead $read = KeyRead::Keys): self
     {
-        $id = self::idOf($resource, $request);
+        $id = self::idOf($resource);
 
-        return new self($id, new KeyLookup($query, $id), $max);
+        return new self($id, new KeyLookup($query, $id, $read), $max);
     }
 
     public function parse(Cursor $resources): KeyList
@@ -57,13 +56,13 @@ final readonly class KeysGrammar
             }
         }
 
-        return new KeyList(array_values(array_map(fn (array $group): int|string => $group[0][1], $groups)), $rules, $this->id);
+        return new KeyList(array_values(array_map(fn (array $group): int|string => $group[0][1], $groups)), $rules, $this->id, $this->lookup);
     }
 
-    public static function idOf(Resource $resource, RestRequest $request): ID
+    public static function idOf(Resource $resource): ID
     {
         $model = $resource::newModel();
-        $field = $resource->getFields($request)->find($model->getKeyName());
+        $field = $resource->getFields()->find($model->getKeyName());
 
         if ($field instanceof ID) {
             return $field;

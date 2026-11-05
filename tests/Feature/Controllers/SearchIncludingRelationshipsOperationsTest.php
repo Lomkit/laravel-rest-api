@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Controllers;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
@@ -158,7 +157,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) {
                             return $relation->only(
-                                (new HasManyResource)->getFields(app()->make(RestRequest::class))->names()
+                                (new HasManyResource)->getFields()->names()
                             );
                         })->toArray(),
                 ],
@@ -199,7 +198,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             new ModelResource,
             [
                 [
-                    'belongs_to_relation' => $matchingModel->belongsToRelation->only((new BelongsToResource)->getFields(app()->make(RestRequest::class))->names()),
+                    'belongs_to_relation' => $matchingModel->belongsToRelation->only((new BelongsToResource)->getFields()->names()),
                 ],
                 [
                     'belongs_to_relation' => null,
@@ -269,11 +268,11 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 [
                     'belongs_to_relation' => array_merge(
                         $matchingModelBelongsToRelation
-                            ->only((new BelongsToResource)->getFields(app()->make(RestRequest::class))->names()),
+                            ->only((new BelongsToResource)->getFields()->names()),
                         [
                             'models' => $matchingModelBelongsToRelation->models
                                 ->map(function ($model) {
-                                    return $model->only((new ModelResource)->getFields(app()->make(RestRequest::class))->names());
+                                    return $model->only((new ModelResource)->getFields()->names());
                                 })
                                 ->toArray(),
                         ]
@@ -325,13 +324,13 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 [
                     'belongs_to_relation' => array_merge(
                         $matchingModelBelongsToRelation
-                            ->only((new BelongsToResource)->getFields(app()->make(RestRequest::class))->names()),
+                            ->only((new BelongsToResource)->getFields()->names()),
                         [
                             'models' => $matchingModelBelongsToRelation->models()
                                 ->orderBy('id')
                                 ->get()
                                 ->map(function ($model) {
-                                    return $model->only((new ModelResource)->getFields(app()->make(RestRequest::class))->names());
+                                    return $model->only((new ModelResource)->getFields()->names());
                                 })
                                 ->toArray(),
                         ]
@@ -417,7 +416,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                         ->map(function (BelongsToManyRelation $belongsToManyRelation) {
                             return array_merge(
                                 $belongsToManyRelation
-                                    ->only((new BelongsToManyResource)->getFields(app()->make(RestRequest::class))->names()),
+                                    ->only((new BelongsToManyResource)->getFields()->names()),
                                 [
                                     'model' => null,
                                     'belongs_to_many_pivot' => Arr::only(
@@ -425,7 +424,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                                             ->belongs_to_many_pivot
                                             ->toArray(),
                                         Arr::first(
-                                            (new ModelResource)->getRelations(app()->make(RestRequest::class)),
+                                            (new ModelResource)->getRelations(),
                                             function (Relation $relation) {
                                                 return $relation->relation === 'belongsToManyRelation';
                                             }
@@ -472,7 +471,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             [
                 [
                     'has_one_relation' => $matchingModel->hasOneRelation->only(
-                        (new HasOneResource)->getFields(app()->make(RestRequest::class))->names()
+                        (new HasOneResource)->getFields()->names()
                     ),
                 ],
                 [
@@ -514,7 +513,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             [
                 [
                     'has_one_of_many_relation' => $matchingModel->hasOneOfManyRelation->only(
-                        (new HasOneOfManyResource)->getFields(app()->make(RestRequest::class))->names()
+                        (new HasOneOfManyResource)->getFields()->names()
                     ),
                 ],
                 [
@@ -563,7 +562,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) {
                             return $relation->only(
-                                (new HasManyResource)->getFields(app()->make(RestRequest::class))->names()
+                                (new HasManyResource)->getFields()->names()
                             );
                         })->toArray(),
                 ],
@@ -614,7 +613,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                     'has_many_relation_with_eager_loading_relation' => $matchingModel->hasManyRelationWithEagerLoadingRelation()
                         ->orderBy('id')
                         ->get()
-                        ->map(fn (HasManyRelation $relation): array => $relation->only((new HasManyResource)->getFields(app()->make(RestRequest::class))->names()))
+                        ->map(fn (HasManyRelation $relation): array => $relation->only((new HasManyResource)->getFields()->names()))
                         ->toArray(),
                 ],
             ]
@@ -658,7 +657,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) use ($pivotAccessor) {
                             return collect($relation->only(
-                                array_merge((new BelongsToManyResource)->getFields(app()->make(RestRequest::class))->names(), [$pivotAccessor])
+                                array_merge((new BelongsToManyResource)->getFields()->names(), [$pivotAccessor])
                             ))
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
@@ -729,7 +728,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) use ($pivotAccessor) {
                             return collect($relation->only(
-                                array_merge((new BelongsToManyResource)->getFields(app()->make(RestRequest::class))->names(), [$pivotAccessor])
+                                array_merge((new BelongsToManyResource)->getFields()->names(), [$pivotAccessor])
                             ))
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
@@ -800,7 +799,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) use ($pivotAccessor) {
                             return collect($relation->only(
-                                array_merge((new BelongsToManyResource)->getFields(app()->make(RestRequest::class))->names(), [$pivotAccessor])
+                                array_merge((new BelongsToManyResource)->getFields()->names(), [$pivotAccessor])
                             ))
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
@@ -870,7 +869,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                 ->get()
                 ->map(function ($relation) {
                     return $relation->only(
-                        (new HasManyResource)->getFields(app()->make(RestRequest::class))->names()
+                        (new HasManyResource)->getFields()->names()
                     );
                 })->toArray();
         };
@@ -987,7 +986,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
             [
                 [
                     'owner' => $matchingModel->belongsToRelation->only(
-                        (new BelongsToResource)->getFields(app()->make(RestRequest::class))->names()
+                        (new BelongsToResource)->getFields()->names()
                     ),
                 ],
                 [
@@ -1032,7 +1031,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
                         ->get()
                         ->map(function ($relation) use ($pivotAccessor) {
                             return collect($relation->only(
-                                array_merge((new BelongsToManyResource)->getFields(app()->make(RestRequest::class))->names(), [$pivotAccessor])
+                                array_merge((new BelongsToManyResource)->getFields()->names(), [$pivotAccessor])
                             ))
                                 ->pipe(function ($relation) use ($pivotAccessor) {
                                     $relation[$pivotAccessor] = collect($relation[$pivotAccessor]->toArray())
@@ -1079,7 +1078,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
 
         // The intermediate relation keeps the fields of its resource, the deepest one is narrowed.
         $this->assertSame(
-            (new BelongsToResource)->getFields(app()->make(RestRequest::class))->names(),
+            (new BelongsToResource)->getFields()->names(),
             array_keys(Arr::except($response->json('data.0.belongs_to_relation'), ['models']))
         );
         $this->assertSame(
@@ -1119,7 +1118,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
 
         // Only the deepest relation of the path is narrowed, every level above keeps its fields.
         $this->assertSame(
-            (new ModelResource)->getFields(app()->make(RestRequest::class))->names(),
+            (new ModelResource)->getFields()->names(),
             array_keys(Arr::except($response->json('data.0.belongs_to_relation.models.0'), ['has_many_relation']))
         );
         $this->assertSame(

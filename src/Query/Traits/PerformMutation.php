@@ -112,7 +112,7 @@ trait PerformMutation
         $relations = $mutation['relations'] ?? [];
 
         $restRelations = array_filter(
-            $this->resource->getRelations($request),
+            $this->resource->getRelations(),
             fn ($relation): bool => isset($relations[$relation->relation])
         );
 
@@ -133,18 +133,22 @@ trait PerformMutation
             $relationKeys = [...$relationKeys, ...$restRelation->ownedAttributes($model)];
         }
 
-        (new AttributeWriter($this->resource->getFields($request)))
+        (new AttributeWriter($this->resource->getFields()))
             ->write($model, MutationOperation::from($mutation['operation']), $attributes, [...$relationKeys, ...$owned])
             ->save();
 
-        $this->resource->context()->authorizer()->forget($model);
+        if ($model->wasRecentlyCreated || $model->wasChanged()) {
+            $this->resource->context()->authorizer()->forget($model);
+        }
 
         foreach ($restRelations as $restRelation) {
             $operations->within($restRelation);
             $restRelation->afterMutating($model, $restRelation, $relations);
         }
 
-        $this->resource->context()->authorizer()->forget($model);
+        if ($restRelations !== []) {
+            $this->resource->context()->authorizer()->forget($model);
+        }
 
         $this
             ->resource

@@ -4,13 +4,11 @@ namespace Lomkit\Rest\Validation\Search;
 
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
-use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
 use Lomkit\Rest\Query\Trashed;
-use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Search\AggregateSort;
@@ -65,15 +63,15 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     }
 
     #[\Override]
-    public function sortFields(ValidationContext $context, int $count): OneOf
+    public function sortFields(ValidationContext $context, int $count): SortPaths
     {
         $fields = $this->resourceSorts($context);
 
         if ($context->aggregates === []) {
-            return $fields;
+            return new SortPaths($context->resource, $fields);
         }
 
-        return new OneOf([...$fields->values(), ...array_map(static fn (AggregateNode $aggregate): string => $aggregate->key->value, $context->aggregates)]);
+        return new SortPaths($context->resource, new OneOf([...$fields->values(), ...array_map(static fn (AggregateNode $aggregate): string => $aggregate->key->value, $context->aggregates)]));
     }
 
     #[\Override]
@@ -101,46 +99,22 @@ final readonly class SqlSearchGrammar implements SearchGrammar
             return RelationSort::resolve($resource, $name, $direction);
         }
 
-        return new FieldSort($resource->getFields($resource->context()->request)->get($name), $direction);
+        return new FieldSort($resource->getFields()->get($name), $direction);
     }
 
     private function resourceSorts(ValidationContext $context): OneOf
     {
         $resource = $context->resource;
-        $names = fn (): array => [
-            ...$resource
-                ->getFields($resource->context()->request)
-                ->sortable()
-                ->names(),
-            ...self::relationPaths($resource),
-        ];
+        $names = fn (): array => $resource
+            ->getFields()
+            ->sortable()
+            ->names();
 
         if (! $this->ranks) {
             return $context->vocabulary->of($resource, $this, 'sorts', $names);
         }
 
         return $context->vocabulary->of($resource, $this, 'sorts+relevance', fn (): array => [...$names(), RelevanceClause::FIELD]);
-    }
-
-    /** @return list<string> */
-    private static function relationPaths(Resource $resource): array
-    {
-        $request = $resource->context()->request;
-        $paths = [];
-
-        foreach ($resource->getRelations($request) as $relation) {
-            if ($relation->hasMultipleEntries() || $relation instanceof MorphTo) {
-                continue;
-            }
-
-            $related = $relation->resource();
-
-            foreach (AggregateFunction::Max->acceptedFieldNames($related->getFields($related->context()->request)) as $field) {
-                $paths[] = $relation->relation.'.'.$field;
-            }
-        }
-
-        return $paths;
     }
 
     #[\Override]

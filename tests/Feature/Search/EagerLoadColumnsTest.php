@@ -48,7 +48,6 @@ class EagerLoadColumnsTest extends PackageTestCase
 
         $response->assertOk()->assertJsonPath('data', [['borrower' => 'Bob'], ['borrower' => 'Ada']]);
         $this->assertSame([
-            'select count(*) as aggregate from loans',
             'select loans.borrower, loans.id, loans.book_id from loans order by loans.id desc limit 50 offset 0',
             'select * from books where books.id in (1)',
         ], self::loggedQueries());
@@ -74,7 +73,7 @@ class EagerLoadColumnsTest extends PackageTestCase
         $response = $this->postJson('/counted-books/search', ['search' => ['selects' => [['field' => 'id']], 'includes' => [$include]]]);
 
         $response->assertOk()->assertJsonPath('data', [['id' => 1, $key => [['borrower' => 'Ada']]]]);
-        $this->assertSame($query, self::loggedQueries()[2]);
+        $this->assertSame($query, self::loggedQueries()[1]);
     }
 
     /** @return array<string, array{array<string, mixed>, string, string}> */

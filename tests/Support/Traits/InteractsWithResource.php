@@ -3,9 +3,7 @@
 namespace Lomkit\Rest\Tests\Support\Traits;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\App;
 use Illuminate\Testing\TestResponse;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
 trait InteractsWithResource
@@ -28,7 +26,7 @@ trait InteractsWithResource
         $this->assertEquals(
             collect($models)
                 ->map(function ($model) use ($resource) {
-                    return $model->only($resource->getFields(App::make(RestRequest::class))->selectable()->names());
+                    return $model->only($resource->getFields()->selectable()->names());
                 })
                 ->when(! empty($additionalFields), function (Collection $collection) use ($additionalFields) {
                     return $collection
@@ -53,7 +51,7 @@ trait InteractsWithResource
         $this->assertEquals(
             array_map(
                 function ($model) use ($resource) {
-                    return $model->only($resource->getFields(App::make(RestRequest::class))->selectable()->names());
+                    return $model->only($resource->getFields()->selectable()->names());
                 },
                 $models
             ),

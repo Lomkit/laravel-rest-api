@@ -37,7 +37,7 @@ class RemovedHooksTest extends PackageTestCase
 
         $this->context()
             ->resource($resource)
-            ->getFields($this->context()->request);
+            ->getFields();
     }
 
     /** @return array<string, array{class-string<Resource>, string}> */
@@ -57,7 +57,7 @@ class RemovedHooksTest extends PackageTestCase
 
         $this->expectExceptionObject(new InvalidInstructionException(ScoutHandledInstruction::class.' declares handleScout(), which the package no longer calls. Implement AppliesToEngine and move the method to handleEngine(array $fields, EngineQuery $query).'));
 
-        $context->resource(ScoutHandledInstructionPostResource::class)->getInstructions($context->request);
+        $context->resource(ScoutHandledInstructionPostResource::class)->getInstructions();
     }
 
     #[Test]

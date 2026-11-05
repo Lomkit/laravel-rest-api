@@ -62,7 +62,7 @@ abstract class EngineTestCase extends PackageTestCase
     {
         $resource = $this->resource($class);
 
-        return TextTarget::of($resource, $resource->context()->request);
+        return TextTarget::of($resource);
     }
 
     protected function useEngine(object $engine): void

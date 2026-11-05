@@ -39,11 +39,6 @@ final readonly class ValidationContext
         return $this->copy($resource, $this->grammar, $this->filterDepth, $this->includeDepth);
     }
 
-    public function inMode(SearchGrammar $grammar): self
-    {
-        return $this->copy($this->resource, $grammar, $this->filterDepth, $this->includeDepth);
-    }
-
     public function deeper(): self
     {
         return $this->copy($this->resource, $this->grammar, $this->filterDepth + 1, $this->includeDepth);

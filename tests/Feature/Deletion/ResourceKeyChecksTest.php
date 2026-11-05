@@ -57,9 +57,10 @@ class ResourceKeyChecksTest extends PackageTestCase
 
         $this->json($method, $uri, ['resources' => range(1, $count)])->assertOk();
 
-        $this->assertCount(1, $this->keyQueries('documents'));
-        $this->assertSame([], $this->keyQueries('documents')[0][1]);
-        $this->assertCount(2, $this->readsOf('documents'));
+        $this->assertSame([], $this->keyQueries('documents'));
+        $this->assertCount(1, $this->readsOf('documents'));
+        $this->assertStringStartsWith('select * from documents where ', $this->readsOf('documents')[0][0]);
+        $this->assertSame([], $this->readsOf('documents')[0][1]);
     }
 
     #[Test]

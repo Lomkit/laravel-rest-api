@@ -133,9 +133,8 @@ class KeysGrammarTest extends TestCase
     {
         $this->violations = new Violations;
         $resource = self::resource($keyType, $fields === [] ? [ID::make('id')] : $fields);
-        $request = $resource->context()->request;
 
-        return KeysGrammar::of($resource, $request, $query ?? fn (): Builder => $resource::newModel()->newQuery(), $max)
+        return KeysGrammar::of($resource, $query ?? fn (): Builder => $resource::newModel()->newQuery(), $max)
             ->parse(Cursor::of(['resources' => $resources], $this->violations)->at('resources'));
     }
 

@@ -75,11 +75,10 @@ class ScopeClauseTest extends PackageTestCase
     public function it_builds_the_scopes_once_per_request(): void
     {
         $resource = $this->postResource();
-        $request = $resource->context()->request;
 
-        $this->assertSame($resource->getScopes($request), $resource->getScopes($request));
-        $this->assertSame('popular', $resource->scope($request, 'popular')?->name);
-        $this->assertNull($resource->scope($request, 'archived'));
+        $this->assertSame($resource->getScopes(), $resource->getScopes());
+        $this->assertSame('popular', $resource->scope('popular')?->name);
+        $this->assertNull($resource->scope('archived'));
     }
 
     #[Test]
@@ -99,7 +98,7 @@ class ScopeClauseTest extends PackageTestCase
         $this->expectException(InvalidScopeException::class);
         $this->expectExceptionMessage($resource::class."::scopes() returned a string at index 0 ('published'). Return Scope objects, for example Scope::make('published').");
 
-        $resource->getScopes($resource->context()->request);
+        $resource->getScopes();
     }
 
     /** @param list<mixed> $parameters */

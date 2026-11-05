@@ -14,7 +14,7 @@ trait DeclaresFields
         return [];
     }
 
-    public function getFields(RestRequest $request): FieldSet
+    public function getFields(): FieldSet
     {
         return $this->context()->definition($this)->fields();
     }

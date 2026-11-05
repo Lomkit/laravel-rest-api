@@ -119,7 +119,7 @@ final readonly class AggregateParser
             return $this->unused($field, $context);
         }
 
-        $fields = $related->getFields($context->resource->context()->request);
+        $fields = $related->getFields();
         $accepted = new OneOf($function->acceptedFieldNames($fields));
         $context->rules->add($field->path, [...$rules, $accepted]);
 

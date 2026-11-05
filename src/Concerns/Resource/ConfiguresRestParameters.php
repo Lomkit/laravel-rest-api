@@ -14,14 +14,14 @@ trait ConfiguresRestParameters
     }
 
     /** @return list<Scope> */
-    public function getScopes(RestRequest $request): array
+    public function getScopes(): array
     {
         return $this->context()->definition($this)->scopes();
     }
 
-    public function scope(RestRequest $request, string $name): ?Scope
+    public function scope(string $name): ?Scope
     {
-        foreach ($this->getScopes($request) as $scope) {
+        foreach ($this->getScopes() as $scope) {
             if ($scope->name === $name) {
                 return $scope;
             }
@@ -47,7 +47,7 @@ trait ConfiguresRestParameters
     }
 
     /** @return list<int> */
-    public function getLimits(RestRequest $request): array
+    public function getLimits(): array
     {
         return $this->context()
             ->definition($this)

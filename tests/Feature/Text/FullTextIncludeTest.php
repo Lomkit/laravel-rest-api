@@ -41,6 +41,6 @@ class FullTextIncludeTest extends FullTextTestCase
 
         $response->assertOk();
         $this->assertSame([[13], range(12, 3)], array_map(fn (array $author): array => array_column($author['posts'], 'id'), $response->json('data')));
-        $this->assertStringContainsString('row_number() over (partition by', DB::getQueryLog()[2]['query']);
+        $this->assertStringContainsString('row_number() over (partition by', DB::getQueryLog()[1]['query']);
     }
 }

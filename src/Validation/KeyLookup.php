@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Validation;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use LogicException;
 use Lomkit\Rest\Fields\ID;
 
 final class KeyLookup
@@ -20,10 +21,14 @@ final class KeyLookup
     /** @var array<array-key, true> */
     private array $found = [];
 
+    /** @var list<Model> */
+    private array $rows = [];
+
     /** @param Closure(): Builder<Model> $query */
     public function __construct(
         private readonly Closure $query,
         private readonly ID $id,
+        private readonly KeyRead $read = KeyRead::Keys,
     ) {}
 
     public function expect(int|string $key): ExistingKey
@@ -48,6 +53,18 @@ final class KeyLookup
         $this->resolve();
 
         return isset($this->found[$key]);
+    }
+
+    /** @return list<Model> */
+    public function rows(): array
+    {
+        if ($this->read === KeyRead::Keys) {
+            throw new LogicException('The key lookup checks the keys without loading their rows.');
+        }
+
+        $this->resolve();
+
+        return $this->rows;
     }
 
     private function register(int|string $key): void
@@ -92,28 +109,29 @@ final class KeyLookup
     private function check(array $round): void
     {
         $base = ($this->query)();
-        $column = $base->getModel()->getQualifiedKeyName();
 
         foreach (array_chunk($round, self::CHUNK) as $chunk) {
-            $this->collect($round, $this->id
-                ->whereKeys(clone $base, $chunk)
-                ->toBase()
-                ->pluck($column)
-                ->all());
+            $this->collect($round, $this->read->read($this->id->whereKeys(clone $base, $chunk)));
         }
     }
 
     /**
      * @param  array<array-key, int|string>  $round
-     * @param  array<array-key, mixed>  $values
+     * @param  list<array{mixed, Model|null}>  $values
      */
     private function collect(array $round, array $values): void
     {
-        foreach ($values as $value) {
+        foreach ($values as [$value, $row]) {
             $key = $this->id->parseKey($value);
 
-            if ($key !== null && isset($round[$normalized = $this->id->normalizeKey($key)])) {
-                $this->found[$round[$normalized]] = true;
+            if ($key === null || ! isset($round[$normalized = $this->id->normalizeKey($key)])) {
+                continue;
+            }
+
+            $this->found[$round[$normalized]] = true;
+
+            if ($row !== null) {
+                $this->rows[] = $row;
             }
         }
     }

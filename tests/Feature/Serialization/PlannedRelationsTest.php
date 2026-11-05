@@ -42,7 +42,7 @@ class PlannedRelationsTest extends PackageTestCase
         $response = $this->postJson('/eager-loans/search', ['search' => ['sorts' => [['field' => 'id']]]]);
 
         $response->assertOk()->assertJsonPath('data', self::LOANS);
-        $this->assertCount(3, DB::getQueryLog());
+        $this->assertCount(2, DB::getQueryLog());
     }
 
     #[Test]

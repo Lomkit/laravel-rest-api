@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Text;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\FieldSet;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Trashed;
 
@@ -19,9 +18,9 @@ final readonly class TextTarget
         public FieldSet $declared,
     ) {}
 
-    public static function of(Resource $resource, RestRequest $request): self
+    public static function of(Resource $resource): self
     {
-        $declared = $resource->getFields($request);
+        $declared = $resource->getFields();
 
         return new self($resource::class, $declared->searchable(), $resource::newModel(), $declared);
     }

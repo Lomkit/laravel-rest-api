@@ -33,13 +33,13 @@ class OperateRequest extends RestRequest
         $resource = $this->rootResource();
         $key = $this->route('action');
 
-        if (! is_string($key) || ! $resource->actionExists($this, $key)) {
+        if (! is_string($key) || ! $resource->actionExists($key)) {
             $authorizer->plan([Check::onClass($resource, 'viewAny')]);
 
             throw new HttpException(404);
         }
 
-        $action = $resource->action($this, $key);
+        $action = $resource->action($key);
 
         if ($action->abilities() !== []) {
             $authorizer->plan([Check::onClass($resource, 'viewAny')]);
@@ -107,13 +107,13 @@ class OperateRequest extends RestRequest
 
     private function parse(Resource $resource): OperationNode
     {
-        if (! $resource->actionExists($this, $this->actionKey())) {
+        if (! $resource->actionExists($this->actionKey())) {
             throw new HttpException(404);
         }
 
         return (new OperationParser(fn (): Builder => $this->keysQuery($resource)))->parse(
             Cursor::of($this->all(), $this->parsedRules()->violations()),
-            $resource->action($this, $this->actionKey()),
+            $resource->action($this->actionKey()),
             ValidationContext::root($resource, $this->budget(), $this->parsedRules()),
         );
     }
