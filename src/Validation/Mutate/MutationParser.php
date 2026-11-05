@@ -35,7 +35,7 @@ final readonly class MutationParser
     {
         $reader = new PayloadReader($rules, $budget);
         $limits = $request->context()->limits();
-        $entryRules = new EntryRules($rules, new ResourceRules($request), $reader);
+        $entryRules = new EntryRules($rules, new ResourceRules, $reader);
 
         return new self(
             $rules,
@@ -43,7 +43,7 @@ final readonly class MutationParser
             $limits,
             new MutationKeys($rules, $reader, $limits->sizes->values, fn (Resource $resource): Builder => $request->keysQuery($resource)),
             $entryRules,
-            new RelationMutationParser($rules, $reader, $limits, $request, $entryRules),
+            new RelationMutationParser($rules, $reader, $limits, $entryRules),
         );
     }
 
@@ -138,7 +138,7 @@ final readonly class MutationParser
         $this->rules->add($attributes->path, ['array', ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => $candidate->writeOperation() === null)]);
 
         if ($write !== null) {
-            $this->entryRules->writable($attributes, $resource->getFields(), $write);
+            $this->entryRules->writable($attributes, $resource->definition()->fields(), $write);
         }
 
         $this->rules->add($entry->at('key')->path, [

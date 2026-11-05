@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Search\Stubs;
 
 use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 
@@ -13,7 +12,7 @@ class HeadlinedPostResource extends Resource
     public static string $model = Post::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             Text::make('title'),

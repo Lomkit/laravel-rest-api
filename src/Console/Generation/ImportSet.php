@@ -13,7 +13,6 @@ use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
@@ -28,7 +27,6 @@ use Lomkit\Rest\Relations\MorphToMany;
 final readonly class ImportSet
 {
     private const array RESOURCE_CLASSES = [
-        RestRequest::class,
         Rule::class,
         Boolean::class,
         Date::class,

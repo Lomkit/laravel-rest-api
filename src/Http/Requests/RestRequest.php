@@ -69,7 +69,7 @@ class RestRequest extends FormRequest
 
         $resource = $this->rootResource();
 
-        $authorizer->enter($resource, self::checksOn($resource, $resource->abilities($endpoint, $this)));
+        $authorizer->enter($resource, self::checksOn($resource, $resource->abilities($endpoint)));
     }
 
     /** @return list<Check> */

@@ -199,7 +199,7 @@ Each package request now owns a `RestContext`. The context holds the request and
 These items change:
 
 - `Controller::newResource()` is removed. In a controller action, use `$request->context()->resource(static::resourceClass())`.
-- `app(RestRequest::class)` no longer returns the request in progress. It builds a new request. In a resource, read the request from the method parameter or from `$this->context()->request`.
+- `app(RestRequest::class)` no longer returns the request in progress. It builds a new request. In a resource, read it with `$this->request()`.
 - A package request reads its resource from the class of the route controller, which must extend `Lomkit\Rest\Http\Controllers\Controller`. On another route, such as a closure route, the request throws `Lomkit\Rest\Exceptions\InvalidControllerException`. Before, it failed with a PHP error.
 - `Lomkit\Rest\Contracts\QueryBuilder` is the contract of searches: `search(QueryPlan $plan)` and `toBase()`. Searches and actions resolve your `QueryBuilder` binding once, for the searched resource, and pass `search()` a `Lomkit\Rest\Search\Plan\QueryPlan`, see [Search](#search). Writes do not go through it, see [Writes](#writes). The `Lomkit\Rest\Contracts\EloquentQueryBuilder` contract is removed: an app that binds it binds `QueryBuilder` instead.
 
@@ -207,10 +207,13 @@ These items change:
 
 A resource holds no request state. Its context evaluates `fields()`, `scopes()`, `relations()`, `instructions()`, `actions()`, `limits()`, `text()` and `gates()` once per request, when they are first read, and keeps the results until the request ends. The next request evaluates them again, with its own user.
 
-- The `calculatedFields`, `calculatedScopes`, `calculatedRelations`, `calculatedInstructions`, `calculatedActions`, `calculatedLimits`, `calculatedScoutFields` and `calculatedScoutInstructions` properties of resources are removed. Read the declarations with `getFields()`, `getScopes()`, `getRelations()`, `getInstructions()`, `getActions()` and `getLimits()`. They take no argument and evaluate the declarations with the request of the resource's context. `getScoutFields()`, `getScoutInstructions()` and `scoutInstruction()` are removed with the declarations they read, and so is the `Lomkit\Rest\Concerns\Resource\Scoutable` trait, see [Search engines](#search-engines).
+- The declarations take no argument: `fields()`, `relations()`, `scopes()`, `limits()`, `alwaysSelect()`, `actions()`, `instructions()`, `text()`, `defaultOrderBy()`, `rules()`, `createRules()`, `updateRules()` and `gates()` of a resource, and the `fields()` of actions and instructions. `abilities()` takes the endpoint only: `abilities(Endpoint $endpoint): array`. Remove the `RestRequest $request` parameter from each override, and the argument of its `parent::` call: PHP refuses to load a class whose override keeps it, and names the method. A declaration that reads the request or the user calls `$this->request()`, the request of the resource's context: `if ($this->request()->user()?->is_staff) { ... }`. An action or an instruction calls `$this->request()` too: it returns the request of its resource. A resource, action or instruction that already defines a method named `request()` must give it this signature: `request(): Lomkit\Rest\Http\Requests\RestRequest`.
+- The `calculatedFields`, `calculatedScopes`, `calculatedRelations`, `calculatedInstructions`, `calculatedActions`, `calculatedLimits`, `calculatedScoutFields` and `calculatedScoutInstructions` properties of resources are removed. Read the declarations from `$resource->definition()`, see below. `getScoutFields()`, `getScoutInstructions()` and `scoutInstruction()` are removed with the declarations they read, and so is the `Lomkit\Rest\Concerns\Resource\Scoutable` trait, see [Search engines](#search-engines).
 - A serialized resource holds its own properties and an empty context, without its declarations. A queued or batched action therefore evaluates them again in the worker, where the request has no user: declarations that depend on the user see a guest there. Closures in the declarations, such as field rules, scope fields, relation constraints, or actions and instructions built with closures, stay out of the queued job. The action that runs and the field values it receives are still serialized with the job, so they cannot hold closures.
 - `Resource` does not define `__sleep()`, and the `Lomkit\Rest\Concerns\Resource\ForgetsRequestState` trait is removed. A resource that overrides `__sleep()` must not call `parent::__sleep()`.
-- `$resource->context()->definition($resource)->limits()` returns a `Lomkit\Rest\Http\ResourceLimits`: `allowed` holds the values of `limits()`, and `defaultLimit` and `includeLimit` the properties of the resource, checked as described in [Search](#search). `getLimits()` still returns the list.
+- `$resource->definition()` returns the `Lomkit\Rest\Http\ResourceDefinition` that the context keeps for the request. It reads `fields()` (a `FieldSet`), `relations()`, `scopes()`, `actions()`, `instructions()`, `limits()`, `text()` and `gates()`, and finds one declaration with `relation($name)` (a dotted path is accepted), `scope($name)`, `instruction($key)`, `actionExists($key)` and `action($key)`. `inputFields($actionOrInstruction)` returns the fields of an action or an instruction of the resource, a `FieldSet` read once per request. `getFields()`, `getRelations()`, `getScopes()`, `getLimits()`, `getActions()`, `getInstructions()`, `relation()`, `scope()`, `actionExists()`, `action()` and `instruction()` are removed from `Resource`, and `getFields()` from actions and instructions: replace `$resource->getFields()` with `$resource->definition()->fields()`, `$resource->getLimits()` with `$resource->definition()->limits()->allowed` and `$action->getFields($request)` with `$resource->definition()->inputFields($action)`. An override of a removed method is no longer called: change the declaration instead. A resource that already defines a method named `definition()` must give it this signature: `definition(): Lomkit\Rest\Http\ResourceDefinition`.
+- `$resource->definition()->limits()` returns a `Lomkit\Rest\Http\ResourceLimits`: `allowed` holds the values of `limits()`, and `defaultLimit` and `includeLimit` the properties of the resource, checked as described in [Search](#search).
+- `Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters` is removed. `scopes()` is declared by `Lomkit\Rest\Concerns\Resource\DeclaresScopes`, `limits()` by `Paginable` and `alwaysSelect()` by `DeclaresFields`. A class that used the trait uses these three.
 
 ### Routing
 
@@ -244,7 +247,7 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 | json, jsonb, JSON cast | `Json::make('metadata')`, with or without a JSON cast on the model |
 
 - `Json` works with or without a JSON cast on the model, or on the pivot class for a pivot field. When the model writes the attribute as it is, with no cast or a `string`, `encrypted` or `AsStringable` cast, and no set mutator, the field encodes the value before Eloquent writes it, and the response returns the decoded value. Any other cast, such as `array`, `json`, `collection`, `AsArrayObject`, `AsCollection`, `AsFluent`, `AsVector` or a cast class of the application, and a set mutator (`setMetadataAttribute()` or an `Attribute` with a `set` callback) receive the value as sent and encode it, as before. A `fillUsing()` callback still receives the value as sent. A `json` pivot column on the default `Pivot` class needs no custom pivot model.
-- `getFields()` returns a `Lomkit\Rest\Fields\FieldSet` instead of an array of names. Call `->names()` to get the old list.
+- `$resource->definition()->fields()` returns a `Lomkit\Rest\Fields\FieldSet` instead of an array of names. Call `->names()` to get the old list.
 - A field named like the gates key, `rest.gates.key` (`gates` by default), throws `Lomkit\Rest\Exceptions\InvalidResourceException` when the fields of its resource are first read, because the gates of a row are returned under that key. Rename the field, or set `rest.gates.key` to another name.
 - `rest:resource` generates `ID::make()` with the key name of the model, `ID::make('id')` by default. See [Generators](#generators).
 - `Lomkit\Rest\Fields\DateTime` has the same short name as PHP's `\DateTime`. In a file that uses both, alias one of them.
@@ -255,7 +258,7 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 Scopes, instructions and actions declare their inputs with the same `Field` objects as resources. The payload does not change: scope parameters stay a positional list, and instruction and action fields stay a list of `{name, value}` entries. Input fields take `rules()` only: `creationRules()` and `updateRules()` describe writes, so declaring them on an input field throws `InvalidFieldException`.
 
 ```php
-public function scopes(RestRequest $request): array
+public function scopes(): array
 {
     return [
         Scope::make('publishedSince')->fields([Date::make('since')]),
@@ -263,7 +266,7 @@ public function scopes(RestRequest $request): array
     ];
 }
 
-public function fields(RestRequest $request): array // in an instruction or an action
+public function fields(): array // in an instruction or an action
 {
     return [Boolean::make('featured')->default(true), Integer::make('min_views')->nullable()];
 }
@@ -294,7 +297,7 @@ Actions:
 
 Instructions and actions:
 
-- `Lomkit\Rest\Concerns\Fieldable` and its `field()` helper are removed. Use `getFields($request)->find($name)`, which returns the `Field` or `null`. `getFields()` returns a `FieldSet` built on each call.
+- `Lomkit\Rest\Concerns\Fieldable` and its `field()` helper are removed. Use `$resource->definition()->inputFields($action)->find($name)`, which returns the `Field` or `null`.
 - The fields are not bound to a model, so an `Enum` field names its enum class: `Enum::make('status', PostStatus::class)`.
 - For actions, an entry without a name, or that is not an object, now gives a 422 under `fields.<i>.name` instead of a 500, as it already did for instructions. A name that is not a string fails with `must be a string`.
 - `rest:action` and `rest:instruction` generate a `fields()` method that returns `[]`. Before, it declared a required `id` field that the action or the instruction did not use. See [Generators](#generators).
@@ -359,15 +362,15 @@ Actions, instructions and relations:
   - an override declares its return type: `handle(): void`, `withBatch(): void`, `name(): string`, `uriKey(): string`, `standalone(): static`, `targeted(): static`, `isStandalone(): bool`, `isTargeted(): bool`, `handleRequest(): int`.
 - An action's `handle()` returns `void`. Before, a synchronous action that returned `false` stopped the remaining chunks; the chunks now always run.
 - `make()` returns `static`. An action, instruction or relation that redefines it must declare `: static`.
-- On relations, `requiredOnCreation()`, `prohibitedOnCreation()`, `requiredOnUpdate()` and `prohibitedOnUpdate()` return `static`. A relation that overrides one of them must declare `: static`. Their callbacks receive the request and the related resource, `null` on a `MorphTo` with several targets: `fn (RestRequest $request, ?Resource $resource): bool`.
-- The public `relationRequiredOnCreationCallback`, `relationProhibitedOnCreationCallback`, `relationRequiredOnUpdateCallback` and `relationProhibitedOnUpdateCallback` properties of relations are removed: the constraints are now private. Set them with `requiredOnCreation()`, `prohibitedOnCreation()`, `requiredOnUpdate()` and `prohibitedOnUpdate()`, and read them with `isRequiredOnCreation()`, `isProhibitedOnCreation()`, `isRequiredOnUpdate()` and `isProhibitedOnUpdate()`.
+- On relations, `requiredOnCreation()`, `prohibitedOnCreation()`, `requiredOnUpdate()` and `prohibitedOnUpdate()` return `static`. A relation that overrides one of them must declare `: static`. Their callbacks receive the request and the related resource, `null` on a `MorphTo` with several targets: `fn (RestRequest $request, ?Resource $resource): bool`. The request is the request of the resource that declares the relation.
+- The public `relationRequiredOnCreationCallback`, `relationProhibitedOnCreationCallback`, `relationRequiredOnUpdateCallback` and `relationProhibitedOnUpdateCallback` properties of relations are removed: the constraints are now private. Set them with `requiredOnCreation()`, `prohibitedOnCreation()`, `requiredOnUpdate()` and `prohibitedOnUpdate()`, and read them with `isRequiredOnCreation()`, `isProhibitedOnCreation()`, `isRequiredOnUpdate()` and `isProhibitedOnUpdate()`, which take no argument.
 - `resource(Resource $resource)` returns `static` on actions, instructions and requests.
 
 Other resource methods:
 
-- `newModel(): Model`, `relation(): ?Relation`, `getRelations(): array` and `instruction(): ?Instruction`.
-- `instructionExists()` is removed. `instruction($key) !== null` gives the same answer.
-- `getFields()`, `getScopes()`, `getRelations()`, `getInstructions()`, `getActions()` and `getLimits()` take no argument, and `scope()`, `actionExists()`, `action()` and `instruction()` take the name only, as in `$resource->action('publish-posts')`. Before, they took a request first and did not use it. A resource that overrides one of them drops that parameter. A call that still passes a request to `scope()`, `actionExists()`, `action()` or `instruction()` reads it as the name and finds nothing, so drop the request there. The declarations `fields()`, `scopes()`, `relations()`, `instructions()`, `actions()`, `limits()` and `alwaysSelect()` still receive the request, and so does the `getFields($request)` of actions and instructions. `Lomkit\Rest\Validation\KeysGrammar::of()` and `idOf()`, and `Lomkit\Rest\Text\TextTarget::of()`, no longer take the request either.
+- `newModel(): Model`.
+- `instructionExists()` is removed. `$resource->definition()->instruction($key) !== null` gives the same answer.
+- `Lomkit\Rest\Validation\KeysGrammar::of()` and `idOf()`, and `Lomkit\Rest\Text\TextTarget::of()`, no longer take the request.
 - `performDelete()`, `performRestore()` and `performForceDelete()` return `void`.
 - `paginate(Builder $query, int $perPage, int $page)` receives the query of the search, the page size and the page number, and returns `Illuminate\Contracts\Pagination\LengthAwarePaginator`. Read the size and the page from these parameters, not from the request: the package passes `search.limit`, or `$defaultLimit` when it is not sent, and `search.page`, or 1. The default `paginate()` runs the page query first and the count query only when the page is full, or empty after the first page: otherwise `total` is the number of rows before the page plus the rows of the page, and no count query runs. Before, the count ran first, on every search. An override that calls `$query->paginate()` keeps Laravel's count, which runs first; `(new Lomkit\Rest\Query\PageQuery($query))->paginate($perPage, $page)` gives the default behaviour.
 
@@ -431,7 +434,7 @@ Query builder and requests:
 - `disableSecurity()` is removed from `Lomkit\Rest\Query\Builder`. `searchQuery()` applies to every search.
 - `RestRequest::isScoutMode()` is removed. `$request->context()->text($resource)` returns the text search of the resource for the request, a `Lomkit\Rest\Text\ResolvedText`: its `usesEngine()` is true when the request runs its text on a search engine, see [Search engines](#search-engines), and its `query` holds the text of the search, or `null` when the request has no text to search.
 - The search parser validates `text` and `trashed` at the root of the search, and an include refuses them: "The search.includes.0.text field is prohibited."
-- `Resource::relation()` returns `null` for a dotted path whose first relation is not declared. Before, it failed with an error.
+- `$resource->definition()->relation()` returns `null` for a dotted path whose first relation is not declared. Before, it failed with an error.
 - `Lomkit\Rest\Query\Builder::search()` and the `QueryBuilder` contract take a `QueryPlan`: `search(QueryPlan $plan): Builder`. The package builds the plan from `$request->payload()`, then resolves `QueryBuilder` once per search, for the root resource: the search endpoint, the search of an action and the rows of a search engine page. Includes and aggregates are applied by the plan and no longer resolve the binding. To change a search, work on the query that `search()` returns in your binding, or use the hooks of the resource: `searchQuery()`, `scopes()`, `instructions()`, `defaultOrderBy()` and `paginate()`.
 - `Builder` loses `applyFilters()`, `applySorts()`, `scope()`, `applyScopes()`, `instruction()`, `applyInstructions()`, `include()`, `includeAliased()`, `applyIncludes()`, `aggregate()`, `applyAggregates()`, `disableDefaultLimit()`, `newQueryBuilder()` and `searchKeys()`. The `Lomkit\Rest\Query\Traits\PerformSearch` and `SearchesKeys` traits are removed.
 - The clauses of `Lomkit\Rest\Query\Clauses` are built from the nodes of `payload()`: `FilterGroupClause::of()`, `RelationGroupClause::of()`, `SortClause::of()`, `RelationSortClause::of()`, `AggregateSortClause::of()`, `TrashedClause::of()`, `ScopeClause::of()`, `InstructionClause::of()` and `AggregateClause::of()`. `fromPayload()`, `fromSort()`, `fromAggregate()`, `RelevanceClause::requestedBy()` and `RelevanceClause::fromSort()` are removed.
@@ -469,7 +472,7 @@ use Lomkit\Rest\Text\Contains;
 use Lomkit\Rest\Text\FullText;
 use Lomkit\Rest\Text\TextSearch;
 
-public function fields(RestRequest $request): array
+public function fields(): array
 {
     return [
         ID::make('id'),
@@ -479,7 +482,7 @@ public function fields(RestRequest $request): array
     ];
 }
 
-public function text(RestRequest $request): ?TextSearch
+public function text(): ?TextSearch
 {
     return FullText::make()
         ->index('name', 'description')
@@ -489,7 +492,7 @@ public function text(RestRequest $request): ?TextSearch
 
 Declaration:
 
-- `Resource::text(RestRequest $request): ?TextSearch` returns `null` by default. A resource without text search refuses `search.text` with a 422, "The search.text field is prohibited.". A model that uses `Laravel\Scout\Searchable` no longer gives its resource a text search: declare `text()` on the resource. If one of your resources already has a method named `text()`, rename it.
+- `Resource::text(): ?TextSearch` returns `null` by default. A resource without text search refuses `search.text` with a 422, "The search.text field is prohibited.". A model that uses `Laravel\Scout\Searchable` no longer gives its resource a text search: declare `text()` on the resource. If one of your resources already has a method named `text()`, rename it.
 - `searchable()` marks a field that the `Contains` and `FullText` strategies read. Only `Text` fields, and app types that extend `Text`, can be searchable: `searchable()` throws `Lomkit\Rest\Exceptions\InvalidFieldException` on another type, and on a `virtual()` or `writeOnly()` field, whatever the order of the calls. `Lomkit\Rest\Fields\FieldSet::searchable()` returns the searchable fields.
 - A resource whose `text()` returns `Contains` or `FullText` but that has no searchable field throws `Lomkit\Rest\Exceptions\InvalidTextSearchException` when it is searched.
 - A text search implements `Lomkit\Rest\Text\TextSearch`, which only declares `capabilities()`. The strategies that add a condition to the SQL query implement `Lomkit\Rest\Text\QueryTextSearch`, and the strategies that run on a search engine implement `Lomkit\Rest\Text\EngineTextSearch`. A strategy that implements neither throws `InvalidTextSearchException` when the resource is searched, and so does an `EngineTextSearch` whose `capabilities()` return no engine grammar in `TextCapabilities::$engine`: the request is validated against that grammar.
@@ -552,7 +555,7 @@ use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Text\ScoutEngine;
 use Lomkit\Rest\Text\TextSearch;
 
-public function text(RestRequest $request): ?TextSearch
+public function text(): ?TextSearch
 {
     return ScoutEngine::make()
         ->filterable([Integer::make('category_id'), Number::make('price'), 'status'])
@@ -630,7 +633,7 @@ Instructions:
 
   class PricedUpTo extends Instruction implements AppliesToEngine
   {
-      public function fields(RestRequest $request): array
+      public function fields(): array
       {
           return [Number::make('max')->rules('required')];
       }
@@ -883,7 +886,7 @@ Checks before validation:
 - Each request checks the abilities of its endpoint, then the resources its payload reaches, before it validates the payload and before any query. A denied check answers with the status of the policy's response, `403` by default, even when the payload is invalid: the `403` now comes before the `422`. This also applies to Precognition requests, with or without `Precognition-Validate-Only`, which answered `204` or `422` before.
 - The `authorize()` method of a request still runs first. When it passes, the endpoint abilities and the reached resources must pass too.
 - The endpoint abilities are `viewAny` for `details` and `search`, and none for `mutate`, `destroy`, `restore` and `forceDestroy`, which check each row and each creation. `operate` is described under "Actions" below.
-- To change them for one resource, override `abilities(Endpoint $endpoint, RestRequest $request): array` on the resource (`Lomkit\Rest\Http\Routing\Endpoint`), for example to require `deleteAny` on `Endpoint::Destroy`. The list replaces the default of the endpoint: a resource that returns `['export']` for `Endpoint::Search` no longer checks `viewAny` there, and its search runs without it. To add an ability, keep `viewAny` in the list, as in `['viewAny', 'export']`. `Endpoint::Operate` is the exception: its list adds to `viewAny`. A resource that already defines a method named `abilities()` must give it this signature.
+- To change them for one resource, override `abilities(Endpoint $endpoint): array` on the resource (`Lomkit\Rest\Http\Routing\Endpoint`), for example to require `deleteAny` on `Endpoint::Destroy`. The list replaces the default of the endpoint: a resource that returns `['export']` for `Endpoint::Search` no longer checks `viewAny` there, and its search runs without it. To add an ability, keep `viewAny` in the list, as in `['viewAny', 'export']`. `Endpoint::Operate` is the exception: its list adds to `viewAny`. A resource that already defines a method named `abilities()` must give it this signature.
 - `details` checks `viewAny` before the controller's `beforeDetails()` hook runs, so the hook no longer runs for a user who cannot list the resource.
 - Every resource the payload reaches needs `viewAny` on that resource: each level of an include (`team.replies` needs `viewAny` on the teams and on the replies), each level of an aggregate, each level of a filter on a relation, nested filters included, the relation of a relation group, each relation of a sort on a relation field (`author.last_name` needs `viewAny` on the authors), and a filter on a pivot column (`tags.pivot.position` needs `viewAny` on the tags). The same applies to the `search` of an action, and to the `response` block of a mutation, which also needs `viewAny` on the resource of the endpoint. A filter on a relation did not check the related resource before, and an include was checked only when the query returned rows.
 - Each `create` in `mutate`, at the root or under a relation, needs `create` on the created resource. It is checked once per resource class and request, before validation, with the model class as its argument, as `Gate::inspect('create', Model::class)` does. Before, it was checked for each new model, after validation, with an unsaved model instance: a `create` policy method that requires a model as its second parameter no longer receives one. A creation under a relation that the package refuses, such as a `HasManyThrough` relation or a relation marked `prohibitedOnCreation()`, is checked before the `422` as well.
@@ -980,11 +983,11 @@ Gates:
 - `create` is accepted at the root of a search only, since its answer goes to `meta`. In an include, at any depth, it gives a 422 under its entry: `The search.includes.0.gates.0 field is prohibited.` Before, it was accepted and left out of the response.
 - The search of an action checks `gates` the same way, and the action still returns no answer.
 - A `gates` list has no size limit of its own: it holds each ability once at most, and its entries still count in `limits.totals.entries`. `limits.sizes.gates` and `Lomkit\Rest\Validation\ListSizes::$gates` are removed.
-- `Lomkit\Rest\Search\SearchNode::$gates` and `Lomkit\Rest\Search\Plan\QueryPlan::$gates` hold `Lomkit\Rest\Search\GateAbility` objects instead of strings. A `GateAbility` holds an `ability`: a case of the `Lomkit\Rest\Authorization\Ability` enum, or the name of a declared gate (`new GateAbility('create')` holds `Ability::Create`). It gives the ability that the policy answers (`name()`), the default name of its answer (`key()`, such as `authorized_to_force_delete`) and whether its answer goes to `meta` (`isClassLevel()`). `Lomkit\Rest\Validation\Search\GatesParser` reads `gates` and accepts the gates of the `Lomkit\Rest\Search\GateVocabulary` that `$resource->context()->definition($resource)->gates()` returns.
-- A resource declares more gates in `gates(RestRequest $request): array`, which returns the names of policy methods:
+- `Lomkit\Rest\Search\SearchNode::$gates` and `Lomkit\Rest\Search\Plan\QueryPlan::$gates` hold `Lomkit\Rest\Search\GateAbility` objects instead of strings. A `GateAbility` holds an `ability`: a case of the `Lomkit\Rest\Authorization\Ability` enum, or the name of a declared gate (`new GateAbility('create')` holds `Ability::Create`). It gives the ability that the policy answers (`name()`), the default name of its answer (`key()`, such as `authorized_to_force_delete`) and whether its answer goes to `meta` (`isClassLevel()`). `Lomkit\Rest\Validation\Search\GatesParser` reads `gates` and accepts the gates of the `Lomkit\Rest\Search\GateVocabulary` that `$resource->definition()->gates()` returns.
+- A resource declares more gates in `gates(): array`, which returns the names of policy methods:
 
   ```php
-  public function gates(RestRequest $request): array
+  public function gates(): array
   {
       return ['download'];
   }
@@ -1003,13 +1006,13 @@ Loaded columns:
 - A policy, an accessor, an observer, a hook or `map()` that reads a column that the search did not load gets `null`, or a `Illuminate\Database\Eloquent\MissingAttributeException` when the application calls `Model::preventAccessingMissingAttributes()`. List the column in `alwaysSelect()`, or in the `requires()` of the field whose value needs it, or set `search.select_columns` to `false` in `config/rest.php` to load every column again. Call `Model::preventAccessingMissingAttributes()` in your tests to find these reads. For example, for a policy that reads the `status` of a ticket:
 
   ```php
-  public function alwaysSelect(RestRequest $request): array
+  public function alwaysSelect(): array
   {
       return ['status'];
   }
   ```
 
-- `alwaysSelect(RestRequest $request): array` returns the columns of the table of the resource that its searches always load, without returning them. It returns `[]` by default. A resource that already defines a method named `alwaysSelect()` must give it this signature.
+- `alwaysSelect(): array` returns the columns of the table of the resource that its searches always load, without returning them. It returns `[]` by default. A resource that already defines a method named `alwaysSelect()` must give it this signature.
 - A field that is not a column of the table, such as an accessor or an appended attribute, must be declared `virtual()`, with `resolveUsing()` to return its value: a field that is not virtual is loaded as a column, and the query fails when the table has no such column.
 - The appended attributes of a model (`$appends`) are not evaluated on the rows of a response: an appended value is returned only through a field whose `resolveUsing()` reads it. Before, each appended attribute was evaluated on every row, and a field named like one returned its value.
 - A relation that the model loads by itself, through `$with` or a `with()` in a scope, a global scope, an instruction or `searchQuery()`, still loads: the search adds the keys that it needs on the parent row. A scope or an instruction that calls `select()` keeps its columns, and the search adds its own. A `<table>.*` in that `select()`, alone or next to a subquery such as the count of `$withCount`, is replaced by the columns of the search: list in `alwaysSelect()` the other columns that the application reads. A global scope applies when the query runs, after the search has chosen its columns: a `select()` in a global scope replaces them. A scope that joins another table and reads its columns selects them itself.
@@ -1162,7 +1165,7 @@ Relations:
 - A filter on a relation path (`author.first_name`, `author.tags.name`) matches the rows that have a related row matching the filter, as before, and applies the `searchQuery()` of the resource at the end of the path to that related row. This `searchQuery()` now runs in its own group: an `orWhere()` in it no longer makes the filter match related rows outside the filter.
 - `type` and `nested` work the same on relation paths and on fields: a filter with the `or` type is combined with the previous one by `or`, and the filters of a `nested` group stay inside that group.
 - A filter through a `MorphTo` relation, such as `labelable.title`, reads the field on the resource that the relation declares, and only matches the rows whose morph type is the model of that resource and that its `searchQuery()` keeps. Rows of another type never match, and a stored type that is not a model class no longer gives an error. The relation can be anywhere in the path, as in `labels.labelable.title` or `labelable.loan.borrower`, and the `searchQuery()` of the resource it declares applies there too, in its own group. With several targets, a dotted filter through the relation gives a 422 (`The selected search.filters.0.field is invalid.`): use a relation group with `types`.
-- An include or an aggregate whose `relation` ends with a `pivot` segment, such as `tags.pivot`, gives a 422 under its `relation` key. Before, it passed validation and failed when the query ran. `Resource::relation('tags.pivot')` returns `null`.
+- An include or an aggregate whose `relation` ends with a `pivot` segment, such as `tags.pivot`, gives a 422 under its `relation` key. Before, it passed validation and failed when the query ran. `$resource->definition()->relation('tags.pivot')` returns `null`.
 
 Relation groups:
 
@@ -1430,7 +1433,7 @@ Behaviour:
   - `Lomkit\Rest\Exceptions\InvalidResourceException` for a `MorphTo` whose model method does not return a `MorphTo` relation of the same name, whose targets are not a list of resources, declare a model twice or a morph type with `*` or a trailing backslash, or for an invalid name in `gates()`;
   - `Lomkit\Rest\Exceptions\InvalidFieldException` for an `Enum` field or pivot field with no enum class and no enum cast;
   - `BadMethodCallException` for a many-to-many relation or a `MorphTo` whose model method is missing.
-- Details checks `viewAny` only and applies no policy to the entries. It lists what the declarations of the resource return for the current request, which can depend on `$request->user()`.
+- Details checks `viewAny` only and applies no policy to the entries. It lists what the declarations of the resource return for the current request, which can depend on `$this->request()->user()`.
 - Clients ignore the keys they do not know. Later releases can add keys.
 
 Scramble:
@@ -1482,7 +1485,7 @@ Scramble:
 
 The classes that the generators write pass Pint with the `laravel` preset and Larastan at level 10:
 
-- They import the classes they use and mark each overriding method with `#[\Override]`. A model or a resource whose short name the file already uses is imported under an alias, for example `use App\Models\Resource as ResourceModel;`. In a resource, the reserved short names are the resource itself, `Resource`, `RestRequest`, `Rule`, the field classes and the relation classes, so a model named `Rule` or `Text` is imported as `RuleModel` or `TextModel`.
+- They import the classes they use and mark each overriding method with `#[\Override]`. A model or a resource whose short name the file already uses is imported under an alias, for example `use App\Models\Resource as ResourceModel;`. In a resource, the reserved short names are the resource itself, `Resource`, `Rule`, the field classes and the relation classes, so a model named `Rule` or `Text` is imported as `RuleModel` or `TextModel`.
 - `rest:action` and `rest:instruction` generate a `fields()` method that returns `[]`. Before, it declared a required `id` field: the instruction refused every request without it, and the action ignored it and ran on every model of the search.
 - `rest:base-resource` generates an empty abstract class. Before, it declared the query hooks, which returned `$query` unchanged. Override a hook in your base resource when you add constraints to it.
 - `rest:base-controller` generates an empty abstract class.

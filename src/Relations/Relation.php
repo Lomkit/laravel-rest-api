@@ -115,16 +115,14 @@ class Relation implements \JsonSerializable
     /** @return array<string, mixed> */
     public function toDetails(): array
     {
-        $request = $this->fromResource->context()->request;
-
         $details = [
             'resource' => $this->type,
             'relation' => $this->relation,
             'constraints' => [
-                'required_on_creation' => $this->isRequiredOnCreation($request),
-                'prohibited_on_creation' => $this->isProhibitedOnCreation($request),
-                'required_on_update' => $this->isRequiredOnUpdate($request),
-                'prohibited_on_update' => $this->isProhibitedOnUpdate($request),
+                'required_on_creation' => $this->isRequiredOnCreation(),
+                'prohibited_on_creation' => $this->isProhibitedOnCreation(),
+                'required_on_update' => $this->isRequiredOnUpdate(),
+                'prohibited_on_update' => $this->isProhibitedOnUpdate(),
             ],
             'name' => $this->name(),
         ];

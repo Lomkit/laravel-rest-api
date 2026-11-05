@@ -11,7 +11,6 @@ use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Scopes\Scope;
@@ -21,7 +20,7 @@ class PostResource extends Resource
     public static string $model = Post::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -38,7 +37,7 @@ class PostResource extends Resource
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsTo::make('author', AuthorResource::class),
@@ -46,7 +45,7 @@ class PostResource extends Resource
     }
 
     #[\Override]
-    public function scopes(RestRequest $request): array
+    public function scopes(): array
     {
         return [
             Scope::make('publishedSince')->fields([Date::make('since')]),
@@ -58,13 +57,13 @@ class PostResource extends Resource
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [HighlightPosts::make()->meta(['group' => 'ranking']), InStatus::make()];
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [
             PublishPosts::make()->meta(['color' => '#FFFFFF']),

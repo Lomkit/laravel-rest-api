@@ -5,14 +5,13 @@ namespace Lomkit\Rest\Tests\Feature\Labels\Stubs;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 
 class LabelledProductResource extends ProductResource
 {
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -28,7 +27,7 @@ class LabelledProductResource extends ProductResource
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsTo::make('category', LabelledCategoryResource::class),

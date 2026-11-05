@@ -10,7 +10,7 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 class ConstrainedPostResource extends PostResource
 {
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsTo::make('author', AuthorResource::class)

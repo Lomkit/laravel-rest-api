@@ -9,6 +9,16 @@ use Lomkit\Rest\Query\PageQuery;
 
 trait Paginable
 {
+    /** @return list<int> */
+    public function limits(): array
+    {
+        return [
+            10,
+            25,
+            50,
+        ];
+    }
+
     /**
      * @param  Builder<Model>  $query
      * @return LengthAwarePaginator<int, Model>

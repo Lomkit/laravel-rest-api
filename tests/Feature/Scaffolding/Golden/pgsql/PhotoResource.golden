@@ -5,7 +5,6 @@ namespace App\Rest\Resources;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Photo;
 
 class PhotoResource extends Resource
@@ -13,7 +12,7 @@ class PhotoResource extends Resource
     public static string $model = Photo::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -28,19 +27,19 @@ class PhotoResource extends Resource
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [];
     }
 
     #[\Override]
-    public function scopes(RestRequest $request): array
+    public function scopes(): array
     {
         return [];
     }
 
     #[\Override]
-    public function limits(RestRequest $request): array
+    public function limits(): array
     {
         return [
             10,
@@ -50,13 +49,13 @@ class PhotoResource extends Resource
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [];
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [];
     }

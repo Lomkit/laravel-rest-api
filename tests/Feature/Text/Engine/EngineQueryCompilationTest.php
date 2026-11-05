@@ -73,7 +73,7 @@ class EngineQueryCompilationTest extends EngineQueryTestCase
     public function it_runs_without_the_search_override_of_the_model(): void
     {
         $resource = $this->resource(VoucherResource::class);
-        $fields = $resource->getFields();
+        $fields = $resource->definition()->fields();
         $target = new TextTarget(VoucherResource::class, $fields, new CallbackVoucher, $fields);
 
         $page = $this->engine()

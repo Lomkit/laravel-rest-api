@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Mutations\Stubs;
 
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 
 class CountedRulesPostResource extends PostResource
@@ -14,26 +13,26 @@ class CountedRulesPostResource extends PostResource
     public static int $updateRulesCalls = 0;
 
     #[\Override]
-    public function rules(RestRequest $request): array
+    public function rules(): array
     {
         self::$rulesCalls++;
 
-        return parent::rules($request);
+        return parent::rules();
     }
 
     #[\Override]
-    public function createRules(RestRequest $request): array
+    public function createRules(): array
     {
         self::$createRulesCalls++;
 
-        return parent::createRules($request);
+        return parent::createRules();
     }
 
     #[\Override]
-    public function updateRules(RestRequest $request): array
+    public function updateRules(): array
     {
         self::$updateRulesCalls++;
 
-        return parent::updateRules($request);
+        return parent::updateRules();
     }
 }

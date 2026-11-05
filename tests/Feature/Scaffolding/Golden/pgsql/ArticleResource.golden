@@ -12,7 +12,6 @@ use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Article;
 
 class ArticleResource extends Resource
@@ -20,7 +19,7 @@ class ArticleResource extends Resource
     public static string $model = Article::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -68,19 +67,19 @@ class ArticleResource extends Resource
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [];
     }
 
     #[\Override]
-    public function scopes(RestRequest $request): array
+    public function scopes(): array
     {
         return [];
     }
 
     #[\Override]
-    public function limits(RestRequest $request): array
+    public function limits(): array
     {
         return [
             10,
@@ -90,13 +89,13 @@ class ArticleResource extends Resource
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [];
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [];
     }

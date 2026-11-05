@@ -24,7 +24,7 @@ final readonly class InstructionParser
         }
 
         $resource = $context->resource;
-        $declared = $context->grammar->instructions($resource->getInstructions());
+        $declared = $context->grammar->instructions($resource->definition()->instructions());
         $names = $context->vocabulary->of($resource, $context->grammar, 'instructions', fn (): array => array_values(array_map(
             fn (Instruction $instruction): string => $instruction->uriKey(),
             $declared,
@@ -65,7 +65,7 @@ final readonly class InstructionParser
             return null;
         }
 
-        $inputs = new InputSet($instruction->getFields($context->resource->context()->request));
+        $inputs = new InputSet($context->resource->definition()->inputFields($instruction));
 
         return new InstructionNode($instruction, $inputs->named($fields, $context, 'fields:'.$instruction->uriKey()));
     }

@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Search\Stubs;
 
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Tests\Fixtures\Library\BookResource;
 
@@ -11,7 +10,7 @@ class CountedBookResource extends BookResource
     public static string $model = CountedBook::class;
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             HasMany::make('countedLoans', CountedLoanResource::class),

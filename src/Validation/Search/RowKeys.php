@@ -38,8 +38,10 @@ final readonly class RowKeys
         $resource = $context->resource;
 
         return new self(
-            $resource->getFields()->names(),
-            array_column($resource->getRelations(), 'relation'),
+            $resource->definition()
+                ->fields()
+                ->names(),
+            array_column($resource->definition()->relations(), 'relation'),
             [$resource->context()->config()->gatesKey, ...$context->reserved],
             self::aliases($includes),
             self::includes($includes),

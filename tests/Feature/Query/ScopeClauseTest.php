@@ -76,9 +76,9 @@ class ScopeClauseTest extends PackageTestCase
     {
         $resource = $this->postResource();
 
-        $this->assertSame($resource->getScopes(), $resource->getScopes());
-        $this->assertSame('popular', $resource->scope('popular')?->name);
-        $this->assertNull($resource->scope('archived'));
+        $this->assertSame($resource->definition()->scopes(), $resource->definition()->scopes());
+        $this->assertSame('popular', $resource->definition()->scope('popular')?->name);
+        $this->assertNull($resource->definition()->scope('archived'));
     }
 
     #[Test]
@@ -89,7 +89,7 @@ class ScopeClauseTest extends PackageTestCase
             public static string $model = Post::class;
 
             #[\Override]
-            public function scopes(RestRequest $request): array
+            public function scopes(): array
             {
                 return ['published'];
             }
@@ -98,7 +98,7 @@ class ScopeClauseTest extends PackageTestCase
         $this->expectException(InvalidScopeException::class);
         $this->expectExceptionMessage($resource::class."::scopes() returned a string at index 0 ('published'). Return Scope objects, for example Scope::make('published').");
 
-        $resource->getScopes();
+        $resource->definition()->scopes();
     }
 
     /** @param list<mixed> $parameters */

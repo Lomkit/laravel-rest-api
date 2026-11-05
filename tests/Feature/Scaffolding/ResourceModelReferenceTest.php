@@ -127,7 +127,6 @@ class ResourceModelReferenceTest extends ScaffoldingTestCase
             'the base resource' => ['AliasedLibraryResource', 'Resource', 'ResourceModel'],
             'the resource itself' => ['AliasedShelf', 'AliasedShelf', 'AliasedShelfModel'],
             'a field' => ['AliasedBadgeResource', 'ID', 'IDModel'],
-            'the request' => ['AliasedLogResource', 'RestRequest', 'RestRequestModel'],
         ];
     }
 }

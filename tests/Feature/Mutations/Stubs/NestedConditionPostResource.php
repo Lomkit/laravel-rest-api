@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Feature\Mutations\Stubs;
 use Illuminate\Support\Fluent;
 use Illuminate\Validation\ConditionalRules;
 use Illuminate\Validation\Rule;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Mutations\Contextual;
 use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
@@ -13,7 +12,7 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 class NestedConditionPostResource extends PostResource
 {
     #[\Override]
-    public function rules(RestRequest $request): array
+    public function rules(): array
     {
         $featured = fn (Fluent $attributes): bool => $attributes->get('featured') === true;
 

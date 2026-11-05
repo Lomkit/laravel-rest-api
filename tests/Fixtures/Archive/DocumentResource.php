@@ -6,7 +6,6 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\Boolean;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
 class DocumentResource extends Resource
@@ -14,7 +13,7 @@ class DocumentResource extends Resource
     public static string $model = Document::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -24,7 +23,7 @@ class DocumentResource extends Resource
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [ArchiveDocumentsAction::make(), QueuedArchiveDocumentsAction::make()];
     }

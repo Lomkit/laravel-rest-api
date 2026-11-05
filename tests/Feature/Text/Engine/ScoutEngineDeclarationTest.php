@@ -161,7 +161,7 @@ class ScoutEngineDeclarationTest extends ScoutEngineDeclarationTestCase
         $this->useEngine(new FakeTypesenseEngine);
         config(['scout.typesense.model-settings.'.Voucher::class.'.search-parameters.query_by' => 'title,code']);
         $resource = $this->resource(VoucherResource::class);
-        $declared = $resource->getFields();
+        $declared = $resource->definition()->fields();
 
         $configured = $this->capabilities($this->open(['price'], ['price']));
         $declaredOnModel = $this->open()->capabilities(new TextTarget(VoucherResource::class, FieldSet::of([]), new QueryByVoucher, $declared));

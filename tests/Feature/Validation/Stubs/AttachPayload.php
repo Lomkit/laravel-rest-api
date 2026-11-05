@@ -6,13 +6,12 @@ use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 
 class AttachPayload extends Action
 {
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [Text::make('reason'), Json::make('payload')];
     }

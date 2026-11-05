@@ -14,7 +14,7 @@ class CurrentDocumentResource extends Resource
     public static string $model = Document::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [ID::make('id'), Text::make('title')];
     }

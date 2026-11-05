@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Relations;
 
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\StrictCategoryConstraint;
@@ -56,10 +57,11 @@ class RelationConstraintsTest extends PackageTestCase
     #[DataProvider('constraintsWithCallables')]
     public function it_passes_the_request_and_the_related_resource_to_a_constraint_callable(string $declare, string $evaluate, callable $callback): void
     {
-        $relation = $this->categoryRelation()->{$declare}($callback);
+        $strict = $this->categoryRelation(['strict' => '1'])->{$declare}($callback);
+        $lenient = $this->categoryRelation(['strict' => '0'])->{$declare}($callback);
 
-        $this->assertTrue($relation->{$evaluate}(new RestRequest(['strict' => '1'])));
-        $this->assertFalse($relation->{$evaluate}(new RestRequest(['strict' => '0'])));
+        $this->assertTrue($strict->{$evaluate}());
+        $this->assertFalse($lenient->{$evaluate}());
     }
 
     #[Test]
@@ -68,17 +70,20 @@ class RelationConstraintsTest extends PackageTestCase
     {
         $relation = $this->categoryRelation()->{$declare}(fn (): bool => ! $value)->{$declare}($value);
 
-        $this->assertSame($value, $relation->{$evaluate}(new RestRequest));
+        $this->assertSame($value, $relation->{$evaluate}());
     }
 
     #[Test]
     #[DataProvider('constraints')]
     public function it_casts_the_result_of_a_constraint_callback_to_a_bool(string $declare, string $evaluate): void
     {
-        $relation = $this->categoryRelation()->{$declare}(fn (RestRequest $request): ?string => $request->input('strict'));
+        $callback = fn (RestRequest $request): ?string => $request->input('strict');
 
-        $this->assertTrue($relation->{$evaluate}(new RestRequest(['strict' => 'yes'])));
-        $this->assertFalse($relation->{$evaluate}(new RestRequest));
+        $answered = $this->categoryRelation(['strict' => 'yes'])->{$declare}($callback);
+        $unanswered = $this->categoryRelation()->{$declare}($callback);
+
+        $this->assertTrue($answered->{$evaluate}());
+        $this->assertFalse($unanswered->{$evaluate}());
     }
 
     #[Test]
@@ -88,7 +93,7 @@ class RelationConstraintsTest extends PackageTestCase
         $relation = $this->categoryRelation()->{$declare}();
 
         foreach (self::constraints() as [, $reader]) {
-            $this->assertSame($reader === $evaluate, $relation->{$reader}(new RestRequest));
+            $this->assertSame($reader === $evaluate, $relation->{$reader}());
         }
     }
 
@@ -99,12 +104,15 @@ class RelationConstraintsTest extends PackageTestCase
         $relation = HasMany::make('products', ProductResource::class);
 
         $this->assertSame($relation, $relation->{$declare}());
-        $this->assertTrue($relation->{$evaluate}(new RestRequest));
+        $this->assertTrue($relation->{$evaluate}());
         $this->assertSame('static', (string) (new ReflectionMethod(HasMany::class, $declare))->getReturnType());
     }
 
-    private function categoryRelation(): BelongsTo
+    /** @param array<string, string> $input */
+    private function categoryRelation(array $input = []): BelongsTo
     {
-        return BelongsTo::make('category', CategoryResource::class)->fromResource(new ProductResource);
+        $context = new RestContext(new RestRequest($input), $this->app);
+
+        return BelongsTo::make('category', CategoryResource::class)->fromResource($context->resource(ProductResource::class));
     }
 }

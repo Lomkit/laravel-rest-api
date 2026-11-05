@@ -6,13 +6,12 @@ use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\Enum;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 
 class ChangeStatus extends Action
 {
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             Enum::make('status', PostStatus::class)->rules('required'),

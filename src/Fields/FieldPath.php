@@ -70,7 +70,7 @@ final readonly class FieldPath
         $relations = [];
 
         foreach ($segments as $segment) {
-            $relation = $segment === '' || $segment === 'pivot' ? null : $resource->relation($segment);
+            $relation = $segment === '' || $segment === 'pivot' ? null : $resource->definition()->relation($segment);
 
             if ($relation === null || ($relation instanceof PolymorphicRelation && $relation->targets()->isPolymorphic())) {
                 break;
@@ -87,7 +87,9 @@ final readonly class FieldPath
     private static function field(Resource $resource, array $relations, string $name): ?self
     {
         $resource = $relations === [] ? $resource : $relations[array_key_last($relations)]->resource();
-        $field = $resource->getFields()->find($name);
+        $field = $resource->definition()
+            ->fields()
+            ->find($name);
 
         if ($field === null || ! $field->isFilterable()) {
             return null;

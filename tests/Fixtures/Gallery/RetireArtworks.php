@@ -5,12 +5,11 @@ namespace Lomkit\Rest\Tests\Fixtures\Gallery;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Fields\Boolean;
-use Lomkit\Rest\Http\Requests\RestRequest;
 
 class RetireArtworks extends Action
 {
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [Boolean::make('notify')->default(false)];
     }

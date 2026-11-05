@@ -20,7 +20,7 @@ class VoucherResource extends Resource
     public static string $model = Voucher::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -34,19 +34,19 @@ class VoucherResource extends Resource
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [HasMany::make('lines', VoucherLineResource::class)];
     }
 
     #[\Override]
-    public function scopes(RestRequest $request): array
+    public function scopes(): array
     {
         return [Scope::make('cheap')];
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [
             DeactivateVouchers::make(),
@@ -58,19 +58,19 @@ class VoucherResource extends Resource
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [PricedUpTo::make(), NumberedFrom::make(), WithLines::make()];
     }
 
     #[\Override]
-    public function limits(RestRequest $request): array
+    public function limits(): array
     {
         return [2, 10, 50];
     }
 
     #[\Override]
-    public function text(RestRequest $request): ?TextSearch
+    public function text(): ?TextSearch
     {
         return ScoutEngine::make()
             ->filterable(['number', 'price', 'active', 'code'])

@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\MorphTargets\Stubs;
 
 use Closure;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Tests\Fixtures\Library\LabelResource;
 
@@ -15,7 +14,7 @@ class DeclaredLabelResource extends LabelResource
     public static ?Closure $declare = null;
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return self::$declare === null ? [] : (self::$declare)();
     }

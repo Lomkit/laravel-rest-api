@@ -30,9 +30,10 @@ class DeclaredFieldsTest extends PackageTestCase
     public function it_builds_the_field_set_once_per_request(): void
     {
         $resource = $this->context()->resource(ProductResource::class);
+        $otherResource = $this->context()->resource(ProductResource::class);
 
-        $this->assertSame($resource->getFields(), $resource->getFields());
-        $this->assertNotSame($resource->getFields(), $this->context()->resource(ProductResource::class)->getFields());
+        $this->assertSame($resource->definition()->fields(), $resource->definition()->fields());
+        $this->assertNotSame($resource->definition()->fields(), $otherResource->definition()->fields());
     }
 
     #[Test]
@@ -43,13 +44,15 @@ class DeclaredFieldsTest extends PackageTestCase
             public static string $model = Post::class;
 
             #[\Override]
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 return [ID::make('id'), Enum::make('status')];
             }
         };
 
-        $this->assertSame(PostStatus::class, $resource->getFields()->get('status')->enumClass());
+        $fields = $resource->definition()->fields();
+
+        $this->assertSame(PostStatus::class, $fields->get('status')->enumClass());
     }
 
     #[Test]
@@ -60,13 +63,15 @@ class DeclaredFieldsTest extends PackageTestCase
             public static string $model = Listing::class;
 
             #[\Override]
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 return [ID::make('id'), Text::make('name')];
             }
         };
 
-        $this->assertSame(['id', 'name'], $resource->getFields()->names());
+        $fields = $resource->definition()->fields();
+
+        $this->assertSame(['id', 'name'], $fields->names());
     }
 
     #[Test]
@@ -77,7 +82,7 @@ class DeclaredFieldsTest extends PackageTestCase
             public static string $model = Product::class;
 
             #[\Override]
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 return [ID::make('id'), 'name'];
             }
@@ -87,7 +92,7 @@ class DeclaredFieldsTest extends PackageTestCase
             $resource::class."::fields() returned a string at index 1 ('name'). Return Field objects, for example Text::make('name').",
         ));
 
-        $resource->getFields();
+        $resource->definition()->fields();
     }
 
     #[Test]
@@ -98,7 +103,7 @@ class DeclaredFieldsTest extends PackageTestCase
             public static string $model = Product::class;
 
             #[\Override]
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 return [ID::make('id'), Text::make('name'), Text::make('name')];
             }
@@ -106,7 +111,7 @@ class DeclaredFieldsTest extends PackageTestCase
 
         $this->expectExceptionObject(new InvalidFieldException($resource::class.'::fields() declares the field [name] twice.'));
 
-        $resource->getFields();
+        $resource->definition()->fields();
     }
 
     private function context(): RestContext

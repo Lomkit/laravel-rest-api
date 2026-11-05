@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Support\Rest\Instructions;
 
 use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\Integer;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 
 class NumberedInstruction extends Instruction
@@ -14,7 +13,7 @@ class NumberedInstruction extends Instruction
         $query->where('number', '>', $fields['number'] ?? 0);
     }
 
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             Integer::make('number'),

@@ -13,7 +13,7 @@ final readonly class KnownRelation implements ValidationRule
     #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! is_string($value) || $this->resource->relation($value) === null) {
+        if (! is_string($value) || $this->resource->definition()->relation($value) === null) {
             $fail('The :attribute field is not a valid or allowed relation for this resource.')->translate();
         }
     }

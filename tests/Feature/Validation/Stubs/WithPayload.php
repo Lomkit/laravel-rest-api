@@ -4,14 +4,13 @@ namespace Lomkit\Rest\Tests\Feature\Validation\Stubs;
 
 use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\Json;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 
 class WithPayload extends Instruction
 {
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [Json::make('payload')];
     }

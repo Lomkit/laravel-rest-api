@@ -4,7 +4,6 @@ namespace App\Rest\Resources;
 
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Relations\MorphedByMany;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Keyword;
 
@@ -13,7 +12,7 @@ class KeywordResource extends Resource
     public static string $model = Keyword::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -24,7 +23,7 @@ class KeywordResource extends Resource
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             MorphedByMany::make('stories', RelatedStoryResource::class),
@@ -33,13 +32,13 @@ class KeywordResource extends Resource
     }
 
     #[\Override]
-    public function scopes(RestRequest $request): array
+    public function scopes(): array
     {
         return [];
     }
 
     #[\Override]
-    public function limits(RestRequest $request): array
+    public function limits(): array
     {
         return [
             10,
@@ -49,13 +48,13 @@ class KeywordResource extends Resource
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [];
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [];
     }

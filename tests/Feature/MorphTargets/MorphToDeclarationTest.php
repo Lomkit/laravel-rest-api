@@ -100,8 +100,12 @@ class MorphToDeclarationTest extends MorphTargetsTestCase
     public function it_gives_the_resource_of_a_relation_with_one_target_only(): void
     {
         $context = new RestContext(RestRequest::create('/api/labels/search', 'POST'), $this->app);
-        $single = $context->resource(BookLabelResource::class)->relation('labelable');
-        $several = $context->resource(LabelResource::class)->relation('labelable');
+        $single = $context->resource(BookLabelResource::class)
+            ->definition()
+            ->relation('labelable');
+        $several = $context->resource(LabelResource::class)
+            ->definition()
+            ->relation('labelable');
 
         $this->assertNotNull($single);
         $this->assertNotNull($several);

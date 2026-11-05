@@ -8,7 +8,6 @@ use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Tests\Fixtures\Publishing\HighlightPosts;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
@@ -17,7 +16,7 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\PublishPosts;
 class LabelledPostResource extends PostResource
 {
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -39,7 +38,7 @@ class LabelledPostResource extends PostResource
     }
 
     #[\Override]
-    public function scopes(RestRequest $request): array
+    public function scopes(): array
     {
         return [
             Scope::make('publishedSince')->fields([Date::make('since')->label('start date')]),
@@ -48,13 +47,13 @@ class LabelledPostResource extends PostResource
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [HighlightPosts::make(), LabelledHighlightPosts::make()];
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [LabelledChangeStatus::make(), PublishPosts::make()];
     }

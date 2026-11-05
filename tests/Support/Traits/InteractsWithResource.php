@@ -26,7 +26,13 @@ trait InteractsWithResource
         $this->assertEquals(
             collect($models)
                 ->map(function ($model) use ($resource) {
-                    return $model->only($resource->getFields()->selectable()->names());
+                    return $model->only(
+                        $resource
+                            ->definition()
+                            ->fields()
+                            ->selectable()
+                            ->names()
+                    );
                 })
                 ->when(! empty($additionalFields), function (Collection $collection) use ($additionalFields) {
                     return $collection
@@ -51,7 +57,13 @@ trait InteractsWithResource
         $this->assertEquals(
             array_map(
                 function ($model) use ($resource) {
-                    return $model->only($resource->getFields()->selectable()->names());
+                    return $model->only(
+                        $resource
+                            ->definition()
+                            ->fields()
+                            ->selectable()
+                            ->names()
+                    );
                 },
                 $models
             ),

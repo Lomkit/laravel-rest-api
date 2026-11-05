@@ -140,11 +140,6 @@ parameters:
 			path: src/Concerns/Resource/DisableGates.php
 
 		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 1
-			path: src/Concerns/Resource/Relationable.php
-
-		-
 			identifier: typeCoverage.returnTypeCoverage
 			count: 1
 			path: src/Contracts/QueryBuilder.php

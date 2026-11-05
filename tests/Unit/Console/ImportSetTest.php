@@ -32,7 +32,6 @@ class ImportSetTest extends TestCase
             'a field' => ['App\Rest\Resources\BadgeResource', 'App\Models\Text', 'TextModel', 'App\Models\Text as TextModel'],
             'a relation' => ['App\Rest\Resources\GraphResource', 'App\Models\HasMany', 'HasManyModel', 'App\Models\HasMany as HasManyModel'],
             'the validation rule' => ['App\Rest\Resources\PolicyResource', 'App\Models\Rule', 'RuleModel', 'App\Models\Rule as RuleModel'],
-            'the request' => ['App\Rest\Resources\LogResource', 'App\Models\RestRequest', 'RestRequestModel', 'App\Models\RestRequest as RestRequestModel'],
         ];
     }
 

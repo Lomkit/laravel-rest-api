@@ -19,10 +19,12 @@ final readonly class RelationSort implements SortNode
     public static function resolve(Resource $resource, string $path, ?SortDirection $direction): self
     {
         [$name, $field] = explode('.', $path, 2);
-        $relation = $resource->relation($name) ?? throw InvalidFieldException::notSortable($path);
-        $related = $relation->resource();
+        $relation = $resource->definition()->relation($name) ?? throw InvalidFieldException::notSortable($path);
+        $fields = $relation->resource()
+            ->definition()
+            ->fields();
 
-        return new self($relation, $related->getFields()->get($field), $direction);
+        return new self($relation, $fields->get($field), $direction);
     }
 
     public function path(): string

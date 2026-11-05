@@ -14,13 +14,13 @@ class TeamNoteResource extends Resource
     public static string $model = Note::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [ID::make('id'), Text::make('team'), Text::make('title'), Boolean::make('pinned')];
     }
 
     #[\Override]
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [PinNotes::make(), PinNamedNotes::make()];
     }

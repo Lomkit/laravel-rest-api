@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Fixtures\Catalog;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 
@@ -14,13 +13,13 @@ class ProductResource extends Resource
     public static string $model = Product::class;
 
     #[\Override]
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [ID::make('id'), Integer::make('category_id'), Text::make('name'), Integer::make('price')];
     }
 
     #[\Override]
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             BelongsTo::make('category', CategoryResource::class),
@@ -28,7 +27,7 @@ class ProductResource extends Resource
     }
 
     #[\Override]
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [PricedAt::make(), PricedBetween::make()];
     }

@@ -15,10 +15,12 @@ final readonly class MorphTypeRules
 
     public static function of(Resource $resource, WriteOperation $operation): self
     {
-        $writable = $resource->getFields()->writableOn($operation);
+        $writable = $resource->definition()
+            ->fields()
+            ->writableOn($operation);
         $columns = [];
 
-        foreach ($resource->getRelations() as $relation) {
+        foreach ($resource->definition()->relations() as $relation) {
             if (! $relation instanceof PolymorphicRelation) {
                 continue;
             }

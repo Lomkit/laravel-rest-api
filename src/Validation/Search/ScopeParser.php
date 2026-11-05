@@ -26,7 +26,7 @@ final readonly class ScopeParser
         $resource = $context->resource;
         $names = $context->vocabulary->of($resource, $context->grammar, 'scopes', fn (): array => array_map(
             fn (Scope $scope): string => $scope->name,
-            $resource->getScopes(),
+            $resource->definition()->scopes(),
         ));
         $scopes = [];
 
@@ -55,7 +55,7 @@ final readonly class ScopeParser
 
         $context->rules->add($name->path, ['required', 'string', $names]);
 
-        $scope = is_string($name->value) ? $resource->scope($name->value) : null;
+        $scope = is_string($name->value) ? $resource->definition()->scope($name->value) : null;
 
         if ($scope === null) {
             $context->rules->addWhenPresent($parameters, ['array', 'list']);

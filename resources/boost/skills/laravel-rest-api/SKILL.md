@@ -100,14 +100,14 @@ php artisan rest:resource UserResource --model=User
 php artisan rest:resource UserResource --model=User --generate   # one field per column of the users table, plus the relations that have a resource
 ```
 
-Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $request`, so any list can be conditionally narrowed by user/permission). `fields()`, `relations()`, `scopes()`, `limits()`, `actions()`, `instructions()`, `text()` and `gates()` run once per request, the first time the package reads them, and the resource keeps nothing between requests:
+Override these methods. They take no argument: a list that depends on the user reads `$this->request()->user()`. `fields()`, `relations()`, `scopes()`, `limits()`, `actions()`, `instructions()`, `text()` and `gates()` run once per request, the first time the package reads them, and the resource keeps nothing between requests:
 
-- `fields()` — list of typed `Lomkit\Rest\Fields\*` objects the client may select / filter / sort / mutate on: `ID`, `Text`, `Number`, `Integer`, `Boolean`, `Date`, `DateTime`, `Enum`, `Json`, or an app type extending `Field`. Strings and duplicate names throw `InvalidFieldException`. `getFields()` returns a `FieldSet`; `->names()` gives the list of names.
+- `fields()` — list of typed `Lomkit\Rest\Fields\*` objects the client may select / filter / sort / mutate on: `ID`, `Text`, `Number`, `Integer`, `Boolean`, `Date`, `DateTime`, `Enum`, `Json`, or an app type extending `Field`. Strings and duplicate names throw `InvalidFieldException`. `$this->definition()->fields()` returns a `FieldSet`; `->names()` gives the list of names.
 
   ```php
   use Lomkit\Rest\Fields\{ID, Integer, Text};
 
-  public function fields(RestRequest $request): array
+  public function fields(): array
   {
       return [ID::make('id'), Text::make('name'), Integer::make('price'), Text::make('note')->nullable()];
   }
@@ -177,7 +177,7 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
   use Lomkit\Rest\Fields\{Date, Integer};
   use Lomkit\Rest\Scopes\Scope;
 
-  public function scopes(RestRequest $request): array
+  public function scopes(): array
   {
       return [
           Scope::make('publishedSince')->fields([Date::make('since')]),           // scopePublishedSince(Builder $query, CarbonImmutable $since)
@@ -190,10 +190,10 @@ Override these methods (all receive `Lomkit\Rest\Http\Requests\RestRequest $requ
 - `limits()` — allowed `limit` values (default `[10, 25, 50]`). The `$defaultLimit` property (`50`) sizes a page sent without `limit`, and `$includeLimit` (`10`) the rows of each parent row in an include of this resource sent without `limit`. Both must be values of `limits()`, or the resource throws `InvalidResourceException` when its limits are first read.
 - `actions()` — `Lomkit\Rest\Actions\Action` instances exposed under `/actions/{uriKey}`.
 - `instructions()` — `Lomkit\Rest\Instructions\Instruction` instances exposed under the `instructions` search key.
-- `text(RestRequest $request): ?\Lomkit\Rest\Text\TextSearch` — the text search strategy of `search.text` (`Contains::make()`, `FullText::make()` or `ScoutEngine::make()`), `null` by default (no text search). See "Text search" and "Search engines" below.
-- `gates(RestRequest $request): array` — the names of extra policy methods that `search.gates` accepts next to the built-in abilities, `[]` by default. See "2. Gates" below.
-- `alwaysSelect(RestRequest $request): array` — the columns of the table that every search of the resource loads without returning them (`[]` by default): the columns that a policy, an accessor, an observer, a hook or `map()` reads.
-- `rules(RestRequest $request): array`, `createRules(...): array`, `updateRules(...): array` — resource-level rules applied during mutate, for rules that compare attributes and for nested keys (`metadata.source`). Put the rules of one attribute on its field instead. Each key gets one list: the field rules, then `createRules()` (on `create`) or `updateRules()` (on `update`, `sync`, `toggle`), then `rules()`; pipe strings are split first. The three methods are read once per request, so every entry shares the rule objects they return. For a rule that depends on the entry, use `\Lomkit\Rest\Mutations\Contextual::rule(fn (MutationContext $mutation) => Rule::unique(Post::class, 'title')->ignore($mutation->key))` or a rule object that implements `\Lomkit\Rest\Mutations\MutationAwareRule` (`setMutation(MutationContext $mutation): static`, called on a clone per entry); `MutationContext` holds the `operation`, `key` and `depth` of the entry. A `Rule::when()` condition reads the attributes of its entry. The same holds for field rules.
+- `text(): ?\Lomkit\Rest\Text\TextSearch` — the text search strategy of `search.text` (`Contains::make()`, `FullText::make()` or `ScoutEngine::make()`), `null` by default (no text search). See "Text search" and "Search engines" below.
+- `gates(): array` — the names of extra policy methods that `search.gates` accepts next to the built-in abilities, `[]` by default. See "2. Gates" below.
+- `alwaysSelect(): array` — the columns of the table that every search of the resource loads without returning them (`[]` by default): the columns that a policy, an accessor, an observer, a hook or `map()` reads.
+- `rules(): array`, `createRules(): array`, `updateRules(): array` — resource-level rules applied during mutate, for rules that compare attributes and for nested keys (`metadata.source`). Put the rules of one attribute on its field instead. Each key gets one list: the field rules, then `createRules()` (on `create`) or `updateRules()` (on `update`, `sync`, `toggle`), then `rules()`; pipe strings are split first. The three methods are read once per request, so every entry shares the rule objects they return. For a rule that depends on the entry, use `\Lomkit\Rest\Mutations\Contextual::rule(fn (MutationContext $mutation) => Rule::unique(Post::class, 'title')->ignore($mutation->key))` or a rule object that implements `\Lomkit\Rest\Mutations\MutationAwareRule` (`setMutation(MutationContext $mutation): static`, called on a clone per entry); `MutationContext` holds the `operation`, `key` and `depth` of the entry. A `Rule::when()` condition reads the attributes of its entry. The same holds for field rules.
 - `defaultOrderBy()` — default sort (defaults to the model key in descending order, `[$model->getKeyName() => 'desc']`); a column may name its table (`posts.views`).
 - Resource hooks (model-lifecycle): `mutating`, `mutated`, `destroying`, `destroyed`, `forceDestroying`, `forceDestroyed`, `restoring`, `restored`. Signatures: `mutating(MutateRequest $request, array $requestBody, Model $model): void`; the others take the endpoint's request and the model, e.g. `destroying(DestroyRequest $request, Model $model): void`.
 
@@ -296,7 +296,7 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
 
 ## `details` endpoint
 
-`GET /api/artworks` describes the resource. It lists what the declarations of the resource (`fields()`, `relations()`, `scopes()`, `actions()`, `instructions()`, the rules methods, `text()` and `gates()`) return for the current request, which can depend on `$request->user()`. It checks `viewAny` only and applies no policy to the entries. With a `collector` morph-map alias:
+`GET /api/artworks` describes the resource. It lists what the declarations of the resource (`fields()`, `relations()`, `scopes()`, `actions()`, `instructions()`, the rules methods, `text()` and `gates()`) return for the current request, which can depend on `$this->request()->user()`. It checks `viewAny` only and applies no policy to the entries. With a `collector` morph-map alias:
 
 ```json
 {"data": {
@@ -431,12 +431,12 @@ Text search is opt-in per resource: `text()` returns a strategy. With `Contains`
 use Lomkit\Rest\Fields\{ID, Integer, Text};
 use Lomkit\Rest\Text\{Contains, FullText, TextSearch};
 
-public function fields(RestRequest $request): array
+public function fields(): array
 {
     return [ID::make('id'), Text::make('name')->searchable(), Text::make('description')->searchable(), Integer::make('price')];
 }
 
-public function text(RestRequest $request): ?TextSearch
+public function text(): ?TextSearch
 {
     return FullText::make()
         ->index('name', 'description')   // one call per FULLTEXT index; without index(), one group of every searchable field
@@ -472,7 +472,7 @@ use Lomkit\Rest\Fields\{Integer, Number};
 use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Text\{ScoutEngine, TextSearch};
 
-public function text(RestRequest $request): ?TextSearch
+public function text(): ?TextSearch
 {
     return ScoutEngine::make()
         ->filterable([Integer::make('category_id'), Number::make('price'), 'status'])
@@ -583,7 +583,7 @@ class SendWelcomeNotificationAction extends \Lomkit\Rest\Actions\Action
         foreach ($models as $model) { /* ... */ }
     }
 
-    public function fields(\Lomkit\Rest\Http\Requests\RestRequest $request): array
+    public function fields(): array
     {
         return [
             \Lomkit\Rest\Fields\Date::make('expires_at')->rules('required'),
@@ -596,7 +596,7 @@ class SendWelcomeNotificationAction extends \Lomkit\Rest\Actions\Action
 Register on the Resource:
 
 ```php
-public function actions(RestRequest $request): array
+public function actions(): array
 {
     return [
         SendWelcomeNotificationAction::make()->meta(['color' => '#FFFFFF']), // merges; getMeta() reads
@@ -667,7 +667,7 @@ class OddEvenIdInstruction extends \Lomkit\Rest\Instructions\Instruction
         $query->whereRaw('MOD(id, 2) = ?', [$fields['type'] === 'odd' ? 1 : 0]);
     }
 
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [\Lomkit\Rest\Fields\Text::make('type')->rules('required', 'in:odd,even')];
     }
@@ -689,7 +689,7 @@ class PricedUpTo extends \Lomkit\Rest\Instructions\Instruction implements \Lomki
         $query->where('price', '<=', $fields['max']);
     }
 
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [\Lomkit\Rest\Fields\Number::make('max')->rules('required')];
     }
@@ -711,7 +711,7 @@ Instruction `fields()` are typed and validated exactly like Action fields: full 
 All relations must extend `Lomkit\Rest\Relations\Relation` (do **not** use `Illuminate\Database\Eloquent\Relations\*`) and target a **Resource class**, not a model. Supported types: `BelongsTo`, `HasOne`, `HasOneOfMany`, `HasOneThrough`, `MorphOne`, `MorphOneOfMany`, `HasMany`, `HasManyThrough`, `MorphMany`, `BelongsToMany`, `MorphToMany`, `MorphedByMany`, `MorphTo`. A `MorphTo` takes one resource or a list: `MorphTo::make('labelable', [BookResource::class, ShelfResource::class])`.
 
 ```php
-public function relations(RestRequest $request): array
+public function relations(): array
 {
     return [
         \Lomkit\Rest\Relations\BelongsTo::make('company', CompanyResource::class)
@@ -772,9 +772,9 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 To change the endpoint abilities of one resource, override `abilities()` on it:
 
 ```php
-public function abilities(\Lomkit\Rest\Http\Routing\Endpoint $endpoint, RestRequest $request): array
+public function abilities(\Lomkit\Rest\Http\Routing\Endpoint $endpoint): array
 {
-    return $endpoint === \Lomkit\Rest\Http\Routing\Endpoint::Destroy ? ['deleteAny'] : parent::abilities($endpoint, $request);
+    return $endpoint === \Lomkit\Rest\Http\Routing\Endpoint::Destroy ? ['deleteAny'] : parent::abilities($endpoint);
 }
 ```
 
@@ -797,7 +797,7 @@ Each answer is `{allowed, message}`, where `message` comes from a `Response::den
 A resource declares more gates, as policy methods that receive the user and the model:
 
 ```php
-public function gates(RestRequest $request): array
+public function gates(): array
 {
     return ['download'];
 }
@@ -867,7 +867,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `ResourceRegistrar` and the route value objects)
 - Config — `src/Config/RestConfig.php` (the typed values of `config/rest.php`, read once per request through `RestContext::config()`) and `src/Config/ConfigValue.php` (the typed read of one key, also used for `rest.limits` and `rest.precognition.enabled`)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details}Request.php`
-- Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, kept by `src/Http/RestContext.php`, whose limits are a `src/Http/ResourceLimits.php`), `src/Concerns/Resource/*` (`DisableGates`, `DisableAuthorizationsCache`, hooks, ...)
+- Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, read with `$resource->definition()`, and their lookups `relation()`, `scope()`, `action()`, `instruction()` and `inputFields()`; kept by `src/Http/RestContext.php`, whose limits are a `src/Http/ResourceLimits.php`), `src/Concerns/Resource/*` (`DeclaresFields`, `DeclaresScopes`, `Paginable`, `Relationable`, `Contextual` with `definition()` and `request()`, `DisableGates`, `DisableAuthorizationsCache`, hooks, ...)
 - Authorization — `src/Authorization/*` (`Authorizer`, `Check`, `Decision`, `Denial`, `DecisionMemo` and the decision stores), `src/Concerns/Authorizable.php`, `src/Exceptions/{AuthorizationDenied,DenialsRenderer,UnplannedCheckException}.php`; the checks made before validation are collected by the parsers (`ParsedRules::reach()`), and run by `RestRequest::passesAuthorization()`
 - Query layer — `src/Query/Builder.php` (`search(QueryPlan)`), `src/Query/QueryBuilderFactory.php` (resolves the `QueryBuilder` binding for the root of a search, and for `mutateQuery()` in a mutation), `src/Query/PageQuery.php` (the default `paginate()`: the page first, the count only when the page does not give the total), `src/Query/EngineSearch.php` (the search of a `ScoutEngine` text), `src/Query/AttributeWriter.php`, which fills a model from the writable fields of a mutation, `src/Query/RelationAggregate.php` (the subquery of an aggregate over a relation, selected by `AggregateClause` and ordered by `RelationSortClause` and `AggregateSortClause`), and `src/Search/Plan/*` (`SearchPlanner`, `QueryPlan`, `PlannedPage` (the plan and the rows of a search engine page), `LimitPolicy`, the row sources `SqlRows` and `KeyedRows` (the rows of a `KeySet`: the `EngineKeys` of an engine page, or the `RecordKeys` of the records of a mutation), the column selection in `src/Search/Plan/Columns/` (`ColumnSet`, the columns of one level; `ColumnSelection`, the returned columns or every column; `RelationKeys`, the keys of each Eloquent relation class), and the `IncludeClause`, `AliasedIncludeClause` (an alias loaded on copies of the parent rows), `MorphToIncludeClause` (a `MorphTo` include, loaded per stored type) and `DefaultOrderClause` clauses)
 - Responses — `src/Http/Response.php` (the envelope, `map()` and `rows()`), `src/Http/MutateResponse.php` (the mutation in one transaction, its `operations` and, with `response`, its `records`, read by `src/Http/WrittenRecords.php`) and `src/Http/Serialization/*`: `RowSerializer` renders the rows of one plan level with `RowFields` (which converts only the returned columns), `GateTable`, `RelationRenderer` and `PivotRenderer`, and `MorphToSerializer` the targets of a `MorphTo` include, type first (both are `RowRenderer`s), and `PageEnvelope` or `PlainEnvelope` (the `Envelope` strategies) wraps them; `src/Pagination/LengthAwarePaginator.php` gives the page keys

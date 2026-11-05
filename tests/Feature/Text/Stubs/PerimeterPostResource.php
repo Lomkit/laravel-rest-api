@@ -11,7 +11,7 @@ use Lomkit\Rest\Text\TextSearch;
 class PerimeterPostResource extends SearchablePostResource
 {
     #[\Override]
-    public function text(RestRequest $request): TextSearch
+    public function text(): TextSearch
     {
         return FullText::make()
             ->index('title', 'summary')

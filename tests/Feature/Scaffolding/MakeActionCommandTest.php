@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
 use App\Rest\Actions\ScaffoldedAction;
 use Lomkit\Rest\Actions\Action;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -22,6 +21,6 @@ class MakeActionCommandTest extends ScaffoldingTestCase
         $action = new ScaffoldedAction;
 
         $this->assertInstanceOf(Action::class, $action);
-        $this->assertSame([], $action->fields(new RestRequest));
+        $this->assertSame([], $action->fields());
     }
 }

@@ -131,9 +131,7 @@ final readonly class IncludeParser
             if (! $middle instanceof OwnerRelation) {
                 $resource = $middle->resource();
 
-                $resource->context()
-                    ->definition($resource)
-                    ->limits();
+                $resource->definition()->limits();
             }
         }
 

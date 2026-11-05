@@ -35,8 +35,7 @@ final readonly class EngineSearch
     public function paginate(): PlannedPage
     {
         $query = $this->query();
-        $perPage = $this->search->limit ?? $this->resource->context()
-            ->definition($this->resource)
+        $perPage = $this->search->limit ?? $this->resource->definition()
             ->limits()
             ->defaultLimit;
         $page = $this->search->page ?? 1;

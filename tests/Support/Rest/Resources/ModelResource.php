@@ -8,7 +8,6 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
@@ -45,7 +44,7 @@ class ModelResource extends Resource
 
     public static string $model = Model::class;
 
-    public function relations(RestRequest $request): array
+    public function relations(): array
     {
         return [
             HasOne::make('hasOneRelation', HasOneResource::class),
@@ -70,7 +69,7 @@ class ModelResource extends Resource
         ];
     }
 
-    public function fields(RestRequest $request): array
+    public function fields(): array
     {
         return [
             ID::make('id'),
@@ -84,7 +83,7 @@ class ModelResource extends Resource
     /**
      * The scopes that could be provided.
      */
-    public function scopes(RestRequest $request): array
+    public function scopes(): array
     {
         return [
             Scope::make('numbered')->fields([Integer::make('number')->default(0)]),
@@ -94,7 +93,7 @@ class ModelResource extends Resource
     /**
      * The limits that could be provided.
      */
-    public function limits(RestRequest $request): array
+    public function limits(): array
     {
         return [
             1,
@@ -105,7 +104,7 @@ class ModelResource extends Resource
         ];
     }
 
-    public function defaultOrderBy(RestRequest $request): array
+    public function defaultOrderBy(): array
     {
         return [
             'id' => 'asc',
@@ -115,7 +114,7 @@ class ModelResource extends Resource
     /**
      * The actions that should be linked.
      */
-    public function actions(RestRequest $request): array
+    public function actions(): array
     {
         return [
             ModifyNumberAction::make(),
@@ -134,7 +133,7 @@ class ModelResource extends Resource
     /**
      * The instructions that should be linked.
      */
-    public function instructions(RestRequest $request): array
+    public function instructions(): array
     {
         return [
             NumberedInstruction::make(),

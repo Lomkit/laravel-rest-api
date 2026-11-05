@@ -2,11 +2,14 @@
 
 namespace Lomkit\Rest\Tests\Unit\Fields;
 
+use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
-use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\ResourceDefinition;
+use Lomkit\Rest\Instructions\Instruction;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -15,73 +18,78 @@ class HasInputFieldsTest extends TestCase
     #[Test]
     public function it_declares_no_fields_by_default(): void
     {
-        $owner = new class
-        {
-            use HasInputFields;
-        };
+        $action = new Action;
+        $instruction = new Instruction;
 
-        $this->assertSame([], $owner->fields(new RestRequest));
-        $this->assertCount(0, $owner->getFields(new RestRequest));
+        $this->assertSame([], $action->fields());
+        $this->assertSame([], $instruction->fields());
+        $this->assertCount(0, self::definition()->inputFields($action));
+        $this->assertCount(0, self::definition()->inputFields($instruction));
     }
 
     #[Test]
-    public function it_builds_a_new_field_set_on_each_call(): void
+    public function it_reads_the_fields_of_a_declaration_once_per_definition(): void
     {
-        $owner = new class
+        $action = new class extends Action
         {
-            use HasInputFields;
-
             public int $calls = 0;
 
-            public function fields(RestRequest $request): array
+            #[\Override]
+            public function fields(): array
             {
                 $this->calls++;
 
                 return [Text::make('title'), Integer::make('min_views')];
             }
         };
+        $definition = self::definition();
 
-        $first = $owner->getFields(new RestRequest);
-        $second = $owner->getFields(new RestRequest);
+        $first = $definition->inputFields($action);
+        $second = $definition->inputFields($action);
+        $other = self::definition()->inputFields($action);
 
         $this->assertSame(['title', 'min_views'], $first->names());
-        $this->assertNotSame($first, $second);
-        $this->assertSame(2, $owner->calls);
+        $this->assertSame($first, $second);
+        $this->assertNotSame($first, $other);
+        $this->assertSame(2, $action->calls);
     }
 
     #[Test]
     public function it_names_its_owner_when_the_fields_are_invalid(): void
     {
-        $owner = new class
+        $action = new class extends Action
         {
-            use HasInputFields;
-
-            public function fields(RestRequest $request): array
+            #[\Override]
+            public function fields(): array
             {
                 return [Text::make('title'), Text::make('title')];
             }
         };
 
-        $this->expectExceptionObject(InvalidFieldException::duplicateName($owner::class.'::fields()', 'title'));
+        $this->expectExceptionObject(InvalidFieldException::duplicateName($action::class.'::fields()', 'title'));
 
-        $owner->getFields(new RestRequest);
+        self::definition()->inputFields($action);
     }
 
     #[Test]
     public function it_names_its_owner_when_an_input_field_declares_write_rules(): void
     {
-        $owner = new class
+        $instruction = new class extends Instruction
         {
-            use HasInputFields;
-
-            public function fields(RestRequest $request): array
+            #[\Override]
+            public function fields(): array
             {
                 return [Text::make('title')->updateRules('max:1')];
             }
         };
 
-        $this->expectExceptionObject(InvalidFieldException::writeRulesOnInput($owner::class.'::fields()', 'title'));
+        $this->expectExceptionObject(InvalidFieldException::writeRulesOnInput($instruction::class.'::fields()', 'title'));
 
-        $owner->getFields(new RestRequest);
+        self::definition()->inputFields($instruction);
+    }
+
+    private static function definition(): ResourceDefinition
+    {
+        return new ResourceDefinition(new Resource, new RestRequest);
     }
 }

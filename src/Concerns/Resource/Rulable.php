@@ -2,24 +2,22 @@
 
 namespace Lomkit\Rest\Concerns\Resource;
 
-use Lomkit\Rest\Http\Requests\RestRequest;
-
 trait Rulable
 {
     /** @return array<string, mixed> */
-    public function rules(RestRequest $request): array
+    public function rules(): array
     {
         return [];
     }
 
     /** @return array<string, mixed> */
-    public function createRules(RestRequest $request): array
+    public function createRules(): array
     {
         return [];
     }
 
     /** @return array<string, mixed> */
-    public function updateRules(RestRequest $request): array
+    public function updateRules(): array
     {
         return [];
     }

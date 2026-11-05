@@ -166,7 +166,7 @@ class KeysGrammarTest extends TestCase
             public function __construct(private readonly array $declared) {}
 
             #[\Override]
-            public function fields(RestRequest $request): array
+            public function fields(): array
             {
                 return $this->declared;
             }

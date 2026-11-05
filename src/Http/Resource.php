@@ -8,9 +8,9 @@ use Lomkit\Rest\Actions\Actionable;
 use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
 use Lomkit\Rest\Concerns\PerformsQueries;
-use Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters;
 use Lomkit\Rest\Concerns\Resource\Contextual;
 use Lomkit\Rest\Concerns\Resource\DeclaresFields;
+use Lomkit\Rest\Concerns\Resource\DeclaresScopes;
 use Lomkit\Rest\Concerns\Resource\HasResourceHooks;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
@@ -19,7 +19,6 @@ use Lomkit\Rest\Concerns\Resource\SearchesText;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Fields\Details\FieldDetails;
 use Lomkit\Rest\Fields\Details\ResourceRuleDetails;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Instructions\Instructionable;
 use Lomkit\Rest\Relations\Relation;
@@ -29,9 +28,9 @@ class Resource implements \JsonSerializable
 {
     use Actionable;
     use Authorizable;
-    use ConfiguresRestParameters;
     use Contextual;
     use DeclaresFields;
+    use DeclaresScopes;
     use HasResourceHooks;
     use Instructionable;
     use Paginable;
@@ -76,7 +75,7 @@ class Resource implements \JsonSerializable
     }
 
     /** @return array<string, string> */
-    public function defaultOrderBy(RestRequest $request): array
+    public function defaultOrderBy(): array
     {
         return [
             static::newModel()->getKeyName() => 'desc',
@@ -107,18 +106,18 @@ class Resource implements \JsonSerializable
     #[\Override]
     public function jsonSerialize(): mixed
     {
-        $request = $this->context()->request;
+        $definition = $this->definition();
 
         return [
-            'actions' => array_values(array_map(fn (Action $action): array => $action->jsonSerialize(), $this->getActions())),
-            'instructions' => array_values(array_map(fn (Instruction $instruction): array => $instruction->jsonSerialize(), $this->getInstructions())),
-            'fields' => FieldDetails::forFields($this->getFields()),
-            'limits' => $this->getLimits(),
-            'scopes' => array_map(fn (Scope $scope): array => $scope->jsonSerialize(), $this->getScopes()),
-            'relations' => array_values(array_map(fn (Relation $relation): mixed => $relation->jsonSerialize(), $this->getRelations())),
-            'rules' => ResourceRuleDetails::of($this, $request)->jsonSerialize(),
+            'actions' => array_values(array_map(fn (Action $action): array => $action->jsonSerialize(), $definition->actions())),
+            'instructions' => array_values(array_map(fn (Instruction $instruction): array => $instruction->jsonSerialize(), $definition->instructions())),
+            'fields' => FieldDetails::forFields($definition->fields()),
+            'limits' => $definition->limits()->allowed,
+            'scopes' => array_map(fn (Scope $scope): array => $scope->jsonSerialize(), $definition->scopes()),
+            'relations' => array_values(array_map(fn (Relation $relation): mixed => $relation->jsonSerialize(), $definition->relations())),
+            'rules' => ResourceRuleDetails::of($this)->jsonSerialize(),
             'text' => $this->context()->text($this)->capabilities?->jsonSerialize(),
-            'gates' => $this->isGatingEnabled() ? $this->context()->definition($this)->gates()->names() : [],
+            'gates' => $this->isGatingEnabled() ? $definition->gates()->names() : [],
         ];
     }
 }

@@ -10,6 +10,7 @@ use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
+use Lomkit\Rest\Http\Requests\RestRequest;
 
 /** @phpstan-consistent-constructor */
 class Instruction
@@ -31,13 +32,18 @@ class Instruction
         return Str::slug($this->name(), '-', null);
     }
 
+    public function request(): RestRequest
+    {
+        return $this->resource->request();
+    }
+
     /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: \stdClass, text: bool} */
     public function jsonSerialize(): array
     {
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
-            'fields' => InputFieldDetails::forFields($this->getFields($this->resource->context()->request)),
+            'fields' => InputFieldDetails::forFields($this->resource->definition()->inputFields($this)),
             'meta' => (object) $this->getMeta(),
             'text' => InstructionSupport::of($this)->runsWithText($this->resource->context()->text($this->resource)->backend),
         ];

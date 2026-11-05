@@ -48,39 +48,32 @@ trait Constrained
         return $this;
     }
 
-    public function isRequiredOnCreation(RestRequest $request): bool
+    public function isRequiredOnCreation(): bool
     {
-        if (is_bool($this->creationRequirement)) {
-            return $this->creationRequirement;
-        }
-
-        return (bool) ($this->creationRequirement)($request, $this->constraintResource());
+        return $this->holds($this->creationRequirement);
     }
 
-    public function isProhibitedOnCreation(RestRequest $request): bool
+    public function isProhibitedOnCreation(): bool
     {
-        if (is_bool($this->creationProhibition)) {
-            return $this->creationProhibition;
-        }
-
-        return (bool) ($this->creationProhibition)($request, $this->constraintResource());
+        return $this->holds($this->creationProhibition);
     }
 
-    public function isRequiredOnUpdate(RestRequest $request): bool
+    public function isRequiredOnUpdate(): bool
     {
-        if (is_bool($this->updateRequirement)) {
-            return $this->updateRequirement;
-        }
-
-        return (bool) ($this->updateRequirement)($request, $this->constraintResource());
+        return $this->holds($this->updateRequirement);
     }
 
-    public function isProhibitedOnUpdate(RestRequest $request): bool
+    public function isProhibitedOnUpdate(): bool
     {
-        if (is_bool($this->updateProhibition)) {
-            return $this->updateProhibition;
+        return $this->holds($this->updateProhibition);
+    }
+
+    private function holds(Closure|bool $constraint): bool
+    {
+        if (is_bool($constraint)) {
+            return $constraint;
         }
 
-        return (bool) ($this->updateProhibition)($request, $this->constraintResource());
+        return (bool) $constraint($this->fromResource->request(), $this->constraintResource());
     }
 }

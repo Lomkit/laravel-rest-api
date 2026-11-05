@@ -32,9 +32,7 @@ final readonly class SearchBodyParser
         $resource = $context->resource;
         $grammar = $context->grammar;
         $limits = $context->limits;
-        $sizes = $resource->context()
-            ->definition($resource)
-            ->limits();
+        $sizes = $resource->definition()->limits();
         $limit = $search->at('limit');
         $page = $search->at('page');
         $sorts = $search->at('sorts');
@@ -117,7 +115,8 @@ final readonly class SearchBodyParser
         $context = $this->context;
         $resource = $context->resource;
         $fields = $context->vocabulary->of($resource, $context->grammar, 'selects', fn (): array => $resource
-            ->getFields()
+            ->definition()
+            ->fields()
             ->selectable()
             ->names());
         $selects = [];
