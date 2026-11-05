@@ -76,6 +76,6 @@
     },
     "raw_queries": [
         "select count(*) as \"aggregate\" from \"authors\"",
-        "select * from \"authors\" order by \"authors\".\"first_name\" asc limit 50 offset 0"
+        "select \"authors\".\"id\", \"authors\".\"first_name\", \"authors\".\"last_name\", \"authors\".\"settings\" from \"authors\" order by \"authors\".\"first_name\" asc limit 50 offset 0"
     ]
 }

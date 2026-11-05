@@ -78,6 +78,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Search Columns
+    |--------------------------------------------------------------------------
+    |
+    | A search loads only the columns it needs: the selected fields, the
+    | keys of its includes and the columns that each resource always
+    | selects. When a policy, an accessor or map() reads another column,
+    | add it to the resource's alwaysSelect() method or to the field's
+    | requires(). Set this option to false to load every column.
+    |
+    */
+
+    'search' => [
+        'select_columns' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Request Limits
     |--------------------------------------------------------------------------
     |

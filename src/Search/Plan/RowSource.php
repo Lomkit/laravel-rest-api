@@ -14,4 +14,7 @@ interface RowSource
      * @return list<Clause>
      */
     public function clauses(Resource $resource, SearchNode $search, array $aggregates = []): array;
+
+    /** @return list<string> */
+    public function columns(): array;
 }

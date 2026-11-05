@@ -21,6 +21,12 @@ final readonly class KeyedRows implements Clause, RowSource
     }
 
     #[\Override]
+    public function columns(): array
+    {
+        return $this->keys->columns();
+    }
+
+    #[\Override]
     public function apply(Builder $query): void
     {
         $this->keys->constrain($query);

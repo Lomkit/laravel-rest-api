@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Fixtures\Fixture;
@@ -15,6 +16,22 @@ use Orchestra\Testbench\TestCase;
 abstract class PackageTestCase extends TestCase
 {
     use RefreshDatabase;
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Model::preventAccessingMissingAttributes();
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        Model::preventAccessingMissingAttributes(false);
+
+        parent::tearDown();
+    }
 
     /** @return list<Fixture> */
     protected function fixtures(): array

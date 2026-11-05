@@ -7,6 +7,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\Clause;
 use Lomkit\Rest\Search\GateAbility;
+use Lomkit\Rest\Search\Plan\Columns\ColumnSet;
 
 final readonly class QueryPlan implements Clause
 {
@@ -25,6 +26,7 @@ final readonly class QueryPlan implements Clause
         public LimitPolicy $limit,
         public ?array $selects = null,
         public ?array $gates = null,
+        public ?ColumnSet $columns = null,
     ) {}
 
     public static function bare(Resource $resource): self
@@ -35,7 +37,13 @@ final readonly class QueryPlan implements Clause
     #[\Override]
     public function apply(Builder $query): void
     {
-        foreach ([...$this->clauses, ...$this->includes, ...$this->aggregates] as $clause) {
+        foreach ($this->clauses as $clause) {
+            $clause->apply($query);
+        }
+
+        $this->columns?->apply($query);
+
+        foreach ([...$this->includes, ...$this->aggregates] as $clause) {
             $clause->apply($query);
         }
 

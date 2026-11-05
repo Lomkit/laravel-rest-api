@@ -20,6 +20,7 @@ class ResolvedAuthorResource extends AuthorResource
             ...parent::fields($request),
             Text::make('display_name')
                 ->virtual()
+                ->requires(['first_name', 'last_name'])
                 ->resolveUsing(function (Model $author): string {
                     self::$resolved[] = $author->getKey();
 

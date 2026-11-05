@@ -34,6 +34,7 @@ class RestConfigTest extends TestCase
         $this->assertSame(5, $config->cacheMinutes);
         $this->assertSame('gates', $config->gatesKey);
         $this->assertSame('@type', $config->morphTypeKey);
+        $this->assertTrue($config->selectColumns);
         $this->assertSame([
             'authorized_to_view' => 'authorized_to_view',
             'authorized_to_create' => 'authorized_to_create',
@@ -114,6 +115,7 @@ class RestConfigTest extends TestCase
             'the gate names' => ['rest.gates.names', ['can_view'], 'The [rest.gates.names] option must be a map of strings.'],
             'one gate name' => ['rest.gates.names.authorized_to_delete', false, 'The [rest.gates.names.authorized_to_delete] option must be a string.'],
             'the morph type key' => ['rest.morph.type_key', '', 'The [rest.morph.type_key] option must be a non-empty string.'],
+            'the column selection' => ['rest.search.select_columns', 'yes', 'The [rest.search.select_columns] option must be a boolean.'],
         ];
     }
 

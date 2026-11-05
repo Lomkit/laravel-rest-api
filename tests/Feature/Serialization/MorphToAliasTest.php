@@ -61,8 +61,8 @@ class MorphToAliasTest extends PackageTestCase
         ]]);
 
         $response->assertOk()->assertJsonPath('data.*.target', [
-            ['@type' => Book::class, 'id' => 1, 'title' => 'Dune', 'loan' => ['id' => 1, 'book_id' => 1, 'borrower' => 'Ada']],
-            ['@type' => Book::class, 'id' => 2, 'title' => 'Emma', 'loan' => ['id' => 2, 'book_id' => 2, 'borrower' => 'Bob']],
+            ['@type' => Book::class, 'id' => 1, 'title' => 'Dune', 'loan' => ['id' => 1, 'borrower' => 'Ada', 'book_id' => 1]],
+            ['@type' => Book::class, 'id' => 2, 'title' => 'Emma', 'loan' => ['id' => 2, 'borrower' => 'Bob', 'book_id' => 2]],
             null,
             null,
         ]);

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Mutations\OperationEntry;
 use Lomkit\Rest\Mutations\RecordKeys;
 use Lomkit\Rest\Query\QueryBuilderFactory;
+use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
 use Lomkit\Rest\Search\Plan\KeyedRows;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
@@ -24,7 +25,7 @@ final readonly class WrittenRecords
     public static function read(Resource $resource, SearchNode $block, array $operations): self
     {
         $keys = RecordKeys::of(KeysGrammar::idOf($resource, $resource->context()->request), $operations);
-        $plan = (new SearchPlanner(new KeyedRows($keys)))->plan($resource, $block, LimitPolicy::none());
+        $plan = (new SearchPlanner(new KeyedRows($keys), ColumnSelection::of($resource)))->plan($resource, $block, LimitPolicy::none());
         $rows = QueryBuilderFactory::make($resource)
             ->search($plan)
             ->get();

@@ -10,6 +10,7 @@ use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
 use Lomkit\Rest\Search\Plan\KeyedRows;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\PlannedPage;
@@ -40,7 +41,7 @@ final readonly class EngineSearch
             ->defaultLimit;
         $page = $this->search->page ?? 1;
         $result = $query->page($perPage, $page);
-        $plan = $this->plan($result->keys);
+        $plan = $this->plan($result->keys, ColumnSelection::of($this->resource));
 
         return new PlannedPage($plan, new LengthAwarePaginator($result->keys === [] ? new Collection : $this->load($plan), $result->total, $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
@@ -77,16 +78,16 @@ final readonly class EngineSearch
             return new Collection;
         }
 
-        return $this->load($this->plan($keys));
+        return $this->load($this->plan($keys, ColumnSelection::Every));
     }
 
     /** @param list<int|string> $keys */
-    private function plan(array $keys): QueryPlan
+    private function plan(array $keys, ColumnSelection $columns): QueryPlan
     {
         $model = $this->resource::newModel();
         $keyed = new KeyedRows(EngineKeys::of(ScoutModel::tryFrom($model) ?? throw InvalidResourceException::unsearchableModel($model::class), $keys));
 
-        return (new SearchPlanner($keyed))->plan($this->resource, $this->search, LimitPolicy::none());
+        return (new SearchPlanner($keyed, $columns))->plan($this->resource, $this->search, LimitPolicy::none());
     }
 
     /** @return Collection<int, Model> */

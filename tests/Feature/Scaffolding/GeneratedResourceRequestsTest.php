@@ -37,7 +37,7 @@ class GeneratedResourceRequestsTest extends ScaffoldingTestCase
         $this->mutate('served-articles', [...self::ARTICLE, 'editor_token' => 'secret'])->assertOk();
         $response = $this->postJson('/served-articles/search', ['search' => ['selects' => [['field' => 'title'], ['field' => 'status'], ['field' => 'locale']]]]);
 
-        $response->assertOk()->assertJsonPath('data', [['title' => 'Spring launch', 'locale' => 'en', 'status' => 'draft']]);
+        $response->assertOk()->assertJsonPath('data', [['title' => 'Spring launch', 'status' => 'draft', 'locale' => 'en']]);
         $this->assertSame('secret', Article::query()->sole()->editor_token);
     }
 

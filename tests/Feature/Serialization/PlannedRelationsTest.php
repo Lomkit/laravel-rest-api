@@ -14,7 +14,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class PlannedRelationsTest extends PackageTestCase
 {
-    private const array LOANS = [['id' => 1, 'book_id' => 1, 'borrower' => 'Ada'], ['id' => 2, 'book_id' => null, 'borrower' => 'Bob']];
+    private const array LOANS = [['id' => 1, 'borrower' => 'Ada', 'book_id' => 1], ['id' => 2, 'borrower' => 'Bob', 'book_id' => null]];
 
     #[\Override]
     protected function fixtures(): array

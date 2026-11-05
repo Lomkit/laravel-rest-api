@@ -82,6 +82,6 @@
     },
     "raw_queries": [
         "select count(*) as \"aggregate\" from \"authors\" where \"authors\".\"deleted_at\" is null",
-        "select \"authors\".*, (select count(*) from \"posts\" where \"authors\".\"id\" = \"posts\".\"author_id\") as \"@aggregate_0\", (select max(\"posts\".\"views\") from \"posts\" where \"authors\".\"id\" = \"posts\".\"author_id\" and (\"posts\".\"status\" = 'published')) as \"@aggregate_1\", (select sum(\"posts\".\"views\") from \"posts\" where \"authors\".\"id\" = \"posts\".\"author_id\") as \"@aggregate_2\" from \"authors\" where \"authors\".\"deleted_at\" is null order by \"authors\".\"id\" desc limit 50 offset 0"
+        "select \"authors\".\"id\", \"authors\".\"first_name\", \"authors\".\"last_name\", \"authors\".\"settings\", (select count(*) from \"posts\" where \"authors\".\"id\" = \"posts\".\"author_id\") as \"@aggregate_0\", (select max(\"posts\".\"views\") from \"posts\" where \"authors\".\"id\" = \"posts\".\"author_id\" and (\"posts\".\"status\" = 'published')) as \"@aggregate_1\", (select sum(\"posts\".\"views\") from \"posts\" where \"authors\".\"id\" = \"posts\".\"author_id\") as \"@aggregate_2\" from \"authors\" where \"authors\".\"deleted_at\" is null order by \"authors\".\"id\" desc limit 50 offset 0"
     ]
 }

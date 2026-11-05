@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests;
 
 use Illuminate\Config\Repository;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
@@ -19,6 +20,15 @@ class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Model::preventAccessingMissingAttributes();
+    }
+
+    protected function tearDown(): void
+    {
+        Model::preventAccessingMissingAttributes(false);
+
+        parent::tearDown();
     }
 
     /**

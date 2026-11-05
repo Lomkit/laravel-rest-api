@@ -76,6 +76,6 @@
     },
     "raw_queries": [
         "select count(*) as \"aggregate\" from \"posts\" where (exists (select * from \"authors\" where \"posts\".\"author_id\" = \"authors\".\"id\" and \"authors\".\"first_name\" = 'Ada' and \"authors\".\"deleted_at\" is null))",
-        "select * from \"posts\" where (exists (select * from \"authors\" where \"posts\".\"author_id\" = \"authors\".\"id\" and \"authors\".\"first_name\" = 'Ada' and \"authors\".\"deleted_at\" is null)) order by \"posts\".\"id\" desc limit 50 offset 0"
+        "select \"posts\".\"id\", \"posts\".\"title\", \"posts\".\"summary\", \"posts\".\"status\", \"posts\".\"featured\", \"posts\".\"views\", \"posts\".\"rating\", \"posts\".\"published_on\", \"posts\".\"published_at\", \"posts\".\"metadata\" from \"posts\" where (exists (select * from \"authors\" where \"posts\".\"author_id\" = \"authors\".\"id\" and \"authors\".\"first_name\" = 'Ada' and \"authors\".\"deleted_at\" is null)) order by \"posts\".\"id\" desc limit 50 offset 0"
     ]
 }
