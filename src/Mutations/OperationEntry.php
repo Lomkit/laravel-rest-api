@@ -4,8 +4,8 @@ namespace Lomkit\Rest\Mutations;
 
 use Illuminate\Database\Eloquent\Model;
 use JsonSerializable;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\MutationOperation;
-use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\Relation;
 
 final class OperationEntry implements JsonSerializable
@@ -74,7 +74,7 @@ final class OperationEntry implements JsonSerializable
             return $this->relations[$name][$index];
         }
 
-        $entry = self::of($mutation, $this->relation instanceof MorphTo, $this->listed || is_array($this->key));
+        $entry = self::of($mutation, $this->relation instanceof PolymorphicRelation, $this->listed || is_array($this->key));
         $this->relations[$name][] = $entry;
 
         return $entry;

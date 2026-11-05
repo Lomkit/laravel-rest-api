@@ -5,13 +5,13 @@ namespace Lomkit\Rest\Search\Plan;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Contracts\OwnerRelation;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\ResourceLimits;
 use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\Clause;
 use Lomkit\Rest\Query\Clauses\FilterGroupClause;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
-use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Search\IncludeNode;
@@ -78,8 +78,8 @@ final readonly class SearchPlanner
 
         foreach ($includes as $include) {
             if ($include->alias !== null) {
-                $entries[] = $include->relations[0] instanceof MorphTo
-                    ? MorphToIncludeClause::of($include->relations[0], $include->alias, $this->explicit($parent, $include, []))
+                $entries[] = $include->relations[0] instanceof PolymorphicRelation
+                    ? MorphToIncludeClause::of($include->relations[0], $include->alias, array_fill_keys($include->relations[0]->targets()->types(), $this->explicit($parent, $include, [])))
                     : new AliasedIncludeClause($include->relation, $include->alias, $this->explicit($parent, $include, []));
 
                 continue;
@@ -111,7 +111,7 @@ final readonly class SearchPlanner
 
     private static function grouped(string $name, Relation $relation, QueryPlan $plan): Clause
     {
-        return $relation instanceof MorphTo ? MorphToIncludeClause::of($relation, null, $plan) : new IncludeClause($name, $plan);
+        return $relation instanceof PolymorphicRelation ? MorphToIncludeClause::of($relation, null, array_fill_keys($relation->targets()->types(), $plan)) : new IncludeClause($name, $plan);
     }
 
     /** @param list<IncludeNode> $children */

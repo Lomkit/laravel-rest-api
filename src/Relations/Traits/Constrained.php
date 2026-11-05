@@ -16,7 +16,7 @@ trait Constrained
 
     private Closure|bool $updateProhibition = false;
 
-    /** @param (callable(RestRequest, Resource): bool)|bool $callback */
+    /** @param (callable(RestRequest, ?Resource): bool)|bool $callback */
     public function requiredOnCreation(callable|bool $callback = true): static
     {
         $this->creationRequirement = is_bool($callback) ? $callback : $callback(...);
@@ -24,7 +24,7 @@ trait Constrained
         return $this;
     }
 
-    /** @param (callable(RestRequest, Resource): bool)|bool $callback */
+    /** @param (callable(RestRequest, ?Resource): bool)|bool $callback */
     public function prohibitedOnCreation(callable|bool $callback = true): static
     {
         $this->creationProhibition = is_bool($callback) ? $callback : $callback(...);
@@ -32,7 +32,7 @@ trait Constrained
         return $this;
     }
 
-    /** @param (callable(RestRequest, Resource): bool)|bool $callback */
+    /** @param (callable(RestRequest, ?Resource): bool)|bool $callback */
     public function requiredOnUpdate(callable|bool $callback = true): static
     {
         $this->updateRequirement = is_bool($callback) ? $callback : $callback(...);
@@ -40,7 +40,7 @@ trait Constrained
         return $this;
     }
 
-    /** @param (callable(RestRequest, Resource): bool)|bool $callback */
+    /** @param (callable(RestRequest, ?Resource): bool)|bool $callback */
     public function prohibitedOnUpdate(callable|bool $callback = true): static
     {
         $this->updateProhibition = is_bool($callback) ? $callback : $callback(...);
@@ -54,7 +54,7 @@ trait Constrained
             return $this->creationRequirement;
         }
 
-        return (bool) ($this->creationRequirement)($request, $this->resource());
+        return (bool) ($this->creationRequirement)($request, $this->constraintResource());
     }
 
     public function isProhibitedOnCreation(RestRequest $request): bool
@@ -63,7 +63,7 @@ trait Constrained
             return $this->creationProhibition;
         }
 
-        return (bool) ($this->creationProhibition)($request, $this->resource());
+        return (bool) ($this->creationProhibition)($request, $this->constraintResource());
     }
 
     public function isRequiredOnUpdate(RestRequest $request): bool
@@ -72,7 +72,7 @@ trait Constrained
             return $this->updateRequirement;
         }
 
-        return (bool) ($this->updateRequirement)($request, $this->resource());
+        return (bool) ($this->updateRequirement)($request, $this->constraintResource());
     }
 
     public function isProhibitedOnUpdate(RestRequest $request): bool
@@ -81,6 +81,6 @@ trait Constrained
             return $this->updateProhibition;
         }
 
-        return (bool) ($this->updateProhibition)($request, $this->resource());
+        return (bool) ($this->updateProhibition)($request, $this->constraintResource());
     }
 }

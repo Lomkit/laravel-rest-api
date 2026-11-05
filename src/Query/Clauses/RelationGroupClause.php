@@ -5,7 +5,7 @@ namespace Lomkit\Rest\Query\Clauses;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Relations\MorphTo;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\RelationFilterGroup;
 
@@ -28,7 +28,7 @@ final readonly class RelationGroupClause implements Clause
     {
         $relation = $this->relation;
 
-        if (! $relation instanceof MorphTo) {
+        if (! $relation instanceof PolymorphicRelation) {
             $query->has($relation->relation, $this->exists ? '>=' : '<', 1, $this->boolean, $this->constrain(...));
 
             return;
@@ -49,7 +49,7 @@ final readonly class RelationGroupClause implements Clause
         }, null, null, $this->boolean);
     }
 
-    private function hasTarget(Builder $query, MorphTo $relation, string $boolean): void
+    private function hasTarget(Builder $query, Relation&PolymorphicRelation $relation, string $boolean): void
     {
         $query->hasMorph($relation->relation, $relation->targets()->modelClasses(), '>=', 1, $boolean, $this->constrain(...));
     }

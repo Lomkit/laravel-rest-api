@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Relations;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany as EloquentBelongsToMany;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Concerns\Makeable;
@@ -11,6 +12,8 @@ use Lomkit\Rest\Fields\Details\FieldDetails;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\Mutates;
+use Lomkit\Rest\Validation\Mutate\EntryRule;
+use Lomkit\Rest\Validation\Mutate\RelatedEntryRule;
 
 class Relation implements \JsonSerializable
 {
@@ -51,11 +54,7 @@ class Relation implements \JsonSerializable
      */
     public function applySearchQuery(Builder $query)
     {
-        $resource = $this->resource();
-
-        $resource->context()->authorizer()->ensurePlanned(Check::onClass($resource, 'viewAny'));
-
-        $resource->searchQuery($resource->context()->request, $query);
+        self::perimeter($this->resource(), $query);
     }
 
     /**
@@ -97,6 +96,11 @@ class Relation implements \JsonSerializable
         });
     }
 
+    public function entryRule(): EntryRule
+    {
+        return new RelatedEntryRule($this);
+    }
+
     /** @return array<string, mixed> */
     public function rules(Resource $resource, string $prefix)
     {
@@ -134,6 +138,19 @@ class Relation implements \JsonSerializable
             ...$details,
             'pivot_fields' => FieldDetails::forPivotFields($this->getPivotFields(), $this->modelRelation() instanceof EloquentBelongsToMany),
         ];
+    }
+
+    protected function constraintResource(): ?Resource
+    {
+        return $this->resource();
+    }
+
+    /** @param Builder<Model> $query */
+    protected static function perimeter(Resource $resource, Builder $query): void
+    {
+        $resource->context()->authorizer()->ensurePlanned(Check::onClass($resource, 'viewAny'));
+
+        $resource->searchQuery($resource->context()->request, $query);
     }
 
     protected function modelRelation(): mixed

@@ -2,19 +2,68 @@
 
 namespace Lomkit\Rest\Relations;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo as EloquentMorphTo;
+use LogicException;
 use Lomkit\Rest\Contracts\EloquentQueryBuilder;
 use Lomkit\Rest\Contracts\OwnerRelation;
+use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
+use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Validation\Mutate\EntryRule;
+use Lomkit\Rest\Validation\Mutate\MorphToEntryRule;
 
-class MorphTo extends MorphRelation implements OwnerRelation
+class MorphTo extends MorphRelation implements OwnerRelation, PolymorphicRelation
 {
-    public function targets(): MorphTargets
+    private ?MorphTargets $targets = null;
+
+    #[\Override]
+    public function fromResource(Resource $fromResource): static
     {
-        return MorphTargets::of($this->type);
+        parent::fromResource($fromResource);
+
+        $this->targets = MorphTargets::of([$this->type], $fromResource::class, $this->relation);
+
+        return $this;
     }
 
+    #[\Override]
+    public function targets(): MorphTargets
+    {
+        return $this->targets ?? throw new LogicException("The MorphTo relation [{$this->relation}] is not bound to a resource.");
+    }
+
+    #[\Override]
+    public function resourceOf(MorphTarget $target): Resource
+    {
+        return $this->fromResource->context()->resource($target->resource);
+    }
+
+    #[\Override]
+    public function resourceFor(Model $model): ?Resource
+    {
+        $target = $this->targets()->forModel($model);
+
+        return $target === null ? null : $this->resourceOf($target);
+    }
+
+    /** @param Builder<Model> $query */
+    #[\Override]
+    public function applySearchQuery(Builder $query): void
+    {
+        $resource = $this->resourceFor($query->getModel()) ?? throw new LogicException($query->getModel()::class." is not a target of the MorphTo relation [{$this->relation}].");
+
+        self::perimeter($resource, $query);
+    }
+
+    #[\Override]
+    public function entryRule(): EntryRule
+    {
+        return new MorphToEntryRule($this);
+    }
+
+    #[\Override]
     public function columns(): MorphColumns
     {
         $relation = $this->modelRelation();
@@ -89,5 +138,11 @@ class MorphTo extends MorphRelation implements OwnerRelation
             $relation->getForeignKeyName() => $model->getAttribute($relation->getForeignKeyName()),
             $relation->getMorphType() => $model->getAttribute($relation->getMorphType()),
         ];
+    }
+
+    #[\Override]
+    protected function constraintResource(): ?Resource
+    {
+        return $this->targets()->isPolymorphic() ? null : $this->resource();
     }
 }
