@@ -31,6 +31,26 @@ final readonly class OwnerWrites extends RelationWrites
         }
     }
 
+    #[\Override]
+    public function rehearseBefore(LinkedRow $parent, LinkReplay $replay): void
+    {
+        $owner = $this->owner($parent->model);
+        $column = LinkColumn::ofOwner($owner);
+
+        foreach ($this->nodes() as $node) {
+            $related = $replay->walk($this->resource($node), $node)[0] ?? null;
+
+            if ($related === null) {
+                continue;
+            }
+
+            $value = $related->owner($owner->getOwnerKeyName(), $owner instanceof EloquentMorphTo ? $related->model->getMorphClass() : null);
+            $detach = $node->operation === MutationOperation::Detach;
+
+            $replay->add(new LinkStep($node->path.'.key', $column, $parent->identity, $parent->link($column), $value, $detach, $detach ? LinkCheck::Current : LinkCheck::None));
+        }
+    }
+
     /** @return array<string, mixed> */
     #[\Override]
     public function owned(Model $parent): array

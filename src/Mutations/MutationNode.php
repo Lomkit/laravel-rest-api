@@ -21,6 +21,7 @@ final readonly class MutationNode
         public ?array $relations,
         public int $depth,
         public ?string $type = null,
+        public string $path = '',
     ) {}
 
     public function context(): MutationContext

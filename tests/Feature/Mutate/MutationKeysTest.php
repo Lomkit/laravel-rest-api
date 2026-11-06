@@ -8,6 +8,8 @@ use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\DraftOnlyAuthorController;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\DraftOnlyPostController;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\DraftOnlyPostResource;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\ListedPostAuthorController;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\ListedPostController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
@@ -44,6 +46,8 @@ class MutationKeysTest extends PackageTestCase
         Gate::policy(Author::class, OpenPublishingPolicy::class);
         Rest::resource('draft-posts', DraftOnlyPostController::class)->register();
         Rest::resource('draft-only-authors', DraftOnlyAuthorController::class)->register();
+        Rest::resource('listed-posts', ListedPostController::class)->register();
+        Rest::resource('listed-post-authors', ListedPostAuthorController::class)->register();
         Category::factory()->create(['id' => 1, 'name' => 'Lighting']);
         Product::factory()->create(['id' => 1, 'category_id' => 1, 'name' => 'Desk lamp', 'price' => 39]);
         Product::factory()->create(['id' => 2, 'category_id' => 1, 'name' => 'Floor lamp', 'price' => 39]);
@@ -105,6 +109,12 @@ class MutationKeysTest extends PackageTestCase
                 ['operation' => 'update', 'key' => 1, 'relations' => ['posts' => [['operation' => 'update', 'key' => 1, 'attributes' => ['views' => 3]]]]],
             ], 'mutate.0.relations.posts.0.key', 'The selected mutate.0.relations.posts.0.key is invalid.'],
             'an attach key that the mutate query leaves out' => ['/draft-only-authors/mutate', [
+                ['operation' => 'update', 'key' => 1, 'relations' => ['posts' => [['operation' => 'attach', 'key' => 1]]]],
+            ], 'mutate.0.relations.posts.0.key', 'The selected mutate.0.relations.posts.0.key is invalid.'],
+            'a key that the search query leaves out' => ['/listed-posts/mutate', [
+                ['operation' => 'update', 'key' => 1, 'attributes' => ['views' => 3]],
+            ], 'mutate.0.key', 'The selected mutate.0.key is invalid.'],
+            'a key that the search query of a related resource leaves out' => ['/listed-post-authors/mutate', [
                 ['operation' => 'update', 'key' => 1, 'relations' => ['posts' => [['operation' => 'attach', 'key' => 1]]]],
             ], 'mutate.0.relations.posts.0.key', 'The selected mutate.0.relations.posts.0.key is invalid.'],
             'a soft-deleted key' => ['/api/authors/mutate', [

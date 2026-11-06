@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use LogicException;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Mutations\LinkReplay;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Mutations\RowSet;
 use Lomkit\Rest\Search\SearchNode;
@@ -39,9 +40,14 @@ class MutateRequest extends RestRequest
         if ($this->mutations === null) {
             $input = Cursor::of($this->all(), $this->parsedRules()->violations());
             $this->rows = new RowSet;
-            $this->mutations = MutationParser::of($this, $this->parsedRules(), $this->budget(), $this->rows)
+            $links = new LinkReplay($this->rows);
+            $this->mutations = MutationParser::of($this, $this->parsedRules(), $this->budget(), $this->rows, $links)
                 ->parse($input->at('mutate'), $resource);
             $this->responseBlock = (new ResponseBlockParser($this->parsedRules(), $this->budget()))->parse($input->at('response'), $resource);
+
+            if (! $this->parsedRules()->isPartial()) {
+                $links->plan($resource, $this->mutations);
+            }
         }
 
         return $this->parsedRules()->rules();
@@ -78,6 +84,7 @@ class MutateRequest extends RestRequest
     {
         return $resource::newModel()
             ->newQuery()
+            ->where(fn (Builder $query): Builder => $resource->searchQuery($this, $query))
             ->where(fn (Builder $query): Builder => $resource->mutateQuery($this, $query));
     }
 }
