@@ -31,21 +31,39 @@ class MeilisearchIndexTest extends MeilisearchTestCase
     }
 
     #[Test]
-    public function it_drops_the_stale_rows_of_the_index_from_the_page_and_keeps_the_engine_total(): void
+    public function it_drops_a_deleted_row_that_the_index_still_holds_and_keeps_the_engine_total(): void
     {
         $this->actingAs(new GenericUser(['id' => 2, 'teams' => ['red']]));
         Voucher::withoutSyncingToSearch(function (): void {
             Voucher::query()
                 ->findOrFail(1)
                 ->delete();
+        });
+
+        $response = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]);
+
+        $response->assertOk()->assertExactJson($this->page([3, 5], 3));
+    }
+
+    #[Test]
+    public function it_returns_a_row_that_left_the_index_perimeter_until_the_index_syncs_it(): void
+    {
+        $this->actingAs(new GenericUser(['id' => 2, 'teams' => ['red']]));
+        Voucher::withoutSyncingToSearch(function (): void {
             Voucher::query()
                 ->findOrFail(3)
                 ->update(['team' => 'blue']);
         });
 
-        $response = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]);
+        $stale = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]);
+        Voucher::query()
+            ->findOrFail(3)
+            ->searchable();
+        $this->settle();
+        $synced = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]);
 
-        $response->assertOk()->assertExactJson($this->page([5], 3));
+        $stale->assertOk()->assertExactJson(array_replace_recursive($this->page([1, 3, 5], 3), ['data' => [1 => ['team' => 'blue']]]));
+        $synced->assertOk()->assertExactJson($this->page([1, 5], 2));
     }
 
     #[Test]
@@ -55,12 +73,12 @@ class MeilisearchIndexTest extends MeilisearchTestCase
         $this->settle();
         $inactive = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [['field' => 'active', 'value' => false]], 'sorts' => self::BY_PRICE]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 3]]);
-        $this->assertSame([['handle', ['ids' => [1, 3, 5]]]], $this->received->calls());
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4]]);
+        $this->assertSame([['handle', ['ids' => [1, 3, 4, 5]]]], $this->received->calls());
         $inactive->assertOk()
-            ->assertJsonPath('data.*.id', [1, 3, 5])
-            ->assertJsonPath('data.*.active', [false, false, false])
-            ->assertJsonPath('total', 3);
+            ->assertJsonPath('data.*.id', [1, 3, 4, 5])
+            ->assertJsonPath('data.*.active', [false, false, false, false])
+            ->assertJsonPath('total', 4);
     }
 
     #[Test]

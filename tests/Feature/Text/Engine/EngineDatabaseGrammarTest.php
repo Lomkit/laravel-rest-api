@@ -84,7 +84,7 @@ class EngineDatabaseGrammarTest extends EngineSearchTestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.*.id', [5, 1, 3])
+            ->assertJsonPath('data.*.id', [5, 4, 1, 3])
             ->assertJsonPath('data.*.lines.*.label', ['l1a', 'l1b']);
         $this->assertCount(1, $this->engine->searches);
     }
@@ -100,8 +100,8 @@ class EngineDatabaseGrammarTest extends EngineSearchTestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.*.id', [5, 1, 3])
-            ->assertJsonPath('data.*.lines.*.voucher.id', [5, 1, 1, 3]);
+            ->assertJsonPath('data.*.id', [5, 4, 1, 3])
+            ->assertJsonPath('data.*.lines.*.voucher.id', [5, null, 1, 1, 3]);
         $this->assertCount(1, $this->engine->searches);
     }
 
@@ -127,10 +127,10 @@ class EngineDatabaseGrammarTest extends EngineSearchTestCase
             'includes' => [['relation' => 'lines', 'includes' => [['relation' => 'voucher', 'text' => null]]]],
         ]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 5]]);
-        $this->assertSame([['handle', ['ids' => [8, 7]]], ['handle', ['ids' => [5]]], ['handle', ['ids' => [1, 3]]]], $received->calls());
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 6]]);
+        $this->assertSame([['handle', ['ids' => [8, 7]]], ['handle', ['ids' => [5, 4]]], ['handle', ['ids' => [1, 3]]]], $received->calls());
         $this->assertSame(
-            ['Renamed V-c', 'Budget', 'Renamed V-a', 'Report blue', 'Renamed V-e', 'Report trashed', 'Renamed V-g', 'Renamed V-h'],
+            ['Renamed V-c', 'Budget', 'Renamed V-a', 'Renamed V-d', 'Renamed V-e', 'Report trashed', 'Renamed V-g', 'Renamed V-h'],
             Voucher::withTrashed()
                 ->orderBy('id')
                 ->pluck('title')

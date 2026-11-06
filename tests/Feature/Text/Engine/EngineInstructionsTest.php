@@ -56,8 +56,8 @@ class EngineInstructionsTest extends EngineSearchTestCase
         foreach (self::drivers() as $engine => [$driver]) {
             yield "an instruction on both grammars in a text search on {$engine}" => [$driver, ['text' => ['value' => 'report'], ...$pricedUpTo], [1], 1, [['handleEngine', ['max' => 7.25]]]];
             yield "an instruction on both grammars without text on {$engine}" => [$driver, $pricedUpTo, [3, 1], 2, [['handle', ['max' => 7.25]]]];
-            yield "an engine instruction in a text search on {$engine}" => [$driver, ['text' => ['value' => 'report'], ...$numberedFrom], [5, 1], 3, [['handleEngine', ['min' => 3]]]];
-            yield "an engine instruction with its default value on {$engine}" => [$driver, ['text' => ['value' => 'report'], 'instructions' => [['name' => 'numbered-from']]], [5, 1, 3], 4, [['handleEngine', ['min' => 1]]]];
+            yield "an engine instruction in a text search on {$engine}" => [$driver, ['text' => ['value' => 'report'], ...$numberedFrom], [5, 4, 1], 3, [['handleEngine', ['min' => 3]]]];
+            yield "an engine instruction with its default value on {$engine}" => [$driver, ['text' => ['value' => 'report'], 'instructions' => [['name' => 'numbered-from']]], [5, 4, 1, 3], 4, [['handleEngine', ['min' => 1]]]];
             yield "a database instruction without text on {$engine}" => [$driver, ['instructions' => [['name' => 'with-lines']]], [5, 3, 1], 3, []];
         }
     }
@@ -99,8 +99,8 @@ class EngineInstructionsTest extends EngineSearchTestCase
             'instructions' => [['name' => 'numbered-from', 'fields' => [['name' => 'min', 'value' => 3]]]],
         ]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
-        $this->assertSame([['handleEngine', ['min' => 3]], ['handle', ['ids' => [5, 1]]]], $this->received->calls());
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 3]]);
+        $this->assertSame([['handleEngine', ['min' => 3]], ['handle', ['ids' => [5, 4, 1]]]], $this->received->calls());
     }
 
     #[Test]

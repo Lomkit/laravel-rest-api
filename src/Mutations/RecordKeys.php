@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Search\Plan\KeySet;
 
 use function Illuminate\Support\enum_value;
@@ -40,6 +42,12 @@ final readonly class RecordKeys implements KeySet
     public function columns(): array
     {
         return [];
+    }
+
+    #[\Override]
+    public function perimeter(Resource $resource): array
+    {
+        return [new PerimeterClause($resource)];
     }
 
     /**

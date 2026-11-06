@@ -58,7 +58,7 @@ final readonly class SearchPlanner
 
         return new QueryPlan(
             $resource,
-            [new PerimeterClause($resource), ...$this->rows->clauses($resource, $search, $aggregates)],
+            [...$this->rows->perimeter($resource), ...$this->rows->clauses($resource, $search, $aggregates)],
             $this->includes($resource, $includes),
             $aggregates,
             $limit,

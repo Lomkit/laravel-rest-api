@@ -9,6 +9,9 @@ use Lomkit\Rest\Search\SearchNode;
 
 interface RowSource
 {
+    /** @return list<Clause> */
+    public function perimeter(Resource $resource): array;
+
     /**
      * @param  list<AggregateClause>  $aggregates
      * @return list<Clause>

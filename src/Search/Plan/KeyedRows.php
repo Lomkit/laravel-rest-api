@@ -13,6 +13,12 @@ final readonly class KeyedRows implements Clause, RowSource
     public function __construct(private KeySet $keys) {}
 
     #[\Override]
+    public function perimeter(Resource $resource): array
+    {
+        return $this->keys->perimeter($resource);
+    }
+
+    #[\Override]
     public function clauses(Resource $resource, SearchNode $search, array $aggregates = []): array
     {
         $trashed = TrashedClause::of($search->trashed);

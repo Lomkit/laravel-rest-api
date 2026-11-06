@@ -48,6 +48,7 @@ class EnginePageTest extends EngineSearchTestCase
 
         $response->assertOk()->assertJsonPath('data', [
             ['code' => 'V-e', 'title' => 'Report inactive'],
+            ['code' => 'V-d', 'title' => 'Report blue'],
             ['code' => 'V-c', 'title' => 'Report alpha'],
             ['code' => 'V-a', 'title' => 'Report beta'],
         ]);
@@ -66,11 +67,12 @@ class EnginePageTest extends EngineSearchTestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.*.id', [5, 1, 3])
-            ->assertJsonPath('data.*.lines_count', [1, 2, 1])
+            ->assertJsonPath('data.*.id', [5, 4, 1, 3])
+            ->assertJsonPath('data.*.lines_count', [1, 1, 2, 1])
             ->assertJsonPath('data.0.lines.*.label', ['l5a'])
-            ->assertJsonPath('data.1.lines.*.label', ['l1b', 'l1a'])
-            ->assertJsonPath('data.2.lines.*.label', ['l3a']);
+            ->assertJsonPath('data.1.lines.*.label', ['l4a'])
+            ->assertJsonPath('data.2.lines.*.label', ['l1b', 'l1a'])
+            ->assertJsonPath('data.3.lines.*.label', ['l3a']);
     }
 
     #[Test]
@@ -92,11 +94,12 @@ class EnginePageTest extends EngineSearchTestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.*.id', [5, 1, 3])
-            ->assertJsonPath('data.*.lines_count', [0, 1, 1])
+            ->assertJsonPath('data.*.id', [5, 4, 1, 3])
+            ->assertJsonPath('data.*.lines_count', [0, 0, 1, 1])
             ->assertJsonPath('data.0.lines', [])
-            ->assertJsonPath('data.1.lines.*.label', ['l1b'])
-            ->assertJsonPath('data.2.lines.*.label', ['l3a']);
+            ->assertJsonPath('data.1.lines', [])
+            ->assertJsonPath('data.2.lines.*.label', ['l1b'])
+            ->assertJsonPath('data.3.lines.*.label', ['l3a']);
     }
 
     #[Test]
@@ -109,7 +112,7 @@ class EnginePageTest extends EngineSearchTestCase
         $report = $this->search('numbered-vouchers', ['text' => ['value' => 'report'], 'sorts' => [['field' => 'price']]]);
 
         $alpha->assertOk()->assertExactJson($this->page([1], 1));
-        $report->assertOk()->assertJsonPath('data.*.id', [1, 3, 5])->assertJsonPath('total', 4);
+        $report->assertOk()->assertJsonPath('data.*.id', [1, 3, 4, 5])->assertJsonPath('total', 4);
     }
 
     #[Test]
@@ -120,7 +123,7 @@ class EnginePageTest extends EngineSearchTestCase
 
         $response = $this->search('scoped-vouchers', ['text' => ['value' => 'report']]);
 
-        $response->assertOk()->assertJsonPath('data.*.id', [1, 3])->assertJsonPath('total', 3);
+        $response->assertOk()->assertJsonPath('data.*.id', [4, 1, 3])->assertJsonPath('total', 3);
     }
 
     #[Test]
@@ -140,7 +143,7 @@ class EnginePageTest extends EngineSearchTestCase
 
     #[Test]
     #[DataProvider('drivers')]
-    public function it_loads_the_page_in_one_query_bound_to_the_perimeter_then_to_the_keys(string $driver): void
+    public function it_loads_the_page_in_one_query_bound_to_the_keys(string $driver): void
     {
         config(['scout.driver' => $driver]);
         $pages = $this->pageQueries();
@@ -155,7 +158,7 @@ class EnginePageTest extends EngineSearchTestCase
         ]);
 
         $response->assertOk()->assertExactJson($this->page([3, 1], 4, 2, 2));
-        $this->assertSame([['red', 'V-a', 'V-c']], array_map(fn (QueryExecuted $query): array => $query->bindings, $pages->getArrayCopy()));
+        $this->assertSame([['V-a', 'V-c']], array_map(fn (QueryExecuted $query): array => $query->bindings, $pages->getArrayCopy()));
     }
 
     #[Test]

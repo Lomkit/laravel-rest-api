@@ -100,7 +100,7 @@ class EngineProfileGrammarTest extends EngineSearchTestCase
 
         $response = $this->search('unsorted-vouchers', ['text' => ['value' => 'report'], 'sorts' => [['field' => '@relevance']]]);
 
-        $response->assertOk()->assertJsonPath('data.*.id', [5, 1, 3]);
+        $response->assertOk()->assertJsonPath('data.*.id', [5, 4, 1, 3]);
         $this->assertSame([], $engine->searches[0]->orders);
     }
 
