@@ -6,6 +6,7 @@ use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 class RelationshipChecksTest extends HelpdeskTestCase
@@ -111,11 +112,78 @@ class RelationshipChecksTest extends HelpdeskTestCase
         $this->assertSame([[], []], [$this->teams->calls, $this->tickets->calls]);
     }
 
+    /** @param array<string, mixed> $entry */
+    #[Test]
+    #[DataProvider('refusedLinks')]
+    public function it_refuses_a_link_that_the_parent_policy_denies(string $relation, array $entry): void
+    {
+        $this->mutateTags([$this->withUrgent($entry)], $relation)
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'Urgent tickets are flagged by the escalation desk.');
+
+        $this->assertSame([], $this->attachedTags($relation));
+    }
+
+    /** @return iterable<string, array{string, array<string, mixed>}> */
+    public static function refusedLinks(): iterable
+    {
+        return self::forEachRelation([
+            'attach' => ['operation' => 'attach', 'key' => ['Urgent']],
+            'attach with pivot' => ['operation' => 'attach', 'key' => ['Urgent'], 'pivot' => ['position' => 2]],
+            'create' => ['operation' => 'create', 'attributes' => ['name' => 'Urgent']],
+            'update' => ['operation' => 'update', 'key' => 'Urgent', 'attributes' => ['name' => 'Urgent']],
+            'update with pivot' => ['operation' => 'update', 'key' => 'Urgent', 'attributes' => ['name' => 'Urgent'], 'pivot' => ['position' => 2]],
+            'toggle on' => ['operation' => 'toggle', 'key' => ['Urgent']],
+        ]);
+    }
+
+    /** @param array<string, mixed> $entry */
+    #[Test]
+    #[DataProvider('refusedUnlinks')]
+    public function it_refuses_an_unlink_that_the_parent_policy_denies(string $relation, array $entry): void
+    {
+        $this->jam->{$relation}()->attach([$this->tag('Urgent')]);
+
+        $this->mutateTags([$this->withUrgent($entry)], $relation)
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'Urgent tickets are cleared by the escalation desk.');
+
+        $this->assertSame([$this->tag('Urgent')], $this->attachedTags($relation));
+    }
+
+    /** @return iterable<string, array{string, array<string, mixed>}> */
+    public static function refusedUnlinks(): iterable
+    {
+        return self::forEachRelation([
+            'detach' => ['operation' => 'detach', 'key' => ['Urgent']],
+            'toggle off' => ['operation' => 'toggle', 'key' => ['Urgent']],
+            'a sync that detaches' => ['operation' => 'sync', 'key' => []],
+        ]);
+    }
+
+    #[Test]
+    #[DataProvider('relations')]
+    public function it_syncs_an_attached_tag_without_checking_its_link(string $relation): void
+    {
+        $this->jam->{$relation}()->attach([$this->tag('Urgent')]);
+
+        $this->mutateTags([['operation' => 'sync', 'key' => [$this->tag('Urgent')]]], $relation)->assertOk();
+
+        $this->assertSame([$this->tag('Urgent')], $this->attachedTags($relation));
+        $this->assertSame($this->calls('update', $this->jam), $this->tickets->calls);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function relations(): array
+    {
+        return ['belongs to many' => ['tags'], 'morph to many' => ['labels']];
+    }
+
     /** @param list<array<string, mixed>> $operations */
-    private function mutateTags(array $operations): TestResponse
+    private function mutateTags(array $operations, string $relation = 'tags'): TestResponse
     {
         return $this->postJson('/api/tickets/mutate', ['mutate' => [
-            ['operation' => 'update', 'key' => $this->jam->id, 'relations' => ['tags' => $operations]],
+            ['operation' => 'update', 'key' => $this->jam->id, 'relations' => [$relation => $operations]],
         ]]);
     }
 
@@ -130,8 +198,39 @@ class RelationshipChecksTest extends HelpdeskTestCase
     }
 
     /** @return list<int> */
-    private function attachedTags(): array
+    private function attachedTags(string $relation = 'tags'): array
     {
-        return $this->jam->tags()->withTrashed()->orderBy('tags.id')->pluck('tags.id')->all();
+        return $this->jam
+            ->{$relation}()
+            ->withTrashed()
+            ->orderBy('tags.id')
+            ->pluck('tags.id')
+            ->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $entry
+     * @return array<string, mixed>
+     */
+    private function withUrgent(array $entry): array
+    {
+        return match (true) {
+            ($entry['key'] ?? null) === 'Urgent' => [...$entry, 'key' => $this->tag('Urgent')],
+            ($entry['key'] ?? null) === ['Urgent'] => [...$entry, 'key' => [$this->tag('Urgent')]],
+            default => $entry,
+        };
+    }
+
+    /**
+     * @param  array<string, array<string, mixed>>  $entries
+     * @return iterable<string, array{string, array<string, mixed>}>
+     */
+    private static function forEachRelation(array $entries): iterable
+    {
+        foreach (self::relations() as $family => [$relation]) {
+            foreach ($entries as $name => $entry) {
+                yield $family.', '.$name => [$relation, $entry];
+            }
+        }
     }
 }

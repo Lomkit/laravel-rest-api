@@ -173,4 +173,55 @@ class PivotWritesTraceTest extends WriteTraceTestCase
         ]);
         $this->assertSame(['Ticket(Password reset) open [] []', 'Ticket(Printer jam) open [Tag(Hardware) 1] [Tag(Network) 4]'], self::rows('tickets'));
     }
+
+    #[Test]
+    public function it_writes_each_operation_of_a_morph_to_many_relation(): void
+    {
+        $this->assertWrites('/api/tickets/mutate', [
+            'mutate' => [
+                [
+                    'operation' => 'update',
+                    'key' => 101,
+                    'relations' => [
+                        'labels' => [
+                            ['operation' => 'attach', 'key' => [101, 102]],
+                            ['operation' => 'detach', 'key' => 101],
+                            ['operation' => 'detach', 'key' => [102]],
+                        ],
+                    ],
+                ],
+            ],
+        ], [
+            [
+                'operation' => 'update',
+                'key' => 101,
+                'relations' => [
+                    'labels' => [
+                        ['operation' => 'attach', 'key' => [101, 102]],
+                        ['operation' => 'detach', 'key' => 101],
+                        ['operation' => 'detach', 'key' => [102]],
+                    ],
+                ],
+            ],
+        ], [
+            'sql select * from tickets where tickets.id in (101)',
+            'sql select * from tags where tags.id in (101, 102) and tags.deleted_at is null',
+            'policy update Ticket(Printer jam)',
+            'saved Ticket(Printer jam)',
+            'policy view Tag(Hardware)',
+            'saved Tag(Hardware)',
+            'policy view Tag(Network)',
+            'saved Tag(Network)',
+            'policy attachTag Ticket(Printer jam) Tag(Hardware)',
+            'policy attachTag Ticket(Printer jam) Tag(Network)',
+            'sql insert into labelables (created_at, labelable_id, labelable_type, tag_id) values (?, ?, ?, ?), (?, ?, ?, ?)',
+            'saved Tag(Hardware)',
+            'policy detachTag Ticket(Printer jam) Tag(Hardware)',
+            'sql delete from labelables where labelables.labelable_id = ? and labelable_type = ? and labelables.tag_id in (?)',
+            'saved Tag(Network)',
+            'policy detachTag Ticket(Printer jam) Tag(Network)',
+            'sql delete from labelables where labelables.labelable_id = ? and labelable_type = ? and labelables.tag_id in (?)',
+        ]);
+        $this->assertSame(['Ticket(Password reset) open [] []', 'Ticket(Printer jam) open [Tag(Hardware) 1] []'], self::rows('tickets'));
+    }
 }

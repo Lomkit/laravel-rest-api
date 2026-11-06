@@ -3,8 +3,13 @@
 namespace Lomkit\Rest\Tests\Feature\Authorization;
 
 use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\LockedTeamTicketController;
+use Lomkit\Rest\Tests\Feature\Search\Stubs\Illustrated\LeadDeskController;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Helpdesk;
+use Lomkit\Rest\Tests\Fixtures\Newsroom\Newsroom;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 class ProhibitedRelationsTest extends HelpdeskTestCase
@@ -12,11 +17,18 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
     private const array NEW_TEAM = ['operation' => 'create', 'attributes' => ['name' => 'Billing']];
 
     #[\Override]
+    protected function fixtures(): array
+    {
+        return [new Helpdesk, new Newsroom];
+    }
+
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
         Rest::resource('locked-team-tickets', LockedTeamTicketController::class)->register();
+        Rest::resource('lead-desks', LeadDeskController::class)->register();
     }
 
     #[Test]
@@ -81,6 +93,43 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
             ]);
 
         $this->assertSame([['create'], ['create']], [$this->teams->calls, $this->replies->calls]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @param  array<array-key, mixed>  $entry
+     */
+    #[Test]
+    #[DataProvider('throughEntries')]
+    public function it_refuses_every_operation_on_a_through_relation(string $uri, array $attributes, string $relation, array $entry): void
+    {
+        DB::table('desks')->insert(['id' => 101, 'name' => 'Day desk']);
+        DB::table('stories')->insert(['id' => 101, 'desk_id' => 101, 'headline' => 'Flood warning']);
+        DB::table('summaries')->insert(['id' => 101, 'story_id' => 101, 'body' => 'Rain until noon']);
+        DB::table('teams')->insert(['id' => 101, 'name' => 'Support']);
+        DB::table('tickets')->insert(['id' => 101, 'team_id' => 101, 'title' => 'Printer jam', 'status' => 'open']);
+        DB::table('replies')->insert(['id' => 101, 'ticket_id' => 101, 'body' => 'On it.']);
+        $message = 'The mutate.0.relations.'.$relation.' field is prohibited.';
+
+        $response = $this->postJson($uri, ['mutate' => [['operation' => 'create', 'attributes' => $attributes, 'relations' => [$relation => $entry]]]]);
+
+        $response->assertUnprocessable()->assertExactJson(['message' => $message, 'errors' => ['mutate.0.relations.'.$relation => [$message]]]);
+        $this->assertSame([1, 1], [DB::table('desks')->count(), DB::table('teams')->count()]);
+    }
+
+    /** @return array<string, array{string, array<string, mixed>, string, array<array-key, mixed>}> */
+    public static function throughEntries(): array
+    {
+        $desk = ['name' => 'Night desk'];
+        $team = ['name' => 'Billing'];
+
+        return [
+            'has one through create' => ['/lead-desks/mutate', $desk, 'leadSummary', ['operation' => 'create', 'attributes' => ['body' => 'Late shift']]],
+            'has one through attach' => ['/lead-desks/mutate', $desk, 'leadSummary', ['operation' => 'attach', 'key' => 101]],
+            'has one through update' => ['/lead-desks/mutate', $desk, 'leadSummary', ['operation' => 'update', 'key' => 101, 'attributes' => ['body' => 'Late shift']]],
+            'has many through attach' => ['/api/teams/mutate', $team, 'replies', [['operation' => 'attach', 'key' => [101]]]],
+            'has many through update' => ['/api/teams/mutate', $team, 'replies', [['operation' => 'update', 'key' => 101, 'attributes' => ['body' => 'On it.']]]],
+        ];
     }
 
     /**

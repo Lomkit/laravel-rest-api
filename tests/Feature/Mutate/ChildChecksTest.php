@@ -49,17 +49,17 @@ class ChildChecksTest extends PackageTestCase
     /** @param array<string, mixed> $relations */
     #[Test]
     #[DataProvider('refusedChanges')]
-    public function it_refuses_a_change_of_a_child_that_the_parent_policy_refuses(string $uri, array $relations): void
+    public function it_refuses_a_change_of_a_child_that_the_parent_policy_refuses(string $uri, array $relations, int $key = 101): void
     {
         $rows = [self::library(), self::posts()];
 
-        $response = $this->postJson($uri, ['mutate' => [['operation' => 'update', 'key' => 101, 'relations' => $relations]]]);
+        $response = $this->postJson($uri, ['mutate' => [['operation' => 'update', 'key' => $key, 'relations' => $relations]]]);
 
         $response->assertForbidden()->assertExactJson(['message' => 'This action is unauthorized.']);
         $this->assertSame($rows, [self::library(), self::posts()]);
     }
 
-    /** @return array<string, array{string, array<string, mixed>}> */
+    /** @return array<string, array{0: string, 1: array<string, mixed>, 2?: int}> */
     public static function refusedChanges(): array
     {
         return [
@@ -76,6 +76,18 @@ class ChildChecksTest extends PackageTestCase
             'morph many update' => ['/api/books/mutate', ['labels' => [['operation' => 'update', 'key' => 101, 'attributes' => ['text' => 'old']]]]],
             'morph many detach' => ['/api/books/mutate', ['labels' => [['operation' => 'detach', 'key' => [101]]]]],
             'belongs to detach' => ['/api/loans/mutate', ['book' => ['operation' => 'detach', 'key' => 101]]],
+            'belongs to update' => ['/api/loans/mutate', ['book' => ['operation' => 'update', 'key' => 101, 'attributes' => ['title' => 'Dune Messiah']]]],
+            'has one attach' => ['/api/books/mutate', ['loan' => ['operation' => 'attach', 'key' => 101]]],
+            'has one create' => ['/api/books/mutate', ['loan' => ['operation' => 'create', 'attributes' => ['borrower' => 'Linus']]], 107],
+            'has one of many attach' => ['/api/books/mutate', ['latestLoan' => ['operation' => 'attach', 'key' => 103]]],
+            'has one of many create' => ['/api/books/mutate', ['latestLoan' => ['operation' => 'create', 'attributes' => ['borrower' => 'Linus']]]],
+            'has many attach' => ['/api/authors/mutate', ['posts' => [['operation' => 'attach', 'key' => [101]]]]],
+            'has many create' => ['/api/authors/mutate', ['posts' => [['operation' => 'create', 'attributes' => ['title' => 'Drafts', 'status' => 'draft', 'published_on' => '2026-02-01']]]]],
+            'morph one attach' => ['/api/books/mutate', ['label' => ['operation' => 'attach', 'key' => 101]]],
+            'morph one create' => ['/api/books/mutate', ['label' => ['operation' => 'create', 'attributes' => ['text' => 'new']]], 107],
+            'morph one of many attach' => ['/api/books/mutate', ['latestLabel' => ['operation' => 'attach', 'key' => 103]]],
+            'morph one of many create' => ['/api/books/mutate', ['latestLabel' => ['operation' => 'create', 'attributes' => ['text' => 'new']]]],
+            'morph many attach' => ['/api/books/mutate', ['labels' => [['operation' => 'attach', 'key' => [103]]]]],
         ];
     }
 
@@ -102,6 +114,7 @@ class ChildChecksTest extends PackageTestCase
         return [
             'update' => [['operation' => 'update', 'key' => 101, 'attributes' => ['views' => 7]], 403, ['Notes > 101 0']],
             'detach' => [['operation' => 'detach', 'key' => [101]], 200, ['Notes > - 0']],
+            'attach' => [['operation' => 'attach', 'key' => [101]], 200, ['Notes > 101 0']],
         ];
     }
 
