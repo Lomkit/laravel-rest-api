@@ -14,11 +14,12 @@ final readonly class GateTable
     private function __construct(
         private Resource $resource,
         private ?array $abilities,
+        private GateReach $reach,
     ) {}
 
-    public static function of(QueryPlan $plan): self
+    public static function of(QueryPlan $plan, GateReach $reach): self
     {
-        return new self($plan->resource, $plan->resource->isGatingEnabled() ? $plan->gates : null);
+        return new self($plan->resource, $plan->resource->isGatingEnabled() ? $plan->gates : null, $reach);
     }
 
     /**
@@ -58,10 +59,21 @@ final readonly class GateTable
                 continue;
             }
 
-            $response = $this->resource->authorizedTo($gate->name(), $subject);
-            $answers[$names[$gate->key()] ?? $gate->key()] = ['allowed' => $response->allowed(), 'message' => $response->message()];
+            $answers[$names[$gate->key()] ?? $gate->key()] = $this->answer($gate, $subject);
         }
 
         return (object) $answers;
+    }
+
+    /** @return array{allowed: bool, message: string|null} */
+    private function answer(GateAbility $gate, Model|string $subject): array
+    {
+        if ($subject instanceof Model && ! $this->reach->reaches($gate, $subject)) {
+            return ['allowed' => false, 'message' => null];
+        }
+
+        $response = $this->resource->authorizedTo($gate->name(), $subject);
+
+        return ['allowed' => $response->allowed(), 'message' => $response->message()];
     }
 }
