@@ -147,8 +147,8 @@ final readonly class SearchPlanner
             $columns = $this->columns->level($resource, null, self::names($children), RelationKeys::between($parent::newModel(), $relation->relation)->related());
 
             return $relation instanceof OwnerRelation
-                ? new QueryPlan($resource, [], $this->includes($resource, $children), [], LimitPolicy::none(), columns: $columns)
-                : new QueryPlan($resource, [new DefaultOrderClause($resource)], $this->includes($resource, $children), [], self::includeLimit($resource, null), columns: $columns);
+                ? new QueryPlan($resource, [new PerimeterClause($resource)], $this->includes($resource, $children), [], LimitPolicy::none(), columns: $columns)
+                : new QueryPlan($resource, [new PerimeterClause($resource), new DefaultOrderClause($resource)], $this->includes($resource, $children), [], self::includeLimit($resource, null), columns: $columns);
         }
 
         return $this->explicit($parent, $level, $children);
