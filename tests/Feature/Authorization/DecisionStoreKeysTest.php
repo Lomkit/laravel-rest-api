@@ -29,7 +29,9 @@ class DecisionStoreKeysTest extends HelpdeskTestCase
         parent::setUp();
 
         Event::listen(KeyWritten::class, function (KeyWritten $event): void {
-            $this->written[] = $event->key;
+            if ($event->seconds !== null) {
+                $this->written[] = $event->key;
+            }
         });
     }
 

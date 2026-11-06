@@ -8,25 +8,21 @@ final readonly class UserIdentity
 {
     private function __construct(
         public string $guard,
-        public ?string $class,
-        public ?string $id,
+        public ?string $user,
     ) {}
 
     public static function of(string $guard, ?Authenticatable $user): self
     {
-        if ($user === null) {
-            return new self($guard, null, null);
-        }
+        return new self($guard, $user === null ? null : self::user($user));
+    }
 
-        return new self($guard, $user::class, rawurlencode(strval($user->getAuthIdentifier())));
+    public static function user(Authenticatable $user): string
+    {
+        return $user::class.'#'.rawurlencode(strval($user->getAuthIdentifier()));
     }
 
     public function key(): string
     {
-        if ($this->class === null) {
-            return $this->guard.'|guest';
-        }
-
-        return $this->guard.'|'.$this->class.'#'.$this->id;
+        return $this->guard.'|'.($this->user ?? 'guest');
     }
 }

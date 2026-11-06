@@ -44,4 +44,10 @@ class UserIdentityTest extends TestCase
     {
         $this->assertSame('web|Illuminate\Auth\GenericUser#a%7Cb', UserIdentity::of('web', new GenericUser(['id' => 'a|b']))->key());
     }
+
+    #[Test]
+    public function it_names_a_user_without_the_guard(): void
+    {
+        $this->assertSame(['Illuminate\Auth\GenericUser#7', null], [UserIdentity::user(new GenericUser(['id' => 7])), UserIdentity::of('api', null)->user]);
+    }
 }

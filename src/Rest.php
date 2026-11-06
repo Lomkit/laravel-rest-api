@@ -3,8 +3,13 @@
 namespace Lomkit\Rest;
 
 use Illuminate\Container\Attributes\Singleton;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Cache\Factory;
+use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
+use Lomkit\Rest\Authorization\DecisionStamps;
+use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Config\ConfigValue;
 use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
 use Lomkit\Rest\Http\Controllers\Controller;
@@ -20,6 +25,7 @@ class Rest
     public function __construct(
         private readonly ResourceRegistrar $registrar,
         private readonly Repository $config,
+        private readonly Factory $cache,
     ) {}
 
     /** @param class-string<Controller> $controller */
@@ -41,6 +47,16 @@ class Rest
         );
     }
 
+    public function forgetAuthorizationsFor(Authenticatable $user): void
+    {
+        DecisionStamps::renew($this->decisions(), UserIdentity::user($user));
+    }
+
+    public function forgetAuthorizations(): void
+    {
+        DecisionStamps::renew($this->decisions(), null);
+    }
+
     /** @return list<string> */
     private function packageMiddleware(): array
     {
@@ -49,5 +65,10 @@ class Rest
         }
 
         return [EnforceExpectsJson::class, HandlePrecognitiveRequests::class];
+    }
+
+    private function decisions(): Cache
+    {
+        return $this->cache->store(ConfigValue::of($this->config, 'rest.authorizations.cache.store')->nullableString());
     }
 }

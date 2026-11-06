@@ -3,10 +3,13 @@
 namespace Lomkit\Rest\Authorization;
 
 use Illuminate\Contracts\Cache\Factory;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Facades\Date;
 
 final readonly class CacheDecisionStore implements DecisionStore
 {
+    private DecisionStamps $stamps;
+
     private int $since;
 
     public function __construct(
@@ -14,6 +17,7 @@ final readonly class CacheDecisionStore implements DecisionStore
         private UserIdentity $user,
         private ?string $store = null,
     ) {
+        $this->stamps = new DecisionStamps($user->user);
         $this->since = Date::now()->getTimestamp();
     }
 
@@ -27,7 +31,7 @@ final readonly class CacheDecisionStore implements DecisionStore
         }
 
         $cache = $this->cache->store($this->store);
-        $keys = array_flip($this->storageKeys($entries));
+        $keys = array_flip($this->storageKeys($cache, $entries));
         $decisions = [];
 
         foreach ($cache->getMultiple(array_keys($keys)) as $storageKey => $value) {
@@ -51,7 +55,7 @@ final readonly class CacheDecisionStore implements DecisionStore
         $cache = $this->cache->store($this->store);
         $values = [];
 
-        foreach ($this->storageKeys($entries) as $key => $storageKey) {
+        foreach ($this->storageKeys($cache, $entries) as $key => $storageKey) {
             $values[$entries[$key][1]][$storageKey] = $decisions[$key]->toArray();
         }
 
@@ -94,8 +98,10 @@ final readonly class CacheDecisionStore implements DecisionStore
      * @param  array<string, array{DecisionKey, int}>  $entries
      * @return array<string, string>
      */
-    private function storageKeys(array $entries): array
+    private function storageKeys(Repository $cache, array $entries): array
     {
-        return array_map(fn (array $entry): string => $entry[0]->for($this->user), $entries);
+        $stamps = $this->stamps->read($cache);
+
+        return array_map(fn (array $entry): string => $entry[0]->for($this->user, $stamps), $entries);
     }
 }

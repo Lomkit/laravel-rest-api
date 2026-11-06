@@ -28,7 +28,9 @@ class DecisionStoreTest extends HelpdeskTestCase
 
         Rest::resource('mirror-tickets', MirrorTicketController::class)->register();
         Event::listen(KeyWritten::class, function (KeyWritten $event): void {
-            $this->written[] = [$event->storeName, $event->value, $event->seconds];
+            if ($event->seconds !== null) {
+                $this->written[] = [$event->storeName, $event->value, $event->seconds];
+            }
         });
     }
 
@@ -45,7 +47,7 @@ class DecisionStoreTest extends HelpdeskTestCase
     public function it_serves_a_second_request_from_the_database_store(): void
     {
         $this->assertSecondRequestServedFromTheStore('database');
-        $this->assertDatabaseCount('cache', 1);
+        $this->assertDatabaseCount('cache', 2);
     }
 
     #[Test]
@@ -61,7 +63,7 @@ class DecisionStoreTest extends HelpdeskTestCase
     public function it_keeps_the_message_and_status_of_a_denial_in_the_database_store(): void
     {
         $this->assertDenialServedFromTheStore('database');
-        $this->assertDatabaseCount('cache', 1);
+        $this->assertDatabaseCount('cache', 2);
     }
 
     #[Test]

@@ -29,9 +29,9 @@ final readonly class DecisionKey
         return new self([...$parts, $context]);
     }
 
-    public function for(UserIdentity $user): string
+    public function for(UserIdentity $user, string $stamps): string
     {
-        return self::PREFIX.hash('sha256', implode('|', [$user->key(), ...$this->parts]));
+        return self::PREFIX.hash('sha256', implode('|', [$stamps, $user->key(), ...$this->parts]));
     }
 
     private static function version(Model $model, int $since): ?string
