@@ -53,6 +53,14 @@ final readonly class PivotWrites extends RelationWrites
         }
     }
 
+    #[\Override]
+    public function rehearseAfter(LinkedRow $parent, LinkReplay $replay): void
+    {
+        foreach ($this->nodes() as $node) {
+            $replay->walk($this->relation->resource(), $node);
+        }
+    }
+
     private static function key(Model $model): int|string
     {
         $key = $model->getKey();

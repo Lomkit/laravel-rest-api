@@ -9,6 +9,7 @@ use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Mutations\LinkReplay;
 use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Mutations\RowSet;
@@ -30,9 +31,10 @@ final readonly class MutationParser
         private MutationKeys $keys,
         private EntryRules $entryRules,
         private RelationMutationParser $relations,
+        private LinkReplay $links,
     ) {}
 
-    public static function of(MutateRequest $request, ParsedRules $rules, NodeBudget $budget, RowSet $rows): self
+    public static function of(MutateRequest $request, ParsedRules $rules, NodeBudget $budget, RowSet $rows, LinkReplay $links): self
     {
         $reader = new PayloadReader($rules, $budget);
         $limits = $request->context()->limits();
@@ -45,6 +47,7 @@ final readonly class MutationParser
             new MutationKeys($rules, $reader, $limits->sizes->values, fn (Resource $resource): Builder => $request->keysQuery($resource), $rows),
             $entryRules,
             new RelationMutationParser($rules, $reader, $limits, $entryRules),
+            $links,
         );
     }
 
@@ -109,7 +112,11 @@ final readonly class MutationParser
             return null;
         }
 
-        return new MutationNode($operation, $key, $attributes, $pivot, $withoutDetaching, $relations, $depth, $type);
+        foreach (LinkRule::paths($entry, $operation, $relation) as $path) {
+            $this->rules->add($path, [new LinkRule($this->links, $path)]);
+        }
+
+        return new MutationNode($operation, $key, $attributes, $pivot, $withoutDetaching, $relations, $depth, $type, $entry->path);
     }
 
     /**

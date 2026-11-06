@@ -53,6 +53,8 @@ class ToOneChildWritesTraceTest extends WriteTraceTestCase
             'sql select * from books where books.id in (102, 101)',
             'sql select * from loans where loans.id in (102, 101)',
             'sql select * from labels where labels.id in (102, 101)',
+            'sql select loans.id, loans.book_id from loans where loans.book_id in (?)',
+            'sql select labels.id, labels.labelable_id from labels where labels.labelable_id in (?) and labels.labelable_type = ?',
             'policy update Book(Emma)',
             'saved Book(Emma)',
             'policy view Loan(Grace)',

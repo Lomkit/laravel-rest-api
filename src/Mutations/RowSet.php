@@ -47,6 +47,13 @@ final class RowSet
         return $this->hand($row)->syncChanges();
     }
 
+    public function peek(Resource $resource, int|string $key): ?Model
+    {
+        $this->index();
+
+        return $this->named[$resource::class][$key] ?? null;
+    }
+
     /**
      * @param  list<mixed>  $keys
      * @return list<Model>

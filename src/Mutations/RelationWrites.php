@@ -41,6 +41,10 @@ abstract readonly class RelationWrites
 
     public function after(Model $parent, Mutator $mutator, OperationLog $log): void {}
 
+    public function rehearseBefore(LinkedRow $parent, LinkReplay $replay): void {}
+
+    public function rehearseAfter(LinkedRow $parent, LinkReplay $replay): void {}
+
     protected function authorize(Resource $resource, Model $parent, Model $related, MutationOperation $operation): void
     {
         $ability = match ($operation) {

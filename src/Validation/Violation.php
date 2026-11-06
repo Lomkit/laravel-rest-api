@@ -78,6 +78,16 @@ final readonly class Violation
         return new self($key, 'The :attribute field cannot be a MorphTo relation.');
     }
 
+    public static function notLinked(string $key): self
+    {
+        return new self($key, 'validation.exists');
+    }
+
+    public static function heldRecord(string $key): self
+    {
+        return new self($key, 'The :attribute field is prohibited: this relation already holds a record. Detach it first.');
+    }
+
     public static function throughMorphTo(string $key): self
     {
         return new self($key, 'The :attribute field cannot go through a MorphTo relation.');

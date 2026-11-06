@@ -1272,6 +1272,19 @@ Nested writes:
   - a `with()` in `mutateQuery()` loads its relations once for the rows of the key check.
 
   `sync` and `toggle` check the rows that they attach and detach on these rows; the rows that a `sync` detaches without naming them are read with one query per 1,000 keys.
+- An `update` or a `detach` under a `HasOne`, `HasOneOfMany`, `HasMany`, `MorphOne`, `MorphOneOfMany` or `MorphMany` relation reaches only a row of the parent: a row whose foreign key, and morph type on the morph relations, names the parent. Another row gives "The selected mutate.0.relations.posts.0.key is invalid.", as a key that does not exist, and so does any row under a created parent. `attach` still takes a row of another parent and moves it. Before, `update` moved a row of another parent to the parent, and `detach` cleared the foreign key of a row of another parent.
+- `attach` and `create` under a `HasOne` or `MorphOne` relation give a 422 when the parent already has a related row: "The mutate.0.relations.loan field is prohibited: this relation already holds a record. Detach it first." Every row that the foreign key links to the parent counts, also one that the `searchQuery()` of the related resource leaves out. Detach the current row in an entry written before, for example:
+
+  ```json
+  {"mutate": [
+    {"operation": "update", "key": 2, "relations": {"loan": {"operation": "detach", "key": 5}}},
+    {"operation": "update", "key": 2, "relations": {"loan": {"operation": "attach", "key": 7}}}
+  ]}
+  ```
+
+  `HasOneOfMany` and `MorphOneOfMany` relations take another row as before. Before, the parent ended with two related rows.
+- A `detach` under a `BelongsTo` or `MorphTo` relation names the current owner of the row, and on a `MorphTo` its `type`: another row gives "The selected mutate.0.relations.author.key is invalid.", and so does a `detach` under a created row. Before, any row cleared the association.
+- These checks run during validation, before `beforeMutate()`, any policy, any hook and any write, on the rows that the key check reads. They follow the entries in the order in which they are written: an entry sees what the entries before it attach, detach and create. A foreign key that an entry writes as an attribute is not followed. The current row of a `HasOne` or `MorphOne` relation is read with one query per relation and request; the other checks read no row. When an entry of the request cannot be read, for example with an unknown `operation` or a value of the wrong type, these checks give no error.
 - `MorphOne`, `MorphOneOfMany` and `MorphMany` write the morph type with `getMorphClass()`: with a morph map, they write the alias instead of the class name, as `MorphTo` does.
 - When a resource keeps the morph type column of a `MorphTo` writable, the column accepts the morph types of its targets only: `The selected mutate.0.attributes.labelable_type is invalid.`. Declare the morph columns `readonly()`.
 
@@ -1331,6 +1344,7 @@ Custom relations and query builders:
 - `Lomkit\Rest\Fields\MutationOperation` lists the operations: `create`, `update`, `attach`, `detach`, `sync` and `toggle`. `Relation::mutationOperations()` returns a list of its cases instead of strings, for example `[MutationOperation::Create, MutationOperation::Attach]`.
 - A mutation is written by the package, not by the query builder: `Lomkit\Rest\Query\Builder` loses `mutate()`, `applyMutation()`, `mutations()`, `mutateModel()` and `mutationAbility()`, and the `Lomkit\Rest\Query\Traits\PerformMutation` trait is removed. A `QueryBuilder` binding that overrides them is no longer called. To change what a write does, use the `mutating()` and `mutated()` hooks of the resource. The writes keep their order and their policy checks.
 - Relations do not write. `beforeMutating()`, `afterMutating()` and `ownedAttributes()` are removed from `Relation`, from every relation class and from the `Lomkit\Rest\Contracts\OwnerRelation` contract, and the `Lomkit\Rest\Relations\Traits\Mutates` and `Lomkit\Rest\Concerns\Relations\PerformsRelationOperations` traits are removed, with the `create()`, `update()`, `attach()`, `detach()`, `toggle()` and `sync()` methods of `BelongsToMany`, `MorphToMany` and `MorphedByMany`. The package writes a relation by the class of its Eloquent relation: a `BelongsTo` or `MorphTo` sets the keys of the row before it is saved; a `HasOne`, `HasMany`, `MorphOne` or `MorphMany` (one of many included) sets the key and morph type of the parent on its rows; a `BelongsToMany` or `MorphToMany` writes the pivot table. A relation whose Eloquent relation is of another class, a through relation included, is not written. An override of the removed methods in a custom relation is no longer called: move its work to the `mutating()` and `mutated()` hooks of the resource. `mutationOperations()` stays on `Relation`.
+- `Lomkit\Rest\Mutations\MutationNode` gains `$path`, the payload path of its entry, and `RowSet` gains `peek()`, which returns a row that validation loaded without handing it to a write. `MutationParser::of()` takes a `Lomkit\Rest\Mutations\LinkReplay` as its last argument; an override of `MutateRequest::rules()` that builds the parser passes it. A relation is checked by the class of its Eloquent relation, as it is written.
 - `Relation::fromResource(Resource $fromResource)` declares `static` as its return type; an override declares it too.
 
 Scramble:
