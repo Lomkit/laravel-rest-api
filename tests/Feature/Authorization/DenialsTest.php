@@ -76,18 +76,20 @@ class DenialsTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_leaves_the_refused_update_of_a_row_to_laravel(): void
+    public function it_lists_the_refused_update_of_a_row(): void
     {
         $this->renderDenials();
         $reset = $this->seedTickets()['Password reset'];
 
         $this->postJson('/api/tickets/mutate', ['mutate' => [['operation' => 'update', 'key' => $reset->id, 'attributes' => ['title' => 'Password expired']]]])
             ->assertStatus(423)
-            ->assertExactJson(['message' => 'Closed tickets are read-only.']);
+            ->assertExactJson(['message' => 'Closed tickets are read-only.', 'denials' => [
+                ['path' => 'mutate.0', 'ability' => 'update', 'key' => $reset->id, 'message' => 'Closed tickets are read-only.'],
+            ]]);
     }
 
     #[Test]
-    public function it_leaves_the_refused_attach_of_a_row_to_laravel(): void
+    public function it_lists_the_refused_attach_of_a_row(): void
     {
         $this->renderDenials();
         $jam = $this->seedTickets()['Printer jam'];
@@ -95,7 +97,11 @@ class DenialsTest extends HelpdeskTestCase
 
         $this->postJson('/api/tickets/mutate', ['mutate' => [
             ['operation' => 'update', 'key' => $jam->id, 'relations' => ['tags' => [['operation' => 'attach', 'key' => [$urgent->id]]]]],
-        ]])->assertStatus(409)->assertExactJson(['message' => 'Urgent tickets are flagged by the escalation desk.']);
+        ]])
+            ->assertStatus(409)
+            ->assertExactJson(['message' => 'Urgent tickets are flagged by the escalation desk.', 'denials' => [
+                ['path' => 'mutate.0.relations.tags.0', 'ability' => 'attachTag', 'key' => $urgent->id, 'message' => 'Urgent tickets are flagged by the escalation desk.'],
+            ]]);
     }
 
     #[Test]

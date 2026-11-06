@@ -893,7 +893,46 @@ Checks before validation:
 - To change them for one resource, override `abilities(Endpoint $endpoint): array` on the resource (`Lomkit\Rest\Http\Routing\Endpoint`), for example to require `deleteAny` on `Endpoint::Destroy`. The list replaces the default of the endpoint: a resource that returns `['export']` for `Endpoint::Search` no longer checks `viewAny` there, and its search runs without it. To add an ability, keep `viewAny` in the list, as in `['viewAny', 'export']`. `Endpoint::Operate` is the exception: its list adds to `viewAny`. A resource that already defines a method named `abilities()` must give it this signature.
 - `details` checks `viewAny` before the controller's `beforeDetails()` hook runs, so the hook no longer runs for a user who cannot list the resource.
 - Every resource the payload reaches needs `viewAny` on that resource: each level of an include (`team.replies` needs `viewAny` on the teams and on the replies), each level of an aggregate, each level of a filter on a relation, nested filters included, the relation of a relation group, each relation of a sort on a relation field (`author.last_name` needs `viewAny` on the authors), and a filter on a pivot column (`tags.pivot.position` needs `viewAny` on the tags). The same applies to the `search` of an action, and to the `response` block of a mutation, which also needs `viewAny` on the resource of the endpoint. A filter on a relation did not check the related resource before, and an include was checked only when the query returned rows.
-- Each `create` in `mutate`, at the root or under a relation, needs `create` on the created resource. It is checked once per resource class and request, before validation, with the model class as its argument, as `Gate::inspect('create', Model::class)` does. Before, it was checked for each new model, after validation, with an unsaved model instance: a `create` policy method that requires a model as its second parameter no longer receives one. A creation under a relation that the package refuses, such as a `HasManyThrough` relation or a relation marked `prohibitedOnCreation()`, is checked before the `422` as well.
+- Each `create` in `mutate`, at the root or under a relation, needs `create` on the created resource. It is checked once per resource class and request, before validation, with the model class as its argument, as `Gate::inspect('create', Model::class)` does. Each created row is also checked with its draft, see "Row checks of `mutate`" below. A `create` policy method whose second parameter has no default fails on this first check: declare it `?Post $draft = null`. A creation under a relation that the package refuses, such as a `HasManyThrough` relation or a relation marked `prohibitedOnCreation()`, is checked before the `422` as well.
+
+Row checks of `mutate`:
+
+- Every row check of a mutation runs in one batch, inside its transaction, after `beforeMutate()` and before the first write: no row is written, and no model event, observer or `mutating()` hook runs, before a `403`. Before, each row was checked right before its own write, and the rows written before a denial ran their events and hooks.
+- Each created row is checked with `create` and its draft: an unsaved model filled with the validated attributes of its entry (through the fields, without their `fillUsing()` callbacks) and with the keys that its owner relations and its parent relation set when these rows exist. A policy declares it as an optional parameter:
+
+  ```php
+  public function create(User $user, ?Post $draft = null): bool
+  {
+      return $draft === null || $draft->team_id === $user->team_id;
+  }
+  ```
+
+  A `create(User $user)` method keeps working: Laravel passes the draft as an extra argument. The class-level `create` check of the request still runs first, so the policy is called once per resource class, then once per created row.
+- Each updated row is checked with `update`, the stored row and a `Lomkit\Rest\Authorization\Changes` object of the values that the write sets: the validated attributes, and the keys that its relations set when these rows exist. `has($key)`, `get($key)` and `keys()` read it:
+
+  ```php
+  public function update(User $user, Post $post, ?Changes $changes = null): Response
+  {
+      return $changes?->get('team_id') !== null && $changes->get('team_id') !== $user->team_id
+          ? Response::deny('Posts cannot move to another team.')
+          : Response::allow();
+  }
+  ```
+
+  When several entries write the same row, each later entry is checked against the row with the changes of the entries before it.
+- A row that an entry names without writing it, the target of an `attach`, a `detach`, a `sync` or a `toggle` without attributes, is checked with `view`. A row moved by an entry under a `HasOne`, `HasOneOfMany`, `HasMany`, `MorphOne`, `MorphOneOfMany` or `MorphMany` relation is checked with `update` and its new keys. Before, it was checked with `view`.
+- The link of a relation is checked with the ability that the relation declares, on the policy of the parent row, with the parent and the related row:
+
+  ```php
+  BelongsToMany::make('tags', TagResource::class)
+      ->abilities(attach: 'attachTag', detach: 'detachTag'),
+  ```
+
+  `attach` covers `create`, `update` and `attach` entries and the rows that `sync` and `toggle` attach; `detach` covers `detach` entries and the rows that `sync` and `toggle` detach. Without a declared ability, the link is checked with `update` on the parent row, with its changes; for a parent that the request creates, its `create` check covers it. `Gate::before()` applies to both. A declared ability that no policy method answers is denied. Before, the package called `attach{Model}` or `detach{Model}` of the parent policy, named after the related model, and allowed the link when the method was missing.
+- A link that involves a row the request creates is checked once that row is saved, right before the link is written: the check of a declared ability may then run after earlier writes of the request, which a denial rolls back. When the created row's own insert writes the link, the check receives the row filled and not yet saved.
+- `sync` and `toggle` compare the keys they send with the attached rows, read once per parent row and relation, before any write. Each row that they attach or detach is checked. Before, the checks ran after the pivot write.
+- The policies see the rows as they were before the request: a policy that reads the database runs before the writes of the request.
+- A denied check throws `AuthorizationDenied` with every denial of the batch, each with the path of its entry, the ability and the key of its row; a denied link names the key of the related row. The first denial in the order of the request gives the message and the status.
 
 Actions:
 
@@ -906,7 +945,7 @@ Denials:
 
 - A check made before validation (an endpoint ability or a reached resource), or a row check of `destroy`, `restore` or `forceDestroy`, that is denied throws `Lomkit\Rest\Exceptions\AuthorizationDenied`, which extends Laravel's `Illuminate\Auth\Access\AuthorizationException`. It holds every denial of these checks, at most 50, as `Lomkit\Rest\Authorization\Denial` objects in `$exception->denials`, each with the path in the payload (`search.includes.0`, `mutate.1.relations.team`, `resources.1`, or an empty string for the endpoint), the ability, the resource class, the key of the model when the check is on a model, and the message.
 - Its message, code and status are those of the first denial, in the order of the request's rules, or, for the rows of `destroy`, `restore` and `forceDestroy`, in the order of `resources`. The response body stays `{"message": ...}`, and a policy that returns `Response::denyAsNotFound()` still answers `404`.
-- The other checks on rows (`view`, `update`, and the attach and detach checks of a relation) still throw Laravel's `AuthorizationException`, with no denials, as before.
+- The row checks of `mutate` throw `AuthorizationDenied` too, with every denial of the request (see "Row checks of `mutate`"). Before, they threw Laravel's `AuthorizationException` with the first denial.
 - `destroy`, `restore` and `forceDestroy` check `delete`, `restore` or `forceDelete` on every row before they write any row. A denied row gives a 403 that holds every denied row, at most 50, each under `resources.<index>` with the key of its row, and no hook of a row (`destroying()`, `restoring()`, `forceDestroying()` or the hook after the write), no write and no model event runs; `beforeDestroy()`, `beforeRestore()` and `beforeForceDestroy()` run before the checks. Before, the first denied row stopped the checks. The rows are checked, written and returned in the order of `resources`. Before, they came in the order that the database returned them, which differs between databases.
 - To add the denials to the JSON body, register the renderer in `bootstrap/app.php`. It adds a `denials` list of `{path, ability, key, message}`, where `key` only appears for a model, to every `AuthorizationDenied` except a `404`, and leaves the other responses unchanged:
 
@@ -931,6 +970,7 @@ Cache:
 - The cache key holds the guard, the user class and key, the resource class, the ability, and the class and key of each model. Entries written under the previous keys are not read anymore and expire on their own.
 - A model whose key is cast to an enum is keyed by the value of the enum. Checks on a model that is not saved yet, or whose key is not a string, an integer or an enum, are neither cached nor shared with another check of the request.
 - `create` checks are not cached: they run once per request, including the `authorized_to_create` gate.
+- The `update` checks of `mutate` carry the changes of their entry and are not cached.
 - A cached decision stays for `authorizations.cache.default` minutes, or the duration that `cacheAuthorizationFor()` returns: a change to a policy, to the user or to the model shows once the entry expires.
 - `Resource::getAuthorizationCacheKey()` is removed: the package builds the key.
 - `isAuthorizationCacheEnabled()` and the `DisableAuthorizationsCache` trait turn the cache off for one resource. When `authorizations.cache.enabled` is `false`, no resource uses the cache.
@@ -938,10 +978,9 @@ Cache:
 Resource methods:
 
 - The authorization methods declare native types. An override must declare compatible types:
-  - `authorizeTo(string $ability, Model|string $model): void` and `authorizedTo(string $ability, Model|string $model): Response`;
-  - `authorizeToAttach(Model $model, Model $toAttachModel): void`, `authorizedToAttach(Model $model, Model $toAttachModel): bool`, and the same for `authorizeToDetach()` and `authorizedToDetach()`;
-  - `authorizeToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): void` and `authorizedToPerformActionOnRelationship(string $ability, Model $model, Model $toActionModel): bool`.
-- `authorizeTo()` calls `authorizedTo()`, so an override of `authorizedTo()` applies to the endpoints as well as to the gates. The checks made before validation, on the endpoint and on each reached resource, also go through the `authorizedTo()` of their resource. So do the row checks of `destroy`, `restore` and `forceDestroy`, which no longer call `authorizeTo()`: an override of `authorizeTo()` does not apply to them.
+  - `authorizeTo(string $ability, Model|string $model, array $arguments = []): void` and `authorizedTo(string $ability, Model|string $model, array $arguments = []): Response`, where `$arguments` holds the models and the `Changes` passed to the policy after the model;
+  - `authorizeToAttach()`, `authorizedToAttach()`, `authorizeToDetach()`, `authorizedToDetach()`, `authorizeToPerformActionOnRelationship()` and `authorizedToPerformActionOnRelationship()` are removed: declare the ability of a link on its relation with `abilities(attach:, detach:)`.
+- `authorizeTo()` calls `authorizedTo()`, so an override of `authorizedTo()` applies to the endpoints as well as to the gates. The checks made before validation, on the endpoint and on each reached resource, also go through the `authorizedTo()` of their resource. So do the row checks of `mutate`, `destroy`, `restore` and `forceDestroy`, which no longer call `authorizeTo()`: an override of `authorizeTo()` does not apply to them.
 - `authorizedTo()` returns a new `Illuminate\Auth\Access\Response` built from the decision, with or without the cache. It keeps the result, the message and the status of the policy's response, and its code when the code is an integer or a string. It does not keep a code of another type, such as an enum or an object, or an instance of your own `Response` subclass.
 
 ### Responses
@@ -1277,7 +1316,7 @@ Nested writes:
   - a row that another request deletes between the validation and the write is not written, and the mutation answers 200. Before, it answered 404;
   - a `with()` in `perimeterQuery()` loads its relations once for the rows of the key check.
 
-  `sync` and `toggle` check the rows that they attach and detach on these rows; the rows that a `sync` detaches without naming them are read with one query per 1,000 keys.
+  `sync` and `toggle` read the attached rows of each parent row once, see "Row checks of `mutate`" in [Authorization](#authorization).
 - An `update` or a `detach` under a `HasOne`, `HasOneOfMany`, `HasMany`, `MorphOne`, `MorphOneOfMany` or `MorphMany` relation reaches only a row of the parent: a row whose foreign key, and morph type on the morph relations, names the parent. Another row gives "The selected mutate.0.relations.posts.0.key is invalid.", as a key that does not exist, and so does any row under a created parent. `attach` still takes a row of another parent and moves it. Before, `update` moved a row of another parent to the parent, and `detach` cleared the foreign key of a row of another parent.
 - `attach` and `create` under a `HasOne` or `MorphOne` relation give a 422 when the parent already has a related row: "The mutate.0.relations.loan field is prohibited: this relation already holds a record. Detach it first." Every row that the foreign key links to the parent counts, also one that the `perimeterQuery()` of the related resource leaves out. Detach the current row in an entry written before, for example:
 
@@ -1349,8 +1388,9 @@ Response block:
 Custom relations and query builders:
 
 - `Lomkit\Rest\Fields\MutationOperation` lists the operations: `create`, `update`, `attach`, `detach`, `sync` and `toggle`. `Relation::mutationOperations()` returns a list of its cases instead of strings, for example `[MutationOperation::Create, MutationOperation::Attach]`.
-- A mutation is written by the package, not by the query builder: `Lomkit\Rest\Query\Builder` loses `mutate()`, `applyMutation()`, `mutations()`, `mutateModel()` and `mutationAbility()`, and the `Lomkit\Rest\Query\Traits\PerformMutation` trait is removed. A `QueryBuilder` binding that overrides them is no longer called. To change what a write does, use the `mutating()` and `mutated()` hooks of the resource. The writes keep their order and their policy checks.
+- A mutation is written by the package, not by the query builder: `Lomkit\Rest\Query\Builder` loses `mutate()`, `applyMutation()`, `mutations()`, `mutateModel()` and `mutationAbility()`, and the `Lomkit\Rest\Query\Traits\PerformMutation` trait is removed. A `QueryBuilder` binding that overrides them is no longer called. To change what a write does, use the `mutating()` and `mutated()` hooks of the resource. The writes keep their order; their policy checks run before them.
 - Relations do not write. `beforeMutating()`, `afterMutating()` and `ownedAttributes()` are removed from `Relation`, from every relation class and from the `Lomkit\Rest\Contracts\OwnerRelation` contract, and the `Lomkit\Rest\Relations\Traits\Mutates` and `Lomkit\Rest\Concerns\Relations\PerformsRelationOperations` traits are removed, with the `create()`, `update()`, `attach()`, `detach()`, `toggle()` and `sync()` methods of `BelongsToMany`, `MorphToMany` and `MorphedByMany`. The package writes a relation by the class of its Eloquent relation: a `BelongsTo` or `MorphTo` sets the keys of the row before it is saved; a `HasOne`, `HasMany`, `MorphOne` or `MorphMany` (one of many included) sets the key and morph type of the parent on its rows; a `BelongsToMany` or `MorphToMany` writes the pivot table. A relation whose Eloquent relation is of another class, a through relation included, is not written. An override of the removed methods in a custom relation is no longer called: move its work to the `mutating()` and `mutated()` hooks of the resource. `mutationOperations()` stays on `Relation`.
+- `Relation::abilities(?string $attach = null, ?string $detach = null)` declares the abilities of the links of a relation. `linkAbility(bool $detach)` reads them, and `parentResource()` returns the resource that declares the relation, whose policy checks the link.
 - `Lomkit\Rest\Mutations\MutationNode` gains `$path`, the payload path of its entry, and `RowSet` gains `peek()`, which returns a row that validation loaded without handing it to a write. `MutationParser::of()` takes a `Lomkit\Rest\Mutations\LinkReplay` as its last argument; an override of `MutateRequest::rules()` that builds the parser passes it. A relation is checked by the class of its Eloquent relation, as it is written.
 - `Relation::fromResource(Resource $fromResource)` declares `static` as its return type; an override declares it too.
 

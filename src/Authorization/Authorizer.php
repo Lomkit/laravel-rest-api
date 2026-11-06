@@ -148,7 +148,7 @@ final class Authorizer
     private function planned(Check $check): Decision
     {
         $key = self::keyOf($check);
-        $decide = fn (): Decision => Decision::fromResponse($check->resource->authorizedTo($check->ability, $check->subject));
+        $decide = fn (): Decision => Decision::fromResponse($check->resource->authorizedTo($check->ability, $check->subject, $check->related));
 
         return $key === null ? $decide() : $this->memo->remember($key, $check, $decide);
     }

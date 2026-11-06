@@ -45,7 +45,7 @@ class CreationChecksTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_creates_each_resource_with_one_check_per_created_resource(): void
+    public function it_creates_each_resource_with_one_check_per_class_and_one_per_created_row(): void
     {
         $this->postJson('/api/tickets/mutate', ['mutate' => [
             $this->ticketWithTeam('Printer jam', 'Billing'),
@@ -54,7 +54,7 @@ class CreationChecksTest extends HelpdeskTestCase
 
         $this->assertSame(['Billing', 'Support'], Team::query()->orderBy('name')->pluck('name')->all());
         $this->assertSame(['Password reset', 'Printer jam'], Ticket::query()->orderBy('title')->pluck('title')->all());
-        $this->assertSame([['create'], ['create']], [$this->tickets->calls, $this->teams->calls]);
+        $this->assertSame([['create', 'create', 'create'], ['create', 'create', 'create']], [$this->tickets->calls, $this->teams->calls]);
     }
 
     #[Test]

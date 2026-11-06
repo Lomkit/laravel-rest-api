@@ -4,14 +4,20 @@ namespace Lomkit\Rest\Tests\Feature\Mutate;
 
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\Mutate\Concerns\SeedsLibraryRows;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\LinkCheckedAuthorResource;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\LinkCheckedBookResource;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\LinkCheckedLoanResource;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\RefusingLibraryLinksPolicy;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\RefusingPostLinksPolicy;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\ViewOnlyPostPolicy;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
+use Lomkit\Rest\Tests\Fixtures\Library\BookResource;
 use Lomkit\Rest\Tests\Fixtures\Library\Label;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
 use Lomkit\Rest\Tests\Fixtures\Library\Loan;
+use Lomkit\Rest\Tests\Fixtures\Library\LoanResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
+use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\OpenPublishingPolicy;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
@@ -41,6 +47,9 @@ class ChildChecksTest extends PackageTestCase
         }
 
         Gate::policy(Author::class, RefusingPostLinksPolicy::class);
+        $this->app?->bind(BookResource::class, LinkCheckedBookResource::class);
+        $this->app?->bind(LoanResource::class, LinkCheckedLoanResource::class);
+        $this->app?->bind(AuthorResource::class, LinkCheckedAuthorResource::class);
         $this->seedLibrary();
         Author::query()->insert(['id' => 101, 'first_name' => 'Ada', 'last_name' => 'Byron', 'api_token' => 'token-1']);
         Post::query()->insert(['id' => 101, 'author_id' => 101, 'title' => 'Notes', 'status' => 'draft', 'published_on' => '2026-01-01']);
@@ -97,7 +106,7 @@ class ChildChecksTest extends PackageTestCase
      */
     #[Test]
     #[DataProvider('childAbilities')]
-    public function it_checks_update_on_an_updated_child_and_view_on_a_detached_one(array $entry, int $status, array $posts): void
+    public function it_checks_update_on_an_updated_or_detached_child(array $entry, int $status, array $posts): void
     {
         Gate::policy(Author::class, OpenPublishingPolicy::class);
         Gate::policy(Post::class, ViewOnlyPostPolicy::class);
@@ -113,8 +122,8 @@ class ChildChecksTest extends PackageTestCase
     {
         return [
             'update' => [['operation' => 'update', 'key' => 101, 'attributes' => ['views' => 7]], 403, ['Notes > 101 0']],
-            'detach' => [['operation' => 'detach', 'key' => [101]], 200, ['Notes > - 0']],
-            'attach' => [['operation' => 'attach', 'key' => [101]], 200, ['Notes > 101 0']],
+            'detach' => [['operation' => 'detach', 'key' => [101]], 403, ['Notes > 101 0']],
+            'attach' => [['operation' => 'attach', 'key' => [101]], 403, ['Notes > 101 0']],
         ];
     }
 

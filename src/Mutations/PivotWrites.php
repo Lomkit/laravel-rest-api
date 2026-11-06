@@ -24,6 +24,11 @@ final readonly class PivotWrites extends RelationWrites
         $related = $node->operation === MutationOperation::Create
             ? [$mutator->one($resource, $node, $log)]
             : $mutator->each($resource, $node, $log);
+
+        if ($node->operation === MutationOperation::Create) {
+            $mutator->checks->pivots->created($node, $related[0]);
+        }
+
         $pivot = $this->pivot($node);
         $ids = [];
 
@@ -31,25 +36,50 @@ final readonly class PivotWrites extends RelationWrites
             $ids[self::key($model)] = $pivot;
         }
 
-        foreach ($related as $model) {
-            $this->authorize($resource, $parent, $model, $node->operation);
+        [$attached, $detached] = match ($node->operation) {
+            MutationOperation::Sync, MutationOperation::Toggle => $mutator->checks->pivots->written($node),
+            MutationOperation::Detach => [[], $related],
+            default => [$related, []],
+        };
+
+        foreach ($attached as $model) {
+            $mutator->checks->linkNow($this->relation, $node, $parent, $model, false);
         }
 
-        $changes = match ($node->operation) {
-            MutationOperation::Create, MutationOperation::Update => $this->pivots($parent)->syncWithoutDetaching($ids),
-            MutationOperation::Attach => $this->pivots($parent)->attach($ids),
-            MutationOperation::Detach => $this->pivots($parent)->detach($related),
-            MutationOperation::Toggle => $this->pivots($parent)->toggle($ids),
-            MutationOperation::Sync => $this->pivots($parent)->sync($ids, ! ($node->withoutDetaching ?? false)),
+        foreach ($detached as $model) {
+            $mutator->checks->linkNow($this->relation, $node, $parent, $model, true);
+        }
+
+        $pivots = $this->pivots($parent);
+
+        match ($node->operation) {
+            MutationOperation::Create, MutationOperation::Update => $pivots->syncWithoutDetaching($ids),
+            MutationOperation::Attach => $pivots->attach($ids),
+            MutationOperation::Detach => $pivots->detach($related),
+            MutationOperation::Toggle => $pivots->toggle($ids),
+            MutationOperation::Sync => $pivots->sync($ids, ! ($node->withoutDetaching ?? false)),
         };
 
         $resource
             ->context()
             ->authorizer()
             ->forget($parent);
+    }
 
-        if (in_array($node->operation, [MutationOperation::Toggle, MutationOperation::Sync], true) && is_array($changes)) {
-            (new PivotChanges($resource, $parent, $mutator->rows))->authorize($changes);
+    #[\Override]
+    public function check(Model $parent, WriteChecks $checks): void
+    {
+        foreach ($this->nodes() as $node) {
+            $related = $checks->walk($this->relation->resource(), $node);
+            [$attached, $detached] = $checks->pivots->apply($this->relation, $parent, $node, $related);
+
+            foreach ($attached as $model) {
+                $checks->link($this->relation, $node, $parent, $model, false);
+            }
+
+            foreach ($detached as $model) {
+                $checks->link($this->relation, $node, $parent, $model, true);
+            }
         }
     }
 

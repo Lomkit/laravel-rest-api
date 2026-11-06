@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Mutations\Mutator;
 use Lomkit\Rest\Mutations\OperationEntry;
+use Lomkit\Rest\Mutations\WriteChecks;
 
 final readonly class MutateResponse implements Responsable
 {
@@ -22,10 +23,21 @@ final readonly class MutateResponse implements Responsable
 
     public static function of(MutateRequest $request, Resource $resource): self
     {
-        $operations = DB::transaction(fn (): array => (new Mutator($request, $request->rows()))->execute($resource, $request->payload()));
+        $operations = DB::transaction(fn (): array => self::write($request, $resource));
         $block = $request->responseBlock();
 
         return new self($operations, $block === null ? null : WrittenRecords::read($resource, $block, $operations)->rows());
+    }
+
+    /** @return list<OperationEntry> */
+    private static function write(MutateRequest $request, Resource $resource): array
+    {
+        $nodes = $request->payload();
+        $checks = new WriteChecks($request->rows());
+
+        $checks->authorize($resource, $nodes);
+
+        return (new Mutator($request, $request->rows(), $checks))->execute($resource, $nodes);
     }
 
     #[\Override]

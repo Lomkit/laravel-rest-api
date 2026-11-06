@@ -17,7 +17,7 @@ use PHPUnit\Framework\Attributes\Test;
 class NamedRowsTest extends WriteTraceTestCase
 {
     #[Test]
-    public function it_checks_a_row_that_three_entries_name_as_it_checks_three_reads_of_it(): void
+    public function it_checks_each_entry_that_names_a_row_against_the_changes_of_the_entries_before_it(): void
     {
         $this->postJson('/api/books/mutate', ['mutate' => [
             ['operation' => 'update', 'key' => 102, 'attributes' => ['title' => 'Emma Woodhouse']],
@@ -26,7 +26,7 @@ class NamedRowsTest extends WriteTraceTestCase
         ]])->assertOk();
 
         $this->assertSame(
-            ['policy update Book(Emma)', 'saved Book(Emma Woodhouse)', 'policy update Book(Emma Woodhouse)', 'saved Book(Emma Woodhouse)', 'saved Book(Emma W.)'],
+            ['policy update Book(Emma)', 'policy update Book(Emma Woodhouse)', 'policy update Book(Emma Woodhouse)', 'saved Book(Emma Woodhouse)', 'saved Book(Emma Woodhouse)', 'saved Book(Emma W.)'],
             array_values(array_filter(TracingPolicy::$trace, fn (string $line): bool => ! str_starts_with($line, 'sql '))),
         );
         $this->assertSame(['Book(Dune) [Shelf(Classics)]', 'Book(Emma W.) []'], self::rows('books'));

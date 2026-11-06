@@ -20,13 +20,17 @@ final readonly class ChildWrites extends RelationWrites
         foreach ($this->nodes() as $node) {
             $detach = $node->operation === MutationOperation::Detach;
             $keys = $this->keys($parent, $detach);
-            $children = $node->operation === MutationOperation::Create || ! $this->relation->hasMultipleEntries()
-                ? [$mutator->one($resource, $node, $log, $keys)]
-                : $mutator->each($resource, $node, $log, $keys);
+            $linking = function (Model $child) use ($mutator, $node, $parent, $detach): void {
+                $mutator->checks->linkNow($this->relation, $node, $parent, $child, $detach);
+            };
 
-            foreach ($children as $child) {
-                $this->authorize($resource, $parent, $child, $node->operation);
+            if ($node->operation === MutationOperation::Create || ! $this->relation->hasMultipleEntries()) {
+                $mutator->one($resource, $node, $log, $keys, $linking);
+
+                continue;
             }
+
+            $mutator->each($resource, $node, $log, $keys, $linking);
         }
     }
 
@@ -56,9 +60,17 @@ final readonly class ChildWrites extends RelationWrites
     }
 
     #[\Override]
-    protected function checksLinksAsAttach(): bool
+    public function check(Model $parent, WriteChecks $checks): void
     {
-        return $this->relation->hasMultipleEntries();
+        foreach ($this->nodes() as $node) {
+            $detach = $node->operation === MutationOperation::Detach;
+            $moves = ! in_array($node->operation, [MutationOperation::Create, MutationOperation::Update], true);
+            $keys = $parent->exists ? $this->keys($parent, $detach) : [];
+
+            foreach ($checks->walk($this->relation->resource(), $node, $keys, $moves) as $child) {
+                $checks->link($this->relation, $node, $parent, $child, $detach);
+            }
+        }
     }
 
     /** @return array<string, mixed> */

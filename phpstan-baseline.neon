@@ -186,12 +186,6 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			message: '#^Parameter \#1 \$object_or_class of function method_exists expects object\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Http\\ResourceRegistry\:\:get\(\) should return Lomkit\\Rest\\Http\\Resource but returns mixed\.$#'
 			identifier: return.type
 			count: 1
@@ -202,12 +196,6 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: src/Http/ResourceRegistry.php
-
-		-
-			message: '#^Parameter \#1 \$attributes of method Illuminate\\Database\\Eloquent\\Model\:\:forceFill\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Query/AttributeWriter.php
 
 		-
 			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:__construct\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'

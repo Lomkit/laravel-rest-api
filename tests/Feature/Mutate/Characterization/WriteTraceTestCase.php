@@ -77,8 +77,9 @@ abstract class WriteTraceTestCase extends PackageTestCase
     /**
      * @param  array<string, mixed>  $payload
      * @param  list<string>  $queries
+     * @param  list<string>|null  $policies
      */
-    protected function assertQueries(string $endpoint, array $payload, array $queries): void
+    protected function assertQueries(string $endpoint, array $payload, array $queries, ?array $policies = null): void
     {
         $this->postJson($endpoint, $payload)->assertOk();
 
@@ -86,6 +87,10 @@ abstract class WriteTraceTestCase extends PackageTestCase
             fn (string $line): string => substr($line, 4),
             array_filter(TracingPolicy::$trace, fn (string $line): bool => str_starts_with($line, 'sql ')),
         )));
+
+        if ($policies !== null) {
+            $this->assertSame($policies, array_values(array_filter(TracingPolicy::$trace, fn (string $line): bool => str_starts_with($line, 'policy '))));
+        }
     }
 
     /** @return list<string> */

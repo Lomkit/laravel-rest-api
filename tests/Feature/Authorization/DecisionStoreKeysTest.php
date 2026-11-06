@@ -110,7 +110,25 @@ class DecisionStoreKeysTest extends HelpdeskTestCase
         $this->postJson('/api/tickets/mutate', $payload)->assertOk();
         $this->postJson('/api/tickets/mutate', $payload)->assertOk();
 
-        $this->assertSame(['create', 'create'], $this->tickets->calls);
+        $this->assertSame(['create', 'create', 'create', 'create'], $this->tickets->calls);
+        $this->assertSame([], $written);
+    }
+
+    #[Test]
+    #[WithConfig('auth.guards.api', ['driver' => 'session', 'provider' => 'users'])]
+    #[WithConfig('rest.authorizations.cache.enabled', true)]
+    public function it_keeps_the_update_checks_of_mutate_out_of_the_store(): void
+    {
+        $jam = $this->seedTickets()['Printer jam'];
+        $written = [];
+        Event::listen(KeyWritten::class, function (KeyWritten $event) use (&$written): void {
+            $written[] = $event->key;
+        });
+
+        $this->postJson('/api/tickets/mutate', ['mutate' => [['operation' => 'update', 'key' => $jam->id, 'attributes' => ['title' => 'Printer fixed']]]])->assertOk();
+        $this->postJson('/api/tickets/mutate', ['mutate' => [['operation' => 'update', 'key' => $jam->id, 'attributes' => ['title' => 'Printer jam']]]])->assertOk();
+
+        $this->assertSame($this->calls('update', $jam, $jam), $this->tickets->calls);
         $this->assertSame([], $written);
     }
 

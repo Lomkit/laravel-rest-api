@@ -10,12 +10,9 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\KeyLookup;
 use Lomkit\Rest\Validation\KeyRead;
-use Lomkit\Rest\Validation\KeysGrammar;
 
 final class RowSet
 {
-    private const int CHUNK = 1000;
-
     /** @var array<class-string<Resource>, KeyLookup> */
     private array $lookups = [];
 
@@ -54,62 +51,6 @@ final class RowSet
         return $this->named[$resource::class][$key] ?? null;
     }
 
-    /**
-     * @param  list<mixed>  $keys
-     * @return list<Model>
-     */
-    public function linked(Resource $resource, array $keys): array
-    {
-        $this->index();
-
-        $class = $resource::newModel()::class;
-        $rows = [];
-
-        foreach (array_chunk($keys, self::CHUNK) as $chunk) {
-            $loaded = $this->load($resource, array_values(array_filter($chunk, fn (mixed $key): bool => self::pick($this->rows, $class, $key) === null)));
-
-            foreach ($chunk as $key) {
-                $held = self::pick($this->rows, $class, $key);
-                $row = $held === null ? self::pick($loaded, $class, $key) : $this->hand($held);
-
-                if ($row !== null) {
-                    $rows[] = $row;
-                }
-            }
-        }
-
-        return $rows;
-    }
-
-    /**
-     * @param  list<mixed>  $keys
-     * @return array<string, Model>
-     */
-    private function load(Resource $resource, array $keys): array
-    {
-        $keys = array_values(array_filter($keys, fn (mixed $key): bool => is_int($key) || is_string($key)));
-
-        if ($keys === []) {
-            return [];
-        }
-
-        $model = $resource::newModel();
-        $loaded = [];
-        $rows = KeysGrammar::idOf($resource)
-            ->whereKeys($model->newQuery(), $keys)
-            ->get();
-
-        foreach ($rows as $row) {
-            $identity = self::identity($model::class, self::keyOf($row));
-
-            if ($identity !== null) {
-                $loaded[$identity] = $row;
-            }
-        }
-
-        return $loaded;
-    }
-
     private function index(): void
     {
         foreach ($this->lookups as $class => $lookup) {
@@ -144,14 +85,6 @@ final class RowSet
         return $row
             ->setRawAttributes($held->getRawOriginal(), true)
             ->setRawAttributes([...$held->getRawOriginal(), ...$dirty]);
-    }
-
-    /** @param array<string, Model> $rows */
-    private static function pick(array $rows, string $class, mixed $key): ?Model
-    {
-        $identity = self::identity($class, $key);
-
-        return $identity === null ? null : $rows[$identity] ?? null;
     }
 
     private static function keyOf(Model $row): mixed

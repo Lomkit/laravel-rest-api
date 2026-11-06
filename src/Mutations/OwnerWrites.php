@@ -19,7 +19,7 @@ final readonly class OwnerWrites extends RelationWrites
             $resource = $this->resource($node);
             $related = $mutator->one($resource, $node, $log);
             $owner = $this->owner($parent);
-            $this->authorize($resource, $parent, $related, $node->operation);
+            $mutator->checks->linkNow($this->relation, $node, $parent, $related, $node->operation === MutationOperation::Detach);
 
             if ($node->operation === MutationOperation::Detach) {
                 $owner->dissociate();
@@ -65,10 +65,38 @@ final readonly class OwnerWrites extends RelationWrites
         return [...$keys, $owner->getMorphType() => $parent->getAttribute($owner->getMorphType())];
     }
 
+    /** @return array<string, mixed> */
     #[\Override]
-    protected function checksLinksAsAttach(): bool
+    public function plannedKeys(Model $parent, WriteChecks $checks): array
     {
-        return $this->relation instanceof PolymorphicRelation;
+        $owner = $this->owner($parent);
+        $keys = [];
+
+        foreach ($this->nodes() as $node) {
+            $related = $node->operation === MutationOperation::Detach ? null : $checks->row($this->resource($node), $node->key);
+
+            if ($related === null && $node->operation !== MutationOperation::Detach) {
+                continue;
+            }
+
+            $keys[$owner->getForeignKeyName()] = $related?->getAttribute($owner->getOwnerKeyName());
+
+            if ($owner instanceof EloquentMorphTo) {
+                $keys[$owner->getMorphType()] = $related?->getMorphClass();
+            }
+        }
+
+        return $keys;
+    }
+
+    #[\Override]
+    public function check(Model $parent, WriteChecks $checks): void
+    {
+        foreach ($this->nodes() as $node) {
+            foreach ($checks->walk($this->resource($node), $node) as $related) {
+                $checks->link($this->relation, $node, $parent, $related, $node->operation === MutationOperation::Detach);
+            }
+        }
     }
 
     private function resource(MutationNode $node): Resource

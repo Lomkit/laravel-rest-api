@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
-use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Relation;
 
@@ -31,6 +30,21 @@ abstract readonly class RelationWrites
         };
     }
 
+    /** @return list<self> */
+    public static function ofNode(Resource $resource, Model $row, MutationNode $node): array
+    {
+        $entries = $node->relations ?? [];
+        $writes = [];
+
+        foreach ($resource->definition()->relations() as $relation) {
+            if (isset($entries[$relation->relation])) {
+                $writes[] = self::of($row, $relation, $entries[$relation->relation]);
+            }
+        }
+
+        return $writes;
+    }
+
     public function before(Model $parent, Mutator $mutator, OperationLog $log): void {}
 
     /** @return array<string, mixed> */
@@ -45,27 +59,13 @@ abstract readonly class RelationWrites
 
     public function rehearseAfter(LinkedRow $parent, LinkReplay $replay): void {}
 
-    protected function authorize(Resource $resource, Model $parent, Model $related, MutationOperation $operation): void
+    /** @return array<string, mixed> */
+    public function plannedKeys(Model $parent, WriteChecks $checks): array
     {
-        $ability = match ($operation) {
-            MutationOperation::Create, MutationOperation::Update, MutationOperation::Attach => 'attach',
-            MutationOperation::Detach => 'detach',
-            MutationOperation::Sync, MutationOperation::Toggle => $this->checksLinksAsAttach() ? 'attach' : null,
-        };
-
-        if ($ability === 'attach') {
-            $resource->authorizeToAttach($parent, $related);
-        }
-
-        if ($ability === 'detach') {
-            $resource->authorizeToDetach($parent, $related);
-        }
+        return [];
     }
 
-    protected function checksLinksAsAttach(): bool
-    {
-        return false;
-    }
+    public function check(Model $parent, WriteChecks $checks): void {}
 
     /** @return list<MutationNode> */
     protected function nodes(): array

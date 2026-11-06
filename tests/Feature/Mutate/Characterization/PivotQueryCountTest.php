@@ -21,6 +21,8 @@ class PivotQueryCountTest extends WriteTraceTestCase
 
     private const string TOGGLE = 'select tag_id from tag_ticket where tag_ticket.ticket_id = ?';
 
+    private const string ATTACHED = 'select tags.*, tag_ticket.ticket_id as pivot_ticket_id, tag_ticket.tag_id as pivot_tag_id, tag_ticket.position as pivot_position, tag_ticket.weight as pivot_weight, tag_ticket.added_by as pivot_added_by, tag_ticket.note as pivot_note, tag_ticket.created_at as pivot_created_at from tags inner join tag_ticket on tags.id = tag_ticket.tag_id where tag_ticket.ticket_id = ? and tags.deleted_at is null';
+
     #[\Override]
     protected function setUp(): void
     {
@@ -41,6 +43,7 @@ class PivotQueryCountTest extends WriteTraceTestCase
         ]), [
             self::TICKET,
             'select * from tags where tags.id in (101, 102, 103) and tags.deleted_at is null',
+            self::ATTACHED,
             self::RENAME,
             'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
             'insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?)',
@@ -66,6 +69,7 @@ class PivotQueryCountTest extends WriteTraceTestCase
         ]), [
             self::TICKET,
             'select * from tags where tags.id in (101, 102, 103) and tags.deleted_at is null',
+            self::ATTACHED,
             self::RENAME,
             self::DETACH,
             self::DETACH,
@@ -91,6 +95,7 @@ class PivotQueryCountTest extends WriteTraceTestCase
         ]), [
             self::TICKET,
             'select * from tags where tags.id in (101, 102) and tags.deleted_at is null',
+            self::ATTACHED,
             self::RENAME,
             'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?), (?, ?, ?)',
             self::DETACH,
@@ -112,10 +117,10 @@ class PivotQueryCountTest extends WriteTraceTestCase
         ]], [
             self::TICKET,
             'select * from tags where tags.id in (102) and tags.deleted_at is null',
+            self::ATTACHED,
             self::SYNC,
             'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?, ?)',
             self::ATTACH,
-            'select * from tags where tags.id in (101, 103, 104) and tags.deleted_at is null',
         ]);
         $this->assertSame(
             ['policy update Ticket(Printer jam)', 'policy view Tag(Network)', 'policy attachTag Ticket(Printer jam) Tag(Network)', 'policy detachTag Ticket(Printer jam) Tag(Hardware)', 'policy detachTag Ticket(Printer jam) Tag(Urgent)'],

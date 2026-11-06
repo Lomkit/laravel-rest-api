@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
 use Lomkit\Rest\Tests\Feature\MorphTargets\Stubs\TargetLabelPolicy;
+use Lomkit\Rest\Tests\Feature\MorphTargets\Stubs\TargetLabelResource;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\BookLabelController;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
 use Lomkit\Rest\Tests\Fixtures\Library\Label;
+use Lomkit\Rest\Tests\Fixtures\Library\LabelResource;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
 use Lomkit\Rest\Tests\Fixtures\Library\Shelf;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -34,6 +36,7 @@ class MorphToMutateTypesTest extends PackageTestCase
 
         Relation::morphMap(['book' => Book::class, 'shelf' => Shelf::class], false);
         Gate::policy(Label::class, TargetLabelPolicy::class);
+        $this->app?->bind(LabelResource::class, TargetLabelResource::class);
         TargetLabelPolicy::$calls = [];
         TargetLabelPolicy::$denied = [];
         Book::query()->create(['id' => 101, 'title' => 'Dune']);
@@ -51,7 +54,7 @@ class MorphToMutateTypesTest extends PackageTestCase
 
     #[Test]
     #[DataProvider('targetTypes')]
-    public function it_attaches_the_target_of_the_type_that_the_entry_names(string $type, string $ability): void
+    public function it_attaches_the_target_of_the_type_that_the_entry_names(string $type, string $call): void
     {
         $response = $this->postJson('/api/labels/mutate', ['mutate' => [[
             'operation' => 'create',
@@ -62,13 +65,13 @@ class MorphToMutateTypesTest extends PackageTestCase
         $label = Label::query()->sole();
         $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $label->id, 'relations' => ['labelable' => ['operation' => 'attach', 'type' => $type, 'key' => 101]]]]]);
         $this->assertSame([$type, 101], [$label->labelable_type, $label->labelable_id]);
-        $this->assertSame([$ability.' 101'], TargetLabelPolicy::$calls);
+        $this->assertSame([$call], TargetLabelPolicy::$calls);
     }
 
     /** @return array<string, array{string, string}> */
     public static function targetTypes(): array
     {
-        return ['a book' => ['book', 'attachBook'], 'a shelf' => ['shelf', 'attachShelf']];
+        return ['a book' => ['book', 'attachLabelable Book 101'], 'a shelf' => ['shelf', 'attachLabelable Shelf 101']];
     }
 
     #[Test]
@@ -93,13 +96,13 @@ class MorphToMutateTypesTest extends PackageTestCase
             fn (Label $label): array => [$label->fresh()?->labelable_type, $label->fresh()?->labelable_id],
             [$first, $second, $third],
         ));
-        $this->assertSame(['attachShelf 101', 'attachShelf '.$poetry->id, 'detachShelf 101'], TargetLabelPolicy::$calls);
+        $this->assertSame(['attachLabelable Shelf 101', 'detachLabelable Shelf 101', 'attachLabelable Shelf '.$poetry->id], TargetLabelPolicy::$calls);
     }
 
     /** @param array<string, mixed> $entry */
     #[Test]
     #[DataProvider('deniedEntries')]
-    public function it_asks_the_policy_of_the_parent_for_the_type_of_the_target(array $entry, string $denied): void
+    public function it_passes_the_target_of_its_type_to_the_ability_declared_on_the_relation(array $entry, string $denied): void
     {
         TargetLabelPolicy::$denied = [$denied];
         $label = Label::query()->create(['text' => 'Classic', 'labelable_type' => 'shelf', 'labelable_id' => 101]);
@@ -108,16 +111,16 @@ class MorphToMutateTypesTest extends PackageTestCase
 
         $response->assertForbidden()->assertJsonPath('message', 'This target is locked.');
         $this->assertSame(['shelf', 101, 'Classics'], [$label->fresh()?->labelable_type, $label->fresh()?->labelable_id, Shelf::query()->find(101)?->name]);
-        $this->assertSame([$denied.' 101'], TargetLabelPolicy::$calls);
+        $this->assertSame([$denied], TargetLabelPolicy::$calls);
     }
 
     /** @return array<string, array{array<string, mixed>, string}> */
     public static function deniedEntries(): array
     {
         return [
-            'an attach' => [['operation' => 'attach', 'type' => 'shelf', 'key' => 101], 'attachShelf'],
-            'an update' => [['operation' => 'update', 'type' => 'shelf', 'key' => 101, 'attributes' => ['name' => 'Rare']], 'attachShelf'],
-            'a detach' => [['operation' => 'detach', 'type' => 'shelf', 'key' => 101], 'detachShelf'],
+            'an attach' => [['operation' => 'attach', 'type' => 'shelf', 'key' => 101], 'attachLabelable Shelf 101'],
+            'an update' => [['operation' => 'update', 'type' => 'shelf', 'key' => 101, 'attributes' => ['name' => 'Rare']], 'attachLabelable Shelf 101'],
+            'a detach' => [['operation' => 'detach', 'type' => 'shelf', 'key' => 101], 'detachLabelable Shelf 101'],
         ];
     }
 

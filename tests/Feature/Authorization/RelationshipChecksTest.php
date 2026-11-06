@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Authorization;
 
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
-use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -84,32 +83,6 @@ class RelationshipChecksTest extends HelpdeskTestCase
 
         $this->assertSame([$this->tag('Network'), $this->tag('Monitor')], $this->attachedTags());
         $this->assertSame([...$this->calls('update', $this->jam), $this->link('attachTag', 'Monitor')], $this->tickets->calls);
-    }
-
-    #[Test]
-    public function it_checks_each_pair_of_rows_once(): void
-    {
-        $resource = $this->contextFor(null)->resource(TagResource::class);
-        $hardware = $this->labels['Hardware'];
-
-        $resource->authorizeToAttach($this->jam, $hardware);
-        $resource->authorizeToAttach(Ticket::query()->findOrFail($this->jam->id), Tag::query()->findOrFail($hardware->id));
-        $allowed = [$resource->authorizedToAttach($this->jam, $hardware), $resource->authorizedToAttach($this->jam, $this->labels['Urgent'])];
-
-        $this->assertSame([true, false], $allowed);
-        $this->assertSame([$this->link('attachTag', 'Hardware'), $this->link('attachTag', 'Urgent')], $this->tickets->calls);
-    }
-
-    #[Test]
-    public function it_skips_the_check_when_the_parent_policy_has_no_method_for_the_relation(): void
-    {
-        $resource = $this->contextFor(null)->resource(TagResource::class);
-        $team = $this->jam->team;
-
-        $allowed = [$resource->authorizedToAttach($team, $this->labels['Urgent']), $resource->authorizedToDetach($team, $this->labels['Urgent'])];
-
-        $this->assertSame([true, true], $allowed);
-        $this->assertSame([[], []], [$this->teams->calls, $this->tickets->calls]);
     }
 
     /** @param array<string, mixed> $entry */
