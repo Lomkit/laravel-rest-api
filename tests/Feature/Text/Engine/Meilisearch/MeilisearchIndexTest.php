@@ -67,6 +67,25 @@ class MeilisearchIndexTest extends MeilisearchTestCase
     }
 
     #[Test]
+    public function it_answers_false_to_the_write_gates_of_a_row_that_left_the_perimeter_until_the_index_syncs_it(): void
+    {
+        $this->actingAs(new GenericUser(['id' => 2, 'teams' => ['red']]));
+        Voucher::withoutSyncingToSearch(function (): void {
+            Voucher::query()
+                ->findOrFail(3)
+                ->update(['team' => 'blue']);
+        });
+
+        $response = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE, 'gates' => ['view', 'update', 'delete'], 'selects' => [['field' => 'id']]]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.*.id', [1, 3, 5])
+            ->assertJsonPath('data.*.gates.authorized_to_view.allowed', [true, true, true])
+            ->assertJsonPath('data.*.gates.authorized_to_update.allowed', [true, false, true])
+            ->assertJsonPath('data.*.gates.authorized_to_delete.allowed', [true, false, true]);
+    }
+
+    #[Test]
     public function it_runs_an_action_on_the_rows_the_engine_matches_and_indexes_its_changes(): void
     {
         $response = $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]]);
