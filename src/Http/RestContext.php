@@ -115,6 +115,6 @@ final class RestContext
             return new NullDecisionStore;
         }
 
-        return new CacheDecisionStore($this->container->make(Factory::class), UserIdentity::of($guard, $user));
+        return new CacheDecisionStore($this->container->make(Factory::class), UserIdentity::of($guard, $user), $this->config()->cacheStore);
     }
 }

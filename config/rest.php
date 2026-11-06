@@ -16,9 +16,11 @@ return [
     | tests, for example with REST_AUTHORIZATIONS_STRICT=true in
     | phpunit.xml.
     |
-    | The cache keeps the decisions between requests for "default"
-    | minutes. It is off by default. Turn it on with "enabled", for
-    | example with REST_AUTHORIZATIONS_CACHE_ENABLED=true.
+    | A resource lists in its authorizationCache() method the decisions
+    | to keep between requests, and for how long. They go to the cache
+    | "store", which must match one of your cache stores; null uses the
+    | default store. Set "enabled" to false to keep no decision between
+    | requests.
     |
     */
 
@@ -26,8 +28,8 @@ return [
         'strict' => env('REST_AUTHORIZATIONS_STRICT', false),
 
         'cache' => [
-            'enabled' => env('REST_AUTHORIZATIONS_CACHE_ENABLED', false),
-            'default' => 5,
+            'enabled' => env('REST_AUTHORIZATIONS_CACHE_ENABLED', true),
+            'store' => env('REST_AUTHORIZATIONS_CACHE_STORE'),
         ],
     ],
 

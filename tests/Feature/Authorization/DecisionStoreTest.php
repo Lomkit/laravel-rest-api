@@ -2,22 +2,23 @@
 
 namespace Lomkit\Rest\Tests\Feature\Authorization;
 
-use Illuminate\Cache\DatabaseStore;
 use Illuminate\Cache\Events\KeyWritten;
-use Illuminate\Cache\FileStore;
-use Illuminate\Cache\Repository;
+use Illuminate\Cache\Events\WritingManyKeys;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Event;
+use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\MirrorTicketController;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\CachedTicketResource;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
 #[WithConfig('cache.serializable_classes', false)]
-#[WithConfig('rest.authorizations.cache.enabled', true)]
 class DecisionStoreTest extends HelpdeskTestCase
 {
-    /** @var list<mixed> */
+    /** @var list<array{string|null, mixed, int|null}> */
     private array $written = [];
 
     #[\Override]
@@ -25,8 +26,9 @@ class DecisionStoreTest extends HelpdeskTestCase
     {
         parent::setUp();
 
+        Rest::resource('mirror-tickets', MirrorTicketController::class)->register();
         Event::listen(KeyWritten::class, function (KeyWritten $event): void {
-            $this->written[] = $event->value;
+            $this->written[] = [$event->storeName, $event->value, $event->seconds];
         });
     }
 
@@ -34,15 +36,15 @@ class DecisionStoreTest extends HelpdeskTestCase
     #[DefineEnvironment('useFileStore')]
     public function it_serves_a_second_request_from_the_file_store(): void
     {
-        $this->assertSecondRequestServedFromTheStore(FileStore::class);
+        $this->assertSecondRequestServedFromTheStore('file');
     }
 
     #[Test]
-    #[WithConfig('cache.default', 'database')]
+    #[WithConfig('rest.authorizations.cache.store', 'database')]
     #[WithConfig('cache.stores.database.connection', null)]
     public function it_serves_a_second_request_from_the_database_store(): void
     {
-        $this->assertSecondRequestServedFromTheStore(DatabaseStore::class);
+        $this->assertSecondRequestServedFromTheStore('database');
         $this->assertDatabaseCount('cache', 1);
     }
 
@@ -50,15 +52,15 @@ class DecisionStoreTest extends HelpdeskTestCase
     #[DefineEnvironment('useFileStore')]
     public function it_keeps_the_message_and_status_of_a_denial_in_the_file_store(): void
     {
-        $this->assertDenialServedFromTheStore(FileStore::class);
+        $this->assertDenialServedFromTheStore('file');
     }
 
     #[Test]
-    #[WithConfig('cache.default', 'database')]
+    #[WithConfig('rest.authorizations.cache.store', 'database')]
     #[WithConfig('cache.stores.database.connection', null)]
     public function it_keeps_the_message_and_status_of_a_denial_in_the_database_store(): void
     {
-        $this->assertDenialServedFromTheStore(DatabaseStore::class);
+        $this->assertDenialServedFromTheStore('database');
         $this->assertDatabaseCount('cache', 1);
     }
 
@@ -74,7 +76,7 @@ class DecisionStoreTest extends HelpdeskTestCase
             array_push($evaluations, ...$this->calls('view', $ticket), ...$this->calls('update', $ticket));
         }
 
-        foreach (['/api/tickets/search', '/api/archived-tickets/search', '/api/tickets/search', '/api/archived-tickets/search'] as $uri) {
+        foreach (['/api/cached-tickets/search', '/mirror-tickets/search', '/api/cached-tickets/search', '/mirror-tickets/search'] as $uri) {
             $this->assertSame($gates, $this->gatesOf($uri));
         }
 
@@ -83,17 +85,43 @@ class DecisionStoreTest extends HelpdeskTestCase
 
     #[Test]
     #[DefineEnvironment('useFileStore')]
-    public function it_keeps_a_decision_for_the_duration_its_resource_sets(): void
+    public function it_keeps_each_decision_for_the_seconds_of_its_ability(): void
     {
+        $this->seedTickets();
         $this->freezeSecond();
         $evaluations = [];
 
-        foreach ([0, 299, 1, 3300] as $seconds) {
+        foreach ([0, 59, 2, 240] as $seconds) {
             $this->travel($seconds)->seconds();
-            $evaluations[] = [$this->evaluationsOf('/api/tickets/search'), $this->evaluationsOf('/api/archived-tickets/search')];
+            $evaluations[] = $this->evaluationsOf('/api/cached-tickets/search', ['search' => ['gates' => ['view']]]);
         }
 
-        $this->assertSame([[1, 1], [0, 0], [1, 0], [1, 1]], $evaluations);
+        $this->assertSame([5, 0, 4, 5], $evaluations);
+        $this->assertSame([300 => 2, 60 => 12], array_count_values(array_column($this->written, 2)));
+    }
+
+    #[Test]
+    public function it_writes_the_decisions_of_one_batch_once_per_duration(): void
+    {
+        ['Printer jam' => $jam, 'Password reset' => $reset] = $this->seedTickets();
+        $resource = $this->contextFor(null)->resource(CachedTicketResource::class);
+        $writes = [];
+        Event::listen(WritingManyKeys::class, function (WritingManyKeys $event) use (&$writes): void {
+            $writes[] = [$event->seconds, count($event->keys)];
+        });
+
+        $resource
+            ->context()
+            ->authorizer()
+            ->inspectAll([
+                Check::onClass($resource, 'viewAny'),
+                new Check($resource, 'view', $jam),
+                new Check($resource, 'view', $reset),
+                new Check($resource, 'escalate', $jam),
+            ]);
+
+        $this->assertSame([[300, 1], [60, 2]], $writes);
+        $this->assertSame(['viewAny', 'view '.$jam->id, 'view '.$reset->id, 'escalate '.$jam->id], $this->tickets->calls);
     }
 
     protected function useFileStore(Application $app): void
@@ -101,35 +129,39 @@ class DecisionStoreTest extends HelpdeskTestCase
         $directory = sys_get_temp_dir().'/lomkit-rest-decisions';
         (new Filesystem)->deleteDirectory($directory);
 
-        $app['config']->set('cache.default', 'file');
+        $app['config']->set('rest.authorizations.cache.store', 'file');
         $app['config']->set('cache.stores.file.path', $directory);
     }
 
-    /** @param class-string $store */
     private function assertSecondRequestServedFromTheStore(string $store): void
     {
-        $this->assertInstanceOf($store, $this->app->make(Repository::class)->getStore());
         $this->seedTickets();
 
-        $this->postJson('/api/tickets/search')->assertOk()->assertJsonPath('total', 4);
-        $this->postJson('/api/tickets/search')->assertOk()->assertJsonPath('total', 4);
+        $this->postJson('/api/cached-tickets/search')
+            ->assertOk()
+            ->assertJsonPath('total', 4);
+        $this->postJson('/api/cached-tickets/search')
+            ->assertOk()
+            ->assertJsonPath('total', 4);
 
         $this->assertSame(['viewAny'], $this->tickets->calls);
-        $this->assertSame([['allowed' => true, 'message' => null, 'code' => null, 'status' => null]], $this->written);
+        $this->assertSame([[$store, ['allowed' => true, 'message' => null, 'code' => null, 'status' => null], 300]], $this->written);
     }
 
-    /** @param class-string $store */
     private function assertDenialServedFromTheStore(string $store): void
     {
-        $this->assertInstanceOf($store, $this->app->make(Repository::class)->getStore());
         $this->tickets->open = false;
-        $this->postJson('/api/tickets/search')->assertStatus(423)->assertJsonPath('message', 'The helpdesk is closed.');
+        $this->postJson('/api/cached-tickets/search')
+            ->assertStatus(423)
+            ->assertJsonPath('message', 'The helpdesk is closed.');
 
         $this->tickets->open = true;
-        $this->postJson('/api/tickets/search')->assertStatus(423)->assertJsonPath('message', 'The helpdesk is closed.');
+        $this->postJson('/api/cached-tickets/search')
+            ->assertStatus(423)
+            ->assertJsonPath('message', 'The helpdesk is closed.');
 
         $this->assertSame(['viewAny'], $this->tickets->calls);
-        $this->assertSame([['allowed' => false, 'message' => 'The helpdesk is closed.', 'code' => null, 'status' => 423]], $this->written);
+        $this->assertSame([[$store, ['allowed' => false, 'message' => 'The helpdesk is closed.', 'code' => null, 'status' => 423], 300]], $this->written);
     }
 
     /** @return array<string, list<bool>> */
@@ -142,11 +174,12 @@ class DecisionStoreTest extends HelpdeskTestCase
             ->all();
     }
 
-    private function evaluationsOf(string $uri): int
+    /** @param array<string, mixed> $payload */
+    private function evaluationsOf(string $uri, array $payload): int
     {
         $before = count($this->tickets->calls);
 
-        $this->postJson($uri)->assertOk();
+        $this->postJson($uri, $payload)->assertOk();
 
         return count($this->tickets->calls) - $before;
     }

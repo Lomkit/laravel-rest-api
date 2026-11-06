@@ -53,6 +53,15 @@ final readonly class ConfigValue
         throw InvalidConfigException::mustBe($this->key, 'a non-empty string');
     }
 
+    public function nullableString(): ?string
+    {
+        if ($this->value === null || (is_string($this->value) && $this->value !== '')) {
+            return $this->value;
+        }
+
+        throw InvalidConfigException::mustBe($this->key, 'null or a non-empty string');
+    }
+
     /**
      * @param  list<string>  $required
      * @return array<string, string>

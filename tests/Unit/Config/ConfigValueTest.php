@@ -58,7 +58,7 @@ class ConfigValueTest extends TestCase
     {
         $this->assertSame(
             [0, 5, 0, 15],
-            array_map(fn (int|string $value): int => ConfigValue::at('rest.authorizations.cache.default', $value)->integer(), [0, 5, '0', '15']),
+            array_map(fn (int|string $value): int => ConfigValue::at('rest.limits.depths.filters', $value)->integer(), [0, 5, '0', '15']),
         );
     }
 
@@ -66,9 +66,9 @@ class ConfigValueTest extends TestCase
     #[DataProvider('notIntegers')]
     public function it_names_the_key_of_a_value_that_is_not_an_integer_of_zero_or_more(mixed $value): void
     {
-        $this->expectExceptionObject(new InvalidConfigException('The [rest.authorizations.cache.default] option must be an integer of 0 or more.'));
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.limits.depths.filters] option must be an integer of 0 or more.'));
 
-        ConfigValue::at('rest.authorizations.cache.default', $value)->integer();
+        ConfigValue::at('rest.limits.depths.filters', $value)->integer();
     }
 
     #[Test]
@@ -84,6 +84,24 @@ class ConfigValueTest extends TestCase
         $this->expectExceptionObject(new InvalidConfigException('The [rest.gates.key] option must be a non-empty string.'));
 
         ConfigValue::at('rest.gates.key', $value)->string();
+    }
+
+    #[Test]
+    public function it_reads_null_or_a_non_empty_string(): void
+    {
+        $this->assertSame(
+            [null, 'redis'],
+            array_map(fn (?string $value): ?string => ConfigValue::at('rest.authorizations.cache.store', $value)->nullableString(), [null, 'redis']),
+        );
+    }
+
+    #[Test]
+    #[DataProvider('notNullableStrings')]
+    public function it_names_the_key_of_a_value_that_is_neither_null_nor_a_non_empty_string(mixed $value): void
+    {
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.authorizations.cache.store] option must be null or a non-empty string.'));
+
+        ConfigValue::at('rest.authorizations.cache.store', $value)->nullableString();
     }
 
     #[Test]
@@ -168,6 +186,17 @@ class ConfigValueTest extends TestCase
             'null' => [null],
             'an integer' => [5],
             'an array' => [['gates']],
+        ];
+    }
+
+    /** @return array<string, array{mixed}> */
+    public static function notNullableStrings(): array
+    {
+        return [
+            'an empty string' => [''],
+            'false' => [false],
+            'an integer' => [5],
+            'an array' => [['redis']],
         ];
     }
 

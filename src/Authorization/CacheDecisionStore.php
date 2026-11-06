@@ -2,11 +2,8 @@
 
 namespace Lomkit\Rest\Authorization;
 
-use DateInterval;
-use DateTimeInterface;
 use Illuminate\Contracts\Cache\Factory;
 use Illuminate\Contracts\Cache\Repository;
-use Illuminate\Support\Carbon;
 
 final readonly class CacheDecisionStore implements DecisionStore
 {
@@ -15,6 +12,7 @@ final readonly class CacheDecisionStore implements DecisionStore
     public function __construct(
         private Factory $cache,
         private UserIdentity $user,
+        private ?string $store = null,
     ) {}
 
     #[\Override]
@@ -22,8 +20,10 @@ final readonly class CacheDecisionStore implements DecisionStore
     {
         $keys = [];
 
-        foreach (array_filter($checks, self::isStorable(...)) as $key => $check) {
-            $keys[$this->storageKey($key)] = $key;
+        foreach ($checks as $key => $check) {
+            if (self::seconds($check) !== null) {
+                $keys[$this->storageKey($key)] = $key;
+            }
         }
 
         if ($keys === []) {
@@ -44,36 +44,36 @@ final readonly class CacheDecisionStore implements DecisionStore
     #[\Override]
     public function putMany(array $checks, array $decisions): void
     {
-        $resources = [];
         $values = [];
 
-        foreach (array_filter($checks, self::isStorable(...)) as $key => $check) {
-            $resources[$check->resource::class] = $check->resource;
-            $values[$check->resource::class][$this->storageKey($key)] = $decisions[$key]->toArray();
+        foreach ($checks as $key => $check) {
+            $seconds = self::seconds($check);
+
+            if ($seconds !== null) {
+                $values[$seconds][$this->storageKey($key)] = $decisions[$key]->toArray();
+            }
         }
 
-        foreach ($values as $class => $entries) {
-            $this->repository()->setMultiple($entries, self::ttl($resources[$class]->cacheAuthorizationFor()));
+        foreach ($values as $seconds => $entries) {
+            $this->repository()->setMultiple($entries, $seconds);
         }
     }
 
-    private static function isStorable(Check $check): bool
+    private static function seconds(Check $check): ?int
     {
-        return $check->resource->isAuthorizationCacheEnabled() && $check->ability !== 'create' && ! $check->isKeyedByInstance();
-    }
-
-    private static function ttl(DateTimeInterface|DateInterval $ttl): DateInterval|int
-    {
-        if ($ttl instanceof DateInterval) {
-            return $ttl;
+        if (! $check->resource->isAuthorizationCacheEnabled() || $check->isKeyedByInstance()) {
+            return null;
         }
 
-        return (int) ceil(Carbon::now()->diffInMilliseconds($ttl, false) / 1000);
+        return $check->resource
+            ->definition()
+            ->cachedAbilities()
+            ->seconds($check->ability);
     }
 
     private function repository(): Repository
     {
-        return $this->cache->store();
+        return $this->cache->store($this->store);
     }
 
     private function storageKey(string $key): string

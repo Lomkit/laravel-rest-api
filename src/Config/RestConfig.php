@@ -19,7 +19,7 @@ final readonly class RestConfig
     public function __construct(
         public bool $strict,
         public bool $cacheEnabled,
-        public int $cacheMinutes,
+        public ?string $cacheStore,
         public string $gatesKey,
         public array $gateNames,
         public string $morphTypeKey,
@@ -31,7 +31,7 @@ final readonly class RestConfig
         return new self(
             strict: ConfigValue::of($config, 'rest.authorizations.strict')->boolean(),
             cacheEnabled: ConfigValue::of($config, 'rest.authorizations.cache.enabled')->boolean(),
-            cacheMinutes: ConfigValue::of($config, 'rest.authorizations.cache.default')->integer(),
+            cacheStore: ConfigValue::of($config, 'rest.authorizations.cache.store')->nullableString(),
             gatesKey: ConfigValue::of($config, 'rest.gates.key')->string(),
             gateNames: ConfigValue::of($config, 'rest.gates.names')->strings(self::GATE_NAMES),
             morphTypeKey: ConfigValue::of($config, 'rest.morph.type_key')->string(),

@@ -181,11 +181,6 @@ parameters:
 			path: src/Http/Resource.php
 
 		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 1
-			path: src/Http/Resource.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Http\\ResourceRegistry\:\:get\(\) should return Lomkit\\Rest\\Http\\Resource but returns mixed\.$#'
 			identifier: return.type
 			count: 1

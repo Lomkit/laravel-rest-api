@@ -38,6 +38,16 @@ final class InvalidResourceException extends LogicException
         return new self("{$owner} declares the gate [{$gate}] at index {$index}. A declared gate is the camelCase name of a policy method, listed once, other than viewAny and the built-in gates view, create, update, delete, restore and forceDelete.");
     }
 
+    public static function invalidCachedAbility(string $resource, int|string $key): self
+    {
+        return new self("The resource [{$resource}] returns the key [{$key}] from authorizationCache(). Key each number of seconds by the name of an ability, for example ['viewAny' => 300].");
+    }
+
+    public static function invalidCacheDuration(string $resource, string $ability): self
+    {
+        return new self("The resource [{$resource}] caches the ability [{$ability}] in authorizationCache() without a valid duration. Give an integer number of seconds of 1 or more, for example ['{$ability}' => 300].");
+    }
+
     public static function notAMorphTo(string $resource, string $relation): self
     {
         return new self("The relation [{$relation}] of the resource [{$resource}] is declared with MorphTo, but its model method does not return a MorphTo relation.");

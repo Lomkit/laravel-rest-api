@@ -39,7 +39,9 @@ The keys that change:
 | `authorizations.enabled` | Removed. Use the `DisableAuthorizations` trait. |
 | `gates.enabled` | Removed. Use the `DisableGates` trait. |
 | `authorizations.strict` | Added. `false` by default, or the value of `REST_AUTHORIZATIONS_STRICT`. |
-| `authorizations.cache.enabled` | Its default goes from `true` to `false`, or the value of `REST_AUTHORIZATIONS_CACHE_ENABLED`. |
+| `authorizations.cache.enabled` | `true` by default, or the value of `REST_AUTHORIZATIONS_CACHE_ENABLED`. Only the decisions that a resource declares in `authorizationCache()` are kept, see "Cache" in [Authorization](#authorization). |
+| `authorizations.cache.default` | Removed. Each resource gives the seconds of each ability in `authorizationCache()`. |
+| `authorizations.cache.store` | Added. The cache store of the decisions, the default store when `null`, or the value of `REST_AUTHORIZATIONS_CACHE_STORE`. |
 | `limits` | Added, in three groups: `sizes`, `depths` and `totals`. |
 | `search.max_nesting_depth` | Moved to `limits.depths.filters`. |
 | `documentation` | Removed with the documentation generator. |
@@ -47,7 +49,7 @@ The keys that change:
 | `search.select_columns` | Added. `true` by default, see [Selects, sorts and aggregates](#selects-sorts-and-aggregates). |
 | `gates.message.enabled` | Removed. Each answer of `gates` holds `allowed` and `message`, see [Responses](#responses). |
 
-`authorizations.cache.default`, `gates.key`, `gates.names` and `precognition.enabled` keep their name and their default. `gates.names` also renames the gates that a resource declares, by their default name, such as `'authorized_to_download' => 'can_download'`, see [Responses](#responses). The blocks are now in this order: `authorizations`, `gates`, `morph`, `search`, `limits`, `precognition`.
+`gates.key`, `gates.names` and `precognition.enabled` keep their name and their default. `gates.names` also renames the gates that a resource declares, by their default name, such as `'authorized_to_download' => 'can_download'`, see [Responses](#responses). The blocks are now in this order: `authorizations`, `gates`, `morph`, `search`, `limits`, `precognition`.
 
 Before, in the file that 2.x published, without its comments and its `documentation` block:
 
@@ -87,8 +89,8 @@ After, in 3.0:
     'strict' => env('REST_AUTHORIZATIONS_STRICT', false),
 
     'cache' => [
-        'enabled' => env('REST_AUTHORIZATIONS_CACHE_ENABLED', false),
-        'default' => 5,
+        'enabled' => env('REST_AUTHORIZATIONS_CACHE_ENABLED', true),
+        'store' => env('REST_AUTHORIZATIONS_CACHE_STORE'),
     ],
 ],
 
@@ -149,7 +151,7 @@ After, in 3.0:
 Authorizations:
 
 - `authorizations.strict` turns strict mode on, see "Checks the request did not plan" in [Authorization](#authorization). Turn it on in your test suite, for example with `<env name="REST_AUTHORIZATIONS_STRICT" value="true"/>` in `phpunit.xml`.
-- The cache of decisions between requests is off by default. A published file keeps its own value, `true` in the 2.x file: write `env('REST_AUTHORIZATIONS_CACHE_ENABLED', false)` there unless you want the cache. `REST_AUTHORIZATIONS_CACHE_ENABLED=true` turns it on. See "Cache" in [Authorization](#authorization).
+- The cache of decisions between requests is on, and keeps only the decisions that a resource declares in `authorizationCache()`: an application that declares none keeps no decision between requests. `REST_AUTHORIZATIONS_CACHE_ENABLED=false` turns it off. `authorizations.cache.store` names the cache store, the default store when `null`; `REST_AUTHORIZATIONS_CACHE_STORE` sets it. See "Cache" in [Authorization](#authorization).
 
 Limits:
 
@@ -160,15 +162,16 @@ Limits:
 Published files:
 
 - The package defaults merge into your published `config/rest.php` at every level. A nested key that your file leaves out, such as `gates.names.authorized_to_restore` or `limits.sizes.filters`, gets its default value. Before, a top-level key such as `gates` replaced all the defaults under it.
-- Remove from your file the keys that 3.0 removed or moved: `authorizations.enabled`, `gates.enabled`, `gates.message`, `search.max_nesting_depth` and the `documentation` block, after moving the value of `search.max_nesting_depth` to `limits.depths.filters`.
+- Remove from your file the keys that 3.0 removed or moved: `authorizations.enabled`, `authorizations.cache.default`, `gates.enabled`, `gates.message`, `search.max_nesting_depth` and the `documentation` block, after moving the value of `search.max_nesting_depth` to `limits.depths.filters`.
 - A key under `limits` that the package does not know throws an exception that names it, so that a typo does not keep the default without notice: "The [rest.limits.sizes.filter] option does not exist." An unknown key elsewhere is ignored.
 
 Types:
 
 - Each request reads the values once, and checks their type. A value of the wrong type throws an exception that names the key. Before, the values were cast without a check: the string `"false"` turned strict mode, the cache and Precognition on.
   - `authorizations.strict`, `authorizations.cache.enabled`, `search.select_columns` and `precognition.enabled` take `true`, `false`, or the strings `"1"`, `"0"`, `"true"` and `"false"`. Anything else throws, `null` included: "The [rest.authorizations.strict] option must be a boolean."
-  - `authorizations.cache.default` and each value of `limits` take an integer of 0 or more, or a string of digits, as `env()` gives it: "The [rest.limits.sizes.filters] option must be an integer of 0 or more."
+  - Each value of `limits` takes an integer of 0 or more, or a string of digits, as `env()` gives it: "The [rest.limits.sizes.filters] option must be an integer of 0 or more."
   - `gates.key` and `morph.type_key` take a string that is not empty: "The [rest.gates.key] option must be a non-empty string."
+  - `authorizations.cache.store` takes `null` or a string that is not empty: "The [rest.authorizations.cache.store] option must be null or a non-empty string."
   - `gates.names` takes a map of strings that holds the six names above: "The [rest.gates.names] option must be a map of strings." for another value, and "The [rest.gates.names.authorized_to_view] option must be a string." for a missing name or one that is not a string.
 - `precognition.enabled` is read when the routes are registered, `limits` when a request first reads the limits, and the other values together, the first time a request needs one of them.
 - The exception is `Lomkit\Rest\Exceptions\InvalidConfigException`, which extends `InvalidArgumentException`.
@@ -968,13 +971,26 @@ Checks the request did not plan:
 
 Cache:
 
-- The cache is off by default, see [Configuration](#configuration).
-- When the cache is on, a decision is stored as an array of scalars (`allowed`, `message`, `code` and `status`), not as a `Response` object, so it reads back with any store, including the `file` and `database` stores with `cache.serializable_classes` set to `false`.
+- A resource lists in `authorizationCache()` the abilities whose decisions are kept between requests, with the number of seconds to keep each one:
+
+  ```php
+  public function authorizationCache(): array
+  {
+      return ['viewAny' => 300, 'view' => 60];
+  }
+  ```
+
+  The other abilities run the policy in each request. A resource that declares nothing keeps no decision. Before, when the cache was on, every ability but `create` of every resource was kept for `authorizations.cache.default` minutes.
+- `cacheAuthorizationFor()` and `authorizations.cache.default` are removed. Move the duration to `authorizationCache()`, per ability, in seconds. A seconds value that is not an integer of 1 or more throws `Lomkit\Rest\Exceptions\InvalidResourceException` when a check first reads the declaration: "The resource [App\Rest\Resources\PostResource] caches the ability [view] in authorizationCache() without a valid duration. Give an integer number of seconds of 1 or more, for example ['view' => 300]."
+- The resource of the check declares the ability: the resource of the endpoint or of the reached relation for `viewAny` and `create`, the resource of the row for its gates and its row checks, and the parent resource for the `attach` and `detach` abilities of a relation.
+- A declared ability is read from the cache wherever it is checked: the gates of a response, the checks made before validation, and the row checks of `mutate`, `destroy`, `restore` and `forceDestroy`. A cached `delete` on a row lets `destroy` delete that row without calling the policy until the entry expires.
+- `create` can be declared: the check on the model class is kept, including the `authorized_to_create` gate. The check on each record that `mutate` creates is not kept, nor are the `update` checks of `mutate`, which carry the changes of their entry.
+- Denials are kept like the other decisions, with their message and status.
+- The decisions go to the store that `authorizations.cache.store` names, or to the default store. A store that is not defined throws "Cache store [name] is not defined." on the first check of a declared ability. When no resource declares an ability, the package calls no cache store.
+- A decision is stored as an array of scalars (`allowed`, `message`, `code` and `status`), not as a `Response` object, so it reads back with any store, including the `file` and `database` stores with `cache.serializable_classes` set to `false`.
 - The cache key holds the guard, the user class and key, the resource class, the ability, and the class and key of each model. Entries written under the previous keys are not read anymore and expire on their own.
 - A model whose key is cast to an enum is keyed by the value of the enum. Checks on a model that is not saved yet, or whose key is not a string, an integer or an enum, are neither cached nor shared with another check of the request.
-- `create` checks are not cached: they run once per request, including the `authorized_to_create` gate.
-- The `update` checks of `mutate` carry the changes of their entry and are not cached.
-- A cached decision stays for `authorizations.cache.default` minutes, or the duration that `cacheAuthorizationFor()` returns: a change to a policy, to the user or to the model shows once the entry expires.
+- A kept decision stays for the seconds of its ability: a change to a policy, to the user or to the model shows once the entry expires.
 - `Resource::getAuthorizationCacheKey()` is removed: the package builds the key.
 - `isAuthorizationCacheEnabled()` and the `DisableAuthorizationsCache` trait turn the cache off for one resource. When `authorizations.cache.enabled` is `false`, no resource uses the cache.
 

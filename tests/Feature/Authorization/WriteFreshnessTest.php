@@ -2,9 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Authorization;
 
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\CachedTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
-use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
 class WriteFreshnessTest extends HelpdeskTestCase
@@ -23,12 +23,11 @@ class WriteFreshnessTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.authorizations.cache.enabled', true)]
-    public function it_checks_a_second_update_against_the_new_state_with_the_cache_on(): void
+    public function it_checks_a_second_update_against_the_new_state_when_its_resource_caches_updates(): void
     {
         $jam = $this->seedTickets()['Printer jam'];
 
-        $this->postJson('/api/tickets/mutate', $this->closeThenRename($jam))
+        $this->postJson('/api/cached-tickets/mutate', $this->closeThenRename($jam))
             ->assertStatus(423)
             ->assertJsonPath('message', 'Closed tickets are read-only.');
 
@@ -36,18 +35,17 @@ class WriteFreshnessTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.authorizations.cache.enabled', true)]
     public function it_checks_a_created_row_whatever_the_store_holds_for_its_key(): void
     {
         $last = $this->seedTickets()['Laptop setup'];
         $stale = (new Ticket)->forceFill(['id' => $last->id + 1, 'team_id' => $last->team_id, 'title' => 'Printer jam', 'status' => 'open']);
         $stale->exists = true;
         $this->contextFor(null)
-            ->resource(TicketResource::class)
+            ->resource(CachedTicketResource::class)
             ->authorizedTo('update', $stale);
         $this->tickets->calls = [];
 
-        $response = $this->postJson('/api/tickets/mutate', [
+        $response = $this->postJson('/api/cached-tickets/mutate', [
             'mutate' => [['operation' => 'create', 'attributes' => ['team_id' => $last->team_id, 'title' => 'Monitor flicker', 'status' => 'closed']]],
             'response' => ['selects' => [['field' => 'status']], 'gates' => ['update']],
         ]);

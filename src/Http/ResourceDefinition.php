@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Http;
 
 use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Authorization\CachedAbilities;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\InvalidScopeException;
@@ -38,6 +39,8 @@ final class ResourceDefinition
     private ?ResolvedText $text = null;
 
     private ?GateVocabulary $gates = null;
+
+    private ?CachedAbilities $cachedAbilities = null;
 
     /** @var WeakMap<Action|Instruction, FieldSet> */
     private WeakMap $inputs;
@@ -140,6 +143,11 @@ final class ResourceDefinition
     public function gates(): GateVocabulary
     {
         return $this->gates ??= GateVocabulary::of($this->resource->gates(), $this->resource::class.'::gates()');
+    }
+
+    public function cachedAbilities(): CachedAbilities
+    {
+        return $this->cachedAbilities ??= CachedAbilities::of($this->resource->authorizationCache(), $this->resource::class);
     }
 
     private function declaredFields(): FieldSet
