@@ -81,7 +81,7 @@ class MorphTo extends MorphRelation implements OwnerRelation, PolymorphicRelatio
 
     /** @param Builder<Model> $query */
     #[\Override]
-    public function applySearchQuery(Builder $query): void
+    public function applyPerimeter(Builder $query): void
     {
         $resource = $this->resourceFor($query->getModel()) ?? throw new LogicException($query->getModel()::class." is not a target of the MorphTo relation [{$this->relation}].");
 

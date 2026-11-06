@@ -10,7 +10,7 @@ trait HidesNamedRows
     abstract protected static function nameColumn(): string;
 
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->whereNotIn(static::nameColumn(), ['Hidden by search', 'Hidden by both']);
     }

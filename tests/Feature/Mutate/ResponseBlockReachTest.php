@@ -18,7 +18,7 @@ class ResponseBlockReachTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_returns_null_for_a_record_outside_the_search_query_of_its_resource(): void
+    public function it_returns_null_for_a_record_outside_the_perimeter_of_its_resource(): void
     {
         Rest::resource('perimeter-books', PerimeterBookController::class)->register();
         Book::query()->insert(['id' => 101, 'title' => 'Dune']);

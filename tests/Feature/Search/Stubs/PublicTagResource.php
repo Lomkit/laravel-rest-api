@@ -10,7 +10,7 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagResource;
 class PublicTagResource extends TagResource
 {
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->where('tags.name', '!=', 'Secret');
     }

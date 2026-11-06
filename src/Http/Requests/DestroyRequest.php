@@ -43,7 +43,7 @@ class DestroyRequest extends RestRequest
     {
         return $resource::newModel()
             ->newQuery()
-            ->where(fn (Builder $query): Builder => $resource->searchQuery($this, $query))
+            ->where(fn (Builder $query): Builder => $resource->perimeterQuery($this, $query))
             ->where(fn (Builder $query): Builder => $resource->destroyQuery($this, $query));
     }
 }

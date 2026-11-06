@@ -48,10 +48,8 @@ class Relation implements \JsonSerializable
         return $this->name ?? (new \ReflectionClass($this))->getShortName();
     }
 
-    /**
-     * Apply a search query to the relation's builder.
-     */
-    public function applySearchQuery(Builder $query)
+    /** @param Builder<Model> $query */
+    public function applyPerimeter(Builder $query): void
     {
         self::perimeter($this->resource(), $query);
     }
@@ -147,7 +145,7 @@ class Relation implements \JsonSerializable
     {
         $resource->context()->authorizer()->ensurePlanned(Check::onClass($resource, 'viewAny'));
 
-        $resource->searchQuery($resource->context()->request, $query);
+        $resource->perimeterQuery($resource->context()->request, $query);
     }
 
     protected function modelRelation(): mixed

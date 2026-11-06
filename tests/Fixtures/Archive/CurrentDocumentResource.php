@@ -20,7 +20,7 @@ class CurrentDocumentResource extends Resource
     }
 
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): EloquentBuilder
+    public function perimeterQuery(RestRequest $request, Builder $query): EloquentBuilder
     {
         return $query->where('archived', false);
     }

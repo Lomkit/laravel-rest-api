@@ -12,7 +12,7 @@ class ListedPostResource extends PostResource
     public static array $searched = [];
 
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
         self::$searched[] = $request->resource::class.' '.$request->endpoint()?->value;
 

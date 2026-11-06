@@ -296,20 +296,8 @@ parameters:
 			path: src/Relations/Relation.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:applySearchQuery\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: src/Relations/Relation.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Relations\\Relation\:\:applySearchQuery\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Relations/Relation.php
-
-		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 5
+			count: 4
 			path: src/Relations/Relation.php
 
 		-

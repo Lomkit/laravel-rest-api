@@ -17,7 +17,7 @@ class QueryHooksTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_searches_within_the_search_query_hook(): void
+    public function it_searches_within_the_perimeter(): void
     {
         $current = Document::factory()->create(['title' => 'Annual report']);
         Document::factory()->create(['title' => 'Old ledger', 'archived' => true]);

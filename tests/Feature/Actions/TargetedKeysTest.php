@@ -42,7 +42,7 @@ class TargetedKeysTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_refuses_a_key_outside_the_search_query(): void
+    public function it_refuses_a_key_outside_the_perimeter(): void
     {
         $response = $this->pin([1, 3]);
 

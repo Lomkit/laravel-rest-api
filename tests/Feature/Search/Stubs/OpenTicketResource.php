@@ -12,7 +12,7 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
 class OpenTicketResource extends TicketResource
 {
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->where('tickets.status', '!=', 'closed');
     }
