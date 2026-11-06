@@ -3,34 +3,34 @@
 namespace Lomkit\Rest\Authorization;
 
 use Illuminate\Contracts\Cache\Factory;
-use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Support\Facades\Date;
 
 final readonly class CacheDecisionStore implements DecisionStore
 {
+    private int $since;
+
     public function __construct(
         private Factory $cache,
         private UserIdentity $user,
         private ?string $store = null,
-    ) {}
+    ) {
+        $this->since = Date::now()->getTimestamp();
+    }
 
     #[\Override]
     public function many(array $checks): array
     {
-        $keys = [];
+        $entries = $this->entries($checks);
 
-        foreach ($checks as $key => $check) {
-            if (self::seconds($check) !== null) {
-                $keys[DecisionKey::of($check)->for($this->user)] = $key;
-            }
-        }
-
-        if ($keys === []) {
+        if ($entries === []) {
             return [];
         }
 
+        $cache = $this->cache->store($this->store);
+        $keys = array_flip($this->storageKeys($entries));
         $decisions = [];
 
-        foreach ($this->repository()->getMultiple(array_keys($keys)) as $storageKey => $value) {
+        foreach ($cache->getMultiple(array_keys($keys)) as $storageKey => $value) {
             if (isset($keys[$storageKey]) && is_array($value) && is_bool($value['allowed'] ?? null)) {
                 $decisions[$keys[$storageKey]] = Decision::fromArray($value);
             }
@@ -42,35 +42,60 @@ final readonly class CacheDecisionStore implements DecisionStore
     #[\Override]
     public function putMany(array $checks, array $decisions): void
     {
-        $values = [];
+        $entries = $this->entries($checks);
 
-        foreach ($checks as $key => $check) {
-            $seconds = self::seconds($check);
-
-            if ($seconds !== null) {
-                $values[$seconds][DecisionKey::of($check)->for($this->user)] = $decisions[$key]->toArray();
-            }
+        if ($entries === []) {
+            return;
         }
 
-        foreach ($values as $seconds => $entries) {
-            $this->repository()->setMultiple($entries, $seconds);
+        $cache = $this->cache->store($this->store);
+        $values = [];
+
+        foreach ($this->storageKeys($entries) as $key => $storageKey) {
+            $values[$entries[$key][1]][$storageKey] = $decisions[$key]->toArray();
+        }
+
+        foreach ($values as $seconds => $stored) {
+            $cache->setMultiple($stored, $seconds);
         }
     }
 
-    private static function seconds(Check $check): ?int
+    /**
+     * @param  array<string, Check>  $checks
+     * @return array<string, array{DecisionKey, int}>
+     */
+    private function entries(array $checks): array
+    {
+        return array_filter(array_map($this->entry(...), $checks));
+    }
+
+    /** @return array{DecisionKey, int}|null */
+    private function entry(Check $check): ?array
     {
         if (! $check->resource->isAuthorizationCacheEnabled() || $check->isKeyedByInstance()) {
             return null;
         }
 
-        return $check->resource
+        $abilities = $check->resource
             ->definition()
-            ->cachedAbilities()
-            ->seconds($check->ability);
+            ->cachedAbilities();
+        $seconds = $abilities->seconds($check->ability);
+
+        if ($seconds === null) {
+            return null;
+        }
+
+        $key = DecisionKey::of($check, $abilities->context, $this->since);
+
+        return $key === null ? null : [$key, $seconds];
     }
 
-    private function repository(): Repository
+    /**
+     * @param  array<string, array{DecisionKey, int}>  $entries
+     * @return array<string, string>
+     */
+    private function storageKeys(array $entries): array
     {
-        return $this->cache->store($this->store);
+        return array_map(fn (array $entry): string => $entry[0]->for($this->user), $entries);
     }
 }

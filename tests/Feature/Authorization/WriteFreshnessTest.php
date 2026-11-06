@@ -38,7 +38,7 @@ class WriteFreshnessTest extends HelpdeskTestCase
     public function it_checks_a_created_row_whatever_the_store_holds_for_its_key(): void
     {
         $last = $this->seedTickets()['Laptop setup'];
-        $stale = (new Ticket)->forceFill(['id' => $last->id + 1, 'team_id' => $last->team_id, 'title' => 'Printer jam', 'status' => 'open']);
+        $stale = (new Ticket)->forceFill(['id' => $last->id + 1, 'team_id' => $last->team_id, 'title' => 'Printer jam', 'status' => 'open', 'updated_at' => '2026-01-01 00:00:00']);
         $stale->exists = true;
         $this->contextFor(null)
             ->resource(CachedTicketResource::class)

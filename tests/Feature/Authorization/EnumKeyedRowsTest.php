@@ -30,7 +30,7 @@ class EnumKeyedRowsTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_serves_the_decisions_on_enum_keyed_rows_from_the_cache(): void
+    public function it_serves_only_the_class_level_decisions_of_rows_without_timestamps(): void
     {
         Rest::resource('cached-channels', CachedChannelController::class)->register();
         $this->seedChannels();
@@ -40,7 +40,7 @@ class EnumKeyedRowsTest extends HelpdeskTestCase
             ->assertOk()
             ->assertJsonPath('data.1.gates.authorized_to_update.allowed', true);
 
-        $this->assertSame(['viewAny', 'view email', 'update email', 'view phone', 'update phone'], $this->channels->calls);
+        $this->assertSame(['viewAny', 'view email', 'update email', 'view phone', 'update phone', 'view email', 'update email', 'view phone', 'update phone'], $this->channels->calls);
     }
 
     private function seedChannels(): void

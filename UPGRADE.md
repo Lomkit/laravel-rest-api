@@ -887,7 +887,7 @@ Each request now has one authorizer, which the resources of the request share: `
 Within a request:
 
 - Each distinct check runs once. A check is an ability on a resource for a model, or for a model class, plus the related model of an attach or detach check. The policy runs on the first check, and the later checks of the request reuse its decision.
-- `GateEvaluated` listeners and `Gate::after()` callbacks see one evaluation per distinct check per request, not one per call.
+- `GateEvaluated` listeners and `Gate::after()` callbacks see one evaluation per distinct check per request, not one per call. A decision read from the cache between requests dispatches no `GateEvaluated` event either.
 - After each write the package performs (mutate creates and updates, relation writes, destroy, restore and force destroy), the decisions on the written model are dropped, so a later check in the same request sees the new state. A row that a mutation names without writing it, such as the target of an `attach` or a `detach`, or an `update` that changes nothing, keeps its decisions; a row whose entry sends `relations` drops them once its relations are written. Before, every row that a mutation named dropped its decisions, and its policies ran again. If a hook of yours writes a model and a later check in the request depends on it, call `$request->context()->authorizer()->forget($model)` after the write.
 - Policies run with `Gate::forUser($request->user())`, or with the authenticated user when the request has none. `Gate::before()` and `Gate::after()` callbacks receive that user.
 - The authorizer belongs to one user. When the user or the default guard changes, for example in a test or a long-running process that reuses a resource, the next check starts a new authorizer for the current user, and the decisions of the previous user are not reused.
@@ -984,14 +984,28 @@ Cache:
   The other abilities run the policy in each request. A resource that declares nothing keeps no decision. Before, when the cache was on, every ability but `create` of every resource was kept for `authorizations.cache.default` minutes.
 - `cacheAuthorizationFor()` and `authorizations.cache.default` are removed. Move the duration to `authorizationCache()`, per ability, in seconds. A seconds value that is not an integer of 1 or more throws `Lomkit\Rest\Exceptions\InvalidResourceException` when a check first reads the declaration: "The resource [App\Rest\Resources\PostResource] caches the ability [view] in authorizationCache() without a valid duration. Give an integer number of seconds of 1 or more, for example ['view' => 300]."
 - The resource of the check declares the ability: the resource of the endpoint or of the reached relation for `viewAny` and `create`, the resource of the row for its gates and its row checks, and the parent resource for the `attach` and `detach` abilities of a relation.
-- A declared ability is read from the cache wherever it is checked: the gates of a response, the checks made before validation, and the row checks of `mutate`, `destroy`, `restore` and `forceDestroy`. A cached `delete` on a row lets `destroy` delete that row without calling the policy until the entry expires.
+- A declared ability is read from the cache wherever it is checked: the gates of a response, the checks made before validation, and the row checks of `mutate`, `destroy`, `restore` and `forceDestroy`. A cached `delete` on a row lets `destroy` delete that row without calling the policy while the row keeps its `updated_at`.
 - `create` can be declared: the check on the model class is kept, including the `authorized_to_create` gate. The check on each record that `mutate` creates is not kept, nor are the `update` checks of `mutate`, which carry the changes of their entry.
 - Denials are kept like the other decisions, with their message and status.
 - The decisions go to the store that `authorizations.cache.store` names, or to the default store. A store that is not defined throws "Cache store [name] is not defined." on the first check of a declared ability. When no resource declares an ability, the package calls no cache store.
 - A decision is stored as an array of scalars (`allowed`, `message`, `code` and `status`), not as a `Response` object, so it reads back with any store, including the `file` and `database` stores with `cache.serializable_classes` set to `false`.
-- The cache key holds the guard, the user class and key, the resource class, the ability, and the class and key of each model. Entries written under the previous keys are not read anymore and expire on their own.
+- The cache key holds the guard, the user class and key, the resource class, the ability, the class, key and `updated_at` of each model, and the values of `authorizationCacheContext()`. Entries written under the previous keys are not read anymore and expire on their own.
+- A decision on a row is kept under the row's `updated_at`, so a change made through Eloquent is checked again in the next request. It is not kept when the model has no `updated_at` (`$timestamps = false`, a `null` value): the decisions on the model class, such as `viewAny` and `create`, are still kept. Add timestamps to a model to keep the decisions on its rows.
+- It is not kept either when the row's `updated_at` is not before the second in which the request started: `timestamps()` keeps whole seconds, so two writes in one second leave the same `updated_at`. Such a row is checked again in the next request. The servers that run your application and Eloquent must share the clock. A change made without Eloquent that leaves `updated_at` alone (`DB::table()->update()`, a trigger, a raw query) shows once the entry expires.
+- A search selects the `updated_at` column of a level when the level asks a row gate that its resource keeps, so that the decision can be kept. The column is not rendered.
+- A check on a row that the request wrote is neither read from nor written to the cache, so a write that rolls back leaves no decision behind.
+- `authorizationCacheContext()` adds values of your own to the key of every decision that the resource keeps, for example the team of the user:
+
+  ```php
+  public function authorizationCacheContext(): array
+  {
+      return ['team' => $this->request()->user()?->current_team_id];
+  }
+  ```
+
+  A value must be an integer, a string, a boolean or `null`. Another value throws `Lomkit\Rest\Exceptions\InvalidResourceException`: "The resource [App\Rest\Resources\PostResource] returns a value for the key [team] from authorizationCacheContext() that is not an integer, a string, a boolean or null. Give a scalar value, for example ['team' => 1]." A value that the context leaves out, such as a header, is not part of the key.
 - A model whose key is cast to an enum is keyed by the value of the enum. Checks on a model that is not saved yet, or whose key is not a string, an integer or an enum, are neither cached nor shared with another check of the request.
-- A kept decision stays for the seconds of its ability: a change to a policy, to the user or to the model shows once the entry expires.
+- A kept decision stays for the seconds of its ability: a change to a policy or to the user shows once the entry expires.
 - `Resource::getAuthorizationCacheKey()` is removed: the package builds the key.
 - `isAuthorizationCacheEnabled()` and the `DisableAuthorizationsCache` trait turn the cache off for one resource. When `authorizations.cache.enabled` is `false`, no resource uses the cache.
 

@@ -17,6 +17,7 @@ class DeclaredAbilitiesTest extends HelpdeskTestCase
     public function it_evaluates_an_ability_that_the_resource_does_not_declare_in_every_request(): void
     {
         ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
+        $this->travel(1)->seconds();
         $payload = ['search' => ['gates' => ['view', 'escalate']]];
 
         $this->postJson('/api/cached-tickets/search', $payload)->assertOk();
@@ -46,6 +47,7 @@ class DeclaredAbilitiesTest extends HelpdeskTestCase
     public function it_serves_a_declared_ability_to_the_endpoint_that_enforces_it(): void
     {
         ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
+        $this->travel(1)->seconds();
         $this->actingAs(new GenericUser(['id' => 1]));
 
         $this->postJson('/api/cached-tickets/search', ['search' => ['gates' => ['delete']]])
@@ -62,6 +64,7 @@ class DeclaredAbilitiesTest extends HelpdeskTestCase
     {
         $jam = $this->seedTickets()['Printer jam'];
         $hardware = Tag::create(['id' => 1, 'name' => 'Hardware']);
+        $this->travel(1)->seconds();
 
         foreach (['attach', 'detach', 'attach'] as $operation) {
             $this->postJson('/api/cached-tickets/mutate', ['mutate' => [

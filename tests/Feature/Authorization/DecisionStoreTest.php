@@ -69,6 +69,7 @@ class DecisionStoreTest extends HelpdeskTestCase
     public function it_stores_each_ability_row_and_resource_of_a_user_apart(): void
     {
         ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
+        $this->travel(1)->seconds();
         $gates = ['Laptop setup' => [true, false], 'Printer toner' => [true, true], 'Password reset' => [true, false], 'Printer jam' => [true, true]];
         $evaluations = ['viewAny'];
 
@@ -91,7 +92,7 @@ class DecisionStoreTest extends HelpdeskTestCase
         $this->freezeSecond();
         $evaluations = [];
 
-        foreach ([0, 59, 2, 240] as $seconds) {
+        foreach ([1, 59, 2, 240] as $seconds) {
             $this->travel($seconds)->seconds();
             $evaluations[] = $this->evaluationsOf('/api/cached-tickets/search', ['search' => ['gates' => ['view']]]);
         }
@@ -104,6 +105,7 @@ class DecisionStoreTest extends HelpdeskTestCase
     public function it_writes_the_decisions_of_one_batch_once_per_duration(): void
     {
         ['Printer jam' => $jam, 'Password reset' => $reset] = $this->seedTickets();
+        $this->travel(1)->seconds();
         $resource = $this->contextFor(null)->resource(CachedTicketResource::class);
         $writes = [];
         Event::listen(WritingManyKeys::class, function (WritingManyKeys $event) use (&$writes): void {

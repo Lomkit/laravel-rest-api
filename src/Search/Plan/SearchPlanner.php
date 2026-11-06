@@ -64,7 +64,7 @@ final readonly class SearchPlanner
             $limit,
             $search->selects,
             $search->gates,
-            $this->columns->level($resource, $search->selects, self::names($includes), [...$keys, ...$this->rows->columns()]),
+            $this->columns->level($resource, $search->selects, self::names($includes), [...$keys, ...$this->rows->columns()], $search->gates ?? []),
         );
     }
 
