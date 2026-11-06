@@ -110,7 +110,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $this->assertEquals(1, $victim->fresh()->number);
     }
 
-    #[DataProvider('writableRelationProvider')]
+    #[DataProvider('manyToManyRelationProvider')]
     public function test_update_is_the_control_and_is_equally_refused(string $relation, string $relatedModel): void
     {
         Gate::policy($relatedModel, ViewPolicy::class);
@@ -186,7 +186,7 @@ class MutateNestedRelationAuthorizationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    #[DataProvider('writableRelationProvider')]
+    #[DataProvider('manyToManyRelationProvider')]
     public function test_detach_only_requires_the_view_ability(string $relation, string $relatedModel): void
     {
         Gate::policy($relatedModel, ViewPolicy::class);
