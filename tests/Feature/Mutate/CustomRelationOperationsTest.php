@@ -73,7 +73,6 @@ class CustomRelationOperationsTest extends WriteTraceTestCase
             'sql select * from shelves where shelves.id in (101)',
             'policy update Label(loose)',
             'policy view Shelf(Classics)',
-            'saved Shelf(Classics)',
             'sql update labels set labelable_type = ?, labelable_id = ?, updated_at = ? where id = ?',
             'saved Label(loose)',
         ]);

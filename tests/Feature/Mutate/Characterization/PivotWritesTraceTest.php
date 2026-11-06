@@ -54,12 +54,10 @@ class PivotWritesTraceTest extends WriteTraceTestCase
             'saved Shelf(Sci-fi)',
             'sql select * from book_shelf where book_shelf.book_id = ?',
             'sql insert into book_shelf (book_id, shelf_id) values (?, ?)',
-            'saved Shelf(Classics)',
             'sql insert into book_shelf (book_id, shelf_id) values (?, ?)',
             'sql update shelves set name = ?, updated_at = ? where id = ?',
             'saved Shelf(Old classics)',
             'sql select * from book_shelf where book_shelf.book_id = ?',
-            'saved Shelf(Old classics)',
             'sql delete from book_shelf where book_shelf.book_id = ? and book_shelf.shelf_id in (?)',
         ]);
         $this->assertSame(['Book(Dune) [Shelf(Old classics)]', 'Book(Emma) [Shelf(Sci-fi)]'], self::rows('books'));
@@ -111,13 +109,10 @@ class PivotWritesTraceTest extends WriteTraceTestCase
             'policy attachTag Ticket(Printer jam) Tag(Hardware)',
             'policy detachTag Ticket(Printer jam) Tag(Network)',
             'saved Ticket(Printer jam)',
-            'saved Tag(Network)',
             'sql select * from tag_ticket where tag_ticket.ticket_id = ?',
             'sql insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?)',
-            'saved Tag(Hardware)',
             'sql select tag_id from tag_ticket where tag_ticket.ticket_id = ?',
             'sql delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
-            'saved Tag(Hardware)',
             'sql delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             'sql select * from tag_ticket where tag_ticket.ticket_id = ?',
             'sql insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?)',
@@ -159,10 +154,7 @@ class PivotWritesTraceTest extends WriteTraceTestCase
             'policy view Ticket(Printer jam)',
             'policy view Ticket(Password reset)',
             'saved Tag(Network)',
-            'saved Ticket(Printer jam)',
-            'saved Ticket(Password reset)',
             'sql insert into labelables (created_at, labelable_id, labelable_type, position, tag_id) values (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)',
-            'saved Ticket(Password reset)',
             'sql delete from labelables where labelables.tag_id = ? and labelable_type = ? and labelables.labelable_id in (?)',
         ]);
         $this->assertSame(['Ticket(Password reset) open [] []', 'Ticket(Printer jam) open [Tag(Hardware) 1] [Tag(Network) 4]'], self::rows('tickets'));
@@ -208,12 +200,8 @@ class PivotWritesTraceTest extends WriteTraceTestCase
             'policy detachTag Ticket(Printer jam) Tag(Hardware)',
             'policy detachTag Ticket(Printer jam) Tag(Network)',
             'saved Ticket(Printer jam)',
-            'saved Tag(Hardware)',
-            'saved Tag(Network)',
             'sql insert into labelables (created_at, labelable_id, labelable_type, tag_id) values (?, ?, ?, ?), (?, ?, ?, ?)',
-            'saved Tag(Hardware)',
             'sql delete from labelables where labelables.labelable_id = ? and labelable_type = ? and labelables.tag_id in (?)',
-            'saved Tag(Network)',
             'sql delete from labelables where labelables.labelable_id = ? and labelable_type = ? and labelables.tag_id in (?)',
         ]);
         $this->assertSame(['Ticket(Password reset) open [] []', 'Ticket(Printer jam) open [Tag(Hardware) 1] []'], self::rows('tickets'));

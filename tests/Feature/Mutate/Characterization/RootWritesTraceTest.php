@@ -75,7 +75,6 @@ class RootWritesTraceTest extends WriteTraceTestCase
             'saved Book(Ubik)',
             'sql insert into labels (text, labelable_id, labelable_type, updated_at, created_at) values (?, ?, ?, ?, ?)',
             'saved Label(new)',
-            'saved Shelf(Poetry)',
             'sql insert into book_shelf (book_id, shelf_id) values (?, ?)',
             'sql insert into loans (book_id, borrower, updated_at, created_at) values (?, ?, ?, ?)',
             'saved Loan(Margaret)',

@@ -83,6 +83,7 @@ final readonly class Mutator
     {
         $entry = $node->toArray();
         $writes = RelationWrites::ofNode($resource, $model, $node);
+        $hooked = self::writesAttributes($node);
         $relationKeys = [];
 
         $log->rewind();
@@ -92,7 +93,9 @@ final readonly class Mutator
             $write->before($model, $this, $log);
         }
 
-        $resource->mutating($this->request, $entry, $model);
+        if ($hooked) {
+            $resource->mutating($this->request, $entry, $model);
+        }
 
         foreach ($writes as $write) {
             $relationKeys = [...$relationKeys, ...$write->owned($model)];
@@ -106,7 +109,9 @@ final readonly class Mutator
 
         $this->checks->settle($resource, $model);
 
-        $model->save();
+        if ($hooked || $model->isDirty()) {
+            $model->save();
+        }
 
         if ($model->wasRecentlyCreated || $model->wasChanged()) {
             $resource
@@ -127,8 +132,17 @@ final readonly class Mutator
                 ->forget($model);
         }
 
-        $resource->mutated($this->request, $entry, $model);
+        if ($hooked) {
+            $resource->mutated($this->request, $entry, $model);
+        }
 
         return $model;
+    }
+
+    private static function writesAttributes(MutationNode $node): bool
+    {
+        return $node->operation === MutationOperation::Create
+            || $node->operation === MutationOperation::Update
+            || ($node->attributes ?? []) !== [];
     }
 }
