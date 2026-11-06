@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Authorization\Decision;
+use Lomkit\Rest\Exceptions\AuthorizationDenied;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\CountedTicket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\PublicTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
@@ -37,8 +38,12 @@ class AuthorizerTest extends HelpdeskTestCase
         try {
             $this->authorizer()->authorizeEach(new TicketResource, 'update', collect($tickets), 'resources');
             $this->fail('The batch was authorized.');
-        } catch (AuthorizationException $exception) {
+        } catch (AuthorizationDenied $exception) {
             $this->assertSame(['Closed tickets are read-only.', 423], [$exception->getMessage(), $exception->status()]);
+            $this->assertSame([
+                ['path' => 'resources.Password reset', 'ability' => 'update', 'key' => $tickets['Password reset']->id, 'message' => 'Closed tickets are read-only.'],
+                ['path' => 'resources.Laptop setup', 'ability' => 'update', 'key' => $tickets['Laptop setup']->id, 'message' => 'Closed tickets are read-only.'],
+            ], $exception->toArray());
         }
 
         $this->assertSame($this->calls('update', ...array_values($tickets)), $this->tickets->calls);
@@ -58,6 +63,24 @@ class AuthorizerTest extends HelpdeskTestCase
                 $this->denialOf([Check::onClass($resource, 'viewAny'), new Check($resource, 'update', $closed)]),
             ],
         );
+    }
+
+    #[Test]
+    public function it_throws_every_denial_of_a_list_of_checks(): void
+    {
+        $closed = $this->seedTickets()['Password reset'];
+        $this->tickets->open = false;
+        $resource = new TicketResource;
+
+        try {
+            $this->authorizer()->authorizeAll([new Check($resource, 'update', $closed, 'mutate.0'), Check::onClass($resource, 'viewAny', 'search')]);
+            $this->fail('The checks were authorized.');
+        } catch (AuthorizationDenied $exception) {
+            $this->assertSame([
+                ['path' => 'mutate.0', 'ability' => 'update', 'key' => $closed->id, 'message' => 'Closed tickets are read-only.'],
+                ['path' => 'search', 'ability' => 'viewAny', 'message' => 'The helpdesk is closed.'],
+            ], $exception->toArray());
+        }
     }
 
     #[Test]

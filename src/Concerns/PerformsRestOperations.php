@@ -16,6 +16,7 @@ use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Response;
+use Lomkit\Rest\Http\RowBatch;
 use Lomkit\Rest\Query\EngineSearch;
 use Lomkit\Rest\Query\QueryBuilderFactory;
 use Lomkit\Rest\Search\Plan\QueryPlan;
@@ -105,13 +106,7 @@ trait PerformsRestOperations
 
         $this->beforeDestroy($request);
 
-        $models = $request->payload()->rows();
-
-        foreach ($models as $model) {
-            $resource->authorizeTo('delete', $model);
-        }
-
-        foreach ($models as $model) {
+        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'delete')->write(function (Model $model) use ($request, $resource): void {
             $resource->destroying($request, $model);
 
             $resource->performDelete($request, $model);
@@ -119,7 +114,7 @@ trait PerformsRestOperations
             $request->context()->authorizer()->forget($model);
 
             $resource->destroyed($request, $model);
-        }
+        });
 
         $this->afterDestroy($request);
 
@@ -132,13 +127,7 @@ trait PerformsRestOperations
 
         $this->beforeRestore($request);
 
-        $models = $request->payload()->rows();
-
-        foreach ($models as $model) {
-            $resource->authorizeTo('restore', $model);
-        }
-
-        foreach ($models as $model) {
+        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'restore')->write(function (Model $model) use ($request, $resource): void {
             $resource->restoring($request, $model);
 
             $resource->performRestore($request, $model);
@@ -146,7 +135,7 @@ trait PerformsRestOperations
             $request->context()->authorizer()->forget($model);
 
             $resource->restored($request, $model);
-        }
+        });
 
         $this->afterRestore($request);
 
@@ -159,13 +148,7 @@ trait PerformsRestOperations
 
         $this->beforeForceDestroy($request);
 
-        $models = $request->payload()->rows();
-
-        foreach ($models as $model) {
-            $resource->authorizeTo('forceDelete', $model);
-        }
-
-        foreach ($models as $model) {
+        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'forceDelete')->write(function (Model $model) use ($request, $resource): void {
             $resource->forceDestroying($request, $model);
 
             $resource->performForceDelete($request, $model);
@@ -173,7 +156,7 @@ trait PerformsRestOperations
             $request->context()->authorizer()->forget($model);
 
             $resource->forceDestroyed($request, $model);
-        }
+        });
 
         $this->afterForceDestroy($request);
 
