@@ -84,6 +84,6 @@ final readonly class ExposedModel
 
         $blueprint = PolicyBlueprint::for($this->policy, $this->source->class, $user);
 
-        return PlannedFile::draft(new ClassDraft($this->policy, Stub::Policy, $app->root, $blueprint->replacements()), $app, '(read-only)');
+        return PlannedFile::draft(new ClassDraft($this->policy, $blueprint->stub(), $app->root, $blueprint->replacements()), $app, $blueprint->detail());
     }
 }

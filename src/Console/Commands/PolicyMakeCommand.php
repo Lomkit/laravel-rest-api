@@ -30,7 +30,7 @@ class PolicyMakeCommand extends RestGeneratorCommand
     #[\Override]
     protected function stub(): Stub
     {
-        return Stub::Policy;
+        return $this->blueprint->stub();
     }
 
     #[\Override]

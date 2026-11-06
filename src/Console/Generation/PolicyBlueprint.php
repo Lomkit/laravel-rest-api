@@ -20,6 +20,16 @@ final readonly class PolicyBlueprint
         return new self($imports, $model, $user);
     }
 
+    public function stub(): Stub
+    {
+        return Stub::Policy;
+    }
+
+    public function detail(): string
+    {
+        return '(read-only)';
+    }
+
     /** @return array<string, string|null> */
     public function replacements(): array
     {

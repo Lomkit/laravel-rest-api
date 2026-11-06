@@ -72,17 +72,22 @@ final readonly class Outro
     /** @return list<string> */
     private function policyReminder(): array
     {
-        $policies = array_values(array_map(
-            fn (PlannedFile $policy): string => class_basename($policy->class),
+        $created = array_values(array_map(
+            fn (PlannedFile $policy): string => $policy->class,
             array_filter($this->plan->policies, fn (PlannedFile $policy): bool => in_array($policy, $this->created, true)),
         ));
+        $sentence = $this->sentence($created, 'lets signed-in users read and refuses every write', 'let signed-in users read and refuse every write');
 
+        return $sentence === null ? [] : ["{$sentence} Edit {$this->app->policies()} before production."];
+    }
+
+    /** @param  array<int, string>  $policies */
+    private function sentence(array $policies, string $one, string $several): ?string
+    {
         if ($policies === []) {
-            return [];
+            return null;
         }
 
-        $verbs = count($policies) === 1 ? 'lets signed-in users read and refuses' : 'let signed-in users read and refuse';
-
-        return [Arr::join($policies, ', ', ' and ')." {$verbs} every write. Edit {$this->app->policies()} before production."];
+        return Arr::join(array_map(class_basename(...), $policies), ', ', ' and ').' '.(count($policies) === 1 ? $one : $several).'.';
     }
 }
