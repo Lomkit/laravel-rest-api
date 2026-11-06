@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Http;
 
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Mutations\Mutator;
 use Lomkit\Rest\Mutations\OperationEntry;
@@ -23,7 +22,9 @@ final readonly class MutateResponse implements Responsable
 
     public static function of(MutateRequest $request, Resource $resource): self
     {
-        $operations = DB::transaction(fn (): array => self::write($request, $resource));
+        $operations = $resource::newModel()
+            ->getConnection()
+            ->transaction(fn (): array => self::write($request, $resource));
         $block = $request->responseBlock();
 
         return new self($operations, $block === null ? null : WrittenRecords::read($resource, $block, $operations)->rows());
