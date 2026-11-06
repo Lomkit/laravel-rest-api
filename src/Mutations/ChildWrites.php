@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Mutations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 use LogicException;
@@ -72,7 +71,7 @@ final readonly class ChildWrites extends RelationWrites
             return $keys;
         }
 
-        return [...$keys, $children->getMorphType() => $detach && ! $children instanceof MorphMany ? null : $parent->getMorphClass()];
+        return [...$keys, $children->getMorphType() => $detach ? null : $parent->getMorphClass()];
     }
 
     /** @return HasOneOrMany<Model, Model, mixed> */

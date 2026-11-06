@@ -53,11 +53,11 @@ class ToManyChildWritesTraceTest extends WriteTraceTestCase
             'policy attachLabel Book(Emma) Label(classic)',
             'policy attachLabel Book(Emma) Label(loose)',
             'policy view Label(classic)',
-            'sql update labels set labelable_id = ?, updated_at = ? where id = ?',
+            'sql update labels set labelable_type = ?, labelable_id = ?, updated_at = ? where id = ?',
             'saved Label(classic)',
             'policy detachLabel Book(Emma) Label(classic)',
         ]);
-        $this->assertSame(['Label(classic) Book -', 'Label(first) Book Book(Emma)', 'Label(loose) Book Book(Emma)'], self::rows('labels'));
+        $this->assertSame(['Label(classic) - -', 'Label(first) Book Book(Emma)', 'Label(loose) Book Book(Emma)'], self::rows('labels'));
     }
 
     #[Test]

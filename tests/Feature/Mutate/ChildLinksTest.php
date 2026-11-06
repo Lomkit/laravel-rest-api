@@ -115,6 +115,17 @@ class ChildLinksTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_clears_the_type_of_a_detached_morph_many_row(): void
+    {
+        $response = $this->postJson('/api/books/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => 101, 'relations' => ['labels' => [['operation' => 'detach', 'key' => [101]]]]],
+        ]]);
+
+        $response->assertOk();
+        $this->assertSame(['classic > - -', 'loose > - -', 'modern > Book Emma', 'shelved > Shelf Classics'], self::library()['labels']);
+    }
+
+    #[Test]
     public function it_moves_a_row_of_another_parent_with_attach(): void
     {
         $response = $this->postJson('/api/authors/mutate', ['mutate' => [
