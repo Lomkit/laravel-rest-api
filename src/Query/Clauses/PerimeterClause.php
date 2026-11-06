@@ -13,7 +13,7 @@ final readonly class PerimeterClause implements Clause
     public function apply(Builder $query): void
     {
         $query->where(function (Builder $query): void {
-            $this->resource->searchQuery($this->resource->context()->request, $query);
+            $this->resource->perimeterQuery($this->resource->context()->request, $query);
         });
     }
 }

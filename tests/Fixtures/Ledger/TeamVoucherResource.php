@@ -21,7 +21,7 @@ class TeamVoucherResource extends VoucherResource
     }
 
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->whereIn('team', self::teams($request));
     }

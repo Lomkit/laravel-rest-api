@@ -66,7 +66,7 @@ final readonly class RelationConditionClause implements Clause
     private function perimeter(EloquentBuilder $query, Relation $relation): void
     {
         $query->where(function (EloquentBuilder $query) use ($relation): void {
-            $relation->applySearchQuery($query);
+            $relation->applyPerimeter($query);
         });
     }
 }

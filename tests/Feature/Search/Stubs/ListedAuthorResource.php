@@ -9,7 +9,7 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
 class ListedAuthorResource extends AuthorResource
 {
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->where('last_name', '!=', 'Hidden')->orWhere('first_name', 'Grace');
     }

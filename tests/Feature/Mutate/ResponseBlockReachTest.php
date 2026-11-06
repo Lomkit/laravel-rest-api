@@ -18,14 +18,14 @@ class ResponseBlockReachTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_returns_null_for_a_record_outside_the_search_query_of_its_resource(): void
+    public function it_returns_null_for_a_record_outside_the_perimeter_of_its_resource(): void
     {
         Rest::resource('perimeter-books', PerimeterBookController::class)->register();
         Book::query()->insert(['id' => 101, 'title' => 'Dune']);
 
         $this->postJson('/perimeter-books/mutate', [
             'mutate' => [
-                ['operation' => 'update', 'key' => 101, 'attributes' => ['title' => 'Hidden by search']],
+                ['operation' => 'update', 'key' => 101, 'attributes' => ['title' => 'Hidden']],
                 ['operation' => 'create', 'attributes' => ['title' => 'Emma']],
             ],
             'response' => ['selects' => [['field' => 'title']]],
@@ -36,6 +36,6 @@ class ResponseBlockReachTest extends PackageTestCase
         $title = Book::query()
             ->findOrFail(101)
             ->getAttribute('title');
-        $this->assertSame('Hidden by search', $title);
+        $this->assertSame('Hidden', $title);
     }
 }

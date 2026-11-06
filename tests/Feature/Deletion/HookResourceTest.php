@@ -27,19 +27,19 @@ class HookResourceTest extends PackageTestCase
         RecordingDocumentResource::$hooked = [];
     }
 
-    /** @return array<string, array{string, string, ?string}> */
+    /** @return array<string, array{string, string, ?string, string}> */
     public static function endpoints(): array
     {
         return [
-            'destroy' => ['DELETE', '/recording-documents', null],
-            'restore' => ['POST', '/recording-documents/restore', '2026-01-01 00:00:00'],
-            'force destroy' => ['DELETE', '/recording-documents/force', '2026-01-01 00:00:00'],
+            'destroy' => ['DELETE', '/recording-documents', null, 'destroy'],
+            'restore' => ['POST', '/recording-documents/restore', '2026-01-01 00:00:00', 'restore'],
+            'force destroy' => ['DELETE', '/recording-documents/force', '2026-01-01 00:00:00', 'forceDestroy'],
         ];
     }
 
     #[Test]
     #[DataProvider('endpoints')]
-    public function it_gives_the_query_hook_the_resource_while_checking_the_keys(string $method, string $uri, ?string $deletedAt): void
+    public function it_gives_the_perimeter_the_resource_and_the_endpoint_once_while_checking_the_keys(string $method, string $uri, ?string $deletedAt, string $endpoint): void
     {
         Rest::resource('recording-documents', RecordingDocumentController::class)
             ->withSoftDeletes()
@@ -48,6 +48,6 @@ class HookResourceTest extends PackageTestCase
 
         $this->json($method, $uri, ['resources' => [1]])->assertOk();
 
-        $this->assertSame([RecordingDocumentResource::class], RecordingDocumentResource::$hooked);
+        $this->assertSame([RecordingDocumentResource::class.' '.$endpoint], RecordingDocumentResource::$hooked);
     }
 }

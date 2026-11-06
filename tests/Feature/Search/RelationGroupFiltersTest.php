@@ -95,7 +95,7 @@ class RelationGroupFiltersTest extends PackageTestCase
      */
     #[Test]
     #[DataProvider('visiblePostFilters')]
-    public function it_applies_the_search_query_of_the_related_resource(array $filters, array $names): void
+    public function it_applies_the_perimeter_of_the_related_resource(array $filters, array $names): void
     {
         Rest::resource('visible-post-authors', VisiblePostAuthorController::class)->register();
 

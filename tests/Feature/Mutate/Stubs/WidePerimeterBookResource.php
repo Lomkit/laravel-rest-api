@@ -9,12 +9,12 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 class WidePerimeterBookResource extends PerimeterBookResource
 {
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
         if ($request->endpoint() === Endpoint::Mutate) {
             return $query;
         }
 
-        return $query->whereNotIn('books.title', ['Hidden by search', 'Hidden by both']);
+        return $query->where('books.title', '<>', 'Hidden');
     }
 }

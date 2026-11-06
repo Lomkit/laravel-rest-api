@@ -81,7 +81,7 @@ class DottedIncludeLevelsTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_keeps_the_search_query_of_an_include_listed_before_a_dotted_include(): void
+    public function it_keeps_the_perimeter_of_an_include_listed_before_a_dotted_include(): void
     {
         Rest::resource('visible-post-authors', VisiblePostAuthorController::class)->register();
 

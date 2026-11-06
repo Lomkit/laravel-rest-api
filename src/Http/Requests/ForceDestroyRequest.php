@@ -2,13 +2,13 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Lomkit\Rest\Http\Requests\Traits\ParsesResourceKeys;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Validation\KeyList;
 
 class ForceDestroyRequest extends RestRequest
@@ -42,10 +42,12 @@ class ForceDestroyRequest extends RestRequest
     #[\Override]
     public function keysQuery(Resource $resource): EloquentBuilder
     {
-        return $resource::newModel()
+        $query = $resource::newModel()
             ->newQuery()
-            ->withoutGlobalScope(SoftDeletingScope::class)
-            ->where(fn (Builder $query): Builder => $resource->searchQuery($this, $query))
-            ->where(fn (Builder $query): Builder => $resource->forceDestroyQuery($this, $query));
+            ->withoutGlobalScope(SoftDeletingScope::class);
+
+        (new PerimeterClause($resource))->apply($query);
+
+        return $query;
     }
 }

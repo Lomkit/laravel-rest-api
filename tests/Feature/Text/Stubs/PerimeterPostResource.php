@@ -20,7 +20,7 @@ class PerimeterPostResource extends SearchablePostResource
     }
 
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->where('featured', true)->orWhere('views', '>=', 100);
     }

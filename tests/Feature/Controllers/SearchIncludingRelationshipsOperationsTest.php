@@ -397,7 +397,7 @@ class SearchIncludingRelationshipsOperationsTest extends TestCase
         $response->assertExactJsonStructure(['message', 'errors' => ['search.includes.0.includes.0.relation']]);
     }
 
-    public function test_getting_a_list_of_resources_including_distant_relation_with_intermediary_search_query_condition(): void
+    public function test_getting_a_list_of_resources_including_distant_relation_with_intermediary_perimeter_condition(): void
     {
         $matchingModel = ModelFactory::new()->create(
             ['number' => 1]

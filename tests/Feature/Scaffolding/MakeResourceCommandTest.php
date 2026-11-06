@@ -34,7 +34,7 @@ class MakeResourceCommandTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    public function it_writes_a_base_resource_that_leaves_every_query_hook_to_the_package(): void
+    public function it_writes_a_base_resource_that_leaves_the_perimeter_to_the_package(): void
     {
         $this->artisan('rest:base-resource', ['name' => 'ScaffoldedHooklessBaseResource'])->assertSuccessful();
 
@@ -42,9 +42,7 @@ class MakeResourceCommandTest extends ScaffoldingTestCase
 
         $this->assertTrue((new ReflectionClass(ScaffoldedHooklessBaseResource::class))->isAbstract());
         $this->assertSame(Resource::class, get_parent_class(ScaffoldedHooklessBaseResource::class));
-        foreach (['searchQuery', 'mutateQuery', 'destroyQuery', 'restoreQuery', 'forceDestroyQuery'] as $hook) {
-            $this->assertSame(Resource::class, (new ReflectionMethod(ScaffoldedHooklessBaseResource::class, $hook))->class);
-        }
+        $this->assertSame(Resource::class, (new ReflectionMethod(ScaffoldedHooklessBaseResource::class, 'perimeterQuery'))->class);
     }
 
     #[Test]

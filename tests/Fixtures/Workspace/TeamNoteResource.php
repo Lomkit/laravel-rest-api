@@ -26,7 +26,7 @@ class TeamNoteResource extends Resource
     }
 
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->where('team', 'red');
     }

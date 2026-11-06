@@ -57,7 +57,7 @@ class OneChildTest extends PackageTestCase
             'has one create' => [[['operation' => 'update', 'key' => 102, 'relations' => ['loan' => ['operation' => 'create', 'attributes' => ['borrower' => 'Linus']]]]], 'mutate.0.relations.loan'],
             'morph one attach' => [[['operation' => 'update', 'key' => 102, 'relations' => ['label' => ['operation' => 'attach', 'key' => 103]]]], 'mutate.0.relations.label'],
             'morph one create' => [[['operation' => 'update', 'key' => 102, 'relations' => ['label' => ['operation' => 'create', 'attributes' => ['text' => 'recent']]]]], 'mutate.0.relations.label'],
-            'a current record that the search query hides' => [[['operation' => 'update', 'key' => 106, 'relations' => ['loan' => ['operation' => 'attach', 'key' => 103]]]], 'mutate.0.relations.loan'],
+            'a current record outside the perimeter' => [[['operation' => 'update', 'key' => 106, 'relations' => ['loan' => ['operation' => 'attach', 'key' => 103]]]], 'mutate.0.relations.loan'],
             'a record that an entry before attached' => [[
                 ['operation' => 'update', 'key' => 107, 'relations' => ['loan' => ['operation' => 'attach', 'key' => 103]]],
                 ['operation' => 'update', 'key' => 107, 'relations' => ['loan' => ['operation' => 'create', 'attributes' => ['borrower' => 'Linus']]]],
@@ -95,7 +95,7 @@ class OneChildTest extends PackageTestCase
             ['select loans.id, loans.book_id from loans where loans.book_id in (?, ?)', [107, 101]],
             ['select labels.id, labels.labelable_id from labels where labels.labelable_id in (?) and labels.labelable_type = ?', [107, Book::class]],
         ], array_values(array_filter($this->statements, fn (array $statement): bool => str_contains($statement[0], '_id in (?'))));
-        $this->assertSame(['Ada > Dune', 'Alan > Walden', 'Grace > Emma', 'Hidden by search > Ulysses', 'Linus > Persuasion'], self::library()['loans']);
+        $this->assertSame(['Ada > Dune', 'Alan > Walden', 'Grace > Emma', 'Hidden > Ulysses', 'Linus > Persuasion'], self::library()['loans']);
     }
 
     /**
@@ -119,7 +119,7 @@ class OneChildTest extends PackageTestCase
             'has one' => [[
                 ['operation' => 'update', 'key' => 102, 'relations' => ['loan' => ['operation' => 'detach', 'key' => 102]]],
                 ['operation' => 'update', 'key' => 102, 'relations' => ['loan' => ['operation' => 'attach', 'key' => 103]]],
-            ], 'loans', ['Ada > Dune', 'Alan > Emma', 'Grace > -', 'Hidden by search > Ulysses']],
+            ], 'loans', ['Ada > Dune', 'Alan > Emma', 'Grace > -', 'Hidden > Ulysses']],
             'morph one' => [[
                 ['operation' => 'update', 'key' => 102, 'relations' => ['label' => ['operation' => 'detach', 'key' => 102]]],
                 ['operation' => 'update', 'key' => 102, 'relations' => ['label' => ['operation' => 'create', 'attributes' => ['text' => 'recent']]]],
@@ -145,9 +145,9 @@ class OneChildTest extends PackageTestCase
     public static function otherRecords(): array
     {
         return [
-            'has one of many attach' => [['latestLoan' => ['operation' => 'attach', 'key' => 103]], 'loans', ['Ada > Dune', 'Alan > Emma', 'Grace > Emma', 'Hidden by search > Ulysses']],
+            'has one of many attach' => [['latestLoan' => ['operation' => 'attach', 'key' => 103]], 'loans', ['Ada > Dune', 'Alan > Emma', 'Grace > Emma', 'Hidden > Ulysses']],
             'morph one of many create' => [['latestLabel' => ['operation' => 'create', 'attributes' => ['text' => 'recent']]], 'labels', ['classic > Book Dune', 'loose > - -', 'modern > Book Emma', 'recent > Book Emma', 'shelved > Shelf Classics']],
-            'has one attach of the current record' => [['loan' => ['operation' => 'attach', 'key' => 102]], 'loans', ['Ada > Dune', 'Alan > -', 'Grace > Emma', 'Hidden by search > Ulysses']],
+            'has one attach of the current record' => [['loan' => ['operation' => 'attach', 'key' => 102]], 'loans', ['Ada > Dune', 'Alan > -', 'Grace > Emma', 'Hidden > Ulysses']],
         ];
     }
 }

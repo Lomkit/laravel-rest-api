@@ -96,7 +96,7 @@ class MorphToRelationGroupsTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_applies_the_search_query_of_the_target(): void
+    public function it_applies_the_perimeter_of_the_target(): void
     {
         Rest::resource('listed-labels', ListedLabelController::class)->register();
 

@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
@@ -11,6 +10,7 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Mutations\LinkReplay;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Mutations\RowSet;
+use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\Mutate\MutationParser;
@@ -82,9 +82,10 @@ class MutateRequest extends RestRequest
     /** @return EloquentBuilder<Model> */
     public function keysQuery(Resource $resource): EloquentBuilder
     {
-        return $resource::newModel()
-            ->newQuery()
-            ->where(fn (Builder $query): Builder => $resource->searchQuery($this, $query))
-            ->where(fn (Builder $query): Builder => $resource->mutateQuery($this, $query));
+        $query = $resource::newModel()->newQuery();
+
+        (new PerimeterClause($resource))->apply($query);
+
+        return $query;
     }
 }

@@ -9,7 +9,7 @@ use Lomkit\Rest\Tests\Fixtures\Library\BookResource;
 class ListedBookResource extends BookResource
 {
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->where('title', '!=', 'Dune');
     }

@@ -9,12 +9,12 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 class ListedPostResource extends PostResource
 {
     /** @var list<string> */
-    public static array $searched = [];
+    public static array $hooked = [];
 
     #[\Override]
-    public function searchQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
-        self::$searched[] = $request->resource::class.' '.$request->endpoint()?->value;
+        self::$hooked[] = $request->resource::class.' '.$request->endpoint()?->value;
 
         return $query->where('posts.title', '<>', 'Annual report');
     }

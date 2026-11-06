@@ -16,9 +16,7 @@ trait SeedsLibraryRows
         Book::query()->insert([
             ['id' => 101, 'title' => 'Dune'],
             ['id' => 102, 'title' => 'Emma'],
-            ['id' => 103, 'title' => 'Hidden by search'],
-            ['id' => 104, 'title' => 'Hidden by write'],
-            ['id' => 105, 'title' => 'Hidden by both'],
+            ['id' => 103, 'title' => 'Hidden'],
             ['id' => 106, 'title' => 'Ulysses'],
             ['id' => 107, 'title' => 'Walden'],
         ]);
@@ -26,7 +24,7 @@ trait SeedsLibraryRows
             ['id' => 101, 'book_id' => 101, 'borrower' => 'Ada'],
             ['id' => 102, 'book_id' => 102, 'borrower' => 'Grace'],
             ['id' => 103, 'book_id' => null, 'borrower' => 'Alan'],
-            ['id' => 104, 'book_id' => 106, 'borrower' => 'Hidden by search'],
+            ['id' => 104, 'book_id' => 106, 'borrower' => 'Hidden'],
         ]);
         Label::query()->insert([
             ['id' => 101, 'labelable_type' => Book::class, 'labelable_id' => 101, 'text' => 'classic'],
@@ -34,7 +32,7 @@ trait SeedsLibraryRows
             ['id' => 103, 'labelable_type' => null, 'labelable_id' => null, 'text' => 'loose'],
             ['id' => 104, 'labelable_type' => Shelf::class, 'labelable_id' => 101, 'text' => 'shelved'],
         ]);
-        Shelf::query()->insert([['id' => 101, 'name' => 'Classics'], ['id' => 102, 'name' => 'Poetry'], ['id' => 103, 'name' => 'Hidden by search']]);
+        Shelf::query()->insert([['id' => 101, 'name' => 'Classics'], ['id' => 102, 'name' => 'Poetry'], ['id' => 103, 'name' => 'Hidden']]);
         DB::table('book_shelf')->insert([['book_id' => 101, 'shelf_id' => 101], ['book_id' => 101, 'shelf_id' => 103]]);
     }
 
