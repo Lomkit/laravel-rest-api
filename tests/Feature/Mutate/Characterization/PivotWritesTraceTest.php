@@ -118,8 +118,8 @@ class PivotWritesTraceTest extends WriteTraceTestCase
             'sql select tag_id from tag_ticket where tag_ticket.ticket_id = ?',
             'sql delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             'saved Tag(Hardware)',
-            'sql select * from tag_ticket where tag_ticket.ticket_id = ?',
             'sql delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
+            'sql select * from tag_ticket where tag_ticket.ticket_id = ?',
             'sql insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?)',
         ]);
         $this->assertSame(['Ticket(Password reset) open [] []', 'Ticket(Printer jam) open [Tag(Hardware) 3] []'], self::rows('tickets'));

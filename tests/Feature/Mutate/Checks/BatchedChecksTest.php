@@ -68,7 +68,7 @@ class BatchedChecksTest extends WriteChecksTestCase
             'sql select * from shelves where (shelves.name != ?) and shelves.id in (101, 102, 103)',
             'sql select * from books where books.id in (102)',
             'begin',
-            'sql select shelves.*, book_shelf.book_id as pivot_book_id, book_shelf.shelf_id as pivot_shelf_id from shelves inner join book_shelf on shelves.id = book_shelf.shelf_id where book_shelf.book_id = ?',
+            'sql select shelves.*, book_shelf.book_id as pivot_book_id, book_shelf.shelf_id as pivot_shelf_id from shelves inner join book_shelf on shelves.id = book_shelf.shelf_id where book_shelf.book_id = ? and (shelves.name != ?)',
             'policy create Book* {"title":"Walden"}',
             'policy create Loan* {"borrower":"Linus"}',
             'policy view Shelf(Classics)',
@@ -76,7 +76,6 @@ class BatchedChecksTest extends WriteChecksTestCase
             'policy view Shelf(Poetry)',
             'policy view Shelf(Drama)',
             'policy attachShelf Book(Emma) Shelf(Classics)',
-            'policy detachShelf Book(Emma) Shelf(Hidden)',
             'hook mutating Book* []',
             'sql insert into books (title, updated_at, created_at) values (?, ?, ?)',
             'saved Book(Walden)',
@@ -104,14 +103,13 @@ class BatchedChecksTest extends WriteChecksTestCase
             'saved Shelf(Drama)',
             'hook mutated Shelf(Drama)',
             'sql select * from book_shelf where book_shelf.book_id = ?',
-            'sql delete from book_shelf where book_shelf.book_id = ? and book_shelf.shelf_id in (?)',
             'sql insert into book_shelf (book_id, shelf_id) values (?, ?)',
             'hook mutated Book(Emma II)',
             'commit',
         ], $trace);
         $this->assertSame([
             'Book(Dune) [Shelf(Classics)]',
-            'Book(Emma II) [Shelf(Classics), Shelf(Drama), Shelf(Poetry)]',
+            'Book(Emma II) [Shelf(Classics), Shelf(Drama), Shelf(Hidden), Shelf(Poetry)]',
             'Book(Walden) [Shelf(Classics)]',
         ], self::rows('books'));
         $this->assertSame(['Loan(Ada) Book(Dune)', 'Loan(Grace) -', 'Loan(Linus) Book(Walden)'], self::rows('loans'));

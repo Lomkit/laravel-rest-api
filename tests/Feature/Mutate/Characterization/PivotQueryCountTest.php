@@ -118,8 +118,8 @@ class PivotQueryCountTest extends WriteTraceTestCase
             self::TICKET,
             'select * from tags where tags.id in (102) and tags.deleted_at is null',
             self::ATTACHED,
+            'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
             self::SYNC,
-            'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?, ?)',
             self::ATTACH,
         ]);
         $this->assertSame(

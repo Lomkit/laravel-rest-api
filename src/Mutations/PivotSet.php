@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use LogicException;
 use Lomkit\Rest\Fields\MutationOperation;
+use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Relations\Relation;
 
 final class PivotSet
@@ -118,6 +119,8 @@ final class PivotSet
         if (! $pivots instanceof BelongsToMany) {
             throw new LogicException("The relation [{$relation->relation}] is not a BelongsToMany, MorphToMany or MorphedByMany relation.");
         }
+
+        (new PerimeterClause($relation->resource()))->apply($pivots);
 
         $rows = [];
 

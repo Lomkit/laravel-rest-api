@@ -52,12 +52,15 @@ final readonly class PivotWrites extends RelationWrites
 
         $pivots = $this->pivots($parent);
 
+        if ($node->operation === MutationOperation::Sync && $detached !== []) {
+            $pivots->detach($detached);
+        }
+
         match ($node->operation) {
-            MutationOperation::Create, MutationOperation::Update => $pivots->syncWithoutDetaching($ids),
+            MutationOperation::Create, MutationOperation::Update, MutationOperation::Sync => $pivots->syncWithoutDetaching($ids),
             MutationOperation::Attach => $pivots->attach($ids),
             MutationOperation::Detach => $pivots->detach($related),
             MutationOperation::Toggle => $pivots->toggle($ids),
-            MutationOperation::Sync => $pivots->sync($ids, ! ($node->withoutDetaching ?? false)),
         };
 
         $resource

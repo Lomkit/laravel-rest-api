@@ -74,14 +74,14 @@ class RelationshipChecksTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_syncs_past_an_attached_tag_that_is_no_longer_found(): void
+    public function it_leaves_attached_a_tag_that_is_no_longer_found_while_syncing(): void
     {
         $this->jam->tags()->attach([$this->tag('Hardware'), $this->tag('Network')]);
         $this->labels['Hardware']->delete();
 
         $this->mutateTags([['operation' => 'sync', 'key' => [$this->tag('Network'), $this->tag('Monitor')]]])->assertOk();
 
-        $this->assertSame([$this->tag('Network'), $this->tag('Monitor')], $this->attachedTags());
+        $this->assertSame([$this->tag('Hardware'), $this->tag('Network'), $this->tag('Monitor')], $this->attachedTags());
         $this->assertSame([...$this->calls('update', $this->jam), $this->link('attachTag', 'Monitor')], $this->tickets->calls);
     }
 
