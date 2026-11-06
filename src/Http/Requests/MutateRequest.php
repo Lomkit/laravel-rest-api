@@ -78,6 +78,7 @@ class MutateRequest extends RestRequest
     {
         return $resource::newModel()
             ->newQuery()
+            ->where(fn (Builder $query): Builder => $resource->searchQuery($this, $query))
             ->where(fn (Builder $query): Builder => $resource->mutateQuery($this, $query));
     }
 }

@@ -2,8 +2,10 @@
 
 namespace Lomkit\Rest\Tests\Feature\Mutate;
 
-use Lomkit\Rest\Tests\Fixtures\Archive\Archive;
-use Lomkit\Rest\Tests\Fixtures\Archive\Document;
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\PerimeterBookController;
+use Lomkit\Rest\Tests\Fixtures\Library\Book;
+use Lomkit\Rest\Tests\Fixtures\Library\Library;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -12,24 +14,28 @@ class ResponseBlockReachTest extends PackageTestCase
     #[\Override]
     protected function fixtures(): array
     {
-        return [new Archive];
+        return [new Library];
     }
 
     #[Test]
     public function it_returns_null_for_a_record_outside_the_search_query_of_its_resource(): void
     {
-        $minutes = Document::query()->create(['title' => 'Minutes', 'archived' => true]);
+        Rest::resource('perimeter-books', PerimeterBookController::class)->register();
+        Book::query()->insert(['id' => 101, 'title' => 'Dune']);
 
-        $this->postJson('/api/current-documents/mutate', [
+        $this->postJson('/perimeter-books/mutate', [
             'mutate' => [
-                ['operation' => 'update', 'key' => $minutes->id, 'attributes' => ['title' => 'Old minutes']],
-                ['operation' => 'create', 'attributes' => ['title' => 'Agenda']],
+                ['operation' => 'update', 'key' => 101, 'attributes' => ['title' => 'Hidden by search']],
+                ['operation' => 'create', 'attributes' => ['title' => 'Emma']],
             ],
             'response' => ['selects' => [['field' => 'title']]],
         ])
             ->assertOk()
-            ->assertJsonPath('records', [null, ['title' => 'Agenda']]);
+            ->assertJsonPath('records', [null, ['title' => 'Emma']]);
 
-        $this->assertSame('Old minutes', $minutes->refresh()->title);
+        $title = Book::query()
+            ->findOrFail(101)
+            ->getAttribute('title');
+        $this->assertSame('Hidden by search', $title);
     }
 }

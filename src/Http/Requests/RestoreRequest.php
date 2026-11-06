@@ -45,6 +45,7 @@ class RestoreRequest extends RestRequest
         return $resource::newModel()
             ->newQuery()
             ->withoutGlobalScope(SoftDeletingScope::class)
+            ->where(fn (Builder $query): Builder => $resource->searchQuery($this, $query))
             ->where(fn (Builder $query): Builder => $resource->restoreQuery($this, $query));
     }
 }
