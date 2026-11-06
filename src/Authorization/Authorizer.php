@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Authorization;
 
+use Closure;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -14,12 +15,16 @@ final class Authorizer
     /** @var array<class-string<Resource>, true> */
     private array $entered = [];
 
+    private readonly DecisionBatch $batch;
+
     public function __construct(
         private readonly Gate $gate,
-        private readonly DecisionStore $store = new NullDecisionStore,
+        DecisionStore $store = new NullDecisionStore,
         private readonly DecisionMemo $memo = new DecisionMemo,
         private readonly bool $strict = false,
-    ) {}
+    ) {
+        $this->batch = new DecisionBatch($store, $memo);
+    }
 
     public function inspect(Check $check): Decision
     {
@@ -33,7 +38,7 @@ final class Authorizer
     public function inspectAll(array $checks): array
     {
         $keys = array_map(self::keyOf(...), $checks);
-        $decisions = $this->resolve($this->pending($checks, $keys));
+        $decisions = $this->batch->resolve($this->pending($checks, $keys), $this->evaluate(...));
 
         return array_map(
             fn (Check $check, ?string $key): Decision => $key === null
@@ -87,7 +92,19 @@ final class Authorizer
     /** @param list<Check> $checks */
     public function plan(array $checks): void
     {
-        self::enforce($checks, array_map($this->planned(...), $checks));
+        self::enforce($checks, $this->batch($checks, fn (): array => array_map($this->planned(...), $checks)));
+    }
+
+    /**
+     * @template TResult
+     *
+     * @param  list<Check>  $checks
+     * @param  Closure(): TResult  $decide
+     * @return TResult
+     */
+    public function batch(array $checks, Closure $decide): mixed
+    {
+        return $this->batch->around($this->pending($checks, array_map(self::keyOf(...), $checks)), $decide);
     }
 
     public function ensurePlanned(Check $check): void
@@ -173,22 +190,8 @@ final class Authorizer
         return $pending;
     }
 
-    /**
-     * @param  array<string, Check>  $checks
-     * @return array<string, Decision>
-     */
-    private function resolve(array $checks): array
+    private function evaluate(Check $check): Decision
     {
-        $storable = array_filter($checks, fn (Check $check): bool => ! $this->memo->involvesForgotten($check));
-        $decisions = $this->store->many($storable);
-        $evaluated = array_diff_key($checks, $decisions);
-
-        foreach ($evaluated as $key => $check) {
-            $decisions[$key] = Decision::fromResponse($this->gate->inspect($check->ability, $check->arguments()));
-        }
-
-        $this->store->putMany(array_intersect_key($evaluated, $storable), $decisions);
-
-        return $decisions;
+        return Decision::fromResponse($this->gate->inspect($check->ability, $check->arguments()));
     }
 }

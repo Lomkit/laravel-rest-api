@@ -146,7 +146,7 @@ class ForgetAuthorizationsTest extends HelpdeskTestCase
         $reads = [];
         $writes = [];
         Event::listen(RetrievingManyKeys::class, function (RetrievingManyKeys $event) use (&$reads): void {
-            $reads[] = count($event->keys) === 1 ? 'decision' : 'stamps';
+            $reads[] = str_starts_with((string) array_key_first($event->keys), self::EVERY_USER) ? 'stamps' : 'decision';
         });
         Event::listen(KeyWritten::class, function (KeyWritten $event) use (&$writes): void {
             $writes[] = $event->seconds === null ? 'stamp' : 'decision';
@@ -160,8 +160,8 @@ class ForgetAuthorizationsTest extends HelpdeskTestCase
         $this->postJson('/api/cached-tickets/search', ['search' => ['gates' => ['view']]])->assertOk();
 
         $this->assertSame([
-            [['stamps', 'decision', 'decision', 'decision', 'decision', 'decision'], ['stamp', 'stamp', 'decision', 'decision', 'decision', 'decision', 'decision']],
-            [['stamps', 'decision', 'decision', 'decision', 'decision', 'decision'], []],
+            [['stamps', 'decision', 'decision'], ['stamp', 'stamp', 'decision', 'decision', 'decision', 'decision', 'decision']],
+            [['stamps', 'decision', 'decision'], []],
         ], [$cold, [$reads, $writes]]);
     }
 
