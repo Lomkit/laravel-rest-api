@@ -9,7 +9,7 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagResource;
 class TrashedTagResource extends TagResource
 {
     #[\Override]
-    public function mutateQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
         return $query->withTrashed();
     }

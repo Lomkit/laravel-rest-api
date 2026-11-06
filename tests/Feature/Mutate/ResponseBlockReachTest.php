@@ -25,7 +25,7 @@ class ResponseBlockReachTest extends PackageTestCase
 
         $this->postJson('/perimeter-books/mutate', [
             'mutate' => [
-                ['operation' => 'update', 'key' => 101, 'attributes' => ['title' => 'Hidden by search']],
+                ['operation' => 'update', 'key' => 101, 'attributes' => ['title' => 'Hidden']],
                 ['operation' => 'create', 'attributes' => ['title' => 'Emma']],
             ],
             'response' => ['selects' => [['field' => 'title']]],
@@ -36,6 +36,6 @@ class ResponseBlockReachTest extends PackageTestCase
         $title = Book::query()
             ->findOrFail(101)
             ->getAttribute('title');
-        $this->assertSame('Hidden by search', $title);
+        $this->assertSame('Hidden', $title);
     }
 }

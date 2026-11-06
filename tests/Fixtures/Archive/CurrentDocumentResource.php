@@ -24,22 +24,4 @@ class CurrentDocumentResource extends Resource
     {
         return $query->where('archived', false);
     }
-
-    #[\Override]
-    public function destroyQuery(RestRequest $request, Builder $query): Builder
-    {
-        return $query->where('archived', false);
-    }
-
-    #[\Override]
-    public function restoreQuery(RestRequest $request, Builder $query): Builder
-    {
-        return $query->where('archived', false);
-    }
-
-    #[\Override]
-    public function forceDestroyQuery(RestRequest $request, Builder $query): Builder
-    {
-        return $query->where('archived', false);
-    }
 }

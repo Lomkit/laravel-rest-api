@@ -110,7 +110,7 @@ class ChildLinksTest extends PackageTestCase
         ]]);
 
         $response->assertOk();
-        $this->assertSame(['Ada Lovelace > Dune', 'Alan > -', 'Grace > -', 'Hidden by search > Ulysses'], self::library()['loans']);
+        $this->assertSame(['Ada Lovelace > Dune', 'Alan > -', 'Grace > -', 'Hidden > Ulysses'], self::library()['loans']);
         $this->assertSame(['classic > - -', 'loose > - -', 'modern > Book Emma', 'shelved > Shelf Classics'], self::library()['labels']);
     }
 

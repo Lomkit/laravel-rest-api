@@ -15,6 +15,6 @@ class WidePerimeterBookResource extends PerimeterBookResource
             return $query;
         }
 
-        return $query->whereNotIn('books.title', ['Hidden by search', 'Hidden by both']);
+        return $query->where('books.title', '<>', 'Hidden');
     }
 }

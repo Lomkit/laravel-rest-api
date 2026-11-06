@@ -7,27 +7,10 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 
 class OrPerimeterSoftDeletedModelResource extends SoftDeletedModelResource
 {
-    public function destroyQuery(RestRequest $request, Builder $query): Builder
+    #[\Override]
+    public function perimeterQuery(RestRequest $request, Builder $query): Builder
     {
-        $query = parent::destroyQuery($request, $query);
-
-        $query->where('string', 'owned')->orWhere('string', 'shared');
-
-        return $query;
-    }
-
-    public function restoreQuery(RestRequest $request, Builder $query): Builder
-    {
-        $query = parent::restoreQuery($request, $query);
-
-        $query->where('string', 'owned')->orWhere('string', 'shared');
-
-        return $query;
-    }
-
-    public function forceDestroyQuery(RestRequest $request, Builder $query): Builder
-    {
-        $query = parent::forceDestroyQuery($request, $query);
+        $query = parent::perimeterQuery($request, $query);
 
         $query->where('string', 'owned')->orWhere('string', 'shared');
 

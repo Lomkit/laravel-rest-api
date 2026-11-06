@@ -37,7 +37,7 @@ class QueryHooksTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_destroys_within_the_destroy_query_hook(): void
+    public function it_destroys_within_the_perimeter(): void
     {
         $current = Document::factory()->create(['title' => 'Annual report']);
         $archived = Document::factory()->create(['title' => 'Old ledger', 'archived' => true]);
@@ -54,7 +54,7 @@ class QueryHooksTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_restores_within_the_restore_query_hook(): void
+    public function it_restores_within_the_perimeter(): void
     {
         $current = Document::factory()->create(['title' => 'Annual report', 'deleted_at' => '2026-01-01 00:00:00']);
         Document::factory()->create(['title' => 'Old ledger', 'archived' => true, 'deleted_at' => '2026-01-01 00:00:00']);
@@ -71,7 +71,7 @@ class QueryHooksTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_force_destroys_within_the_force_destroy_query_hook(): void
+    public function it_force_destroys_within_the_perimeter(): void
     {
         $current = Document::factory()->create(['title' => 'Annual report', 'deleted_at' => '2026-01-01 00:00:00']);
         $archived = Document::factory()->create(['title' => 'Old ledger', 'archived' => true, 'deleted_at' => '2026-01-01 00:00:00']);
@@ -89,7 +89,7 @@ class QueryHooksTest extends PackageTestCase
 
     #[Test]
     #[DataProvider('endpoints')]
-    public function it_refuses_a_key_outside_the_query_hook(string $method, string $uri, ?string $deletedAt): void
+    public function it_refuses_a_key_outside_the_perimeter(string $method, string $uri, ?string $deletedAt): void
     {
         $current = Document::factory()->create(['id' => 1, 'title' => 'Annual report', 'deleted_at' => $deletedAt]);
         $archived = Document::factory()->create(['id' => 2, 'title' => 'Old ledger', 'archived' => true, 'deleted_at' => $deletedAt]);

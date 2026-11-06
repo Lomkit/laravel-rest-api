@@ -73,7 +73,7 @@ class OwnerLinksTest extends PackageTestCase
     public static function currentOwners(): array
     {
         return [
-            'belongs to' => ['/api/loans/mutate', ['operation' => 'update', 'key' => 102, 'relations' => ['book' => ['operation' => 'detach', 'key' => 102]]], 'loans', ['Ada > Dune', 'Alan > -', 'Grace > -', 'Hidden by search > Ulysses']],
+            'belongs to' => ['/api/loans/mutate', ['operation' => 'update', 'key' => 102, 'relations' => ['book' => ['operation' => 'detach', 'key' => 102]]], 'loans', ['Ada > Dune', 'Alan > -', 'Grace > -', 'Hidden > Ulysses']],
             'morph to' => ['/api/labels/mutate', ['operation' => 'update', 'key' => 104, 'relations' => ['labelable' => ['operation' => 'detach', 'type' => Shelf::class, 'key' => 101]]], 'labels', ['classic > Book Dune', 'loose > - -', 'modern > Book Emma', 'shelved > - -']],
         ];
     }

@@ -34,10 +34,10 @@ class DeletionPerimeterTest extends PackageTestCase
     }
 
     #[Test]
-    #[DataProvider('hiddenRows')]
-    public function it_refuses_a_row_outside_the_read_or_the_write_perimeter(string $method, string $uri, ?string $deletedAt, string $title): void
+    #[DataProvider('endpoints')]
+    public function it_refuses_a_row_outside_the_perimeter(string $method, string $uri, ?string $deletedAt): void
     {
-        Document::query()->insert(['id' => 1, 'title' => $title, 'archived' => false, 'deleted_at' => $deletedAt]);
+        Document::query()->insert(['id' => 1, 'title' => 'Hidden', 'archived' => false, 'deleted_at' => $deletedAt]);
 
         $response = $this->json($method, $uri, ['resources' => [1]]);
 
@@ -45,36 +45,22 @@ class DeletionPerimeterTest extends PackageTestCase
         $this->assertSame([[1, $deletedAt]], self::documents());
     }
 
-    /** @return array<string, array{string, string, ?string, string}> */
-    public static function hiddenRows(): array
-    {
-        $rows = [];
-
-        foreach (self::endpoints() as $endpoint => $row) {
-            foreach (['search query' => 'Hidden by search', 'hook of the endpoint' => 'Hidden by write', 'two queries' => 'Hidden by both'] as $hook => $title) {
-                $rows[$endpoint.', a row hidden by the '.$hook] = [...$row, $title];
-            }
-        }
-
-        return $rows;
-    }
-
     #[Test]
     #[DataProvider('endpointsAndReads')]
-    public function it_reads_the_rows_through_the_search_query_and_the_hook_of_the_endpoint(string $method, string $uri, ?string $deletedAt, string $read): void
+    public function it_reads_the_rows_through_the_perimeter(string $method, string $uri, ?string $deletedAt, string $read): void
     {
         Document::query()->insert(['id' => 1, 'title' => 'Annual report', 'archived' => false, 'deleted_at' => $deletedAt]);
         $this->captureQueries();
 
         $this->json($method, $uri, ['resources' => [1]])->assertOk();
 
-        $this->assertSame([[$read, ['Hidden by search', 'Hidden by both', 'Hidden by write', 'Hidden by both']]], $this->readsOf('documents'));
+        $this->assertSame([[$read, ['Hidden']]], $this->readsOf('documents'));
     }
 
     /** @return array<string, array{string, string, ?string, string}> */
     public static function endpointsAndReads(): array
     {
-        $read = 'select * from documents where (documents.title not in (?, ?)) and (documents.title not in (?, ?)) and documents.id in (1)';
+        $read = 'select * from documents where (documents.title <> ?) and documents.id in (1)';
 
         return [
             'destroy' => [...self::endpoints()['destroy'], $read.' and documents.deleted_at is null'],
@@ -84,7 +70,7 @@ class DeletionPerimeterTest extends PackageTestCase
     }
 
     /** @return array<string, array{string, string, ?string}> */
-    private static function endpoints(): array
+    public static function endpoints(): array
     {
         return [
             'destroy' => ['DELETE', '/perimeter-documents', null],

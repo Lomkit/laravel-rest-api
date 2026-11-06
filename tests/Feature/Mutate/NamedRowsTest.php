@@ -117,7 +117,7 @@ class NamedRowsTest extends WriteTraceTestCase
     }
 
     #[Test]
-    public function it_writes_a_trashed_row_that_the_mutate_query_of_its_resource_takes_in(): void
+    public function it_writes_a_trashed_row_that_the_perimeter_of_its_resource_takes_in(): void
     {
         Rest::resource('trashed-tags', TrashedTagController::class)->register();
         Tag::query()->insert(['id' => 103, 'name' => 'Archived', 'deleted_at' => '2026-01-01 00:00:00']);

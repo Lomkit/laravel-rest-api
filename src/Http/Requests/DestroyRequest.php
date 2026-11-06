@@ -2,12 +2,12 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Requests\Traits\ParsesResourceKeys;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Validation\KeyList;
 
 class DestroyRequest extends RestRequest
@@ -41,9 +41,10 @@ class DestroyRequest extends RestRequest
     #[\Override]
     public function keysQuery(Resource $resource): EloquentBuilder
     {
-        return $resource::newModel()
-            ->newQuery()
-            ->where(fn (Builder $query): Builder => $resource->perimeterQuery($this, $query))
-            ->where(fn (Builder $query): Builder => $resource->destroyQuery($this, $query));
+        $query = $resource::newModel()->newQuery();
+
+        (new PerimeterClause($resource))->apply($query);
+
+        return $query;
     }
 }

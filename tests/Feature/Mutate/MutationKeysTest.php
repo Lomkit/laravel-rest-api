@@ -5,9 +5,6 @@ namespace Lomkit\Rest\Tests\Feature\Mutate;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
-use Lomkit\Rest\Tests\Feature\Mutate\Stubs\DraftOnlyAuthorController;
-use Lomkit\Rest\Tests\Feature\Mutate\Stubs\DraftOnlyPostController;
-use Lomkit\Rest\Tests\Feature\Mutate\Stubs\DraftOnlyPostResource;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\ListedPostAuthorController;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\ListedPostController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
@@ -42,10 +39,7 @@ class MutationKeysTest extends PackageTestCase
     {
         parent::setUp();
 
-        DraftOnlyPostResource::$hooked = [];
         Gate::policy(Author::class, OpenPublishingPolicy::class);
-        Rest::resource('draft-posts', DraftOnlyPostController::class)->register();
-        Rest::resource('draft-only-authors', DraftOnlyAuthorController::class)->register();
         Rest::resource('listed-posts', ListedPostController::class)->register();
         Rest::resource('listed-post-authors', ListedPostAuthorController::class)->register();
         Category::factory()->create(['id' => 1, 'name' => 'Lighting']);
@@ -102,19 +96,10 @@ class MutationKeysTest extends PackageTestCase
             'a key that is not a UUID' => ['/api/authors/mutate', [
                 ['operation' => 'update', 'key' => 1, 'relations' => ['drafts' => [['operation' => 'update', 'key' => 'draft-1']]]],
             ], 'mutate.0.relations.drafts.0.key', 'The mutate.0.relations.drafts.0.key field must be a valid UUID.'],
-            'a key that the mutate query leaves out' => ['/draft-posts/mutate', [
+            'a key outside the perimeter' => ['/listed-posts/mutate', [
                 ['operation' => 'update', 'key' => 1, 'attributes' => ['views' => 3]],
             ], 'mutate.0.key', 'The selected mutate.0.key is invalid.'],
-            'a key that the mutate query of a related resource leaves out' => ['/draft-only-authors/mutate', [
-                ['operation' => 'update', 'key' => 1, 'relations' => ['posts' => [['operation' => 'update', 'key' => 1, 'attributes' => ['views' => 3]]]]],
-            ], 'mutate.0.relations.posts.0.key', 'The selected mutate.0.relations.posts.0.key is invalid.'],
-            'an attach key that the mutate query leaves out' => ['/draft-only-authors/mutate', [
-                ['operation' => 'update', 'key' => 1, 'relations' => ['posts' => [['operation' => 'attach', 'key' => 1]]]],
-            ], 'mutate.0.relations.posts.0.key', 'The selected mutate.0.relations.posts.0.key is invalid.'],
-            'a key that the search query leaves out' => ['/listed-posts/mutate', [
-                ['operation' => 'update', 'key' => 1, 'attributes' => ['views' => 3]],
-            ], 'mutate.0.key', 'The selected mutate.0.key is invalid.'],
-            'a key that the search query of a related resource leaves out' => ['/listed-post-authors/mutate', [
+            'a key outside the perimeter of a related resource' => ['/listed-post-authors/mutate', [
                 ['operation' => 'update', 'key' => 1, 'relations' => ['posts' => [['operation' => 'attach', 'key' => 1]]]],
             ], 'mutate.0.relations.posts.0.key', 'The selected mutate.0.relations.posts.0.key is invalid.'],
             'a soft-deleted key' => ['/api/authors/mutate', [

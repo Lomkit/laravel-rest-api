@@ -75,8 +75,8 @@ class NestedLinksTest extends PackageTestCase
     public static function ownersOfChildren(): array
     {
         return [
-            'has one, an attach' => [['operation' => 'update', 'key' => 102, 'relations' => ['loan' => ['operation' => 'update', 'key' => 102, 'attributes' => ['borrower' => 'Grace H'], 'relations' => ['book' => ['operation' => 'attach', 'key' => 101]]]]], 'loans', ['Ada > Dune', 'Alan > -', 'Grace H > Emma', 'Hidden by search > Ulysses']],
-            'has one, a detach' => [['operation' => 'update', 'key' => 101, 'relations' => ['loan' => ['operation' => 'update', 'key' => 101, 'attributes' => ['borrower' => 'Ada L'], 'relations' => ['book' => ['operation' => 'detach', 'key' => 101]]]]], 'loans', ['Ada L > Dune', 'Alan > -', 'Grace > Emma', 'Hidden by search > Ulysses']],
+            'has one, an attach' => [['operation' => 'update', 'key' => 102, 'relations' => ['loan' => ['operation' => 'update', 'key' => 102, 'attributes' => ['borrower' => 'Grace H'], 'relations' => ['book' => ['operation' => 'attach', 'key' => 101]]]]], 'loans', ['Ada > Dune', 'Alan > -', 'Grace H > Emma', 'Hidden > Ulysses']],
+            'has one, a detach' => [['operation' => 'update', 'key' => 101, 'relations' => ['loan' => ['operation' => 'update', 'key' => 101, 'attributes' => ['borrower' => 'Ada L'], 'relations' => ['book' => ['operation' => 'detach', 'key' => 101]]]]], 'loans', ['Ada L > Dune', 'Alan > -', 'Grace > Emma', 'Hidden > Ulysses']],
             'morph many, an attach' => [['operation' => 'update', 'key' => 101, 'relations' => ['labels' => [['operation' => 'update', 'key' => [101], 'attributes' => ['text' => 'classical'], 'relations' => ['labelable' => ['operation' => 'attach', 'type' => Shelf::class, 'key' => 101]]]]]], 'labels', ['classical > Book Dune', 'loose > - -', 'modern > Book Emma', 'shelved > Shelf Classics']],
         ];
     }
