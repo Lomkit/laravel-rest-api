@@ -7,8 +7,6 @@ use Illuminate\Contracts\Cache\Repository;
 
 final readonly class CacheDecisionStore implements DecisionStore
 {
-    private const string PREFIX = 'rest.authorizations.';
-
     public function __construct(
         private Factory $cache,
         private UserIdentity $user,
@@ -22,7 +20,7 @@ final readonly class CacheDecisionStore implements DecisionStore
 
         foreach ($checks as $key => $check) {
             if (self::seconds($check) !== null) {
-                $keys[$this->storageKey($key)] = $key;
+                $keys[DecisionKey::of($check)->for($this->user)] = $key;
             }
         }
 
@@ -50,7 +48,7 @@ final readonly class CacheDecisionStore implements DecisionStore
             $seconds = self::seconds($check);
 
             if ($seconds !== null) {
-                $values[$seconds][$this->storageKey($key)] = $decisions[$key]->toArray();
+                $values[$seconds][DecisionKey::of($check)->for($this->user)] = $decisions[$key]->toArray();
             }
         }
 
@@ -74,10 +72,5 @@ final readonly class CacheDecisionStore implements DecisionStore
     private function repository(): Repository
     {
         return $this->cache->store($this->store);
-    }
-
-    private function storageKey(string $key): string
-    {
-        return self::PREFIX.hash('sha256', $this->user->key().'|'.$key);
     }
 }
