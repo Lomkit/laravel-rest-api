@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
@@ -25,6 +26,14 @@ class GenerateResourceReportTest extends ScaffoldingTestCase
     protected function fixtures(): array
     {
         return [new Newsroom];
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        Relation::morphMap([], false);
+
+        parent::tearDown();
     }
 
     #[Test]
@@ -123,7 +132,19 @@ class GenerateResourceReportTest extends ScaffoldingTestCase
     {
         $this->artisan('rest:resource', ['name' => 'SkippedPhotoResource', '--model' => Photo::class, '--generate' => true, '--no-interaction' => true])
             ->expectsOutputToContain('4 fields, 0 relations')
-            ->expectsOutputToContain('  Skipped: imageable: MorphTo relations are not generated, declare it in relations() by hand.')
+            ->expectsOutputToContain("  Skipped: imageable: MorphTo relations are not generated, declare it in relations() by hand with its targets, for example MorphTo::make('imageable', [...]).")
+            ->assertSuccessful();
+    }
+
+    #[Test]
+    public function it_names_the_resources_of_the_morph_map_in_the_note_of_a_morph_to_relation(): void
+    {
+        Relation::morphMap(['story' => Story::class, 'desk' => Desk::class, 'topic' => Topic::class], false);
+        $this->artisan('rest:resource', ['name' => 'MappedStoryResource', '--model' => Story::class, '--no-interaction' => true])->assertSuccessful();
+        $this->artisan('rest:resource', ['name' => 'MappedDeskResource', '--model' => Desk::class, '--no-interaction' => true])->assertSuccessful();
+
+        $this->artisan('rest:resource', ['name' => 'MappedPhotoResource', '--model' => Photo::class, '--generate' => true, '--no-interaction' => true])
+            ->expectsOutputToContain("  Skipped: imageable: MorphTo relations are not generated, declare it in relations() by hand with its targets, for example MorphTo::make('imageable', [MappedDeskResource::class, MappedStoryResource::class]).")
             ->assertSuccessful();
     }
 

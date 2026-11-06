@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Console\Generation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo as EloquentBelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany as EloquentBelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo as EloquentMorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\Generation\Schema\Table;
@@ -34,6 +35,10 @@ final readonly class RelationMapping
     /** @param  Relation<Model, Model, mixed>  $relation */
     private function mapRelation(string $name, Relation $relation, Table $table, RelationList $list): RelationList
     {
+        if ($relation instanceof EloquentMorphTo) {
+            return $list->skipping($this->morphToNote($name));
+        }
+
         $type = RelationType::of($relation);
 
         if ($type === null) {
@@ -91,6 +96,14 @@ final readonly class RelationMapping
         }
 
         return $fields;
+    }
+
+    private function morphToNote(string $name): string
+    {
+        $resources = array_map(class_basename(...), array_values(array_intersect_key($this->resources, array_flip(Relation::morphMap()))));
+        $targets = $resources === [] ? '...' : implode('::class, ', $resources).'::class';
+
+        return "{$name}: MorphTo relations are not generated, declare it in relations() by hand with its targets, for example MorphTo::make('{$name}', [{$targets}]).";
     }
 
     private function missingResource(string $name, string $model): string
