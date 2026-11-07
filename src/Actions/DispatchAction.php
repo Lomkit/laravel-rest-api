@@ -51,7 +51,11 @@ class DispatchAction
      */
     public function dispatch(int $chunkCount): int
     {
-        $runner = ActionRunner::for($this->request, $this->action, $this->fields, $this->engineTargets === null);
+        $checks = RowChecks::of($this->request, $this->action);
+
+        $checks?->verify(fn (Closure $each): int => $this->rows($chunkCount, $each));
+
+        $runner = ActionRunner::for($this->request, $this->action, $this->fields, $this->engineTargets === null, $checks);
         $modelsImpacted = $this->rows($chunkCount, $runner->run(...));
 
         $runner->finish();

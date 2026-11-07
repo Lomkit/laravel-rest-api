@@ -2,10 +2,13 @@
 
 namespace Lomkit\Rest\Validation;
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\ID;
+
+use function Illuminate\Support\enum_value;
 
 final readonly class KeyList
 {
@@ -35,5 +38,17 @@ final readonly class KeyList
     public function rows(): Collection
     {
         return new Collection($this->lookup?->rows() ?? []);
+    }
+
+    /** @return Closure(Model): ?int */
+    public function positions(): Closure
+    {
+        $positions = array_flip(array_map($this->id->normalizeKey(...), $this->keys));
+
+        return function (Model $row) use ($positions): ?int {
+            $key = $this->id->parseKey(enum_value($row->getKey()));
+
+            return $key === null ? null : $positions[$this->id->normalizeKey($key)] ?? null;
+        };
     }
 }
