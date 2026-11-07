@@ -35,7 +35,7 @@ trait ConfiguresFiltering
     /** @return list<FilterOperator> */
     public function filterOperators(): array
     {
-        $filterable = $this->filterable ?? $this->filterableByDefault();
+        $filterable = $this->filterable ?? ($this->selectable && $this->filterableByDefault());
 
         if ($filterable === false || (($this->isVirtual() || $this->isWriteOnly()) && $this->filterUsing === null)) {
             return [];

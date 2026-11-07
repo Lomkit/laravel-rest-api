@@ -89,7 +89,7 @@ trait ConfiguresReading
 
     public function isSortable(): bool
     {
-        if ($this->sortable === false) {
+        if (! ($this->sortable ?? $this->selectable)) {
             return false;
         }
 
@@ -125,7 +125,7 @@ trait ConfiguresReading
 
     public function isSortableByColumn(): bool
     {
-        return ($this->sortable ?? $this->sortableByDefault()) && ! $this->virtual && ! $this->isWriteOnly();
+        return ($this->sortable ?? ($this->selectable && $this->sortableByDefault())) && ! $this->virtual && ! $this->isWriteOnly();
     }
 
     public function sort(Builder $query, SortDirection|string $direction, ?string $column = null): void

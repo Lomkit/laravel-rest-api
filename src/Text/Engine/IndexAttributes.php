@@ -41,7 +41,7 @@ final readonly class IndexAttributes
     public static function of(TextTarget $target, EngineProfile $profile, array $filterable, array $sortable, array $perimeter): self
     {
         $client = self::attributes($target, $profile, $filterable, 'filterable()');
-        $restricted = self::attributes($target, $profile, $perimeter, 'perimeter()');
+        $restricted = self::attributes($target, $profile, $perimeter, 'perimeter()', true);
 
         foreach (array_keys($restricted) as $name) {
             if (isset($client[$name])) {
@@ -71,7 +71,7 @@ final readonly class IndexAttributes
      * @param  array<mixed>  $declared
      * @return array<string, IndexAttribute>
      */
-    private static function attributes(TextTarget $target, EngineProfile $profile, array $declared, string $declaration): array
+    private static function attributes(TextTarget $target, EngineProfile $profile, array $declared, string $declaration, bool $restricted = false): array
     {
         $attributes = [];
 
@@ -86,7 +86,7 @@ final readonly class IndexAttributes
                 throw InvalidTextSearchException::duplicateAttribute($target->resource, $field->name);
             }
 
-            $attributes[$field->name] = self::attribute($target, $profile, $field);
+            $attributes[$field->name] = self::attribute($target, $profile, $restricted ? (clone $field)->selectable() : $field);
         }
 
         return $attributes;

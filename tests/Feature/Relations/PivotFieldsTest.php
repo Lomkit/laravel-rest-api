@@ -66,6 +66,20 @@ class PivotFieldsTest extends WeightedPivotTestCase
     }
 
     #[Test]
+    #[DataProvider('relations')]
+    public function it_refuses_a_filter_on_a_pivot_field_that_cannot_be_selected(string $relation): void
+    {
+        $this->attach($relation, ['position' => 1, 'weight' => 3, 'added_by' => 'Ada', 'note' => 'Seen twice']);
+
+        $response = $this->postJson($this->endpoint($relation).'/search', ['search' => ['filters' => [['field' => $relation.'.pivot.added_by', 'value' => 'Ada']]]]);
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The selected search.filters.0.field is invalid.',
+            'errors' => ['search.filters.0.field' => ['The selected search.filters.0.field is invalid.']],
+        ]);
+    }
+
+    #[Test]
     #[DataProvider('directWrites')]
     public function it_writes_only_the_writable_pivot_keys_of_the_operation(string $relation, string $operation, ?string $addedBy): void
     {
