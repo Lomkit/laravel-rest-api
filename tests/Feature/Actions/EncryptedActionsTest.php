@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 #[WithMigration('queue')]
+#[WithConfig('app.key', 'base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=')]
 #[WithConfig('auth.providers.users.model', ArchiveUser::class)]
 #[WithConfig('queue.default', 'database')]
 class EncryptedActionsTest extends PackageTestCase
