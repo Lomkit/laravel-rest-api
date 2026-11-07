@@ -66,7 +66,7 @@ class RemovedHooksTest extends PackageTestCase
     #[Test]
     public function it_refuses_a_request_to_a_resource_that_still_declares_a_removed_hook(): void
     {
-        Rest::resource('scout-fields-posts', ScoutFieldsPostController::class)->register();
+        Rest::resource('scout-fields-posts', ScoutFieldsPostController::class)->only('search')->register();
         Post::factory()->create();
         $this->withoutExceptionHandling();
 

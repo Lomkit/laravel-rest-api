@@ -47,6 +47,12 @@ class Action implements JsonSerializable
 
     public bool $atomic = false;
 
+    /** @var list<string> */
+    public array $middleware = [];
+
+    /** @var list<string> */
+    public array $withoutMiddleware = [];
+
     public function name(): string
     {
         return $this->name ?: Str::of(class_basename(static::class))->beforeLast('Action')->snake(' ')->title()->toString();
@@ -93,6 +99,22 @@ class Action implements JsonSerializable
     public function atomic(): static
     {
         $this->atomic = true;
+
+        return $this;
+    }
+
+    /** @param string|list<string> $middleware */
+    public function middleware(string|array $middleware): static
+    {
+        $this->middleware = [...$this->middleware, ...(array) $middleware];
+
+        return $this;
+    }
+
+    /** @param string|list<string> $middleware */
+    public function withoutMiddleware(string|array $middleware): static
+    {
+        $this->withoutMiddleware = [...$this->withoutMiddleware, ...(array) $middleware];
 
         return $this;
     }

@@ -54,6 +54,23 @@ class RouteCacheTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_serves_each_action_from_its_compiled_route(): void
+    {
+        Document::factory()->create();
+
+        $this->useCompiledRoutes();
+
+        $route = $this->app['router']->getRoutes()->getByName('documents.operate.archive-documents');
+
+        $this->assertSame('api/documents/actions/archive-documents', $route?->uri());
+        $this->assertSame(['action' => 'archive-documents'], $route->defaults);
+        $this->postJson('/api/documents/actions/archive-documents')
+            ->assertOk()
+            ->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
+        $this->postJson('/api/documents/actions/publish-documents')->assertNotFound();
+    }
+
+    #[Test]
     public function it_keeps_route_defaults_through_the_cache(): void
     {
         Document::factory()->create();

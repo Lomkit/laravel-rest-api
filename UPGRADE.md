@@ -220,17 +220,28 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 
 ### Routing
 
-- `operate()` takes only the request: `operate(OperateRequest $request)`. It reads the action key from the route by name, with `$request->actionKey()`. A controller that overrides `operate($request, $action)` no longer loads: remove the second parameter. Actions now also work under route groups with URI or domain parameters, such as `Route::prefix('{tenant}')`.
-- `Rest::resource()` now registers its routes through the package's own registrar. The default URIs, HTTP methods and route names do not change.
+- `operate()` takes only the request: `operate(OperateRequest $request)`. `$request->actionKey()` returns the key of the action's route, or `null` on the route of unknown keys, see below. A controller that overrides `operate($request, $action)` no longer loads: remove the second parameter. Actions now also work under route groups with URI or domain parameters, such as `Route::prefix('{tenant}')`.
+- `Rest::resource()` now registers its routes through the package's own registrar. The URIs, HTTP methods and route names of the endpoints do not change; each action gets its own route, see below.
 - `Rest::resource()` takes two arguments. A third argument (the old `$options` array) throws `Lomkit\Rest\Exceptions\InvalidResourceRouteException`, so a forgotten `['except' => ['destroy']]` cannot silently expose an endpoint. Use the fluent methods instead: `only()`, `except()`, `names()`, `middleware()` and `withSoftDeletes()`. For the `as` option, use `names('prefix.users')` or a route group with `name()`.
 - The resource name must be one URI segment made of letters, digits, `-` and `_`. A dotted name (`users.posts`) throws: its `{user}` parameter was never used, so register the child resource on its own and scope its query in the resource. A slashed name (`admin/users`) throws: wrap the call in `Route::prefix('admin')`.
 - `PendingResourceRegistration` is final and no longer extends Laravel's class. It keeps `only()`, `except()`, `withSoftDeletes()`, `names()`, `name()`, `middleware()`, `middlewareFor()`, `withoutMiddleware()`, `withoutMiddlewareFor()` and `register()`. `parameters()`, `parameter()`, `shallow()`, `scoped()`, `missing()` and `withTrashed()` are removed because they have no effect on these routes. `where()` and its variants, `metadata()` and the macros of Laravel's class are removed too: put `where()` or `metadata()` on the enclosing route group, for example `Route::where(['action' => '[a-z-]+'])->group(...)`. Repeated `names()` and `name()` calls add up: a prefix and exact names combine in any order.
 - Every method that takes endpoint keys throws on an unknown key. The keys are `details`, `search`, `mutate`, `operate`, `destroy`, `restore`, `forceDestroy` and `batch`, or the cases of `Lomkit\Rest\Http\Routing\Endpoint`. `withSoftDeletes()` only accepts `restore` and `forceDestroy`, and repeated calls add up.
 - `Endpoint` has a `Batch` case, the opt-in route of `withBatchProgress()`, see [Actions](#actions). A `match` on `Endpoint` without a default arm handles it. `Endpoint::optIns()` is replaced by `Endpoint::softDeletes()`, which returns `Restore` and `ForceDestroy`.
 - `withSoftDeletes([...])` no longer overrides `except()`. For example, `except('destroy')->withSoftDeletes('restore')` no longer registers `destroy`.
-- `middleware()` adds to the package middleware instead of replacing it, so `EnforceExpectsJson` stays on every route, next to `HandlePrecognitiveRequests` when precognition is enabled. Requests without `Accept: application/json` now get JSON errors instead of a redirect. Repeated middleware calls add up, and resource middleware always comes before endpoint middleware.
+- `middleware()` adds to the package middleware instead of replacing it, so `EnforceExpectsJson` stays on every route, next to `HandlePrecognitiveRequests` when precognition is enabled. Requests without `Accept: application/json` now get JSON errors instead of a redirect. Repeated middleware calls add up, resource middleware always comes before endpoint middleware, and endpoint middleware before the middleware of an action.
 - `Route::resourceVerbs()` now changes the package URIs through the keys `search`, `mutate`, `actions`, `restore` and `forceDestroy`. An application that already sets one of these keys will see its URIs change.
 - Two endpoints of one resource cannot share a URI or a route name: the registration throws.
+- Each action that the resource declares has its own route, `POST {name}/actions/{uriKey}`, named `{name}.operate.{uriKey}`, registered before `POST {name}/actions/{action}` (`{name}.operate`). That last route answers the keys of no action: `403` to a user that `viewAny` refuses, `404` to the others, as before. `php artisan route:list` shows one route per action:
+
+  ```
+  POST  api/tickets/actions/close-tickets   tickets.operate.close-tickets
+  POST  api/tickets/actions/{action}        tickets.operate
+  ```
+
+  `names('helpdesk')` gives `helpdesk.operate.close-tickets`, `name('operate', 'tickets.run')` gives `tickets.run.close-tickets`, and `Route::resourceVerbs(['actions' => 'run'])` gives `tickets/run/close-tickets`. `route('tickets.operate', ['action' => 'close-tickets'])` still gives the URL of the action.
+- `Rest::resource()` reads the `actions()` of the resource when it registers the routes: at boot, without a user, or during `php artisan route:cache`. Return the same actions for every user and every request: refuse an action to some users with its `abilities()`, not by leaving it out of `actions()`. An action that `actions()` returns only later has no route and gets the answer of an unknown key, and so does a route whose action `actions()` no longer returns. With cached routes, run `php artisan route:cache` after you add, rename or remove an action. Keep `actions()` free of queries. An action that throws when the actions are read, such as `Lomkit\Rest\Exceptions\InvalidActionException`, now throws when the routes register.
+- Two actions of one resource with the same `uriKey()` throw `InvalidResourceRouteException` when the routes register: "Two endpoints of the resource use the route [POST tickets/actions/close-tickets].". Before, the second action could not be called.
+- `Rest` and `PendingResourceRegistration` take the container as a last constructor argument. `Rest` comes from the container as before.
 - `Lomkit\Rest\Http\Routing\ResourceRegistrar` is final, no longer extends Laravel's class and has a new API. `Rest` receives it from the container, so remove any container binding of `ResourceRegistrar` to your own class. The `Lomkit\Rest\Contracts\Http\Routing\Registrar` interface is removed.
 - The force delete endpoint is renamed `forceDestroy`, like `destroy`, `ForceDestroyRequest` and the `forceDestroying` hooks: the controller method is `forceDestroy()`, the route name is `{name}.forceDestroy`, and the endpoint key and the `Route::resourceVerbs()` key are `forceDestroy`. The URI stays `{name}/force`. The policy ability stays `forceDelete`, like Laravel's, and so does `performForceDelete()`, which calls Eloquent's `forceDelete()`.
 
@@ -495,6 +506,27 @@ A queued or batched action no longer serializes its resource, its rows and its i
   Another user, a guest, another action and an unknown batch get a 404, and so does every batch started by a guest. The route checks the abilities that the resource's `abilities()` returns for `Endpoint::Batch`, none by default.
 - The jobs of a batched action skip their rows once the batch is cancelled, with Laravel's `SkipIfBatchCancelled` middleware: `$this->batch()?->cancel()` in `handle()`, or `Bus::findBatch($id)?->cancel()`, stops the jobs that did not run yet.
 - `DispatchAction::dispatch()` returns the `OperateResponse` of the action, without `result`; `OperateResponse::answer()` gives a copy with the result.
+- An action can carry its own route middleware. Add it when the resource declares the action, or as properties of the action:
+
+  ```php
+  public function actions(): array
+  {
+      return [
+          ExportTickets::make()->middleware('throttle:exports'),
+          ReportOutage::make()->withoutMiddleware('auth:sanctum'),
+      ];
+  }
+  ```
+
+  ```php
+  class ExportTickets extends Action
+  {
+      public array $middleware = ['throttle:exports'];
+  }
+  ```
+
+  The route of the action gets the package middleware, the middleware of the resource, the middleware of `middlewareFor('operate', ...)`, then its own. `withoutMiddleware()` removes a middleware of any of these, of the route group and of the controller. Name the middleware as it is declared, with its parameters: `withoutMiddleware('auth:sanctum')` for `->middleware('auth:sanctum')`. An action whose `abilities()` returns `[]` and that removes the authentication middleware runs for guests. `middlewareFor('operate', ...)` and `withoutMiddlewareFor('operate', ...)` still apply to every action.
+- An action that already defines `middleware()` or `withoutMiddleware()`, or a `$middleware` or `$withoutMiddleware` property, gives them these signatures and this meaning.
 
 ### Native types
 
@@ -1130,7 +1162,7 @@ Row checks of `mutate`:
 
 Actions:
 
-- An unknown action answers `404` to a user allowed `viewAny` on the resource, and `403` to the others.
+- An unknown action answers `404` to a user allowed `viewAny` on the resource, and `403` to the others. So does an action that has no route, see [Routing](#routing).
 - A known action checks, before validation and in this order: `viewAny` on the resource, the abilities that the resource's `abilities()` returns for `Endpoint::Operate` (none by default), then the abilities that the action's `abilities()` returns. These abilities add to `viewAny` and never replace it.
 - `Action::abilities(): array` returns `['viewAny']` by default, for every action, whatever its target. An action that returns `['export']` checks `viewAny`, then `export`; listing `viewAny` as well, as in `['viewAny', 'export']`, checks the same abilities. An action that already defines a method named `abilities()` must give it this signature.
 - An action whose `abilities()` returns `[]` runs without any of these checks: neither `viewAny` nor the resource's abilities for `Endpoint::Operate`, and the search of its models does not check `viewAny` on the resource either. Use it for an action that any user may run, guests included. The resources that its `search` reaches through includes, aggregates and filters on relations still need `viewAny`.

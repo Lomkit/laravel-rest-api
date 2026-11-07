@@ -7,6 +7,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Cache\Factory;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Lomkit\Rest\Authorization\DecisionStamps;
 use Lomkit\Rest\Authorization\UserIdentity;
@@ -26,6 +27,7 @@ class Rest
         private readonly ResourceRegistrar $registrar,
         private readonly Repository $config,
         private readonly Factory $cache,
+        private readonly Container $container,
     ) {}
 
     /** @param class-string<Controller> $controller */
@@ -44,6 +46,7 @@ class Rest
             UriSegment::resourceName($name),
             $controller,
             new RouteMiddleware($this->packageMiddleware()),
+            $this->container,
         );
     }
 
