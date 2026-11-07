@@ -15,6 +15,8 @@ class StaffDocumentResource extends DocumentResource
         return [
             ...(self::$exports ? [ExportDocuments::make()] : []),
             BatchedExportDocuments::make(),
+            EncryptedExportDocuments::make(),
+            BatchedEncryptedExportDocuments::make(),
             RoutedExportDocuments::make(),
             RetriedExportDocuments::make(),
             GuestExportDocuments::make(),

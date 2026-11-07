@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Actions;
 
 use Illuminate\Bus\PendingBatch;
+use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Queue\Attributes\Backoff;
 use Illuminate\Queue\Attributes\Connection;
 use Illuminate\Queue\Attributes\Delay;
@@ -33,6 +34,7 @@ final class QueueSettings
         $job->backoff = $this->attribute(Backoff::class)?->backoff;
         $job->maxExceptions = $this->attribute(MaxExceptions::class)?->maxExceptions;
         $job->failOnTimeout = $this->attribute(FailOnTimeout::class) !== null;
+        $job->shouldBeEncrypted = $this->action instanceof ShouldBeEncrypted;
 
         return $job;
     }
