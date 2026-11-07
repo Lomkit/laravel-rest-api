@@ -15,6 +15,7 @@ use Lomkit\Rest\Validation\InputSet;
 use Lomkit\Rest\Validation\KeyList;
 use Lomkit\Rest\Validation\KeysGrammar;
 use Lomkit\Rest\Validation\Search\SearchParser;
+use Lomkit\Rest\Validation\Search\SearchShape;
 use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class OperationParser
@@ -43,7 +44,7 @@ final readonly class OperationParser
 
     private function search(Cursor $search, Cursor $resources, ValidationContext $context): SearchNode
     {
-        $node = (new SearchParser(paged: false))->parse($search, $context);
+        $node = (new SearchParser(SearchShape::Rows))->parse($search, $context);
         $context->rules->add($resources->path, ['prohibited']);
 
         return $node;

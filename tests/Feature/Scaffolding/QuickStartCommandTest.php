@@ -32,7 +32,7 @@ class QuickStartCommandTest extends ScaffoldingTestCase
           app/Policies/PostPolicy.php ... created (allows every ability)
           app/Policies/TagPolicy.php ... created (allows every ability)
           routes/api.php ... posts, tags behind auth:sanctum
-          checks (fresh process) ... 10 routes authenticated, 2 policies found
+          checks (fresh process) ... 12 routes authenticated, 2 policies found
 
           Skipped: Post.author: no resource for App\Models\User. Rerun with --model=User to expose users.
 
@@ -55,7 +55,7 @@ class QuickStartCommandTest extends ScaffoldingTestCase
           app/Policies/PostPolicy.php ... kept
           app/Policies/TagPolicy.php ... kept
           routes/api.php ... kept
-          checks (fresh process) ... 10 routes authenticated, 2 policies found
+          checks (fresh process) ... 12 routes authenticated, 2 policies found
 
            WARN  Add Laravel\Sanctum\HasApiTokens to App\Models\User.
 

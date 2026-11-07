@@ -1,5 +1,6 @@
 {"data": {
   "actions": [],
+  "metrics": [],
   "instructions": [
     {"name": "Priced At", "uriKey": "priced-at",
      "fields": [{"name": "price", "label": null, "type": "integer", "nullable": false, "default": null, "rules": ["integer", "required"], "meta": {}}],

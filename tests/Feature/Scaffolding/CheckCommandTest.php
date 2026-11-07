@@ -30,7 +30,7 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $output = $this->check(0, BookController::class, LabelController::class);
 
-        $this->assertSame("  checks (fresh process) ... 10 routes authenticated, 2 policies found\n", $output);
+        $this->assertSame("  checks (fresh process) ... 12 routes authenticated, 2 policies found\n", $output);
     }
 
     #[Test]
@@ -74,7 +74,7 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $output = $this->check(0, BookController::class);
 
-        $this->assertSame("  checks (fresh process) ... 5 routes authenticated, 1 policy found\n", $output);
+        $this->assertSame("  checks (fresh process) ... 6 routes authenticated, 1 policy found\n", $output);
     }
 
     #[Test]
@@ -84,7 +84,7 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $output = $this->check(0, BookController::class);
 
-        $this->assertSame("  checks (fresh process) ... 5 routes authenticated, 1 policy found\n", $output);
+        $this->assertSame("  checks (fresh process) ... 6 routes authenticated, 1 policy found\n", $output);
     }
 
     #[Test]
@@ -95,7 +95,7 @@ class CheckCommandTest extends ScaffoldingTestCase
         $output = $this->check(1, BookController::class);
 
         $this->assertStringContainsString('  ⇂ POST /api/books/search authenticates with the [passport] guard, which is not defined', $output);
-        $this->assertSame(5, substr_count($output, '⇂'));
+        $this->assertSame(6, substr_count($output, '⇂'));
     }
 
     #[Test]
@@ -108,7 +108,7 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $this->assertSame(1, $exitCode);
         $this->assertSame(
-            ['routes' => 5, 'policies' => 2, 'problems' => ['POST /api/labels/search is not behind an authentication middleware.'], 'search' => '/api/books/search'],
+            ['routes' => 6, 'policies' => 2, 'problems' => ['POST /api/labels/search is not behind an authentication middleware.'], 'search' => '/api/books/search'],
             json_decode($output->fetch(), true),
         );
     }
@@ -164,7 +164,7 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $output = $this->check(0, BookController::class);
 
-        $this->assertSame("  checks (fresh process) ... 5 routes authenticated, 1 policy found\n", $output);
+        $this->assertSame("  checks (fresh process) ... 6 routes authenticated, 1 policy found\n", $output);
     }
 
     #[Test]

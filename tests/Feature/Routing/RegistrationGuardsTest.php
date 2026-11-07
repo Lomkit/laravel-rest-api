@@ -72,7 +72,7 @@ class RegistrationGuardsTest extends PackageTestCase
     {
         $this->assertRejected(
             fn () => $change(Rest::resource('documents', DocumentController::class)),
-            'Unknown endpoint [force]. The endpoints are: details, search, mutate, operate, destroy, restore, forceDestroy, batch.',
+            'Unknown endpoint [force]. The endpoints are: details, search, mutate, operate, metric, destroy, restore, forceDestroy, batch.',
         );
     }
 

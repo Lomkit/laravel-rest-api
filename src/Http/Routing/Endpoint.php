@@ -10,6 +10,7 @@ enum Endpoint: string
     case Search = 'search';
     case Mutate = 'mutate';
     case Operate = 'operate';
+    case Metric = 'metric';
     case Destroy = 'destroy';
     case Restore = 'restore';
     case ForceDestroy = 'forceDestroy';
@@ -52,7 +53,7 @@ enum Endpoint: string
     {
         return match ($this) {
             self::Details, self::Batch => ['GET', 'HEAD'],
-            self::Search, self::Mutate, self::Operate, self::Restore => ['POST'],
+            self::Search, self::Mutate, self::Operate, self::Metric, self::Restore => ['POST'],
             self::Destroy, self::ForceDestroy => ['DELETE'],
         };
     }
@@ -63,6 +64,7 @@ enum Endpoint: string
             self::Details, self::Destroy => null,
             self::Search, self::Mutate, self::Restore, self::ForceDestroy => $this->value,
             self::Operate, self::Batch => 'actions',
+            self::Metric => 'metrics',
         };
     }
 
@@ -72,6 +74,7 @@ enum Endpoint: string
             self::Details, self::Destroy => null,
             self::Search, self::Mutate, self::Restore => $this->value,
             self::Operate, self::Batch => 'actions',
+            self::Metric => 'metrics',
             self::ForceDestroy => 'force',
         };
     }
@@ -80,6 +83,7 @@ enum Endpoint: string
     {
         return match ($this) {
             self::Operate, self::Batch => 'action',
+            self::Metric => 'metric',
             self::Details, self::Search, self::Mutate, self::Destroy, self::Restore, self::ForceDestroy => null,
         };
     }
@@ -89,7 +93,7 @@ enum Endpoint: string
     {
         return match ($this) {
             self::Details, self::Search => ['viewAny'],
-            self::Mutate, self::Operate, self::Destroy, self::Restore, self::ForceDestroy, self::Batch => [],
+            self::Mutate, self::Operate, self::Metric, self::Destroy, self::Restore, self::ForceDestroy, self::Batch => [],
         };
     }
 
@@ -97,7 +101,7 @@ enum Endpoint: string
     {
         return match ($this) {
             self::Restore, self::ForceDestroy, self::Batch => true,
-            self::Details, self::Search, self::Mutate, self::Operate, self::Destroy => false,
+            self::Details, self::Search, self::Mutate, self::Operate, self::Metric, self::Destroy => false,
         };
     }
 

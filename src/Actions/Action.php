@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use JsonSerializable;
 use Lomkit\Rest\Concerns\HasMeta;
+use Lomkit\Rest\Concerns\HasRouteMiddleware;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Exceptions\InvalidActionException;
@@ -27,6 +28,7 @@ class Action implements JsonSerializable
     use Batchable;
     use HasInputFields;
     use HasMeta;
+    use HasRouteMiddleware;
     use InteractsWithQueue;
     use Makeable;
     use Resourcable;
@@ -46,12 +48,6 @@ class Action implements JsonSerializable
     public bool $skipUnauthorized = false;
 
     public bool $atomic = false;
-
-    /** @var list<string> */
-    public array $middleware = [];
-
-    /** @var list<string> */
-    public array $withoutMiddleware = [];
 
     public function name(): string
     {
@@ -106,22 +102,6 @@ class Action implements JsonSerializable
     public function atomic(): static
     {
         $this->atomic = true;
-
-        return $this;
-    }
-
-    /** @param string|list<string> $middleware */
-    public function middleware(string|array $middleware): static
-    {
-        $this->middleware = [...$this->middleware, ...(array) $middleware];
-
-        return $this;
-    }
-
-    /** @param string|list<string> $middleware */
-    public function withoutMiddleware(string|array $middleware): static
-    {
-        $this->withoutMiddleware = [...$this->withoutMiddleware, ...(array) $middleware];
 
         return $this;
     }

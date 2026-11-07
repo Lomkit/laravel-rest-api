@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Scopes;
 
 use JsonSerializable;
 use Lomkit\Rest\Concerns\HasMeta;
+use Lomkit\Rest\Exceptions\InvalidScopeException;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\FieldSet;
@@ -22,6 +23,25 @@ final class Scope implements JsonSerializable
     public static function make(string $name): self
     {
         return new self($name);
+    }
+
+    /**
+     * @param  array<mixed>  $scopes
+     * @return list<self>
+     */
+    public static function listOf(array $scopes, string $owner): array
+    {
+        $declared = [];
+
+        foreach (array_values($scopes) as $index => $scope) {
+            if (! $scope instanceof self) {
+                throw InvalidScopeException::notAScope($owner, $index, $scope);
+            }
+
+            $declared[] = $scope;
+        }
+
+        return $declared;
     }
 
     /** @param list<Field> $fields */

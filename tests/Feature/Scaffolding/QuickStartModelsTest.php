@@ -48,7 +48,7 @@ class QuickStartModelsTest extends ScaffoldingTestCase
 
         $this->assertStringContainsString("            BelongsTo::make('author', UserResource::class)->requiredOnCreation(),\n", $this->contents('Rest/Resources/PostResource.php'));
         $this->assertStringContainsString("            Integer::make('author_id')->readonly(),\n", $this->contents('Rest/Resources/PostResource.php'));
-        $this->assertStringContainsString('  checks (fresh process) ... 15 routes authenticated, 3 policies found', $output);
+        $this->assertStringContainsString('  checks (fresh process) ... 18 routes authenticated, 3 policies found', $output);
         $this->assertStringNotContainsString('Skipped:', $output);
         $this->assertStringContainsString("\n  Note: User.password: hidden and not fillable on the model, left out.\n", $output);
         $this->assertStringContainsString('PostPolicy, TagPolicy and UserPolicy let signed-in users do everything', $output);
@@ -101,7 +101,7 @@ class QuickStartModelsTest extends ScaffoldingTestCase
         $output = $this->quickStart('Archive/Note');
 
         $this->assertStringContainsString("  app/Rest/Controllers/Archive/NotesController.php ... created\n  app/Policies/Archive/NotePolicy.php ... created (allows every ability)\n", $output);
-        $this->assertStringContainsString('  checks (fresh process) ... 5 routes authenticated, 1 policy found', $output);
+        $this->assertStringContainsString('  checks (fresh process) ... 6 routes authenticated, 1 policy found', $output);
         $this->assertStringStartsWith(
             "<?php\n\nnamespace App\Rest\Controllers\Archive;\n\nuse App\Rest\Controllers\Controller;\nuse App\Rest\Resources\Archive\NoteResource;\n",
             $this->contents('Rest/Controllers/Archive/NotesController.php'),
@@ -162,7 +162,7 @@ class QuickStartModelsTest extends ScaffoldingTestCase
             ."  app/Rest/Controllers/PostsController.php ... created\n"
             ."  app/Policies/PostPolicy.php ... created (allows every ability)\n"
             ."  routes/api.php ... posts behind auth:sanctum\n"
-            ."  checks (fresh process) ... 5 routes authenticated, 1 policy found\n",
+            ."  checks (fresh process) ... 6 routes authenticated, 1 policy found\n",
             $output,
         );
         $this->assertSame(['PostResource.php', 'Resource.php'], array_values(array_diff((array) scandir(app_path('Rest/Resources')), ['.', '..'])));

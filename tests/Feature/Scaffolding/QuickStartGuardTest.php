@@ -59,7 +59,7 @@ class QuickStartGuardTest extends ScaffoldingTestCase
         $this->assertSame(
             self::FILES
             ."  routes/api.php ... posts behind auth:web\n"
-            ."  checks (fresh process) ... 5 routes authenticated, 1 policy found\n\n"
+            ."  checks (fresh process) ... 6 routes authenticated, 1 policy found\n\n"
             .self::SKIPPED
             ."  Next:\n"
             ."    Authenticate with the web guard to call the API.\n"
@@ -82,7 +82,7 @@ class QuickStartGuardTest extends ScaffoldingTestCase
         $this->assertSame(
             self::FILES
             ."  routes/api.php ... posts behind auth:api\n"
-            ."  checks (fresh process) ... 5 routes authenticated, 1 policy found\n\n"
+            ."  checks (fresh process) ... 6 routes authenticated, 1 policy found\n\n"
             .self::SKIPPED
             ."\n   WARN  Add Laravel\Passport\HasApiTokens to App\Models\User.\n\n"
             ."  Next:\n"

@@ -90,6 +90,16 @@ final class DetailsEntryTypes
         ]);
     }
 
+    public static function metric(): ObjectType
+    {
+        return self::objectOf([
+            'name' => new StringType,
+            'uriKey' => new StringType,
+            'type' => (new StringType)->setDescription('The type of the result, given again as data.type in the response of the metric'),
+            'meta' => new ObjectType,
+        ]);
+    }
+
     public static function instruction(): ObjectType
     {
         return self::objectOf([

@@ -139,7 +139,7 @@ class QuickStartPassportTest extends ScaffoldingTestCase
 
     private function undefinedGuardProblems(): string
     {
-        $endpoints = ['GET|HEAD /api/posts', 'POST /api/posts/search', 'POST /api/posts/mutate', 'POST /api/posts/actions/{action}', 'DELETE /api/posts'];
+        $endpoints = ['GET|HEAD /api/posts', 'POST /api/posts/search', 'POST /api/posts/mutate', 'POST /api/posts/actions/{action}', 'POST /api/posts/metrics/{metric}', 'DELETE /api/posts'];
 
         return implode('', array_map(fn (string $endpoint): string => "  ⇂ {$endpoint} authenticates with the [api] guard, which is not defined\n", $endpoints));
     }

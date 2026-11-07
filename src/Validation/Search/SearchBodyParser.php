@@ -79,6 +79,18 @@ final readonly class SearchBodyParser
         return new self($context, $lists, 0, (new GatesParser(classLevel: false))->parse($block->at('gates'), $context), null, null);
     }
 
+    public static function aggregate(Cursor $search, ValidationContext $context): self
+    {
+        $sizes = $context->limits->sizes;
+        $lists = [
+            'filters' => self::list($search->at('filters'), ['array'], $sizes->filters, $context, true),
+            'scopes' => self::list($search->at('scopes'), ['array', ...$context->grammar->scopeRules()], $sizes->scopes, $context),
+            'instructions' => self::list($search->at('instructions'), ['array'], $sizes->instructions, $context),
+        ];
+
+        return new self($context, $lists, 0, null, null, null);
+    }
+
     public function node(?TextQuery $text, ?Trashed $trashed): SearchNode
     {
         $context = $this->context;
@@ -106,7 +118,7 @@ final readonly class SearchBodyParser
     /** @return list<string>|null */
     private function selects(): ?array
     {
-        $entries = $this->lists['selects'];
+        $entries = $this->lists['selects'] ?? null;
 
         if ($entries === null) {
             return null;

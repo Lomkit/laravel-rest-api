@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Http\BatchProgress;
+use Lomkit\Rest\Http\MetricResponse;
 use Lomkit\Rest\Http\MutateResponse;
 use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\BatchRequest;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\DetailsRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
+use Lomkit\Rest\Http\Requests\MetricRequest;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestoreRequest;
@@ -90,6 +92,13 @@ trait PerformsRestOperations
         $request->resource($request->context()->resource(static::resourceClass()));
 
         return $request->payload()->action->handleRequest($request);
+    }
+
+    public function metric(MetricRequest $request): MetricResponse
+    {
+        $request->resource($resource = $request->context()->resource(static::resourceClass()));
+
+        return MetricResponse::of($request, $resource);
     }
 
     public function batch(BatchRequest $request): BatchProgress

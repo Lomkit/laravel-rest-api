@@ -65,6 +65,11 @@ final readonly class ResolvedText
         return $engine->searchGrammar($this->capabilities);
     }
 
+    public function sqlGrammar(): SearchGrammar
+    {
+        return new SqlSearchGrammar($this->strategy === null ? null : $this->capabilities, $this->ranks());
+    }
+
     public function clause(): ?TextClause
     {
         if ($this->strategy === null || $this->target === null || $this->query === null) {

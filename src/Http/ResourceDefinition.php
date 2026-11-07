@@ -7,10 +7,10 @@ use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Authorization\CachedAbilities;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
-use Lomkit\Rest\Exceptions\InvalidScopeException;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Search\GateVocabulary;
@@ -33,6 +33,9 @@ final class ResourceDefinition
 
     /** @var array<int, Action>|null */
     private ?array $actions = null;
+
+    /** @var array<int, Metric>|null */
+    private ?array $metrics = null;
 
     private ?ResourceLimits $limits = null;
 
@@ -60,7 +63,7 @@ final class ResourceDefinition
     /** @return list<Scope> */
     public function scopes(): array
     {
-        return $this->scopes ??= self::ensureScopes($this->resource->scopes(), $this->resource::class.'::scopes()');
+        return $this->scopes ??= Scope::listOf($this->resource->scopes(), $this->resource::class.'::scopes()');
     }
 
     /** @return array<int, Relation> */
@@ -84,6 +87,15 @@ final class ResourceDefinition
         return $this->actions ??= array_map(
             fn (Action $action): Action => $action->resource($this->resource)->ensureValid(),
             $this->resource->actions(),
+        );
+    }
+
+    /** @return array<int, Metric> */
+    public function metrics(): array
+    {
+        return $this->metrics ??= array_map(
+            fn (Metric $metric): Metric => $metric->resource($this->resource)->ensureValid(),
+            $this->resource->metrics(),
         );
     }
 
@@ -122,6 +134,11 @@ final class ResourceDefinition
     public function action(string $key): Action
     {
         return collect($this->actions())->sole(fn (Action $action): bool => $action->uriKey() === $key);
+    }
+
+    public function metric(string $key): ?Metric
+    {
+        return array_find($this->metrics(), fn (Metric $metric): bool => $metric->uriKey() === $key);
     }
 
     public function inputFields(Action|Instruction $declaration): FieldSet
@@ -172,24 +189,5 @@ final class ResourceDefinition
     private function boundInstructions(array $instructions): array
     {
         return array_map(fn (Instruction $instruction): Instruction => $instruction->resource($this->resource), $instructions);
-    }
-
-    /**
-     * @param  array<mixed>  $scopes
-     * @return list<Scope>
-     */
-    private static function ensureScopes(array $scopes, string $owner): array
-    {
-        $declared = [];
-
-        foreach (array_values($scopes) as $index => $scope) {
-            if (! $scope instanceof Scope) {
-                throw InvalidScopeException::notAScope($owner, $index, $scope);
-            }
-
-            $declared[] = $scope;
-        }
-
-        return $declared;
     }
 }

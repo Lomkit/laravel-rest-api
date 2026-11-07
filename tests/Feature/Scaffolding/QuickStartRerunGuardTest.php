@@ -25,7 +25,7 @@ class QuickStartRerunGuardTest extends ScaffoldingTestCase
         ."  app/Rest/Controllers/PostsController.php ... kept\n"
         ."  app/Policies/PostPolicy.php ... kept\n"
         ."  routes/api.php ... kept\n"
-        ."  checks (fresh process) ... 5 routes authenticated, 1 policy found\n\n";
+        ."  checks (fresh process) ... 6 routes authenticated, 1 policy found\n\n";
 
     private const string SEARCH = '    curl -X POST http://localhost/api/posts/search%s -H "Accept: application/json" -H "Content-Type: application/json" -d \'{"search":{"limit":10}}\''."\n";
 
