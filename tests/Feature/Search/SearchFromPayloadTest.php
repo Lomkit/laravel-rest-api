@@ -47,7 +47,7 @@ class SearchFromPayloadTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_runs_the_validated_search_when_before_search_edits_the_input(): void
+    public function it_runs_the_validated_search_when_searching_edits_the_input(): void
     {
         Rest::resource('input-editing-posts', InputEditingPostController::class)->register();
 

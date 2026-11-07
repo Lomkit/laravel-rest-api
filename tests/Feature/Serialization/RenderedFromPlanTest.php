@@ -46,7 +46,7 @@ class RenderedFromPlanTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_renders_the_validated_search_when_before_search_edits_the_input(): void
+    public function it_renders_the_validated_search_when_searching_edits_the_input(): void
     {
         Rest::resource('render-editing-posts', RenderEditingPostController::class)->register();
 

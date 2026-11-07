@@ -2,14 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Mutate\Stubs;
 
-use Lomkit\Rest\Http\Requests\MutateRequest;
-use Lomkit\Rest\Tests\Fixtures\Catalog\CategoryController;
+use Lomkit\Rest\Http\Controllers\Controller;
 
-class InputReplacingCategoryController extends CategoryController
+class InputReplacingCategoryController extends Controller
 {
-    #[\Override]
-    protected function beforeMutate(MutateRequest $request): void
-    {
-        $request->merge(['mutate' => [['operation' => 'create', 'attributes' => ['name' => 'Desks']]]]);
-    }
+    public static string $resource = InputReplacingCategoryResource::class;
 }

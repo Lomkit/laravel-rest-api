@@ -33,8 +33,6 @@ trait PerformsRestOperations
 
         $request->context()->authorizer()->ensurePlanned(Check::onClass($resource, 'viewAny'));
 
-        $this->beforeDetails($request);
-
         $resource->describing();
 
         $details = $resource->jsonSerialize();
@@ -50,8 +48,6 @@ trait PerformsRestOperations
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $this->beforeSearch($request);
-
         $resource->searching($request->searchContext());
 
         $text = $request->context()->text($resource);
@@ -61,15 +57,11 @@ trait PerformsRestOperations
 
             $resource->searched($page->rows);
 
-            $this->afterSearch($request);
-
             return $this->buildResponse($page->plan, $page->rows);
         }
 
         $plan = SearchPlanner::paged($resource, $request->payload(), $text);
         $query = QueryBuilderFactory::make($resource)->search($plan);
-
-        $this->afterSearch($request);
 
         $rows = $text->run(fn () => $resource->paginate($query, $plan->limit->perPage(), $plan->limit->page()));
 
@@ -90,26 +82,14 @@ trait PerformsRestOperations
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $this->beforeMutate($request);
-
-        $response = MutateResponse::of($request, $resource);
-
-        $this->afterMutate($request);
-
-        return $response;
+        return MutateResponse::of($request, $resource);
     }
 
     public function operate(OperateRequest $request): OperateResponse
     {
         $request->resource($request->context()->resource(static::resourceClass()));
 
-        $this->beforeOperate($request);
-
-        $response = $request->payload()->action->handleRequest($request);
-
-        $this->afterOperate($request);
-
-        return $response;
+        return $request->payload()->action->handleRequest($request);
     }
 
     public function batch(BatchRequest $request): BatchProgress
@@ -123,8 +103,6 @@ trait PerformsRestOperations
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $this->beforeDestroy($request);
-
         $models = RowBatch::authorize($resource, $request->payload()->rows(), 'delete')->write($resource->destroyingAll(...), function (Model $model) use ($request, $resource): void {
             $resource->destroying($request, $model);
 
@@ -135,16 +113,12 @@ trait PerformsRestOperations
             $resource->destroyed($request, $model);
         }, $resource->destroyedAll(...));
 
-        $this->afterDestroy($request);
-
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }
 
     public function restore(RestoreRequest $request): Response
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
-
-        $this->beforeRestore($request);
 
         $models = RowBatch::authorize($resource, $request->payload()->rows(), 'restore')->write($resource->restoringAll(...), function (Model $model) use ($request, $resource): void {
             $resource->restoring($request, $model);
@@ -156,16 +130,12 @@ trait PerformsRestOperations
             $resource->restored($request, $model);
         }, $resource->restoredAll(...));
 
-        $this->afterRestore($request);
-
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }
 
     public function forceDestroy(ForceDestroyRequest $request): Response
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
-
-        $this->beforeForceDestroy($request);
 
         $models = RowBatch::authorize($resource, $request->payload()->rows(), 'forceDelete')->write($resource->forceDestroyingAll(...), function (Model $model) use ($request, $resource): void {
             $resource->forceDestroying($request, $model);
@@ -176,8 +146,6 @@ trait PerformsRestOperations
 
             $resource->forceDestroyed($request, $model);
         }, $resource->forceDestroyedAll(...));
-
-        $this->afterForceDestroy($request);
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }

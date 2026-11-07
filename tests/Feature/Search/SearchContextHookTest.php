@@ -41,7 +41,7 @@ class SearchContextHookTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_refuses_a_search_that_before_search_refuses(): void
+    public function it_refuses_a_search_that_searching_refuses(): void
     {
         Rest::resource('checked-posts', ContextCheckingPostController::class)->register();
         DB::enableQueryLog();
@@ -56,7 +56,7 @@ class SearchContextHookTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_runs_a_search_that_before_search_accepts(): void
+    public function it_runs_a_search_that_searching_accepts(): void
     {
         Rest::resource('checked-posts', ContextCheckingPostController::class)->register();
 

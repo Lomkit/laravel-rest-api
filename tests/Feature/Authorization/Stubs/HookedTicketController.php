@@ -2,15 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Authorization\Stubs;
 
-use Lomkit\Rest\Http\Requests\DetailsRequest;
-use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketController;
-use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
+use Lomkit\Rest\Http\Controllers\Controller;
 
-class HookedTicketController extends TicketController
+class HookedTicketController extends Controller
 {
-    #[\Override]
-    protected function beforeDetails(DetailsRequest $request): void
-    {
-        app(TicketPolicy::class)->calls[] = 'beforeDetails';
-    }
+    public static string $resource = HookedTicketResource::class;
 }

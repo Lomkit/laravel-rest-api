@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Deletion\Stubs;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\Events\TransactionBeginning;
@@ -29,9 +30,19 @@ final class DeletionTrace
         self::$failure = null;
     }
 
+    /** @param Collection<int, Model> $models */
+    public static function recordAll(string $step, Collection $models): void
+    {
+        self::trace($step.' '.implode(',', $models->modelKeys()));
+    }
+
     public static function record(string $step, Model $model): void
     {
-        $line = $step.' '.$model->getKey();
+        self::trace($step.' '.$model->getKey());
+    }
+
+    private static function trace(string $line): void
+    {
         self::$lines[] = $line;
 
         if (self::$failure === $line) {

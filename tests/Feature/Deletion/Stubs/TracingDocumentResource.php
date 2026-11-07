@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Deletion\Stubs;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
@@ -11,6 +12,42 @@ use Lomkit\Rest\Tests\Fixtures\Archive\DocumentResource;
 
 class TracingDocumentResource extends DocumentResource
 {
+    #[\Override]
+    public function destroyingAll(Collection $models): void
+    {
+        DeletionTrace::recordAll('destroyingAll', $models);
+    }
+
+    #[\Override]
+    public function destroyedAll(Collection $models): void
+    {
+        DeletionTrace::recordAll('destroyedAll', $models);
+    }
+
+    #[\Override]
+    public function restoringAll(Collection $models): void
+    {
+        DeletionTrace::recordAll('restoringAll', $models);
+    }
+
+    #[\Override]
+    public function restoredAll(Collection $models): void
+    {
+        DeletionTrace::recordAll('restoredAll', $models);
+    }
+
+    #[\Override]
+    public function forceDestroyingAll(Collection $models): void
+    {
+        DeletionTrace::recordAll('forceDestroyingAll', $models);
+    }
+
+    #[\Override]
+    public function forceDestroyedAll(Collection $models): void
+    {
+        DeletionTrace::recordAll('forceDestroyedAll', $models);
+    }
+
     #[\Override]
     public function destroying(DestroyRequest $request, Model $model): void
     {

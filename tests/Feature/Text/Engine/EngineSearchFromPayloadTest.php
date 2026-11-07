@@ -26,7 +26,7 @@ class EngineSearchFromPayloadTest extends EngineSearchTestCase
 
     #[Test]
     #[DataProvider('drivers')]
-    public function it_runs_the_validated_engine_search_when_before_search_edits_the_input(string $driver): void
+    public function it_runs_the_validated_engine_search_when_searching_edits_the_input(string $driver): void
     {
         config(['scout.driver' => $driver]);
 
@@ -38,7 +38,7 @@ class EngineSearchFromPayloadTest extends EngineSearchTestCase
 
     #[Test]
     #[DataProvider('drivers')]
-    public function it_acts_on_the_validated_engine_search_when_before_operate_edits_the_input(string $driver): void
+    public function it_acts_on_the_validated_engine_search_when_operating_edits_the_input(string $driver): void
     {
         config(['scout.driver' => $driver]);
 
