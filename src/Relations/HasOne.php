@@ -2,4 +2,4 @@
 
 namespace Lomkit\Rest\Relations;
 
-class HasOne extends Relation {}
+class HasOne extends HasOneOrMany {}

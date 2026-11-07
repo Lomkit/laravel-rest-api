@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Relations;
 
 use Lomkit\Rest\Relations\Traits\HasMultipleResults;
 
-class MorphMany extends MorphRelation
+class MorphMany extends HasOneOrMany
 {
     use HasMultipleResults;
 }

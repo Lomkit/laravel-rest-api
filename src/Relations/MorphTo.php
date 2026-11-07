@@ -6,14 +6,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo as EloquentMorphTo;
 use LogicException;
-use Lomkit\Rest\Contracts\OwnerRelation;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\Mutate\EntryRule;
 use Lomkit\Rest\Validation\Mutate\MorphToEntryRule;
 
-class MorphTo extends MorphRelation implements OwnerRelation, PolymorphicRelation
+class MorphTo extends BelongsTo implements PolymorphicRelation
 {
     /** @var array<array-key, mixed> */
     private readonly array $resources;

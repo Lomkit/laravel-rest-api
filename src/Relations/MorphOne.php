@@ -2,4 +2,4 @@
 
 namespace Lomkit\Rest\Relations;
 
-class MorphOne extends MorphRelation {}
+class MorphOne extends HasOneOrMany {}
