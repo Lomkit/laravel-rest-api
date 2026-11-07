@@ -32,6 +32,11 @@ final class InvalidFieldException extends LogicException
         return new self("{$owner} declares the field [{$name}] twice.");
     }
 
+    public static function undeclaredInput(string $owner, string $name): self
+    {
+        return new self("{$owner} does not declare the input [{$name}].");
+    }
+
     public static function writeRulesOnInput(string $owner, string $name): self
     {
         return new self("{$owner} declares creation or update rules on the input field [{$name}]. Input fields take rules() only.");

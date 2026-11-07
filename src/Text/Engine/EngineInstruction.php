@@ -3,7 +3,7 @@
 namespace Lomkit\Rest\Text\Engine;
 
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
-use Lomkit\Rest\Fields\InputValues;
+use Lomkit\Rest\Fields\CastValues;
 use Lomkit\Rest\Instructions\AppliesToEngine;
 use Lomkit\Rest\Search\InstructionNode;
 
@@ -11,7 +11,7 @@ final readonly class EngineInstruction
 {
     private function __construct(
         private AppliesToEngine $instruction,
-        private InputValues $fields,
+        private CastValues $fields,
     ) {}
 
     public static function of(InstructionNode $node): self
@@ -20,7 +20,7 @@ final readonly class EngineInstruction
             throw InvalidInstructionException::queryOnly($node->instruction::class);
         }
 
-        return new self($node->instruction, $node->fields);
+        return new self($node->instruction, CastValues::of($node->fields, $node->instruction::class.'::fields()'));
     }
 
     public function apply(EngineQuery $query): void

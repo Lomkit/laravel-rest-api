@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use InvalidArgumentException;
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
-use Lomkit\Rest\Fields\InputValues;
+use Lomkit\Rest\Fields\CastValues;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Search\InstructionNode;
@@ -18,12 +18,12 @@ final readonly class InstructionClause implements Clause
 {
     private function __construct(
         private Instruction $instruction,
-        private InputValues $fields,
+        private CastValues $fields,
     ) {}
 
     public static function of(InstructionNode $node): self
     {
-        return new self($node->instruction, $node->fields);
+        return new self($node->instruction, CastValues::of($node->fields, $node->instruction::class.'::fields()'));
     }
 
     #[\Override]

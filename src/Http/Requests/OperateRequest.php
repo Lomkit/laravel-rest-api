@@ -9,6 +9,7 @@ use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\OperationNode;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Fields\CastValues;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
@@ -81,7 +82,9 @@ class OperateRequest extends RestRequest
     /** @return array<string, mixed> */
     public function resolveFields(): array
     {
-        return $this->payload()->fields->toArray();
+        $operation = $this->payload();
+
+        return CastValues::of($operation->fields, $operation->action::class.'::fields()')->toArray();
     }
 
     /** @return Builder<Model> */

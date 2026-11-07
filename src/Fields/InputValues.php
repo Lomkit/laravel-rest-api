@@ -41,6 +41,12 @@ final readonly class InputValues
         return new self($fields, $given);
     }
 
+    /** @return list<string> */
+    public function names(): array
+    {
+        return $this->fields->names();
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {
