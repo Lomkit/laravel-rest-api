@@ -14,6 +14,7 @@ final readonly class IndexAttribute implements JsonSerializable
     public function __construct(
         public Field $field,
         public array $operators,
+        public EngineLiteral $literal = new PlainLiteral,
     ) {}
 
     public function supports(FilterOperator $operator): bool
@@ -23,7 +24,13 @@ final readonly class IndexAttribute implements JsonSerializable
 
     public function value(mixed $value): int|float|string|bool
     {
-        return EngineValue::of($this->field, $value) ?? throw InvalidEngineQueryException::invalidValue($this->field->name, $value);
+        $typed = EngineValue::of($this->field, $value) ?? throw InvalidEngineQueryException::invalidValue($this->field->name, $value);
+
+        if (! LiteralValue::accepts($typed)) {
+            throw InvalidEngineQueryException::nonLiteralValue($this->field->name);
+        }
+
+        return $this->literal->of($typed);
     }
 
     /** @return array{name: string, type: string, operators: list<string>, values?: list<int|string>} */

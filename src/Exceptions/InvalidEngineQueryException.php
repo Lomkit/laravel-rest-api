@@ -23,6 +23,11 @@ final class InvalidEngineQueryException extends LogicException
         return new self("The engine query does not compare the attribute [{$attribute}] with this value of type [{$type}].");
     }
 
+    public static function nonLiteralValue(string $attribute): self
+    {
+        return new self("The search engine cannot match this value of the attribute [{$attribute}] as it is.");
+    }
+
     public static function notSortable(string $attribute): self
     {
         return new self("The engine query does not sort on the attribute [{$attribute}]. Declare it with ScoutEngine::sortable().");

@@ -13,6 +13,8 @@ use Lomkit\Rest\Text\TextTarget;
 
 final readonly class DatabaseProfile implements EngineProfile
 {
+    use PlainLiterals;
+
     public function __construct(private DatabaseEngine $engine) {}
 
     #[\Override]

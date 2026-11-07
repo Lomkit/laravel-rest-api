@@ -14,6 +14,8 @@ use Throwable;
 
 final readonly class AlgoliaProfile implements EngineProfile
 {
+    use PlainLiterals;
+
     /** @param AlgoliaEngine<object> $engine */
     public function __construct(private AlgoliaEngine $engine) {}
 

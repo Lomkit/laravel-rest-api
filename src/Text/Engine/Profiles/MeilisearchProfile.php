@@ -12,6 +12,8 @@ use Throwable;
 
 final readonly class MeilisearchProfile implements EngineProfile
 {
+    use PlainLiterals;
+
     public function __construct(private MeilisearchEngine $engine) {}
 
     #[\Override]

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Text\Engine\EngineLiteral;
 use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
@@ -34,4 +35,6 @@ interface EngineProfile
     public function page(Builder $builder, ScoutModel $model, int $perPage, int $page): EnginePage;
 
     public function reachable(ScoutModel $model): ?int;
+
+    public function literal(): EngineLiteral;
 }
