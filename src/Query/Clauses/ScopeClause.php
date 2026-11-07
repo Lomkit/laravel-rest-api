@@ -3,7 +3,9 @@
 namespace Lomkit\Rest\Query\Clauses;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Lomkit\Rest\Fields\InputValues;
+use Lomkit\Rest\Query\WhereGroup;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Search\ScopeNode;
 
@@ -22,6 +24,8 @@ final readonly class ScopeClause implements Clause
     #[\Override]
     public function apply(Builder $query): void
     {
-        $query->scopes([$this->scope->name => $this->parameters->arguments()]);
+        WhereGroup::wrap($query, function (EloquentBuilder $query): void {
+            $query->scopes([$this->scope->name => $this->parameters->arguments()]);
+        });
     }
 }
