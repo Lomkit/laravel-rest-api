@@ -141,7 +141,7 @@ class Action implements JsonSerializable
     public function handleRequest(OperateRequest $request): OperateResponse
     {
         $fields = ActionFields::of($this, $request->payload()->fields, Auth::getDefaultDriver(), $request->user());
-        $impacted = (new DispatchAction($request, $this, $fields))->dispatch($this->chunkCount);
+        $impacted = (new DispatchAction($request, $this, $fields))->dispatch();
 
         return new OperateResponse($impacted, $this->respond($fields, $impacted));
     }

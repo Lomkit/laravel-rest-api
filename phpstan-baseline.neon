@@ -1,16 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 2
-			path: src/Actions/DispatchAction.php
-
-		-
-			identifier: typeCoverage.paramTypeCoverage
-			count: 2
-			path: src/Actions/DispatchAction.php
-
-		-
 			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
