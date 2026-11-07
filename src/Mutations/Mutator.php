@@ -2,8 +2,8 @@
 
 namespace Lomkit\Rest\Mutations;
 
+use Closure;
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Resource;
@@ -13,7 +13,8 @@ final readonly class Mutator
 {
     public function __construct(
         private MutateRequest $request,
-        public RowSet $rows,
+        private RowSet $rows,
+        public WriteChecks $checks,
     ) {}
 
     /**
@@ -31,11 +32,14 @@ final readonly class Mutator
         return $log->entries();
     }
 
-    /** @param array<string, mixed> $owned */
-    public function one(Resource $resource, MutationNode $node, OperationLog $log, array $owned = []): Model
+    /**
+     * @param  array<string, mixed>  $owned
+     * @param  (Closure(Model): void)|null  $linking
+     */
+    public function one(Resource $resource, MutationNode $node, OperationLog $log, array $owned = [], ?Closure $linking = null): Model
     {
         $log->begin($node);
-        $model = $log->wrote($this->row($resource, $node, $log, $owned, $node->context()->key));
+        $model = $log->wrote($this->row($resource, $node, $log, $owned, $node->context()->key, $linking));
         $log->end();
 
         return $model;
@@ -43,15 +47,16 @@ final readonly class Mutator
 
     /**
      * @param  array<string, mixed>  $owned
+     * @param  (Closure(Model): void)|null  $linking
      * @return list<Model>
      */
-    public function each(Resource $resource, MutationNode $node, OperationLog $log, array $owned = []): array
+    public function each(Resource $resource, MutationNode $node, OperationLog $log, array $owned = [], ?Closure $linking = null): array
     {
         $keys = is_array($node->key) ? $node->key : [$node->key];
 
         $log->begin($node);
         $models = array_map(
-            fn (int|string|null $key): Model => $log->wrote($this->row($resource, $node, $log, $owned, $key)),
+            fn (int|string|null $key): Model => $log->wrote($this->row($resource, $node, $log, $owned, $key, $linking)),
             $keys
         );
         $log->end();
@@ -59,29 +64,26 @@ final readonly class Mutator
         return $models;
     }
 
-    /** @param array<string, mixed> $owned */
-    private function row(Resource $resource, MutationNode $node, OperationLog $log, array $owned, int|string|null $key): Model
+    /**
+     * @param  array<string, mixed>  $owned
+     * @param  (Closure(Model): void)|null  $linking
+     */
+    private function row(Resource $resource, MutationNode $node, OperationLog $log, array $owned, int|string|null $key, ?Closure $linking): Model
     {
-        if ($node->operation === MutationOperation::Create) {
-            $resource
-                ->context()
-                ->authorizer()
-                ->ensurePlanned(Check::onClass($resource, 'create'));
+        $model = $node->operation === MutationOperation::Create ? $resource::newModel() : $this->rows->find($resource, $key);
 
-            return $this->write($resource, $resource::newModel(), $node, $log, $owned);
-        }
-
-        $model = $this->rows->find($resource, $key);
-        $resource->authorizeTo(self::ability($node), $model);
-
-        return $this->write($resource, $model, $node, $log, $owned);
+        return $this->write($resource, $model, $node, $log, $owned, $linking);
     }
 
-    /** @param array<string, mixed> $owned */
-    private function write(Resource $resource, Model $model, MutationNode $node, OperationLog $log, array $owned): Model
+    /**
+     * @param  array<string, mixed>  $owned
+     * @param  (Closure(Model): void)|null  $linking
+     */
+    private function write(Resource $resource, Model $model, MutationNode $node, OperationLog $log, array $owned, ?Closure $linking): Model
     {
         $entry = $node->toArray();
-        $writes = self::writes($resource, $model, $node);
+        $writes = RelationWrites::ofNode($resource, $model, $node);
+        $hooked = self::writesAttributes($node);
         $relationKeys = [];
 
         $log->rewind();
@@ -91,15 +93,25 @@ final readonly class Mutator
             $write->before($model, $this, $log);
         }
 
-        $resource->mutating($this->request, $entry, $model);
+        if ($hooked) {
+            $resource->mutating($this->request, $entry, $model);
+        }
 
         foreach ($writes as $write) {
             $relationKeys = [...$relationKeys, ...$write->owned($model)];
         }
 
-        (new AttributeWriter($resource->definition()->fields()))
-            ->write($model, $node->operation, $node->attributes ?? [], [...$relationKeys, ...$owned])
-            ->save();
+        (new AttributeWriter($resource->definition()->fields()))->write($model, $node->operation, $node->attributes ?? [], [...$relationKeys, ...$owned]);
+
+        if ($linking !== null) {
+            $linking($model);
+        }
+
+        $this->checks->settle($resource, $model);
+
+        if ($hooked || $model->isDirty()) {
+            $model->save();
+        }
 
         if ($model->wasRecentlyCreated || $model->wasChanged()) {
             $resource
@@ -120,32 +132,17 @@ final readonly class Mutator
                 ->forget($model);
         }
 
-        $resource->mutated($this->request, $entry, $model);
+        if ($hooked) {
+            $resource->mutated($this->request, $entry, $model);
+        }
 
         return $model;
     }
 
-    /** @return list<RelationWrites> */
-    private static function writes(Resource $resource, Model $model, MutationNode $node): array
+    private static function writesAttributes(MutationNode $node): bool
     {
-        $entries = $node->relations ?? [];
-        $writes = [];
-
-        foreach ($resource->definition()->relations() as $relation) {
-            if (isset($entries[$relation->relation])) {
-                $writes[] = RelationWrites::of($model, $relation, $entries[$relation->relation]);
-            }
-        }
-
-        return $writes;
-    }
-
-    private static function ability(MutationNode $node): string
-    {
-        return match (true) {
-            $node->operation === MutationOperation::Create, $node->operation === MutationOperation::Update => $node->operation->value,
-            ! empty($node->attributes) => $node->operation->writeOperation()->value ?? 'view',
-            default => 'view',
-        };
+        return $node->operation === MutationOperation::Create
+            || $node->operation === MutationOperation::Update
+            || ($node->attributes ?? []) !== [];
     }
 }

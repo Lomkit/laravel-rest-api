@@ -47,7 +47,7 @@ final class LinkReplay
         $rows = $this->rowsOf($resource, $node);
 
         foreach ($rows as $row) {
-            $writes = self::writes($resource, $row, $node);
+            $writes = RelationWrites::ofNode($resource, $row->model, $node);
             $from = count($this->steps);
 
             foreach ($writes as $write) {
@@ -124,20 +124,5 @@ final class LinkReplay
         }
 
         return $rows;
-    }
-
-    /** @return list<RelationWrites> */
-    private static function writes(Resource $resource, LinkedRow $row, MutationNode $node): array
-    {
-        $entries = $node->relations ?? [];
-        $writes = [];
-
-        foreach ($resource->definition()->relations() as $relation) {
-            if (isset($entries[$relation->relation])) {
-                $writes[] = RelationWrites::of($row->model, $relation, $entries[$relation->relation]);
-            }
-        }
-
-        return $writes;
     }
 }

@@ -13,6 +13,7 @@ use Lomkit\Rest\Mutations\OwnerWrites;
 use Lomkit\Rest\Mutations\PivotWrites;
 use Lomkit\Rest\Mutations\RelationWrites;
 use Lomkit\Rest\Mutations\RowSet;
+use Lomkit\Rest\Mutations\WriteChecks;
 use Lomkit\Rest\Relations\HasManyThrough;
 use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\Relation;
@@ -69,7 +70,10 @@ class RelationWritesTest extends PackageTestCase
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('The relation [replies] cannot be written.');
 
-        $writes->after(new Team, new Mutator(MutateRequest::create('/api/teams/mutate', 'POST'), new RowSet), new OperationLog);
+        $request = MutateRequest::create('/api/teams/mutate', 'POST');
+        $rows = new RowSet;
+
+        $writes->after(new Team, new Mutator($request, $rows, new WriteChecks($rows)), new OperationLog);
     }
 
     #[Test]

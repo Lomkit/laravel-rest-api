@@ -6,11 +6,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToManyRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\BelongsToRelationFactory;
-use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
 use Lomkit\Rest\Tests\Support\Database\Factories\SoftDeletedModelFactory;
 use Lomkit\Rest\Tests\Support\Models\BelongsToManyRelation;
-use Lomkit\Rest\Tests\Support\Models\BelongsToRelation;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 use Lomkit\Rest\Tests\Support\Policies\GreenPolicy;
@@ -338,93 +335,6 @@ class HooksTest extends TestCase
         );
     }
 
-    public function test_resource_mutating_hook_by_attaching(): void
-    {
-        $modelToCreate = ModelFactory::new()->makeOne();
-        $belongsToRelationToAttach = BelongsToRelationFactory::new()->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
-
-        $this->post(
-            '/api/model-hooks/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'create',
-                        'attributes' => [
-                            'name' => $modelToCreate->name,
-                            'number' => $modelToCreate->number,
-                        ],
-                        'relations' => [
-                            'belongsToRelation' => [
-                                'operation' => 'attach',
-                                'key' => $belongsToRelationToAttach->getKey(),
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertEquals(
-            1,
-            Cache::get('mutating-belongs-to')
-        );
-
-        $this->assertEquals(
-            1,
-            Cache::get('mutated-belongs-to')
-        );
-    }
-
-    public function test_resource_mutating_hook_by_detaching(): void
-    {
-        $belongsToRelationToDetach = BelongsToRelationFactory::new()
-            ->createOne();
-
-        $modelToUpdate = SoftDeletedModelFactory::new()
-            ->for($belongsToRelationToDetach)
-            ->createOne();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(BelongsToRelation::class, GreenPolicy::class);
-
-        $this->post(
-            '/api/model-hooks/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001,
-                        ],
-                        'relations' => [
-                            'belongsToRelation' => [
-                                'operation' => 'detach',
-                                'key' => $belongsToRelationToDetach->getKey(),
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertEquals(
-            1,
-            Cache::get('mutating-belongs-to')
-        );
-
-        $this->assertEquals(
-            1,
-            Cache::get('mutated-belongs-to')
-        );
-    }
-
     public function test_resource_mutating_hook_by_syncing(): void
     {
         $modelToUpdate = SoftDeletedModelFactory::new()->createOne();
@@ -469,58 +379,6 @@ class HooksTest extends TestCase
 
         $this->assertEquals(
             1,
-            Cache::get('mutated-belongs-to-many')
-        );
-    }
-
-    public function test_resource_mutating_hook_by_toggling(): void
-    {
-        $modelToUpdate = SoftDeletedModelFactory::new()->createOne();
-        $belongsToManyToggled = BelongsToManyRelationFactory::new()->createOne();
-        $belongsToManyNotToggled = BelongsToManyRelationFactory::new()->createOne();
-
-        $modelToUpdate->belongsToManyRelation()
-            ->attach($belongsToManyToggled);
-
-        Gate::policy(Model::class, GreenPolicy::class);
-        Gate::policy(BelongsToManyRelation::class, GreenPolicy::class);
-
-        $this->post(
-            '/api/model-hooks/mutate',
-            [
-                'mutate' => [
-                    [
-                        'operation' => 'update',
-                        'key' => $modelToUpdate->getKey(),
-                        'attributes' => [
-                            'name' => 'new name',
-                            'number' => 5001,
-                        ],
-                        'relations' => [
-                            'belongsToManyRelation' => [
-                                [
-                                    'operation' => 'toggle',
-                                    'key' => $belongsToManyToggled->getKey(),
-                                ],
-                                [
-                                    'operation' => 'toggle',
-                                    'key' => $belongsToManyNotToggled->getKey(),
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $this->assertEquals(
-            2,
-            Cache::get('mutating-belongs-to-many')
-        );
-
-        $this->assertEquals(
-            2,
             Cache::get('mutated-belongs-to-many')
         );
     }

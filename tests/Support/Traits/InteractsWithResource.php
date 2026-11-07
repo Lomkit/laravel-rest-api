@@ -49,41 +49,4 @@ trait InteractsWithResource
             $response->json('data')
         );
     }
-
-    protected function assertResourceModel($response, $models, Resource $resource)
-    {
-        $response->assertStatus(200);
-
-        $this->assertEquals(
-            array_map(
-                function ($model) use ($resource) {
-                    return $model->only(
-                        $resource
-                            ->definition()
-                            ->fields()
-                            ->selectable()
-                            ->names()
-                    );
-                },
-                $models
-            ),
-            $response->json('data')
-        );
-    }
-
-    protected function assertMutatedResponse($response, $createdModels = [], $updatedModels = [])
-    {
-        $response->assertStatus(200);
-
-        $this->assertEquals(
-            array_map(function ($model) {
-                return $model->getKey();
-            }, $updatedModels),
-            array_column(array_filter($response->json('operations'), fn (array $operation): bool => $operation['operation'] === 'update'), 'key')
-        );
-
-        foreach ($createdModels as $model) {
-            $this->assertDatabaseHas($model->getTable(), $model->getAttributes());
-        }
-    }
 }

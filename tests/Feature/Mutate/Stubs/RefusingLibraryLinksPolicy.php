@@ -28,6 +28,11 @@ class RefusingLibraryLinksPolicy extends OpenLibraryPolicy
         return false;
     }
 
+    public function attachBook(?Authenticatable $user, Model $loan, Model $book): bool
+    {
+        return false;
+    }
+
     public function detachBook(?Authenticatable $user, Model $loan, Model $book): bool
     {
         return false;

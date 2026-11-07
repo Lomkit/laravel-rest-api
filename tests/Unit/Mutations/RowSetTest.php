@@ -18,7 +18,6 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\UncachedTicketResource;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Lomkit\Rest\Tests\Unit\Mutations\Stubs\StringKeyTagResource;
-use Lomkit\Rest\Tests\Unit\Mutations\Stubs\SubclassedTag;
 use Lomkit\Rest\Tests\Unit\Mutations\Stubs\SubclassingTagResource;
 use Lomkit\Rest\Validation\KeysGrammar;
 use PHPUnit\Framework\Attributes\Test;
@@ -85,38 +84,6 @@ class RowSetTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_loads_the_linked_rows_that_no_entry_named_with_one_query(): void
-    {
-        $rows = new RowSet;
-        $tags = $this->resource(TagResource::class);
-        $this->expect($rows, $tags, 2);
-        $named = $rows->find($tags, 2);
-        $this->captureQueries();
-
-        $linked = $rows->linked($tags, [2, 1, 3]);
-
-        $this->assertCount(2, $linked);
-        $this->assertSame([$named, 1], [$linked[0], $linked[1]->getKey()]);
-        $this->assertSame(['select * from tags where tags.id in (1, 3) and tags.deleted_at is null'], array_column($this->statements, 0));
-    }
-
-    #[Test]
-    public function it_loads_the_linked_rows_with_one_query_per_1000_keys(): void
-    {
-        $rows = new RowSet;
-        $tags = $this->resource(TagResource::class);
-        $this->captureQueries();
-
-        $linked = $rows->linked($tags, range(1, 1001));
-
-        $this->assertCount(2, $linked);
-        $this->assertSame([
-            'select * from tags where tags.id in ('.implode(', ', range(1, 1000)).') and tags.deleted_at is null',
-            'select * from tags where tags.id in (1001) and tags.deleted_at is null',
-        ], array_column($this->statements, 0));
-    }
-
-    #[Test]
     public function it_gives_each_row_its_own_instance_when_its_key_is_cast_to_an_object(): void
     {
         $rows = new RowSet;
@@ -125,22 +92,6 @@ class RowSetTest extends PackageTestCase
         $this->expect($rows, $tags, 2);
 
         $this->assertSame(['Hardware', 'Network'], [$rows->find($tags, 1)->getAttribute('name'), $rows->find($tags, 2)->getAttribute('name')]);
-    }
-
-    #[Test]
-    public function it_links_the_rows_it_holds_for_a_model_that_builds_a_subclass(): void
-    {
-        $rows = new RowSet;
-        $tags = $this->resource(SubclassingTagResource::class);
-        $this->expect($rows, $tags, 2);
-        $named = $rows->find($tags, 2);
-        $this->captureQueries();
-
-        $linked = $rows->linked($tags, [2, 1]);
-
-        $this->assertCount(2, $linked);
-        $this->assertSame([$named, SubclassedTag::class], [$linked[0], $linked[1]::class]);
-        $this->assertSame(['select * from tags where tags.id in (1) and tags.deleted_at is null'], array_column($this->statements, 0));
     }
 
     #[Test]
@@ -159,7 +110,7 @@ class RowSetTest extends PackageTestCase
         $rows->find($subclassing, 2)->update(['name' => 'Wifi']);
         $found = $rows->find($tags, 1);
 
-        $this->assertSame(['Printers', 'Printers', 'Wifi'], [$found->getAttribute('name'), $found->getOriginal('name'), $rows->linked($tags, [2])[0]->getAttribute('name')]);
+        $this->assertSame(['Printers', 'Printers', 'Wifi'], [$found->getAttribute('name'), $found->getOriginal('name'), $rows->find($tags, 2)->getAttribute('name')]);
     }
 
     #[Test]

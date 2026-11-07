@@ -37,46 +37,6 @@ class TracingPolicy
         return self::record('update', $model);
     }
 
-    public function attachBook(?Authenticatable $user, Model $model, Model $related): bool
-    {
-        return self::record('attachBook', $model, $related);
-    }
-
-    public function detachBook(?Authenticatable $user, Model $model, Model $related): bool
-    {
-        return self::record('detachBook', $model, $related);
-    }
-
-    public function attachLoan(?Authenticatable $user, Model $model, Model $related): bool
-    {
-        return self::record('attachLoan', $model, $related);
-    }
-
-    public function detachLoan(?Authenticatable $user, Model $model, Model $related): bool
-    {
-        return self::record('detachLoan', $model, $related);
-    }
-
-    public function attachLabel(?Authenticatable $user, Model $model, Model $related): bool
-    {
-        return self::record('attachLabel', $model, $related);
-    }
-
-    public function detachLabel(?Authenticatable $user, Model $model, Model $related): bool
-    {
-        return self::record('detachLabel', $model, $related);
-    }
-
-    public function attachShelf(?Authenticatable $user, Model $model, Model $related): bool
-    {
-        return self::record('attachShelf', $model, $related);
-    }
-
-    public function detachShelf(?Authenticatable $user, Model $model, Model $related): bool
-    {
-        return self::record('detachShelf', $model, $related);
-    }
-
     public function attachTag(?Authenticatable $user, Model $model, Model $related): bool
     {
         return self::record('attachTag', $model, $related);
@@ -85,16 +45,6 @@ class TracingPolicy
     public function detachTag(?Authenticatable $user, Model $model, Model $related): bool
     {
         return self::record('detachTag', $model, $related);
-    }
-
-    public function attachTicket(?Authenticatable $user, Model $model, Model $related): bool
-    {
-        return self::record('attachTicket', $model, $related);
-    }
-
-    public function detachTicket(?Authenticatable $user, Model $model, Model $related): bool
-    {
-        return self::record('detachTicket', $model, $related);
     }
 
     private static function record(string $ability, Model ...$models): bool

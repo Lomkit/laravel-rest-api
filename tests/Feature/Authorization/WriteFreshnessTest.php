@@ -56,7 +56,7 @@ class WriteFreshnessTest extends HelpdeskTestCase
             'operations' => [['operation' => 'create', 'key' => $stale->id]],
             'records' => [['status' => 'closed', 'gates' => ['authorized_to_update' => ['allowed' => false, 'message' => 'Closed tickets are read-only.']]]],
         ]);
-        $this->assertSame(['create', 'viewAny', 'update '.$stale->id], $this->tickets->calls);
+        $this->assertSame(['create', 'viewAny', 'create', 'update '.$stale->id], $this->tickets->calls);
     }
 
     #[Test]

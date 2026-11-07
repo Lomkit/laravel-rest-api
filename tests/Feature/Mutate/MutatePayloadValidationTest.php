@@ -48,6 +48,57 @@ class MutatePayloadValidationTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_refuses_a_body_without_a_mutate_list(): void
+    {
+        $response = $this->postJson('/api/products/mutate', []);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', ['mutate' => ['The mutate field is required.']]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $entry
+     * @param  array<string, list<string>>  $errors
+     */
+    #[Test]
+    #[DataProvider('rootLinks')]
+    public function it_refuses_a_link_operation_at_the_root(array $entry, array $errors): void
+    {
+        $lighting = Category::factory()->create(['name' => 'Lighting']);
+        Product::factory()->create(['id' => 101, 'category_id' => $lighting->id, 'name' => 'Desk lamp']);
+
+        $response = $this->postJson('/api/products/mutate', ['mutate' => [$entry]]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', $errors);
+        $this->assertSame(['Desk lamp'], Product::query()
+            ->pluck('name')
+            ->all());
+    }
+
+    /** @return array<string, array{array<string, mixed>, array<string, list<string>>}> */
+    public static function rootLinks(): array
+    {
+        return [
+            'attach' => [['operation' => 'attach'], [
+                'mutate.0.operation' => ['The selected mutate.0.operation is invalid.'],
+                'mutate.0.key' => ['The mutate.0.key field must be present when mutate.0.operation is attach.'],
+            ]],
+            'detach' => [['operation' => 'detach', 'key' => 101], [
+                'mutate.0.operation' => ['The selected mutate.0.operation is invalid.'],
+            ]],
+        ];
+    }
+
+    #[Test]
+    public function it_refuses_an_update_without_a_key(): void
+    {
+        $response = $this->postJson('/api/products/mutate', ['mutate' => [['operation' => 'update', 'attributes' => ['name' => 'Floor lamp']]]]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', [
+            'mutate.0.key' => ['The mutate.0.key field must be present when mutate.0.operation is update.'],
+        ]);
+    }
+
+    #[Test]
     public function it_refuses_a_key_on_create(): void
     {
         $lighting = Category::factory()->create(['name' => 'Lighting']);

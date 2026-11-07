@@ -32,6 +32,10 @@ class Relation implements \JsonSerializable
 
     protected Resource $fromResource;
 
+    private ?string $attachAbility = null;
+
+    private ?string $detachAbility = null;
+
     public function __construct($relation, $type)
     {
         $this->relation = $relation;
@@ -85,6 +89,24 @@ class Relation implements \JsonSerializable
         $this->fromResource = $fromResource;
 
         return $this;
+    }
+
+    public function parentResource(): Resource
+    {
+        return $this->fromResource;
+    }
+
+    public function abilities(?string $attach = null, ?string $detach = null): static
+    {
+        $this->attachAbility = $attach;
+        $this->detachAbility = $detach;
+
+        return $this;
+    }
+
+    public function linkAbility(bool $detach): ?string
+    {
+        return $detach ? $this->detachAbility : $this->attachAbility;
     }
 
     /** @return list<MutationOperation> */

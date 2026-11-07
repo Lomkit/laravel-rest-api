@@ -2,6 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Relations;
 
+use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -104,5 +107,46 @@ class PivotWritesTest extends WeightedPivotTestCase
             'mutate.0.relations.'.$relation.'.0.pivot' => ['The '.self::shown($relation).'.pivot field must be an array.'],
         ]);
         $this->assertSame([], $this->pivotRows($relation));
+    }
+
+    #[Test]
+    #[DataProvider('relations')]
+    public function it_updates_the_rows_of_a_key_list_with_their_pivot(string $relation): void
+    {
+        [$first, $second, $third] = $this->relatedRows($relation);
+        $column = $relation === 'labelledTickets' ? 'status' : 'name';
+
+        $response = $this->mutate(
+            $relation,
+            ['operation' => 'update', 'key' => [$first->getKey(), $second->getKey()], 'attributes' => [$column => 'reviewed'], 'pivot' => ['weight' => 3]],
+            ['operation' => 'update', 'key' => $third->getKey(), 'pivot' => ['weight' => 5]],
+        );
+
+        $rows = $this->parent($relation)
+            ->{$relation}()
+            ->orderBy($this->related($relation)->getQualifiedKeyName())
+            ->get()
+            ->map(fn (Model $related): array => [$related->getKey(), $related->getAttribute($column), $related->getRelation('pivot')->getAttribute('weight')])
+            ->all();
+        $response->assertOk();
+        $this->assertSame([
+            [$first->getKey(), 'reviewed', 3],
+            [$second->getKey(), 'reviewed', 3],
+            [$third->getKey(), $third->getAttribute($column), 5],
+        ], $rows);
+    }
+
+    /** @return array{Model, Model, Model} */
+    private function relatedRows(string $relation): array
+    {
+        if ($relation !== 'labelledTickets') {
+            return [$this->hardware, Tag::create(['name' => 'Network']), Tag::create(['name' => 'Monitor'])];
+        }
+
+        return [
+            $this->jam,
+            Ticket::create(['team_id' => $this->billing->id, 'title' => 'Toner low', 'status' => 'open']),
+            Ticket::create(['team_id' => $this->billing->id, 'title' => 'Laptop setup', 'status' => 'open']),
+        ];
     }
 }

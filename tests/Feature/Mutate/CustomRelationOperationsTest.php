@@ -36,7 +36,7 @@ class CustomRelationOperationsTest extends WriteTraceTestCase
 
     #[Test]
     #[DataProvider('linkOperations')]
-    public function it_checks_the_attach_of_each_row_that_a_custom_has_many_relation_links(string $operation): void
+    public function it_checks_each_row_that_a_custom_has_many_relation_links_as_an_update_of_the_row(string $operation): void
     {
         $this->app?->bind(TeamResource::class, SyncedTeamResource::class);
         Team::query()->insert(['id' => 102, 'name' => 'Ops']);
@@ -50,18 +50,17 @@ class CustomRelationOperationsTest extends WriteTraceTestCase
             'sql select * from teams where teams.id in (102)',
             'sql select * from tickets where tickets.id in (101)',
             'policy update Team(Ops)',
+            'policy update Ticket(Printer jam)',
             'saved Team(Ops)',
-            'policy view Ticket(Printer jam)',
             'sql update tickets set team_id = ?, updated_at = ? where id = ?',
             'saved Ticket(Printer jam)',
-            'policy attachTicket Team(Ops) Ticket(Printer jam)',
         ]);
         $this->assertSame(102, self::teamOfPrinterJam());
     }
 
     #[Test]
     #[DataProvider('linkOperations')]
-    public function it_checks_the_attach_of_the_row_that_a_custom_morph_to_relation_links(string $operation): void
+    public function it_checks_the_row_that_a_custom_morph_to_relation_links_with_the_update_of_its_parent(string $operation): void
     {
         $this->app?->bind(LabelResource::class, SyncedLabelResource::class);
 
@@ -74,8 +73,6 @@ class CustomRelationOperationsTest extends WriteTraceTestCase
             'sql select * from shelves where shelves.id in (101)',
             'policy update Label(loose)',
             'policy view Shelf(Classics)',
-            'saved Shelf(Classics)',
-            'policy attachShelf Label(loose) Shelf(Classics)',
             'sql update labels set labelable_type = ?, labelable_id = ?, updated_at = ? where id = ?',
             'saved Label(loose)',
         ]);

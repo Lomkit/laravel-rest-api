@@ -50,7 +50,7 @@ class UnwrittenRowDecisionsTest extends HelpdeskTestCase
         ]]])->assertOk();
 
         $this->assertSame(['view 1', 'view 2'], $this->tags->calls);
-        $this->assertSame(['update 1', 'attachTag 1 1', 'attachTag 1 2', 'detachTag 1 1', 'attachTag 1 1', 'detachTag 1 1'], $this->tickets->calls);
+        $this->assertSame(['update 1', 'attachTag 1 1', 'attachTag 1 2', 'detachTag 1 1'], $this->tickets->calls);
     }
 
     #[Test]

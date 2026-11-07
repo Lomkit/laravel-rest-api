@@ -10,13 +10,14 @@ use function Illuminate\Support\enum_value;
 
 final readonly class Check
 {
-    /** @param list<Model> $related */
+    /** @param list<Model|Changes> $related */
     public function __construct(
         public Resource $resource,
         public string $ability,
         public Model|string $subject,
         public string $path = '',
         public array $related = [],
+        public ?Model $row = null,
     ) {}
 
     public static function onClass(Resource $resource, string $ability, string $path = ''): self
@@ -30,7 +31,7 @@ final readonly class Check
         return array_values(array_unique([self::rowOf($model), self::instanceKey($model)]));
     }
 
-    /** @return list<Model|string> */
+    /** @return list<Model|Changes|string> */
     public function arguments(): array
     {
         return [$this->subject, ...$this->related];
@@ -39,7 +40,7 @@ final readonly class Check
     /** @return list<Model> */
     public function models(): array
     {
-        return array_values(array_filter($this->arguments(), fn (Model|string $argument): bool => $argument instanceof Model));
+        return array_values(array_filter($this->arguments(), fn (Model|Changes|string $argument): bool => $argument instanceof Model));
     }
 
     /** @return list<string> */
@@ -50,6 +51,10 @@ final readonly class Check
 
     public function isKeyedByInstance(): bool
     {
+        if (array_filter($this->related, fn (Model|Changes $argument): bool => $argument instanceof Changes) !== []) {
+            return true;
+        }
+
         foreach ($this->models() as $model) {
             if (self::storedKey($model) === null) {
                 return true;
@@ -68,10 +73,14 @@ final readonly class Check
         ]);
     }
 
-    private static function argumentKey(Model|string $argument): string
+    private static function argumentKey(Model|Changes|string $argument): string
     {
         if (is_string($argument)) {
             return $argument;
+        }
+
+        if ($argument instanceof Changes) {
+            return 'changes#'.spl_object_id($argument);
         }
 
         return $argument::class.'#'.(self::storedKey($argument) ?? self::instanceKey($argument));

@@ -7,6 +7,7 @@ use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Mutations\Stubs\CountedRulesPostController;
 use Lomkit\Rest\Tests\Feature\Mutations\Stubs\CountedRulesPostResource;
+use Lomkit\Rest\Tests\Feature\Mutations\Stubs\RequiringAuthorController;
 use Lomkit\Rest\Tests\Feature\Mutations\Stubs\RuledAuthorController;
 use Lomkit\Rest\Tests\Feature\Mutations\Stubs\RuledPostController;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
@@ -36,6 +37,7 @@ class ResourceRulesTest extends PackageTestCase
         Rest::resource('ruled-posts', RuledPostController::class)->register();
         Rest::resource('ruled-authors', RuledAuthorController::class)->register();
         Rest::resource('counted-rules-posts', CountedRulesPostController::class)->register();
+        Rest::resource('requiring-authors', RequiringAuthorController::class)->register();
         CountedRulesPostResource::$rulesCalls = 0;
         CountedRulesPostResource::$createRulesCalls = 0;
         CountedRulesPostResource::$updateRulesCalls = 0;
@@ -176,6 +178,21 @@ class ResourceRulesTest extends PackageTestCase
             'mutate.0.attributes.metadata.tags.0' => ['The mutate.0.attributes.metadata.tags.0 field must not be greater than 5 characters.'],
         ]);
         $this->assertSame(0, Post::query()->count());
+    }
+
+    #[Test]
+    public function it_applies_no_resource_rule_to_a_link_only_entry(): void
+    {
+        Gate::policy(Author::class, OpenPublishingPolicy::class);
+        Author::query()->insert([['id' => 101, 'first_name' => 'Ada', 'last_name' => 'Byron', 'api_token' => 'token-1'], ['id' => 102, 'first_name' => 'Grace', 'last_name' => 'Hopper', 'api_token' => 'token-2']]);
+        Post::query()->insert(['id' => 101, 'author_id' => 102, 'title' => 'Notes', 'status' => 'draft', 'published_on' => '2026-01-01']);
+
+        $response = $this->mutate('/requiring-authors/mutate', [['operation' => 'update', 'key' => 101, 'relations' => ['posts' => [['operation' => 'attach', 'key' => [101]]]]]]);
+
+        $response->assertOk();
+        $this->assertSame(101, Post::query()
+            ->findOrFail(101)
+            ->getAttribute('author_id'));
     }
 
     /** @param list<array<string, mixed>> $mutations */

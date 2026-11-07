@@ -13,6 +13,8 @@ class MutationQueryCountTest extends WriteTraceTestCase
 
     private const string UPDATE_TICKET = 'update tickets set team_id = ?, updated_at = ? where id = ?';
 
+    private const array MOVED_TICKETS = ['policy update Team(Ops)', 'policy update Ticket(Printer jam)', 'policy update Ticket(Password reset)'];
+
     #[\Override]
     protected function setUp(): void
     {
@@ -39,6 +41,12 @@ class MutationQueryCountTest extends WriteTraceTestCase
             self::UPDATE_BOOK,
             self::UPDATE_BOOK,
             self::UPDATE_BOOK,
+        ], [
+            'policy update Book(Dune)',
+            'policy update Book(Emma)',
+            'policy update Book(Ubik)',
+            'policy update Book(Solaris)',
+            'policy update Book(Kindred)',
         ]);
     }
 
@@ -52,7 +60,7 @@ class MutationQueryCountTest extends WriteTraceTestCase
             'select * from tickets where tickets.id in (101, 102)',
             self::UPDATE_TICKET,
             self::UPDATE_TICKET,
-        ]);
+        ], self::MOVED_TICKETS);
     }
 
     #[Test]
@@ -68,7 +76,7 @@ class MutationQueryCountTest extends WriteTraceTestCase
             'select * from tickets where tickets.id in (101, 102)',
             self::UPDATE_TICKET,
             self::UPDATE_TICKET,
-        ]);
+        ], self::MOVED_TICKETS);
     }
 
     #[Test]
@@ -82,7 +90,7 @@ class MutationQueryCountTest extends WriteTraceTestCase
             'select * from teams where teams.id in (102)',
             self::UPDATE_TICKET,
             self::UPDATE_TICKET,
-        ]);
+        ], ['policy update Ticket(Printer jam)', 'policy view Team(Ops)', 'policy update Ticket(Password reset)']);
     }
 
     #[Test]
@@ -98,6 +106,14 @@ class MutationQueryCountTest extends WriteTraceTestCase
             'select * from tags where tags.id in (101, 102) and tags.deleted_at is null',
             'insert into tickets (team_id, title, status, updated_at, created_at) values (?, ?, ?, ?, ?)',
             'insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?), (?, ?, ?, ?)',
+        ], [
+            'policy create',
+            'policy create',
+            'policy view Team(Support)',
+            'policy view Tag(Hardware)',
+            'policy view Tag(Network)',
+            'policy attachTag Ticket(Fan noise) Tag(Hardware)',
+            'policy attachTag Ticket(Fan noise) Tag(Network)',
         ]);
     }
 
@@ -116,6 +132,14 @@ class MutationQueryCountTest extends WriteTraceTestCase
             'insert into labels (text, labelable_id, labelable_type, updated_at, created_at) values (?, ?, ?, ?, ?)',
             'insert into book_shelf (book_id, shelf_id) values (?, ?)',
             'insert into book_shelf (book_id, shelf_id) values (?, ?)',
+        ], [
+            'policy create',
+            'policy create',
+            'policy create',
+            'policy create',
+            'policy create',
+            'policy view Shelf(Classics)',
+            'policy view Shelf(Poetry)',
         ]);
     }
 

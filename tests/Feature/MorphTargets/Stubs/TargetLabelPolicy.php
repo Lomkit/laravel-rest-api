@@ -5,10 +5,8 @@ namespace Lomkit\Rest\Tests\Feature\MorphTargets\Stubs;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Tests\Fixtures\Library\Book;
 use Lomkit\Rest\Tests\Fixtures\Library\Label;
 use Lomkit\Rest\Tests\Fixtures\Library\OpenLibraryPolicy;
-use Lomkit\Rest\Tests\Fixtures\Library\Shelf;
 
 class TargetLabelPolicy extends OpenLibraryPolicy
 {
@@ -18,25 +16,21 @@ class TargetLabelPolicy extends OpenLibraryPolicy
     /** @var list<string> */
     public static array $denied = [];
 
-    public function attachBook(?Authenticatable $user, Label $label, Book $book): Response
+    public function attachLabelable(?Authenticatable $user, Label $label, Model $target): Response
     {
-        return $this->record('attachBook', $book);
+        return $this->record('attachLabelable', $target);
     }
 
-    public function attachShelf(?Authenticatable $user, Label $label, Shelf $shelf): Response
+    public function detachLabelable(?Authenticatable $user, Label $label, Model $target): Response
     {
-        return $this->record('attachShelf', $shelf);
-    }
-
-    public function detachShelf(?Authenticatable $user, Label $label, Shelf $shelf): Response
-    {
-        return $this->record('detachShelf', $shelf);
+        return $this->record('detachLabelable', $target);
     }
 
     private function record(string $ability, Model $target): Response
     {
-        self::$calls[] = $ability.' '.$target->getKey();
+        $call = $ability.' '.class_basename($target).' '.$target->getKey();
+        self::$calls[] = $call;
 
-        return in_array($ability, self::$denied, true) ? Response::deny('This target is locked.') : Response::allow();
+        return in_array($call, self::$denied, true) ? Response::deny('This target is locked.') : Response::allow();
     }
 }

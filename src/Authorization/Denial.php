@@ -22,7 +22,7 @@ final readonly class Denial
 
     public static function of(Check $check, Decision $decision): self
     {
-        return new self($check->path, $check->ability, $check->resource::class, self::keyOf($check->subject), $decision);
+        return new self($check->path, $check->ability, $check->resource::class, self::keyOf($check->row ?? $check->subject), $decision);
     }
 
     public function message(): string

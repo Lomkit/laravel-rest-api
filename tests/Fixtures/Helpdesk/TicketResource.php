@@ -31,8 +31,12 @@ class TicketResource extends Resource
     {
         return [
             BelongsTo::make('team', TeamResource::class),
-            BelongsToMany::make('tags', TagResource::class)->pivotFields([Integer::make('position')->nullable()]),
-            MorphToMany::make('labels', TagResource::class)->pivotFields([Integer::make('position')->nullable()]),
+            BelongsToMany::make('tags', TagResource::class)
+                ->pivotFields([Integer::make('position')->nullable()])
+                ->abilities(attach: 'attachTag', detach: 'detachTag'),
+            MorphToMany::make('labels', TagResource::class)
+                ->pivotFields([Integer::make('position')->nullable()])
+                ->abilities(attach: 'attachTag', detach: 'detachTag'),
         ];
     }
 
