@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 class RestConfigTest extends TestCase
 {
-    private const array VARIABLES = ['REST_AUTHORIZATIONS_STRICT', 'REST_AUTHORIZATIONS_CACHE_ENABLED'];
+    private const array VARIABLES = ['REST_AUTHORIZATIONS_STRICT', 'REST_AUTHORIZATIONS_CACHE_ENABLED', 'REST_AUTHORIZATIONS_CACHE_STORE'];
 
     #[\Override]
     protected function tearDown(): void
@@ -30,8 +30,8 @@ class RestConfigTest extends TestCase
         $config = RestConfig::from($this->packageConfig());
 
         $this->assertFalse($config->strict);
-        $this->assertFalse($config->cacheEnabled);
-        $this->assertSame(5, $config->cacheMinutes);
+        $this->assertTrue($config->cacheEnabled);
+        $this->assertNull($config->cacheStore);
         $this->assertSame('gates', $config->gatesKey);
         $this->assertSame('@type', $config->morphTypeKey);
         $this->assertTrue($config->selectColumns);
@@ -53,18 +53,29 @@ class RestConfigTest extends TestCase
         $config = RestConfig::from($this->packageConfig());
 
         $this->assertTrue($config->strict);
-        $this->assertFalse($config->cacheEnabled);
+        $this->assertTrue($config->cacheEnabled);
     }
 
     #[Test]
-    public function it_turns_the_cache_on_from_the_environment(): void
+    public function it_turns_the_cache_off_from_the_environment(): void
     {
-        Env::getRepository()->set('REST_AUTHORIZATIONS_CACHE_ENABLED', '1');
+        Env::getRepository()->set('REST_AUTHORIZATIONS_CACHE_ENABLED', '0');
 
         $config = RestConfig::from($this->packageConfig());
 
+        $this->assertFalse($config->cacheEnabled);
+        $this->assertNull($config->cacheStore);
+    }
+
+    #[Test]
+    public function it_names_the_cache_store_from_the_environment(): void
+    {
+        Env::getRepository()->set('REST_AUTHORIZATIONS_CACHE_STORE', 'redis');
+
+        $config = RestConfig::from($this->packageConfig());
+
+        $this->assertSame('redis', $config->cacheStore);
         $this->assertTrue($config->cacheEnabled);
-        $this->assertFalse($config->strict);
     }
 
     #[Test]
@@ -110,7 +121,7 @@ class RestConfigTest extends TestCase
         return [
             'strict mode' => ['rest.authorizations.strict', 'on', 'The [rest.authorizations.strict] option must be a boolean.'],
             'the cache switch' => ['rest.authorizations.cache.enabled', null, 'The [rest.authorizations.cache.enabled] option must be a boolean.'],
-            'the cache minutes' => ['rest.authorizations.cache.default', '5 minutes', 'The [rest.authorizations.cache.default] option must be an integer of 0 or more.'],
+            'the cache store' => ['rest.authorizations.cache.store', '', 'The [rest.authorizations.cache.store] option must be null or a non-empty string.'],
             'the gates key' => ['rest.gates.key', '', 'The [rest.gates.key] option must be a non-empty string.'],
             'the gate names' => ['rest.gates.names', ['can_view'], 'The [rest.gates.names] option must be a map of strings.'],
             'one gate name' => ['rest.gates.names.authorized_to_delete', false, 'The [rest.gates.names.authorized_to_delete] option must be a string.'],

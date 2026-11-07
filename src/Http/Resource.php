@@ -97,12 +97,6 @@ class Resource implements \JsonSerializable
         return $this->context()->config()->cacheEnabled;
     }
 
-    /** @return \DateTimeInterface|\DateInterval */
-    public function cacheAuthorizationFor()
-    {
-        return now()->addMinutes($this->context()->config()->cacheMinutes);
-    }
-
     #[\Override]
     public function jsonSerialize(): mixed
     {

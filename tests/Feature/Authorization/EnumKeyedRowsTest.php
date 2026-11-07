@@ -2,8 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Authorization;
 
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\CachedChannelController;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Channel;
-use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
 class EnumKeyedRowsTest extends HelpdeskTestCase
@@ -29,13 +30,13 @@ class EnumKeyedRowsTest extends HelpdeskTestCase
     }
 
     #[Test]
-    #[WithConfig('rest.authorizations.cache.enabled', true)]
     public function it_serves_the_decisions_on_enum_keyed_rows_from_the_cache(): void
     {
+        Rest::resource('cached-channels', CachedChannelController::class)->register();
         $this->seedChannels();
 
-        $this->postJson('/api/channels/search', self::GATED_SEARCH)->assertOk();
-        $this->postJson('/api/channels/search', self::GATED_SEARCH)
+        $this->postJson('/cached-channels/search', self::GATED_SEARCH)->assertOk();
+        $this->postJson('/cached-channels/search', self::GATED_SEARCH)
             ->assertOk()
             ->assertJsonPath('data.1.gates.authorized_to_update.allowed', true);
 

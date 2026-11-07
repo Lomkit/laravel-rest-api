@@ -3,10 +3,10 @@
 namespace Lomkit\Rest\Http;
 
 use Illuminate\Auth\AuthManager;
-use Illuminate\Cache\Repository;
 use Illuminate\Container\Container as IlluminateContainer;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Cache\Factory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\Container;
 use Lomkit\Rest\Authorization\Authorizer;
@@ -115,6 +115,6 @@ final class RestContext
             return new NullDecisionStore;
         }
 
-        return new CacheDecisionStore($this->container->make(Repository::class), UserIdentity::of($guard, $user));
+        return new CacheDecisionStore($this->container->make(Factory::class), UserIdentity::of($guard, $user), $this->config()->cacheStore);
     }
 }

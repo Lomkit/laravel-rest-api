@@ -20,6 +20,7 @@ class Helpdesk implements Fixture
         Route::prefix('api')->group(function (): void {
             Rest::resource('tickets', TicketController::class);
             Rest::resource('public-tickets', PublicTicketController::class);
+            Rest::resource('cached-tickets', CachedTicketController::class);
             Rest::resource('uncached-tickets', UncachedTicketController::class);
             Rest::resource('ungated-tickets', UngatedTicketController::class);
             Rest::resource('archived-tickets', ArchivedTicketController::class);

@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Helpdesk;
 
-use DateTimeInterface;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Authorization\Changes;
@@ -18,11 +17,5 @@ class ArchivedTicketResource extends TicketResource
             'create' => Response::deny('Tickets are archived, not created.'),
             default => parent::authorizedTo($ability, $model, $arguments),
         };
-    }
-
-    #[\Override]
-    public function cacheAuthorizationFor(): DateTimeInterface
-    {
-        return now()->addHour();
     }
 }
