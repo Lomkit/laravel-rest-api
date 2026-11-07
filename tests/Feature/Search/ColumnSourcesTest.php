@@ -80,7 +80,7 @@ class ColumnSourcesTest extends PackageTestCase
         $response = $this->postJson('/api/posts/search', ['search' => ['selects' => [['field' => 'id']], 'sorts' => [['field' => 'author.last_name']]]]);
 
         $response->assertOk()->assertJsonPath('data', [['id' => 2], ['id' => 1]]);
-        $this->assertSame('select posts.id from posts order by (select max(authors.last_name) from authors where posts.author_id = authors.id and authors.deleted_at is null) asc limit 50 offset 0', $this->loggedQuery(0));
+        $this->assertSame('select posts.id from posts order by (select max(authors.last_name) from authors where posts.author_id = authors.id and authors.deleted_at is null) asc, posts.id desc limit 50 offset 0', $this->loggedQuery(0));
     }
 
     #[Test]

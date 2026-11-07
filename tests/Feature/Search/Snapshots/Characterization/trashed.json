@@ -75,6 +75,6 @@
         "meta": []
     },
     "raw_queries": [
-        "select \"authors\".\"id\", \"authors\".\"first_name\", \"authors\".\"last_name\", \"authors\".\"settings\" from \"authors\" order by \"authors\".\"first_name\" asc limit 50 offset 0"
+        "select \"authors\".\"id\", \"authors\".\"first_name\", \"authors\".\"last_name\", \"authors\".\"settings\" from \"authors\" order by \"authors\".\"first_name\" asc, \"authors\".\"id\" desc limit 50 offset 0"
     ]
 }

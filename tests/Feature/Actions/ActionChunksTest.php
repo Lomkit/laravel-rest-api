@@ -62,6 +62,7 @@ class ActionChunksTest extends HelpdeskTestCase
             'a filter, in the order of the key' => [['filters' => [self::OPEN]], [[1, 2], [3, 4], [5, 6], [7]], 7, 0],
             'a filter and a sort, in the order of the sort' => [['filters' => [self::OPEN], 'sorts' => [['field' => 'title']]], [[4, 2], [5, 3], [6, 1], [7]], 7, 0],
             'a filter and a limit, in the default order' => [['filters' => [self::OPEN], 'limit' => 10], [[7, 6], [5, 4], [3, 2], [1]], 7, 0],
+            'a sort with ties, the ties in descending key order' => [['filters' => [self::OPEN], 'sorts' => [['field' => 'status']]], [[7, 6], [5, 4], [3, 2], [1]], 7, 0],
         ];
     }
 
@@ -222,7 +223,7 @@ class ActionChunksTest extends HelpdeskTestCase
                 'select * from tickets where (tickets.status = ?) and tickets.id > ? order by tickets.id asc limit 2',
             ]],
             'a sorted search: every key, then chunks of keys' => [ActionTarget::Search, ['search' => ['filters' => [self::OPEN], 'sorts' => [['field' => 'title']]]], [[4, 2], [5, 3], [6, 1], [7]], [
-                'select tickets.id from tickets where (tickets.status = ?) order by tickets.title asc',
+                'select tickets.id from tickets where (tickets.status = ?) order by tickets.title asc, tickets.id desc',
                 'select * from tickets where (tickets.status = ?) and tickets.id in (4, 2)',
                 'select * from tickets where (tickets.status = ?) and tickets.id in (5, 3)',
                 'select * from tickets where (tickets.status = ?) and tickets.id in (6, 1)',
@@ -266,7 +267,7 @@ class ActionChunksTest extends HelpdeskTestCase
                 'select * from tickets where (tickets.status = ?) and tickets.id > ? order by tickets.id asc limit 2',
             ]],
             'a sorted search: the keys, then chunks of keys' => [ActionTarget::Search, ['search' => ['filters' => [self::OPEN], 'sorts' => [['field' => 'title']]]], [
-                'select tickets.id from tickets where (tickets.status = ?) order by tickets.title asc limit 1001',
+                'select tickets.id from tickets where (tickets.status = ?) order by tickets.title asc, tickets.id desc limit 1001',
                 'select * from tickets where (tickets.status = ?) and tickets.id in (4, 2)',
                 'select * from tickets where (tickets.status = ?) and tickets.id in (5, 3)',
                 'select * from tickets where (tickets.status = ?) and tickets.id in (6, 1)',

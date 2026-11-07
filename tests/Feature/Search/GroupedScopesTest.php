@@ -172,7 +172,7 @@ class GroupedScopesTest extends PackageTestCase
         $response->assertOk();
         $this->assertSame([3, 1], $response->json('data.*.id'));
         $this->assertSame(
-            [['select vouchers.id from vouchers where (team = ?) and (price < ?) and vouchers.deleted_at is null order by vouchers.active asc, price desc limit 50 offset 0', ['red', 10]]],
+            [['select vouchers.id from vouchers where (team = ?) and (price < ?) and vouchers.deleted_at is null order by vouchers.active asc, price desc, vouchers.id desc limit 50 offset 0', ['red', 10]]],
             $this->readsOf('vouchers'),
         );
     }
