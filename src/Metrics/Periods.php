@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Date;
 use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Metrics\Grouping\PeriodGrammar;
 use Lomkit\Rest\Metrics\Grouping\PeriodLabel;
+use Lomkit\Rest\Metrics\Grouping\ZoneShift;
 
 final readonly class Periods
 {
@@ -48,7 +49,9 @@ final readonly class Periods
 
     public function label(): PeriodLabel
     {
-        return new PeriodLabel(PeriodGrammar::for($this->model->getConnection()->getDriverName(), $this->weekStartsOn), $this->unit, $this->date->column);
+        $shift = $this->date->field instanceof DateTime ? ZoneShift::between($this->from, $this->to, self::storedZone(), $this->model) : null;
+
+        return new PeriodLabel(PeriodGrammar::for($this->model->getConnection()->getDriverName(), $this->weekStartsOn), $this->unit, $this->date->column, $shift);
     }
 
     /** @param Builder<Model> $query */

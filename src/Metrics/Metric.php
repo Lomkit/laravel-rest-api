@@ -66,7 +66,10 @@ abstract class Metric implements JsonSerializable
 
     public function timezone(): DateTimeZone
     {
-        return new DateTimeZone(Config::string('app.timezone'));
+        $request = $this->request();
+        $zone = $request instanceof MetricRequest ? $request->payload()->timezone : null;
+
+        return new DateTimeZone($zone ?? Config::string('app.timezone'));
     }
 
     /** @param Builder<Model> $query */

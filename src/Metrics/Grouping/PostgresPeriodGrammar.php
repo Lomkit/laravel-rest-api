@@ -18,4 +18,10 @@ final readonly class PostgresPeriodGrammar extends PeriodGrammar
             PeriodUnit::Month => "to_char(date_trunc('month', {$date}), 'YYYY-MM')",
         };
     }
+
+    #[\Override]
+    public function shift(string $date, string $minutes): string
+    {
+        return "({$date} + ({$minutes}) * interval '1 minute')";
+    }
 }

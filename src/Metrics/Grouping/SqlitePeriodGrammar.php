@@ -17,4 +17,10 @@ final readonly class SqlitePeriodGrammar extends PeriodGrammar
             PeriodUnit::Month => "strftime('%Y-%m', {$date})",
         };
     }
+
+    #[\Override]
+    public function shift(string $date, string $minutes): string
+    {
+        return "datetime({$date}, ({$minutes}) || ' minutes')";
+    }
 }

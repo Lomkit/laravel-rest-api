@@ -18,4 +18,10 @@ final readonly class MySqlPeriodGrammar extends PeriodGrammar
             PeriodUnit::Month => "date_format({$date}, '%Y-%m')",
         };
     }
+
+    #[\Override]
+    public function shift(string $date, string $minutes): string
+    {
+        return "({$date} + interval ({$minutes}) minute)";
+    }
 }

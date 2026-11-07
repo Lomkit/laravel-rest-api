@@ -13,6 +13,8 @@ abstract readonly class PeriodGrammar
 
     abstract public function label(string $date, PeriodUnit $unit): string;
 
+    abstract public function shift(string $date, string $minutes): string;
+
     public static function for(string $driver, int $weekStartsOn): self
     {
         return match ($driver) {
