@@ -65,7 +65,7 @@ class ActionTransactionsTest extends PackageTestCase
      */
     #[Test]
     #[DataProvider('runs')]
-    public function it_runs_the_chunks_in_transactions_on_the_connection_of_the_resource(string $action, array $titles, int $status, array $transactions, array $after): void
+    public function it_runs_the_chunks_in_the_transactions_of_the_action_on_the_connection_of_the_resource(string $action, array $titles, int $status, array $transactions, array $after): void
     {
         SecondaryDocument::query()->insert(array_map(fn (int $id): array => ['id' => $id, 'title' => $titles[$id - 1]], range(1, count($titles))));
 
@@ -82,13 +82,21 @@ class ActionTransactionsTest extends PackageTestCase
     /** @return array<string, array{string, list<string>, int, list<string>, list<string>}> */
     public static function runs(): array
     {
-        $titles = ['Annual report', 'Roadmap', 'Budget'];
+        $failing = ['Annual report', 'Roadmap', 'Minutes', 'Budget'];
+        $passing = ['Annual report', 'Roadmap', 'Minutes'];
+        $chunks = ['begin secondary', 'commit secondary', 'begin secondary', 'commit secondary'];
+        $failedChunk = ['begin secondary', 'commit secondary', 'begin secondary', 'rollback secondary'];
 
         return [
-            'one transaction per chunk, the failed chunk rolled back' => ['rename-secondary-documents', $titles, 500, ['begin secondary', 'commit secondary', 'begin secondary', 'rollback secondary'], ['Renamed', 'Renamed', 'Budget']],
-            'one transaction per chunk' => ['rename-secondary-documents', ['Annual report', 'Roadmap', 'Minutes'], 200, ['begin secondary', 'commit secondary', 'begin secondary', 'commit secondary'], ['Renamed', 'Renamed', 'Renamed']],
-            'atomic, every chunk rolled back' => ['atomic-rename-secondary-documents', $titles, 500, ['begin secondary', 'rollback secondary'], $titles],
-            'atomic, one transaction' => ['atomic-rename-secondary-documents', ['Annual report', 'Roadmap', 'Minutes'], 200, ['begin secondary', 'commit secondary'], ['Renamed', 'Renamed', 'Renamed']],
+            'one transaction per chunk, the failed chunk rolled back' => ['rename-secondary-documents', $failing, 500, $failedChunk, ['Renamed', 'Renamed', 'Minutes', 'Budget']],
+            'one transaction per chunk' => ['rename-secondary-documents', $passing, 200, $chunks, ['Renamed', 'Renamed', 'Renamed']],
+            'atomic, every chunk rolled back' => ['atomic-rename-secondary-documents', $failing, 500, ['begin secondary', 'rollback secondary'], $failing],
+            'atomic, one transaction' => ['atomic-rename-secondary-documents', $passing, 200, ['begin secondary', 'commit secondary'], ['Renamed', 'Renamed', 'Renamed']],
+            'without transaction, the rows before the failure stay written' => ['transactionless-rename-secondary-documents', $failing, 500, [], ['Renamed', 'Renamed', 'Renamed', 'Budget']],
+            'without transaction' => ['transactionless-rename-secondary-documents', $passing, 200, [], ['Renamed', 'Renamed', 'Renamed']],
+            'queued, one transaction per job, the failed job rolled back' => ['queued-rename-secondary-documents', $failing, 500, $failedChunk, ['Renamed', 'Renamed', 'Minutes', 'Budget']],
+            'queued, one transaction per job' => ['queued-rename-secondary-documents', $passing, 200, $chunks, ['Renamed', 'Renamed', 'Renamed']],
+            'queued without transaction, the rows before the failure stay written' => ['queued-transactionless-rename-secondary-documents', $failing, 500, [], ['Renamed', 'Renamed', 'Renamed', 'Budget']],
         ];
     }
 }

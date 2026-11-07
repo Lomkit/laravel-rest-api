@@ -18,7 +18,13 @@ class EventTicketResource extends TicketResource
     #[\Override]
     public function actions(): array
     {
-        return [CloseEventTickets::make(), AtomicCloseEventTickets::make(), QueuedCloseEventTickets::make(), ReportOutage::make()];
+        return [
+            CloseEventTickets::make(),
+            AtomicCloseEventTickets::make(),
+            TransactionlessCloseEventTickets::make()->withoutTransaction(),
+            QueuedCloseEventTickets::make(),
+            ReportOutage::make(),
+        ];
     }
 
     #[\Override]

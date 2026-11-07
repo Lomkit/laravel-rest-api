@@ -99,8 +99,9 @@ final class QueuedAction implements ShouldQueue
         }
 
         $inputs = InputValues::fromGiven($resource->definition()->inputFields($action), $this->fields);
+        $fields = ActionFields::of($action, $inputs, $this->user->guard, $user);
 
-        $action->handle(ActionFields::of($action, $inputs, $this->user->guard, $user), $models);
+        $action->transaction->aroundChunk($resource::newModel()->getConnection(), fn () => $action->handle($fields, $models));
     }
 
     private function declared(Resource $resource): Action

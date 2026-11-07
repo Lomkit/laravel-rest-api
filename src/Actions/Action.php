@@ -48,7 +48,7 @@ class Action implements JsonSerializable
 
     public bool $skipUnauthorized = false;
 
-    public bool $atomic = false;
+    public ActionTransaction $transaction = ActionTransaction::Chunk;
 
     public function name(): string
     {
@@ -102,7 +102,14 @@ class Action implements JsonSerializable
 
     public function atomic(): static
     {
-        $this->atomic = true;
+        $this->transaction = ActionTransaction::Whole;
+
+        return $this;
+    }
+
+    public function withoutTransaction(): static
+    {
+        $this->transaction = ActionTransaction::None;
 
         return $this;
     }
@@ -138,8 +145,8 @@ class Action implements JsonSerializable
             throw InvalidActionException::abilityWithoutRows(static::class, $ability);
         }
 
-        if ($this->atomic && $this instanceof ShouldQueue) {
-            throw InvalidActionException::atomicQueued(static::class);
+        if ($this->transaction === ActionTransaction::Whole && $this instanceof ShouldQueue) {
+            throw InvalidActionException::wholeTransactionQueued(static::class);
         }
 
         return $this;
