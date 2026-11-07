@@ -2,11 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Controllers;
 
-use Illuminate\Bus\PendingBatch;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Queue;
-use Lomkit\Rest\Actions\CallRestApiAction;
 use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Tests\Feature\TestCase;
 use Lomkit\Rest\Tests\Support\Database\Factories\ModelFactory;
@@ -182,46 +178,6 @@ class ActionsOperationsTest extends TestCase
         );
     }
 
-    public function test_operate_queueable_action(): void
-    {
-        ModelFactory::new()->count(2)->create();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/actions/queueable-modify-number',
-            [],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertJson([
-            'data' => [
-                'impacted' => 2,
-            ],
-        ]);
-        $this->assertEquals(
-            2,
-            Model::where('number', 100000000)->count()
-        );
-    }
-
-    public function test_operate_catched_queueable_action(): void
-    {
-        ModelFactory::new()->count(2)->create();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        Queue::fake();
-
-        $response = $this->post(
-            '/api/models/actions/queueable-modify-number',
-            [],
-            ['Accept' => 'application/json']
-        );
-
-        Queue::assertPushedOn('custom-queue', CallRestApiAction::class);
-    }
-
     public function test_operate_action_with_search(): void
     {
         ModelFactory::new()
@@ -292,26 +248,6 @@ class ActionsOperationsTest extends TestCase
             150,
             Model::where('number', 100000000)->count()
         );
-    }
-
-    public function test_operate_batchable_action(): void
-    {
-        ModelFactory::new()->count(150)->create();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        Bus::fake();
-
-        $response = $this->post(
-            '/api/models/actions/batchable-modify-number',
-            [],
-            ['Accept' => 'application/json']
-        );
-
-        Bus::assertBatched(function (PendingBatch $batch) {
-            return $batch->name == 'batchable-modify-number' &&
-                $batch->jobs->count() === 2;
-        });
     }
 
     public function test_operate_targeted_action_without_resources_is_rejected(): void

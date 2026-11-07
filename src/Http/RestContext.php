@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Http;
 
 use Illuminate\Auth\AuthManager;
-use Illuminate\Container\Container as IlluminateContainer;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Cache\Factory;
@@ -96,17 +95,6 @@ final class RestContext
             $this->decisionStore($guard, $user),
             strict: $this->config()->strict,
         );
-    }
-
-    public function __serialize(): array
-    {
-        return [];
-    }
-
-    /** @param array<string, mixed> $data */
-    public function __unserialize(array $data): void
-    {
-        $this->__construct(RestRequest::createFrom(request()), IlluminateContainer::getInstance());
     }
 
     private function decisionStore(string $guard, ?Authenticatable $user): DecisionStore

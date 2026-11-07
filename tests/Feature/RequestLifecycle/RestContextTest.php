@@ -75,16 +75,6 @@ class RestContextTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_keeps_a_resource_serializable_with_its_context(): void
-    {
-        $resource = $this->contextFor(User::factory()->make())->resource(ProductResource::class);
-
-        $restored = unserialize(serialize($resource));
-
-        $this->assertInstanceOf(RestRequest::class, $restored->context()->request);
-    }
-
-    #[Test]
     public function it_checks_a_field_against_the_user_of_its_context(): void
     {
         $staff = $this->contextFor(User::factory()->staff()->make())->resource(StaffProductResource::class);

@@ -41,7 +41,7 @@ class DispatchAction
         $this->request = $request;
         $this->action = $action;
         $this->engineTargets = EngineTargets::of($request, $action);
-        $this->runner = ActionRunner::for($action, $fields);
+        $this->runner = ActionRunner::for($request, $action, $fields, $this->engineTargets === null);
     }
 
     /**

@@ -5,7 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Actions;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
-use Lomkit\Rest\Actions\CallRestApiAction;
+use Lomkit\Rest\Actions\QueuedAction;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
@@ -138,8 +138,7 @@ class ActionTextSearchTest extends EngineSearchTestCase
         $response = $this->postJson('/api/team-vouchers/actions/queued-review-vouchers', ['search' => ['text' => ['value' => 'report'], 'filters' => [['field' => 'active', 'value' => true]]]]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 3]]);
-        Queue::assertPushed(CallRestApiAction::class, 1);
-        Queue::assertPushed(CallRestApiAction::class, fn (CallRestApiAction $job): bool => (fn (): array => $this->models->pluck('id')->all())->call($job) === [4, 1, 3]);
+        $this->assertSame([[[4, 1, 3], false]], Queue::pushed(QueuedAction::class)->map(fn (QueuedAction $job): array => [$job->rows->keys, $job->rows->perimeter])->all());
         $this->assertSame([], $this->received->calls());
     }
 

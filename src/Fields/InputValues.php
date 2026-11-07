@@ -5,7 +5,13 @@ namespace Lomkit\Rest\Fields;
 final readonly class InputValues
 {
     /** @param array<string, mixed> $given */
-    private function __construct(private FieldSet $fields, private array $given) {}
+    private function __construct(private FieldSet $fields, public array $given) {}
+
+    /** @param array<string, mixed> $given */
+    public static function fromGiven(FieldSet $fields, array $given): self
+    {
+        return new self($fields, $given);
+    }
 
     /** @param list<mixed> $parameters */
     public static function fromPositional(FieldSet $fields, array $parameters): self

@@ -1,34 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Method Lomkit\\Rest\\Actions\\CallRestApiAction\:\:__construct\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Actions/CallRestApiAction.php
-
-		-
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 1
-			path: src/Actions/CallRestApiAction.php
-
-		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 2
-			path: src/Actions/CallRestApiAction.php
-
-		-
-			message: '#^Parameter \#1 \$job of method Lomkit\\Rest\\Actions\\Action\:\:setJob\(\) expects Illuminate\\Contracts\\Queue\\Job, Illuminate\\Contracts\\Queue\\Job\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Actions/CallRestApiAction.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Actions\\CallRestApiAction\:\:\$models with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Actions/CallRestApiAction.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:dispatch\(\) has parameter \$chunkCount with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
