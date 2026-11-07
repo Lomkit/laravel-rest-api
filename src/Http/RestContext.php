@@ -15,6 +15,9 @@ use Lomkit\Rest\Authorization\NullDecisionStore;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Config\RestConfig;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Metrics\CacheMetricStore;
+use Lomkit\Rest\Metrics\MetricStore;
+use Lomkit\Rest\Metrics\NullMetricStore;
 use Lomkit\Rest\Text\ResolvedText;
 use Lomkit\Rest\Validation\Limits;
 use Lomkit\Rest\Validation\Vocabulary;
@@ -95,6 +98,18 @@ final class RestContext
             $this->decisionStore($guard, $user),
             strict: $this->config()->strict,
         );
+    }
+
+    public function metricStore(): MetricStore
+    {
+        if (! $this->config()->cacheEnabled) {
+            return new NullMetricStore;
+        }
+
+        $auth = $this->container->make(AuthManager::class);
+        $user = UserIdentity::of($auth->getDefaultDriver(), $this->request->user() ?? $auth->guard()->user());
+
+        return new CacheMetricStore($this->container->make(Factory::class), $user, $this->config()->cacheStore);
     }
 
     private function decisionStore(string $guard, ?Authenticatable $user): DecisionStore

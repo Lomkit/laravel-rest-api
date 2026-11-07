@@ -848,6 +848,27 @@ class TopCustomers extends Table
 - Ranges: as a `Value`, a key counts days and the table covers the last N days; without `ranges()`, every row.
 - Fields: the group column is a `Text`, `Enum`, `Integer` or `Boolean` field, the column of a sum, average, min or max a `Number` field, the date column a `Date` or `DateTime` field; any other field throws `InvalidMetricException` when the metric runs. Index the group column of a large table: the database groups every row of the search before it keeps the top rows.
 
+### Cache
+
+A metric can keep its result between requests:
+
+```php
+public function metrics(): array
+{
+    return [
+        TotalRevenue::make()->cacheFor(600),                          // seconds, a DateInterval or now()->addMinutes(10)
+        OrdersByStatus::make()->cacheFor(600)->cacheScope('global'),  // one result for every user
+    ];
+}
+```
+
+- `->cacheFor()`, or `public ?int $cacheFor = 600;` in the class, keeps the result for that long; without it nothing is kept and no cache store is called. Less than 1 second throws `InvalidMetricException` when `Rest::resource()` reads the metrics.
+- Each user gets their own result. `->cacheScope('global')`, or `public CacheScope $cacheScope = CacheScope::Global;` (`Lomkit\Rest\Metrics\CacheScope`), shares one result between users and guests: use it only when the metric gives the same result to every user. Another scope than `'user'` or `'global'` throws `InvalidMetricException`.
+- The key holds the user (guard, user class and key, or guest; none with `'global'`), the resource, the metric class and `uriKey()`, the public properties of the metric that hold a number, a string, a boolean, `null` or an enum (`->limit()`, `->weekStartsOn()`, the scope, your own settings), the `range` and `timezone` of the request (the first range and `config('app.timezone')` when it sends none), its `search` (the keys of an object in any order), the values of the resource's `authorizationCacheContext()` and the stamps of the decision cache. A metric that reads anything else, such as a header, adds it to `authorizationCacheContext()`.
+- The result goes to the store of `authorizations.cache.store` as the JSON text of `data`: any store works, `cache.serializable_classes = false` included.
+- A kept result still runs validation, the abilities, the middleware and `searching()`; it skips every query of the metric. A metric with ranges counts them back from the instant of the first request until the result expires.
+- `Rest::forgetAuthorizationsFor($user)` drops the results of that user (the global ones stay), `Rest::forgetAuthorizations()` drops every result, and `authorizations.cache.enabled = false` keeps none. After a deploy that changes what a metric computes, call `Rest::forgetAuthorizations()`.
+
 ## Instructions (custom search refinements)
 
 Generate:
@@ -982,7 +1003,7 @@ The queries check `viewAny` again on each resource they search (and `create` on 
 
 Within a request, each distinct check (ability, resource, model or model class) runs the policy once and the later checks reuse its decision, so `GateEvaluated` listeners and `Gate::after()` see one evaluation per distinct check. A decision read from the cross-request cache dispatches no `GateEvaluated` either. Policies run with `Gate::forUser($request->user())`, and a change of user starts a new set of decisions. The package drops the decisions on a model after writing it, and keeps them for a row that a mutation only attaches, detaches or leaves unchanged; a hook that writes a model itself calls `$request->context()->authorizer()->forget($model)`.
 
-The cross-request cache keeps only what a resource declares in `authorizationCache(): array` (ability => seconds, for example `['viewAny' => 300, 'view' => 60]`); a resource that declares nothing keeps nothing. Declared decisions are stored as scalars in the store of `authorizations.cache.store` (`null`: the default store), keyed by guard, user class and key, resource, ability, model class, key and `updated_at`, the values of `authorizationCacheContext(): array` (for example `['team' => $this->request()->user()?->current_team_id]`; integers, strings, booleans or `null`) and a stamp per user, and are read wherever the ability is checked, write endpoints included. Checks on unsaved models and the `update` checks of `mutate` are never kept. A row without `updated_at`, or written since the second its request started, keeps no decision; a search selects `updated_at` on a level that asks a kept row gate; a check on a row the request wrote is never kept. `Rest::forgetAuthorizationsFor($user)` drops a user's kept decisions (all guards, every store) and `Rest::forgetAuthorizations()` drops everyone's, guests included. `authorizations.cache.enabled = false` (`REST_AUTHORIZATIONS_CACHE_ENABLED=false`) turns it off for every resource.
+The cross-request cache keeps only what a resource declares in `authorizationCache(): array` (ability => seconds, for example `['viewAny' => 300, 'view' => 60]`); a resource that declares nothing keeps nothing. Declared decisions are stored as scalars in the store of `authorizations.cache.store` (`null`: the default store), keyed by guard, user class and key, resource, ability, model class, key and `updated_at`, the values of `authorizationCacheContext(): array` (for example `['team' => $this->request()->user()?->current_team_id]`; integers, strings, booleans or `null`) and a stamp per user, and are read wherever the ability is checked, write endpoints included. Checks on unsaved models and the `update` checks of `mutate` are never kept. A row without `updated_at`, or written since the second its request started, keeps no decision; a search selects `updated_at` on a level that asks a kept row gate; a check on a row the request wrote is never kept. `Rest::forgetAuthorizationsFor($user)` drops a user's kept decisions and metric results (all guards, every store) and `Rest::forgetAuthorizations()` drops everyone's, guests included. `authorizations.cache.enabled = false` (`REST_AUTHORIZATIONS_CACHE_ENABLED=false`) turns it off for every resource.
 
 ### 2. Gates
 
@@ -1061,7 +1082,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 ## Pointers into the codebase
 
 - Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `EndpointRoutes` (the routes of each endpoint, one per action for `operate` and one per metric for `metric`), `ResourceRegistrar` and the route value objects)
-- Metrics — `src/Metrics/` (`Metric`, `MetricResult`, `HasMetrics`, `MetricQuery`, `MetricNode`; the built-in types `Value`, `Partition`, `Progress` and their results; `MetricRange`, `MetricColumn` (typed checks), `Aggregate` and `AggregateQuery` (the SQL), `HasLimit`; `Trend`, `TrendResult`, `Periods` and `PeriodUnit`, and `Grouping/` (the SQL of a period per database); `Table`, `TableColumn` and `TableResult`), `src/Http/Requests/MetricRequest.php`, `src/Http/MetricResponse.php`
+- Metrics — `src/Metrics/` (`Metric`, `MetricResult`, `HasMetrics`, `MetricQuery`, `MetricNode`; the built-in types `Value`, `Partition`, `Progress` and their results; `MetricRange`, `MetricColumn` (typed checks), `Aggregate` and `AggregateQuery` (the SQL), `HasLimit`; `Trend`, `TrendResult`, `Periods` and `PeriodUnit`, and `Grouping/` (the SQL of a period per database); `Table`, `TableColumn` and `TableResult`; `HasCache`, `CacheScope`, `MetricKey` and `CacheMetricStore` (the result cache)), `src/Http/Requests/MetricRequest.php`, `src/Http/MetricResponse.php`
 - Config — `src/Config/RestConfig.php` (the typed values of `config/rest.php`, read once per request through `RestContext::config()`) and `src/Config/ConfigValue.php` (the typed read of one key, also used for `rest.limits` and `rest.precognition.enabled`)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details,Batch}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, read with `$resource->definition()`, and their lookups `relation()`, `scope()`, `action()`, `instruction()` and `inputFields()`; kept by `src/Http/RestContext.php`, whose limits are a `src/Http/ResourceLimits.php`), `src/Concerns/Resource/*` (`DeclaresFields`, `DeclaresScopes`, `Paginable`, `Relationable`, `Contextual` with `definition()` and `request()`, hooks, ...)

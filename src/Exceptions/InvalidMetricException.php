@@ -31,6 +31,16 @@ final class InvalidMetricException extends LogicException
         return new self("{$metric}::{$helper}() {$use} [{$name}], whose type is [{$type}]: it needs {$expected} field.");
     }
 
+    public static function invalidCacheDuration(string $metric, int $seconds): self
+    {
+        return new self("{$metric} caches its result for [{$seconds}] seconds. Cache a metric for 1 second or more, for example ->cacheFor(600).");
+    }
+
+    public static function invalidCacheScope(string $metric, string $scope): self
+    {
+        return new self("{$metric} caches its result for the scope [{$scope}]. A cache scope is user or global.");
+    }
+
     public static function invalidLimit(string $metric, int $limit): self
     {
         return new self("{$metric} keeps [{$limit}] groups. A limit is an integer greater than 0.");
