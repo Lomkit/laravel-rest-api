@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('quantity');
             $table->boolean('gift');
             $table->dateTime('placed_at')->index();
+            $table->date('delivered_on')->nullable();
             $table->timestamps();
         });
     }

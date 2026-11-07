@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Fixtures\Sales;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\Boolean;
+use Lomkit\Rest\Fields\Date;
 use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\ID;
@@ -31,6 +32,7 @@ class OrderResource extends Resource
             Integer::make('quantity'),
             Boolean::make('gift'),
             DateTime::make('placed_at'),
+            Date::make('delivered_on')->nullable(),
             Text::make('summary')
                 ->virtual()
                 ->resolveUsing(fn (Order $order): string => $order->reference),

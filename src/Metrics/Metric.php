@@ -2,8 +2,11 @@
 
 namespace Lomkit\Rest\Metrics;
 
+use Carbon\CarbonInterface;
+use DateTimeZone;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use JsonSerializable;
 use Lomkit\Rest\Concerns\HasMeta;
@@ -25,6 +28,8 @@ abstract class Metric implements JsonSerializable
     public ?string $name = null;
 
     public bool $withoutSearching = false;
+
+    public int $weekStartsOn = CarbonInterface::MONDAY;
 
     abstract public function type(): string;
 
@@ -59,9 +64,27 @@ abstract class Metric implements JsonSerializable
         return $request instanceof MetricRequest ? $request->payload()->range : null;
     }
 
+    public function timezone(): DateTimeZone
+    {
+        return new DateTimeZone(Config::string('app.timezone'));
+    }
+
+    /** @param Builder<Model> $query */
+    public function periods(Builder $query, string $dateColumn, PeriodUnit $unit, ?int $count = null): Periods
+    {
+        return $this->periodsFor('periods', $query, $dateColumn, $unit, $count);
+    }
+
     public function withoutSearching(): static
     {
         $this->withoutSearching = true;
+
+        return $this;
+    }
+
+    public function weekStartsOn(int $day): static
+    {
+        $this->weekStartsOn = $day;
 
         return $this;
     }
@@ -80,9 +103,22 @@ abstract class Metric implements JsonSerializable
             throw InvalidMetricException::invalidType(static::class, $type);
         }
 
+        if ($this->weekStartsOn < CarbonInterface::SUNDAY || $this->weekStartsOn > CarbonInterface::SATURDAY) {
+            throw InvalidMetricException::invalidWeekStart(static::class, $this->weekStartsOn);
+        }
+
         MetricRange::listOf($this->ranges(), static::class);
 
         return $this;
+    }
+
+    /** @param Builder<Model> $query */
+    protected function periodsFor(string $helper, Builder $query, string $dateColumn, PeriodUnit $unit, ?int $count): Periods
+    {
+        $date = MetricColumn::period($this, $query, $helper, $dateColumn);
+        $count ??= $this->range()->value ?? throw InvalidMetricException::withoutPeriods(static::class, $helper);
+
+        return Periods::last($query, $date, $unit, $count, $this->timezone(), $this->weekStartsOn);
     }
 
     /** @return array{name: string, uriKey: string, type: string, ranges: list<MetricRange>, meta: \stdClass} */

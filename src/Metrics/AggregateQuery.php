@@ -67,6 +67,29 @@ final readonly class AggregateQuery
         }, $base->get()->all()));
     }
 
+    /**
+     * @param  Builder<Model>  $query
+     * @return list<array{period: string, key: int|string|bool|null, partials: list<int|float|null>}>
+     */
+    public function trend(Builder $query, Periods $periods, ?MetricColumn $split): array
+    {
+        $base = $periods->group($query);
+
+        if ($split !== null) {
+            $base->addSelect("{$split->column} as split_key");
+            $base->groupBy($split->column);
+        }
+
+        $this->select($base, 'period');
+
+        return array_values(array_map(function (object $row) use ($split): array {
+            $values = get_object_vars($row);
+            $period = $values['period'] ?? null;
+
+            return ['period' => is_string($period) ? $period : '', 'key' => $split?->key($values['split_key'] ?? null), 'partials' => $this->partials($values, 'period')];
+        }, $base->get()->all()));
+    }
+
     /** @param Builder<Model> $query */
     private function base(Builder $query): QueryBuilder
     {

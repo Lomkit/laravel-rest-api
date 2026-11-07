@@ -21,21 +21,27 @@ final readonly class MetricColumn
     ) {}
 
     /** @param Builder<Model> $query */
-    public static function aggregated(Metric $metric, Builder $query, Aggregate $function, string $name): self
+    public static function aggregated(Metric $metric, Builder $query, string $helper, string $name): self
     {
-        return self::of($metric, $query, $function, 'aggregates', $name, 'a number', fn (Field $field): bool => $field instanceof Number);
+        return self::of($metric, $query, $helper, 'aggregates', $name, 'a number', fn (Field $field): bool => $field instanceof Number);
     }
 
     /** @param Builder<Model> $query */
-    public static function date(Metric $metric, Builder $query, Aggregate $function, string $name): self
+    public static function date(Metric $metric, Builder $query, string $helper, string $name): self
     {
-        return self::of($metric, $query, $function, 'dates its range with', $name, 'a date or datetime', fn (Field $field): bool => $field instanceof Date);
+        return self::of($metric, $query, $helper, 'dates its range with', $name, 'a date or datetime', fn (Field $field): bool => $field instanceof Date);
     }
 
     /** @param Builder<Model> $query */
-    public static function group(Metric $metric, Builder $query, Aggregate $function, string $name): self
+    public static function period(Metric $metric, Builder $query, string $helper, string $name): self
     {
-        return self::of($metric, $query, $function, 'groups by', $name, 'a text, enum, integer or boolean', fn (Field $field): bool => $field instanceof Text || $field instanceof Enum || $field instanceof Integer || $field instanceof Boolean);
+        return self::of($metric, $query, $helper, 'dates its periods with', $name, 'a date or datetime', fn (Field $field): bool => $field instanceof Date);
+    }
+
+    /** @param Builder<Model> $query */
+    public static function group(Metric $metric, Builder $query, string $helper, string $name): self
+    {
+        return self::of($metric, $query, $helper, 'groups by', $name, 'a text, enum, integer or boolean', fn (Field $field): bool => $field instanceof Text || $field instanceof Enum || $field instanceof Integer || $field instanceof Boolean);
     }
 
     public function integer(): bool
@@ -74,16 +80,16 @@ final readonly class MetricColumn
      * @param  Builder<Model>  $query
      * @param  callable(Field): bool  $fits
      */
-    private static function of(Metric $metric, Builder $query, Aggregate $function, string $use, string $name, string $expected, callable $fits): self
+    private static function of(Metric $metric, Builder $query, string $helper, string $use, string $name, string $expected, callable $fits): self
     {
         $field = $metric->resource->definition()->fields()->find($name);
 
         if ($field === null || $field->isVirtual()) {
-            throw InvalidMetricException::unknownField($metric::class, $function->value, $use, $name, $metric->resource::class);
+            throw InvalidMetricException::unknownField($metric::class, $helper, $use, $name, $metric->resource::class);
         }
 
         if (! $fits($field)) {
-            throw InvalidMetricException::wrongField($metric::class, $function->value, $use, $name, $field->type(), $expected);
+            throw InvalidMetricException::wrongField($metric::class, $helper, $use, $name, $field->type(), $expected);
         }
 
         return new self($field, $query->qualifyColumn($name));
