@@ -111,13 +111,12 @@ class ActionFieldsTest extends PackageTestCase
         $response->assertOk()->assertJsonPath('data.actions.0', [
             'name' => 'Publish Posts',
             'uriKey' => 'publish-posts',
+            'target' => 'search',
             'fields' => [
                 ['name' => 'at', 'label' => null, 'type' => 'datetime', 'nullable' => true, 'default' => null, 'rules' => ['nullable', 'date'], 'meta' => []],
                 ['name' => 'notify', 'label' => null, 'type' => 'boolean', 'nullable' => false, 'default' => true, 'rules' => ['boolean'], 'meta' => []],
             ],
             'meta' => ['color' => '#FFFFFF'],
-            'standalone' => false,
-            'targeted' => false,
         ]);
     }
 

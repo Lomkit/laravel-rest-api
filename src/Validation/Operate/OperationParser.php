@@ -6,8 +6,8 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Actions\OperationNode;
-use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Validation\Cursor;
@@ -24,10 +24,6 @@ final readonly class OperationParser
 
     public function parse(Cursor $root, Action $action, ValidationContext $context): OperationNode
     {
-        if ($action->isStandalone() && $action->isTargeted()) {
-            throw new InvalidActionStateException('An action cannot be both standalone and targeted.');
-        }
-
         $target = $this->target($root, $action, $context);
 
         return new OperationNode($action, $this->fields($root->at('fields'), $action, $context), $target);
@@ -38,27 +34,33 @@ final readonly class OperationParser
         $search = $root->at('search');
         $resources = $root->at('resources');
 
-        if (! $action->isStandalone() && ! $action->isTargeted()) {
-            $node = (new SearchParser(paged: false))->parse($search, $context);
-            $context->rules->add($resources->path, ['prohibited']);
+        return match ($action->target) {
+            ActionTarget::Search => $this->search($search, $resources, $context),
+            ActionTarget::Resources => $this->keys($search, $resources, $action->maxResources, $context),
+            ActionTarget::None => $this->none($search, $resources, $context),
+        };
+    }
 
-            return $node;
-        }
+    private function search(Cursor $search, Cursor $resources, ValidationContext $context): SearchNode
+    {
+        $node = (new SearchParser(paged: false))->parse($search, $context);
+        $context->rules->add($resources->path, ['prohibited']);
 
+        return $node;
+    }
+
+    private function none(Cursor $search, Cursor $resources, ValidationContext $context): null
+    {
         $context->rules->add($search->path, ['prohibited']);
-
-        if ($action->isTargeted()) {
-            return $this->keys($resources, $action->maxResources, $context);
-        }
-
         $context->rules->add($resources->path, ['prohibited']);
 
         return null;
     }
 
-    private function keys(Cursor $resources, int $max, ValidationContext $context): KeyList
+    private function keys(Cursor $search, Cursor $resources, int $max, ValidationContext $context): KeyList
     {
         $rules = $context->rules;
+        $rules->add($search->path, ['prohibited']);
         $keys = KeysGrammar::of($context->resource, $this->keysQuery, $max)->parse($resources);
 
         if ($rules->violations()->has($resources->path)) {

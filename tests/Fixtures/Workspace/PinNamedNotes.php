@@ -4,10 +4,11 @@ namespace Lomkit\Rest\Tests\Fixtures\Workspace;
 
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionTarget;
 
 class PinNamedNotes extends Action
 {
-    public bool $targeted = true;
+    public ActionTarget $target = ActionTarget::Resources;
 
     public int $maxResources = 3;
 

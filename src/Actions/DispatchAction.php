@@ -54,13 +54,11 @@ class DispatchAction
      */
     public function dispatch($chunkCount)
     {
-        if ($this->action->isStandalone()) {
-            $modelsImpacted = $this->handleStandalone();
-        } elseif ($this->action->isTargeted()) {
-            $modelsImpacted = $this->handleTargeted($chunkCount);
-        } else {
-            $modelsImpacted = $this->handleClassic($chunkCount);
-        }
+        $modelsImpacted = match ($this->action->target) {
+            ActionTarget::Search => $this->handleClassic($chunkCount),
+            ActionTarget::Resources => $this->handleTargeted($chunkCount),
+            ActionTarget::None => $this->handleStandalone(),
+        };
 
         $this->runner->finish();
 

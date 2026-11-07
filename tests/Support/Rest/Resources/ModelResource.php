@@ -26,13 +26,9 @@ use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Tests\Support\Models\Model;
 use Lomkit\Rest\Tests\Support\Rest\Actions\BatchableModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ConditionalFieldAction;
-use Lomkit\Rest\Tests\Support\Rest\Actions\ConflictingStateModifyNumberAction;
-use Lomkit\Rest\Tests\Support\Rest\Actions\MaxResourcesModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\ModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\QueueableModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\RequiredFieldAction;
-use Lomkit\Rest\Tests\Support\Rest\Actions\StandaloneModifyNumberAction;
-use Lomkit\Rest\Tests\Support\Rest\Actions\TargetedModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Actions\WithMetaModifyNumberAction;
 use Lomkit\Rest\Tests\Support\Rest\Instructions\ConditionalInstruction;
 use Lomkit\Rest\Tests\Support\Rest\Instructions\NumberedInstruction;
@@ -118,10 +114,6 @@ class ModelResource extends Resource
     {
         return [
             ModifyNumberAction::make(),
-            StandaloneModifyNumberAction::make()->standalone(),
-            TargetedModifyNumberAction::make()->targeted(),
-            MaxResourcesModifyNumberAction::make()->targeted(),
-            ConflictingStateModifyNumberAction::make(),
             QueueableModifyNumberAction::make(),
             WithMetaModifyNumberAction::make(),
             BatchableModifyNumberAction::make(),

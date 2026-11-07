@@ -2,7 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Actions\Stubs;
 
+use Lomkit\Rest\Actions\ActionTarget;
+
 class TargetedCountedPublishPosts extends CountedPublishPosts
 {
-    public bool $targeted = true;
+    public ActionTarget $target = ActionTarget::Resources;
 }

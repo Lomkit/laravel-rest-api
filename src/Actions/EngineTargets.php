@@ -18,7 +18,7 @@ final readonly class EngineTargets
 
     public static function of(OperateRequest $request, Action $action): ?self
     {
-        if ($action->isStandalone() || $action->isTargeted()) {
+        if ($action->target !== ActionTarget::Search) {
             return null;
         }
 

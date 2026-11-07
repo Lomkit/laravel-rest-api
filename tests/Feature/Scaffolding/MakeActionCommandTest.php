@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
 use App\Rest\Actions\ScaffoldedAction;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -22,5 +23,6 @@ class MakeActionCommandTest extends ScaffoldingTestCase
 
         $this->assertInstanceOf(Action::class, $action);
         $this->assertSame([], $action->fields());
+        $this->assertSame(ActionTarget::Search, $action->target);
     }
 }

@@ -12,7 +12,6 @@ use JsonSerializable;
 use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Resourcable;
-use Lomkit\Rest\Exceptions\InvalidActionStateException;
 use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Http\Requests\OperateRequest;
@@ -30,9 +29,7 @@ class Action implements JsonSerializable
 
     public ?string $name = null;
 
-    public bool $standalone = false;
-
-    public bool $targeted = false;
+    public ActionTarget $target = ActionTarget::Search;
 
     public int $chunkCount = 100;
 
@@ -53,36 +50,11 @@ class Action implements JsonSerializable
         return $this->resource->request();
     }
 
-    public function standalone(): static
+    public function target(ActionTarget $target): static
     {
-        if ($this->targeted) {
-            throw new InvalidActionStateException('An action cannot be both standalone and targeted.');
-        }
-
-        $this->standalone = true;
+        $this->target = $target;
 
         return $this;
-    }
-
-    public function isStandalone(): bool
-    {
-        return $this->standalone;
-    }
-
-    public function targeted(): static
-    {
-        if ($this->standalone) {
-            throw new InvalidActionStateException('An action cannot be both standalone and targeted.');
-        }
-
-        $this->targeted = true;
-
-        return $this;
-    }
-
-    public function isTargeted(): bool
-    {
-        return $this->targeted;
     }
 
     /** @return list<string> */
@@ -91,17 +63,16 @@ class Action implements JsonSerializable
         return ['viewAny'];
     }
 
-    /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: \stdClass, standalone: bool, targeted: bool} */
+    /** @return array{name: string, uriKey: string, target: value-of<ActionTarget>, fields: list<array<string, mixed>>, meta: \stdClass} */
     #[\Override]
     public function jsonSerialize(): array
     {
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
+            'target' => $this->target->value,
             'fields' => InputFieldDetails::forFields($this->resource->definition()->inputFields($this)),
             'meta' => (object) $this->getMeta(),
-            'standalone' => $this->isStandalone(),
-            'targeted' => $this->isTargeted(),
         ];
     }
 

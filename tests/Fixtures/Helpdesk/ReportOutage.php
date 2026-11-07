@@ -4,10 +4,11 @@ namespace Lomkit\Rest\Tests\Fixtures\Helpdesk;
 
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionTarget;
 
 class ReportOutage extends Action
 {
-    public bool $standalone = true;
+    public ActionTarget $target = ActionTarget::None;
 
     #[\Override]
     public function abilities(): array
