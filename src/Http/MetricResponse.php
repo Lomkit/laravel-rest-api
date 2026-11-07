@@ -6,46 +6,46 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
 use Lomkit\Rest\Exceptions\InvalidMetricException;
 use Lomkit\Rest\Http\Requests\MetricRequest;
-use Lomkit\Rest\Metrics\Metric;
+use Lomkit\Rest\Metrics\MetricNode;
 use Lomkit\Rest\Metrics\MetricQuery;
 use Lomkit\Rest\Metrics\MetricResult;
 use Lomkit\Rest\Search\SearchContext;
 
 final readonly class MetricResponse implements Responsable
 {
-    /** @param array<string, mixed> $data */
-    private function __construct(public array $data) {}
+    private function __construct(public string $json) {}
 
     public static function of(MetricRequest $request, Resource $resource): self
     {
         $node = $request->payload();
-        $metric = $node->metric;
 
-        if (! $metric->withoutSearching) {
+        if (! $node->metric->withoutSearching) {
             $resource->searching(SearchContext::of($node->search));
         }
 
-        $text = $resource->context()->text($resource);
-        $result = $text->run(fn (): MetricResult => $metric->calculate(MetricQuery::of($resource, $node->search, $text)));
+        $store = $resource->context()->metricStore();
 
-        return new self(self::data($metric, $result));
+        return new self($store->remember($node, fn (): string => self::render($resource, $node)));
     }
 
-    /** @return array<string, mixed> */
-    private static function data(Metric $metric, MetricResult $result): array
+    private static function render(Resource $resource, MetricNode $node): string
     {
-        $values = $result->jsonSerialize();
+        $metric = $node->metric;
+        $text = $resource->context()->text($resource);
+        $values = $text
+            ->run(fn (): MetricResult => $metric->calculate(MetricQuery::of($resource, $node->search, $text)))
+            ->jsonSerialize();
 
         if (array_key_exists('type', $values)) {
             throw InvalidMetricException::typeInResult($metric::class);
         }
 
-        return ['type' => $metric->type(), ...$values];
+        return json_encode(['type' => $metric->type(), ...$values], JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR);
     }
 
     #[\Override]
     public function toResponse($request): JsonResponse
     {
-        return new JsonResponse(['data' => $this->data], options: JSON_PRESERVE_ZERO_FRACTION);
+        return new JsonResponse('{"data":'.$this->json.'}', json: true);
     }
 }

@@ -19,8 +19,9 @@ return [
     | A resource lists in its authorizationCache() method the decisions
     | to keep between requests, and for how long. They go to the cache
     | "store", which must match one of your cache stores; null uses the
-    | default store. Set "enabled" to false to keep no decision between
-    | requests.
+    | default store. A metric declared with cacheFor() keeps its result
+    | in the same store. Set "enabled" to false to keep no decision and
+    | no metric result between requests.
     |
     */
 

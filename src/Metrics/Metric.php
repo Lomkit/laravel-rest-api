@@ -20,6 +20,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 /** @phpstan-consistent-constructor */
 abstract class Metric implements JsonSerializable
 {
+    use HasCache;
     use HasMeta;
     use HasRouteMiddleware;
     use Makeable;
@@ -111,6 +112,7 @@ abstract class Metric implements JsonSerializable
         }
 
         MetricRange::listOf($this->ranges(), static::class);
+        $this->ensureValidCache();
 
         return $this;
     }

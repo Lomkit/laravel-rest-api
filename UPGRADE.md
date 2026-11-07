@@ -44,9 +44,9 @@ The keys that change:
 | `authorizations.enabled` | Removed. Override `isAuthorizingEnabled()` and return `false`. |
 | `gates.enabled` | Removed. Override `isGatingEnabled()` and return `false`. |
 | `authorizations.strict` | Added. `false` by default, or the value of `REST_AUTHORIZATIONS_STRICT`. |
-| `authorizations.cache.enabled` | `true` by default, or the value of `REST_AUTHORIZATIONS_CACHE_ENABLED`. Only the decisions that a resource declares in `authorizationCache()` are kept, see "Cache" in [Authorization](#authorization). |
+| `authorizations.cache.enabled` | `true` by default, or the value of `REST_AUTHORIZATIONS_CACHE_ENABLED`. Only the decisions that a resource declares in `authorizationCache()` and the results of the metrics that declare `cacheFor()` are kept, see "Cache" in [Authorization](#authorization). |
 | `authorizations.cache.default` | Removed. Each resource gives the seconds of each ability in `authorizationCache()`. |
-| `authorizations.cache.store` | Added. The cache store of the decisions, the default store when `null`, or the value of `REST_AUTHORIZATIONS_CACHE_STORE`. |
+| `authorizations.cache.store` | Added. The cache store of the decisions and of the metric results, the default store when `null`, or the value of `REST_AUTHORIZATIONS_CACHE_STORE`. |
 | `limits` | Added, in three groups: `sizes`, `depths` and `totals`. |
 | `search.max_nesting_depth` | Moved to `limits.depths.filters`. |
 | `documentation` | Removed with the documentation generator. |
@@ -709,6 +709,7 @@ class TotalRevenue extends Value
 
 - A metric declares its ranges in `ranges()`, and the request picks one with `range`: the first one when it sends none. A key that the metric does not declare is a `422`, and so is `range` for a metric without ranges. The details entry of a metric lists them in `ranges`.
 - The floats of a metric response keep their fraction: `52.0`, not `52`.
+- `->cacheFor(600)` keeps the result of a metric between requests for 600 seconds; it also takes a `DateInterval` or an instant, `->cacheFor(now()->addMinutes(10))`. Each user gets their own result. `->cacheScope('global')` shares one result between users: use it only when the metric gives the same result to every user. A metric class can declare `public ?int $cacheFor = 600;` and `public CacheScope $cacheScope = CacheScope::Global;` (`Lomkit\Rest\Metrics\CacheScope`) instead. The results go to the store of `authorizations.cache.store`, under the stamps of the decisions: `Rest::forgetAuthorizationsFor($user)` drops the results of a user, `Rest::forgetAuthorizations()` drops every result, and with `authorizations.cache.enabled` set to `false` no result is kept. See "Cache" in [Authorization](#authorization).
 
 ### Native types
 
@@ -1399,11 +1400,12 @@ Cache:
 
   A value must be an integer, a string, a boolean or `null`. Another value throws `Lomkit\Rest\Exceptions\InvalidResourceException`: "The resource [App\Rest\Resources\PostResource] returns a value for the key [team] from authorizationCacheContext() that is not an integer, a string, a boolean or null. Give a scalar value, for example ['team' => 1]." A value that the context leaves out, such as a header, is not part of the key.
 - A model whose key is cast to an enum is keyed by the value of the enum. Checks on a model that is not saved yet, or whose key is not a string, an integer or an enum, are neither cached nor shared with another check of the request.
-- `Rest::forgetAuthorizationsFor($user)` drops the kept decisions of a user, on every guard and in every request that follows. Call it where your application changes what a policy or a `Gate::before()` callback reads about the user, such as a role or a team: the answers of `Gate::before()` and `Gate::after()` are kept like the policy's. It works on every cache store and writes even when `authorizations.cache.enabled` is `false`.
-- `Rest::forgetAuthorizations()` drops the kept decisions of every user and of guests, for example after a deploy that changes a policy. Guests share one kept decision per guard.
+- `Rest::forgetAuthorizationsFor($user)` drops the kept decisions and the kept metric results of a user, on every guard and in every request that follows. Call it where your application changes what a policy or a `Gate::before()` callback reads about the user, such as a role or a team: the answers of `Gate::before()` and `Gate::after()` are kept like the policy's. It works on every cache store and writes even when `authorizations.cache.enabled` is `false`.
+- `Rest::forgetAuthorizations()` drops the kept decisions and metric results of every user and of guests, for example after a deploy that changes a policy. Guests share one kept decision per guard.
 - Otherwise a kept decision stays for the seconds of its ability: a change to a policy or to a `Gate::before()` callback shows once the entry expires.
 - `Resource::getAuthorizationCacheKey()` is removed: the package builds the key.
 - `isAuthorizationCacheEnabled()` and the `Lomkit\Rest\Concerns\Resource\DisableAuthorizationsCache` trait are removed. To turn the cache off for one resource, declare no ability in its `authorizationCache()`, or remove the override. When `authorizations.cache.enabled` is `false`, no resource uses the cache.
+- A metric that declares `cacheFor()` keeps its result in the same store, under a key that holds the user (or no user with `cacheScope('global')`), the resource, the metric and its settings, the `range`, `timezone` and `search` of the request, the values of `authorizationCacheContext()` and the same stamps, see [Metrics](#metrics).
 
 Resource methods:
 
