@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Value as RestValue;
+use Lomkit\Rest\Metrics\ValueResult;
+
+class {{ class }} extends RestValue
+{
+    #[\Override]
+    public function calculate(Builder $query): ValueResult
+    {
+        return $this->count($query);
+    }
+}

@@ -710,6 +710,7 @@ class TotalRevenue extends Value
 - A metric declares its ranges in `ranges()`, and the request picks one with `range`: the first one when it sends none. A key that the metric does not declare is a `422`, and so is `range` for a metric without ranges. The details entry of a metric lists them in `ranges`.
 - The floats of a metric response keep their fraction: `52.0`, not `52`.
 - `->cacheFor(600)` keeps the result of a metric between requests for 600 seconds; it also takes a `DateInterval` or an instant, `->cacheFor(now()->addMinutes(10))`. Each user gets their own result. `->cacheScope('global')` shares one result between users: use it only when the metric gives the same result to every user. A metric class can declare `public ?int $cacheFor = 600;` and `public CacheScope $cacheScope = CacheScope::Global;` (`Lomkit\Rest\Metrics\CacheScope`) instead. The results go to the store of `authorizations.cache.store`, under the stamps of the decisions: `Rest::forgetAuthorizationsFor($user)` drops the results of a user, `Rest::forgetAuthorizations()` drops every result, and with `authorizations.cache.enabled` set to `false` no result is kept. See "Cache" in [Authorization](#authorization).
+- `php artisan rest:metric` writes a metric of each built-in type, or of a type of your own: see [Generators](#generators).
 
 ### Native types
 
@@ -2026,7 +2027,7 @@ The classes that the generators write pass Pint with the `laravel` preset and La
 
 Options:
 
-- `rest:resource`, `rest:controller`, `rest:policy`, `rest:action`, `rest:instruction`, `rest:response`, `rest:base-resource` and `rest:base-controller` accept `--force` (`-f`), which replaces an existing class. Without it, an existing class is kept: the command prints `<Type> already exists.` and exits with 0.
+- `rest:resource`, `rest:controller`, `rest:policy`, `rest:action`, `rest:instruction`, `rest:metric`, `rest:response`, `rest:base-resource` and `rest:base-controller` accept `--force` (`-f`), which replaces an existing class. Without it, an existing class is kept: the command prints `<Type> already exists.` and exits with 0.
 - When the command runs interactively, `rest:resource` asks for the model and `rest:controller` for the resource whenever the option is missing, also when the name is given or `-v` is passed. With `--no-interaction` they ask nothing.
 - `rest:controller` offers the concrete resources under `app/Rest/Resources`, nested ones included. It reads each file first, and loads only a file that declares a single class, named like the file and its directory, that extends another class and is not abstract: a script or a helper in that directory is never run. `rest:resource --generate` finds the resources of the related models in the same way.
 
@@ -2083,11 +2084,25 @@ Policies:
 - Without `--model`, the model is guessed from the class name: `PostPolicy` gives `App\Models\Post`, `Admin/InvoicePolicy` gives `App\Models\Admin\Invoice`, and `LearningResourcePolicy` gives `App\Models\LearningResource`. When the command runs interactively, it asks for the model. When no model is given or guessed, or the model does not exist, the command stops with exit code 1 before any file is written.
 - When Gate already finds another policy for the model, through `Gate::policy()`, `#[UsePolicy]` or the naming convention, the command prints `The model [App\Models\Post] already has the policy [App\Policies\ContentPolicy].`, writes nothing and exits with 0. With `--force`, it writes the policy and warns that Gate still uses the other one: register the new policy with `Gate::policy()` to use it.
 
+Metrics:
+
+- `rest:metric` is a new generator. `php artisan rest:metric OrdersByStatus --type=partition --group-by=status` writes `app/Rest/Metrics/OrdersByStatus.php`. `--type` is `value`, `trend`, `partition`, `progress`, `table` or `custom`, and the class overrides only what its type needs:
+  - `value`: `return $this->count($query);`, without ranges.
+  - `trend`: `return $this->countByDays($query);`, with the ranges `7 => '7 days'`, `30 => '30 days'` and `90 => '90 days'`. It counts by `created_at`: on a resource that does not declare that field as `Date` or `DateTime`, pass another field to `countByDays()`.
+  - `partition`: `return $this->count($query, 'status');`, with the field of `--group-by`.
+  - `progress`: `return $this->count($query, target: 100);`.
+  - `table`: `return $this->rows($query, 'channel', ['count' => TableColumn::count()]);`, with the field of `--group-by`.
+  - `custom`: a class that extends `Metric`, whose `type()` is the class name in kebab case (`OrderBacklog` gives `order-backlog`) and whose `calculate()` returns `new ValueResult($query->count())`. Return your own `MetricResult` instead.
+- Declare the class in `metrics()` of a resource, for example `OrdersByStatus::make()`.
+- When the command runs interactively, it asks `Which type of metric?` when `--type` is missing, then `Which field should the metric group by?` for a partition or a table when `--group-by` is missing. With `--no-interaction`, a metric without `--type` is a `value` metric.
+- A partition or a table without a field, an unknown type and a field name with characters other than letters, digits and underscores stop the command with exit code 1 before any file is written. The other types ignore `--group-by` and warn.
+
 Published stubs:
 
 - The generators read the stubs that `php artisan stub:publish` copies to `stubs/rest.<name>.stub`, and fall back to the package stubs. Before, they ignored them. The stubs published under 2.x declare untyped properties such as `public static $model`, which are a fatal error in 3.0 (see [Native types](#native-types)): delete your `stubs/rest.*.stub` files, or publish them again with `php artisan stub:publish --force` after you have saved the Laravel stubs that you customised.
 - The `stubs/rest/*.stub` files that versions before 2.14 used are not read.
-- A published stub keeps the placeholders that the generator fills: `{{ namespace }}` and `{{ class }}` in each stub, `{{ namespacedModel }}`, `{{ model }}`, `{{ imports }}`, `{{ fields }}` and `{{ relations }}` in `rest.resource.stub`, `{{ namespacedResource }}` and `{{ resource }}` in `rest.controller.stub`, and `{{ namespacedModel }}`, `{{ namespacedUserModel }}`, `{{ model }}`, `{{ modelVariable }}`, `{{ user }}` and `{{ softDeleteMethods }}` in `rest.policy.stub`. Otherwise the command throws `Lomkit\Rest\Exceptions\InvalidStubException`, which names the stub and the missing placeholder.
+- `rest:metric` reads one stub per type: `rest.metric-value.stub`, `rest.metric-trend.stub`, `rest.metric-partition.stub`, `rest.metric-progress.stub`, `rest.metric-table.stub`, and `rest.metric.stub` for `custom`.
+- A published stub keeps the placeholders that the generator fills: `{{ namespace }}` and `{{ class }}` in each stub, `{{ namespacedModel }}`, `{{ model }}`, `{{ imports }}`, `{{ fields }}` and `{{ relations }}` in `rest.resource.stub`, `{{ namespacedResource }}` and `{{ resource }}` in `rest.controller.stub`, `{{ namespacedModel }}`, `{{ namespacedUserModel }}`, `{{ model }}`, `{{ modelVariable }}`, `{{ user }}` and `{{ softDeleteMethods }}` in `rest.policy.stub`, `{{ groupBy }}` in `rest.metric-partition.stub` and `rest.metric-table.stub`, and `{{ type }}` in `rest.metric.stub`. Otherwise the command throws `Lomkit\Rest\Exceptions\InvalidStubException`, which names the stub and the missing placeholder.
 
 ### Quick start
 

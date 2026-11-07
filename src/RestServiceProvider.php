@@ -13,6 +13,7 @@ use Lomkit\Rest\Console\Commands\BaseResourceMakeCommand;
 use Lomkit\Rest\Console\Commands\CheckCommand;
 use Lomkit\Rest\Console\Commands\ControllerMakeCommand;
 use Lomkit\Rest\Console\Commands\InstructionMakeCommand;
+use Lomkit\Rest\Console\Commands\MetricMakeCommand;
 use Lomkit\Rest\Console\Commands\PolicyMakeCommand;
 use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceMakeCommand;
@@ -62,6 +63,7 @@ class RestServiceProvider extends ServiceProvider
                 QuickStartCommand::class,
                 ActionMakeCommand::class,
                 InstructionMakeCommand::class,
+                MetricMakeCommand::class,
                 PolicyMakeCommand::class,
                 CheckCommand::class,
             ]);

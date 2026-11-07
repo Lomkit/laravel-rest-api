@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Partition as RestPartition;
+use Lomkit\Rest\Metrics\PartitionResult;
+
+class {{ class }} extends RestPartition
+{
+    #[\Override]
+    public function calculate(Builder $query): PartitionResult
+    {
+        return $this->count($query, '{{ groupBy }}');
+    }
+}
