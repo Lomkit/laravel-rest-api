@@ -141,7 +141,7 @@ class QuickStartBlockedTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    public function it_reports_the_skipped_relations_and_the_read_only_policies_of_a_run_that_fails_its_checks(): void
+    public function it_reports_the_skipped_relations_and_the_policies_of_a_run_that_fails_its_checks(): void
     {
         $this->installApiRoutes();
         file_put_contents(base_path('routes/api.php'), "\nLomkit\Rest\Facades\Rest::resource('posts', App\Rest\Controllers\PostsController::class);\n", FILE_APPEND);
@@ -152,7 +152,7 @@ class QuickStartBlockedTest extends ScaffoldingTestCase
             "  ⇂ DELETE /api/posts is not behind an authentication middleware\n\n"
             ."  Skipped: Post.author: no resource for App\Models\User. Rerun with --model=User to expose users.\n"
             ."  Skipped: Post.tags: no resource for App\Models\Tag. Rerun with --model=Tag to expose tags.\n"
-            ."  PostPolicy lets signed-in users read and refuses every write. Edit app/Policies before production.\n\n"
+            ."  PostPolicy lets signed-in users do everything. Edit app/Policies before production.\n\n"
             .'   ERROR  The API is not ready yet: fix the problems above, then run this command again.',
             $output,
         );

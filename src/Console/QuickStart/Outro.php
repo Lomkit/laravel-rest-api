@@ -76,7 +76,7 @@ final readonly class Outro
             fn (PlannedFile $policy): string => $policy->class,
             array_filter($this->plan->policies, fn (PlannedFile $policy): bool => in_array($policy, $this->created, true)),
         ));
-        $sentence = $this->sentence($created, 'lets signed-in users read and refuses every write', 'let signed-in users read and refuse every write');
+        $sentence = $this->sentence($created, 'lets signed-in users do everything', 'let signed-in users do everything');
 
         return $sentence === null ? [] : ["{$sentence} Edit {$this->app->policies()} before production."];
     }

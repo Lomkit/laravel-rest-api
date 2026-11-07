@@ -40,7 +40,7 @@ class QuickStartRequestsTest extends ScaffoldingTestCase
         $this->artisan('rest:quick-start', ['--model' => ['Post', 'Tag'], '--install-api' => true, '--no-interaction' => true])->assertSuccessful();
 
         DB::table('users')->insert(['id' => 1, 'name' => 'Ada', 'email' => 'ada@example.com', 'password' => 'secret']);
-        DB::table('posts')->insert(['id' => 1, 'title' => 'Hello REST', 'body' => 'First post', 'author_id' => 1]);
+        DB::table('posts')->insert(['title' => 'Hello REST', 'body' => 'First post', 'author_id' => 1]);
         DB::table('tags')->insert(['id' => 1, 'name' => 'php']);
         DB::table('post_tag')->insert(['post_id' => 1, 'tag_id' => 1]);
     }
@@ -67,16 +67,29 @@ class QuickStartRequestsTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    public function it_refuses_every_write_of_a_signed_in_user(): void
+    public function it_lets_a_signed_in_user_create_update_and_delete(): void
     {
         $this->actingAs($this->user(), 'sanctum');
+        $this->travelTo('2026-01-07 09:00:00');
 
         $this->postJson('/api/posts/mutate', ['mutate' => [['operation' => 'create', 'attributes' => ['title' => 'Typed fields', 'body' => 'Generated from the schema', 'author_id' => 1]]]])
-            ->assertForbidden()
-            ->assertJsonPath('message', 'This action is unauthorized.');
-        $this->deleteJson('/api/posts', ['resources' => [1]])->assertForbidden();
+            ->assertOk()
+            ->assertExactJson(['operations' => [['operation' => 'create', 'key' => 2]]]);
+        $this->postJson('/api/posts/mutate', ['mutate' => [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Hello again']]]])
+            ->assertOk()
+            ->assertExactJson(['operations' => [['operation' => 'update', 'key' => 1]]]);
+        $this->deleteJson('/api/posts', ['resources' => [2]])
+            ->assertOk()
+            ->assertExactJson(['data' => [[
+                'id' => 2,
+                'title' => 'Typed fields',
+                'body' => 'Generated from the schema',
+                'author_id' => 1,
+                'created_at' => '2026-01-07T09:00:00.000000Z',
+                'updated_at' => '2026-01-07T09:00:00.000000Z',
+            ]], 'meta' => []]);
 
-        $this->assertSame(1, DB::table('posts')->count());
+        $this->assertSame([1 => 'Hello again'], DB::table('posts')->pluck('title', 'id')->all());
     }
 
     private function user(): Authenticatable

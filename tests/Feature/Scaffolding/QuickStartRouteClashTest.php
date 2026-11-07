@@ -123,8 +123,8 @@ class QuickStartRouteClashTest extends ScaffoldingTestCase
             ."  app/Rest/Controllers/Controller.php ... created\n"
             ."  app/Rest/Controllers/NotesController.php ... created\n"
             ."  app/Rest/Controllers/Archive/NotesController.php ... created\n"
-            ."  app/Policies/NotePolicy.php ... created (read-only)\n"
-            ."  app/Policies/Archive/NotePolicy.php ... created (read-only)\n"
+            ."  app/Policies/NotePolicy.php ... created (allows every ability)\n"
+            ."  app/Policies/Archive/NotePolicy.php ... created (allows every ability)\n"
             ."  routes/api.php ... kept\n"
             ."  checks (fresh process) ... 10 routes authenticated, 2 policies found\n\n",
             $output,

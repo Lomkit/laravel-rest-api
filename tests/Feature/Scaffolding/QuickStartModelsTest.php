@@ -51,7 +51,7 @@ class QuickStartModelsTest extends ScaffoldingTestCase
         $this->assertStringContainsString('  checks (fresh process) ... 15 routes authenticated, 3 policies found', $output);
         $this->assertStringNotContainsString('Skipped:', $output);
         $this->assertStringContainsString("\n  Note: User.password: hidden and not fillable on the model, left out.\n", $output);
-        $this->assertStringContainsString('PostPolicy, TagPolicy and UserPolicy let signed-in users read', $output);
+        $this->assertStringContainsString('PostPolicy, TagPolicy and UserPolicy let signed-in users do everything', $output);
     }
 
     #[Test]
@@ -61,11 +61,11 @@ class QuickStartModelsTest extends ScaffoldingTestCase
 
         $output = $this->quickStart('Note');
 
-        $this->assertStringContainsString('NotePolicy lets signed-in users read and refuses every write.', $output);
+        $this->assertStringContainsString('NotePolicy lets signed-in users do everything.', $output);
         $this->assertStringEndsWith(
-            "    public function delete(User \$user, Note \$note): bool\n    {\n        return false;\n    }\n\n"
-            ."    public function restore(User \$user, Note \$note): bool\n    {\n        return false;\n    }\n\n"
-            ."    public function forceDelete(User \$user, Note \$note): bool\n    {\n        return false;\n    }\n}\n",
+            "    public function delete(User \$user, Note \$note): bool\n    {\n        return true;\n    }\n\n"
+            ."    public function restore(User \$user, Note \$note): bool\n    {\n        return true;\n    }\n\n"
+            ."    public function forceDelete(User \$user, Note \$note): bool\n    {\n        return true;\n    }\n}\n",
             $this->contents('Policies/NotePolicy.php'),
         );
     }
@@ -100,7 +100,7 @@ class QuickStartModelsTest extends ScaffoldingTestCase
 
         $output = $this->quickStart('Archive/Note');
 
-        $this->assertStringContainsString("  app/Rest/Controllers/Archive/NotesController.php ... created\n  app/Policies/Archive/NotePolicy.php ... created (read-only)\n", $output);
+        $this->assertStringContainsString("  app/Rest/Controllers/Archive/NotesController.php ... created\n  app/Policies/Archive/NotePolicy.php ... created (allows every ability)\n", $output);
         $this->assertStringContainsString('  checks (fresh process) ... 5 routes authenticated, 1 policy found', $output);
         $this->assertStringStartsWith(
             "<?php\n\nnamespace App\Rest\Controllers\Archive;\n\nuse App\Rest\Controllers\Controller;\nuse App\Rest\Resources\Archive\NoteResource;\n",
@@ -160,7 +160,7 @@ class QuickStartModelsTest extends ScaffoldingTestCase
             ."  app/Rest/Resources/PostResource.php ... created (6 fields, 0 relations)\n"
             ."  app/Rest/Controllers/Controller.php ... created\n"
             ."  app/Rest/Controllers/PostsController.php ... created\n"
-            ."  app/Policies/PostPolicy.php ... created (read-only)\n"
+            ."  app/Policies/PostPolicy.php ... created (allows every ability)\n"
             ."  routes/api.php ... posts behind auth:sanctum\n"
             ."  checks (fresh process) ... 5 routes authenticated, 1 policy found\n",
             $output,

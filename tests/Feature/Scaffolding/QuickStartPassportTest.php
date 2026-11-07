@@ -81,13 +81,13 @@ class QuickStartPassportTest extends ScaffoldingTestCase
             ."  app/Rest/Resources/PostResource.php ... created (6 fields, 0 relations)\n"
             ."  app/Rest/Controllers/Controller.php ... created\n"
             ."  app/Rest/Controllers/PostsController.php ... created\n"
-            ."  app/Policies/PostPolicy.php ... created (read-only)\n"
+            ."  app/Policies/PostPolicy.php ... created (allows every ability)\n"
             ."  routes/api.php ... posts behind auth:api\n"
             ."  checks (fresh process) ... FAILED\n"
             .$this->undefinedGuardProblems()
             ."\n  Skipped: Post.author: no resource for App\Models\User. Rerun with --model=User to expose users.\n"
             ."  Skipped: Post.tags: no resource for App\Models\Tag. Rerun with --model=Tag to expose tags.\n"
-            ."  PostPolicy lets signed-in users read and refuses every write. Edit app/Policies before production.\n\n"
+            ."  PostPolicy lets signed-in users do everything. Edit app/Policies before production.\n\n"
             ."   ERROR  The API is not ready yet: fix the problems above, then run this command again.\n\n",
             $this->summary($output->fetch()),
         );

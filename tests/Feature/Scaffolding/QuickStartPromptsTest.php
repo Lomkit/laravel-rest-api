@@ -98,7 +98,7 @@ class QuickStartPromptsTest extends ScaffoldingTestCase
               app/Rest/Resources/PostResource.php ... created (6 fields, 0 relations)
               app/Rest/Controllers/Controller.php ... created
               app/Rest/Controllers/PostsController.php ... created
-              app/Policies/PostPolicy.php ... created (read-only)
+              app/Policies/PostPolicy.php ... created (allows every ability)
               routes/api.php ... posts behind auth:sanctum
               checks (fresh process) ... 5 routes authenticated, 1 policy found
 
@@ -110,7 +110,7 @@ class QuickStartPromptsTest extends ScaffoldingTestCase
               Next:
                 php artisan tinker --execute="echo App\Models\User::first()->createToken('cli')->plainTextToken;"
                 curl -X POST http://localhost/api/posts/search -H "Authorization: Bearer <token>" -H "Accept: application/json" -H "Content-Type: application/json" -d '{"search":{"limit":10}}'
-              PostPolicy lets signed-in users read and refuses every write. Edit app/Policies before production.
+              PostPolicy lets signed-in users do everything. Edit app/Policies before production.
 
             TXT, $this->summary($output->fetch()));
         $this->assertSame(self::ROUTES_WITH_POSTS, (string) file_get_contents(base_path('routes/api.php')));
