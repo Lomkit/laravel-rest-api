@@ -49,6 +49,12 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
         'Controllers/LintedPostsController.php',
         'Controllers/LintedStrayController.php',
         'Instructions/LintedInstruction.php',
+        'Metrics/LintedMetric.php',
+        'Metrics/LintedPartition.php',
+        'Metrics/LintedProgress.php',
+        'Metrics/LintedTable.php',
+        'Metrics/LintedTrend.php',
+        'Metrics/LintedValue.php',
         'Resources/Admin/LintedTagResource.php',
         'Resources/Admin/LintedTopicResource.php',
         'Resources/LintedArticleResource.php',
@@ -147,6 +153,12 @@ class GeneratedCodeQualityTest extends ScaffoldingTestCase
         $this->generate('rest:action', ['name' => 'LintedAction']);
         $this->generate('rest:instruction', ['name' => 'LintedInstruction']);
         $this->generate('rest:response', ['name' => 'LintedResponse']);
+        $this->generate('rest:metric', ['name' => 'LintedValue', '--type' => 'value']);
+        $this->generate('rest:metric', ['name' => 'LintedTrend', '--type' => 'trend']);
+        $this->generate('rest:metric', ['name' => 'LintedPartition', '--type' => 'partition', '--group-by' => 'status']);
+        $this->generate('rest:metric', ['name' => 'LintedProgress', '--type' => 'progress']);
+        $this->generate('rest:metric', ['name' => 'LintedTable', '--type' => 'table', '--group-by' => 'channel']);
+        $this->generate('rest:metric', ['name' => 'LintedMetric', '--type' => 'custom']);
         $this->generate('rest:policy', ['name' => 'LintedPostPolicy', '--model' => 'LintedPost']);
         $this->generate('rest:policy', ['name' => 'LintedArticlePolicy', '--model' => Article::class, '--force' => true]);
         $this->generate('rest:policy', ['name' => 'Admin/LintedTagPolicy']);

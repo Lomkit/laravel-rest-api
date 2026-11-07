@@ -1,0 +1,22 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Metric as RestMetric;
+use Lomkit\Rest\Metrics\ValueResult;
+
+class {{ class }} extends RestMetric
+{
+    #[\Override]
+    public function type(): string
+    {
+        return '{{ type }}';
+    }
+
+    #[\Override]
+    public function calculate(Builder $query): ValueResult
+    {
+        return new ValueResult($query->count());
+    }
+}

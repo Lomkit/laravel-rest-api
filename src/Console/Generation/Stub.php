@@ -12,6 +12,12 @@ enum Stub: string
     case BaseResource = 'base-resource';
     case Controller = 'controller';
     case Instruction = 'instruction';
+    case Metric = 'metric';
+    case MetricPartition = 'metric-partition';
+    case MetricProgress = 'metric-progress';
+    case MetricTable = 'metric-table';
+    case MetricTrend = 'metric-trend';
+    case MetricValue = 'metric-value';
     case Policy = 'policy';
     case Resource = 'resource';
     case Response = 'response';
@@ -59,6 +65,8 @@ enum Stub: string
     {
         return match ($this) {
             self::Controller => ['{{ namespace }}', '{{ class }}', '{{ namespacedResource }}', '{{ resource }}'],
+            self::Metric => ['{{ namespace }}', '{{ class }}', '{{ type }}'],
+            self::MetricPartition, self::MetricTable => ['{{ namespace }}', '{{ class }}', '{{ groupBy }}'],
             self::Policy => ['{{ namespace }}', '{{ class }}', '{{ namespacedModel }}', '{{ model }}', '{{ modelVariable }}', '{{ namespacedUserModel }}', '{{ user }}', '{{ softDeleteMethods }}'],
             self::Resource => ['{{ namespace }}', '{{ class }}', '{{ namespacedModel }}', '{{ model }}', '{{ imports }}', '{{ fields }}', '{{ relations }}'],
             default => ['{{ namespace }}', '{{ class }}'],

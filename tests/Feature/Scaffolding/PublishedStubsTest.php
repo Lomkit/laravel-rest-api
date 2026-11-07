@@ -17,6 +17,10 @@ class PublishedStubsTest extends ScaffoldingTestCase
 
     private const string POLICY_WITHOUT_SOFT_DELETES = "<?php\n\nnamespace {{ namespace }};\n\nuse {{ namespacedModel }};\nuse {{ namespacedUserModel }};\n\n// {{ user }} {{ model }} {{ modelVariable }}\nclass {{ class }} {}\n";
 
+    private const string PUBLISHED_METRIC = "<?php\n\nnamespace {{ namespace }};\n\nclass {{ class }} {}\n";
+
+    private const string GENERATED_METRIC = "<?php\n\nnamespace App\Rest\Metrics;\n\nclass PublishedMetric {}\n";
+
     private const string PUBLISHED_ACTION = "<?php\n\nnamespace {{ namespace }};\n\nuse Lomkit\Rest\Actions\Action;\n\nclass {{ class }} extends Action {}\n";
 
     #[Test]
@@ -31,6 +35,12 @@ class PublishedStubsTest extends ScaffoldingTestCase
                 realpath(__DIR__.'/../../../src/Console/stubs/base-resource.stub') => 'rest.base-resource.stub',
                 realpath(__DIR__.'/../../../src/Console/stubs/controller.stub') => 'rest.controller.stub',
                 realpath(__DIR__.'/../../../src/Console/stubs/instruction.stub') => 'rest.instruction.stub',
+                realpath(__DIR__.'/../../../src/Console/stubs/metric.stub') => 'rest.metric.stub',
+                realpath(__DIR__.'/../../../src/Console/stubs/metric-partition.stub') => 'rest.metric-partition.stub',
+                realpath(__DIR__.'/../../../src/Console/stubs/metric-progress.stub') => 'rest.metric-progress.stub',
+                realpath(__DIR__.'/../../../src/Console/stubs/metric-table.stub') => 'rest.metric-table.stub',
+                realpath(__DIR__.'/../../../src/Console/stubs/metric-trend.stub') => 'rest.metric-trend.stub',
+                realpath(__DIR__.'/../../../src/Console/stubs/metric-value.stub') => 'rest.metric-value.stub',
                 realpath(__DIR__.'/../../../src/Console/stubs/policy.stub') => 'rest.policy.stub',
                 realpath(__DIR__.'/../../../src/Console/stubs/resource.stub') => 'rest.resource.stub',
                 realpath(__DIR__.'/../../../src/Console/stubs/response.stub') => 'rest.response.stub',
@@ -64,6 +74,32 @@ class PublishedStubsTest extends ScaffoldingTestCase
             file_get_contents(app_path('Rest/Actions/PublishedAction.php')),
         );
         $this->assertSame(base_path('stubs/rest.action.stub'), Stub::Action->path());
+    }
+
+    /** @param array<string, string> $options */
+    #[Test]
+    #[DataProvider('publishedMetricStubs')]
+    public function it_generates_each_type_of_metric_from_its_published_stub(string $stub, string $contents, array $options, string $expected): void
+    {
+        mkdir(base_path('stubs'));
+        file_put_contents(base_path("stubs/rest.{$stub}.stub"), $contents);
+
+        $this->artisan('rest:metric', ['name' => 'PublishedMetric', ...$options, '--no-interaction' => true])->assertSuccessful();
+
+        $this->assertSame($expected, file_get_contents(app_path('Rest/Metrics/PublishedMetric.php')));
+    }
+
+    /** @return array<string, array{string, string, array<string, string>, string}> */
+    public static function publishedMetricStubs(): array
+    {
+        return [
+            'value' => ['metric-value', self::PUBLISHED_METRIC.'// value', ['--type' => 'value'], self::GENERATED_METRIC.'// value'],
+            'trend' => ['metric-trend', self::PUBLISHED_METRIC.'// trend', ['--type' => 'trend'], self::GENERATED_METRIC.'// trend'],
+            'partition' => ['metric-partition', self::PUBLISHED_METRIC.'// {{ groupBy }}', ['--type' => 'partition', '--group-by' => 'status'], self::GENERATED_METRIC.'// status'],
+            'progress' => ['metric-progress', self::PUBLISHED_METRIC.'// progress', ['--type' => 'progress'], self::GENERATED_METRIC.'// progress'],
+            'table' => ['metric-table', self::PUBLISHED_METRIC.'// {{ groupBy }}', ['--type' => 'table', '--group-by' => 'channel'], self::GENERATED_METRIC.'// channel'],
+            'custom' => ['metric', self::PUBLISHED_METRIC.'// {{ type }}', ['--type' => 'custom'], self::GENERATED_METRIC.'// published-metric'],
+        ];
     }
 
     #[Test]
@@ -105,6 +141,9 @@ class PublishedStubsTest extends ScaffoldingTestCase
             'policy without the restore and force delete methods' => ['policy', self::POLICY_WITHOUT_SOFT_DELETES, '{{ softDeleteMethods }}', 'rest:policy', ['name' => 'UnfilledPolicy', '--model' => User::class]],
             'action without its class' => ['action', "<?php\n\nnamespace {{ namespace }};\n\nclass UnfilledAction {}\n", '{{ class }}', 'rest:action', ['name' => 'UnfilledAction']],
             'response without its namespace' => ['response', "<?php\n\nclass {{ class }} {}\n", '{{ namespace }}', 'rest:response', ['name' => 'UnfilledResponse']],
+            'partition metric without its field' => ['metric-partition', "<?php\n\nnamespace {{ namespace }};\n\nclass {{ class }} {}\n", '{{ groupBy }}', 'rest:metric', ['name' => 'UnfilledPartition', '--type' => 'partition', '--group-by' => 'status']],
+            'table metric without its field' => ['metric-table', "<?php\n\nnamespace {{ namespace }};\n\nclass {{ class }} {}\n", '{{ groupBy }}', 'rest:metric', ['name' => 'UnfilledTable', '--type' => 'table', '--group-by' => 'channel']],
+            'custom metric without its type' => ['metric', "<?php\n\nnamespace {{ namespace }};\n\nclass {{ class }} {}\n", '{{ type }}', 'rest:metric', ['name' => 'UntypedMetric', '--type' => 'custom']],
         ];
     }
 }

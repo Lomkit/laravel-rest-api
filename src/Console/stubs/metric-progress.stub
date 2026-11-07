@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Progress as RestProgress;
+use Lomkit\Rest\Metrics\ProgressResult;
+
+class {{ class }} extends RestProgress
+{
+    #[\Override]
+    public function calculate(Builder $query): ProgressResult
+    {
+        return $this->count($query, target: 100);
+    }
+}

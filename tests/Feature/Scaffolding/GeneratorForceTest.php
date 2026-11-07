@@ -59,6 +59,7 @@ class GeneratorForceTest extends ScaffoldingTestCase
             'base resource' => ['rest:base-resource', 'ForcedBaseResource', 'Rest/Resources/ForcedBaseResource.php', 'Base Resource'],
             'controller' => ['rest:controller', 'ForcedController', 'Rest/Controllers/ForcedController.php', 'Controller'],
             'instruction' => ['rest:instruction', 'ForcedInstruction', 'Rest/Instructions/ForcedInstruction.php', 'Instruction'],
+            'metric' => ['rest:metric', 'ForcedMetric', 'Rest/Metrics/ForcedMetric.php', 'Metric'],
             'resource' => ['rest:resource', 'ForcedResource', 'Rest/Resources/ForcedResource.php', 'Resource'],
             'response' => ['rest:response', 'ForcedResponse', 'Rest/Responses/ForcedResponse.php', 'Response'],
         ];

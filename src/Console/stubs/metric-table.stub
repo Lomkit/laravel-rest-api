@@ -1,0 +1,19 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Table as RestTable;
+use Lomkit\Rest\Metrics\TableColumn;
+use Lomkit\Rest\Metrics\TableResult;
+
+class {{ class }} extends RestTable
+{
+    #[\Override]
+    public function calculate(Builder $query): TableResult
+    {
+        return $this->rows($query, '{{ groupBy }}', [
+            'count' => TableColumn::count(),
+        ]);
+    }
+}
