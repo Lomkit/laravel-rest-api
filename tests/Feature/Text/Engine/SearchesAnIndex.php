@@ -132,6 +132,18 @@ trait SearchesAnIndex
         ];
     }
 
+    #[Test]
+    public function it_reads_the_user_of_each_request_in_the_index_perimeter(): void
+    {
+        $this->actingAs(new GenericUser(['id' => 1, 'teams' => ['red', 'blue']]));
+        $both = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]);
+        $this->actingAs(new GenericUser(['id' => 2, 'teams' => ['blue']]));
+        $blue = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]);
+
+        $both->assertOk()->assertExactJson($this->page([1, 3, 4, 5], 4));
+        $blue->assertOk()->assertExactJson($this->page([4], 1));
+    }
+
     /**
      * @param  array<string, mixed>  $trashed
      * @param  list<int>  $ids

@@ -39,6 +39,6 @@ abstract class EngineQueryTestCase extends EngineTestCase
     {
         $target = $this->target(VoucherResource::class);
 
-        return ($engine ?? $this->engine())->query(new TextQuery($text), $target, $this->context()->request, $trashed);
+        return ($engine ?? $this->engine())->query(new TextQuery($text), $target, $trashed);
     }
 }

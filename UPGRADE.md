@@ -578,7 +578,57 @@ The controller hooks are removed. The resource has endpoint events instead: publ
 
 - The resource now declares `describing()`, `described()`, `searching()`, `searched()`, `mutatingAll()`, `mutatedAll()`, `operating()`, `operated()`, `destroyingAll()`, `destroyedAll()`, `restoringAll()`, `restoredAll()`, `forceDestroyingAll()` and `forceDestroyedAll()`. A resource method with one of these names and another signature no longer loads: rename it.
 - The queued jobs of an action run no event: the events run in the request.
-- The hooks of each row (`mutating()`, `destroying()` and the others) and `perform*()` do not change.
+
+Hooks of each row and the perimeter:
+
+- The hooks of each row, the `perform*()` methods, `perimeterQuery()` and the closure of `ScoutEngine::perimeter()` no longer take the request. Read it with `$this->request()`: it is the request of the endpoint, such as `DestroyRequest`, also in the hooks and the perimeter of a nested entry or an include, and in the worker of a queued action. Remove the request parameter from each override, and the argument of its `parent::` call. PHP refuses to load a class whose override keeps it, and names the method. A perimeter closure that keeps it throws an `ArgumentCountError` when a text search runs.
+
+  | Before | Now |
+  |---|---|
+  | `mutating(MutateRequest $request, array $requestBody, Model $model)` | `mutating(MutationNode $entry, Model $model)` |
+  | `mutated(MutateRequest $request, array $requestBody, Model $model)` | `mutated(MutationNode $entry, Model $model)` |
+  | `destroying(DestroyRequest $request, Model $model)`, `destroyed()` | `destroying(Model $model)`, `destroyed(Model $model)` |
+  | `restoring(RestoreRequest $request, Model $model)`, `restored()` | `restoring(Model $model)`, `restored(Model $model)` |
+  | `forceDestroying(ForceDestroyRequest $request, Model $model)`, `forceDestroyed()` | `forceDestroying(Model $model)`, `forceDestroyed(Model $model)` |
+  | `performDelete(RestRequest $request, Model $model)`, `performRestore()`, `performForceDelete()` | `performDelete(Model $model)`, `performRestore(Model $model)`, `performForceDelete(Model $model)` |
+  | `perimeterQuery(RestRequest $request, Builder $query): Builder` | `perimeterQuery(Builder $query): Builder` |
+  | `ScoutEngine::make()->perimeter(fn (EngineQuery $query, RestRequest $request) => ...)` | `ScoutEngine::make()->perimeter(fn (EngineQuery $query) => ...)` |
+
+- `mutating()` and `mutated()` receive the entry as a `Lomkit\Rest\Mutations\MutationNode`, the node of `$request->payload()` itself, instead of an array: `operation` (a `Lomkit\Rest\Fields\MutationOperation`), `key` (`null` on `create`, a list for an entry that sends several keys), `attributes`, `pivot`, `withoutDetaching`, `relations` (the nodes of each relation that the entry sends), `type` (the morph type of a `MorphTo` entry), `depth` and `path`. Replace `$requestBody['attributes']['title']` with `$entry->attributes['title']`, and `$requestBody['operation'] === 'create'` with `$entry->operation === MutationOperation::Create`. `MutationNode::toArray()` is removed.
+- The hooks run at the same moments as before, inside the transaction of their endpoint.
+
+  ```php
+  use Illuminate\Contracts\Database\Eloquent\Builder;
+  use Illuminate\Database\Eloquent\Model;
+  use Lomkit\Rest\Fields\Integer;
+  use Lomkit\Rest\Fields\MutationOperation;
+  use Lomkit\Rest\Mutations\MutationNode;
+  use Lomkit\Rest\Text\Engine\EngineQuery;
+  use Lomkit\Rest\Text\ScoutEngine;
+  use Lomkit\Rest\Text\TextSearch;
+
+  public function perimeterQuery(Builder $query): Builder
+  {
+      return $query->where('team_id', $this->request()->user()->team_id);
+  }
+
+  public function text(): ?TextSearch
+  {
+      return ScoutEngine::make()->perimeter(
+          fn (EngineQuery $query) => $query->where('team_id', '=', $this->request()->user()->team_id),
+          [Integer::make('team_id')],
+      );
+  }
+
+  public function mutating(MutationNode $entry, Model $model): void
+  {
+      if ($entry->operation === MutationOperation::Create) {
+          $model->setAttribute('created_by', $this->request()->user()->id);
+      }
+  }
+  ```
+
+- The callbacks of `requiredOnCreation()` and the other relation constraints keep their request argument.
 
 ### Native types
 
@@ -614,9 +664,9 @@ Query hooks:
   ```php
   use Illuminate\Contracts\Database\Eloquent\Builder;
 
-  public function perimeterQuery(RestRequest $request, Builder $query): Builder
+  public function perimeterQuery(Builder $query): Builder
   {
-      return $query->where('team_id', $request->user()->team_id);
+      return $query->where('team_id', $this->request()->user()->team_id);
   }
   ```
 
@@ -839,7 +889,7 @@ public function text(): ?TextSearch
         ->filterable([Integer::make('category_id'), Number::make('price'), 'status'])
         ->sortable(['price'])
         ->perimeter(
-            fn (EngineQuery $query, RestRequest $request) => $query->where('team_id', '=', $request->user()->team_id),
+            fn (EngineQuery $query) => $query->where('team_id', '=', $this->request()->user()->team_id),
             [Integer::make('team_id')],
         );
 }
@@ -850,7 +900,7 @@ Declaration:
 - The model uses `Laravel\Scout\Searchable`, and its engine, the result of `searchableUsing()`, is a Scout engine or a class that extends one: `collection`, `database`, `meilisearch`, `typesense`, `algolia`, `turbopuffer` or `null`. Another engine is refused, because the package cannot know which filters and sorts it runs.
 - `filterable()` lists the index attributes that clients may filter on: fields, such as `Integer::make('category_id')`, or the names of fields of the resource, such as `'status'`, which take the type and the operators of that field. An attribute is an `ID`, `Integer`, `Number`, `Boolean`, `Text` or `Enum` field without `filterUsing()` or `sortUsing()`. `Date`, `DateTime`, `Json` and the app types that extend a field type are refused: index a date as a timestamp and declare it as an `Integer`. A name starts with a letter or `_` and holds only letters, digits and `_`, and `__soft_deleted` is reserved. An `Enum` field declared here reads its enum class from the casts of the model.
 - `sortable()` names the `filterable()` attributes that clients may sort on.
-- The index perimeter is required: declare `perimeter()` or `withoutPerimeter()`, and not both. The closure of `perimeter()` receives the `EngineQuery` of each search and the request. Its conditions narrow every search of the resource, its total and its pages included, and clients cannot widen them. Its second argument lists the attributes that only the perimeter uses: clients cannot filter or sort on them.
+- The index perimeter is required: declare `perimeter()` or `withoutPerimeter()`, and not both. The closure of `perimeter()` receives the `EngineQuery` of each search, and reads the request with `$this->request()`. Its conditions narrow every search of the resource, its total and its pages included, and clients cannot widen them. Its second argument lists the attributes that only the perimeter uses: clients cannot filter or sort on them.
 - The perimeter decides which rows a text search returns: the rows of a page are loaded without `perimeterQuery()` (see Pages and totals). Declare in `perimeter()` every condition that keeps rows from some users, on attributes that the index holds and filters on, and keep these attributes in sync with the database: set `scout.after_commit` to `true`, and leave `scout.queue` off for a model whose perimeter keeps rows from some users, so that a change reaches the index before the next search. Until the index holds a change, a text search returns the row as the index matches it, with its current values.
 - `searchable()` does not apply to `ScoutEngine`, which needs no searchable field.
 - The declaration is checked when the resource is first searched in a request. A missing perimeter, a model without `Searchable`, another engine, a refused type, a callback, a refused name, an attribute declared twice or a sort on an attribute that is not filterable throws `Lomkit\Rest\Exceptions\InvalidTextSearchException`, which names the resource.
@@ -1005,7 +1055,7 @@ Requests:
 - A wildcard rule that the override adds on the entries of an instruction's `fields`, such as `search.instructions.*.fields.*`, also meets the named input values, such as `search.instructions.0.fields.min_views`. To check the entries only, write the rule on `search.instructions.*.fields.*.value` or `.name`, or give the rule to the field that the instruction declares in `fields()`.
 - `SearchRequest::payload()` returns the validated search as a `Lomkit\Rest\Search\SearchNode`. Its parts are typed nodes: `FilterGroup`, `FilterCondition`, `RelationFilterGroup` and `MorphFilterGroup` (each a `FilterNode`), a `SortNode` per sort, `AggregateNode`, `IncludeNode`, `MorphIncludeNode`, `ScopeNode` and `InstructionNode`, in `Lomkit\Rest\Search`. A `FilterCondition` holds the `name` of its field as sent and its `path`, a `Lomkit\Rest\Fields\FieldPath` (`relations`, `field`, `resource`, `pivotTable`). Under a search engine, a filter is a `Lomkit\Rest\Text\Engine\EngineFilterCondition`, which holds its `IndexAttribute`. `SortNode` is an interface with `direction()`, `asc` by default and `desc` for `@relevance`: `FieldSort` holds the `Field`, `RelevanceSort` stands for `@relevance`, and `Lomkit\Rest\Text\Engine\EngineSort` holds the attribute of a search engine. An `IncludeNode` holds `relations`, the `Relation` of each segment of its path, and the related `resource`. An `AggregateNode` holds the related `resource`, its `field` (a `Field`, or `null`) and its `key`, a `Lomkit\Rest\Search\AggregateKey` whose `value` is the alias, or the default name. A `RelationFilterGroup` holds its `Relation`, `exists` and the `FilterGroup` of its `nested`. On a `MorphTo`, a `MorphIncludeNode` holds an `IncludeNode` for each type in `branches`, and a `MorphFilterGroup` holds a `FilterGroup` for each type in `types`. `payload()` throws a `LogicException` before the request passed validation: "The search was read before the request passed validation."
 - `OperateRequest::payload()` returns the validated operation as a `Lomkit\Rest\Actions\OperationNode`. The node has `action`, `fields`, a `Lomkit\Rest\Fields\InputValues`, and `target`. The target is one of these: a `Lomkit\Rest\Search\SearchNode` for the `Search` target, which is empty when `search` is left out; the `Lomkit\Rest\Validation\KeyList` of the `Resources` target; `null` for the `None` target. `keys()` returns the `KeyList`. `payload()` throws a `LogicException` before the request passed validation: "The operation was read before the request passed validation."
-- `MutateRequest::payload()` returns the validated mutation as a list of `Lomkit\Rest\Mutations\MutationNode`, one per entry of `mutate`. A node has `operation` (a `Lomkit\Rest\Fields\MutationOperation`), `key`, `attributes`, `pivot`, `withoutDetaching`, `relations`, which holds the nodes of each relation that the entry sends, and `depth`. `context()` returns its `MutationContext`, and `toArray()` rebuilds the entry as an array. `payload()` throws a `LogicException` before the request passed validation: "The mutation was read before the request passed validation."
+- `MutateRequest::payload()` returns the validated mutation as a list of `Lomkit\Rest\Mutations\MutationNode`, one per entry of `mutate`. A node has `operation` (a `Lomkit\Rest\Fields\MutationOperation`), `key`, `attributes`, `pivot`, `withoutDetaching`, `relations`, which holds the nodes of each relation that the entry sends, and `depth`. `context()` returns its `MutationContext`. The `mutating()` and `mutated()` hooks receive these nodes, see [Events](#events). `payload()` throws a `LogicException` before the request passed validation: "The mutation was read before the request passed validation."
 - Every package request records its validation pass in `passedValidation()`. An override of `passedValidation()` must call the parent.
 - To adjust the validator, use `withValidator()`, or override `createDefaultValidator()` and call the parent. A request that defines `validator()` builds the validator itself: it must use `validationData()` and `validationRules()`. The `label()` and `messages()` of fields do not apply there, and Laravel names its keys, such as `fields.status` for an input field.
 - Every key that the package parses in `mutate` is named as written in messages, at every level, as Laravel names wildcard keys, unless the request's `attributes()`, the field's `label()` or a `validation.attributes` translation line names it. Examples: `mutate.0.without_detaching`, `mutate.0.attributes.published_on`, `mutate.0.relations.latestLoan.operation`, `mutate.0.relations.lineItems.0.operation`, a relation that the entry does not send, such as `mutate.0.relations.featuredProducts`, and an explicit key of the resource rules, such as `mutate.0.attributes.metadata.source_url`. A key that Laravel expands from a wildcard rule of the request or of the resource rules, such as `mutate.0.attributes.metadata.tags.1`, is named as written too. The package gives a parsed key its name as written only where Laravel's formatting would change the key: when it holds `_`, whitespace or an uppercase letter. Laravel's formatting leaves the other parsed keys as written. `Validator::setImplicitAttributesFormatter()` applies to a key that Laravel expands only when no other name applies to it. So it does not apply to a parsed key that a wildcard rule meets when the key holds `_`, whitespace or an uppercase letter, such as `mutate.0.attributes.published_on` under `mutate.*.attributes.published_on`, or when its field declares `label()`. It still applies to the other parsed keys, such as `mutate.0.attributes.name` under `mutate.*.attributes.name` or `mutate.0.relations.products.0.operation` under `mutate.*.relations.products.*.operation`.
@@ -1087,7 +1137,7 @@ Mutate payload:
 - The keys are checked with one query per resource class and request, per 1,000 keys, through the `perimeterQuery()` of their resource and the global scopes of the model, at the root and under relations. This query loads the rows (`select *`), and the mutation writes these rows: each row that the payload names by key is read once, during validation. A key that this query does not return, a soft-deleted key included, gives "The selected mutate.0.key is invalid.". A key list with a missing key gives one error on its `key`, such as "The selected mutate.0.relations.products.0.key is invalid.". Two forms of one UUID or ULID key that differ only by case are checked apart, each in a query of its own, and each passes only when the database matches it as sent. A `Precognition-Validate-Only` request whose names leave out every `key` runs no key query.
 - `MutateRequest` sets `$request->resource` in `rules()` and has `keysQuery(Resource $resource): Illuminate\Database\Eloquent\Builder`. The `perimeterQuery()` of each resource class whose keys the payload holds runs once per request, during validation, before `mutatingAll()`, also when a key is sent in two cases. It is not called when the mutation is written, and a mutation that names no key of a resource, such as one that only creates rows, does not call it. `MutateRequest::rows()` returns the `Lomkit\Rest\Mutations\RowSet` of the rows that validation loaded, once the request passed validation.
 - On `create`, `key` is not read: it gets only "The mutate.0.key field is prohibited when mutate.0.operation is create.", and no key query runs for it. Before, a key list there also got the `values` limit error and counted toward `totals.entries`.
-- A mutation is written from the entries of `payload()`. The `mutating()` and `mutated()` hooks of the resource receive each entry as an array rebuilt by `MutationNode::toArray()`: the keys that the entry sent, in the order `operation`, `key`, `attributes`, `pivot`, `without_detaching`, `relations`, with integer keys as integers. A `MorphTo` entry holds `type`, after `operation`: the type that it sent, or the one target's type. A change to the request input after validation, such as in `mutatingAll()`, does not change what is written.
+- A mutation is written from the entries of `payload()`. The `mutating()` and `mutated()` hooks of the resource receive the `MutationNode` of each entry, see [Events](#events). A `MorphTo` entry holds `type`: the type that it sent, or the one target's type. A change to the request input after validation, such as in `mutatingAll()`, does not change what is written.
 
 Limits:
 
@@ -1335,7 +1385,7 @@ Gates:
   - a trashed row, for `update` and `delete`, unless `perimeterQuery()` takes trashed rows in: `mutate` and `destroy` do not reach trashed rows. A search with `trashed` and one of these gates runs one more query.
 
   The other rows of a search, of its includes and the records of a mutation are read through `perimeterQuery()` and need no query. `view`, `create` and the gates that a resource declares answer the policy alone. Before, every gate answered the policy alone.
-- The gates run `perimeterQuery()` with the request of the response: the search request, or the `mutate` request for the records of a mutation. When `perimeterQuery()` leaves a row out on one endpoint only, by checking `$request->endpoint()`, a search still answers that endpoint's gate from the policy: put a condition that a gate must follow in the policy.
+- The gates run `perimeterQuery()` with the request of the response: the search request, or the `mutate` request for the records of a mutation. When `perimeterQuery()` leaves a row out on one endpoint only, by checking `$this->request()->endpoint()`, a search still answers that endpoint's gate from the policy: put a condition that a gate must follow in the policy.
 - `map()` receives the answers of a row as an object (`stdClass`) whose properties are the names of the answers: read `$responseModel['gates']->authorized_to_view['allowed']`. Before, it received an array.
 - `gates` takes the abilities `view`, `create`, `update`, `delete`, `restore` and `forceDelete`, and the gates that the resource of its level declares (below), each once. `viewAny`, another name or a value that is not a string gives a 422 under its entry, `The selected search.gates.0 is invalid.`, and an ability listed twice gives `The search.gates.0 field has a duplicate value.` on each copy. Before, `viewAny` was accepted and never answered, a repeated ability was answered once, and another name gave the 422 on the whole list, `The selected search.gates is invalid.`
 - `create` is accepted at the root of a search only, since its answer goes to `meta`. In an include, at any depth, it gives a 422 under its entry: `The search.includes.0.gates.0 field is prohibited.` Before, it was accepted and left out of the response.
@@ -1603,12 +1653,12 @@ Rows that a write reaches:
 - A resource has one perimeter, `perimeterQuery()`: the rows that exist for the client. Searches and actions read through it, at every level of a relation path, except the rows that a search engine returns for a text search (see [Search engines](#search-engines)), and so do the keys of `mutate`, at the root and under relations, each in the resource of its row, and the keys of `destroy`, `restore` and `forceDestroy`. A key outside it gives a 422, with the message of a key that does not exist. Before, each write endpoint read its keys through its own hook, `mutateQuery()`, `destroyQuery()`, `restoreQuery()` or `forceDeleteQuery()`, and a client could change or delete a row that its searches did not return.
 - The write hooks are removed. Move the condition of each override:
   - to the policy when the client may see the row but not change it, such as a locked row or a row of another owner: `update`, `delete`, `restore` or `forceDelete` refuses the row with a 403, see [Authorization](#authorization);
-  - to `perimeterQuery()` when the row must not exist for the client on that endpoint: `perimeterQuery()` receives the request of the endpoint, so branch on it. The row then gives a 422 on that endpoint only. For example, to let `mutate` reach rows that the other endpoints leave out:
+  - to `perimeterQuery()` when the row must not exist for the client on that endpoint: `perimeterQuery()` reads the request of the endpoint with `$this->request()`, so branch on it. The row then gives a 422 on that endpoint only. For example, to let `mutate` reach rows that the other endpoints leave out:
 
   ```php
-  public function perimeterQuery(RestRequest $request, Builder $query): Builder
+  public function perimeterQuery(Builder $query): Builder
   {
-      if ($request->endpoint() === Endpoint::Mutate) {
+      if ($this->request()->endpoint() === Endpoint::Mutate) {
           return $query;
       }
 
@@ -1616,7 +1666,7 @@ Rows that a write reaches:
   }
   ```
 
-  A `perimeterQuery()` that reads data of a search request checks `$request->endpoint()` before it reads them.
+  A `perimeterQuery()` that reads data of a search request checks `$this->request()->endpoint()` before it reads them.
 - A created row is not checked against `perimeterQuery()`: it is written, and its record in `records` is `null` when `perimeterQuery()` leaves it out.
 
 Nested writes:

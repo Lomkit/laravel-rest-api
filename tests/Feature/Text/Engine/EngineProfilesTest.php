@@ -178,6 +178,6 @@ class EngineProfilesTest extends EngineTestCase
         return ScoutEngine::make()
             ->filterable(['price'])
             ->withoutPerimeter()
-            ->query(new TextQuery('report'), $this->target(VoucherResource::class), $this->context()->request);
+            ->query(new TextQuery('report'), $this->target(VoucherResource::class));
     }
 }

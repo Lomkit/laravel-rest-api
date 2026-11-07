@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Text\Engine\Stubs;
 
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Text\EngineTextSearch;
@@ -24,8 +23,8 @@ final readonly class GrammarlessEngineSearch implements EngineTextSearch
     }
 
     #[\Override]
-    public function query(TextQuery $text, TextTarget $target, RestRequest $request, ?Trashed $trashed = null): EngineQuery
+    public function query(TextQuery $text, TextTarget $target, ?Trashed $trashed = null): EngineQuery
     {
-        return $this->engine->query($text, $target, $request, $trashed);
+        return $this->engine->query($text, $target, $trashed);
     }
 }

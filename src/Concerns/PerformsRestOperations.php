@@ -104,13 +104,13 @@ trait PerformsRestOperations
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
         $models = RowBatch::authorize($resource, $request->payload()->rows(), 'delete')->write($resource->destroyingAll(...), function (Model $model) use ($request, $resource): void {
-            $resource->destroying($request, $model);
+            $resource->destroying($model);
 
-            $resource->performDelete($request, $model);
+            $resource->performDelete($model);
 
             $request->context()->authorizer()->forget($model);
 
-            $resource->destroyed($request, $model);
+            $resource->destroyed($model);
         }, $resource->destroyedAll(...));
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
@@ -121,13 +121,13 @@ trait PerformsRestOperations
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
         $models = RowBatch::authorize($resource, $request->payload()->rows(), 'restore')->write($resource->restoringAll(...), function (Model $model) use ($request, $resource): void {
-            $resource->restoring($request, $model);
+            $resource->restoring($model);
 
-            $resource->performRestore($request, $model);
+            $resource->performRestore($model);
 
             $request->context()->authorizer()->forget($model);
 
-            $resource->restored($request, $model);
+            $resource->restored($model);
         }, $resource->restoredAll(...));
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
@@ -138,13 +138,13 @@ trait PerformsRestOperations
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
         $models = RowBatch::authorize($resource, $request->payload()->rows(), 'forceDelete')->write($resource->forceDestroyingAll(...), function (Model $model) use ($request, $resource): void {
-            $resource->forceDestroying($request, $model);
+            $resource->forceDestroying($model);
 
-            $resource->performForceDelete($request, $model);
+            $resource->performForceDelete($model);
 
             $request->context()->authorizer()->forget($model);
 
-            $resource->forceDestroyed($request, $model);
+            $resource->forceDestroyed($model);
         }, $resource->forceDestroyedAll(...));
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);

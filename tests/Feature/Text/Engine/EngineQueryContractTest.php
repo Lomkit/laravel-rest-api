@@ -128,7 +128,7 @@ class EngineQueryContractTest extends EngineQueryContractTestCase
             ->perimeter(fn (EngineQuery $query): EngineQuery => $query->where('team', '=', 'red'), [Text::make('team')]);
         $target = $this->target(VoucherResource::class);
 
-        $engine->query(new TextQuery('report'), $target, $this->context()->request)->page(10, 1);
+        $engine->query(new TextQuery('report'), $target)->page(10, 1);
 
         $this->assertSame([['field' => 'team', 'operator' => '=', 'value' => 'red']], $this->engine->searches[0]->wheres);
         $this->assertSame(['price'], array_keys($engine->capabilities($target)->engine->filters ?? []));

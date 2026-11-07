@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\ActionFields;
-use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Search\SearchContext;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\ReportOutage;
@@ -96,7 +95,7 @@ class EventTicketResource extends TicketResource
     }
 
     #[\Override]
-    public function destroying(DestroyRequest $request, Model $model): void
+    public function destroying(Model $model): void
     {
         EventLog::record('destroying '.$model->getKey());
     }

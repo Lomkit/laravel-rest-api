@@ -83,13 +83,13 @@ final readonly class ResolvedText
         return new RelevanceClause($this->strategy, $this->query, $this->target, $direction);
     }
 
-    public function engineQuery(RestRequest $request, ?Trashed $trashed = null): ?EngineQuery
+    public function engineQuery(?Trashed $trashed = null): ?EngineQuery
     {
         if ($this->engine === null || $this->target === null || $this->query === null) {
             return null;
         }
 
-        return $this->engine->query($this->query, $this->target, $request, $trashed);
+        return $this->engine->query($this->query, $this->target, $trashed);
     }
 
     /**

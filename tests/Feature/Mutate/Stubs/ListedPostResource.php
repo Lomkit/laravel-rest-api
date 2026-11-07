@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Mutate\Stubs;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostResource;
 
 class ListedPostResource extends PostResource
@@ -12,9 +11,9 @@ class ListedPostResource extends PostResource
     public static array $hooked = [];
 
     #[\Override]
-    public function perimeterQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(Builder $query): Builder
     {
-        self::$hooked[] = $request->resource::class.' '.$request->endpoint()?->value;
+        self::$hooked[] = $this->request()->resource::class.' '.$this->request()->endpoint()?->value;
 
         return $query->where('posts.title', '<>', 'Annual report');
     }

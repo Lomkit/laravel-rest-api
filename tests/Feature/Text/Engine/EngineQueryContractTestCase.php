@@ -32,6 +32,6 @@ abstract class EngineQueryContractTestCase extends EngineTestCase
             ->sortable(['price', 'number'])
             ->withoutPerimeter();
 
-        return $engine->query(new TextQuery('report'), $this->target(VoucherResource::class), $this->context()->request, $trashed);
+        return $engine->query(new TextQuery('report'), $this->target(VoucherResource::class), $trashed);
     }
 }

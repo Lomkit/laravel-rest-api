@@ -6,7 +6,6 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 
 class CurrentDocumentResource extends Resource
@@ -20,7 +19,7 @@ class CurrentDocumentResource extends Resource
     }
 
     #[\Override]
-    public function perimeterQuery(RestRequest $request, Builder $query): EloquentBuilder
+    public function perimeterQuery(Builder $query): EloquentBuilder
     {
         return $query->where('archived', false);
     }

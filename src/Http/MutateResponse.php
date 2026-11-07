@@ -40,7 +40,7 @@ final readonly class MutateResponse implements Responsable
 
         $resource->mutatingAll($nodes);
 
-        $operations = (new Mutator($request, $request->rows(), $checks))->execute($resource, $nodes);
+        $operations = (new Mutator($request->rows(), $checks))->execute($resource, $nodes);
 
         $resource->mutatedAll($operations);
 

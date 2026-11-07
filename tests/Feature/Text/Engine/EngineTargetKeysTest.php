@@ -140,7 +140,7 @@ class EngineTargetKeysTest extends EngineSearchTestCase
         $this->useEngine(new PagedTurbopufferEngine(endless: true));
         $resource = $this->resource(UnsortedVoucherResource::class, $this->context(['search' => ['text' => ['value' => 'report']]]));
         $text = $resource->context()->text($resource);
-        $query = $text->engineQuery($resource->context()->request);
+        $query = $text->engineQuery();
         $this->assertNotNull($query);
 
         try {

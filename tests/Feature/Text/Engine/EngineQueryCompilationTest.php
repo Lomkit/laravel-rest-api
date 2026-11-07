@@ -77,7 +77,7 @@ class EngineQueryCompilationTest extends EngineQueryTestCase
         $target = new TextTarget(VoucherResource::class, $fields, new CallbackVoucher, $fields);
 
         $page = $this->engine()
-            ->query(new TextQuery('alpha'), $target, $resource->context()->request)
+            ->query(new TextQuery('alpha'), $target)
             ->page(10, 1);
 
         $this->assertEquals(new EnginePage(['V-c'], 1), $page);

@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Actions\Stubs;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Archive\DocumentResource;
 
 class StaffDocumentResource extends DocumentResource
@@ -24,9 +23,9 @@ class StaffDocumentResource extends DocumentResource
     }
 
     #[\Override]
-    public function perimeterQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(Builder $query): Builder
     {
-        $user = $request->user();
+        $user = $this->request()->user();
 
         if (! $user instanceof ArchiveUser || ! $user->isStaff()) {
             $query->where('title', '!=', 'Payroll');

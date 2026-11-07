@@ -90,7 +90,7 @@ class MeilisearchValuesTest extends MeilisearchTestCase
             ->sortable(['price', 'number'])
             ->perimeter(fn (EngineQuery $query): EngineQuery => $query->whereNotIn('team', ['blue']));
 
-        $page = $engine->query(new TextQuery('report'), $this->target(VoucherResource::class), $this->context()->request)
+        $page = $engine->query(new TextQuery('report'), $this->target(VoucherResource::class))
             ->whereNotIn('team', ['green'])
             ->orderBy('price')
             ->page(10, 1);
