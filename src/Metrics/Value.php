@@ -51,7 +51,7 @@ abstract class Value extends Metric
     /** @param Builder<Model> $query */
     protected function aggregate(Builder $query, Aggregate $function, ?string $column, string $dateColumn): ValueResult
     {
-        $aggregate = new AggregateQuery($function, $column === null ? null : MetricColumn::aggregated($this, $query, $function, $column));
+        $aggregate = new AggregateQuery($function, $column === null ? null : MetricColumn::aggregated($this, $query, $function->value, $column));
         $range = $this->range();
 
         if ($range === null) {
@@ -60,7 +60,7 @@ abstract class Value extends Metric
 
         $now = Date::now()->toImmutable();
         $split = $now->subDays($range->value);
-        [$current, $previous] = $aggregate->periods($query, MetricColumn::date($this, $query, $function, $dateColumn), $split->subDays($range->value), $split, $now);
+        [$current, $previous] = $aggregate->periods($query, MetricColumn::date($this, $query, $function->value, $dateColumn), $split->subDays($range->value), $split, $now);
 
         return new ValueResult($current, $previous);
     }

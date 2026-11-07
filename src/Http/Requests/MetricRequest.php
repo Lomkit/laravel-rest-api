@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Http\Requests;
 
+use DateTimeZone;
 use Illuminate\Routing\Route;
 use Illuminate\Validation\Rule;
 use LogicException;
@@ -95,7 +96,7 @@ class MetricRequest extends RestRequest
         $context = ValidationContext::root($resource, $this->budget(), $rules, $text->sqlGrammar());
         $search = (new SearchParser(SearchShape::Aggregate))->parse(Cursor::of($this->all(), $rules->violations())->at('search'), $context);
 
-        return new MetricNode($metric, $search, $this->range($metric, $rules));
+        return new MetricNode($metric, $search, $this->range($metric, $rules), $this->timezone($rules));
     }
 
     private function range(Metric $metric, ParsedRules $rules): ?MetricRange
@@ -106,5 +107,13 @@ class MetricRequest extends RestRequest
         $rules->add('range', $ranges === [] ? ['prohibited'] : [Rule::in($values)]);
 
         return array_find($ranges, fn (MetricRange $range): bool => is_scalar($sent) && (string) $range->value === (string) $sent) ?? $ranges[0] ?? null;
+    }
+
+    private function timezone(ParsedRules $rules): ?string
+    {
+        $sent = $this->input('timezone');
+        $rules->add('timezone', ['timezone:all']);
+
+        return is_string($sent) && in_array($sent, DateTimeZone::listIdentifiers(), true) ? $sent : null;
     }
 }

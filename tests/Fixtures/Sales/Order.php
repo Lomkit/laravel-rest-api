@@ -14,6 +14,6 @@ class Order extends Model
     #[\Override]
     protected function casts(): array
     {
-        return ['status' => OrderStatus::class, 'gift' => 'boolean', 'placed_at' => 'datetime'];
+        return ['status' => OrderStatus::class, 'gift' => 'boolean', 'placed_at' => 'datetime', 'delivered_on' => 'date'];
     }
 }

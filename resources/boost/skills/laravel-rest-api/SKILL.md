@@ -751,6 +751,53 @@ class OrdersByStatus extends Partition
 - Fields: the helpers read fields that the resource declares. A sum, average, min or max needs a `Number` field (`Integer` included), the range a `Date` or `DateTime` field; a partition groups by a `Text`, `Enum`, `Integer` or `Boolean` field; any other field throws `InvalidMetricException` when the metric runs.
 - Response: `POST /api/orders/metrics/total-revenue` with `{}` -> `{"data": {"type": "value", "value": 52.0, "previous": 37.25}}`.
 
+### Trend
+
+A `Trend` gives one value per day, week or month over the range of the request.
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Trend;
+use Lomkit\Rest\Metrics\TrendResult;
+
+class RevenuePerMonth extends Trend
+{
+    public function calculate(Builder $query): TrendResult
+    {
+        return $this->sumByMonths($query, 'price', 'placed_at');   // column, date column
+    }
+
+    public function ranges(): array
+    {
+        return [3 => '3 months', 6 => '6 months', 12 => '12 months'];   // months, this one included
+    }
+}
+```
+
+`{"range": 6}` -> `{"data": {"type": "trend", "series": [{"label": "2026-06", "value": 0.0}, ..., {"label": "2026-11", "value": 19.5}]}}`
+
+- Helpers: `countByDays($query, $dateColumn = 'created_at', $splitBy = null)`, `countByWeeks()`, `countByMonths()`, and `sumBy...`, `averageBy...`, `minBy...`, `maxBy...` with `($query, $column, $dateColumn = 'created_at', $splitBy = null)`.
+- Ranges: a Trend declares `ranges()`, or `Rest::resource()` throws. A key counts periods, the current one included: `6` on a monthly trend is this month and the 5 before. The series starts at the start of the first period and ends now.
+- Labels: a day `2026-11-07`, a week the date of its first day (`2026-11-02` for a week from Monday), a month `2026-11`. Every period of the range is in the series, oldest first; a period without rows is `0` for a count or a sum, `null` for an average, a min or a max.
+- Weeks start on Monday. `RevenuePerWeek::make()->weekStartsOn(Carbon::SUNDAY)` in `metrics()`, or `public int $weekStartsOn = Carbon::SUNDAY;` in the class, starts them on another day (`0` Sunday to `6` Saturday, or `Rest::resource()` throws).
+- Time zone: `{"timezone": "Europe/Paris"}` counts the days, weeks and months in that zone, changes of offset included; without `timezone`, `config('app.timezone')`, the zone in which Laravel stores the dates. An unknown zone or an offset such as `+01:00` is a `422`. A `Date` field is a calendar date: only the range follows the zone. Every metric accepts `timezone`; a custom metric reads it with `$this->timezone()`, and `$this->periods()` uses it.
+- Split: `$this->countByMonths($query, 'placed_at', splitBy: 'status')` adds `splits`, one series per value of the column, and `other`: `{"series": [<every row>], "splits": [{"key": "paid", "label": "Paid", "series": [...]}, ..., {"key": null, "label": null, "series": [...]}], "other": null}`. Keys and labels as a partition, sorted by key, the rows without a value last.
+- Limit: `OrdersPerMonth::make()->limit(5)` in `metrics()`, or `public ?int $limit = 5;` in the class, keeps the 5 splits with the largest total over the range, chosen as the parts of a partition, and folds the others into `other`: `{"label": "Other", "series": [...]}`. `other` is null when nothing is folded. `->labels(['paid' => 'Payée'], other: 'Autre')` renames the splits and `other`.
+- Fields: the date column is a `Date` or `DateTime` field, the column of a sum, average, min or max a `Number` field, the split column a `Text`, `Enum`, `Integer` or `Boolean` field; any other field throws `InvalidMetricException` when the metric runs.
+- Databases: SQLite, MySQL, MariaDB and PostgreSQL.
+- Periods in a custom metric: `$this->periods($query, 'placed_at', PeriodUnit::Day, 7)` gives the periods of the range (the count defaults to the range of the request; weeks follow `weekStartsOn`):
+
+  ```php
+  $periods = $this->periods($query, 'placed_at', PeriodUnit::Day, 7);
+  $channels = $periods->group($query)
+      ->selectRaw('count(distinct orders.channel) as channels')
+      ->pluck('channels', 'period');
+
+  return new TrendResult($periods->series($channels->all(), 0));
+  ```
+
+  `group()` selects `period` and groups by it inside the range; `series()` gives one point per period, the second argument for a period without rows; `labels()` lists the periods and `label()` is the SQL expression of a row's period.
+
 ## Instructions (custom search refinements)
 
 Generate:
@@ -964,7 +1011,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 ## Pointers into the codebase
 
 - Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `EndpointRoutes` (the routes of each endpoint, one per action for `operate` and one per metric for `metric`), `ResourceRegistrar` and the route value objects)
-- Metrics — `src/Metrics/` (`Metric`, `MetricResult`, `HasMetrics`, `MetricQuery`, `MetricNode`; the built-in types `Value`, `Partition`, `Progress` and their results; `MetricRange`, `MetricColumn` (typed checks), `Aggregate` and `AggregateQuery` (the SQL)), `src/Http/Requests/MetricRequest.php`, `src/Http/MetricResponse.php`
+- Metrics — `src/Metrics/` (`Metric`, `MetricResult`, `HasMetrics`, `MetricQuery`, `MetricNode`; the built-in types `Value`, `Partition`, `Progress` and their results; `MetricRange`, `MetricColumn` (typed checks), `Aggregate` and `AggregateQuery` (the SQL), `HasLimit`; `Trend`, `TrendResult`, `Periods` and `PeriodUnit`, and `Grouping/` (the SQL of a period per database)), `src/Http/Requests/MetricRequest.php`, `src/Http/MetricResponse.php`
 - Config — `src/Config/RestConfig.php` (the typed values of `config/rest.php`, read once per request through `RestContext::config()`) and `src/Config/ConfigValue.php` (the typed read of one key, also used for `rest.limits` and `rest.precognition.enabled`)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details,Batch}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, read with `$resource->definition()`, and their lookups `relation()`, `scope()`, `action()`, `instruction()` and `inputFields()`; kept by `src/Http/RestContext.php`, whose limits are a `src/Http/ResourceLimits.php`), `src/Concerns/Resource/*` (`DeclaresFields`, `DeclaresScopes`, `Paginable`, `Relationable`, `Contextual` with `definition()` and `request()`, hooks, ...)

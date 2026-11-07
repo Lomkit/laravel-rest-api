@@ -51,7 +51,7 @@ abstract class Progress extends Metric
     /** @param Builder<Model> $query */
     protected function aggregate(Builder $query, Aggregate $function, ?string $column, int|float $target, string $dateColumn): ProgressResult
     {
-        $aggregated = $column === null ? null : MetricColumn::aggregated($this, $query, $function, $column);
+        $aggregated = $column === null ? null : MetricColumn::aggregated($this, $query, $function->value, $column);
         $aggregate = new AggregateQuery($function, $aggregated);
         $target = $function === Aggregate::Average || $aggregated?->integer() === false ? (float) $target : $target;
         $range = $this->range();
@@ -61,7 +61,7 @@ abstract class Progress extends Metric
         }
 
         $now = Date::now()->toImmutable();
-        $date = MetricColumn::date($this, $query, $function, $dateColumn);
+        $date = MetricColumn::date($this, $query, $function->value, $dateColumn);
 
         return new ProgressResult($aggregate->between($query, $date, $now->subDays($range->value), $now), $target);
     }

@@ -4,11 +4,10 @@ namespace Lomkit\Rest\Metrics;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Exceptions\InvalidMetricException;
 
 abstract class Partition extends Metric
 {
-    public ?int $limit = null;
+    use HasLimit;
 
     #[\Override]
     public function type(): string
@@ -20,19 +19,10 @@ abstract class Partition extends Metric
     #[\Override]
     abstract public function calculate(Builder $query): PartitionResult;
 
-    public function limit(int $limit): static
-    {
-        $this->limit = $limit;
-
-        return $this;
-    }
-
     #[\Override]
     public function ensureValid(): static
     {
-        if ($this->limit !== null && $this->limit < 1) {
-            throw InvalidMetricException::invalidLimit(static::class, $this->limit);
-        }
+        $this->ensureValidLimit();
 
         return parent::ensureValid();
     }
@@ -70,8 +60,8 @@ abstract class Partition extends Metric
     /** @param Builder<Model> $query */
     protected function aggregate(Builder $query, Aggregate $function, ?string $column, string $groupBy): PartitionResult
     {
-        $group = MetricColumn::group($this, $query, $function, $groupBy);
-        $aggregate = new AggregateQuery($function, $column === null ? null : MetricColumn::aggregated($this, $query, $function, $column));
+        $group = MetricColumn::group($this, $query, $function->value, $groupBy);
+        $aggregate = new AggregateQuery($function, $column === null ? null : MetricColumn::aggregated($this, $query, $function->value, $column));
 
         return PartitionResult::of($function, $group, $aggregate->groups($query, $group), $this->limit);
     }

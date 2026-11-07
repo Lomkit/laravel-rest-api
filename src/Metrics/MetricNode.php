@@ -10,5 +10,6 @@ final readonly class MetricNode
         public Metric $metric,
         public SearchNode $search,
         public ?MetricRange $range = null,
+        public ?string $timezone = null,
     ) {}
 }
