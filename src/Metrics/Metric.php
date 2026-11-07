@@ -11,6 +11,7 @@ use Lomkit\Rest\Concerns\HasRouteMiddleware;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Exceptions\InvalidMetricException;
+use Lomkit\Rest\Http\Requests\MetricRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 /** @phpstan-consistent-constructor */
@@ -45,6 +46,19 @@ abstract class Metric implements JsonSerializable
         return $this->resource->request();
     }
 
+    /** @return array<int, string> */
+    public function ranges(): array
+    {
+        return [];
+    }
+
+    public function range(): ?MetricRange
+    {
+        $request = $this->request();
+
+        return $request instanceof MetricRequest ? $request->payload()->range : null;
+    }
+
     public function withoutSearching(): static
     {
         $this->withoutSearching = true;
@@ -66,10 +80,12 @@ abstract class Metric implements JsonSerializable
             throw InvalidMetricException::invalidType(static::class, $type);
         }
 
+        MetricRange::listOf($this->ranges(), static::class);
+
         return $this;
     }
 
-    /** @return array{name: string, uriKey: string, type: string, meta: \stdClass} */
+    /** @return array{name: string, uriKey: string, type: string, ranges: list<MetricRange>, meta: \stdClass} */
     #[\Override]
     public function jsonSerialize(): array
     {
@@ -77,6 +93,7 @@ abstract class Metric implements JsonSerializable
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
             'type' => $this->type(),
+            'ranges' => MetricRange::listOf($this->ranges(), static::class),
             'meta' => (object) $this->getMeta(),
         ];
     }

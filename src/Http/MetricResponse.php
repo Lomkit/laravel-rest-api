@@ -46,6 +46,6 @@ final readonly class MetricResponse implements Responsable
     #[\Override]
     public function toResponse($request): JsonResponse
     {
-        return new JsonResponse(['data' => $this->data]);
+        return new JsonResponse(['data' => $this->data], options: JSON_PRESERVE_ZERO_FRACTION);
     }
 }

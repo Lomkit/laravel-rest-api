@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Http\Requests;
 
 use Illuminate\Routing\Route;
+use Illuminate\Validation\Rule;
 use LogicException;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
@@ -10,7 +11,9 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Metrics\MetricNode;
+use Lomkit\Rest\Metrics\MetricRange;
 use Lomkit\Rest\Validation\Cursor;
+use Lomkit\Rest\Validation\ParsedRules;
 use Lomkit\Rest\Validation\Search\SearchParser;
 use Lomkit\Rest\Validation\Search\SearchShape;
 use Lomkit\Rest\Validation\ValidationContext;
@@ -92,6 +95,16 @@ class MetricRequest extends RestRequest
         $context = ValidationContext::root($resource, $this->budget(), $rules, $text->sqlGrammar());
         $search = (new SearchParser(SearchShape::Aggregate))->parse(Cursor::of($this->all(), $rules->violations())->at('search'), $context);
 
-        return new MetricNode($metric, $search);
+        return new MetricNode($metric, $search, $this->range($metric, $rules));
+    }
+
+    private function range(Metric $metric, ParsedRules $rules): ?MetricRange
+    {
+        $ranges = MetricRange::listOf($metric->ranges(), $metric::class);
+        $values = array_map(fn (MetricRange $range): int => $range->value, $ranges);
+        $sent = $this->input('range');
+        $rules->add('range', $ranges === [] ? ['prohibited'] : [Rule::in($values)]);
+
+        return array_find($ranges, fn (MetricRange $range): bool => is_scalar($sent) && (string) $range->value === (string) $sent) ?? $ranges[0] ?? null;
     }
 }

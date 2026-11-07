@@ -9,5 +9,6 @@ final readonly class MetricNode
     public function __construct(
         public Metric $metric,
         public SearchNode $search,
+        public ?MetricRange $range = null,
     ) {}
 }

@@ -212,7 +212,7 @@ These items change:
 
 ### Resource definitions
 
-A resource holds no request state. Its context evaluates `fields()`, `scopes()`, `relations()`, `instructions()`, `actions()`, `limits()`, `text()` and `gates()` once per request, when they are first read, and keeps the results until the request ends. The next request evaluates them again, with its own user.
+A resource holds no request state. Its context evaluates `fields()`, `scopes()`, `relations()`, `instructions()`, `actions()`, `metrics()`, `limits()`, `text()` and `gates()` once per request, when they are first read, and keeps the results until the request ends. The next request evaluates them again, with its own user.
 
 - The declarations take no argument: `fields()`, `relations()`, `scopes()`, `limits()`, `alwaysSelect()`, `actions()`, `instructions()`, `text()`, `defaultOrderBy()`, `rules()`, `createRules()`, `updateRules()` and `gates()` of a resource, and the `fields()` of actions and instructions. `abilities()` takes the endpoint only: `abilities(Endpoint $endpoint): array`. Remove the `RestRequest $request` parameter from each override, and the argument of its `parent::` call: PHP refuses to load a class whose override keeps it, and names the method. A declaration that reads the request or the user calls `$this->request()`, the request of the resource's context: `if ($this->request()->user()?->is_staff) { ... }`. An action or an instruction calls `$this->request()` too: it returns the request of its resource. A resource, action or instruction that already defines a method named `request()` must give it this signature: `request(): Lomkit\Rest\Http\Requests\RestRequest`.
 - The `calculatedFields`, `calculatedScopes`, `calculatedRelations`, `calculatedInstructions`, `calculatedActions`, `calculatedLimits`, `calculatedScoutFields` and `calculatedScoutInstructions` properties of resources are removed. Read the declarations from `$resource->definition()`, see below. `getScoutFields()`, `getScoutInstructions()` and `scoutInstruction()` are removed with the declarations they read, and so is the `Lomkit\Rest\Concerns\Resource\Scoutable` trait, see [Search engines](#search-engines).
@@ -682,6 +682,32 @@ public function metrics(): array
 - Every resource gets `POST {name}/metrics/{metric}`, named `{name}.metric`, also without metrics. It answers the keys of no metric: `403` to a user that `viewAny` refuses, `404` to the others. `except('metric')` removes the metric routes. `php artisan route:list` and `rest:check` count one more route for each resource.
 - The details response has a new `metrics` key, after `actions`: `[]` for a resource without metrics.
 - `Lomkit\Rest\Http\Routing\Endpoint` has a `Metric` case, after `Operate`. A `match` on `Endpoint` without a default arm handles it.
+
+Three built-in types compute the usual results in one query: `Value`, `Partition` and `Progress`. They read the fields that the resource declares.
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Value;
+use Lomkit\Rest\Metrics\ValueResult;
+
+class TotalRevenue extends Value
+{
+    public function calculate(Builder $query): ValueResult
+    {
+        return $this->sum($query, 'price', 'placed_at');
+    }
+
+    public function ranges(): array
+    {
+        return [30 => '30 days', 90 => '90 days'];
+    }
+}
+```
+
+`POST /api/orders/metrics/total-revenue` with `{}` answers `{"data": {"type": "value", "value": 52.0, "previous": 37.25}}`: the total of the last 30 days and of the 30 days before. `{"range": 90}` selects the second range. A `Partition` gives one part per value of a column, and `->limit(5)` folds all but the 5 largest parts into `other`. A `Progress` gives a value and its target: `$this->sum($query, 'price', target: 100000)`.
+
+- A metric declares its ranges in `ranges()`, and the request picks one with `range`: the first one when it sends none. A key that the metric does not declare is a `422`, and so is `range` for a metric without ranges. The details entry of a metric lists them in `ranges`.
+- The floats of a metric response keep their fraction: `52.0`, not `52`.
 
 ### Native types
 

@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Scramble;
 
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
+use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
@@ -96,6 +97,7 @@ final class DetailsEntryTypes
             'name' => new StringType,
             'uriKey' => new StringType,
             'type' => (new StringType)->setDescription('The type of the result, given again as data.type in the response of the metric'),
+            'ranges' => self::listOf(self::objectOf(['value' => new IntegerType, 'label' => new StringType]), 'The values that the range key of the request accepts; the first one applies when the request sends none'),
             'meta' => new ObjectType,
         ]);
     }

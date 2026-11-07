@@ -298,7 +298,7 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
   "actions": [{"name": "Retire Artworks", "uriKey": "retire-artworks", "target": "search",
     "fields": [{"name": "notify", "label": null, "type": "boolean", "nullable": false, "default": false, "rules": ["boolean"], "meta": {}}],
     "meta": {}, "destructive": false, "confirm": null}],
-  "metrics": [{"name": "Artworks By Medium", "uriKey": "artworks-by-medium", "type": "breakdown", "meta": {}}],
+  "metrics": [{"name": "Artworks By Medium", "uriKey": "artworks-by-medium", "type": "partition", "ranges": [], "meta": {}}],
   "instructions": [{"name": "By Medium", "uriKey": "by-medium",
     "fields": [{"name": "medium", "label": null, "type": "enum", "nullable": false, "default": null, "rules": ["enum", "required"], "meta": {}, "values": ["oil", "ink", "watercolor"]}],
     "meta": {}, "text": true}],
@@ -703,7 +703,53 @@ class TicketBacklog extends Metric
 - The search runs the resource's `searching()` event first, as a search does. A metric that must skip it declares `TicketBacklog::make()->withoutSearching()` in `metrics()`, or `public bool $withoutSearching = true;` in its class. The perimeter, `viewAny` and the validation still apply.
 - Abilities: `viewAny`, then the resource's `abilities(Endpoint::Metric)`, then the metric's `abilities()` (`['viewAny']` by default). `[]` runs without these checks, for example for guests with `->withoutMiddleware('auth')`. Relation filters still need `viewAny` on the related resource.
 - Routes: named `{name}.metric.{uriKey}`; `POST /{resource}/metrics/{metric}` comes last and answers unknown keys (`403` without `viewAny`, else `404`). `->middleware('throttle:reports')` and `->withoutMiddleware('auth:sanctum')` (or the `$middleware` and `$withoutMiddleware` properties) work as for actions. `Rest::resource()` reads `metrics()` when it registers the routes: keep it the same for every user and free of queries; two metrics with one `uriKey()` throw.
-- Details: `metrics` lists `{"name", "uriKey", "type", "meta"}` for each metric. `$resource->definition()->metrics()` and `metric($key)` read them.
+- Details: `metrics` lists `{"name", "uriKey", "type", "ranges", "meta"}` for each metric. `$resource->definition()->metrics()` and `metric($key)` read them.
+
+### Value, Partition and Progress
+
+Three built-in types compute the usual results in one query. Extend one and call its helpers in `calculate()`; each helper returns the result to return.
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Value;
+use Lomkit\Rest\Metrics\ValueResult;
+
+class TotalRevenue extends Value
+{
+    public function calculate(Builder $query): ValueResult
+    {
+        return $this->sum($query, 'price', 'placed_at');   // column, date column
+    }
+
+    public function ranges(): array
+    {
+        return [30 => '30 days', 90 => '90 days'];          // days; the first one is the default
+    }
+}
+```
+
+- `Value` (type `value`): `count($query, $dateColumn = 'created_at')`, `sum($query, $column, $dateColumn = 'created_at')`, `average()`, `min()` and `max()` with the parameters of `sum()`. With ranges, `{"value": <the last N days>, "previous": <the N days before>}`; without, `{"value": <every row>, "previous": null}` and the date column is not read. A count without ranges is the number of rows of the search.
+- `Partition` (type `partition`): `count($query, $groupBy)`, `sum($query, $column, $groupBy)`, `average()`, `min()` and `max()` with the parameters of `sum()`. The group column is a `Text`, `Enum`, `Integer` or `Boolean` field. Each part is `{"key", "label", "value"}`: the key is the stored value (the enum value, an integer, a boolean), the label the enum case name or the key as text, the rows without a value form the part `{"key": null, "label": null, ...}`. Parts are sorted by value, largest first, then by key. A partition takes no `range`: filter the search instead.
+- Limit: `OrdersByStatus::make()->limit(5)` in `metrics()`, or `public ?int $limit = 5;` in the class, keeps the 5 largest parts and folds the others into `other`: `{"label": "Other", "value": <their count, sum, min, max or average>}`. `other` is null when nothing is folded.
+- Labels: `return $this->count($query, 'status')->labels(['paid' => 'Payée'], other: 'Autre');`.
+
+```php
+class OrdersByStatus extends Partition
+{
+    public function calculate(Builder $query): PartitionResult
+    {
+        return $this->count($query, 'status');
+    }
+}
+```
+
+`{}` -> `{"data": {"type": "partition", "parts": [{"key": "paid", "label": "Paid", "value": 5}, {"key": "pending", "label": "Pending", "value": 1}, {"key": null, "label": null, "value": 1}], "other": null}}`
+
+- `Progress` (type `progress`): `count($query, $target, $dateColumn = 'created_at')`, `sum($query, $column, $target, $dateColumn = 'created_at')`, `average()`, `min()` and `max()` with the parameters of `sum()`. `{"value": <the last N days, or every row without ranges>, "target": <$target>}`: `$this->sum($query, 'price', target: 100000)` -> `{"data": {"type": "progress", "value": 52000.0, "target": 100000.0}}`. The target can come from the request: `target: $this->request()->user()->monthly_goal`.
+- Ranges: `ranges()` maps a number of days to a label. The request sends `{"range": 90}` for another range; an undeclared key, or `range` for a metric without ranges, is a `422`. In a custom metric, `$this->range()` gives the selected `MetricRange` (`value`, `label`) or null. `ranges()` keys are integers greater than 0, or `Rest::resource()` throws.
+- Numbers: a count is an integer; a sum, min or max is an integer for an `Integer` field and a float for another `Number` field; an average is a float. Over no row: count and sum `0`, average, min and max `null`. Floats keep their fraction in the response (`52.0`).
+- Fields: the helpers read fields that the resource declares. A sum, average, min or max needs a `Number` field (`Integer` included), the range a `Date` or `DateTime` field; a partition groups by a `Text`, `Enum`, `Integer` or `Boolean` field; any other field throws `InvalidMetricException` when the metric runs.
+- Response: `POST /api/orders/metrics/total-revenue` with `{}` -> `{"data": {"type": "value", "value": 52.0, "previous": 37.25}}`.
 
 ## Instructions (custom search refinements)
 
@@ -918,7 +964,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 ## Pointers into the codebase
 
 - Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `EndpointRoutes` (the routes of each endpoint, one per action for `operate` and one per metric for `metric`), `ResourceRegistrar` and the route value objects)
-- Metrics — `src/Metrics/` (`Metric`, `MetricResult`, `HasMetrics`, `MetricQuery`, `MetricNode`), `src/Http/Requests/MetricRequest.php`, `src/Http/MetricResponse.php`
+- Metrics — `src/Metrics/` (`Metric`, `MetricResult`, `HasMetrics`, `MetricQuery`, `MetricNode`; the built-in types `Value`, `Partition`, `Progress` and their results; `MetricRange`, `MetricColumn` (typed checks), `Aggregate` and `AggregateQuery` (the SQL)), `src/Http/Requests/MetricRequest.php`, `src/Http/MetricResponse.php`
 - Config — `src/Config/RestConfig.php` (the typed values of `config/rest.php`, read once per request through `RestContext::config()`) and `src/Config/ConfigValue.php` (the typed read of one key, also used for `rest.limits` and `rest.precognition.enabled`)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details,Batch}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, read with `$resource->definition()`, and their lookups `relation()`, `scope()`, `action()`, `instruction()` and `inputFields()`; kept by `src/Http/RestContext.php`, whose limits are a `src/Http/ResourceLimits.php`), `src/Concerns/Resource/*` (`DeclaresFields`, `DeclaresScopes`, `Paginable`, `Relationable`, `Contextual` with `definition()` and `request()`, hooks, ...)
