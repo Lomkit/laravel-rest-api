@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Validation\Stubs;
 
+use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Resource;
@@ -20,7 +21,7 @@ class PayloadPostResource extends Resource
     #[\Override]
     public function actions(): array
     {
-        return [AttachPayload::make()->standalone()];
+        return [AttachPayload::make()->target(ActionTarget::None)];
     }
 
     #[\Override]

@@ -5,7 +5,11 @@ namespace Lomkit\Rest\Tests\Feature\Actions;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
+use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Actions\QueuedAction;
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Actions\Stubs\TargetTeamVoucherController;
+use Lomkit\Rest\Tests\Feature\Actions\Stubs\TargetTeamVoucherResource;
 use Lomkit\Rest\Tests\Feature\Text\Engine\EngineSearchTestCase;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RecordingCollectionEngine;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Voucher;
@@ -149,6 +153,35 @@ class ActionTextSearchTest extends EngineSearchTestCase
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
         $this->assertSame([['handle', ['ids' => [5, 4]]]], $this->received->calls());
+    }
+
+    /**
+     * @param  array<string, mixed>  $body
+     * @param  list<int>  $ids
+     */
+    #[Test]
+    #[DataProvider('targetsWithoutSearch')]
+    public function it_reads_the_rows_of_a_target_without_search_in_sql(ActionTarget $target, array $body, array $ids): void
+    {
+        $engine = new RecordingCollectionEngine;
+        $this->useEngine($engine);
+        TargetTeamVoucherResource::$target = $target;
+        Rest::resource('target-team-vouchers', TargetTeamVoucherController::class)->register();
+
+        $response = $this->postJson('/target-team-vouchers/actions/deactivate-vouchers', $body);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids)]]);
+        $this->assertSame([['handle', ['ids' => $ids]]], $this->received->calls());
+        $this->assertSame([], $engine->pages);
+    }
+
+    /** @return array<string, array{ActionTarget, array<string, mixed>, list<int>}> */
+    public static function targetsWithoutSearch(): array
+    {
+        return [
+            'the named keys of the resources target' => [ActionTarget::Resources, ['resources' => [1, 3]], [3, 1]],
+            'no row for the none target' => [ActionTarget::None, [], []],
+        ];
     }
 
     /**

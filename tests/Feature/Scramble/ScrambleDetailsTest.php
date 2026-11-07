@@ -81,7 +81,7 @@ class ScrambleDetailsTest extends ScrambleTestCase
         $fields = '"fields":{"type":"array","items":'.self::INPUT.'},"meta":{"type":"object"}';
 
         return [
-            'actions' => ['actions', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string"},'.$fields.',"standalone":{"type":"boolean"},"targeted":{"type":"boolean"}},"required":["name","uriKey","fields","meta","standalone","targeted"]}'],
+            'actions' => ['actions', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string"},"target":{"type":"string","enum":["search","resources","none"]},'.$fields.'},"required":["name","uriKey","target","fields","meta"]}'],
             'instructions' => ['instructions', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string"},'.$fields.',"text":{"type":"boolean","description":"Can be sent with search.text on this resource"}},"required":["name","uriKey","fields","meta","text"]}'],
             'scopes' => ['scopes', '{"type":"object","properties":{"name":{"type":"string"},'.$fields.'},"required":["name","fields","meta"]}'],
         ];

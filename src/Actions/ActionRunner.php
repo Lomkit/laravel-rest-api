@@ -49,7 +49,7 @@ final readonly class ActionRunner
     /** @param Collection<array-key, Model> $models */
     public function run(Collection $models): void
     {
-        if ($models->isEmpty() && ! $this->action->isStandalone()) {
+        if ($models->isEmpty() && $this->action->target !== ActionTarget::None) {
             return;
         }
 

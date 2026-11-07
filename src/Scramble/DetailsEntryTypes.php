@@ -8,6 +8,7 @@ use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
+use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 
 final class DetailsEntryTypes
@@ -81,10 +82,9 @@ final class DetailsEntryTypes
         return self::objectOf([
             'name' => new StringType,
             'uriKey' => new StringType,
+            'target' => (new StringType)->enum(array_column(ActionTarget::cases(), 'value')),
             'fields' => self::listOf(self::input()),
             'meta' => new ObjectType,
-            'standalone' => new BooleanType,
-            'targeted' => new BooleanType,
         ]);
     }
 
