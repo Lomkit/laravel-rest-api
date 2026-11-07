@@ -9,6 +9,7 @@ use Lomkit\Rest\Tests\Feature\Authorization\Stubs\MisdeclaredCacheTicketControll
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\MisdeclaredCacheTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\CachedTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\Test;
 
 class DeclaredAbilitiesTest extends HelpdeskTestCase
@@ -44,7 +45,8 @@ class DeclaredAbilitiesTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_serves_a_declared_ability_to_the_endpoint_that_enforces_it(): void
+    #[WithConfig('rest.search.select_columns', false)]
+    public function it_serves_a_declared_ability_of_a_full_row_to_the_endpoint_that_enforces_it(): void
     {
         ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
         $this->travel(1)->seconds();

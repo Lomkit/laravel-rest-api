@@ -48,6 +48,14 @@ final readonly class DecisionKey
             return null;
         }
 
-        return $updatedAt->format('U.u');
+        return $updatedAt->format('U.u').':'.self::loaded($model);
+    }
+
+    private static function loaded(Model $model): string
+    {
+        $names = array_map(rawurlencode(...), array_keys($model->getAttributes()));
+        sort($names, SORT_STRING);
+
+        return implode(',', $names);
     }
 }
