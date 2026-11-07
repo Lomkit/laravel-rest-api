@@ -225,7 +225,8 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 - `Rest::resource()` takes two arguments. A third argument (the old `$options` array) throws `Lomkit\Rest\Exceptions\InvalidResourceRouteException`, so a forgotten `['except' => ['destroy']]` cannot silently expose an endpoint. Use the fluent methods instead: `only()`, `except()`, `names()`, `middleware()` and `withSoftDeletes()`. For the `as` option, use `names('prefix.users')` or a route group with `name()`.
 - The resource name must be one URI segment made of letters, digits, `-` and `_`. A dotted name (`users.posts`) throws: its `{user}` parameter was never used, so register the child resource on its own and scope its query in the resource. A slashed name (`admin/users`) throws: wrap the call in `Route::prefix('admin')`.
 - `PendingResourceRegistration` is final and no longer extends Laravel's class. It keeps `only()`, `except()`, `withSoftDeletes()`, `names()`, `name()`, `middleware()`, `middlewareFor()`, `withoutMiddleware()`, `withoutMiddlewareFor()` and `register()`. `parameters()`, `parameter()`, `shallow()`, `scoped()`, `missing()` and `withTrashed()` are removed because they have no effect on these routes. `where()` and its variants, `metadata()` and the macros of Laravel's class are removed too: put `where()` or `metadata()` on the enclosing route group, for example `Route::where(['action' => '[a-z-]+'])->group(...)`. Repeated `names()` and `name()` calls add up: a prefix and exact names combine in any order.
-- Every method that takes endpoint keys throws on an unknown key. The keys are `details`, `search`, `mutate`, `operate`, `destroy`, `restore` and `forceDestroy`, or the cases of `Lomkit\Rest\Http\Routing\Endpoint`. `withSoftDeletes()` only accepts `restore` and `forceDestroy`, and repeated calls add up.
+- Every method that takes endpoint keys throws on an unknown key. The keys are `details`, `search`, `mutate`, `operate`, `destroy`, `restore`, `forceDestroy` and `batch`, or the cases of `Lomkit\Rest\Http\Routing\Endpoint`. `withSoftDeletes()` only accepts `restore` and `forceDestroy`, and repeated calls add up.
+- `Endpoint` has a `Batch` case, the opt-in route of `withBatchProgress()`, see [Actions](#actions). A `match` on `Endpoint` without a default arm handles it. `Endpoint::optIns()` is replaced by `Endpoint::softDeletes()`, which returns `Restore` and `ForceDestroy`.
 - `withSoftDeletes([...])` no longer overrides `except()`. For example, `except('destroy')->withSoftDeletes('restore')` no longer registers `destroy`.
 - `middleware()` adds to the package middleware instead of replacing it, so `EnforceExpectsJson` stays on every route, next to `HandlePrecognitiveRequests` when precognition is enabled. Requests without `Accept: application/json` now get JSON errors instead of a redirect. Repeated middleware calls add up, and resource middleware always comes before endpoint middleware.
 - `Route::resourceVerbs()` now changes the package URIs through the keys `search`, `mutate`, `actions`, `restore` and `forceDestroy`. An application that already sets one of these keys will see its URIs change.
@@ -472,6 +473,28 @@ A queued or batched action no longer serializes its resource, its rows and its i
 - Each chunk of a synchronous action runs in a database transaction on the connection of the model of the resource. Before, it ran on the default connection, so the rows of a model on another connection were written outside it.
 - `->atomic()` when the resource declares the action, or `public bool $atomic = true` on the action, runs every chunk in one transaction: when `handle()` throws on a chunk, the rows of every chunk are rolled back. Without it, the chunks handled before the failure stay written and the request answers with the error. `respond()` runs after the commit. An action that implements `ShouldQueue` and is atomic throws `Lomkit\Rest\Exceptions\InvalidActionException` when the resource's actions are read: "App\Rest\Actions\ExportOrders runs its chunks in one transaction through atomic(), but it implements ShouldQueue: its chunks run in the worker, outside the request."
 - An action that already defines `atomic()` or an `$atomic` property gives them this signature and this meaning.
+- A batched action (`BatchableAction`) gives the id of its batch in the response, between `impacted` and `result`:
+
+  ```json
+  {"data": {"impacted": 250, "batch": "9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f", "result": null}}
+  ```
+
+  Read the batch with `Bus::findBatch($id)`. The batch keeps the resource, the action and the user who started it in its options, under `lomkit_rest_owner`.
+- `withBatchProgress()` on `Rest::resource()` adds `GET {name}/actions/{action}/batches/{batch}`, named `{name}.batch`:
+
+  ```php
+  Rest::resource('invoices', InvoiceController::class)->withBatchProgress();
+  ```
+
+  It answers the user who started the batch, through the same guard:
+
+  ```json
+  {"data": {"id": "9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f", "total_jobs": 3, "pending_jobs": 1, "failed_jobs": 0, "progress": 67, "finished": false, "cancelled": false}}
+  ```
+
+  Another user, a guest, another action and an unknown batch get a 404, and so does every batch started by a guest. The route checks the abilities that the resource's `abilities()` returns for `Endpoint::Batch`, none by default.
+- The jobs of a batched action skip their rows once the batch is cancelled, with Laravel's `SkipIfBatchCancelled` middleware: `$this->batch()?->cancel()` in `handle()`, or `Bus::findBatch($id)?->cancel()`, stops the jobs that did not run yet.
+- `DispatchAction::dispatch()` returns the `OperateResponse` of the action, without `result`; `OperateResponse::answer()` gives a copy with the result.
 
 ### Native types
 

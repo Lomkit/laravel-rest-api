@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Queue\Jobs\SyncJob;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Actions\QueuedAction;
@@ -26,6 +27,7 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use Ramsey\Uuid\Uuid;
 
 #[WithMigration('queue')]
 #[WithConfig('auth.providers.users.model', ArchiveUser::class)]
@@ -221,10 +223,11 @@ class ReadingActionFieldsTest extends PackageTestCase
     public function it_gives_the_same_fields_to_with_batch_and_to_the_jobs(): void
     {
         $this->actingAs($this->grace);
+        Str::createUuidsUsingSequence([Uuid::fromString('9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f')]);
 
         $this->postJson('/field-documents/actions/batched-read-document-fields', self::BODY)
             ->assertOk()
-            ->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
+            ->assertExactJson(['data' => ['impacted' => 4, 'batch' => '9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f', 'result' => null]]);
 
         $this->assertCount(1, ReadDocumentFields::$batches);
         $this->assertSame([[1, 2, 3, 4]], array_column(ReadDocumentFields::$runs, 'keys'));

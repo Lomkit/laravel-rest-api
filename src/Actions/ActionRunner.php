@@ -33,6 +33,7 @@ final readonly class ActionRunner
     public static function for(OperateRequest $request, Action $action, ActionFields $fields, bool $perimeter, ?RowChecks $checks): self
     {
         $payload = $request->payload();
+        $user = $action instanceof ShouldQueue || $action instanceof BatchableAction ? UserReference::of(Auth::getDefaultDriver(), $request->user()) : null;
 
         return new self(
             $action,
@@ -40,8 +41,8 @@ final readonly class ActionRunner
             $payload->fields->given,
             $payload->search()->trashed,
             $perimeter,
-            $action instanceof ShouldQueue ? UserReference::of(Auth::getDefaultDriver(), $request->user()) : null,
-            $action instanceof BatchableAction ? self::batch($action, $fields) : null,
+            $action instanceof ShouldQueue ? $user : null,
+            $user !== null && $action instanceof BatchableAction ? self::batch($action, $fields, $user) : null,
             $checks,
             $request->resource::newModel()->getConnection(),
         );
@@ -70,9 +71,9 @@ final readonly class ActionRunner
         return $models->count();
     }
 
-    public function finish(): void
+    public function finish(): ?string
     {
-        $this->batch?->dispatch();
+        return $this->batch?->dispatch()->id;
     }
 
     /** @param Collection<array-key, Model> $models */
@@ -107,10 +108,11 @@ final readonly class ActionRunner
         $this->connection->transaction(fn () => $this->action->handle($this->fields, $models));
     }
 
-    private static function batch(Action $action, ActionFields $fields): PendingBatch
+    private static function batch(Action $action, ActionFields $fields, UserReference $user): PendingBatch
     {
         $batch = (new QueueSettings($action))->configureBatch(Bus::batch([])->name($action->uriKey()));
 
+        BatchOwner::of($action, $user)->tag($batch);
         $action->withBatch($fields, $batch);
 
         return $batch;

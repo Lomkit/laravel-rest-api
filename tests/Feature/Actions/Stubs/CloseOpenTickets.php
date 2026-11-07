@@ -13,11 +13,14 @@ class CloseOpenTickets extends Action
     /** @var list<list<int>> */
     public static array $runs = [];
 
+    public static bool $cancel = false;
+
     public int $chunkCount = 2;
 
     public static function reset(): void
     {
         self::$runs = [];
+        self::$cancel = false;
         ChunkedTicketResource::$target = ActionTarget::Search;
         ChunkedTicketResource::$queuedAtomic = false;
     }
@@ -27,6 +30,10 @@ class CloseOpenTickets extends Action
     public function handle(ActionFields $fields, Collection $models): void
     {
         self::$runs[] = $models->modelKeys();
+
+        if (self::$cancel) {
+            $this->batch()?->cancel();
+        }
 
         foreach ($models as $ticket) {
             $ticket->update(['status' => 'closed']);

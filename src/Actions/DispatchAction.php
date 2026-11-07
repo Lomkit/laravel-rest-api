@@ -10,6 +10,7 @@ use Lomkit\Rest\Actions\Rows\KeyChunks;
 use Lomkit\Rest\Actions\Rows\NoRows;
 use Lomkit\Rest\Actions\Rows\RowCap;
 use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Query\QueryBuilderFactory;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
@@ -24,7 +25,7 @@ final readonly class DispatchAction
         private ActionFields $fields,
     ) {}
 
-    public function dispatch(): int
+    public function dispatch(): OperateResponse
     {
         return $this->request
             ->context()
@@ -32,7 +33,7 @@ final readonly class DispatchAction
             ->run($this->run(...));
     }
 
-    private function run(): int
+    private function run(): OperateResponse
     {
         $rows = $this->rows();
         $checks = RowChecks::of($this->request, $this->action);
@@ -42,9 +43,7 @@ final readonly class DispatchAction
         $runner = ActionRunner::for($this->request, $this->action, $this->fields, ! $rows instanceof EngineTargets, $checks);
         $impacted = $runner->through($rows);
 
-        $runner->finish();
-
-        return $impacted;
+        return new OperateResponse($impacted, null, $runner->finish());
     }
 
     private function rows(): ActionRows

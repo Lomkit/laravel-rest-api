@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Actions;
 use Illuminate\Bus\PendingBatch;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\QueuedAction;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\TouchDocumentController;
@@ -14,6 +15,7 @@ use Lomkit\Rest\Tests\Fixtures\Archive\Document;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use Ramsey\Uuid\Uuid;
 
 class ImpactedRowsTest extends PackageTestCase
 {
@@ -78,10 +80,11 @@ class ImpactedRowsTest extends PackageTestCase
     public function it_counts_the_rows_put_into_a_batch(): void
     {
         Bus::fake();
+        Str::createUuidsUsingSequence([Uuid::fromString('9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f')]);
 
         $response = $this->postJson('/touch-documents/actions/batched-touch-documents', ['search' => ['limit' => 50]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'result' => null]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'batch' => '9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f', 'result' => null]]);
         Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->jobs->map(fn (QueuedAction $job): array => $job->rows->keys)->all() === self::CHUNKS);
     }
 }

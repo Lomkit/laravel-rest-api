@@ -18,6 +18,7 @@ class ChunkedTicketResource extends TicketResource
             CloseOpenTickets::make()->target(self::$target),
             CheckedCloseOpenTickets::make(),
             CappedCloseOpenTickets::make(),
+            BatchedCloseOpenTickets::make(),
             ...(self::$queuedAtomic ? [QueuedAtomicCloseOpenTickets::make()] : []),
         ];
     }
