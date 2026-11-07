@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany as EloquentBelongsToMany;
 use Lomkit\Rest\Authorization\Check;
-use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Fields\Details\FieldDetails;
 use Lomkit\Rest\Fields\MutationOperation;
@@ -15,19 +14,16 @@ use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Validation\Mutate\EntryRule;
 use Lomkit\Rest\Validation\Mutate\RelatedEntryRule;
 
+/** @phpstan-consistent-constructor */
 class Relation implements \JsonSerializable
 {
     use Constrained;
-    use Makeable;
 
     public string $relation;
 
     /** @var class-string<Resource> */
     protected string $type;
 
-    /**
-     * The displayable name of the relation.
-     */
     public string $name;
 
     protected Resource $fromResource;
@@ -36,18 +32,20 @@ class Relation implements \JsonSerializable
 
     private ?string $detachAbility = null;
 
-    public function __construct($relation, $type)
+    /** @param class-string<Resource> $type */
+    public function __construct(string $relation, string $type)
     {
         $this->relation = $relation;
         $this->type = $type;
     }
 
-    /**
-     * Get the name of the relation.
-     *
-     * @return string
-     */
-    public function name()
+    /** @param class-string<Resource> $type */
+    public static function make(string $relation, string $type): static
+    {
+        return new static($relation, $type);
+    }
+
+    public function name(): string
     {
         return $this->name ?? (new \ReflectionClass($this))->getShortName();
     }
@@ -58,12 +56,7 @@ class Relation implements \JsonSerializable
         self::perimeter($this->resource(), $query);
     }
 
-    /**
-     * Check if the relation has multiple entries.
-     *
-     * @return bool
-     */
-    public function hasMultipleEntries()
+    public function hasMultipleEntries(): bool
     {
         return false;
     }
@@ -74,12 +67,7 @@ class Relation implements \JsonSerializable
         return [];
     }
 
-    /**
-     * Get the resource associated with this relation.
-     *
-     * @return \Lomkit\Rest\Http\Resource
-     */
-    public function resource()
+    public function resource(): Resource
     {
         return $this->fromResource->context()->resource($this->type);
     }
@@ -121,7 +109,7 @@ class Relation implements \JsonSerializable
     }
 
     /** @return array<string, mixed> */
-    public function rules(Resource $resource, string $prefix)
+    public function rules(Resource $resource, string $prefix): array
     {
         return [];
     }

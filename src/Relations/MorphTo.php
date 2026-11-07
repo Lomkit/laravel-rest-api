@@ -6,14 +6,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo as EloquentMorphTo;
 use LogicException;
-use Lomkit\Rest\Contracts\OwnerRelation;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\Mutate\EntryRule;
 use Lomkit\Rest\Validation\Mutate\MorphToEntryRule;
 
-class MorphTo extends MorphRelation implements OwnerRelation, PolymorphicRelation
+class MorphTo extends BelongsTo implements PolymorphicRelation
 {
     /** @var array<array-key, mixed> */
     private readonly array $resources;
@@ -25,10 +24,18 @@ class MorphTo extends MorphRelation implements OwnerRelation, PolymorphicRelatio
     {
         $resources = is_array($types) ? $types : [$types];
         $first = reset($resources);
+        $type = is_string($first) && is_subclass_of($first, Resource::class) ? $first : Resource::class;
 
-        parent::__construct($relation, is_string($first) ? $first : '');
+        parent::__construct($relation, $type);
 
         $this->resources = $resources;
+    }
+
+    /** @param class-string<Resource>|list<class-string<Resource>> $types */
+    #[\Override]
+    public static function make(string $relation, string|array $types): static
+    {
+        return new static($relation, $types);
     }
 
     #[\Override]
