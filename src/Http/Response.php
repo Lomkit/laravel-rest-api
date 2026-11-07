@@ -7,6 +7,8 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Lomkit\Rest\Authorization\Authorizer;
+use Lomkit\Rest\Http\Serialization\GatePrefetch;
 use Lomkit\Rest\Http\Serialization\GateReach;
 use Lomkit\Rest\Http\Serialization\PageEnvelope;
 use Lomkit\Rest\Http\Serialization\PlainEnvelope;
@@ -38,12 +40,17 @@ class Response implements Responsable
     #[\Override]
     public function toResponse(mixed $request): JsonResponse
     {
-        $rows = RowSerializer::of($this->plan, reach: GateReach::of($this->plan, $this->models()));
+        $models = $this->models();
+        $reach = GateReach::of($this->plan, $models);
+        $rows = RowSerializer::of($this->plan, reach: $reach);
         $envelope = $this->responsable instanceof LengthAwarePaginator
             ? new PageEnvelope($this->responsable)
             : new PlainEnvelope($this->responsable);
 
-        return new JsonResponse($envelope->wrap(fn (Model $model): array => $this->map($model, $rows->row($model)), $rows->meta()));
+        return $this->authorizer()->batch(
+            GatePrefetch::page($this->plan, $models, $reach),
+            fn (): JsonResponse => new JsonResponse($envelope->wrap(fn (Model $model): array => $this->map($model, $rows->row($model)), $rows->meta())),
+        );
     }
 
     /**
@@ -54,9 +61,13 @@ class Response implements Responsable
      */
     public function rows(array $models): array
     {
-        $rows = RowSerializer::of($this->plan, reach: GateReach::of($this->plan, array_values($models)));
+        $reach = GateReach::of($this->plan, array_values($models));
+        $rows = RowSerializer::of($this->plan, reach: $reach);
 
-        return array_map(fn (Model $model): array => $this->map($model, $rows->row($model)), $models);
+        return $this->authorizer()->batch(
+            GatePrefetch::rows($this->plan, array_values($models), $reach),
+            fn (): array => array_map(fn (Model $model): array => $this->map($model, $rows->row($model)), $models),
+        );
     }
 
     /**
@@ -66,6 +77,13 @@ class Response implements Responsable
     protected function map(Model $model, array $responseModel): array
     {
         return $responseModel;
+    }
+
+    private function authorizer(): Authorizer
+    {
+        return $this->plan->resource
+            ->context()
+            ->authorizer();
     }
 
     /** @return list<Model> */
