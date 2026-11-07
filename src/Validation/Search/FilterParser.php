@@ -59,7 +59,7 @@ final readonly class FilterParser
         $rules->addWhenPresent($entry->at('type'), [Rule::in(['or', 'and'])]);
 
         $resolved = $path === null ? null : self::operator($operator->value ?? FilterOperator::Equal->value, $path);
-        $valueRules = $path === null || $resolved === null ? [] : $path->field->filterValueRules($resolved, $value->path);
+        $valueRules = $path === null || $resolved === null ? [] : $path->field->filterValueRules($resolved, $value->path, $context->limits->lengths);
         $items = $this->values($value, $valueRules, $context);
         $boolean = $this->boolean($entry->at('type'), $context);
         $group = $children === null ? null : $this->group($children, $context->deeper(), $boolean);

@@ -102,10 +102,10 @@ return [
     | Request Limits
     |--------------------------------------------------------------------------
     |
-    | A request over one of these limits gets a 422 on the list that goes
-    | over it. A limit of 0 refuses every entry, or the first level of a
-    | depth. These are not the page sizes of a resource, which its
-    | limits() method returns.
+    | A request over one of these limits gets a 422 on the list or the
+    | value that goes over it. A limit of 0 refuses every entry, or the
+    | first level of a depth. These are not the page sizes of a resource,
+    | which its limits() method returns.
     |
     | "sizes" is the most entries that each list of a request accepts, at
     | every level. "filters" also covers each "nested" group and the
@@ -124,6 +124,10 @@ return [
     | search, at every level and in its includes and aggregates.
     | "entries" is the most entries of all the lists above and of the
     | "gates" lists in one request, except "resources".
+    |
+    | "lengths" is the most characters of one value. "patterns" covers the
+    | value of a "like", "not like", "ilike" or "not ilike" filter, at
+    | every level.
     |
     */
 
@@ -152,6 +156,10 @@ return [
         'totals' => [
             'filters' => 500,
             'entries' => 1000,
+        ],
+
+        'lengths' => [
+            'patterns' => 255,
         ],
     ],
 

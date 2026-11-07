@@ -18,6 +18,7 @@ use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
 use Lomkit\Rest\Tests\PackageTestCase;
+use Lomkit\Rest\Validation\Lengths;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -31,7 +32,7 @@ class FilterValueRulesTest extends PackageTestCase
     #[DataProvider('values')]
     public function it_validates_the_filter_value_for_the_operator_and_the_field_type(Closure $field, string $operator, array $input, bool $passes): void
     {
-        $validator = Validator::make($input, $field()->filterValueRules($operator, 'value'));
+        $validator = Validator::make($input, $field()->filterValueRules($operator, 'value', new Lengths(8)));
 
         $this->assertSame($passes, $validator->passes());
     }
@@ -58,6 +59,12 @@ class FilterValueRulesTest extends PackageTestCase
         yield 'between with a scalar' => [fn (): Field => Number::make('rating'), 'between', ['value' => 2.5], false];
         yield 'like with an array' => [$title, 'like', ['value' => ['%a%']], false];
         yield 'like with a string' => [$title, 'like', ['value' => '%a%'], true];
+        yield 'like at the length limit' => [$title, 'like', ['value' => 'Release%'], true];
+        yield 'like one character over the length limit' => [$title, 'like', ['value' => 'Releases%'], false];
+        yield 'not like one character over the length limit' => [$title, 'not like', ['value' => 'Releases%'], false];
+        yield 'ilike one character over the length limit' => [$title, 'ilike', ['value' => 'Releases%'], false];
+        yield 'not ilike at the length limit' => [$title, 'not ilike', ['value' => 'Release%'], true];
+        yield 'like at the length limit in multibyte characters' => [$title, 'like', ['value' => 'ééééééé%'], true];
         yield 'comparison with null on a type without base rules' => [fn (): Field => new class('code') extends Field
         {
             #[\Override]
@@ -103,14 +110,14 @@ class FilterValueRulesTest extends PackageTestCase
     #[DataProvider('ruleSets')]
     public function it_returns_the_rules_of_each_condition_family(Closure $field, FilterOperator|string $operator, array $expected): void
     {
-        $this->assertSame($expected, $field()->filterValueRules($operator, 'filters.0.value'));
+        $this->assertSame($expected, $field()->filterValueRules($operator, 'filters.0.value', new Lengths(8)));
     }
 
     /** @return iterable<string, array{Closure(): Field, FilterOperator|string, array<string, list<string>>}> */
     public static function ruleSets(): iterable
     {
         $comparison = ['filters.0.value' => ['required', 'integer']];
-        $pattern = ['filters.0.value' => ['required', 'string']];
+        $pattern = ['filters.0.value' => ['required', 'string', 'max:8']];
         $membership = ['filters.0.value' => ['present', 'array', 'list', 'min:1'], 'filters.0.value.*' => ['required', 'ulid']];
         $range = ['filters.0.value' => ['present', 'array', 'list', 'size:2'], 'filters.0.value.*' => ['required', 'date']];
         $nullity = ['filters.0.value' => ['prohibited']];
@@ -126,7 +133,7 @@ class FilterValueRulesTest extends PackageTestCase
     #[Test]
     public function it_uses_the_enum_rule_as_the_type_rule_of_an_enum(): void
     {
-        $rules = Enum::make('status', PostStatus::class)->filterValueRules('in', 'value');
+        $rules = Enum::make('status', PostStatus::class)->filterValueRules('in', 'value', new Lengths(8));
 
         $this->assertEquals([
             'value' => ['present', 'array', 'list', 'min:1'],
@@ -140,6 +147,6 @@ class FilterValueRulesTest extends PackageTestCase
         $this->expectException(InvalidFieldException::class);
         $this->expectExceptionMessage('Unknown filter operator [contains].');
 
-        Text::make('title')->filterValueRules('contains', 'value');
+        Text::make('title')->filterValueRules('contains', 'value', new Lengths(8));
     }
 }

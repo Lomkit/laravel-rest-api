@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Fields\Filtering;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Lomkit\Rest\Validation\Lengths;
 
 final readonly class Pattern implements Condition
 {
@@ -15,8 +16,8 @@ final readonly class Pattern implements Condition
     }
 
     #[\Override]
-    public function valueRules(array $typeRules): ValueRules
+    public function valueRules(array $typeRules, Lengths $lengths): ValueRules
     {
-        return new ValueRules(['required', 'string']);
+        return new ValueRules(['required', 'string', 'max:'.$lengths->patterns]);
     }
 }

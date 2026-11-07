@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Fields\Filtering;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
+use Lomkit\Rest\Validation\Lengths;
 
 final readonly class Range implements Condition
 {
@@ -20,7 +21,7 @@ final readonly class Range implements Condition
     }
 
     #[\Override]
-    public function valueRules(array $typeRules): ValueRules
+    public function valueRules(array $typeRules, Lengths $lengths): ValueRules
     {
         return new ValueRules(['present', 'array', 'list', 'size:2'], ['required', ...$typeRules]);
     }

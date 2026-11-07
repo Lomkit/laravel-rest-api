@@ -7,6 +7,7 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Lomkit\Rest\Contracts\Filter;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Validation\Lengths;
 
 trait ConfiguresFiltering
 {
@@ -77,9 +78,9 @@ trait ConfiguresFiltering
     }
 
     /** @return array<string, list<mixed>> */
-    public function filterValueRules(FilterOperator|string $operator, string $attribute): array
+    public function filterValueRules(FilterOperator|string $operator, string $attribute, Lengths $lengths): array
     {
-        return $this->declaredOperator($operator)->condition()->valueRules($this->baseRules())->for($attribute);
+        return $this->declaredOperator($operator)->condition()->valueRules($this->baseRules(), $lengths)->for($attribute);
     }
 
     private function declaredOperator(FilterOperator|string $operator): FilterOperator
