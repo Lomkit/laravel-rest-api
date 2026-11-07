@@ -798,6 +798,56 @@ class RevenuePerMonth extends Trend
 
   `group()` selects `period` and groups by it inside the range; `series()` gives one point per period, the second argument for a period without rows; `labels()` lists the periods and `label()` is the SQL expression of a row's period.
 
+### Table
+
+A `Table` gives the top rows of a grouped aggregate: one row per value of a column, one column per count, sum, average, min or max, ranked by one of them.
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Table;
+use Lomkit\Rest\Metrics\TableColumn;
+use Lomkit\Rest\Metrics\TableResult;
+
+class TopCustomers extends Table
+{
+    public int $limit = 5;                                  // rows; 10 by default, 100 at most
+
+    public function calculate(Builder $query): TableResult
+    {
+        return $this->rows($query, 'customer', [
+            'orders' => TableColumn::count(),
+            'revenue' => TableColumn::sum('price'),
+            'basket' => TableColumn::average('price')->label('Average basket'),
+        ], orderBy: 'revenue', dateColumn: 'placed_at');
+    }
+
+    public function ranges(): array
+    {
+        return [30 => '30 days', 365 => '365 days'];        // days, as a Value
+    }
+}
+```
+
+`{}` -> `{"data": {"type": "table", "columns": [{"name": "orders", "label": "Orders", "aggregate": "count"}, {"name": "revenue", "label": "Revenue", "aggregate": "sum"}, {"name": "basket", "label": "Average basket", "aggregate": "average"}], "rows": [{"key": "acme", "label": "acme", "values": {"orders": 2, "revenue": 150.0, "basket": 75.0}}, ...]}}`
+
+- Helper: `rows($query, $groupBy, $columns, $orderBy = null, $direction = 'desc', $dateColumn = 'created_at')`. `$columns` maps a name (letters, digits and underscores, starting with a lowercase letter) to `TableColumn::count()`, `sum($field)`, `average($field)`, `min($field)` or `max($field)`; `->label('...')` names the column, else the name in words ("Revenue").
+- Order: by `$orderBy`, the first column by default, largest first; `'asc'` for the smallest first. Rows without a value for that column come last; ties are ordered by key, the rows without a key last.
+- Limit: `TopCustomers::make()->limit(5)` in `metrics()`, or `public int $limit = 5;` in the class. From 1 to 100, else `Rest::resource()` throws; 10 by default. The rows after the limit are not returned.
+- Rows: `{"key", "label", "values"}`; keys and labels as a partition (the enum value and its case name; the rows without a value form the row `{"key": null, "label": null, ...}`). Numbers as a `Value`: a count is an integer, an average a float.
+- Labels: `->labels(['paid' => 'Payée'])` renames rows. For labels stored elsewhere, read them for the keys of the rows:
+
+  ```php
+  $table = $this->rows($query, 'customer_id', ['revenue' => TableColumn::sum('price')]);
+
+  return $table->labels(Customer::query()
+      ->whereKey($table->keys())
+      ->pluck('name', 'id')
+      ->all());
+  ```
+
+- Ranges: as a `Value`, a key counts days and the table covers the last N days; without `ranges()`, every row.
+- Fields: the group column is a `Text`, `Enum`, `Integer` or `Boolean` field, the column of a sum, average, min or max a `Number` field, the date column a `Date` or `DateTime` field; any other field throws `InvalidMetricException` when the metric runs. Index the group column of a large table: the database groups every row of the search before it keeps the top rows.
+
 ## Instructions (custom search refinements)
 
 Generate:
@@ -1011,7 +1061,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 ## Pointers into the codebase
 
 - Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `EndpointRoutes` (the routes of each endpoint, one per action for `operate` and one per metric for `metric`), `ResourceRegistrar` and the route value objects)
-- Metrics — `src/Metrics/` (`Metric`, `MetricResult`, `HasMetrics`, `MetricQuery`, `MetricNode`; the built-in types `Value`, `Partition`, `Progress` and their results; `MetricRange`, `MetricColumn` (typed checks), `Aggregate` and `AggregateQuery` (the SQL), `HasLimit`; `Trend`, `TrendResult`, `Periods` and `PeriodUnit`, and `Grouping/` (the SQL of a period per database)), `src/Http/Requests/MetricRequest.php`, `src/Http/MetricResponse.php`
+- Metrics — `src/Metrics/` (`Metric`, `MetricResult`, `HasMetrics`, `MetricQuery`, `MetricNode`; the built-in types `Value`, `Partition`, `Progress` and their results; `MetricRange`, `MetricColumn` (typed checks), `Aggregate` and `AggregateQuery` (the SQL), `HasLimit`; `Trend`, `TrendResult`, `Periods` and `PeriodUnit`, and `Grouping/` (the SQL of a period per database); `Table`, `TableColumn` and `TableResult`), `src/Http/Requests/MetricRequest.php`, `src/Http/MetricResponse.php`
 - Config — `src/Config/RestConfig.php` (the typed values of `config/rest.php`, read once per request through `RestContext::config()`) and `src/Config/ConfigValue.php` (the typed read of one key, also used for `rest.limits` and `rest.precognition.enabled`)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details,Batch}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, read with `$resource->definition()`, and their lookups `relation()`, `scope()`, `action()`, `instruction()` and `inputFields()`; kept by `src/Http/RestContext.php`, whose limits are a `src/Http/ResourceLimits.php`), `src/Concerns/Resource/*` (`DeclaresFields`, `DeclaresScopes`, `Paginable`, `Relationable`, `Contextual` with `definition()` and `request()`, hooks, ...)

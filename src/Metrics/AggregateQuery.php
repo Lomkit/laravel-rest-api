@@ -6,6 +6,7 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Lomkit\Rest\Metrics\Grouping\AggregateRank;
 use Lomkit\Rest\Query\Expressions\AggregateSelect;
 
 final readonly class AggregateQuery
@@ -112,6 +113,11 @@ final readonly class AggregateQuery
                 $base->addBinding($since, 'select');
             }
         }
+    }
+
+    public function rank(): AggregateRank
+    {
+        return new AggregateRank($this->function, $this->column?->column);
     }
 
     /** @param array<mixed> $row */

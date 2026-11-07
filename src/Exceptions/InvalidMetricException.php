@@ -55,4 +55,27 @@ final class InvalidMetricException extends LogicException
     {
         return new self("Metrics group rows by period on sqlite, mysql, mariadb and pgsql connections, not on [{$driver}].");
     }
+
+    public static function invalidRowLimit(string $metric, int $limit, int $max): self
+    {
+        return new self("{$metric} keeps [{$limit}] rows. A table limit is an integer from 1 to {$max}.");
+    }
+
+    public static function withoutColumns(string $metric): self
+    {
+        return new self("{$metric}::rows() has no column. A table needs at least one TableColumn.");
+    }
+
+    public static function invalidColumn(string $metric, string $name): self
+    {
+        return new self("{$metric}::rows() names a column [{$name}]. A column name is letters, digits and underscores, starting with a lowercase letter.");
+    }
+
+    /** @param list<string> $columns */
+    public static function unknownOrder(string $metric, string $orderBy, array $columns): self
+    {
+        $names = implode(', ', $columns);
+
+        return new self("{$metric}::rows() orders by [{$orderBy}], which is not one of its columns: {$names}.");
+    }
 }
