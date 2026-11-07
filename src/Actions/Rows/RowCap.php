@@ -8,6 +8,11 @@ final readonly class RowCap
 {
     public function __construct(private int $max) {}
 
+    public static function of(?int $max): ?self
+    {
+        return $max === null ? null : new self($max);
+    }
+
     public function limit(?int $limit): int
     {
         return min($limit ?? PHP_INT_MAX, $this->max + 1);

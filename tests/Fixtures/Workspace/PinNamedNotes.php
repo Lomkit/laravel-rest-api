@@ -11,7 +11,7 @@ class PinNamedNotes extends Action
 {
     public ActionTarget $target = ActionTarget::Resources;
 
-    public int $maxResources = 3;
+    public ?int $maxResources = 3;
 
     /** @param Collection<int, Note> $models */
     #[\Override]

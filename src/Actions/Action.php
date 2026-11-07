@@ -37,7 +37,7 @@ class Action implements JsonSerializable
 
     public int $chunkCount = 100;
 
-    public int $maxResources = 1000;
+    public ?int $maxResources = 1000;
 
     public bool $destructive = false;
 
@@ -71,6 +71,13 @@ class Action implements JsonSerializable
     public function target(ActionTarget $target): static
     {
         $this->target = $target;
+
+        return $this;
+    }
+
+    public function maxResources(?int $max): static
+    {
+        $this->maxResources = $max;
 
         return $this;
     }

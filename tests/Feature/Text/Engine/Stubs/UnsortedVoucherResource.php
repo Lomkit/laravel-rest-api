@@ -17,6 +17,12 @@ class UnsortedVoucherResource extends VoucherResource
     }
 
     #[\Override]
+    public function actions(): array
+    {
+        return [...parent::actions(), UncappedReviewVouchers::make()->maxResources(null)];
+    }
+
+    #[\Override]
     public function limits(): array
     {
         return [2, 10, 50, 300];

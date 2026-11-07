@@ -491,7 +491,7 @@ public function text(): ?TextSearch
   - `null`: always an empty page, without SQL.
   - Meilisearch and Typesense compare filter strings without regard to case: prefer `Integer`, `ID`, `Boolean` or `Enum` perimeter attributes.
 - `EngineQuery` (perimeter and `handleEngine()`): `where($attribute, $operator, $value)` with `=`, `!=`, `<`, `>`, `<=`, `>=`; `whereIn()` and `whereNotIn()` with a list; `orderBy()` on a `sortable()` attribute; `options([...])` merged, never replaced. Only declared attributes and their operators; values are converted to the attribute type, and anything else throws `InvalidEngineQueryException` (a `LogicException`). Repeated `whereIn()` lists intersect, repeated `whereNotIn()` lists add up, and an empty `whereIn()` returns an empty page without calling the engine. There is no `query()` callback.
-- Actions with a filled text read every key from the engine first (pages of `chunkCount`), then load each chunk in SQL by key, without `perimeterQuery()`, like a page, before running, queueing or batching. More matches than `maxResources` is a `422` under `search`; `search.limit` acts on the first `limit` results. Without `search.limit`, the action reads Meilisearch `pagination.maxTotalHits` or Algolia `paginationLimitedTo`: the application key must be allowed to read the index settings (a `422` otherwise), and a search that reaches a limit not above `maxResources` is a `422`, so set these limits above `maxResources`. Set `scout.after_commit` to `true`.
+- Actions with a filled text read every key from the engine first (pages of `chunkCount`), then load each chunk in SQL by key, without `perimeterQuery()`, like a page, before running, queueing or batching. More matches than `maxResources` is a `422` under `search`; `search.limit` acts on the first `limit` results. Without `search.limit`, the action reads Meilisearch `pagination.maxTotalHits` or Algolia `paginationLimitedTo`: the application key must be allowed to read the index settings (a `422` otherwise), and a search that reaches a limit not above `maxResources`, or any limit without a cap, is a `422`, so set these limits above `maxResources`. Set `scout.after_commit` to `true`.
 
 ## `mutate` payload
 
@@ -564,7 +564,8 @@ class SendWelcomeNotificationAction extends \Lomkit\Rest\Actions\Action
     // public \Lomkit\Rest\Actions\ActionTarget $target = \Lomkit\Rest\Actions\ActionTarget::Resources;
 
     // Optional. Cap on the rows the action runs on, for every target (default 1000): more is a 422.
-    // public int $maxResources = 1000;
+    // null removes the cap. ->maxResources(5000) or ->maxResources(null) also sets it when declaring.
+    // public ?int $maxResources = 1000;
 
     // Optional. Batch size when processing models (default 100).
     // public int $chunkCount = 100;
@@ -641,7 +642,7 @@ not exist, or that `perimeterQuery()` hides, are a `422` under `resources.{index
 per 1,000 ids. Keys are typed like the resource's `ID` field, and repeated ids are a `422`.
 `resources` is capped at
 `$maxResources` ids per request (default 1000) — lower it per action when the blast radius should be
-smaller.
+smaller, raise it, or set it to `null` to remove the cap on every target.
 
 ```jsonc
 // POST /api/users/actions/deactivate-users
