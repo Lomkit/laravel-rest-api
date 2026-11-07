@@ -123,7 +123,7 @@ class RowVersionsTest extends HelpdeskTestCase
 
         [$update, $link] = ['update '.$jam->id, $jam->id.' '.$hardware->id];
 
-        $this->assertSame([$update, "attachTag {$link}", $update, "detachTag {$link}", $update, $update, "detachTag {$link}", $update, "attachTag {$link}"], $this->tickets->calls);
+        $this->assertSame(['viewAny', $update, "attachTag {$link}", $update, "detachTag {$link}", $update, $update, "detachTag {$link}", $update, "attachTag {$link}"], $this->tickets->calls);
     }
 
     #[Test]
@@ -163,10 +163,10 @@ class RowVersionsTest extends HelpdeskTestCase
             ]]],
         ]])->assertStatus(409);
 
-        $created = explode(' ', $this->tickets->calls[2])[1];
+        $created = explode(' ', $this->tickets->calls[3])[1];
 
-        $this->assertSame(['create', 'create', "attachTag {$created} 1", "attachTag {$created} 2"], $this->tickets->calls);
-        $this->assertCount(1, $this->written);
+        $this->assertSame(['viewAny', 'create', 'create', "attachTag {$created} 1", "attachTag {$created} 2"], $this->tickets->calls);
+        $this->assertCount(2, $this->written);
         $this->assertDatabaseMissing('tickets', ['title' => 'Monitor flicker']);
     }
 

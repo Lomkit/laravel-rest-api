@@ -25,7 +25,7 @@ class EnumKeyedRowsTest extends HelpdeskTestCase
             ->assertOk()
             ->assertJsonPath('operations', [['operation' => 'update', 'key' => 'phone']]);
 
-        $this->assertSame(['viewAny', 'view email', 'update email', 'view phone', 'update phone', 'update phone'], $this->channels->calls);
+        $this->assertSame(['viewAny', 'view email', 'update email', 'view phone', 'update phone', 'viewAny', 'update phone'], $this->channels->calls);
         $this->assertDatabaseHas('channels', ['code' => 'phone', 'name' => 'Hotline']);
     }
 

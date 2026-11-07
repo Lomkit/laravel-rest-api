@@ -34,7 +34,7 @@ class RelationshipChecksTest extends HelpdeskTestCase
         $this->mutateTags([['operation' => 'attach', 'key' => [$this->tag('Hardware'), $this->tag('Network')]]])->assertOk();
 
         $this->assertSame([$this->tag('Hardware'), $this->tag('Network')], $this->attachedTags());
-        $this->assertSame([...$this->calls('update', $this->jam), $this->link('attachTag', 'Hardware'), $this->link('attachTag', 'Network')], $this->tickets->calls);
+        $this->assertSame(['viewAny', ...$this->calls('update', $this->jam), $this->link('attachTag', 'Hardware'), $this->link('attachTag', 'Network')], $this->tickets->calls);
     }
 
     #[Test]
@@ -70,7 +70,7 @@ class RelationshipChecksTest extends HelpdeskTestCase
             ->assertJsonPath('message', 'Urgent tickets are cleared by the escalation desk.');
 
         $this->assertSame([$this->tag('Urgent')], $this->attachedTags());
-        $this->assertSame([...$this->calls('update', $this->jam), $this->link('attachTag', 'Hardware'), $this->link('detachTag', 'Urgent')], $this->tickets->calls);
+        $this->assertSame(['viewAny', ...$this->calls('update', $this->jam), $this->link('attachTag', 'Hardware'), $this->link('detachTag', 'Urgent')], $this->tickets->calls);
     }
 
     #[Test]
@@ -82,7 +82,7 @@ class RelationshipChecksTest extends HelpdeskTestCase
         $this->mutateTags([['operation' => 'sync', 'key' => [$this->tag('Network'), $this->tag('Monitor')]]])->assertOk();
 
         $this->assertSame([$this->tag('Hardware'), $this->tag('Network'), $this->tag('Monitor')], $this->attachedTags());
-        $this->assertSame([...$this->calls('update', $this->jam), $this->link('attachTag', 'Monitor')], $this->tickets->calls);
+        $this->assertSame(['viewAny', ...$this->calls('update', $this->jam), $this->link('attachTag', 'Monitor')], $this->tickets->calls);
     }
 
     /** @param array<string, mixed> $entry */
@@ -143,7 +143,7 @@ class RelationshipChecksTest extends HelpdeskTestCase
         $this->mutateTags([['operation' => 'sync', 'key' => [$this->tag('Urgent')]]], $relation)->assertOk();
 
         $this->assertSame([$this->tag('Urgent')], $this->attachedTags($relation));
-        $this->assertSame($this->calls('update', $this->jam), $this->tickets->calls);
+        $this->assertSame(['viewAny', ...$this->calls('update', $this->jam)], $this->tickets->calls);
     }
 
     /** @return array<string, array{string}> */

@@ -137,8 +137,8 @@ class DecisionStoreKeysTest extends HelpdeskTestCase
         $this->postJson('/api/cached-tickets/mutate', $payload)->assertOk();
         $this->postJson('/api/cached-tickets/mutate', $payload)->assertOk();
 
-        $this->assertSame(['create', 'create', 'create'], $this->tickets->calls);
-        $this->assertCount(1, $this->written);
+        $this->assertSame(['viewAny', 'create', 'create', 'create'], $this->tickets->calls);
+        $this->assertCount(2, $this->written);
     }
 
     #[Test]
@@ -149,8 +149,8 @@ class DecisionStoreKeysTest extends HelpdeskTestCase
         $this->postJson('/api/cached-tickets/mutate', ['mutate' => [['operation' => 'update', 'key' => $jam->id, 'attributes' => ['title' => 'Printer fixed']]]])->assertOk();
         $this->postJson('/api/cached-tickets/mutate', ['mutate' => [['operation' => 'update', 'key' => $jam->id, 'attributes' => ['title' => 'Printer jam']]]])->assertOk();
 
-        $this->assertSame($this->calls('update', $jam, $jam), $this->tickets->calls);
-        $this->assertSame([], $this->written);
+        $this->assertSame(['viewAny', ...$this->calls('update', $jam, $jam)], $this->tickets->calls);
+        $this->assertCount(1, $this->written);
     }
 
     #[Test]

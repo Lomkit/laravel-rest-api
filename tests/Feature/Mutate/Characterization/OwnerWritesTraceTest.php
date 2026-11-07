@@ -58,6 +58,7 @@ class OwnerWritesTraceTest extends WriteTraceTestCase
                 'relations' => ['book' => ['operation' => 'detach', 'key' => 101]],
             ],
         ], [
+            'policy viewAny',
             'policy create',
             'policy create',
             'sql select * from loans where loans.id in (101, 102)',
@@ -126,6 +127,7 @@ class OwnerWritesTraceTest extends WriteTraceTestCase
                 'relations' => ['labelable' => ['operation' => 'detach', 'type' => Book::class, 'key' => 101]],
             ],
         ], [
+            'policy viewAny',
             'policy create',
             'policy create',
             'sql select * from labels where labels.id in (102, 101)',

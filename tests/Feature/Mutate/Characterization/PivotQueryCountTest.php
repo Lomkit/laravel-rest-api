@@ -123,7 +123,7 @@ class PivotQueryCountTest extends WriteTraceTestCase
             self::ATTACH,
         ]);
         $this->assertSame(
-            ['policy update Ticket(Printer jam)', 'policy view Tag(Network)', 'policy attachTag Ticket(Printer jam) Tag(Network)', 'policy detachTag Ticket(Printer jam) Tag(Hardware)', 'policy detachTag Ticket(Printer jam) Tag(Urgent)'],
+            ['policy viewAny', 'policy update Ticket(Printer jam)', 'policy view Tag(Network)', 'policy attachTag Ticket(Printer jam) Tag(Network)', 'policy detachTag Ticket(Printer jam) Tag(Hardware)', 'policy detachTag Ticket(Printer jam) Tag(Urgent)'],
             array_values(array_filter(TracingPolicy::$trace, fn (string $line): bool => str_starts_with($line, 'policy '))),
         );
     }

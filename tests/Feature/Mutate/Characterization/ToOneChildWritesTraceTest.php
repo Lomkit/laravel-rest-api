@@ -50,6 +50,7 @@ class ToOneChildWritesTraceTest extends WriteTraceTestCase
                 ],
             ],
         ], [
+            'policy viewAny',
             'sql select * from books where books.id in (102, 101)',
             'sql select * from loans where loans.id in (102, 101)',
             'sql select * from labels where labels.id in (102, 101)',
@@ -100,6 +101,7 @@ class ToOneChildWritesTraceTest extends WriteTraceTestCase
                 ],
             ],
         ], [
+            'policy viewAny',
             'policy create',
             'sql select * from books where books.id in (101)',
             'sql select * from loans where loans.id in (101)',

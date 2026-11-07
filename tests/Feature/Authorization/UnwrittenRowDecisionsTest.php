@@ -31,7 +31,7 @@ class UnwrittenRowDecisionsTest extends HelpdeskTestCase
         ]])->assertOk();
 
         $this->assertSame(['view 1'], $this->teams->calls);
-        $this->assertSame(['update 1', 'update 2'], $this->tickets->calls);
+        $this->assertSame(['viewAny', 'update 1', 'update 2'], $this->tickets->calls);
     }
 
     #[Test]
@@ -50,7 +50,7 @@ class UnwrittenRowDecisionsTest extends HelpdeskTestCase
         ]]])->assertOk();
 
         $this->assertSame(['view 1', 'view 2'], $this->tags->calls);
-        $this->assertSame(['update 1', 'attachTag 1 1', 'attachTag 1 2', 'detachTag 1 1'], $this->tickets->calls);
+        $this->assertSame(['viewAny', 'update 1', 'attachTag 1 1', 'attachTag 1 2', 'detachTag 1 1'], $this->tickets->calls);
     }
 
     #[Test]
@@ -61,6 +61,6 @@ class UnwrittenRowDecisionsTest extends HelpdeskTestCase
             ['operation' => 'update', 'key' => 1, 'relations' => ['tickets' => [['operation' => 'attach', 'key' => 2]]]],
         ]])->assertOk();
 
-        $this->assertSame(['update 1', 'update 1'], $this->teams->calls);
+        $this->assertSame(['viewAny', 'update 1', 'update 1'], $this->teams->calls);
     }
 }

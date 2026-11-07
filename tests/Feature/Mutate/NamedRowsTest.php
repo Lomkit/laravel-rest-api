@@ -26,7 +26,7 @@ class NamedRowsTest extends WriteTraceTestCase
         ]])->assertOk();
 
         $this->assertSame(
-            ['policy update Book(Emma)', 'policy update Book(Emma Woodhouse)', 'policy update Book(Emma Woodhouse)', 'saved Book(Emma Woodhouse)', 'saved Book(Emma Woodhouse)', 'saved Book(Emma W.)'],
+            ['policy viewAny', 'policy update Book(Emma)', 'policy update Book(Emma Woodhouse)', 'policy update Book(Emma Woodhouse)', 'saved Book(Emma Woodhouse)', 'saved Book(Emma Woodhouse)', 'saved Book(Emma W.)'],
             array_values(array_filter(TracingPolicy::$trace, fn (string $line): bool => ! str_starts_with($line, 'sql '))),
         );
         $this->assertSame(['Book(Dune) [Shelf(Classics)]', 'Book(Emma W.) []'], self::rows('books'));

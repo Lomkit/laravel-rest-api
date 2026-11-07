@@ -13,7 +13,7 @@ class MutationQueryCountTest extends WriteTraceTestCase
 
     private const string UPDATE_TICKET = 'update tickets set team_id = ?, updated_at = ? where id = ?';
 
-    private const array MOVED_TICKETS = ['policy update Team(Ops)', 'policy update Ticket(Printer jam)', 'policy update Ticket(Password reset)'];
+    private const array MOVED_TICKETS = ['policy viewAny', 'policy update Team(Ops)', 'policy update Ticket(Printer jam)', 'policy update Ticket(Password reset)'];
 
     #[\Override]
     protected function setUp(): void
@@ -42,6 +42,7 @@ class MutationQueryCountTest extends WriteTraceTestCase
             self::UPDATE_BOOK,
             self::UPDATE_BOOK,
         ], [
+            'policy viewAny',
             'policy update Book(Dune)',
             'policy update Book(Emma)',
             'policy update Book(Ubik)',
@@ -90,7 +91,7 @@ class MutationQueryCountTest extends WriteTraceTestCase
             'select * from teams where teams.id in (102)',
             self::UPDATE_TICKET,
             self::UPDATE_TICKET,
-        ], ['policy update Ticket(Printer jam)', 'policy view Team(Ops)', 'policy update Ticket(Password reset)']);
+        ], ['policy viewAny', 'policy update Ticket(Printer jam)', 'policy view Team(Ops)', 'policy update Ticket(Password reset)']);
     }
 
     #[Test]
@@ -107,6 +108,7 @@ class MutationQueryCountTest extends WriteTraceTestCase
             'insert into tickets (team_id, title, status, updated_at, created_at) values (?, ?, ?, ?, ?)',
             'insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?), (?, ?, ?, ?)',
         ], [
+            'policy viewAny',
             'policy create',
             'policy create',
             'policy view Team(Support)',
@@ -133,6 +135,7 @@ class MutationQueryCountTest extends WriteTraceTestCase
             'insert into book_shelf (book_id, shelf_id) values (?, ?)',
             'insert into book_shelf (book_id, shelf_id) values (?, ?)',
         ], [
+            'policy viewAny',
             'policy create',
             'policy create',
             'policy create',
