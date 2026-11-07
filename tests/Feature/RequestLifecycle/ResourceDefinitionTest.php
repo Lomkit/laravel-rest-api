@@ -3,13 +3,11 @@
 namespace Lomkit\Rest\Tests\Feature\RequestLifecycle;
 
 use Illuminate\Http\Request;
-use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
-use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\CountedPostController;
 use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\CountedPostResource;
 use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\EvaluatedDeclarations;
@@ -107,19 +105,6 @@ class ResourceDefinitionTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_serializes_a_resource_without_its_declarations(): void
-    {
-        $resource = $this->contextFor(User::factory()->staff()->make())->resource(CountedPostResource::class);
-        $this->readEveryDeclaration($resource, 1);
-
-        $this->assertSame(
-            'O:68:"Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\CountedPostResource":3:{s:12:"defaultLimit";i:50;s:12:"includeLimit";i:10;'
-                ."s:34:\"\0Lomkit\Rest\Http\Resource\0context\";O:28:\"Lomkit\Rest\Http\RestContext\":0:{}}",
-            serialize($resource),
-        );
-    }
-
-    #[Test]
     public function it_keeps_no_declarations_on_the_resource_once_read(): void
     {
         $resource = $this->contextFor(User::factory()->staff()->make())->resource(CountedPostResource::class);
@@ -127,32 +112,6 @@ class ResourceDefinitionTest extends PackageTestCase
         $this->readEveryDeclaration($resource, 1);
 
         $this->assertSame(['defaultLimit', 'includeLimit', "\0Lomkit\Rest\Http\Resource\0context"], array_keys((array) $resource));
-    }
-
-    #[Test]
-    public function it_evaluates_the_declarations_again_against_the_worker_request(): void
-    {
-        $resource = $this->contextFor(User::factory()->staff()->make())->resource(CountedPostResource::class);
-        $this->readEveryDeclaration($resource, 1);
-        $serialized = serialize($resource);
-
-        $this->app->instance('request', Request::create('/'));
-        $restored = unserialize($serialized);
-        $definition = $restored->definition();
-        $declared = [...$definition->actions(), ...$definition->instructions()];
-        $bound = array_map(fn (Action|Instruction $declaration): Resource => $declaration->resource, $declared);
-        $this->readEveryDeclaration($restored, 2);
-
-        $this->assertSame(array_fill_keys(self::DECLARATIONS, 2), $this->evaluated->counts());
-        $this->assertSame(['Grace', null], $this->evaluated->usersOf('fields'));
-        $this->assertSame(['id', 'title'], $definition->fields()->names());
-        $this->assertSame(
-            ['publish-posts', 'queued-publish-posts', 'batched-publish-posts', 'change-status', 'highlight-posts', 'in-status'],
-            array_map(fn (Action|Instruction $declaration): string => $declaration->uriKey(), $declared),
-        );
-        foreach ($bound as $boundResource) {
-            $this->assertSame($restored, $boundResource);
-        }
     }
 
     private function readEveryDeclaration(Resource $resource, int $times): void

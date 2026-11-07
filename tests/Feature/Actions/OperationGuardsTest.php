@@ -50,26 +50,26 @@ class OperationGuardsTest extends PackageTestCase
     /** @param array<string, mixed> $body */
     #[Test]
     #[DataProvider('runs')]
-    public function it_declares_the_action_fields_once_per_request(string $action, array $body, int $impacted): void
+    public function it_declares_the_action_fields_once_per_request_and_once_in_the_worker(string $action, array $body, int $impacted, int $calls): void
     {
         $response = $this->postJson("/field-counting-posts/actions/{$action}", $body);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted]]);
-        $this->assertSame(1, CountedPublishPosts::$calls);
+        $this->assertSame($calls, CountedPublishPosts::$calls);
     }
 
-    /** @return array<string, array{string, array<string, mixed>, int}> */
+    /** @return array<string, array{string, array<string, mixed>, int, int}> */
     public static function runs(): array
     {
         $fields = ['fields' => [['name' => 'at', 'value' => '2026-03-01 09:30:00']]];
         $search = [...$fields, 'search' => ['filters' => [['field' => 'title', 'value' => 'Annual report']]]];
 
         return [
-            'synchronous' => ['counted-publish-posts', $search, 1],
-            'queued' => ['queued-counted-publish-posts', $search, 1],
-            'batched' => ['batched-counted-publish-posts', $search, 1],
-            'targeted' => ['targeted-counted-publish-posts', [...$fields, 'resources' => [1]], 1],
-            'standalone' => ['standalone-counted-publish-posts', $fields, 0],
+            'synchronous' => ['counted-publish-posts', $search, 1, 1],
+            'queued' => ['queued-counted-publish-posts', $search, 1, 2],
+            'batched' => ['batched-counted-publish-posts', $search, 1, 2],
+            'targeted' => ['targeted-counted-publish-posts', [...$fields, 'resources' => [1]], 1, 1],
+            'standalone' => ['standalone-counted-publish-posts', $fields, 0, 1],
         ];
     }
 

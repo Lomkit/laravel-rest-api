@@ -4,11 +4,8 @@ namespace Lomkit\Rest\Actions;
 
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\PendingBatch;
-use Illuminate\Bus\Queueable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use JsonSerializable;
@@ -25,14 +22,11 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 class Action implements JsonSerializable
 {
     use Batchable;
-    use Dispatchable;
     use HasInputFields;
     use HasMeta;
     use InteractsWithQueue;
     use Makeable;
-    use Queueable;
     use Resourcable;
-    use SerializesModels;
 
     public ?string $name = null;
 
