@@ -5,4 +5,3 @@
 /.github                  export-ignore
 /pint.json                export-ignore
 /phpstan.neon             export-ignore
-/phpstan-baseline.neon    export-ignore

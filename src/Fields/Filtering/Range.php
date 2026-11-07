@@ -11,6 +11,8 @@ final readonly class Range implements Condition
     #[\Override]
     public function apply(Builder $query, string $column, mixed $value, string $boolean): void
     {
+        assert(is_iterable($value));
+
         $query->whereBetween($column, $value, $boolean, $this->not);
     }
 

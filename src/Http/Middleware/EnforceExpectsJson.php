@@ -16,8 +16,10 @@ class EnforceExpectsJson
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! Str::contains($request->header('Accept'), 'application/json')) {
-            $request->headers->set('Accept', 'application/json, '.$request->header('Accept'));
+        $accept = $request->header('Accept', '');
+
+        if (! Str::contains($accept, 'application/json')) {
+            $request->headers->set('Accept', 'application/json, '.$accept);
         }
 
         return $next($request);

@@ -11,6 +11,7 @@ use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Dedoc\Scramble\Support\RouteInfo;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\FieldSet;
@@ -84,56 +85,40 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         $include->addProperty('sorts', new ArrayType);
         $include->addProperty('types', (new ObjectType)->setDescription('MorphTo relations only: the search of each type, keyed by morph type, with selects, filters, scopes, includes, aggregates, instructions and gates'));
 
-        $search = new ObjectType;
-        $search
-            ->addProperty('filters', (new ArrayType)->setItems(
-                (new ObjectType)
-                    ->addProperty('field', (new StringType)->enum($fieldEnum))
-                    ->addProperty('operator', (new StringType)->enum(array_column(FilterOperator::cases(), 'value')))
-                    ->addProperty('value', (new MixedType)->setDescription('Accepts string, integer, boolean, or array'))
-                    ->addProperty('type', (new StringType)->enum(['and', 'or']))
-                    ->addProperty('nested', new ArrayType)
-            ))
-            ->addProperty('sorts', (new ArrayType)->setItems(
-                (new ObjectType)
-                    ->addProperty('field', (new StringType)->enum($text->sortNames($fields->sortable()->names())))
-                    ->addProperty('direction', (new StringType)->enum(array_column(SortDirection::cases(), 'value')))
-            ))
-            ->addProperty('selects', (new ArrayType)->setItems(
-                (new ObjectType)->addProperty('field', (new StringType)->enum($fields->selectable()->names()))
-            ))
-            ->addProperty('includes', (new ArrayType)->setItems($include))
-            ->addProperty('scopes', (new ArrayType)->setItems(
-                (new ObjectType)
-                    ->addProperty('name', new StringType)
-                    ->addProperty('parameters', new ArrayType)
-            ));
+        $search = $this->objectOf([
+            'filters' => $this->listOf($this->objectOf([
+                'field' => (new StringType)->enum($fieldEnum),
+                'operator' => (new StringType)->enum(array_column(FilterOperator::cases(), 'value')),
+                'value' => (new MixedType)->setDescription('Accepts string, integer, boolean, or array'),
+                'type' => (new StringType)->enum(['and', 'or']),
+                'nested' => new ArrayType,
+            ])),
+            'sorts' => $this->listOf($this->objectOf([
+                'field' => (new StringType)->enum($text->sortNames($fields->sortable()->names())),
+                'direction' => (new StringType)->enum(array_column(SortDirection::cases(), 'value')),
+            ])),
+            'selects' => $this->listOf($this->objectOf(['field' => (new StringType)->enum($fields->selectable()->names())])),
+            'includes' => $this->listOf($include),
+            'scopes' => $this->listOf($this->objectOf(['name' => new StringType, 'parameters' => new ArrayType])),
+        ]);
 
         $text->addTo($search);
 
-        $search
-            ->addProperty('aggregates', (new ArrayType)->setItems(
-                (new ObjectType)
-                    ->addProperty('relation', new StringType)
-                    ->addProperty('type', (new StringType)->enum(array_column(AggregateFunction::cases(), 'value')))
-                    ->addProperty('field', new StringType)
-                    ->addProperty('filters', new ArrayType)
-            )->setDescription('Aggregate values over relations'))
-            ->addProperty('instructions', (new ArrayType)->setItems(
-                (new ObjectType)
-                    ->addProperty('name', new StringType)
-                    ->addProperty('fields', new ArrayType)
-            )->setDescription('Named query instructions defined on the resource'))
-            ->addProperty('gates', (new ArrayType)->setItems(new StringType)
-                ->setDescription('Gates to evaluate for the current user on each result'))
-            ->addProperty('page', new IntegerType)
-            ->addProperty('limit', new IntegerType);
+        $aggregate = $this->objectOf([
+            'relation' => new StringType,
+            'type' => (new StringType)->enum(array_column(AggregateFunction::cases(), 'value')),
+            'field' => new StringType,
+            'filters' => new ArrayType,
+        ]);
+        $instruction = $this->objectOf(['name' => new StringType, 'fields' => new ArrayType]);
 
-        $body = (new ObjectType)->addProperty('search', $search);
+        $search->addProperty('aggregates', $this->listOf($aggregate)->setDescription('Aggregate values over relations'));
+        $search->addProperty('instructions', $this->listOf($instruction)->setDescription('Named query instructions defined on the resource'));
+        $search->addProperty('gates', $this->listOf(new StringType)->setDescription('Gates to evaluate for the current user on each result'));
+        $search->addProperty('page', new IntegerType);
+        $search->addProperty('limit', new IntegerType);
 
-        $operation->addRequestBodyObject(
-            RequestBodyObject::make()->setContent('application/json', Schema::fromType($body))
-        );
+        $this->requestBody($operation, $this->objectOf(['search' => $search]));
     }
 
     private function attributes(Resource $resource): ObjectType
@@ -169,15 +154,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
             $entry->addProperty('relations', $relationsType);
         }
 
-        $entries = new ArrayType;
-        $entries->setItems($entry);
-
-        $body = new ObjectType;
-        $body->addProperty('mutate', $entries);
-
-        $operation->addRequestBodyObject(
-            RequestBodyObject::make()->setContent('application/json', Schema::fromType($body))
-        );
+        $this->requestBody($operation, $this->objectOf(['mutate' => $this->listOf($entry)]));
     }
 
     /**
@@ -187,11 +164,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
     {
         $operation->summary("Delete {$resourceName}");
 
-        $operation->addRequestBodyObject(
-            RequestBodyObject::make()->setContent('application/json', Schema::fromType(
-                (new ObjectType)->addProperty('resources', (new ArrayType)->setItems(new IntegerType))
-            ))
-        );
+        $this->requestBody($operation, $this->objectOf(['resources' => $this->listOf(new IntegerType)]));
     }
 
     /**
@@ -201,11 +174,7 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
     {
         $operation->summary("Restore {$resourceName}");
 
-        $operation->addRequestBodyObject(
-            RequestBodyObject::make()->setContent('application/json', Schema::fromType(
-                (new ObjectType)->addProperty('resources', (new ArrayType)->setItems(new IntegerType))
-            ))
-        );
+        $this->requestBody($operation, $this->objectOf(['resources' => $this->listOf(new IntegerType)]));
     }
 
     /**
@@ -225,5 +194,33 @@ class LomkitLaravelRestApiOperationExtension extends OperationExtension
         }
 
         return implode("\n", $lines);
+    }
+
+    /** @param array<string, Type> $properties */
+    private function objectOf(array $properties): ObjectType
+    {
+        $object = new ObjectType;
+
+        foreach ($properties as $name => $property) {
+            $object->addProperty($name, $property);
+        }
+
+        return $object;
+    }
+
+    private function listOf(Type $items): ArrayType
+    {
+        $list = new ArrayType;
+        $list->setItems($items);
+
+        return $list;
+    }
+
+    private function requestBody(Operation $operation, ObjectType $body): void
+    {
+        $schema = new Schema;
+        $schema->type = $body;
+
+        $operation->addRequestBodyObject(RequestBodyObject::make()->setContent('application/json', $schema));
     }
 }

@@ -13,6 +13,8 @@ trait PerformsModelOperations
 
     public function performRestore(Model $model): void
     {
+        assert(method_exists($model, 'restore'));
+
         $model->restore();
     }
 

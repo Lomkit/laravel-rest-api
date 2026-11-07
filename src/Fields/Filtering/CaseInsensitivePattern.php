@@ -11,6 +11,8 @@ final readonly class CaseInsensitivePattern implements Condition
     #[\Override]
     public function apply(Builder $query, string $column, mixed $value, string $boolean): void
     {
+        assert(is_string($value));
+
         $query->whereLike($column, $value, false, $boolean, $this->not);
     }
 

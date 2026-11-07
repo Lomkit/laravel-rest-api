@@ -14,6 +14,14 @@ class ResourceRegistry
     /** @param class-string<Resource> $class */
     public function get(string $class): Resource
     {
-        return $this->resources[$class] ??= $this->container->make($class);
+        if (isset($this->resources[$class])) {
+            return $this->resources[$class];
+        }
+
+        $resource = $this->container->make($class);
+
+        assert($resource instanceof Resource);
+
+        return $this->resources[$class] = $resource;
     }
 }
