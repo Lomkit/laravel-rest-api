@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Fixtures\Gallery;
 use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Instructions\InstructionFields;
 
 class ByMedium extends Instruction
 {
@@ -15,8 +16,8 @@ class ByMedium extends Instruction
     }
 
     #[\Override]
-    public function handle(array $fields, Builder $query): void
+    public function handle(InstructionFields $fields, Builder $query): void
     {
-        $query->where('medium', $fields['medium']);
+        $query->where('medium', $fields->medium);
     }
 }

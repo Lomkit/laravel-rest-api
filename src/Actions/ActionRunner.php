@@ -16,13 +16,10 @@ use Lomkit\Rest\Query\Trashed;
 
 final readonly class ActionRunner
 {
-    /**
-     * @param  array<string, mixed>  $fields
-     * @param  array<string, mixed>  $given
-     */
+    /** @param array<string, mixed> $given */
     private function __construct(
         private Action $action,
-        private array $fields,
+        private ActionFields $fields,
         private array $given,
         private ?Trashed $trashed,
         private bool $perimeter,
@@ -30,8 +27,7 @@ final readonly class ActionRunner
         private ?PendingBatch $batch,
     ) {}
 
-    /** @param array<string, mixed> $fields */
-    public static function for(OperateRequest $request, Action $action, array $fields, bool $perimeter): self
+    public static function for(OperateRequest $request, Action $action, ActionFields $fields, bool $perimeter): self
     {
         $payload = $request->payload();
 
@@ -75,8 +71,7 @@ final readonly class ActionRunner
         $this->batch?->dispatch();
     }
 
-    /** @param array<string, mixed> $fields */
-    private static function batch(Action $action, array $fields): PendingBatch
+    private static function batch(Action $action, ActionFields $fields): PendingBatch
     {
         $batch = (new QueueSettings($action))->configureBatch(Bus::batch([])->name($action->uriKey()));
 

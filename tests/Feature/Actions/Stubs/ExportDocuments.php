@@ -6,6 +6,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\Text;
@@ -23,17 +24,14 @@ class ExportDocuments extends Action implements ShouldQueue
         ];
     }
 
-    /**
-     * @param  array<string, mixed>  $fields
-     * @param  Collection<int, Document>  $models
-     */
+    /** @param Collection<int, Document> $models */
     #[\Override]
-    public function handle(array $fields, Collection $models): void
+    public function handle(ActionFields $fields, Collection $models): void
     {
         QueuedRuns::$runs[] = [
             'user' => $this->request()->user()?->getAuthIdentifier(),
             'guard' => Auth::getDefaultDriver(),
-            'fields' => $fields,
+            'fields' => $fields->toArray(),
             'keys' => $models->modelKeys(),
             'shred' => $models->isEmpty() ? null : $this->resource
                 ->authorizedTo('shred', $models->first())

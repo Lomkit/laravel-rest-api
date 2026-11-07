@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\Date;
 use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Instructions\InstructionFields;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 
 class InStatus extends Instruction
@@ -20,14 +21,14 @@ class InStatus extends Instruction
     }
 
     #[\Override]
-    public function handle(array $fields, Builder $query): void
+    public function handle(InstructionFields $fields, Builder $query): void
     {
-        app(ReceivedFields::class)->record('handle', $fields);
+        app(ReceivedFields::class)->record('handle', $fields->toArray());
 
-        $query->where('status', $fields['status']);
+        $query->where('status', $fields->status);
 
-        if (isset($fields['since'])) {
-            $query->where('published_on', '>=', $fields['since']);
+        if ($fields->filled('since')) {
+            $query->where('published_on', '>=', $fields->since);
         }
     }
 }

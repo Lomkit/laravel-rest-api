@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs;
 use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Instructions\InstructionFields;
 
 class ConfigurableInstruction extends Instruction
 {
@@ -18,8 +19,8 @@ class ConfigurableInstruction extends Instruction
     }
 
     #[\Override]
-    public function handle(array $fields, Builder $query): void
+    public function handle(InstructionFields $fields, Builder $query): void
     {
-        $query->where('featured', $fields['featured']);
+        $query->where('featured', $fields->featured);
     }
 }

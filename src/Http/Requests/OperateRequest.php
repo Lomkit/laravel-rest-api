@@ -78,12 +78,6 @@ class OperateRequest extends RestRequest
         return $this->operation;
     }
 
-    /** @return array<string, mixed> */
-    public function resolveFields(): array
-    {
-        return $this->payload()->fields->toArray();
-    }
-
     /** @return Builder<Model> */
     public function keysQuery(Resource $resource): Builder
     {

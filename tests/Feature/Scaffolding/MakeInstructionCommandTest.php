@@ -4,8 +4,10 @@ namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
 use App\Rest\Instructions\ScaffoldedInstruction;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Instructions\InstructionFields;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use PHPUnit\Framework\Attributes\Test;
+use ReflectionMethod;
 
 class MakeInstructionCommandTest extends ScaffoldingTestCase
 {
@@ -22,5 +24,6 @@ class MakeInstructionCommandTest extends ScaffoldingTestCase
 
         $this->assertInstanceOf(Instruction::class, $instruction);
         $this->assertSame([], $instruction->fields());
+        $this->assertSame(InstructionFields::class, (string) (new ReflectionMethod($instruction, 'handle'))->getParameters()[0]->getType());
     }
 }

@@ -2,13 +2,18 @@
 
 namespace Lomkit\Rest\Tests\Feature\Query;
 
+use Carbon\CarbonImmutable;
+use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
+use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Instructions\InstructionFields;
 use Lomkit\Rest\Query\Clauses\InstructionClause;
 use Lomkit\Rest\Search\InstructionNode;
+use Lomkit\Rest\Tests\Feature\Query\Stubs\ReadPostFields;
 use Lomkit\Rest\Tests\Feature\Search\Plan\ParsesSearchNodes;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
@@ -66,6 +71,48 @@ class InstructionClauseTest extends PackageTestCase
         $this->expectExceptionObject(InvalidInstructionException::engineOnly(PricedBetween::class));
 
         InstructionClause::of($node)->apply($query);
+    }
+
+    #[Test]
+    public function it_passes_the_instruction_fields_to_handle(): void
+    {
+        $fields = $this->readPostFields();
+
+        $this->assertInstanceOf(CarbonImmutable::class, $fields->since);
+        $this->assertSame('2026-01-01 00:00:00', $fields->since->format('Y-m-d H:i:s'));
+        $this->assertSame([100, null, null], [$fields->min_views, $fields->status, $fields->title]);
+        $this->assertSame(
+            ['min_views' => [true, true, true], 'status' => [true, false, false], 'title' => [false, false, false]],
+            array_map(fn (string $name): array => [$fields->has($name), $fields->filled($name), isset($fields->{$name})], ['min_views' => 'min_views', 'status' => 'status', 'title' => 'title']),
+        );
+        $this->assertSame(['min_views' => 100, 'status' => null], $fields->only('title', 'status', 'min_views'));
+        $this->assertSame(['since', 'min_views', 'status'], array_keys($fields->toArray()));
+    }
+
+    #[Test]
+    public function it_refuses_an_input_that_the_instruction_does_not_declare(): void
+    {
+        $fields = $this->readPostFields();
+
+        $this->expectExceptionObject(new InvalidFieldException(ReadPostFields::class.'::fields() does not declare the input [views].'));
+
+        $fields->has('views');
+    }
+
+    private function readPostFields(): InstructionFields
+    {
+        $instruction = ReadPostFields::make();
+        $values = InputValues::fromNamed(FieldSet::of($instruction->fields()), [
+            ['name' => 'status', 'value' => null],
+            ['name' => 'since', 'value' => '2026-01-01'],
+        ]);
+        ReadPostFields::$received = null;
+
+        InstructionClause::of(new InstructionNode($instruction, $values))->apply(Post::query());
+
+        $this->assertInstanceOf(InstructionFields::class, ReadPostFields::$received);
+
+        return ReadPostFields::$received;
     }
 
     /**

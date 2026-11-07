@@ -3,9 +3,9 @@
 namespace Lomkit\Rest\Contracts;
 
 use Illuminate\Bus\PendingBatch;
+use Lomkit\Rest\Actions\ActionFields;
 
 interface BatchableAction
 {
-    /** @param array<string, mixed> $fields */
-    public function withBatch(array $fields, PendingBatch $batch): void;
+    public function withBatch(ActionFields $fields, PendingBatch $batch): void;
 }

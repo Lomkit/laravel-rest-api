@@ -576,9 +576,9 @@ class SendWelcomeNotificationAction extends \Lomkit\Rest\Actions\Action
     // Optional. Batch size when processing models (default 100).
     // public int $chunkCount = 100;
 
-    public function handle(array $fields, \Illuminate\Support\Collection $models): void
+    public function handle(\Lomkit\Rest\Actions\ActionFields $fields, \Illuminate\Support\Collection $models): void
     {
-        // $fields['expires_at'] is a CarbonImmutable; $fields['notify'] is a bool, true when not sent
+        // $fields->expires_at is a CarbonImmutable; $fields->notify is a bool, true when not sent
         foreach ($models as $model) { /* ... */ }
     }
 
@@ -642,15 +642,15 @@ smaller.
 
 **Field rules run in the request's validator.** A rule that names another input compares with that input: the field parameters of Laravel's dependent rules (`required_if`, `gte`, `after`, `same`, …), `date_equals` and `in_array`, as strings or arrays, in `Rule::date()` / `Rule::numeric()` / `Rule::string()` / `Rule::array()` objects and inside `Rule::when()`. Other rule objects see the whole request: a `DataAwareRule` receives the whole payload, with each input value under `fields.{name}`, and rule objects and closures receive the full key (`fields.{name}`, `search.instructions.{index}.fields.{name}`) as their attribute.
 
-**`handle()` receives a name => value map**: each value cast to its field type (`Date`/`DateTime` → `CarbonImmutable`, `Integer` → `int`, `Boolean` → `bool`, `Enum` → the enum case), with `default()` values filled in. A field that is absent and has no default is missing from the array, so read optional fields with `$fields['name'] ?? null`; an entry sent without `value` counts as absent.
+**`handle()` receives `Lomkit\Rest\Actions\ActionFields`**: each declared input is a property cast to its field type (`Date`/`DateTime` → `CarbonImmutable`, `Integer` → `int`, `Boolean` → `bool`, `Enum` → the enum case), with `default()` values filled in; an input not sent and without default reads `null`. `has('name')` (sent, `null` included, or defaulted) and `filled('name')` (`has()` and not `null`, also `isset($fields->name)`) tell them apart; `only('a', 'b')` and `toArray()` return the inputs `has()` reports, in `fields()` order; `user()` is the user who sent the request (also in the worker) and `target()` the `ActionTarget`. A name that `fields()` does not declare throws `InvalidFieldException`. The object is read only and serializes (values, target, a reference to the user). An entry sent without `value` counts as absent.
 
-**`$request->payload()` returns the parsed `Lomkit\Rest\Actions\OperationNode`** once the request passed validation, in `beforeOperate()` for example. The node has `action`, `fields` (the input values) and `target`: the parsed search of the `Search` target (a `SearchNode`), the keys of the `Resources` target (a `KeyList`), or `null` for the `None` target. `$request->payload()->keys()` returns the keys of the `Resources` target, and `resolveFields()` returns the cast map. The action's `fields()` runs once per request.
+**`$request->payload()` returns the parsed `Lomkit\Rest\Actions\OperationNode`** once the request passed validation, in `beforeOperate()` for example. The node has `action`, `fields` (the input values) and `target`: the parsed search of the `Search` target (a `SearchNode`), the keys of the `Resources` target (a `KeyList`), or `null` for the `None` target. `$request->payload()->keys()` returns the keys of the `Resources` target. The action's `fields()` runs once per request.
 
 **Response**: `{"data": {"impacted": 150}}`.
 
 **Abilities.** Before validation, `operate` resolves the action: an unknown action is a `404` for a user allowed `viewAny` on the resource and a `403` for the others. A known action checks, in this order, `viewAny` on the resource, the abilities the resource's `abilities()` returns for `Endpoint::Operate` (none by default), then those `Action::abilities(): array` returns (`['viewAny']` by default, for every action, whatever its target). Both lists add to `viewAny`: an action returning `['export']` checks `viewAny`, then `export`. An action returning `[]` runs with none of these checks (no `viewAny`, no `Endpoint::Operate` abilities, and its search does not check `viewAny` on the resource): use it for an action any user may run, guests included. Includes, aggregates and filters on relations in the action's `search` still need `viewAny` on the related resource, as in a search.
 
-**Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models. Combine with `Lomkit\Rest\Contracts\BatchableAction` and use `withBatch(array $fields, PendingBatch $batch): void` to register `then`/`catch`/`finally` callbacks. Route the jobs with Laravel's queue attributes on the action (`#[Queue('exports')]`, `#[Connection('redis')]`, `#[Tries(3)]`, `#[Timeout]`, `#[Backoff]`, `#[Delay]`, `#[MaxExceptions]`, `#[FailOnTimeout]`) or `Queue::route(ExportOrders::class, 'exports')`; an action has no `$queue`/`$connection` properties and no `dispatch()`. The job (`Lomkit\Rest\Actions\QueuedAction`) holds the resource and action classes, the action key, the input values as sent, the row keys and a reference to the user; the worker rebuilds the context for that user (`$this->request()->user()`, policies and `perimeterQuery()` see them; `auth()->user()` does not), casts the input values again, and reloads the rows by key through `perimeterQuery()` (not for an engine text search) with the global scopes and `search.trashed`, without the search's includes. Rows gone or out of the perimeter are skipped; a missing user or a removed action fails the job with `QueuedActionException`. `release()`, `attempts()` and `batch()` work in `handle()`.
+**Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models. Combine with `Lomkit\Rest\Contracts\BatchableAction` and use `withBatch(ActionFields $fields, PendingBatch $batch): void` to register `then`/`catch`/`finally` callbacks. Route the jobs with Laravel's queue attributes on the action (`#[Queue('exports')]`, `#[Connection('redis')]`, `#[Tries(3)]`, `#[Timeout]`, `#[Backoff]`, `#[Delay]`, `#[MaxExceptions]`, `#[FailOnTimeout]`) or `Queue::route(ExportOrders::class, 'exports')`; an action has no `$queue`/`$connection` properties and no `dispatch()`. The job (`Lomkit\Rest\Actions\QueuedAction`) holds the resource and action classes, the action key, the input values as sent, the row keys and a reference to the user; the worker rebuilds the context for that user (`$this->request()->user()`, policies and `perimeterQuery()` see them; `auth()->user()` does not), casts the input values again, and reloads the rows by key through `perimeterQuery()` (not for an engine text search) with the global scopes and `search.trashed`, without the search's includes. Rows gone or out of the perimeter are skipped; a missing user or a removed action fails the job with `QueuedActionException`. `release()`, `attempts()` and `batch()` work in `handle()`.
 
 ## Instructions (custom search refinements)
 
@@ -663,9 +663,9 @@ php artisan rest:instruction OddEvenIdInstruction   # → app/Rest/Instructions/
 ```php
 class OddEvenIdInstruction extends \Lomkit\Rest\Instructions\Instruction
 {
-    public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query): void
+    public function handle(\Lomkit\Rest\Instructions\InstructionFields $fields, \Illuminate\Database\Eloquent\Builder $query): void
     {
-        $query->whereRaw('MOD(id, 2) = ?', [$fields['type'] === 'odd' ? 1 : 0]);
+        $query->whereRaw('MOD(id, 2) = ?', [$fields->type === 'odd' ? 1 : 0]);
     }
 
     public function fields(): array
@@ -680,14 +680,14 @@ To also run next to a text of a `ScoutEngine` resource, implement `Lomkit\Rest\I
 ```php
 class PricedUpTo extends \Lomkit\Rest\Instructions\Instruction implements \Lomkit\Rest\Instructions\AppliesToEngine
 {
-    public function handle(array $fields, \Illuminate\Database\Eloquent\Builder $query): void
+    public function handle(\Lomkit\Rest\Instructions\InstructionFields $fields, \Illuminate\Database\Eloquent\Builder $query): void
     {
-        $query->where('price', '<=', $fields['max']);
+        $query->where('price', '<=', $fields->max);
     }
 
-    public function handleEngine(array $fields, \Lomkit\Rest\Text\Engine\EngineQuery $query): void
+    public function handleEngine(\Lomkit\Rest\Instructions\InstructionFields $fields, \Lomkit\Rest\Text\Engine\EngineQuery $query): void
     {
-        $query->where('price', '<=', $fields['max']);
+        $query->where('price', '<=', $fields->max);
     }
 
     public function fields(): array
@@ -705,7 +705,7 @@ Register in `Resource::instructions()`. Clients invoke them via the `instruction
 
 `->meta([...])` (which merges) and `getMeta()` are also available on Instructions.
 
-Instruction `fields()` are typed and validated exactly like Action fields: full Laravel validation (including `required` on absent fields), with errors keyed by name under `search.instructions.{index}.fields.{name}` (custom translation lines go under `validation.custom.search.instructions.*.fields.{name}.{rule}`); a name repeated in `fields` is a `422` under `search.instructions.{index}.fields.{position}.name`. `handle()` and `handleEngine()` receive the same cast name => value map as an action, with defaults filled in.
+Instruction `fields()` are typed and validated exactly like Action fields: full Laravel validation (including `required` on absent fields), with errors keyed by name under `search.instructions.{index}.fields.{name}` (custom translation lines go under `validation.custom.search.instructions.*.fields.{name}.{rule}`); a name repeated in `fields` is a `422` under `search.instructions.{index}.fields.{position}.name`. `handle()` and `handleEngine()` receive `Lomkit\Rest\Instructions\InstructionFields`: the reading API of `ActionFields` (properties, `has()`, `filled()`, `only()`, `toArray()`), without `user()` and `target()`; both extend `Lomkit\Rest\Fields\FieldValues`.
 
 ## Relationships
 
@@ -874,8 +874,8 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Writes — `src/Mutations/Mutator.php` (writes the entries of `payload()` in the transaction of `MutateResponse`, reads each row from the `RowSet` that the key check of validation loaded (`src/Mutations/RowSet.php`, one instance per row) and collects the entries of the response in an `OperationLog` of `OperationEntry` objects) and `src/Mutations/RelationWrites.php` (the writes of each Eloquent relation class: `OwnerWrites`, `ChildWrites`, `PivotWrites` with `PivotSet`, `NoWrites`), checked before the first write by `src/Mutations/WriteChecks.php`
 - Text search — `src/Text/*` (`TextSearch`; the SQL strategies `Contains` and `FullText` implement `QueryTextSearch`, with the database dialects in `src/Text/Dialects/`; `ScoutEngine` implements `EngineTextSearch`; `ResolvedText`, the text search of a resource for one request, read through `$request->context()->text($resource)`; `TextQuery`, `TextMode`, `TextCapabilities`), applied by `TextClause`, `RelevanceClause` and `TrashedClause` in `src/Query/Clauses/`
 - Search engines — `src/Text/Engine/*` (`EngineQuery`, `IndexAttributes`, `EnginePage`, `ScoutModel`) and one profile per Scout engine in `src/Text/Engine/Profiles/`; engine filters and sorts are validated by `src/Text/Engine/{EngineSearchGrammar,EngineFilterParser}.php`, and actions read their keys through `src/Actions/{EngineTargets,EngineTargetKeys}.php`; `EngineCriteria` and `EngineInstruction` build the engine query from the nodes of `payload()`
-- Actions / Instructions / Scopes — `src/Actions/{Action,ActionTarget,Actionable}.php`, `src/Instructions/{Instruction,Instructionable,AppliesToEngine}.php`, `src/Scopes/Scope.php`
-- Typed fields and input values — `src/Fields/*` (`Field`, `Concerns/ConfiguresMessages`, `FieldSet`, `FieldPath`, `InputValues`, `MutationOperation`, `WriteRules`, `Details/FieldDetails`, `Details/ResourceRuleDetails`, `Details/InputFieldDetails`), filter operators and conditions in `src/Fields/Filtering/`, clauses in `src/Query/Clauses/`, built from the nodes of `payload()` with `of()` (filters: `FilterGroupClause`, `FieldConditionClause`, `RelationConditionClause`, `RelationGroupClause`)
+- Actions / Instructions / Scopes — `src/Actions/{Action,ActionTarget,ActionFields,Actionable}.php`, `src/Instructions/{Instruction,InstructionFields,Instructionable,AppliesToEngine}.php`, `src/Scopes/Scope.php`
+- Typed fields and input values — `src/Fields/*` (`Field`, `Concerns/ConfiguresMessages`, `FieldSet`, `FieldPath`, `InputValues`, `CastValues`, `FieldValues`, `MutationOperation`, `WriteRules`, `Details/FieldDetails`, `Details/ResourceRuleDetails`, `Details/InputFieldDetails`), filter operators and conditions in `src/Fields/Filtering/`, clauses in `src/Query/Clauses/`, built from the nodes of `payload()` with `of()` (filters: `FilterGroupClause`, `FieldConditionClause`, `RelationConditionClause`, `RelationGroupClause`)
 - Relations — `src/Relations/*.php` (the relation classes follow the Eloquent hierarchy: `MorphTo` extends `BelongsTo`, `MorphToMany` and `MorphedByMany` extend `BelongsToMany`, `HasOne`, `HasMany`, `MorphOne` and `MorphMany` extend `HasOneOrMany`, the through relations extend `HasOneOrManyThrough`) (`MorphColumns`, the columns of a `MorphTo` in the details); `src/Contracts/PolymorphicRelation.php` and `src/Relations/MorphTargets.php` (the targets of a `MorphTo`, by morph type); `src/Contracts/OwnerRelation.php` (`BelongsTo` and `MorphTo`: one row per parent, no include limit); pivot fields in `src/Concerns/Relations/HasPivotFields.php` (`src/Contracts/PivotRelation.php`), validated by `src/Validation/Mutate/EntryRules.php`
 - Validation of the request bodies — the parsers in `src/Validation/{Search,Operate,Mutate}/*` (the search parser with `SearchGrammar`, `SqlSearchGrammar` (with `SortPaths`, the sort names of a level and its relation paths) and `LevelBounds`, the bounds of a level, and `RowKeys`, the keys of a row, read by the `IncludeAlias` and `AggregateAlias` rules), the typed nodes in `src/Search/*` (with the sort nodes `FieldSort`, `RelationSort`, `AggregateSort` and `RelevanceSort`, `AggregateKey`, and `SearchContext`, which `FilterFlattener` builds from the filters as `FlatFilter` entries), `EngineFilterCondition` and `EngineSort` in `src/Text/Engine/`, `src/Actions/OperationNode.php` and `src/Mutations/*` (`MutationNode`, `MutationContext`, `Contextual`, `MutationAwareRule`), and `src/Validation/{ValidationContext,Vocabulary,ParsedRules,PayloadReader,InputSet,CompiledRules,MessageBook}.php`
 - Request limits and resource keys — `src/Validation/{Limits,ListSizes,Depths,Totals,LimitGroup,NodeBudget,Cursor,Violation,Violations,Rejected,KeysGrammar,KeyList,KeyLookup,KeyRead,ExistingKey}.php` and `src/Http/Requests/Traits/ParsesResourceKeys.php` (the `resources` of the deletion requests, whose key query loads their rows; the operate parser reads the `resources` of the actions with the `Resources` target)

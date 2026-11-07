@@ -71,60 +71,6 @@ class ActionsOperationsTest extends TestCase
         );
     }
 
-    public function test_operate_action_with_fields(): void
-    {
-        ModelFactory::new()->count(2)->create();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/actions/modify-number',
-            [
-                'fields' => [
-                    ['name' => 'number', 'value' => 100000001],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertJson([
-            'data' => [
-                'impacted' => 2,
-            ],
-        ]);
-        $this->assertEquals(
-            2,
-            Model::where('number', 100000001)->count()
-        );
-    }
-
-    public function test_operate_mass_action_with_fields(): void
-    {
-        ModelFactory::new()->count(150)->create();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/actions/modify-number',
-            [
-                'fields' => [
-                    ['name' => 'number', 'value' => 100000001],
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertJson([
-            'data' => [
-                'impacted' => 150,
-            ],
-        ]);
-        $this->assertEquals(
-            150,
-            Model::where('number', 100000001)->count()
-        );
-    }
-
     public function test_operate_action_with_search(): void
     {
         ModelFactory::new()

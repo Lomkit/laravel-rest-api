@@ -49,9 +49,6 @@ class Instruction
         ];
     }
 
-    /**
-     * @param  array<string, mixed>  $fields
-     * @param  Builder<Model>  $query
-     */
-    public function handle(array $fields, Builder $query): void {}
+    /** @param Builder<Model> $query */
+    public function handle(InstructionFields $fields, Builder $query): void {}
 }

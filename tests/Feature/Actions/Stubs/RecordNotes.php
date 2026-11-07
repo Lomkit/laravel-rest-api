@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Actions\Stubs;
 
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Fixtures\Workspace\Note;
 
@@ -18,13 +19,10 @@ class RecordNotes extends Action
         return [Text::make('reason')->nullable()];
     }
 
-    /**
-     * @param  array<string, mixed>  $fields
-     * @param  Collection<int, Note>  $models
-     */
+    /** @param Collection<int, Note> $models */
     #[\Override]
-    public function handle(array $fields, Collection $models): void
+    public function handle(ActionFields $fields, Collection $models): void
     {
-        self::$runs[] = ['keys' => array_values($models->modelKeys()), 'reason' => $fields['reason'] ?? null];
+        self::$runs[] = ['keys' => array_values($models->modelKeys()), 'reason' => $fields->reason];
     }
 }

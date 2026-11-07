@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\Boolean;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Instructions\InstructionFields;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 
 class HighlightPosts extends Instruction
@@ -17,14 +18,14 @@ class HighlightPosts extends Instruction
     }
 
     #[\Override]
-    public function handle(array $fields, Builder $query): void
+    public function handle(InstructionFields $fields, Builder $query): void
     {
-        app(ReceivedFields::class)->record('handle', $fields);
+        app(ReceivedFields::class)->record('handle', $fields->toArray());
 
-        $query->where('featured', $fields['featured']);
+        $query->where('featured', $fields->featured);
 
-        if (isset($fields['min_views'])) {
-            $query->where('views', '>=', $fields['min_views']);
+        if ($fields->filled('min_views')) {
+            $query->where('views', '>=', $fields->min_views);
         }
     }
 }

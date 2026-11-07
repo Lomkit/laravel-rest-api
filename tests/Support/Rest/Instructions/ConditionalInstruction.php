@@ -5,10 +5,11 @@ namespace Lomkit\Rest\Tests\Support\Rest\Instructions;
 use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Instructions\InstructionFields;
 
 class ConditionalInstruction extends Instruction
 {
-    public function handle(array $fields, Builder $query): void
+    public function handle(InstructionFields $fields, Builder $query): void
     {
         // No-op refinement — used only to exercise field validation.
     }

@@ -6,6 +6,7 @@ use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Instructions\AppliesToEngine;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Instructions\InstructionFields;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 
 class ComparesPrice extends Instruction implements AppliesToEngine
@@ -20,8 +21,8 @@ class ComparesPrice extends Instruction implements AppliesToEngine
     }
 
     #[\Override]
-    public function handleEngine(array $fields, EngineQuery $query): void
+    public function handleEngine(InstructionFields $fields, EngineQuery $query): void
     {
-        $query->where('price', (string) $fields['operator'], $fields['value']);
+        $query->where('price', (string) $fields->operator, $fields->value);
     }
 }

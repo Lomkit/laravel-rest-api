@@ -15,7 +15,7 @@ final class RemovedHooks
     ];
 
     private const array INSTRUCTION = [
-        'handleScout' => 'Implement AppliesToEngine and move the method to handleEngine(array $fields, EngineQuery $query).',
+        'handleScout' => 'Implement AppliesToEngine and move the method to handleEngine(InstructionFields $fields, EngineQuery $query).',
     ];
 
     public static function ensureAbsentFrom(Resource $resource): void

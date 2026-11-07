@@ -4,11 +4,12 @@ namespace {{ namespace }};
 
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action as RestAction;
+use Lomkit\Rest\Actions\ActionFields;
 
 class {{ class }} extends RestAction
 {
     #[\Override]
-    public function handle(array $fields, Collection $models): void
+    public function handle(ActionFields $fields, Collection $models): void
     {
         foreach ($models as $model) {
             // ...

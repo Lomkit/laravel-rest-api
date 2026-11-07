@@ -89,7 +89,9 @@ final class QueuedAction implements ShouldQueue
             $action->withBatchId($this->batchId);
         }
 
-        $action->handle(InputValues::fromGiven($resource->definition()->inputFields($action), $this->fields)->toArray(), $models);
+        $inputs = InputValues::fromGiven($resource->definition()->inputFields($action), $this->fields);
+
+        $action->handle(ActionFields::of($action, $inputs, $this->user->guard, $user), $models);
     }
 
     private function declared(Resource $resource): Action
