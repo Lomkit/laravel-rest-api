@@ -362,6 +362,7 @@ A queued or batched action no longer serializes its resource, its rows and its i
 
   `#[Connection]`, `#[Queue]`, `#[Delay]`, `#[Tries]`, `#[Timeout]`, `#[Backoff]`, `#[MaxExceptions]` and `#[FailOnTimeout]` apply to the jobs of the action. An attribute wins over a route. A batched action sends its batch to the same connection and queue.
 - `release()`, `attempts()`, `fail()`, `delete()` and `batch()` work in `handle()`: the worker gives the action its job and its batch.
+- An action that implements `Illuminate\Contracts\Queue\ShouldBeEncrypted` gets its queued payload encrypted, input values included.
 - The job class is `Lomkit\Rest\Actions\QueuedAction`, and `Lomkit\Rest\Actions\CallRestApiAction` is removed. In tests, assert `Queue::assertPushed(QueuedAction::class)`. The job shows the action class as its name.
 - Run the queued actions of the previous version before you deploy this one: a job queued before the upgrade cannot run after it.
 - A resource and its `RestContext` can no longer be serialized. Do not put a resource, an action or a context in a job of your own: pass the class names and the keys.

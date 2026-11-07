@@ -33,6 +33,8 @@ final class QueuedAction implements ShouldQueue
 
     public bool $failOnTimeout = false;
 
+    public bool $shouldBeEncrypted = false;
+
     /**
      * @param  class-string<Resource>  $resource
      * @param  class-string<Action>  $action
