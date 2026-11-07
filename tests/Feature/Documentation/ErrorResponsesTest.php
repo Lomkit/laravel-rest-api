@@ -1,0 +1,75 @@
+<?php
+
+namespace Lomkit\Rest\Tests\Feature\Documentation;
+
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
+
+class ErrorResponsesTest extends DocumentationTestCase
+{
+    #[Test]
+    public function it_defines_the_error_responses_once_for_every_operation(): void
+    {
+        $message = ['type' => 'object', 'properties' => ['message' => ['type' => 'string']], 'required' => ['message']];
+        $denial = [
+            'type' => 'object',
+            'properties' => ['path' => ['type' => 'string'], 'ability' => ['type' => 'string'], 'key' => ['type' => ['integer', 'string']], 'message' => ['type' => 'string']],
+            'required' => ['path', 'ability', 'message'],
+        ];
+        $forbidden = [
+            'type' => 'object',
+            'properties' => [
+                'message' => ['type' => 'string'],
+                'denials' => ['type' => 'array', 'description' => 'Present when the application renders the denials with Lomkit\Rest\Exceptions\DenialsRenderer', 'items' => $denial],
+            ],
+            'required' => ['message'],
+        ];
+        $validation = [
+            'type' => 'object',
+            'properties' => ['message' => ['type' => 'string'], 'errors' => ['type' => 'object', 'additionalProperties' => ['type' => 'array', 'items' => ['type' => 'string']]]],
+            'required' => ['message', 'errors'],
+        ];
+
+        $this->assertSame([
+            'RestForbidden' => ['description' => 'Forbidden', 'content' => ['application/json' => ['schema' => $forbidden]]],
+            'RestNotFound' => ['description' => 'Not found', 'content' => ['application/json' => ['schema' => $message]]],
+            'RestUnauthenticated' => ['description' => 'Unauthenticated', 'content' => ['application/json' => ['schema' => $message]]],
+            'RestValidationFailed' => ['description' => 'Validation error', 'content' => ['application/json' => ['schema' => $validation]]],
+        ], $this->document()['components']['responses']);
+    }
+
+    /** @return array<string, array{string, string, list<int>, bool}> */
+    public static function operations(): array
+    {
+        return [
+            'details behind auth' => ['/shows', 'get', [200, 401, 403, 404], true],
+            'search behind auth' => ['/shows/search', 'post', [200, 401, 403, 404, 422], true],
+            'an action behind auth' => ['/shows/actions/cancel-shows', 'post', [200, 401, 403, 404, 422], true],
+            'a metric without the auth of its resource' => ['/shows/metrics/shows-by-status', 'post', [200, 403, 404, 422], false],
+            'batch progress' => ['/shows/actions/{action}/batches/{batch}', 'get', [200, 401, 403, 404], true],
+            'force delete' => ['/shows/force', 'delete', [200, 401, 403, 404, 422], true],
+            'details of a resource registered after one behind auth' => ['/notes', 'get', [200, 403, 404], false],
+            'mutate of a resource registered after one behind auth' => ['/notes/mutate', 'post', [200, 403, 404, 422], false],
+            'restore' => ['/shows/restore', 'post', [200, 401, 403, 404, 422], true],
+        ];
+    }
+
+    /** @param list<int> $statuses */
+    #[Test]
+    #[DataProvider('operations')]
+    public function it_lists_the_error_responses_of_each_operation(string $path, string $method, array $statuses, bool $authenticated): void
+    {
+        $operation = $this->operation($path, $method);
+        $names = [401 => 'RestUnauthenticated', 403 => 'RestForbidden', 404 => 'RestNotFound', 422 => 'RestValidationFailed'];
+
+        $this->assertSame($statuses, array_keys($operation['responses']));
+
+        foreach (array_slice($statuses, 1) as $status) {
+            $this->assertSame(['$ref' => '#/components/responses/'.$names[$status]], $operation['responses'][$status]);
+        }
+
+        $authenticated
+            ? $this->assertArrayNotHasKey('security', $operation)
+            : $this->assertSame([], $operation['security']);
+    }
+}

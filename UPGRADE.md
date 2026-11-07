@@ -2015,6 +2015,14 @@ The document:
 - has the summaries `Get {Resource} details`, `Search {Resource}`, `Mutate {Resource}`, `Delete {Resource}`, `Restore {Resource}`, `Force delete {Resource}` and `Batch progress of {Resource} actions`, where `{Resource}` is the resource class name without its `Resource` suffix, also used as the tag;
 - holds the responses that the package writes for its operations. Scramble no longer infers the responses of the package routes; it still infers those of the other routes of the application.
 
+Error responses:
+
+- `components.responses` holds four shared responses: `RestUnauthenticated` (`401`, `{"message"}`), `RestForbidden` (`403`, `{"message"}`, plus the `denials` list when the application registers `DenialsRenderer`, see [Authorization](#authorization)), `RestNotFound` (`404`, `{"message"}`) and `RestValidationFailed` (`422`, `{"message", "errors"}`).
+- `401` is listed when the route of the operation runs `auth` or `auth:<guard>` and does not exclude it: a metric declared with `->withoutMiddleware('auth')` on a resource behind `auth` has no `401`. Before, Scramble listed `401` on resources without `auth` too.
+- `403` and `404` are listed on every operation of the package, `422` on every operation that reads a body: all but details and batch progress. Before, `422` was listed on details and batch progress, and `403` and `404` nowhere.
+- An operation whose route does not run `auth` has `"security": []`, so a security scheme that the application declares for the whole document does not apply to it. The package declares no scheme: declare yours with `$openApi->secure(...)` in a document transformer.
+- Two different components under one name, for example a response named `RestNotFound` that the application defines, throw `Lomkit\Rest\Exceptions\InvalidDocumentationException` when the document is generated: "The OpenAPI response component [RestNotFound] of [Lomkit\Rest\Scramble\ErrorResponses] is already defined differently by [the application]. Give one of them another name."
+
 ### Framework integration
 
 - `Lomkit\Rest\Concerns\PerformsRestOperations` is removed. Its endpoint methods (`details()`, `search()`, `mutate()`, `operate()`, `metric()`, `batch()`, `destroy()`, `restore()`, `forceDestroy()`) are declared on `Lomkit\Rest\Http\Controllers\Controller`. A controller that used the trait extends `Controller` instead.

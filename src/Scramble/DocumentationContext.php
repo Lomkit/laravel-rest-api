@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Scramble;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -49,6 +50,13 @@ final readonly class DocumentationContext
     public function isCatchAll(): bool
     {
         return in_array($this->endpoint, [Endpoint::Operate, Endpoint::Metric], true) && $this->declarationKey() === null;
+    }
+
+    public function authenticates(): bool
+    {
+        $excluded = $this->route->excludedMiddleware();
+
+        return array_any($this->route->gatherMiddleware(), fn (mixed $middleware): bool => is_string($middleware) && ! in_array($middleware, $excluded, true) && Str::is(['auth', 'auth:*'], $middleware));
     }
 
     private function declarationKey(): ?string

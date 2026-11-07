@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Scramble;
 
 use Dedoc\Scramble\Contracts\OperationTransformer;
+use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\Operation;
 use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\Response;
@@ -22,6 +23,7 @@ final readonly class RestOperations implements OperationTransformer
 
     public function __construct(
         private Container $container,
+        private OpenApi $document,
     ) {}
 
     #[\Override]
@@ -51,6 +53,8 @@ final readonly class RestOperations implements OperationTransformer
         if ($operation->responses === []) {
             $operation->addResponse(self::success());
         }
+
+        (new ErrorResponses(new ComponentRegistry($this->document->components)))->attach($operation, $context);
     }
 
     /** @return list<string> */

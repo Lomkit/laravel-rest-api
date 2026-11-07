@@ -826,8 +826,15 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
                     }
-                }
+                },
+                "security": []
             },
             "delete": {
                 "operationId": "notes.destroy",
@@ -862,8 +869,18 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
-                }
+                },
+                "security": []
             }
         },
         "/notes/search": {
@@ -1106,8 +1123,18 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
-                }
+                },
+                "security": []
             }
         },
         "/notes/mutate": {
@@ -1202,8 +1229,18 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
-                }
+                },
+                "security": []
             }
         },
         "/shows": {
@@ -2032,6 +2069,15 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
                     }
                 }
             },
@@ -2068,6 +2114,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2363,6 +2421,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2600,6 +2670,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2621,6 +2703,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2642,6 +2736,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2663,6 +2769,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2684,6 +2802,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2705,6 +2835,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2726,6 +2868,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2747,8 +2901,18 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
-                }
+                },
+                "security": []
             }
         },
         "/shows/metrics/top-stages": {
@@ -2768,6 +2932,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2789,6 +2965,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2810,6 +2998,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2848,6 +3048,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2886,6 +3098,18 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             }
@@ -2925,6 +3149,15 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
                     }
                 }
             }
@@ -3755,8 +3988,15 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
                     }
-                }
+                },
+                "security": []
             },
             "delete": {
                 "operationId": "stages.destroy",
@@ -3791,8 +4031,18 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
-                }
+                },
+                "security": []
             }
         },
         "/stages/search": {
@@ -4036,8 +4286,18 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
-                }
+                },
+                "security": []
             }
         },
         "/stages/mutate": {
@@ -4151,6 +4411,131 @@
                                     "type": "object"
                                 }
                             }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
+                    }
+                },
+                "security": []
+            }
+        }
+    },
+    "components": {
+        "responses": {
+            "RestForbidden": {
+                "description": "Forbidden",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "denials": {
+                                    "type": "array",
+                                    "description": "Present when the application renders the denials with Lomkit\\Rest\\Exceptions\\DenialsRenderer",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "path": {
+                                                "type": "string"
+                                            },
+                                            "ability": {
+                                                "type": "string"
+                                            },
+                                            "key": {
+                                                "type": [
+                                                    "integer",
+                                                    "string"
+                                                ]
+                                            },
+                                            "message": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "path",
+                                            "ability",
+                                            "message"
+                                        ]
+                                    }
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "RestNotFound": {
+                "description": "Not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "RestUnauthenticated": {
+                "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "RestValidationFailed": {
+                "description": "Validation error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "errors": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "message",
+                                "errors"
+                            ]
                         }
                     }
                 }
