@@ -50,7 +50,7 @@ class AggregateFunctionTest extends TestCase
             'id' => [fn (): Field => ID::make('id')],
             'uuid id' => [fn (): Field => ID::make('id')->keyType('uuid')],
             'app type' => [fn (): Field => Money::make('price')],
-            'not selectable' => [fn (): Field => Text::make('title')->selectable(false)],
+            'not selectable but declared sortable' => [fn (): Field => Text::make('title')->selectable(false)->sortable()],
             'text with a custom sort' => [fn (): Field => Text::make('title')->sortUsing(fn (Builder $query, string $direction) => $query->orderBy('views', $direction))],
             'json marked sortable' => [fn (): Field => Json::make('metadata')->sortable()],
         ];
@@ -76,6 +76,8 @@ class AggregateFunctionTest extends TestCase
             'json with a custom sort' => [fn (): Field => Json::make('metadata')->sortUsing($byTitle)],
             'not sortable' => [fn (): Field => Integer::make('views')->sortable(false)],
             'not sortable with a custom sort' => [fn (): Field => Integer::make('views')->sortable(false)->sortUsing($byTitle)],
+            'not selectable' => [fn (): Field => Integer::make('views')->selectable(false)],
+            'not selectable with a custom sort' => [fn (): Field => Integer::make('views')->selectable(false)->sortUsing($byTitle)],
             'virtual' => [fn (): Field => Integer::make('popularity')->virtual()],
             'virtual with a custom sort' => [fn (): Field => Integer::make('popularity')->virtual()->sortUsing($byTitle)],
             'write only' => [fn (): Field => Integer::make('secret_score')->writeOnly()],

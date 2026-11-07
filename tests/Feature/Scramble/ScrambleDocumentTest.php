@@ -31,10 +31,10 @@ class ScrambleDocumentTest extends ScrambleTestCase
         $search = $this->body($this->operation('/authors/search', 'post'))['properties']['search']['properties'];
 
         $this->assertSame(
-            ['id', 'first_name', 'last_name', 'full_name', 'created_at'],
+            ['id', 'first_name', 'last_name', 'full_name'],
             $search['filters']['items']['properties']['field']['enum'],
         );
-        $this->assertSame(['first_name', 'last_name', 'full_name', 'created_at'], $search['sorts']['items']['properties']['field']['enum']);
+        $this->assertSame(['first_name', 'last_name', 'full_name'], $search['sorts']['items']['properties']['field']['enum']);
         $this->assertSame(['asc', 'desc'], $search['sorts']['items']['properties']['direction']['enum']);
         $this->assertSame(['id', 'first_name', 'last_name', 'settings'], $search['selects']['items']['properties']['field']['enum']);
         $this->assertSame(['count', 'min', 'max', 'avg', 'sum', 'exists'], $search['aggregates']['items']['properties']['type']['enum']);

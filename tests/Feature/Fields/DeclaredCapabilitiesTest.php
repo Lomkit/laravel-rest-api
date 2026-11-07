@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\Field;
+use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
@@ -35,6 +36,28 @@ class DeclaredCapabilitiesTest extends PackageTestCase
         $this->assertTrue($field->isFilterable());
     }
 
+    #[Test]
+    public function it_neither_sorts_nor_filters_a_field_that_cannot_be_selected(): void
+    {
+        $field = Text::make('summary')->selectable(false)
+            ->sortUsing(fn (Builder $query, string $direction) => $query->orderBy('title', $direction))
+            ->filterUsing(fn (Builder $query, string $operator, mixed $value) => $query->where('title', $operator, $value));
+
+        $this->assertFalse(Text::make('summary')->selectable(false)->isSortableByColumn());
+        $this->assertFalse($field->isSortable());
+        $this->assertSame([], $field->filterOperators());
+    }
+
+    #[Test]
+    public function it_sorts_and_filters_a_field_that_cannot_be_selected_when_declared_sortable_and_filterable(): void
+    {
+        $field = Text::make('summary')->selectable(false)->sortable()->filterable(['=']);
+
+        $this->assertTrue($field->isSortableByColumn());
+        $this->assertTrue($field->isSortable());
+        $this->assertSame([FilterOperator::Equal], $field->filterOperators());
+    }
+
     /** @param Closure(): Field $field */
     #[Test]
     #[DataProvider('undeclaredOperators')]
@@ -52,6 +75,7 @@ class DeclaredCapabilitiesTest extends PackageTestCase
             'narrowed filter' => [fn (): Field => Text::make('title')->filterable(['=']), 'like', 'The field [title] does not support the operator [like].'],
             'filtering turned off' => [fn (): Field => Text::make('title')->filterable(false), '=', 'The field [title] does not support the operator [=].'],
             'write only field' => [fn (): Field => Text::make('summary')->writeOnly(), '=', 'The field [summary] does not support the operator [=].'],
+            'field that cannot be selected' => [fn (): Field => Text::make('summary')->selectable(false), '=', 'The field [summary] does not support the operator [=].'],
         ];
     }
 
@@ -114,6 +138,7 @@ class DeclaredCapabilitiesTest extends PackageTestCase
             'json' => [fn (): Field => Json::make('metadata'), 'The field [metadata] is not sortable.'],
             'sorting turned off' => [fn (): Field => Text::make('title')->sortable(false), 'The field [title] is not sortable.'],
             'write only field' => [fn (): Field => Text::make('summary')->writeOnly(), 'The field [summary] is not sortable.'],
+            'field that cannot be selected' => [fn (): Field => Text::make('summary')->selectable(false), 'The field [summary] is not sortable.'],
         ];
     }
 }

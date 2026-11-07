@@ -10,11 +10,13 @@ use Lomkit\Rest\Fields\Date;
 use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\Field;
+use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\Amount;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\UnselectableTeamVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\VoucherResource;
 use Lomkit\Rest\Text\ScoutEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -118,6 +120,26 @@ class IndexAttributeDeclarationTest extends ScoutEngineDeclarationTestCase
         $this->expectExceptionObject(InvalidTextSearchException::unfilterableAttribute(VoucherResource::class, 'active'));
 
         $this->capabilities($this->open([Boolean::make('active')->filterable(false)]));
+    }
+
+    #[Test]
+    public function it_refuses_an_attribute_that_cannot_be_selected(): void
+    {
+        $this->expectExceptionObject(InvalidTextSearchException::unfilterableAttribute(UnselectableTeamVoucherResource::class, 'team'));
+
+        $this->open(['team'])->capabilities($this->target(UnselectableTeamVoucherResource::class));
+    }
+
+    #[Test]
+    public function it_takes_an_attribute_that_cannot_be_selected_when_declared_filterable_or_kept_for_the_perimeter(): void
+    {
+        $capabilities = ScoutEngine::make()
+            ->filterable(['code'])
+            ->perimeter(fn (): null => null, ['team'])
+            ->capabilities($this->target(UnselectableTeamVoucherResource::class));
+
+        $this->assertSame(['code'], array_keys($capabilities->engine->filters ?? []));
+        $this->assertSame([FilterOperator::Equal, FilterOperator::NotEqual, FilterOperator::In, FilterOperator::NotIn], $capabilities->engine?->operators('code'));
     }
 
     #[Test]

@@ -72,27 +72,10 @@ class SortableFieldsTest extends PackageTestCase
             'a json field' => ['settings'],
             'a field that is not sortable' => ['id'],
             'a write only field' => ['api_token'],
+            'a field that cannot be selected' => ['created_at'],
             'a virtual field without a custom sort' => ['initials'],
             'an undeclared field' => ['nickname'],
         ];
-    }
-
-    #[Test]
-    public function it_sorts_on_a_field_that_cannot_be_selected(): void
-    {
-        Author::factory()->create(['first_name' => 'Ada', 'created_at' => '2026-01-03 09:00:00']);
-        Author::factory()->create(['first_name' => 'Alan', 'created_at' => '2026-01-01 09:00:00']);
-        Author::factory()->create(['first_name' => 'Grace', 'created_at' => '2026-01-02 09:00:00']);
-
-        $response = $this->postJson('/api/authors/search', [
-            'search' => ['sorts' => [['field' => 'created_at']], 'selects' => [['field' => 'first_name']]],
-        ]);
-
-        $response->assertOk()->assertExactJson($this->page([
-            ['first_name' => 'Alan'],
-            ['first_name' => 'Grace'],
-            ['first_name' => 'Ada'],
-        ]));
     }
 
     #[Test]
