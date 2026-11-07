@@ -5,11 +5,14 @@ namespace Lomkit\Rest\Http\Routing;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\Request;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Exceptions\InvalidControllerException;
+use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\ResourceDefinition;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Metrics\Metric;
+use Lomkit\Rest\Query\Trashed;
 
 final readonly class EndpointRoutes
 {
@@ -33,6 +36,8 @@ final readonly class EndpointRoutes
      */
     public function definitions(array $endpoints): array
     {
+        $this->checkSoftDeletes($endpoints);
+
         $definition = $this->definition($endpoints);
         $definitions = [];
 
@@ -95,6 +100,29 @@ final readonly class EndpointRoutes
         return $context
             ->resource($this->controller::resourceClass())
             ->definition();
+    }
+
+    /** @param list<Endpoint> $endpoints */
+    private function checkSoftDeletes(array $endpoints): void
+    {
+        $endpoint = array_find($endpoints, fn (Endpoint $endpoint): bool => in_array($endpoint, Endpoint::softDeletes(), true));
+
+        if ($endpoint === null || ! is_subclass_of($this->controller, Controller::class)) {
+            return;
+        }
+
+        try {
+            $resource = $this->controller::resourceClass();
+            $model = $resource::modelClass();
+        } catch (InvalidControllerException|InvalidResourceException) {
+            return;
+        }
+
+        if (Trashed::supportedBy($model)) {
+            return;
+        }
+
+        throw InvalidResourceException::softDeletesRoute($resource, $model, $endpoint->value);
     }
 
     private function middlewareFor(Endpoint $endpoint): RouteMiddleware

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Http;
 
 use Illuminate\Contracts\Container\Container;
+use Lomkit\Rest\Exceptions\InvalidResourceException;
 
 class ResourceRegistry
 {
@@ -14,6 +15,16 @@ class ResourceRegistry
     /** @param class-string<Resource> $class */
     public function get(string $class): Resource
     {
-        return $this->resources[$class] ??= $this->container->make($class);
+        if (isset($this->resources[$class])) {
+            return $this->resources[$class];
+        }
+
+        $resource = $this->container->make($class);
+
+        if (! $resource instanceof Resource) {
+            throw InvalidResourceException::notAResource($class, $resource);
+        }
+
+        return $this->resources[$class] = $resource;
     }
 }

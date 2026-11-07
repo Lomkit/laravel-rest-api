@@ -15,14 +15,14 @@ use ReflectionProperty;
 
 final class RuleReferences
 {
-    private const EVERY_PARAMETER = [
+    private const array EVERY_PARAMETER = [
         'Different', 'ExcludeWithout', 'MissingWith', 'MissingWithAll', 'PresentWith', 'PresentWithAll',
         'Prohibits', 'RequiredWith', 'RequiredWithAll', 'RequiredWithout', 'RequiredWithoutAll',
     ];
 
-    private const NO_FIELD_PARAMETER = ['Prohibited', 'Unique'];
+    private const array NO_FIELD_PARAMETER = ['Prohibited', 'Unique'];
 
-    private const READS_A_FIELD = ['DateEquals', 'InArray'];
+    private const array READS_A_FIELD = ['DateEquals', 'InArray'];
 
     /** @var array<string, int>|null */
     private static ?array $dependentRules = null;
@@ -155,8 +155,16 @@ final class RuleReferences
 
     private static function isDependent(string $name): bool
     {
-        self::$dependentRules ??= array_flip((new ReflectionProperty(Validator::class, 'dependentRules'))->getDefaultValue());
+        self::$dependentRules ??= self::dependentRules();
 
         return isset(self::$dependentRules[$name]);
+    }
+
+    /** @return array<string, int> */
+    private static function dependentRules(): array
+    {
+        $rules = (array) (new ReflectionProperty(Validator::class, 'dependentRules'))->getDefaultValue();
+
+        return array_flip(array_values(array_filter($rules, is_string(...))));
     }
 }

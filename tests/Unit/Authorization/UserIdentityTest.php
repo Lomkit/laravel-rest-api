@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Unit\Authorization;
 
 use Illuminate\Auth\GenericUser;
 use Lomkit\Rest\Authorization\UserIdentity;
+use Lomkit\Rest\Exceptions\InvalidUserException;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -43,6 +44,14 @@ class UserIdentityTest extends TestCase
     public function it_encodes_a_user_key_holding_a_separator(): void
     {
         $this->assertSame('web|Illuminate\Auth\GenericUser#a%7Cb', UserIdentity::of('web', new GenericUser(['id' => 'a|b']))->key());
+    }
+
+    #[Test]
+    public function it_rejects_a_user_identifier_that_is_not_a_scalar_a_stringable_or_null(): void
+    {
+        $this->expectExceptionObject(new InvalidUserException('The user [Illuminate\Auth\GenericUser] returns a value of type [array] from getAuthIdentifier(). Return a scalar, a Stringable or null.'));
+
+        UserIdentity::user(new GenericUser(['id' => [7]]));
     }
 
     #[Test]

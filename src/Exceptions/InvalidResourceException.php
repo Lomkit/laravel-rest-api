@@ -78,6 +78,23 @@ final class InvalidResourceException extends LogicException
         return new self("The resource [{$resource}] declares the field [{$field}], which is the type key of the rows that the MorphTo relation [{$relation}] of the resource [{$owner}] loads. Rename the field, or set rest.morph.type_key to another name.");
     }
 
+    public static function notAResource(string $class, mixed $resolved): self
+    {
+        $type = get_debug_type($resolved);
+
+        return new self("The container resolves the resource [{$class}] to [{$type}], which does not extend Lomkit\\Rest\\Http\\Resource.");
+    }
+
+    public static function softDeletesRoute(string $resource, string $model, string $endpoint): self
+    {
+        return new self("The routes of the resource [{$resource}] include the [{$endpoint}] endpoint, but its model [{$model}] does not use Illuminate\\Database\\Eloquent\\SoftDeletes. Use SoftDeletes in the model, or register the routes without withSoftDeletes().");
+    }
+
+    public static function unrestorableModel(string $resource, string $model): self
+    {
+        return new self("The resource [{$resource}] restores a row of the model [{$model}], which has no restore() method. Use Illuminate\\Database\\Eloquent\\SoftDeletes in the model.");
+    }
+
     public static function unsearchableModel(string $model): self
     {
         return new self("The model [{$model}] is not indexed: it does not use Laravel\\Scout\\Searchable.");

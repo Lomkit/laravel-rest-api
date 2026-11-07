@@ -3,11 +3,13 @@
 namespace Lomkit\Rest\Tests\Unit\Http;
 
 use Illuminate\Container\Container;
+use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\ResourceRegistry;
 use Lomkit\Rest\Tests\Fixtures\Catalog\CategoryResource;
 use Lomkit\Rest\Tests\Fixtures\Catalog\ProductResource;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class ResourceRegistryTest extends TestCase
 {
@@ -18,6 +20,17 @@ class ResourceRegistryTest extends TestCase
 
         $this->assertSame($registry->get(CategoryResource::class), $registry->get(CategoryResource::class));
         $this->assertNotSame($registry->get(CategoryResource::class), $registry->get(ProductResource::class));
+    }
+
+    #[Test]
+    public function it_rejects_a_resource_that_the_container_resolves_to_another_class(): void
+    {
+        $container = new Container;
+        $container->bind(CategoryResource::class, fn (): stdClass => new stdClass);
+
+        $this->expectExceptionObject(new InvalidResourceException('The container resolves the resource [Lomkit\Rest\Tests\Fixtures\Catalog\CategoryResource] to [stdClass], which does not extend Lomkit\Rest\Http\Resource.'));
+
+        (new ResourceRegistry($container))->get(CategoryResource::class);
     }
 
     #[Test]
