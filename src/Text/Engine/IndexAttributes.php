@@ -115,7 +115,7 @@ final readonly class IndexAttributes
 
         return $operators === []
             ? throw InvalidTextSearchException::unfilterableAttribute($target->resource, $field->name)
-            : new IndexAttribute($field, array_values($operators));
+            : new IndexAttribute($field, array_values($operators), $profile->literal());
     }
 
     /**

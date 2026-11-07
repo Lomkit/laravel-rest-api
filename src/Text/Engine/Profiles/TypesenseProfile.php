@@ -7,6 +7,8 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\TypesenseEngine;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
 use Lomkit\Rest\Fields\Field;
+use Lomkit\Rest\Text\Engine\BacktickLiteral;
+use Lomkit\Rest\Text\Engine\EngineLiteral;
 use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\TextTarget;
@@ -65,6 +67,12 @@ final readonly class TypesenseProfile implements EngineProfile
         if (! is_string($queryBy) || trim($queryBy) === '') {
             throw InvalidTextSearchException::missingQueryBy($target->resource, $target->model::class);
         }
+    }
+
+    #[\Override]
+    public function literal(): EngineLiteral
+    {
+        return new BacktickLiteral;
     }
 
     #[\Override]

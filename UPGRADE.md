@@ -1013,6 +1013,7 @@ Engines:
 - `turbopuffer`: no sorts, because Turbopuffer refuses sorts next to a text: `sortable()` throws, and `@relevance` alone is accepted. A page must end within the first 10,000 results, otherwise `search.page` gives a 422. The total that Scout reports counts the documents that match the filters, not the text: `total` and `last_page` are given as Scout reports them, and can exceed the matching rows.
 - `null`: an empty page and a total of 0, without SQL query.
 - Meilisearch and Typesense compare filter strings without regard to case: prefer `Integer`, `ID`, `Boolean` or `Enum` perimeter attributes.
+- Every search engine receives filter values as literals. A string value that holds a backtick or a colon followed by `(` or `[ (`, ends with `*`, is wrapped in double quotes, or is a number written with `+` gives a 422 as a filter value, and an `InvalidEngineQueryException` in the perimeter.
 
 Engine queries:
 

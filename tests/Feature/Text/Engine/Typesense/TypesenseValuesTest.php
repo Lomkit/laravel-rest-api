@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Text\Engine\Typesense;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\RedVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\TitledVoucherController;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\TitledVouchers;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -31,7 +32,10 @@ class TypesenseValuesTest extends TypesenseTestCase
     {
         parent::defineRoutes($router);
 
-        Route::prefix('api')->group(fn () => Rest::resource('titled-vouchers', TitledVoucherController::class));
+        Route::prefix('api')->group(function (): void {
+            Rest::resource('titled-vouchers', TitledVoucherController::class);
+            Rest::resource('red-vouchers', RedVoucherController::class);
+        });
     }
 
     /**
@@ -60,6 +64,35 @@ class TypesenseValuesTest extends TypesenseTestCase
             'brackets' => [['field' => 'title', 'value' => TitledVouchers::BRACKETS], [12]],
             'a list' => [['field' => 'title', 'operator' => 'in', 'value' => [TitledVouchers::QUOTED, TitledVouchers::TRAILING, TitledVouchers::BRACKETS]], [7, 9, 12]],
             'an excluded list' => [['field' => 'title', 'operator' => 'not in', 'value' => [TitledVouchers::QUOTED, TitledVouchers::BACKSLASH, TitledVouchers::BRACKETS]], [1, 9, 11, 3, 5]],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  list<int>  $ids
+     */
+    #[Test]
+    #[DataProvider('literals')]
+    public function it_matches_filter_values_as_literals_within_the_perimeter(string $resource, array $filter, array $ids): void
+    {
+        $response = $this->search($resource, ['text' => ['value' => 'report'], 'filters' => [$filter], 'sorts' => self::BY_PRICE]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.*.id', $ids)
+            ->assertJsonPath('total', count($ids));
+    }
+
+    /** @return array<string, array{string, array<string, mixed>, list<int>}> */
+    public static function literals(): array
+    {
+        return [
+            'a title holding ||' => ['red-vouchers', ['field' => 'title', 'value' => 'x || team:=blue'], []],
+            'a title holding &&' => ['titled-vouchers', ['field' => 'title', 'operator' => '!=', 'value' => 'x && team:=blue'], [1, 7, 8, 9, 11, 12, 3, 5]],
+            'a code holding parentheses' => ['red-vouchers', ['field' => 'code', 'value' => 'x) || (team:=blue'], []],
+            'a list holding brackets' => ['titled-vouchers', ['field' => 'title', 'operator' => 'in', 'value' => ['Report alpha', 'x] || team:!=[red']], [1]],
+            'an excluded list holding brackets' => ['titled-vouchers', ['field' => 'title', 'operator' => 'not in', 'value' => ['x] || team:=[blue']], [1, 7, 8, 9, 11, 12, 3, 5]],
+            'a title holding a colon' => ['red-vouchers', ['field' => 'title', 'value' => 'x:y || team:=blue'], []],
+            'a title holding a colon before brackets' => ['red-vouchers', ['field' => 'title', 'value' => 'x:[a] || team:=blue'], []],
         ];
     }
 

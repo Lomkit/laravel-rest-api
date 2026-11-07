@@ -11,6 +11,8 @@ use Lomkit\Rest\Text\TextTarget;
 
 final readonly class CollectionProfile implements EngineProfile
 {
+    use PlainLiterals;
+
     public function __construct(private CollectionEngine $engine) {}
 
     #[\Override]

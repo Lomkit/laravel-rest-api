@@ -12,8 +12,16 @@ final readonly class EngineComparable implements ValidationRule
     #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (EngineValue::of($this->attribute->field, $value) === null) {
+        $typed = EngineValue::of($this->attribute->field, $value);
+
+        if ($typed === null) {
             $fail('The :attribute field holds a value the search engine cannot compare.')->translate();
+
+            return;
+        }
+
+        if (! LiteralValue::accepts($typed)) {
+            $fail('The :attribute field holds characters the search engine cannot match as they are.')->translate();
         }
     }
 }
