@@ -14,30 +14,35 @@ Version 3.0 is in development on the `3.x` branch. This guide lists each breakin
 
 This section lists each change to `config/rest.php`. Compare your published file with `vendor/lomkit/laravel-rest-api/config/rest.php`, then apply the changes below.
 
-`authorizations.enabled` and `gates.enabled` are removed. To turn the policies or the gates off for the whole application, add the `DisableAuthorizations` or the `DisableGates` trait to your base resource, `app/Rest/Resources/Resource.php`, which your resources extend:
+`authorizations.enabled` and `gates.enabled` are removed. To turn the policies or the gates off for the whole application, override `isAuthorizingEnabled()` or `isGatingEnabled()` in your base resource, `app/Rest/Resources/Resource.php`, which your resources extend, and return `false`:
 
 ```php
 namespace App\Rest\Resources;
 
-use Lomkit\Rest\Concerns\Resource\DisableAuthorizations;
-use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Http\Resource as RestResource;
 
 abstract class Resource extends RestResource
 {
-    use DisableAuthorizations;
-    use DisableGates;
+    public function isAuthorizingEnabled(): bool
+    {
+        return false;
+    }
+
+    public function isGatingEnabled(): bool
+    {
+        return false;
+    }
 }
 ```
 
-`Resource::isAuthorizingEnabled()` and `Resource::isGatingEnabled()` return `true` and no longer read the config. The traits override them, and so can a resource of yours.
+`Resource::isAuthorizingEnabled()` and `Resource::isGatingEnabled()` return `true` and no longer read the config. Override them the same way in one resource to turn its policies or its gates off. The `Lomkit\Rest\Concerns\Resource\DisableAuthorizations` and `DisableGates` traits are removed: a resource that uses one overrides the method instead.
 
 The keys that change:
 
 | Key | Change |
 | --- | --- |
-| `authorizations.enabled` | Removed. Use the `DisableAuthorizations` trait. |
-| `gates.enabled` | Removed. Use the `DisableGates` trait. |
+| `authorizations.enabled` | Removed. Override `isAuthorizingEnabled()` and return `false`. |
+| `gates.enabled` | Removed. Override `isGatingEnabled()` and return `false`. |
 | `authorizations.strict` | Added. `false` by default, or the value of `REST_AUTHORIZATIONS_STRICT`. |
 | `authorizations.cache.enabled` | `true` by default, or the value of `REST_AUTHORIZATIONS_CACHE_ENABLED`. Only the decisions that a resource declares in `authorizationCache()` are kept, see "Cache" in [Authorization](#authorization). |
 | `authorizations.cache.default` | Removed. Each resource gives the seconds of each ability in `authorizationCache()`. |
@@ -1371,7 +1376,7 @@ Cache:
 - `Rest::forgetAuthorizations()` drops the kept decisions of every user and of guests, for example after a deploy that changes a policy. Guests share one kept decision per guard.
 - Otherwise a kept decision stays for the seconds of its ability: a change to a policy or to a `Gate::before()` callback shows once the entry expires.
 - `Resource::getAuthorizationCacheKey()` is removed: the package builds the key.
-- `isAuthorizationCacheEnabled()` and the `DisableAuthorizationsCache` trait turn the cache off for one resource. When `authorizations.cache.enabled` is `false`, no resource uses the cache.
+- `isAuthorizationCacheEnabled()` and the `Lomkit\Rest\Concerns\Resource\DisableAuthorizationsCache` trait are removed. To turn the cache off for one resource, declare no ability in its `authorizationCache()`, or remove the override. When `authorizations.cache.enabled` is `false`, no resource uses the cache.
 
 Resource methods:
 
@@ -1920,7 +1925,7 @@ Text search:
 
 Gates:
 
-- `gates` is a new key. It lists the abilities that `search.gates` accepts on the resource: `view`, `create`, `update`, `delete`, `restore` and `forceDelete`, then the gates that `gates()` declares, see [Responses](#responses). It is `[]` when the resource uses `DisableGates`.
+- `gates` is a new key. It lists the abilities that `search.gates` accepts on the resource: `view`, `create`, `update`, `delete`, `restore` and `forceDelete`, then the gates that `gates()` declares, see [Responses](#responses). It is `[]` when `isGatingEnabled()` returns `false`.
 
 Behaviour:
 

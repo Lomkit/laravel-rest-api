@@ -7,24 +7,6 @@ parameters:
 			path: src/Authorization/UserIdentity.php
 
 		-
-			message: '#^Trait Lomkit\\Rest\\Concerns\\Resource\\DisableAuthorizations is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Concerns/Resource/DisableAuthorizations.php
-
-		-
-			message: '#^Trait Lomkit\\Rest\\Concerns\\Resource\\DisableAuthorizationsCache is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Concerns/Resource/DisableAuthorizationsCache.php
-
-		-
-			message: '#^Trait Lomkit\\Rest\\Concerns\\Resource\\DisableGates is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Concerns/Resource/DisableGates.php
-
-		-
 			message: '#^Parameter \#2 \$value of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:whereLike\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1

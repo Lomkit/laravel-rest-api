@@ -97,11 +97,6 @@ class Resource implements \JsonSerializable
         return true;
     }
 
-    public function isAuthorizationCacheEnabled(): bool
-    {
-        return $this->context()->config()->cacheEnabled;
-    }
-
     /** @return array<string, mixed> */
     #[\Override]
     public function jsonSerialize(): mixed

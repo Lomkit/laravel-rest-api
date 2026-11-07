@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
-use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Http\Resource;
@@ -10,8 +9,6 @@ use Lomkit\Rest\Tests\Support\Models\MorphOneRelation;
 
 class MorphOneResource extends Resource
 {
-    use DisableGates;
-
     public static string $model = MorphOneRelation::class;
 
     public function relations(): array
@@ -25,5 +22,11 @@ class MorphOneResource extends Resource
             ID::make('id'),
             Integer::make('number'),
         ];
+    }
+
+    #[\Override]
+    public function isGatingEnabled(): bool
+    {
+        return false;
     }
 }

@@ -47,7 +47,7 @@ return [
     | "names" renames the answers. Each key is the default name of an
     | answer: "authorized_to_" and the ability in snake case. Add a key to
     | rename a gate that a resource declares in gates(). A resource can
-    | turn gates off with the DisableGates trait.
+    | turn its gates off: override isGatingEnabled() and return false.
     |
     */
 
