@@ -10,6 +10,7 @@ use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\PackageTestCase;
+use Lomkit\Rest\Validation\Lengths;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -62,7 +63,7 @@ class DeclaredCapabilitiesTest extends PackageTestCase
     {
         $this->expectExceptionObject(new InvalidFieldException($message));
 
-        $field()->filterValueRules($operator, 'search.filters.0.value');
+        $field()->filterValueRules($operator, 'search.filters.0.value', new Lengths(255));
     }
 
     #[Test]

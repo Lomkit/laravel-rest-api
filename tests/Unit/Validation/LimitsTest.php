@@ -31,6 +31,7 @@ class LimitsTest extends TestCase
         $this->assertSame(1000, $limits->sizes->resources);
         $this->assertSame(['filters' => 1, 'includes' => 3, 'mutations' => 3], get_object_vars($limits->depths));
         $this->assertSame(['filters' => 500, 'entries' => 1000], get_object_vars($limits->totals));
+        $this->assertSame(['patterns' => 255], get_object_vars($limits->lengths));
     }
 
     #[Test]
@@ -132,6 +133,7 @@ class LimitsTest extends TestCase
             'a size in the singular' => ['sizes', 'filter'],
             'a depth of a list that does not nest' => ['depths', 'sorts'],
             'a total of one list' => ['totals', 'includes'],
+            'a length of a list' => ['lengths', 'filters'],
             'a numeric key' => ['sizes', 0],
         ];
     }
@@ -157,6 +159,7 @@ class LimitsTest extends TestCase
             'depths.mutations' => ['depths', 'mutations', static fn (Limits $limits): int => $limits->depths->mutations],
             'totals.filters' => ['totals', 'filters', static fn (Limits $limits): int => $limits->totals->filters],
             'totals.entries' => ['totals', 'entries', static fn (Limits $limits): int => $limits->totals->entries],
+            'lengths.patterns' => ['lengths', 'patterns', static fn (Limits $limits): int => $limits->lengths->patterns],
         ];
     }
 
@@ -189,9 +192,11 @@ class LimitsTest extends TestCase
             'missing sizes' => ['sizes', false, 'rest.limits.sizes.filters'],
             'missing depths' => ['depths', false, 'rest.limits.depths.filters'],
             'missing totals' => ['totals', false, 'rest.limits.totals.filters'],
+            'missing lengths' => ['lengths', false, 'rest.limits.lengths.patterns'],
             'sizes that are not an array' => ['sizes', true, 'rest.limits.sizes.filters'],
             'depths that are not an array' => ['depths', true, 'rest.limits.depths.filters'],
             'totals that are not an array' => ['totals', true, 'rest.limits.totals.filters'],
+            'lengths that are not an array' => ['lengths', true, 'rest.limits.lengths.patterns'],
         ];
     }
 

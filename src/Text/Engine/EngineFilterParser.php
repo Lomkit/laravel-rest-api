@@ -73,7 +73,7 @@ final readonly class EngineFilterParser
 
     private function values(Cursor $value, IndexAttribute $declared, FilterOperator $operator, ValidationContext $context): void
     {
-        $rules = $declared->field->filterValueRules($operator, $value->path);
+        $rules = $declared->field->filterValueRules($operator, $value->path, $context->limits->lengths);
         $items = $value->path.'.*';
         $compared = isset($rules[$items]) ? $items : $value->path;
         $rules[$compared] = ['bail', ...$rules[$compared] ?? [], new EngineComparable($declared)];

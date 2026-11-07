@@ -47,7 +47,7 @@ The keys that change:
 | `authorizations.cache.enabled` | `true` by default, or the value of `REST_AUTHORIZATIONS_CACHE_ENABLED`. Only the decisions that a resource declares in `authorizationCache()` and the results of the metrics that declare `cacheFor()` are kept, see "Cache" in [Authorization](#authorization). |
 | `authorizations.cache.default` | Removed. Each resource gives the seconds of each ability in `authorizationCache()`. |
 | `authorizations.cache.store` | Added. The cache store of the decisions and of the metric results, the default store when `null`, or the value of `REST_AUTHORIZATIONS_CACHE_STORE`. |
-| `limits` | Added, in three groups: `sizes`, `depths` and `totals`. |
+| `limits` | Added, in four groups: `sizes`, `depths`, `totals` and `lengths`. |
 | `search.max_nesting_depth` | Moved to `limits.depths.filters`. |
 | `documentation` | Removed with the documentation generator. |
 | `morph.type_key` | Added. `@type` by default, see [Responses](#responses). |
@@ -146,6 +146,10 @@ After, in 3.0:
         'filters' => 500,
         'entries' => 1000,
     ],
+
+    'lengths' => [
+        'patterns' => 255,
+    ],
 ],
 
 'precognition' => [
@@ -160,7 +164,7 @@ Authorizations:
 
 Limits:
 
-- The `limits` block sets the most entries of each list of a request, how deep filters, includes and relations nest, and two totals. See "Limits" in [Validation engine](#validation-engine) for what each key covers.
+- The `limits` block sets the most entries of each list of a request, how deep filters, includes and relations nest, two totals, and the most characters of a pattern. See "Limits" in [Validation engine](#validation-engine) for what each key covers.
 - `search.max_nesting_depth` moved to `limits.depths.filters`, with the same default of 1 and the same meaning. Move its value to the new key, and remove `max_nesting_depth` from the `search` block, which now holds `select_columns`.
 - `limits.sizes` has no `gates` key: a `gates` list takes each ability once, see [Responses](#responses). Remove `limits.sizes.gates` from your file if it lists it.
 
@@ -1216,7 +1220,7 @@ Mutate payload:
 
 Limits:
 
-- Each list of a request accepts a limited number of entries, filters, includes and relation operations nest up to a set depth, and two totals bound one request. The values are in the new `limits` block of `config/rest.php`, in three groups, `sizes`, `depths` and `totals`. See [Configuration](#configuration) for the block, its defaults and the values it accepts.
+- Each list of a request accepts a limited number of entries, filters, includes and relation operations nest up to a set depth, and two totals bound one request. The values are in the new `limits` block of `config/rest.php`, in four groups, `sizes`, `depths`, `totals` and `lengths`. See [Configuration](#configuration) for the block, its defaults and the values it accepts.
 - Each key of `sizes` applies to these lists, at every level of a search, including the search of an include and of an action:
   - `filters`: `search.filters`, each `nested` group, and the `filters` of includes and aggregates;
   - `sorts`, `selects`, `scopes`, `aggregates`, `includes` and `instructions`: the list of that name;
@@ -1229,6 +1233,7 @@ Limits:
 - `totals` sets two totals:
   - `filters`: the filters of one search, at every depth and in its includes and aggregates;
   - `entries`: the entries of every list in `sizes` and of every `gates` list in one request, except `resources`.
+- `lengths.patterns` sets the most characters of the value of a `like`, `not like`, `ilike` or `not ilike` filter, 255 by default, wherever a search takes filters. A longer value gets a 422 on the value: "The search.filters.0.value field must not be greater than 255 characters." Raise `lengths.patterns` if your clients send longer patterns.
 - The `parameters` of a scope keep their limit: one value per field of the scope.
 - A list over its limit gets a 422 on its own key, such as `search.filters`: "The search.filters field must not have more than 100 items." This message comes first on the key, and the package does not validate the entries of the list. A wildcard rule of the request with more than one `*` can still meet them, see "Requests" above.
 - Includes nest up to `depths.includes` levels, 3 by default. A fourth level gives a 422: "The search.includes.0.includes.0.includes.0.includes field is prohibited." Each relation of a dotted include counts toward `depths.includes`: `team.tickets.tags` takes three levels. An include that goes deeper gives a 422 on its relation, "The search.includes.0.relation field goes deeper than the limit of 3 include levels.", and `includes` below a dotted include is prohibited sooner. Before, a dotted include counted as one level. Relations in `mutate` nest up to `depths.mutations` levels, 3 by default: "The mutate.0.relations.products.0.relations.category.relations.products.0.relations field is prohibited." An empty list passes at that depth.
@@ -1638,7 +1643,7 @@ Values:
 
 - The value is validated for the operator and the type of the field, under `search.filters.<i>.value`, or `search.filters.<i>.value.<n>` for an entry of a list:
   - `=`, `!=`, `>`, `>=`, `<` and `<=` need a value of the field's type: a string for `Text`, an integer for `Integer`, a number for `Number`, a boolean for `Boolean`, a date for `Date` and `DateTime`, a value of the enum for `Enum`, and a key of the model's key type for `ID`.
-  - `like`, `not like`, `ilike` and `not ilike` need a string.
+  - `like`, `not like`, `ilike` and `not ilike` need a string of at most `limits.lengths.patterns` characters, see [Validation engine](#validation-engine).
   - `in` and `not in` need a list of at least one value, and `between` and `not between` a list of exactly two values, each of the field's type.
   - `is null` and `is not null` refuse a value.
 - `=` and `!=` with `null` give a 422 under `search.filters.<i>.value`. Before, `=` with `null` matched the rows without a value, and `!=` with `null` the rows with one. Use `is null` or `is not null` on a nullable field instead: `{"field": "summary", "operator": "is null"}`.

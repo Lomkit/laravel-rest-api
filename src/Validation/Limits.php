@@ -4,12 +4,13 @@ namespace Lomkit\Rest\Validation;
 
 final readonly class Limits
 {
-    private const array GROUPS = ['sizes', 'depths', 'totals'];
+    private const array GROUPS = ['sizes', 'depths', 'totals', 'lengths'];
 
     public function __construct(
         public ListSizes $sizes,
         public Depths $depths,
         public Totals $totals,
+        public Lengths $lengths,
     ) {}
 
     public static function fromConfig(mixed $config): self
@@ -22,6 +23,7 @@ final readonly class Limits
             ListSizes::from(LimitGroup::of($config, 'sizes', ListSizes::KEYS)),
             Depths::from(LimitGroup::of($config, 'depths', Depths::KEYS)),
             Totals::from(LimitGroup::of($config, 'totals', Totals::KEYS)),
+            Lengths::from(LimitGroup::of($config, 'lengths', Lengths::KEYS)),
         );
     }
 }
