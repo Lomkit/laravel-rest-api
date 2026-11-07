@@ -82,7 +82,7 @@ class QueuedActionsTest extends PackageTestCase
         $job = $this->queued('export-documents', ['fields' => [['name' => 'due_at', 'value' => '2026-12-01 10:00:00'], ['name' => 'note', 'value' => null]]]);
 
         $this->assertSame(
-            [StaffDocumentResource::class, ExportDocuments::class, 'export-documents', ['due_at' => '2026-12-01 10:00:00', 'note' => null], [4, 3, 2, 1], null, true],
+            [StaffDocumentResource::class, ExportDocuments::class, 'export-documents', ['due_at' => '2026-12-01 10:00:00', 'note' => null], [1, 2, 3, 4], null, true],
             [$job->resource, $job->action, $job->uriKey, $job->fields, $job->rows->keys, $job->rows->trashed, $job->rows->perimeter],
         );
         $this->assertSame(['web', ArchiveUser::class, 2], [$job->user->guard, $job->user->class, $job->user->id]);
@@ -100,7 +100,7 @@ class QueuedActionsTest extends PackageTestCase
 
         $run = QueuedRuns::$runs[0];
         $this->assertCount(1, QueuedRuns::$runs);
-        $this->assertSame([2, 'web', [4, 3, 2, 1], true, null], [$run['user'], $run['guard'], $run['keys'], $run['shred'], $run['batch']]);
+        $this->assertSame([2, 'web', [1, 2, 3, 4], true, null], [$run['user'], $run['guard'], $run['keys'], $run['shred'], $run['batch']]);
         $this->assertEquals(['due_at' => CarbonImmutable::parse('2026-12-01 10:00:00'), 'priority' => DocumentPriority::Normal, 'note' => null], $run['fields']);
         $this->assertSame(DocumentPriority::Normal, $run['fields']['priority']);
     }
@@ -125,7 +125,7 @@ class QueuedActionsTest extends PackageTestCase
 
         $this->assertSame([4], QueuedRuns::$runs[0]['keys']);
         $this->assertSame([
-            ['select * from documents where (archived = ?) and documents.id in (4, 3, 2, 1) and documents.deleted_at is null', [false]],
+            ['select * from documents where (archived = ?) and documents.id in (1, 2, 3, 4) and documents.deleted_at is null', [false]],
         ], $this->readsOf('documents'));
     }
 
@@ -188,7 +188,7 @@ class QueuedActionsTest extends PackageTestCase
     public static function trashedSearches(): array
     {
         return [
-            'a search with the trashed rows' => ['with', false, Trashed::With, [4, 3, 2, 1]],
+            'a search with the trashed rows' => ['with', false, Trashed::With, [1, 2, 3, 4]],
             'a search of the trashed rows, restored before the worker' => ['only', true, Trashed::Only, []],
         ];
     }
@@ -213,7 +213,7 @@ class QueuedActionsTest extends PackageTestCase
         $this->work($job);
 
         $this->assertSame(['web', null, null], [$job->user->guard, $job->user->class, $job->user->id]);
-        $this->assertSame([null, [3, 2, 1], false], [QueuedRuns::$runs[0]['user'], QueuedRuns::$runs[0]['keys'], QueuedRuns::$runs[0]['shred']]);
+        $this->assertSame([null, [1, 2, 3], false], [QueuedRuns::$runs[0]['user'], QueuedRuns::$runs[0]['keys'], QueuedRuns::$runs[0]['shred']]);
     }
 
     #[Test]
@@ -279,7 +279,7 @@ class QueuedActionsTest extends PackageTestCase
         $this->travel(10)->seconds();
         $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
 
-        $this->assertSame([['attempts' => 1, 'keys' => [4, 3, 2, 1]], ['attempts' => 2, 'keys' => [4, 3, 2, 1]]], QueuedRuns::$runs);
+        $this->assertSame([['attempts' => 1, 'keys' => [1, 2, 3, 4]], ['attempts' => 2, 'keys' => [1, 2, 3, 4]]], QueuedRuns::$runs);
         $this->assertDatabaseCount('jobs', 0);
     }
 
@@ -315,7 +315,7 @@ class QueuedActionsTest extends PackageTestCase
         $response = $this->postJson('/staff-documents/actions/export-documents', self::DUE);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
-        $this->assertSame([[2, [4, 3, 2, 1], true]], array_map(fn (array $run): array => [$run['user'], $run['keys'], $run['shred']], QueuedRuns::$runs));
+        $this->assertSame([[2, [1, 2, 3, 4], true]], array_map(fn (array $run): array => [$run['user'], $run['keys'], $run['shred']], QueuedRuns::$runs));
     }
 
     #[Test]

@@ -98,7 +98,7 @@ class ColumnSourcesTest extends PackageTestCase
         $response = $this->postJson('/api/posts/actions/publish-posts', ['search' => ['filters' => [['field' => 'id', 'value' => 2]]]]);
 
         $response->assertOk()->assertJsonPath('data.impacted', 1);
-        $this->assertSame('select * from posts where (posts.id = ?) order by posts.id desc limit 100 offset 0', $this->loggedQuery(0));
+        $this->assertSame('select * from posts where (posts.id = ?) and posts.id is not null order by posts.id asc limit 100', $this->loggedQuery(0));
     }
 
     private function loggedQuery(int $index): string

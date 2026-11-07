@@ -56,7 +56,7 @@ class ImpactedRowsTest extends PackageTestCase
     public static function searches(): array
     {
         return [
-            'every row of the perimeter' => [[], self::CHUNKS, 11],
+            'every row of the perimeter' => [[], [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]], 11],
             'a limit above the matching rows' => [['search' => ['limit' => 50]], self::CHUNKS, 11],
             'a limit below the matching rows' => [['search' => ['limit' => 10]], [[11, 10, 9, 8], [7, 6, 5, 4], [3, 2]], 10],
             'a filter with a limit above its rows' => [['search' => ['filters' => [['field' => 'title', 'value' => 'Document 2']], 'limit' => 25]], [[2]], 1],

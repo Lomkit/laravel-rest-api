@@ -179,7 +179,7 @@ class ActionTextSearchTest extends EngineSearchTestCase
     public static function targetsWithoutSearch(): array
     {
         return [
-            'the named keys of the resources target' => [ActionTarget::Resources, ['resources' => [1, 3]], [3, 1]],
+            'the named keys of the resources target' => [ActionTarget::Resources, ['resources' => [1, 3]], [1, 3]],
             'no row for the none target' => [ActionTarget::None, [], []],
         ];
     }

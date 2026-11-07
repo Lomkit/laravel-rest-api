@@ -171,7 +171,7 @@ class ReadingActionFieldsTest extends PackageTestCase
         $this->work(Queue::pushed(QueuedAction::class)->sole());
 
         $fields = ReadDocumentFields::$runs[0]['fields'];
-        $this->assertSame([[4, 2]], array_column(ReadDocumentFields::$runs, 'keys'));
+        $this->assertSame([[2, 4]], array_column(ReadDocumentFields::$runs, 'keys'));
         $this->assertSame([2, ActionTarget::Resources, DocumentPriority::Normal], [$fields->user()?->getAuthIdentifier(), $fields->target(), $fields->priority]);
         $this->assertEquals(self::cast(), $fields->toArray());
     }
@@ -227,7 +227,7 @@ class ReadingActionFieldsTest extends PackageTestCase
             ->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
 
         $this->assertCount(1, ReadDocumentFields::$batches);
-        $this->assertSame([[4, 3, 2, 1]], array_column(ReadDocumentFields::$runs, 'keys'));
+        $this->assertSame([[1, 2, 3, 4]], array_column(ReadDocumentFields::$runs, 'keys'));
 
         foreach ([ReadDocumentFields::$batches[0], ReadDocumentFields::$runs[0]['fields']] as $fields) {
             $this->assertEquals(self::cast(), $fields->toArray());
@@ -244,7 +244,7 @@ class ReadingActionFieldsTest extends PackageTestCase
             ->assertOk()
             ->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
 
-        $this->assertSame([[4, 3], [2, 1]], array_column(ReadDocumentFields::$runs, 'keys'));
+        $this->assertSame([[1, 2], [3, 4]], array_column(ReadDocumentFields::$runs, 'keys'));
         $this->assertSame(ReadDocumentFields::$runs[0]['fields'], ReadDocumentFields::$runs[1]['fields']);
         $this->assertSame(3, ReadDocumentFields::$runs[1]['fields']->copies);
     }

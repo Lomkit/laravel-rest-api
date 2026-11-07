@@ -64,9 +64,9 @@ class ActionTargetsTest extends PackageTestCase
     public static function targets(): array
     {
         return [
-            'the search target by default, without a search' => [null, 'record-notes', [], [['keys' => [4, 2, 1], 'reason' => null]], 3],
+            'the search target by default, without a search' => [null, 'record-notes', [], [['keys' => [1, 2, 4], 'reason' => null]], 3],
             'the search target by default, with a search' => [null, 'record-notes', ['search' => ['filters' => [['field' => 'title', 'value' => 'Retro']]]], [['keys' => [2], 'reason' => null]], 1],
-            'the resources target as a property' => [null, 'record-named-notes', ['resources' => [1, 4]], [['keys' => [4, 1], 'reason' => null]], 2],
+            'the resources target as a property' => [null, 'record-named-notes', ['resources' => [1, 4]], [['keys' => [1, 4], 'reason' => null]], 2],
             'the resources target under a perimeter with or' => [null, 'record-named-notes', ['resources' => [1]], [['keys' => [1], 'reason' => null]], 1],
             'the none target as a property' => [null, 'record-no-note', ['fields' => [['name' => 'reason', 'value' => 'Quarterly']]], [['keys' => [], 'reason' => 'Quarterly']], 0],
             'the resources target when declaring' => [ActionTarget::Resources, 'record-notes', ['resources' => [2]], [['keys' => [2], 'reason' => null]], 1],
@@ -145,8 +145,8 @@ class ActionTargetsTest extends PackageTestCase
     public static function queuedTargets(): array
     {
         return [
-            'the search target' => [ActionTarget::Search, [], [4, 2, 1]],
-            'the resources target' => [ActionTarget::Resources, ['resources' => [1, 4]], [4, 1]],
+            'the search target' => [ActionTarget::Search, [], [1, 2, 4]],
+            'the resources target' => [ActionTarget::Resources, ['resources' => [1, 4]], [1, 4]],
             'the none target' => [ActionTarget::None, [], []],
         ];
     }

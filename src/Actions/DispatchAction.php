@@ -5,12 +5,15 @@ namespace Lomkit\Rest\Actions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Actions\Rows\ActionRows;
+use Lomkit\Rest\Actions\Rows\ChunkedRows;
+use Lomkit\Rest\Actions\Rows\KeyChunks;
 use Lomkit\Rest\Actions\Rows\NoRows;
-use Lomkit\Rest\Actions\Rows\PagedRows;
+use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Query\QueryBuilderFactory;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 use Lomkit\Rest\Search\SearchNode;
+use Lomkit\Rest\Validation\KeysGrammar;
 
 final readonly class DispatchAction
 {
@@ -48,10 +51,21 @@ final readonly class DispatchAction
         $payload = $this->request->payload();
 
         return match ($this->action->target) {
-            ActionTarget::Search => EngineTargets::of($this->request, $this->action) ?? new PagedRows($this->query($payload->search()), $this->action->chunkCount),
-            ActionTarget::Resources => new PagedRows($payload->keys()->constrain($this->query(SearchNode::empty())), $this->action->chunkCount),
+            ActionTarget::Search => EngineTargets::of($this->request, $this->action) ?? $this->search($payload->search()),
+            ActionTarget::Resources => KeyChunks::of($this->query(SearchNode::empty()), $this->id(), $payload->keys()->keys, $this->action->chunkCount),
             ActionTarget::None => new NoRows,
         };
+    }
+
+    private function search(SearchNode $search): ActionRows
+    {
+        $query = $this->query($search);
+
+        if ($search->sorts === [] && $search->limit === null) {
+            return new ChunkedRows($query->reorder(), $this->action->chunkCount);
+        }
+
+        return KeyChunks::read($query, $this->id(), $this->action->chunkCount);
     }
 
     /** @return Builder<Model> */
@@ -60,5 +74,10 @@ final readonly class DispatchAction
         $resource = $this->request->resource;
 
         return QueryBuilderFactory::make($resource)->search(SearchPlanner::all($resource, $search, $this->request->context()->text($resource)));
+    }
+
+    private function id(): ID
+    {
+        return KeysGrammar::idOf($this->request->resource);
     }
 }
