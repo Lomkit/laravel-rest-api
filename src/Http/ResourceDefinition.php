@@ -49,7 +49,6 @@ final class ResourceDefinition
         private readonly Resource $resource,
         private readonly RestRequest $request,
     ) {
-        RemovedHooks::ensureAbsentFrom($resource);
         $this->inputs = new WeakMap;
     }
 
@@ -172,11 +171,7 @@ final class ResourceDefinition
      */
     private function boundInstructions(array $instructions): array
     {
-        return array_map(function (Instruction $instruction): Instruction {
-            RemovedHooks::ensureAbsentFromInstruction($instruction);
-
-            return $instruction->resource($this->resource);
-        }, $instructions);
+        return array_map(fn (Instruction $instruction): Instruction => $instruction->resource($this->resource), $instructions);
     }
 
     /**

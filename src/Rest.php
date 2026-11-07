@@ -12,7 +12,6 @@ use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Lomkit\Rest\Authorization\DecisionStamps;
 use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Config\ConfigValue;
-use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
@@ -33,10 +32,6 @@ class Rest
     /** @param class-string<Controller> $controller */
     public function resource(string $name, string $controller): PendingResourceRegistration
     {
-        if (func_num_args() > 2) {
-            throw InvalidResourceRouteException::optionsArgumentRemoved($name);
-        }
-
         if (is_subclass_of($controller, Controller::class)) {
             $controller::resourceClass();
         }

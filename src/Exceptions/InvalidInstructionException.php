@@ -15,9 +15,4 @@ final class InvalidInstructionException extends LogicException
     {
         return new self("{$instruction} does not implement AppliesToEngine: it cannot apply to a text search on a search engine.");
     }
-
-    public static function removedHook(string $instruction, string $method, string $replacement): self
-    {
-        return new self("{$instruction} declares {$method}(), which the package no longer calls. {$replacement}");
-    }
 }
