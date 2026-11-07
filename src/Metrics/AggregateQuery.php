@@ -24,6 +24,16 @@ final readonly class AggregateQuery
         return $this->function->value($this->partials($this->row($base), 'total'));
     }
 
+    /** @param Builder<Model> $query */
+    public function between(Builder $query, MetricColumn $date, DateTimeInterface $from, DateTimeInterface $to): int|float|null
+    {
+        $base = $this->base($query);
+        $base->whereBetween($date->column, [$this->stored($query, $from), $this->stored($query, $to)]);
+        $this->select($base, 'total');
+
+        return $this->function->value($this->partials($this->row($base), 'total'));
+    }
+
     /**
      * @param  Builder<Model>  $query
      * @return array{int|float|null, int|float|null}
