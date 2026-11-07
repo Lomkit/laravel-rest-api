@@ -179,14 +179,15 @@ final class Authorizer
      */
     private function resolve(array $checks): array
     {
-        $decisions = $this->store->many(array_filter($checks, fn (Check $check): bool => ! $this->memo->involvesForgotten($check)));
+        $storable = array_filter($checks, fn (Check $check): bool => ! $this->memo->involvesForgotten($check));
+        $decisions = $this->store->many($storable);
         $evaluated = array_diff_key($checks, $decisions);
 
         foreach ($evaluated as $key => $check) {
             $decisions[$key] = Decision::fromResponse($this->gate->inspect($check->ability, $check->arguments()));
         }
 
-        $this->store->putMany($evaluated, $decisions);
+        $this->store->putMany(array_intersect_key($evaluated, $storable), $decisions);
 
         return $decisions;
     }

@@ -2,7 +2,9 @@
 
 namespace Lomkit\Rest\Search\Plan\Columns;
 
+use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Search\GateAbility;
 
 enum ColumnSelection
 {
@@ -18,8 +20,9 @@ enum ColumnSelection
      * @param  list<string>|null  $selects
      * @param  list<string>  $includes
      * @param  list<string>  $keys
+     * @param  list<GateAbility>  $gates
      */
-    public function level(Resource $resource, ?array $selects, array $includes, array $keys): ?ColumnSet
+    public function level(Resource $resource, ?array $selects, array $includes, array $keys, array $gates = []): ?ColumnSet
     {
         if ($this === self::Every) {
             return null;
@@ -43,6 +46,30 @@ enum ColumnSelection
             $model->getKeyName(),
             ...$resource->alwaysSelect(),
             ...$keys,
+            ...self::version($resource, $model, $gates),
         ]);
+    }
+
+    /**
+     * @param  list<GateAbility>  $gates
+     * @return list<string>
+     */
+    private static function version(Resource $resource, Model $model, array $gates): array
+    {
+        $column = $model->getUpdatedAtColumn();
+
+        if ($column === null || ! $model->usesTimestamps() || ! $resource->isGatingEnabled() || ! $resource->isAuthorizationCacheEnabled()) {
+            return [];
+        }
+
+        $abilities = $resource->definition()->cachedAbilities();
+
+        foreach ($gates as $gate) {
+            if (! $gate->isClassLevel() && $abilities->seconds($gate->name()) !== null) {
+                return [$column];
+            }
+        }
+
+        return [];
     }
 }

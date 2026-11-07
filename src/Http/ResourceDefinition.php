@@ -147,7 +147,7 @@ final class ResourceDefinition
 
     public function cachedAbilities(): CachedAbilities
     {
-        return $this->cachedAbilities ??= CachedAbilities::of($this->resource->authorizationCache(), $this->resource::class);
+        return $this->cachedAbilities ??= CachedAbilities::of($this->resource->authorizationCache(), $this->resource::class, $this->resource->authorizationCacheContext(...));
     }
 
     private function declaredFields(): FieldSet

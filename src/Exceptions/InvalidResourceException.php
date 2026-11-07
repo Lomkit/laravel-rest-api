@@ -48,6 +48,11 @@ final class InvalidResourceException extends LogicException
         return new self("The resource [{$resource}] caches the ability [{$ability}] in authorizationCache() without a valid duration. Give an integer number of seconds of 1 or more, for example ['{$ability}' => 300].");
     }
 
+    public static function invalidCacheContext(string $resource, int|string $key): self
+    {
+        return new self("The resource [{$resource}] returns a value for the key [{$key}] from authorizationCacheContext() that is not an integer, a string, a boolean or null. Give a scalar value, for example ['team' => 1].");
+    }
+
     public static function notAMorphTo(string $resource, string $relation): self
     {
         return new self("The relation [{$relation}] of the resource [{$resource}] is declared with MorphTo, but its model method does not return a MorphTo relation.");

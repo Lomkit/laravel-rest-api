@@ -28,6 +28,12 @@ trait Authorizable
         return [];
     }
 
+    /** @return array<string, int|string|bool|null> */
+    public function authorizationCacheContext(): array
+    {
+        return [];
+    }
+
     /** @param list<Model|Changes> $arguments */
     public function authorizeTo(string $ability, Model|string $model, array $arguments = []): void
     {
