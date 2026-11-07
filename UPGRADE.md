@@ -1946,6 +1946,7 @@ Scramble:
 
 ### Framework integration
 
+- `Lomkit\Rest\Concerns\PerformsRestOperations` is removed. Its endpoint methods (`details()`, `search()`, `mutate()`, `operate()`, `metric()`, `batch()`, `destroy()`, `restore()`, `forceDestroy()`) are declared on `Lomkit\Rest\Http\Controllers\Controller`. A controller that used the trait extends `Controller` instead.
 - `Lomkit\Rest\Http\Controllers\Controller` no longer extends `Illuminate\Routing\Controller`. The inherited `middleware()`, `getMiddleware()`, `callAction()` and `__call()` methods are removed. Replace the `$this->middleware()` calls in your controller constructors with the `Illuminate\Routing\Controllers\HasMiddleware` interface or with the `#[Middleware]` and `#[Authorize]` attributes:
   - Middleware that a base controller declared for all its children, such as the controller that `rest:base-controller` generates, moves to the static `middleware()` method of `HasMiddleware` on that base controller. Every child controller inherits it. A child controller that needs more middleware overrides `middleware()` and adds its entries to `parent::middleware()`.
 
