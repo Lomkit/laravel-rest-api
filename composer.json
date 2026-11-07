@@ -14,7 +14,7 @@
     "laravel/framework": "^13.30"
   },
   "require-dev": {
-    "dedoc/scramble": "^0.13",
+    "dedoc/scramble": "^0.13.48",
     "larastan/larastan": "^3.13",
     "laravel/pint": "^1.32",
     "laravel/scout": "^11.9",
@@ -28,7 +28,7 @@
     "laravel/scout": "Runs text searches on a search engine through the ScoutEngine text strategy."
   },
   "conflict": {
-    "dedoc/scramble": "<0.13 || >=0.14",
+    "dedoc/scramble": "<0.13.48 || >=0.14",
     "laravel/scout": "<11.9.0"
   },
   "autoload": {

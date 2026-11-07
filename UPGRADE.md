@@ -202,7 +202,7 @@ To upgrade:
 
 1. Remove the calls to `Rest::withDocumentationCallback()`, and the service provider that `rest:documentation-provider` created.
 2. Remove the `generateDocumentation*Operation()` methods from your controllers.
-3. Install `dedoc/scramble` 0.13. The package registers its extension, so `config/scramble.php` needs no change. If you added `Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension` to its `extensions`, you can remove it.
+3. Install `dedoc/scramble` 0.13.48 or a later 0.13 release. The package registers its extension, so `config/scramble.php` needs no change. If you added `Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension` to its `extensions`, you can remove it.
 
 ### Request context
 
