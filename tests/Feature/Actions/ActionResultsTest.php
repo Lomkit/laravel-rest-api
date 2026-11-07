@@ -11,6 +11,7 @@ use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Actions\ActionResponse;
 use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Actions\QueuedAction;
+use Lomkit\Rest\Exceptions\InvalidActionException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\TouchDocumentController;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\TouchDocumentResource;
@@ -70,6 +71,13 @@ class ActionResultsTest extends PackageTestCase
             'a download' => [fn (): ActionResponse => ActionResponse::download('https://files.example.com/exports/documents.csv', 'documents.csv'), ['type' => 'download', 'url' => 'https://files.example.com/exports/documents.csv', 'name' => 'documents.csv']],
             'a redirect' => [fn (): ActionResponse => ActionResponse::redirect('https://app.example.com/documents'), ['type' => 'redirect', 'url' => 'https://app.example.com/documents']],
             'created rows' => [fn (): ActionResponse => ActionResponse::created(new Collection([Document::query()->findOrFail(3), Document::query()->findOrFail(1)])), ['type' => 'created', 'keys' => [3, 1]]],
+            'data' => [fn (ActionFields $fields, int $impacted): ActionResponse => ActionResponse::data(['export' => 41, 'rows' => $impacted]), ['type' => 'data', 'data' => ['export' => 41, 'rows' => 11]]],
+            'a message with data' => [fn (): ActionResponse => ActionResponse::message('Export started')->withData(['export' => 41]), ['type' => 'message', 'message' => 'Export started', 'data' => ['export' => 41]]],
+            'a danger message with data' => [fn (): ActionResponse => ActionResponse::danger('2 documents are locked')->withData(['skipped' => [4, 9]]), ['type' => 'danger', 'message' => '2 documents are locked', 'data' => ['skipped' => [4, 9]]]],
+            'a download with data' => [fn (): ActionResponse => ActionResponse::download('https://files.example.com/exports/documents.csv', 'documents.csv')->withData(['bytes' => 2048]), ['type' => 'download', 'url' => 'https://files.example.com/exports/documents.csv', 'name' => 'documents.csv', 'data' => ['bytes' => 2048]]],
+            'a redirect with data' => [fn (): ActionResponse => ActionResponse::redirect('https://app.example.com/documents')->withData(['tab' => 'archived']), ['type' => 'redirect', 'url' => 'https://app.example.com/documents', 'data' => ['tab' => 'archived']]],
+            'created rows with data' => [fn (): ActionResponse => ActionResponse::created(new Collection([Document::query()->findOrFail(3)]))->withData(['by_category' => ['report' => 1]]), ['type' => 'created', 'keys' => [3], 'data' => ['by_category' => ['report' => 1]]]],
+            'data replaced by withData' => [fn (): ActionResponse => ActionResponse::data(['export' => 41])->withData(['export' => 42]), ['type' => 'data', 'data' => ['export' => 42]]],
         ];
     }
 
@@ -122,6 +130,72 @@ class ActionResultsTest extends PackageTestCase
         $response = $this->postJson('/touch-documents/actions/batched-touch-documents');
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'batch' => '9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f', 'result' => ['type' => 'message', 'message' => '1 batch for 11 documents']]]);
+    }
+
+    #[Test]
+    public function it_answers_data_next_to_the_batch_of_a_queued_action(): void
+    {
+        Bus::fake();
+        TouchDocuments::$answer = fn (ActionFields $fields, int $impacted): ActionResponse => ActionResponse::data(['batches' => count(Bus::dispatchedBatches()), 'rows' => $impacted]);
+        Str::createUuidsUsingSequence([Uuid::fromString('9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f')]);
+
+        $response = $this->postJson('/touch-documents/actions/batched-touch-documents');
+
+        $response->assertOk();
+        $this->assertSame('{"data":{"impacted":11,"batch":"9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f","result":{"type":"data","data":{"batches":1,"rows":11}}}}', $response->getContent());
+    }
+
+    #[Test]
+    public function it_gives_the_data_after_the_values_of_the_type(): void
+    {
+        TouchDocuments::$answer = fn (): ActionResponse => ActionResponse::message('Export started')->withData(['export' => 41]);
+
+        $response = $this->postJson('/touch-documents/actions/touch-documents');
+
+        $response->assertOk();
+        $this->assertSame('{"data":{"impacted":11,"result":{"type":"message","message":"Export started","data":{"export":41}}}}', $response->getContent());
+    }
+
+    /** @param Closure(): ActionResponse $answer */
+    #[Test]
+    #[DataProvider('emptyData')]
+    public function it_gives_empty_data_as_an_object(Closure $answer, string $result): void
+    {
+        TouchDocuments::$answer = $answer;
+
+        $response = $this->postJson('/touch-documents/actions/touch-documents');
+
+        $response->assertOk();
+        $this->assertSame('{"data":{"impacted":11,"result":'.$result.'}}', $response->getContent());
+    }
+
+    /** @return array<string, array{Closure(): ActionResponse, string}> */
+    public static function emptyData(): array
+    {
+        return [
+            'the data type' => [fn (): ActionResponse => ActionResponse::data([]), '{"type":"data","data":{}}'],
+            'a message' => [fn (): ActionResponse => ActionResponse::message('Nothing to export')->withData([]), '{"type":"message","message":"Nothing to export","data":{}}'],
+        ];
+    }
+
+    /** @param Closure(): ActionResponse $answer */
+    #[Test]
+    #[DataProvider('listData')]
+    public function it_refuses_data_given_as_a_list(Closure $answer): void
+    {
+        $this->expectException(InvalidActionException::class);
+        $this->expectExceptionMessage("The data of an ActionResponse is a list, but the result gives it as a JSON object: pass an array with string keys, such as ['skipped' => [4, 9]].");
+
+        $answer();
+    }
+
+    /** @return array<string, array{Closure(): ActionResponse}> */
+    public static function listData(): array
+    {
+        return [
+            'the data type' => [fn (): ActionResponse => ActionResponse::data([4, 9])],
+            'a message' => [fn (): ActionResponse => ActionResponse::message('2 documents skipped')->withData([4, 9])],
+        ];
     }
 
     #[Test]
