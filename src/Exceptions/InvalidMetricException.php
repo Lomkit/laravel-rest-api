@@ -30,4 +30,9 @@ final class InvalidMetricException extends LogicException
     {
         return new self("{$metric}::{$helper}() {$use} [{$name}], whose type is [{$type}]: it needs {$expected} field.");
     }
+
+    public static function invalidLimit(string $metric, int $limit): self
+    {
+        return new self("{$metric} keeps [{$limit}] parts. A partition limit is an integer greater than 0.");
+    }
 }

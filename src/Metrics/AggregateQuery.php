@@ -39,6 +39,24 @@ final readonly class AggregateQuery
         return [$this->function->value($this->partials($row, 'current')), $this->function->value($this->partials($row, 'previous'))];
     }
 
+    /**
+     * @param  Builder<Model>  $query
+     * @return list<array{key: int|string|bool|null, partials: list<int|float|null>}>
+     */
+    public function groups(Builder $query, MetricColumn $group): array
+    {
+        $base = $this->base($query);
+        $base->addSelect("{$group->column} as group_key");
+        $this->select($base, 'group');
+        $base->groupBy($group->column);
+
+        return array_values(array_map(function (object $row) use ($group): array {
+            $values = get_object_vars($row);
+
+            return ['key' => $group->key($values['group_key'] ?? null), 'partials' => $this->partials($values, 'group')];
+        }, $base->get()->all()));
+    }
+
     /** @param Builder<Model> $query */
     private function base(Builder $query): QueryBuilder
     {

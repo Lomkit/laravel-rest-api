@@ -729,9 +729,25 @@ class TotalRevenue extends Value
 ```
 
 - `Value` (type `value`): `count($query, $dateColumn = 'created_at')`, `sum($query, $column, $dateColumn = 'created_at')`, `average()`, `min()` and `max()` with the parameters of `sum()`. With ranges, `{"value": <the last N days>, "previous": <the N days before>}`; without, `{"value": <every row>, "previous": null}` and the date column is not read. A count without ranges is the number of rows of the search.
+- `Partition` (type `partition`): `count($query, $groupBy)`, `sum($query, $column, $groupBy)`, `average()`, `min()` and `max()` with the parameters of `sum()`. The group column is a `Text`, `Enum`, `Integer` or `Boolean` field. Each part is `{"key", "label", "value"}`: the key is the stored value (the enum value, an integer, a boolean), the label the enum case name or the key as text, the rows without a value form the part `{"key": null, "label": null, ...}`. Parts are sorted by value, largest first, then by key. A partition takes no `range`: filter the search instead.
+- Limit: `OrdersByStatus::make()->limit(5)` in `metrics()`, or `public ?int $limit = 5;` in the class, keeps the 5 largest parts and folds the others into `other`: `{"label": "Other", "value": <their count, sum, min, max or average>}`. `other` is null when nothing is folded.
+- Labels: `return $this->count($query, 'status')->labels(['paid' => 'Payée'], other: 'Autre');`.
+
+```php
+class OrdersByStatus extends Partition
+{
+    public function calculate(Builder $query): PartitionResult
+    {
+        return $this->count($query, 'status');
+    }
+}
+```
+
+`{}` -> `{"data": {"type": "partition", "parts": [{"key": "paid", "label": "Paid", "value": 5}, {"key": "pending", "label": "Pending", "value": 1}, {"key": null, "label": null, "value": 1}], "other": null}}`
+
 - Ranges: `ranges()` maps a number of days to a label. The request sends `{"range": 90}` for another range; an undeclared key, or `range` for a metric without ranges, is a `422`. In a custom metric, `$this->range()` gives the selected `MetricRange` (`value`, `label`) or null. `ranges()` keys are integers greater than 0, or `Rest::resource()` throws.
 - Numbers: a count is an integer; a sum, min or max is an integer for an `Integer` field and a float for another `Number` field; an average is a float. Over no row: count and sum `0`, average, min and max `null`. Floats keep their fraction in the response (`52.0`).
-- Fields: the helpers read fields that the resource declares. A sum, average, min or max needs a `Number` field (`Integer` included), the range a `Date` or `DateTime` field; any other field throws `InvalidMetricException` when the metric runs.
+- Fields: the helpers read fields that the resource declares. A sum, average, min or max needs a `Number` field (`Integer` included), the range a `Date` or `DateTime` field; a partition groups by a `Text`, `Enum`, `Integer` or `Boolean` field; any other field throws `InvalidMetricException` when the metric runs.
 - Response: `POST /api/orders/metrics/total-revenue` with `{}` -> `{"data": {"type": "value", "value": 52.0, "previous": 37.25}}`.
 
 ## Instructions (custom search refinements)

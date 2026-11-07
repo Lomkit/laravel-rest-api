@@ -704,7 +704,7 @@ class TotalRevenue extends Value
 }
 ```
 
-`POST /api/orders/metrics/total-revenue` with `{}` answers `{"data": {"type": "value", "value": 52.0, "previous": 37.25}}`: the total of the last 30 days and of the 30 days before. `{"range": 90}` selects the second range.
+`POST /api/orders/metrics/total-revenue` with `{}` answers `{"data": {"type": "value", "value": 52.0, "previous": 37.25}}`: the total of the last 30 days and of the 30 days before. `{"range": 90}` selects the second range. A `Partition` gives one part per value of a column, and `->limit(5)` folds all but the 5 largest parts into `other`.
 
 - A metric declares its ranges in `ranges()`, and the request picks one with `range`: the first one when it sends none. A key that the metric does not declare is a `422`, and so is `range` for a metric without ranges. The details entry of a metric lists them in `ranges`.
 - The floats of a metric response keep their fraction: `52.0`, not `52`.
