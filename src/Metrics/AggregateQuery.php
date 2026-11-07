@@ -16,22 +16,36 @@ final readonly class AggregateQuery
     ) {}
 
     /** @param Builder<Model> $query */
+    public static function base(Builder $query): QueryBuilder
+    {
+        return $query->clone()
+            ->toBase()
+            ->reorder()
+            ->select([]);
+    }
+
+    /** @param Builder<Model> $query */
+    public static function window(QueryBuilder $base, Builder $query, MetricColumn $date, DateTimeInterface $from, DateTimeInterface $to): QueryBuilder
+    {
+        return $base->whereBetween($date->column, [self::stored($query, $from), self::stored($query, $to)]);
+    }
+
+    /** @param Builder<Model> $query */
     public function total(Builder $query): int|float|null
     {
-        $base = $this->base($query);
+        $base = self::base($query);
         $this->select($base, 'total');
 
-        return $this->function->value($this->partials($this->row($base), 'total'));
+        return $this->value($this->row($base), 'total');
     }
 
     /** @param Builder<Model> $query */
     public function between(Builder $query, MetricColumn $date, DateTimeInterface $from, DateTimeInterface $to): int|float|null
     {
-        $base = $this->base($query);
-        $base->whereBetween($date->column, [$this->stored($query, $from), $this->stored($query, $to)]);
+        $base = self::window(self::base($query), $query, $date, $from, $to);
         $this->select($base, 'total');
 
-        return $this->function->value($this->partials($this->row($base), 'total'));
+        return $this->value($this->row($base), 'total');
     }
 
     /**
@@ -40,13 +54,12 @@ final readonly class AggregateQuery
      */
     public function periods(Builder $query, MetricColumn $date, DateTimeInterface $from, DateTimeInterface $split, DateTimeInterface $to): array
     {
-        $base = $this->base($query);
-        $base->whereBetween($date->column, [$this->stored($query, $from), $this->stored($query, $to)]);
-        $this->select($base, 'current', $date, '>=', $this->stored($query, $split));
-        $this->select($base, 'previous', $date, '<', $this->stored($query, $split));
+        $base = self::window(self::base($query), $query, $date, $from, $to);
+        $this->select($base, 'current', $date, '>=', self::stored($query, $split));
+        $this->select($base, 'previous', $date, '<', self::stored($query, $split));
         $row = $this->row($base);
 
-        return [$this->function->value($this->partials($row, 'current')), $this->function->value($this->partials($row, 'previous'))];
+        return [$this->value($row, 'current'), $this->value($row, 'previous')];
     }
 
     /**
@@ -55,7 +68,7 @@ final readonly class AggregateQuery
      */
     public function groups(Builder $query, MetricColumn $group): array
     {
-        $base = $this->base($query);
+        $base = self::base($query);
         $base->addSelect("{$group->column} as group_key");
         $this->select($base, 'group');
         $base->groupBy($group->column);
@@ -90,16 +103,7 @@ final readonly class AggregateQuery
         }, $base->get()->all()));
     }
 
-    /** @param Builder<Model> $query */
-    private function base(Builder $query): QueryBuilder
-    {
-        return $query->clone()
-            ->toBase()
-            ->reorder()
-            ->select([]);
-    }
-
-    private function select(QueryBuilder $base, string $alias, ?MetricColumn $date = null, string $operator = '>=', ?string $since = null): void
+    public function select(QueryBuilder $base, string $alias, ?MetricColumn $date = null, string $operator = '>=', ?string $since = null): void
     {
         foreach ($this->function->functions() as $index => $function) {
             $base->addSelect(new AggregateSelect($function, $this->column?->column, "{$alias}_{$index}", $date?->column, $operator));
@@ -108,6 +112,12 @@ final readonly class AggregateQuery
                 $base->addBinding($since, 'select');
             }
         }
+    }
+
+    /** @param array<mixed> $row */
+    public function value(array $row, string $alias): int|float|null
+    {
+        return $this->function->value($this->partials($row, $alias));
     }
 
     /** @return array<mixed> */
@@ -130,7 +140,7 @@ final readonly class AggregateQuery
     }
 
     /** @param Builder<Model> $query */
-    private function stored(Builder $query, DateTimeInterface $date): string
+    private static function stored(Builder $query, DateTimeInterface $date): string
     {
         return (string) $query->getModel()->fromDateTime($date);
     }
