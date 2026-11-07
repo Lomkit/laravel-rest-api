@@ -9,6 +9,7 @@ use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\HookedTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\LeadTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\SharedTicketController;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\TrashableLeadTicketController;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -109,7 +110,7 @@ class EntryChecksTest extends HelpdeskTestCase
     #[DataProvider('leadEndpoints')]
     public function it_checks_the_abilities_a_resource_requires_for_an_endpoint_before_validating(string $method, string $uri, string $ability, array $calls): void
     {
-        Rest::resource('lead-tickets', LeadTicketController::class)->withSoftDeletes()->register();
+        Rest::resource('lead-tickets', TrashableLeadTicketController::class)->withSoftDeletes()->register();
         $this->tickets->answers[$ability] = Response::deny('Only the helpdesk lead does this.');
         $this->logQueries();
 

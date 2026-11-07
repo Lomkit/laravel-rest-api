@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Fields\Filtering;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Lomkit\Rest\Exceptions\InvalidFieldException;
 
 final readonly class Range implements Condition
 {
@@ -11,7 +12,9 @@ final readonly class Range implements Condition
     #[\Override]
     public function apply(Builder $query, string $column, mixed $value, string $boolean): void
     {
-        assert(is_iterable($value));
+        if (! is_iterable($value)) {
+            throw InvalidFieldException::invalidFilterValue($this->not ? 'not between' : 'between', $column, 'a list of two values', $value);
+        }
 
         $query->whereBetween($column, $value, $boolean, $this->not);
     }

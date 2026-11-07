@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Fields\Filtering;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Lomkit\Rest\Exceptions\InvalidFieldException;
 
 final readonly class CaseInsensitivePattern implements Condition
 {
@@ -11,7 +12,9 @@ final readonly class CaseInsensitivePattern implements Condition
     #[\Override]
     public function apply(Builder $query, string $column, mixed $value, string $boolean): void
     {
-        assert(is_string($value));
+        if (! is_string($value)) {
+            throw InvalidFieldException::invalidFilterValue($this->not ? 'not ilike' : 'ilike', $column, 'a string', $value);
+        }
 
         $query->whereLike($column, $value, false, $boolean, $this->not);
     }

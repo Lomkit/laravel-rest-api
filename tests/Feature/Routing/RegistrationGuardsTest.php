@@ -3,11 +3,13 @@
 namespace Lomkit\Rest\Tests\Feature\Routing;
 
 use Closure;
+use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
 use Lomkit\Rest\Tests\Concerns\InspectsResourceRoutes;
 use Lomkit\Rest\Tests\Fixtures\Archive\DocumentController;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketController;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -113,6 +115,29 @@ class RegistrationGuardsTest extends PackageTestCase
             fn () => Rest::resource('documents', DocumentController::class)->name('search', ' '),
             'A route name cannot be empty.',
         );
+    }
+
+    #[Test]
+    #[DataProvider('softDeleteEndpoints')]
+    public function it_rejects_a_soft_delete_endpoint_on_a_model_without_soft_deletes(string $endpoint): void
+    {
+        $before = $this->routeCount();
+
+        try {
+            Rest::resource('tickets', TicketController::class)->withSoftDeletes($endpoint)->register();
+            $this->fail('The registration was not rejected.');
+        } catch (InvalidResourceException $exception) {
+            $this->assertSame("The routes of the resource [Lomkit\\Rest\\Tests\\Fixtures\\Helpdesk\\TicketResource] include the [{$endpoint}] endpoint, but its model [Lomkit\\Rest\\Tests\\Fixtures\\Helpdesk\\Ticket] does not use Illuminate\\Database\\Eloquent\\SoftDeletes. Use SoftDeletes in the model, or register the routes without withSoftDeletes().", $exception->getMessage());
+        }
+
+        $this->assertSame($before, $this->routeCount());
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function softDeleteEndpoints(): iterable
+    {
+        yield 'restore' => ['restore'];
+        yield 'force destroy' => ['forceDestroy'];
     }
 
     private function assertRejected(Closure $registration, string $message): void

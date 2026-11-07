@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Authorization;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Lomkit\Rest\Exceptions\InvalidUserException;
 use Stringable;
 
 final readonly class UserIdentity
@@ -21,7 +22,9 @@ final readonly class UserIdentity
     {
         $identifier = $user->getAuthIdentifier();
 
-        assert($identifier === null || is_scalar($identifier) || $identifier instanceof Stringable);
+        if ($identifier !== null && ! is_scalar($identifier) && ! $identifier instanceof Stringable) {
+            throw InvalidUserException::unusableIdentifier($user::class, $identifier);
+        }
 
         return $user::class.'#'.rawurlencode((string) $identifier);
     }

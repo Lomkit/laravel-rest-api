@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Exceptions\InvalidResourceException;
 
 trait PerformsModelOperations
 {
@@ -13,7 +14,9 @@ trait PerformsModelOperations
 
     public function performRestore(Model $model): void
     {
-        assert(method_exists($model, 'restore'));
+        if (! method_exists($model, 'restore')) {
+            throw InvalidResourceException::unrestorableModel(static::class, $model::class);
+        }
 
         $model->restore();
     }

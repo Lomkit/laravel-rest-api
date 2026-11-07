@@ -133,6 +133,30 @@ class ApplyFilterArgumentsTest extends PackageTestCase
         yield 'an unknown operator' => [fn (): Field => Text::make('title'), 'contains', 'Unknown filter operator [contains].'];
     }
 
+    /** @param Closure(): Field $field */
+    #[Test]
+    #[DataProvider('wrongValues')]
+    public function it_rejects_a_value_of_the_wrong_type_before_touching_the_query(Closure $field, string $operator, mixed $value, string $message): void
+    {
+        $query = Post::query();
+
+        try {
+            $this->bound($field)->applyFilter($query, $operator, $value);
+            $this->fail("The operator [{$operator}] was applied.");
+        } catch (InvalidFieldException $exception) {
+            $this->assertSame($message, $exception->getMessage());
+        }
+
+        $this->assertSame([], $query->getQuery()->wheres);
+    }
+
+    /** @return iterable<string, array{Closure(): Field, string, mixed, string}> */
+    public static function wrongValues(): iterable
+    {
+        yield 'range with a number' => [fn (): Field => Integer::make('views'), 'between', 1000, 'The operator [between] on the column [posts.views] takes a list of two values, not a value of type [int].'];
+        yield 'case insensitive pattern with a number' => [fn (): Field => Text::make('title'), 'not ilike', 12, 'The operator [not ilike] on the column [posts.title] takes a string, not a value of type [int].'];
+    }
+
     /** @param Closure(): Field $factory */
     private function bound(Closure $factory): Field
     {

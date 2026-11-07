@@ -92,6 +92,13 @@ final class InvalidFieldException extends LogicException
         return new self("The field [{$field}] does not support the operator [{$operator}].");
     }
 
+    public static function invalidFilterValue(string $operator, string $column, string $expected, mixed $value): self
+    {
+        $type = get_debug_type($value);
+
+        return new self("The operator [{$operator}] on the column [{$column}] takes {$expected}, not a value of type [{$type}].");
+    }
+
     public static function notFilterable(string $field): self
     {
         return new self("The field [{$field}] is not filterable.");
