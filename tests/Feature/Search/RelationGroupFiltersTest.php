@@ -136,7 +136,7 @@ class RelationGroupFiltersTest extends PackageTestCase
             ['field' => 'status', 'value' => 'draft'],
         ]]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
         $this->assertSame(PostStatus::Published, Post::query()
             ->findOrFail(2)
             ->status);

@@ -66,7 +66,7 @@ class DeclaredKeyTypeTest extends PackageTestCase
 
         $response = $this->postJson('/untyped-drafts/actions/retitle-untyped-drafts', ['resources' => [self::NAMED]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
         $this->assertCount(1, $this->keyQueries('drafts'));
         $this->assertSame([[self::NAMED], [self::NAMED]], array_column($this->readsOf('drafts'), 1));
         $this->assertSame(

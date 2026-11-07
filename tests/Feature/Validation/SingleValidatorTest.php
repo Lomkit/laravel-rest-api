@@ -196,7 +196,7 @@ class SingleValidatorTest extends PackageTestCase
 
         $response = $this->postJson('/api/team-notes/actions/pin-named-notes', ['resources' => [1, 2]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertOnePass();
     }
 
@@ -207,7 +207,7 @@ class SingleValidatorTest extends PackageTestCase
 
         $response = $this->postJson('/payload-posts/actions/attach-payload', ['fields' => [['name' => 'reason', 'value' => 'spam']]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 0]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
         $this->assertOnePass();
     }
 

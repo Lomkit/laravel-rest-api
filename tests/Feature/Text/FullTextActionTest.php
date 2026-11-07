@@ -24,7 +24,7 @@ class FullTextActionTest extends FullTextTestCase
             'search' => ['text' => ['value' => 'lamp'], 'filters' => [['field' => 'views', 'operator' => '<', 'value' => 100]]],
         ]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame([PostStatus::Published, PostStatus::Draft, PostStatus::Draft, PostStatus::Published], $this->statuses());
     }
 
@@ -38,7 +38,7 @@ class FullTextActionTest extends FullTextTestCase
 
         $response = $this->postJson('/perimeter-posts/actions/publish-posts', ['search' => ['text' => ['value' => 'lamp']]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame([PostStatus::Published, PostStatus::Draft, PostStatus::Draft, PostStatus::Published], $this->statuses());
     }
 

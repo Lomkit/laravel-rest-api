@@ -47,7 +47,7 @@ class QueuedActionDeclarationsTest extends PackageTestCase
 
         $response = $this->postJson("/configurable-action-posts/actions/{$action}");
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame(2, Post::query()->where('status', PostStatus::Published)->count());
     }
 
@@ -63,7 +63,7 @@ class QueuedActionDeclarationsTest extends PackageTestCase
             'search' => ['instructions' => [['name' => 'configurable', 'fields' => [['name' => 'featured', 'value' => true]]]]],
         ]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame(2, Post::query()->where('featured', true)->where('status', PostStatus::Published)->count());
         $this->assertSame(0, Post::query()->where('featured', false)->where('status', PostStatus::Published)->count());
     }
@@ -80,7 +80,7 @@ class QueuedActionDeclarationsTest extends PackageTestCase
             'search' => ['scopes' => [['name' => 'popular', 'parameters' => [100]]]],
         ]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame(2, Post::query()->where('views', 250)->where('status', PostStatus::Published)->count());
         $this->assertSame(0, Post::query()->where('views', 40)->where('status', PostStatus::Published)->count());
     }

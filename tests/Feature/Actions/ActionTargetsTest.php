@@ -56,7 +56,7 @@ class ActionTargetsTest extends PackageTestCase
 
         $response = $this->postJson("/target-notes/actions/{$action}", $body);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted, 'result' => null]]);
         $this->assertSame($runs, RecordNotes::$runs);
     }
 
@@ -112,10 +112,10 @@ class ActionTargetsTest extends PackageTestCase
         $response = $this->getJson('/target-notes');
 
         $response->assertOk()->assertJsonPath('data.actions', [
-            ['name' => 'Record Notes', 'uriKey' => 'record-notes', 'target' => 'search', 'fields' => [self::REASON], 'meta' => []],
-            ['name' => 'Record Named Notes', 'uriKey' => 'record-named-notes', 'target' => 'resources', 'fields' => [self::REASON], 'meta' => []],
-            ['name' => 'Record No Note', 'uriKey' => 'record-no-note', 'target' => 'none', 'fields' => [self::REASON], 'meta' => []],
-            ['name' => 'Queued Record Notes', 'uriKey' => 'queued-record-notes', 'target' => 'none', 'fields' => [self::REASON], 'meta' => []],
+            ['name' => 'Record Notes', 'uriKey' => 'record-notes', 'target' => 'search', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null],
+            ['name' => 'Record Named Notes', 'uriKey' => 'record-named-notes', 'target' => 'resources', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null],
+            ['name' => 'Record No Note', 'uriKey' => 'record-no-note', 'target' => 'none', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null],
+            ['name' => 'Queued Record Notes', 'uriKey' => 'queued-record-notes', 'target' => 'none', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null],
         ]);
     }
 

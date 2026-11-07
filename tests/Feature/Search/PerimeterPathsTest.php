@@ -131,7 +131,7 @@ class PerimeterPathsTest extends PackageTestCase
     {
         $response = $this->postJson('/path-posts/actions/publish-posts', ['search' => ['filters' => [['field' => 'author.tags.name', 'value' => 'Mathematics']]]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame(['viewAny Post', 'viewAny Author', 'viewAny Tag'], $this->checks);
     }
 

@@ -50,7 +50,7 @@ class ActionFieldsTest extends PackageTestCase
             'fields' => [['name' => 'at', 'value' => '2026-03-01 09:30:00']],
         ]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame($hooks, array_column($this->received->calls(), 0));
 
         foreach ($this->received->calls() as [, $fields]) {
@@ -117,6 +117,8 @@ class ActionFieldsTest extends PackageTestCase
                 ['name' => 'notify', 'label' => null, 'type' => 'boolean', 'nullable' => false, 'default' => true, 'rules' => ['boolean'], 'meta' => []],
             ],
             'meta' => ['color' => '#FFFFFF'],
+            'destructive' => false,
+            'confirm' => null,
         ]);
     }
 

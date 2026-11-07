@@ -45,7 +45,7 @@ class TypesenseActionTest extends TypesenseTestCase
 
         $response = $this->postJson('/api/titled-vouchers/actions/deactivate-vouchers-in-large-chunks', ['search' => ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
         $this->assertSame([['handle', ['ids' => [1, 3, 4, 5]]]], $this->received->calls());
         $this->assertSame([[250, 1]], $engine->pages);
     }
@@ -56,7 +56,7 @@ class TypesenseActionTest extends TypesenseTestCase
         $response = $this->postJson('/api/team-vouchers/actions/retitle-vouchers', ['search' => ['text' => ['value' => 'report'], 'trashed' => 'with', 'sorts' => self::BY_PRICE]]);
         $report = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'trashed' => 'with']);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 5]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 5, 'result' => null]]);
         $this->assertSame([['handle', ['ids' => [1, 6]]], ['handle', ['ids' => [3, 4]]], ['handle', ['ids' => [5]]]], $this->received->calls());
         $report->assertOk()->assertExactJson($this->page([], 0));
     }

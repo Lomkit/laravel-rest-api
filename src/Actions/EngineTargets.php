@@ -35,16 +35,13 @@ final readonly class EngineTargets
         return new self($engine, array_chunk($keys, max(1, $action->chunkCount)));
     }
 
-    /** @param Closure(Collection<int, Model>): void $dispatch */
+    /** @param Closure(Collection<int, Model>): int $dispatch */
     public function dispatch(Closure $dispatch): int
     {
         $impacted = 0;
 
         foreach ($this->chunks as $keys) {
-            $models = $this->search->rows($keys);
-            $impacted += $models->count();
-
-            $dispatch($models);
+            $impacted += $dispatch($this->search->rows($keys));
         }
 
         return $impacted;

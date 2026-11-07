@@ -92,7 +92,7 @@ class MeilisearchIndexTest extends MeilisearchTestCase
         $this->settle();
         $inactive = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [['field' => 'active', 'value' => false]], 'sorts' => self::BY_PRICE]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
         $this->assertSame([['handle', ['ids' => [1, 3, 4, 5]]]], $this->received->calls());
         $inactive->assertOk()
             ->assertJsonPath('data.*.id', [1, 3, 4, 5])
@@ -107,7 +107,7 @@ class MeilisearchIndexTest extends MeilisearchTestCase
         $this->settle();
         $report = $this->search('team-vouchers', ['text' => ['value' => 'report'], 'trashed' => 'with']);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 5]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 5, 'result' => null]]);
         $this->assertSame([['handle', ['ids' => [1, 6]]], ['handle', ['ids' => [3, 4]]], ['handle', ['ids' => [5]]]], $this->received->calls());
         $report->assertOk()->assertExactJson($this->page([], 0));
     }
@@ -123,7 +123,7 @@ class MeilisearchIndexTest extends MeilisearchTestCase
         $this->settle();
 
         if ($refusal === null) {
-            $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids)]]);
+            $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids), 'result' => null]]);
         } else {
             $response->assertUnprocessable()->assertExactJson(['message' => $refusal, 'errors' => ['search' => [$refusal]]]);
         }
@@ -158,7 +158,7 @@ class MeilisearchIndexTest extends MeilisearchTestCase
         $this->settle();
 
         if ($refusal === null) {
-            $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids)]]);
+            $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids), 'result' => null]]);
         } else {
             $response->assertUnprocessable()->assertExactJson(['message' => $refusal, 'errors' => ['search' => [$refusal]]]);
         }

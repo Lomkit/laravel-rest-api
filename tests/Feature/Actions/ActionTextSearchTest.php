@@ -45,7 +45,7 @@ class ActionTextSearchTest extends EngineSearchTestCase
 
         $response = $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report'], ...$search]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids)]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids), 'result' => null]]);
         $this->assertSame([['handle', ['ids' => $ids]]], $this->received->calls());
         $this->assertSame(array_values(array_diff([6], $ids)), $this->activeAmong([6, ...$ids]));
     }
@@ -67,7 +67,7 @@ class ActionTextSearchTest extends EngineSearchTestCase
 
         $response = $this->postJson('/api/team-vouchers/actions/retitle-vouchers', ['search' => ['text' => ['value' => 'report'], 'trashed' => 'with']]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 5]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 5, 'result' => null]]);
         $this->assertSame([['handle', ['ids' => [6, 5]]], ['handle', ['ids' => [4, 1]]], ['handle', ['ids' => [3]]]], $this->received->calls());
         $this->assertSame(['Renamed V-c', 'Budget', 'Renamed V-a', 'Renamed V-d', 'Renamed V-e', 'Renamed V-f'], $this->titles());
     }
@@ -104,7 +104,7 @@ class ActionTextSearchTest extends EngineSearchTestCase
         $message = 'This action can be run on at most 3 resources; narrow the search.';
 
         return [
-            'three matches' => [[['field' => 'active', 'value' => true]], 200, ['data' => ['impacted' => 3]], [['handle', ['ids' => [4, 1, 3]]]]],
+            'three matches' => [[['field' => 'active', 'value' => true]], 200, ['data' => ['impacted' => 3, 'result' => null]], [['handle', ['ids' => [4, 1, 3]]]]],
             'four matches' => [[], 422, ['message' => $message, 'errors' => ['search' => [$message]]], []],
         ];
     }
@@ -141,7 +141,7 @@ class ActionTextSearchTest extends EngineSearchTestCase
 
         $response = $this->postJson('/api/team-vouchers/actions/queued-review-vouchers', ['search' => ['text' => ['value' => 'report'], 'filters' => [['field' => 'active', 'value' => true]]]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 3]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 3, 'result' => null]]);
         $this->assertSame([[[4, 1, 3], false]], Queue::pushed(QueuedAction::class)->map(fn (QueuedAction $job): array => [$job->rows->keys, $job->rows->perimeter])->all());
         $this->assertSame([], $this->received->calls());
     }
@@ -151,7 +151,7 @@ class ActionTextSearchTest extends EngineSearchTestCase
     {
         $response = $this->postJson('/api/team-vouchers/actions/review-vouchers', ['search' => ['text' => ['value' => 'report'], 'limit' => 2]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame([['handle', ['ids' => [5, 4]]]], $this->received->calls());
     }
 
@@ -170,7 +170,7 @@ class ActionTextSearchTest extends EngineSearchTestCase
 
         $response = $this->postJson('/target-team-vouchers/actions/deactivate-vouchers', $body);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids)]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids), 'result' => null]]);
         $this->assertSame([['handle', ['ids' => $ids]]], $this->received->calls());
         $this->assertSame([], $engine->pages);
     }

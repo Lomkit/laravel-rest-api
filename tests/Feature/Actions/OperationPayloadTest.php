@@ -53,7 +53,7 @@ class OperationPayloadTest extends PackageTestCase
             'fields' => [['name' => 'status', 'value' => 'published'], ['name' => 'at', 'value' => '2026-03-01 10:00:00']],
         ]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
         $read = $this->read();
         $fields = $read->fields->toArray();
         $this->assertInstanceOf(ChangeStatus::class, $read->action);
@@ -86,7 +86,7 @@ class OperationPayloadTest extends PackageTestCase
 
         $response = $this->postJson('/api/team-notes/actions/pin-named-notes', ['resources' => [2, '1']]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $read = $this->read();
         $this->assertInstanceOf(KeyList::class, $read->target);
         $this->assertSame([2, 1], $read->target->keys);
@@ -100,7 +100,7 @@ class OperationPayloadTest extends PackageTestCase
 
         $response = $this->postJson('/payload-posts/actions/attach-payload', ['fields' => [['name' => 'reason', 'value' => 'spam']]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 0]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
         $read = $this->read();
         $this->assertNull($read->target);
         $this->assertSame(['reason' => 'spam'], $read->fields->toArray());

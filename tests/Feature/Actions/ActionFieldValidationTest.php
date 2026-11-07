@@ -124,7 +124,7 @@ class ActionFieldValidationTest extends PackageTestCase
             ['name' => 'at', 'value' => '2026-03-01 09:30:00'],
         ]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
         $this->assertSame(PostStatus::Published, $post->fresh()?->status);
     }
 
@@ -135,7 +135,7 @@ class ActionFieldValidationTest extends PackageTestCase
 
         $response = $this->postJson('/api/posts/actions/change-status', ['fields' => [['name' => 'status', 'value' => 'review']]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
         $this->assertSame(PostStatus::Review, $post->fresh()?->status);
     }
 }

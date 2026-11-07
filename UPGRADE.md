@@ -379,7 +379,7 @@ A queued or batched action no longer serializes its resource, its rows and its i
 - In the details response, each action entry gives `target`, `"search"`, `"resources"` or `"none"`, in place of `standalone` and `targeted`:
 
   ```json
-  {"name": "Deactivate Users", "uriKey": "deactivate-users", "target": "resources", "fields": [], "meta": {}}
+  {"name": "Deactivate Users", "uriKey": "deactivate-users", "target": "resources", "fields": [], "meta": {}, "destructive": false, "confirm": null}
   ```
 
   Scramble documents `target` as a string with these three values.
@@ -412,6 +412,39 @@ A queued or batched action no longer serializes its resource, its rows and its i
 - `ActionFields` can be serialized, for example to pass it to a job of your own. It keeps the cast values, the target and a reference to the user, and finds the user again through the user provider of the guard when it is unserialized. When the provider no longer finds the user, `unserialize()` throws `QueuedActionException`.
 - `OperateRequest::resolveFields()` is removed. `handle()` receives the values in its `ActionFields`, and `$request->payload()->fields` keeps the input values of the request, see [Validation engine](#validation-engine).
 - Instructions: `handle(InstructionFields $fields, Builder $query)` and `AppliesToEngine::handleEngine(InstructionFields $fields, EngineQuery $query)`. `Lomkit\Rest\Instructions\InstructionFields` reads the inputs as `ActionFields` does, without `user()` and `target()`; both extend `Lomkit\Rest\Fields\FieldValues`. Scope parameters do not change: the model scope still receives the cast values as arguments.
+- `impacted` in the response of `operate` is the number of rows that the action ran on: the rows given to `handle()`, or the rows put into the jobs of a queued or batched action. Before, an action whose `search` sent a `limit` answered that limit, even when the search matched fewer rows: `{"search": {"limit": 50}}` on 11 rows answered `"impacted": 50`, and now answers `11`. A queued action counts the rows of its jobs when the request ends: the worker can later find fewer rows, see above.
+- An action can answer with a result. Override `respond()` and return a `Lomkit\Rest\Actions\ActionResponse`:
+
+  ```php
+  use Lomkit\Rest\Actions\ActionFields;
+  use Lomkit\Rest\Actions\ActionResponse;
+
+  public function respond(ActionFields $fields, int $impacted): ?ActionResponse
+  {
+      return ActionResponse::message("{$impacted} subscriptions extended");
+  }
+  ```
+
+  `respond()` runs once, in the request, after the last chunk: after `handle()` ran on every chunk, or after the jobs or the batch of a queued action were sent. It receives the `ActionFields` that `handle()` received and `impacted`. It does not run when `handle()` throws. It returns `null` by default.
+- The response of `operate` gives `result`, `null` when `respond()` returns `null`:
+
+  ```json
+  {"data": {"impacted": 11, "result": {"type": "message", "message": "11 subscriptions extended"}}}
+  ```
+
+  | `respond()` returns | `result` |
+  |---|---|
+  | `ActionResponse::message('Done')` | `{"type": "message", "message": "Done"}` |
+  | `ActionResponse::danger('2 subscriptions are locked')` | `{"type": "danger", "message": "2 subscriptions are locked"}` |
+  | `ActionResponse::download($url, 'subscriptions.csv')` | `{"type": "download", "url": "...", "name": "subscriptions.csv"}` |
+  | `ActionResponse::redirect($url)` | `{"type": "redirect", "url": "..."}` |
+  | `ActionResponse::created($invoices)` | `{"type": "created", "keys": [29, 30]}` |
+  | `null` | `null` |
+
+  The status stays 200. The package does not send the file or follow the URL: the client acts on the result. `created()` takes the models, in a collection or an array, and gives their keys in that order; read the rows with a search.
+- Clients that compare the whole response body of `operate` now also receive `result`.
+- `->destructive()` and `->confirm('Extend the selected subscriptions?')` mark an action for clients, when the resource declares it or as the `$destructive` and `$confirm` properties of the action. The details response gives both in each action entry, after `meta`: `"destructive": false` and `"confirm": null` by default. Scramble documents both. The endpoint runs the action the same way.
+- `Action::handleRequest()` returns `Lomkit\Rest\Http\OperateResponse`, which holds `impacted` and `result`, instead of the count, and the `operate()` method of the controller returns that `OperateResponse`. A class that overrides one of them declares the new return type: PHP refuses to load an override that keeps `int` or `Illuminate\Http\Response`, and names the method.
 
 ### Native types
 
@@ -468,7 +501,7 @@ Actions, instructions and relations:
 
 - `Action`, `Instruction` and `BatchableAction` declare native types:
   - a redeclared property keeps its type: `public ?string $name`, `public ActionTarget $target`, `public int $chunkCount`;
-  - an override declares its return type: `handle(): void`, `withBatch(): void`, `name(): string`, `uriKey(): string`, `target(): static`, `handleRequest(): int`.
+  - an override declares its return type: `handle(): void`, `withBatch(): void`, `name(): string`, `uriKey(): string`, `target(): static`, `destructive(): static`, `confirm(): static`, `respond(): ?ActionResponse`, `handleRequest(): OperateResponse`.
 - An action's `handle()` returns `void`. Before, a synchronous action that returned `false` stopped the remaining chunks; the chunks now always run.
 - `make()` returns `static`. An action or instruction that redefines it must declare `: static`. On relations, `make()` takes the arguments of the constructor: `make(string $relation, string $type)`, and `make(string $relation, string|array $types)` on `MorphTo`. A relation that redefines it declares them, and a relation whose constructor takes other arguments redefines `make()`: it no longer passes every argument to the constructor.
 - Relations declare native types: `__construct(string $relation, string $type)`, `name(): string`, `hasMultipleEntries(): bool`, `resource(): Resource` and `rules(Resource $resource, string $prefix): array`, where `Resource` is `Lomkit\Rest\Http\Resource`. A relation that overrides one of them declares the same types.
@@ -486,7 +519,7 @@ Other resource methods:
 
 Controller endpoints:
 
-- `details()` returns `array`, `mutate()` returns `Lomkit\Rest\Http\MutateResponse`, `operate()` returns `Illuminate\Http\Response`, and `search()`, `destroy()`, `restore()` and `forceDestroy()` return `Lomkit\Rest\Http\Response`.
+- `details()` returns `array`, `mutate()` returns `Lomkit\Rest\Http\MutateResponse`, `operate()` returns `Lomkit\Rest\Http\OperateResponse`, and `search()`, `destroy()`, `restore()` and `forceDestroy()` return `Lomkit\Rest\Http\Response`.
 
 Requests:
 

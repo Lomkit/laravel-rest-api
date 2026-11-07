@@ -55,7 +55,7 @@ class AddedFieldRulesTest extends PackageTestCase
 
         $response = $this->postJson('/api/posts/actions/publish-posts', []);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 0]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
     }
 
     #[Test]

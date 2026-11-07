@@ -127,7 +127,7 @@ class EngineDatabaseGrammarTest extends EngineSearchTestCase
             'includes' => [['relation' => 'lines', 'includes' => [['relation' => 'voucher', 'text' => null]]]],
         ]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 6]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 6, 'result' => null]]);
         $this->assertSame([['handle', ['ids' => [8, 7]]], ['handle', ['ids' => [5, 4]]], ['handle', ['ids' => [1, 3]]]], $received->calls());
         $this->assertSame(
             ['Renamed V-c', 'Budget', 'Renamed V-a', 'Renamed V-d', 'Renamed V-e', 'Report trashed', 'Renamed V-g', 'Renamed V-h'],

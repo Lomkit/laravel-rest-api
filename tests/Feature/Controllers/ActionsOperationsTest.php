@@ -105,41 +105,4 @@ class ActionsOperationsTest extends TestCase
             Model::where('number', 100000000)->count()
         );
     }
-
-    public function test_operate_action_with_search_and_limit(): void
-    {
-        ModelFactory::new()
-            ->count(300)
-            ->create([
-                'string' => 'match',
-            ]);
-
-        ModelFactory::new()->count(2)
-            ->create();
-
-        Gate::policy(Model::class, GreenPolicy::class);
-
-        $response = $this->post(
-            '/api/models/actions/modify-number',
-            [
-                'search' => [
-                    'filters' => [
-                        ['field' => 'string', 'value' => 'match'],
-                    ],
-                    'limit' => 150,
-                ],
-            ],
-            ['Accept' => 'application/json']
-        );
-
-        $response->assertJson([
-            'data' => [
-                'impacted' => 150,
-            ],
-        ]);
-        $this->assertEquals(
-            150,
-            Model::where('number', 100000000)->count()
-        );
-    }
 }

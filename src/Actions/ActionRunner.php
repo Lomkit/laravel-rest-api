@@ -43,12 +43,25 @@ final readonly class ActionRunner
     }
 
     /** @param Collection<array-key, Model> $models */
-    public function run(Collection $models): void
+    public function run(Collection $models): int
     {
         if ($models->isEmpty() && $this->action->target !== ActionTarget::None) {
-            return;
+            return 0;
         }
 
+        $this->hand($models);
+
+        return $models->count();
+    }
+
+    public function finish(): void
+    {
+        $this->batch?->dispatch();
+    }
+
+    /** @param Collection<array-key, Model> $models */
+    private function hand(Collection $models): void
+    {
         if ($this->user === null) {
             DB::transaction(fn () => $this->action->handle($this->fields, $models));
 
@@ -64,11 +77,6 @@ final readonly class ActionRunner
         }
 
         Bus::dispatch($job);
-    }
-
-    public function finish(): void
-    {
-        $this->batch?->dispatch();
     }
 
     private static function batch(Action $action, ActionFields $fields): PendingBatch

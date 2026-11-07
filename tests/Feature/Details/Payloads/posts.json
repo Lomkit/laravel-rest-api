@@ -4,22 +4,22 @@
      "fields": [
        {"name": "at", "label": null, "type": "datetime", "nullable": true, "default": null, "rules": ["nullable", "date"], "meta": {}},
        {"name": "notify", "label": null, "type": "boolean", "nullable": false, "default": true, "rules": ["boolean"], "meta": {}}],
-     "meta": {"color": "#FFFFFF"}},
+     "meta": {"color": "#FFFFFF"}, "destructive": false, "confirm": null},
     {"name": "Queued Publish Posts", "uriKey": "queued-publish-posts", "target": "search",
      "fields": [
        {"name": "at", "label": null, "type": "datetime", "nullable": true, "default": null, "rules": ["nullable", "date"], "meta": {}},
        {"name": "notify", "label": null, "type": "boolean", "nullable": false, "default": true, "rules": ["boolean"], "meta": {}}],
-     "meta": {}},
+     "meta": {}, "destructive": false, "confirm": null},
     {"name": "Batched Publish Posts", "uriKey": "batched-publish-posts", "target": "search",
      "fields": [
        {"name": "at", "label": null, "type": "datetime", "nullable": true, "default": null, "rules": ["nullable", "date"], "meta": {}},
        {"name": "notify", "label": null, "type": "boolean", "nullable": false, "default": true, "rules": ["boolean"], "meta": {}}],
-     "meta": {}},
+     "meta": {}, "destructive": false, "confirm": null},
     {"name": "Change Status", "uriKey": "change-status", "target": "search",
      "fields": [
        {"name": "status", "label": null, "type": "enum", "nullable": false, "default": null, "rules": ["enum", "required"], "meta": {}, "values": ["draft", "review", "published"]},
        {"name": "at", "label": null, "type": "datetime", "nullable": false, "default": null, "rules": ["date", "required_if:status,published"], "meta": {}}],
-     "meta": {}}],
+     "meta": {}, "destructive": false, "confirm": null}],
   "instructions": [
     {"name": "Highlight Posts", "uriKey": "highlight-posts",
      "fields": [
