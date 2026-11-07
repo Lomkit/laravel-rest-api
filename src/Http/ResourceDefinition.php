@@ -83,7 +83,7 @@ final class ResourceDefinition
     public function actions(): array
     {
         return $this->actions ??= array_map(
-            fn (Action $action): Action => $action->resource($this->resource),
+            fn (Action $action): Action => $action->resource($this->resource)->ensureValid(),
             $this->resource->actions(),
         );
     }

@@ -1,42 +1,13 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:dispatch\(\) has parameter \$chunkCount with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:dispatchInChunks\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
 			identifier: typeCoverage.propertyTypeCoverage
 			count: 2
 			path: src/Actions/DispatchAction.php
 
 		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 5
-			path: src/Actions/DispatchAction.php
-
-		-
 			identifier: typeCoverage.paramTypeCoverage
-			count: 3
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Parameter \#1 \$chunkCount of method Lomkit\\Rest\\Actions\\DispatchAction\:\:handleClassic\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Parameter \#1 \$chunkCount of method Lomkit\\Rest\\Actions\\DispatchAction\:\:handleTargeted\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
+			count: 2
 			path: src/Actions/DispatchAction.php
 
 		-

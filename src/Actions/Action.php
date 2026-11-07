@@ -13,6 +13,7 @@ use JsonSerializable;
 use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Resourcable;
+use Lomkit\Rest\Exceptions\InvalidActionException;
 use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Http\OperateResponse;
@@ -40,6 +41,8 @@ class Action implements JsonSerializable
     public bool $destructive = false;
 
     public ?string $confirm = null;
+
+    public bool $skipUnauthorized = false;
 
     public function name(): string
     {
@@ -77,10 +80,37 @@ class Action implements JsonSerializable
         return $this;
     }
 
+    public function skipUnauthorized(): static
+    {
+        $this->skipUnauthorized = true;
+
+        return $this;
+    }
+
     /** @return list<string> */
     public function abilities(): array
     {
         return ['viewAny'];
+    }
+
+    public function authorizeEach(): ?string
+    {
+        return null;
+    }
+
+    public function ensureValid(): static
+    {
+        $ability = $this->authorizeEach();
+
+        if ($ability === null && $this->skipUnauthorized) {
+            throw InvalidActionException::skipWithoutAbility(static::class);
+        }
+
+        if ($ability !== null && $this->target === ActionTarget::None) {
+            throw InvalidActionException::abilityWithoutRows(static::class, $ability);
+        }
+
+        return $this;
     }
 
     /** @return array{name: string, uriKey: string, target: value-of<ActionTarget>, fields: list<array<string, mixed>>, meta: \stdClass, destructive: bool, confirm: ?string} */

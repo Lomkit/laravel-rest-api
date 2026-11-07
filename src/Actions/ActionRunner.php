@@ -25,9 +25,10 @@ final readonly class ActionRunner
         private bool $perimeter,
         private ?UserReference $user,
         private ?PendingBatch $batch,
+        private ?RowChecks $checks,
     ) {}
 
-    public static function for(OperateRequest $request, Action $action, ActionFields $fields, bool $perimeter): self
+    public static function for(OperateRequest $request, Action $action, ActionFields $fields, bool $perimeter, ?RowChecks $checks): self
     {
         $payload = $request->payload();
 
@@ -39,12 +40,15 @@ final readonly class ActionRunner
             $perimeter,
             $action instanceof ShouldQueue ? UserReference::of(Auth::getDefaultDriver(), $request->user()) : null,
             $action instanceof BatchableAction ? self::batch($action, $fields) : null,
+            $checks,
         );
     }
 
     /** @param Collection<array-key, Model> $models */
     public function run(Collection $models): int
     {
+        $models = $this->checks?->filter($models) ?? $models;
+
         if ($models->isEmpty() && $this->action->target !== ActionTarget::None) {
             return 0;
         }
