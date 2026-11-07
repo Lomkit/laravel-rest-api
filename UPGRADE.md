@@ -351,7 +351,7 @@ A queued or batched action no longer serializes its resource, its rows and its i
 
   | Target | Request | Rows | Before |
   |---|---|---|---|
-  | `ActionTarget::Search`, the default | `search` is optional, `resources` is refused | the rows that `search` matches inside `perimeterQuery()`, every row when the request sends no `search` | neither `standalone` nor `targeted` |
+  | `ActionTarget::Search`, the default | `search` is optional, `resources` is refused | the rows that `search` matches inside `perimeterQuery()`, every row when the request sends no `search`, at most `$maxResources` | neither `standalone` nor `targeted` |
   | `ActionTarget::Resources` | `resources` is required, `search` is refused | the rows of the keys in `resources`, at most `$maxResources` | `targeted()` |
   | `ActionTarget::None` | `search` and `resources` are refused | no row: `handle()` receives an empty collection | `standalone()` |
 
@@ -464,6 +464,14 @@ A queued or batched action no longer serializes its resource, its rows and its i
 - The chunks of a search without `sorts` and without `limit` come in the order of the key, from the lowest, and no longer in the order of `defaultOrderBy()`. Add `sorts` to choose the order.
 - A row that no longer matches the search when its chunk is loaded is not given to the action, and `impacted` does not count it.
 - An action with the `Resources` target gives `handle()` its rows in the order of `resources`, in chunks of `chunkCount` keys. Before, they came in the order of `defaultOrderBy()`.
+- Every target is capped by the `$maxResources` property of the action, 1000 by default. An action whose `search` matches more rows answers 422 under `search` before it runs on any row: "This action can be run on at most 1000 resources; narrow the search.". Before, only the `Resources` target and a text search on a search engine were capped. A search without `sorts` and without `limit` counts its rows first; with `sorts` or a `limit`, the action reads at most `$maxResources` + 1 keys. Raise the cap on an action that runs on more rows:
+
+  ```php
+  public int $maxResources = 5000;
+  ```
+- Each chunk of a synchronous action runs in a database transaction on the connection of the model of the resource. Before, it ran on the default connection, so the rows of a model on another connection were written outside it.
+- `->atomic()` when the resource declares the action, or `public bool $atomic = true` on the action, runs every chunk in one transaction: when `handle()` throws on a chunk, the rows of every chunk are rolled back. Without it, the chunks handled before the failure stay written and the request answers with the error. `respond()` runs after the commit. An action that implements `ShouldQueue` and is atomic throws `Lomkit\Rest\Exceptions\InvalidActionException` when the resource's actions are read: "App\Rest\Actions\ExportOrders runs its chunks in one transaction through atomic(), but it implements ShouldQueue: its chunks run in the worker, outside the request."
+- An action that already defines `atomic()` or an `$atomic` property gives them this signature and this meaning.
 
 ### Native types
 
@@ -554,7 +562,7 @@ Service provider and facade:
 Query builder:
 
 - `Lomkit\Rest\Query\Builder::$resource` is declared `protected Resource $resource`, where `Resource` is `Lomkit\Rest\Http\Resource`. A query builder that extends `Builder` and redeclares `$resource` keeps that type.
-- `Builder::disableDefaultLimit()` and its property are removed. Remove the calls: an action applies `search.limit` when it is sent, and loads every row of its search otherwise.
+- `Builder::disableDefaultLimit()` and its property are removed. Remove the calls: an action applies `search.limit` when it is sent, and loads every row of its search otherwise, at most `$maxResources` (see [Actions](#actions)).
 
 ### Search
 
@@ -826,7 +834,7 @@ Actions:
 - Meilisearch and Algolia count the results up to a setting of the index: `pagination.maxTotalHits` on Meilisearch and `paginationLimitedTo` on Algolia. Without `search.limit`, the action reads this setting, so the key of the application must be allowed to read the settings of the index. Set it above the `maxResources` of the actions: when it is not above, and the search reaches it, the action gives a 422, "The search engine returns at most 1000 results for this search; narrow the search.". When the settings cannot be read, the action gives a 422, "The search engine does not report how many results this search can reach; give the search a limit.".
 - On Turbopuffer, whose total does not count the text, the action reads the keys until a page is not full.
 - When the results change while the action reads them, it gives a 422, "The search results changed while the action was resolving them; run the action again.". Set `scout.after_commit` to `true`, so that the index changes once the database transactions commit.
-- The actions of `Contains` and `FullText` resources do not change: they still act on the rows of the SQL search, in chunks.
+- The actions of `Contains` and `FullText` resources act on the rows of the SQL search, in chunks, capped by `maxResources` as well, see [Actions](#actions).
 
 From the Scout text search of 2.x:
 

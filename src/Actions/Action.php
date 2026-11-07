@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Actions;
 
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\PendingBatch;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
@@ -43,6 +44,8 @@ class Action implements JsonSerializable
     public ?string $confirm = null;
 
     public bool $skipUnauthorized = false;
+
+    public bool $atomic = false;
 
     public function name(): string
     {
@@ -87,6 +90,13 @@ class Action implements JsonSerializable
         return $this;
     }
 
+    public function atomic(): static
+    {
+        $this->atomic = true;
+
+        return $this;
+    }
+
     /** @return list<string> */
     public function abilities(): array
     {
@@ -108,6 +118,10 @@ class Action implements JsonSerializable
 
         if ($ability !== null && $this->target === ActionTarget::None) {
             throw InvalidActionException::abilityWithoutRows(static::class, $ability);
+        }
+
+        if ($this->atomic && $this instanceof ShouldQueue) {
+            throw InvalidActionException::atomicQueued(static::class);
         }
 
         return $this;

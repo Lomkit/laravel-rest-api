@@ -4,11 +4,12 @@ namespace Lomkit\Rest\Actions;
 
 use Illuminate\Bus\PendingBatch;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\DB;
+use Lomkit\Rest\Actions\Rows\ActionRows;
 use Lomkit\Rest\Authorization\UserReference;
 use Lomkit\Rest\Contracts\BatchableAction;
 use Lomkit\Rest\Http\Requests\OperateRequest;
@@ -26,6 +27,7 @@ final readonly class ActionRunner
         private ?UserReference $user,
         private ?PendingBatch $batch,
         private ?RowChecks $checks,
+        private ConnectionInterface $connection,
     ) {}
 
     public static function for(OperateRequest $request, Action $action, ActionFields $fields, bool $perimeter, ?RowChecks $checks): self
@@ -41,7 +43,17 @@ final readonly class ActionRunner
             $action instanceof ShouldQueue ? UserReference::of(Auth::getDefaultDriver(), $request->user()) : null,
             $action instanceof BatchableAction ? self::batch($action, $fields) : null,
             $checks,
+            $request->resource::newModel()->getConnection(),
         );
+    }
+
+    public function through(ActionRows $rows): int
+    {
+        if (! $this->action->atomic) {
+            return $rows->each($this->run(...));
+        }
+
+        return $this->connection->transaction(fn (): int => $rows->each($this->run(...)));
     }
 
     /** @param Collection<array-key, Model> $models */
@@ -67,7 +79,7 @@ final readonly class ActionRunner
     private function hand(Collection $models): void
     {
         if ($this->user === null) {
-            DB::transaction(fn () => $this->action->handle($this->fields, $models));
+            $this->handle($models);
 
             return;
         }
@@ -81,6 +93,18 @@ final readonly class ActionRunner
         }
 
         Bus::dispatch($job);
+    }
+
+    /** @param Collection<array-key, Model> $models */
+    private function handle(Collection $models): void
+    {
+        if ($this->action->atomic) {
+            $this->action->handle($this->fields, $models);
+
+            return;
+        }
+
+        $this->connection->transaction(fn () => $this->action->handle($this->fields, $models));
     }
 
     private static function batch(Action $action, ActionFields $fields): PendingBatch

@@ -9,9 +9,16 @@ class ChunkedTicketResource extends TicketResource
 {
     public static ActionTarget $target = ActionTarget::Search;
 
+    public static bool $queuedAtomic = false;
+
     #[\Override]
     public function actions(): array
     {
-        return [CloseOpenTickets::make()->target(self::$target), CheckedCloseOpenTickets::make()];
+        return [
+            CloseOpenTickets::make()->target(self::$target),
+            CheckedCloseOpenTickets::make(),
+            CappedCloseOpenTickets::make(),
+            ...(self::$queuedAtomic ? [QueuedAtomicCloseOpenTickets::make()] : []),
+        ];
     }
 }

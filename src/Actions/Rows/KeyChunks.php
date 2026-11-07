@@ -38,17 +38,23 @@ final readonly class KeyChunks implements ActionRows
     }
 
     /** @param Builder<Model> $query */
-    public static function read(Builder $query, ID $id, int $chunkCount): self
+    public static function read(Builder $query, ID $id, int $chunkCount, ?int $limit, RowCap $cap): self
     {
+        $values = $query
+            ->clone()
+            ->limit($cap->limit($limit))
+            ->pluck($query->getModel()->getQualifiedKeyName());
         $keys = [];
 
-        foreach ($query->clone()->pluck($query->getModel()->getQualifiedKeyName()) as $value) {
+        foreach ($values as $value) {
             $key = $id->parseKey(enum_value($value));
 
             if ($key !== null) {
                 $keys[$id->normalizeKey($key)] ??= $key;
             }
         }
+
+        $cap->check(count($keys));
 
         return self::of($query, $id, array_values($keys), $chunkCount);
     }

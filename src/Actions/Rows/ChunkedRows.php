@@ -10,10 +10,20 @@ use Illuminate\Database\Eloquent\Model;
 final readonly class ChunkedRows implements ActionRows
 {
     /** @param Builder<Model> $query */
-    public function __construct(
+    private function __construct(
         private Builder $query,
         private int $chunkCount,
     ) {}
+
+    /** @param Builder<Model> $query */
+    public static function of(Builder $query, int $chunkCount, RowCap $cap): self
+    {
+        $rows = $query->clone()->reorder();
+
+        $cap->check($rows->toBase()->getCountForPagination());
+
+        return new self($rows, $chunkCount);
+    }
 
     #[\Override]
     public function each(Closure $each): int

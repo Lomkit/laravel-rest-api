@@ -570,7 +570,7 @@ class SendWelcomeNotificationAction extends \Lomkit\Rest\Actions\Action
     // (the caller names the models by id) or ActionTarget::None (no model).
     // public \Lomkit\Rest\Actions\ActionTarget $target = \Lomkit\Rest\Actions\ActionTarget::Resources;
 
-    // Optional. Cap on how many ids an action with the Resources target accepts (default 1000).
+    // Optional. Cap on the rows the action runs on, for every target (default 1000): more is a 422.
     // public int $maxResources = 1000;
 
     // Optional. Batch size when processing models (default 100).
@@ -582,6 +582,9 @@ class SendWelcomeNotificationAction extends \Lomkit\Rest\Actions\Action
 
     // Optional. A policy ability checked on every row before the action runs (403 on a refused row).
     // public function authorizeEach(): ?string { return 'update'; }
+
+    // Optional. Run every chunk in one database transaction (synchronous actions only).
+    // public bool $atomic = true;
 
     public function handle(\Lomkit\Rest\Actions\ActionFields $fields, \Illuminate\Support\Collection $models): void
     {
@@ -631,7 +634,7 @@ The target of an action (`Lomkit\Rest\Actions\ActionTarget`, the `$target` prope
 
 | Target | `search` | `resources` | Models impacted |
 |---|---|---|---|
-| `ActionTarget::Search` (default) | optional | prohibited | whatever `search` resolves — **every model when `search` is omitted** |
+| `ActionTarget::Search` (default) | optional | prohibited | whatever `search` resolves — **every model when `search` is omitted**, at most `$maxResources` |
 | `ActionTarget::Resources` | prohibited | required, list of ids | exactly the ids named, each returned by the resource's `perimeterQuery()` |
 | `ActionTarget::None` | prohibited | prohibited | none, `handle()` gets an empty collection |
 
@@ -660,7 +663,7 @@ smaller.
 
 **Response**: `{"data": {"impacted": 150, "result": null}}`. `impacted` is the number of rows given to `handle()`, or put into jobs for a queued action, never the search `limit`. `result` is what `respond(ActionFields $fields, int $impacted): ?ActionResponse` returns, run once after the last chunk (or after the jobs or the batch are sent): `ActionResponse::message($text)` → `{"type": "message", "message": ...}`, `danger($text)` → `{"type": "danger", "message": ...}`, `download($url, $name)` → `{"type": "download", "url": ..., "name": ...}`, `redirect($url)` → `{"type": "redirect", "url": ...}`, `created($models)` → `{"type": "created", "keys": [...]}`; status 200.
 
-**Chunks.** Rows reach `handle()` (or the jobs) in chunks of `$chunkCount`. A search without `sorts` and `limit` is read with `chunkById()` (ascending key), so an action that changes a filtered column still reaches every row; with `sorts` or `limit` the keys are read first in the search order and each chunk of keys is loaded through the same search; the `Resources` target loads `resources` in request order.
+**Chunks.** Rows reach `handle()` (or the jobs) in chunks of `$chunkCount`. A search without `sorts` and `limit` is read with `chunkById()` (ascending key), so an action that changes a filtered column still reaches every row; with `sorts` or `limit` the keys are read first in the search order and each chunk of keys is loaded through the same search; the `Resources` target loads `resources` in request order. Every target is capped by `$maxResources` (a count first, or at most `$maxResources` + 1 keys; `422` under `search`). Each synchronous chunk runs in a transaction on the resource model's connection; `->atomic()` (or `public bool $atomic = true`) runs all chunks in one (a queued atomic action throws `InvalidActionException`).
 
 **Abilities.** Before validation, `operate` resolves the action: an unknown action is a `404` for a user allowed `viewAny` on the resource and a `403` for the others. A known action checks, in this order, `viewAny` on the resource, the abilities the resource's `abilities()` returns for `Endpoint::Operate` (none by default), then those `Action::abilities(): array` returns (`['viewAny']` by default, for every action, whatever its target). Both lists add to `viewAny`: an action returning `['export']` checks `viewAny`, then `export`. An action returning `[]` runs with none of these checks (no `viewAny`, no `Endpoint::Operate` abilities, and its search does not check `viewAny` on the resource): use it for an action any user may run, guests included. Includes, aggregates and filters on relations in the action's `search` still need `viewAny` on the related resource, as in a search.
 

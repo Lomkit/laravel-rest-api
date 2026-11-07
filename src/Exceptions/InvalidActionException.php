@@ -15,4 +15,9 @@ final class InvalidActionException extends LogicException
     {
         return new self("{$action} checks [{$ability}] on each row through authorizeEach(), but its target is None: it runs without rows.");
     }
+
+    public static function atomicQueued(string $action): self
+    {
+        return new self("{$action} runs its chunks in one transaction through atomic(), but it implements ShouldQueue: its chunks run in the worker, outside the request.");
+    }
 }

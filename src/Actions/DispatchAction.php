@@ -8,6 +8,7 @@ use Lomkit\Rest\Actions\Rows\ActionRows;
 use Lomkit\Rest\Actions\Rows\ChunkedRows;
 use Lomkit\Rest\Actions\Rows\KeyChunks;
 use Lomkit\Rest\Actions\Rows\NoRows;
+use Lomkit\Rest\Actions\Rows\RowCap;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Query\QueryBuilderFactory;
@@ -39,7 +40,7 @@ final readonly class DispatchAction
         $checks?->verify($rows->each(...));
 
         $runner = ActionRunner::for($this->request, $this->action, $this->fields, ! $rows instanceof EngineTargets, $checks);
-        $impacted = $rows->each($runner->run(...));
+        $impacted = $runner->through($rows);
 
         $runner->finish();
 
@@ -60,12 +61,13 @@ final readonly class DispatchAction
     private function search(SearchNode $search): ActionRows
     {
         $query = $this->query($search);
+        $cap = new RowCap($this->action->maxResources);
 
         if ($search->sorts === [] && $search->limit === null) {
-            return new ChunkedRows($query->reorder(), $this->action->chunkCount);
+            return ChunkedRows::of($query, $this->action->chunkCount, $cap);
         }
 
-        return KeyChunks::read($query, $this->id(), $this->action->chunkCount);
+        return KeyChunks::read($query, $this->id(), $this->action->chunkCount, $search->limit, $cap);
     }
 
     /** @return Builder<Model> */

@@ -19,6 +19,7 @@ class CloseOpenTickets extends Action
     {
         self::$runs = [];
         ChunkedTicketResource::$target = ActionTarget::Search;
+        ChunkedTicketResource::$queuedAtomic = false;
     }
 
     /** @param Collection<int, Ticket> $models */
