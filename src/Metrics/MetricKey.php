@@ -5,6 +5,8 @@ namespace Lomkit\Rest\Metrics;
 use BackedEnum;
 use Lomkit\Rest\Authorization\CacheContext;
 use Lomkit\Rest\Authorization\UserIdentity;
+use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Query\Clauses\PerimeterClause;
 
 final readonly class MetricKey
 {
@@ -17,7 +19,7 @@ final readonly class MetricKey
         $metric = $node->metric;
         $resource = $metric->resource;
 
-        return new self(json_encode([
+        $parts = [
             $resource::class,
             $metric::class,
             $metric->uriKey(),
@@ -26,12 +28,27 @@ final readonly class MetricKey
             $metric->timezone()->getName(),
             self::canonical($metric->request()->input('search', [])),
             CacheContext::of($resource->authorizationCacheContext(), $resource::class),
-        ], JSON_THROW_ON_ERROR));
+        ];
+
+        if ($metric->cacheScope === CacheScope::Global) {
+            $parts[] = self::perimeter($resource);
+        }
+
+        return new self(json_encode($parts, JSON_THROW_ON_ERROR));
     }
 
     public function for(?UserIdentity $user, string $stamps): string
     {
         return self::PREFIX.hash('sha256', implode('|', [$stamps, $user?->key() ?? 'global', $this->parts]));
+    }
+
+    private static function perimeter(Resource $resource): string
+    {
+        $query = $resource::newModel()->newQuery();
+        (new PerimeterClause($resource))->apply($query);
+        $base = $query->getQuery();
+
+        return hash('sha256', serialize([$base->toSql(), $base->getBindings()]));
     }
 
     /** @return array<int|float|string|bool|null> */

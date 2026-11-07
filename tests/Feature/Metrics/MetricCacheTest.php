@@ -11,6 +11,7 @@ use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingKey;
 use Illuminate\Cache\Events\WritingManyKeys;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Cache;
@@ -26,10 +27,12 @@ use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\MetricOrderResource;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\OrderCount;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\OrdersByStatus;
+use Lomkit\Rest\Tests\Feature\Metrics\Stubs\PerimeterOrderController;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\SharedOrderCount;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\TeamOrderController;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\TotalRevenue;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\WeeklyOrders;
+use Lomkit\Rest\Tests\Fixtures\Sales\Order;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -41,6 +44,10 @@ class MetricCacheTest extends SalesTestCase
     private const string TEAM_ONE = '{"data":{"type":"value","value":52.0,"previous":37.25}}';
 
     private const string TEAM_TWO = '{"data":{"type":"value","value":500.0,"previous":0.0}}';
+
+    private const string SEVEN = '{"data":{"type":"value","value":7,"previous":null}}';
+
+    private const string ONE = '{"data":{"type":"value","value":1,"previous":null}}';
 
     private const string BY_STATUS = '{"data":{"type":"partition","parts":[{"key":"paid","label":"Paid","value":4},{"key":"pending","label":"Pending","value":1},{"key":"refunded","label":"Refunded","value":1},{"key":null,"label":null,"value":1}],"other":null}}';
 
@@ -97,7 +104,8 @@ class MetricCacheTest extends SalesTestCase
         $request->postJson('/team-orders/metrics/total-revenue', ['search' => ['filters' => [['value' => 'paid', 'field' => 'status']]]])->assertOk();
 
         $team = $user === null ? 'N;' : 'i:1;';
-        $parts = '["Lomkit\\\\Rest\\\\Tests\\\\Feature\\\\Metrics\\\\Stubs\\\\TeamOrderResource","Lomkit\\\\Rest\\\\Tests\\\\Feature\\\\Metrics\\\\Stubs\\\\TotalRevenue","total-revenue",{"cacheScope":"'.$scope->value.'","name":null,"weekStartsOn":1,"withoutSearching":false},30,"UTC",{"filters":[{"field":"status","value":"paid"}]},"a:1:{s:4:\"team\";'.$team.'}"]';
+        $perimeter = $scope === CacheScope::Global ? ',"'.$this->perimeterOf(1).'"' : '';
+        $parts = '["Lomkit\\\\Rest\\\\Tests\\\\Feature\\\\Metrics\\\\Stubs\\\\TeamOrderResource","Lomkit\\\\Rest\\\\Tests\\\\Feature\\\\Metrics\\\\Stubs\\\\TotalRevenue","total-revenue",{"cacheScope":"'.$scope->value.'","name":null,"weekStartsOn":1,"withoutSearching":false},30,"UTC",{"filters":[{"field":"status","value":"paid"}]},"a:1:{s:4:\"team\";'.$team.'}"'.$perimeter.']';
         $this->assertSame(['rest.metrics.'.hash('sha256', $identity.$parts)], $keys);
     }
 
@@ -143,7 +151,7 @@ class MetricCacheTest extends SalesTestCase
         $users = [new GenericUser(['id' => 1, 'team_id' => 1]), new GenericUser(['id' => 2, 'team_id' => 1])];
 
         $this->assertSame(1, $this->statementsOf($users, $key));
-        $this->assertSame('{"data":{"type":"value","value":7,"previous":null}}', $this->metricAs($users[1], $key)->getContent());
+        $this->assertSame(self::SEVEN, $this->metricAs($users[1], $key)->getContent());
     }
 
     /** @return iterable<string, array{Closure(): Metric, string}> */
@@ -162,7 +170,72 @@ class MetricCacheTest extends SalesTestCase
         $first = $this->metricAs(new GenericUser(['id' => 1, 'team_id' => 1]), 'shared-order-count')->getContent();
         $second = $this->metricAs(new GenericUser(['id' => 2, 'team_id' => 2]), 'shared-order-count')->getContent();
 
-        $this->assertSame(['{"data":{"type":"value","value":7,"previous":null}}', '{"data":{"type":"value","value":1,"previous":null}}'], [$first, $second]);
+        $this->assertSame([self::SEVEN, self::ONE], [$first, $second]);
+    }
+
+    #[Test]
+    public function it_keeps_a_global_result_of_each_perimeter_apart(): void
+    {
+        $this->servePerimeters(SharedOrderCount::make());
+        $keys = [];
+        Event::listen(RetrievingKey::class, function (RetrievingKey $event) use (&$keys): void {
+            if (str_starts_with($event->key, 'rest.metrics.')) {
+                $keys[] = $event->key;
+            }
+        });
+        $this->logQueries();
+        $contents = [];
+        $calls = [];
+
+        foreach ([[1, 1], [3, 2], [2, 1], [4, 2]] as [$id, $team]) {
+            $this->calls = [];
+            $contents[] = $this->metricAs(new GenericUser(['id' => $id, 'team_id' => $team]), 'shared-order-count')->getContent();
+            $calls[] = $this->calls;
+        }
+
+        $this->assertSame([self::SEVEN, self::ONE, self::SEVEN, self::ONE], $contents);
+        $this->assertSame(2, $this->orderStatements());
+        $this->assertSame([$keys[0], $keys[1], $keys[0], $keys[1]], $keys);
+        $this->assertNotSame($keys[0], $keys[1]);
+        $this->assertSame([
+            ['read 1 keys', 'write a stamp', 'read a result', 'write a result'],
+            ['read 1 keys', 'read a result', 'write a result'],
+            ['read 1 keys', 'read a result'],
+            ['read 1 keys', 'read a result'],
+        ], $calls);
+    }
+
+    #[Test]
+    public function it_computes_again_the_global_results_of_each_perimeter_once_forgotten(): void
+    {
+        $this->servePerimeters(SharedOrderCount::make());
+        $users = [new GenericUser(['id' => 1, 'team_id' => 1]), new GenericUser(['id' => 3, 'team_id' => 2])];
+        $statements = [$this->statementsOf($users, 'shared-order-count')];
+
+        Rest::forgetAuthorizationsFor($users[0]);
+        $statements[] = $this->statementsOf($users, 'shared-order-count');
+
+        Rest::forgetAuthorizations();
+        $statements[] = $this->statementsOf($users, 'shared-order-count');
+
+        $this->assertSame([2, 0, 2], $statements);
+    }
+
+    #[Test]
+    #[WithConfig('rest.authorizations.cache.enabled', false)]
+    public function it_keeps_no_global_result_of_a_perimeter_when_the_cache_is_off(): void
+    {
+        $this->servePerimeters(SharedOrderCount::make());
+        $contents = [];
+        $this->logQueries();
+
+        foreach ([[1, 1], [3, 2], [2, 1]] as [$id, $team]) {
+            $contents[] = $this->metricAs(new GenericUser(['id' => $id, 'team_id' => $team]), 'shared-order-count')->getContent();
+        }
+
+        $this->assertSame([self::SEVEN, self::ONE, self::SEVEN], $contents);
+        $this->assertSame(3, $this->orderStatements());
+        $this->assertSame([], $this->calls);
     }
 
     /**
@@ -385,6 +458,21 @@ class MetricCacheTest extends SalesTestCase
     {
         MetricOrderResource::$declared = array_values($metrics);
         Rest::resource('team-orders', TeamOrderController::class)->register();
+    }
+
+    private function servePerimeters(Metric ...$metrics): void
+    {
+        MetricOrderResource::$declared = array_values($metrics);
+        Rest::resource('team-orders', PerimeterOrderController::class)->register();
+    }
+
+    private function perimeterOf(int $team): string
+    {
+        $query = Order::query()
+            ->where(fn (Builder $query): Builder => $query->where('orders.team_id', $team))
+            ->getQuery();
+
+        return hash('sha256', serialize([$query->toSql(), $query->getBindings()]));
     }
 
     /** @param array<string, mixed> $body */
