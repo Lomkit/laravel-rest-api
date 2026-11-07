@@ -2,12 +2,14 @@
 
 namespace Lomkit\Rest\Tests\Feature\RequestLifecycle;
 
+use Closure;
 use Illuminate\Http\Request;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
 use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\CountedPostController;
 use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\CountedPostResource;
 use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\EvaluatedDeclarations;
@@ -17,6 +19,7 @@ use Lomkit\Rest\Tests\Fixtures\Publishing\Author;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 class ResourceDefinitionTest extends PackageTestCase
@@ -30,8 +33,8 @@ class ResourceDefinitionTest extends PackageTestCase
     {
         parent::setUp();
 
-        $this->evaluated = $this->app->instance(EvaluatedDeclarations::class, new EvaluatedDeclarations);
         Rest::resource('counted-posts', CountedPostController::class)->register();
+        $this->evaluated = $this->app->instance(EvaluatedDeclarations::class, new EvaluatedDeclarations);
     }
 
     #[\Override]
@@ -102,6 +105,23 @@ class ResourceDefinitionTest extends PackageTestCase
 
         $this->assertSame(array_fill_keys(self::DECLARATIONS, 1), $this->evaluated->counts());
         $this->assertSame([null], $this->evaluated->usersOf('fields'));
+    }
+
+    /** @param Closure(PendingResourceRegistration): mixed $configure */
+    #[Test]
+    #[DataProvider('registrations')]
+    public function it_reads_the_actions_once_when_the_routes_register(Closure $configure, array $expected): void
+    {
+        $configure(Rest::resource('recounted-posts', CountedPostController::class))->register();
+
+        $this->assertSame($expected, $this->evaluated->counts());
+    }
+
+    /** @return iterable<string, array{Closure(PendingResourceRegistration): PendingResourceRegistration, array<string, int>}> */
+    public static function registrations(): iterable
+    {
+        yield 'with the operate endpoint' => [fn (PendingResourceRegistration $pending): PendingResourceRegistration => $pending, ['actions' => 1]];
+        yield 'without the operate endpoint' => [fn (PendingResourceRegistration $pending): PendingResourceRegistration => $pending->except('operate'), []];
     }
 
     #[Test]

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Http\Routing;
 
 use Closure;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Routing\RouteCollection;
 use Lomkit\Rest\Exceptions\InvalidResourceRouteException;
 use Lomkit\Rest\Http\Controllers\Controller;
@@ -24,6 +25,7 @@ final class PendingResourceRegistration
         private readonly UriSegment $name,
         private readonly string $controller,
         private RouteMiddleware $middleware,
+        private readonly Container $container,
     ) {
         $this->selection = new EndpointSelection;
         $this->names = new RouteNames($name->value);
@@ -121,7 +123,7 @@ final class PendingResourceRegistration
     {
         $this->settled = true;
 
-        $routes = new EndpointRoutes($this->name, $this->controller, ResourceVerbs::current(), $this->names, $this->middleware, $this->endpointMiddleware);
+        $routes = new EndpointRoutes($this->name, $this->controller, ResourceVerbs::current(), $this->names, $this->middleware, $this->endpointMiddleware, $this->container);
 
         return $this->registrar->register($routes->definitions($this->selection->resolve()));
     }

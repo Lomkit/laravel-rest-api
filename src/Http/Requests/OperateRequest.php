@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Http\Requests;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Routing\Route;
 use LogicException;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\OperationNode;
@@ -31,9 +32,9 @@ class OperateRequest extends RestRequest
     protected function authorizeEntry(Authorizer $authorizer): void
     {
         $resource = $this->rootResource();
-        $key = $this->route('action');
+        $key = $this->actionKey();
 
-        if (! is_string($key) || ! $resource->definition()->actionExists($key)) {
+        if ($key === null || ! $resource->definition()->actionExists($key)) {
             $authorizer->plan([Check::onClass($resource, 'viewAny')]);
 
             throw new HttpException(404);
@@ -88,26 +89,25 @@ class OperateRequest extends RestRequest
         return $query;
     }
 
-    public function actionKey(): string
+    public function actionKey(): ?string
     {
-        $key = $this->route('action');
+        $route = $this->route();
+        $key = $route instanceof Route ? $route->defaults['action'] ?? null : null;
 
-        if (! is_string($key)) {
-            throw new HttpException(404);
-        }
-
-        return $key;
+        return is_string($key) ? $key : null;
     }
 
     private function parse(Resource $resource): OperationNode
     {
-        if (! $resource->definition()->actionExists($this->actionKey())) {
+        $key = $this->actionKey();
+
+        if ($key === null || ! $resource->definition()->actionExists($key)) {
             throw new HttpException(404);
         }
 
         return (new OperationParser(fn (): Builder => $this->keysQuery($resource)))->parse(
             Cursor::of($this->all(), $this->parsedRules()->violations()),
-            $resource->definition()->action($this->actionKey()),
+            $resource->definition()->action($key),
             ValidationContext::root($resource, $this->budget(), $this->parsedRules()),
         );
     }

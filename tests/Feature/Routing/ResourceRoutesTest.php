@@ -24,6 +24,8 @@ class ResourceRoutesTest extends PackageTestCase
             'documents.details' => 'GET|HEAD documents',
             'documents.search' => 'POST documents/search',
             'documents.mutate' => 'POST documents/mutate',
+            'documents.operate.archive-documents' => 'POST documents/actions/archive-documents',
+            'documents.operate.queued-archive-documents' => 'POST documents/actions/queued-archive-documents',
             'documents.operate' => 'POST documents/actions/{action}',
             'documents.destroy' => 'DELETE documents',
         ], $this->table($this->registerDocuments()));
@@ -38,7 +40,7 @@ class ResourceRoutesTest extends PackageTestCase
         );
 
         $this->assertSame(array_map(fn (string $method): string => DocumentController::class.'@'.$method, [
-            'details', 'search', 'mutate', 'operate', 'destroy', 'restore', 'forceDestroy',
+            'details', 'search', 'mutate', 'operate', 'operate', 'operate', 'destroy', 'restore', 'forceDestroy',
         ]), $actions);
     }
 
@@ -49,7 +51,7 @@ class ResourceRoutesTest extends PackageTestCase
 
         $this->assertSame('POST documents/restore', $table['documents.restore']);
         $this->assertSame('DELETE documents/force', $table['documents.forceDestroy']);
-        $this->assertCount(7, $table);
+        $this->assertCount(9, $table);
     }
 
     #[Test]
@@ -80,7 +82,7 @@ class ResourceRoutesTest extends PackageTestCase
         $this->assertSame($before, $this->routeCount());
 
         unset($pending);
-        $this->assertSame($before + 5, $this->routeCount());
+        $this->assertSame($before + 7, $this->routeCount());
     }
 
     /** @param Closure(PendingResourceRegistration): mixed $configure */
@@ -106,7 +108,7 @@ class ResourceRoutesTest extends PackageTestCase
         ];
         yield 'except a soft delete endpoint' => [
             fn (PendingResourceRegistration $pending) => $pending->withSoftDeletes('restore')->except('restore'),
-            ['documents.details', 'documents.search', 'documents.mutate', 'documents.operate', 'documents.destroy'],
+            ['documents.details', 'documents.search', 'documents.mutate', 'documents.operate.archive-documents', 'documents.operate.queued-archive-documents', 'documents.operate', 'documents.destroy'],
         ];
         yield 'only a soft delete endpoint without opting in' => [
             fn (PendingResourceRegistration $pending) => $pending->only('restore', 'search'),

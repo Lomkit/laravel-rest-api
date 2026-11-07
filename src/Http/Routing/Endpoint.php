@@ -101,12 +101,12 @@ enum Endpoint: string
         };
     }
 
-    public function uri(UriSegment $name, ResourceVerbs $verbs): string
+    public function uri(UriSegment $name, ResourceVerbs $verbs, ?string $key = null): string
     {
         $segments = [$name->value, $verbs->for($this)];
 
         if ($this->parameter() !== null) {
-            $segments[] = '{'.$this->parameter().'}';
+            $segments[] = $key ?? '{'.$this->parameter().'}';
         }
 
         if ($this === self::Batch) {

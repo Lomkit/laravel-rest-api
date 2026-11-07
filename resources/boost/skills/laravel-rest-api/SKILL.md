@@ -188,7 +188,7 @@ Override these methods. They take no argument: a list that depends on the user r
   }
   ```
 - `limits()` — allowed `limit` values (default `[10, 25, 50]`). The `$defaultLimit` property (`50`) sizes a page sent without `limit`, and `$includeLimit` (`10`) the rows of each parent row in an include of this resource sent without `limit`. Both must be values of `limits()`, or the resource throws `InvalidResourceException` when its limits are first read.
-- `actions()` — `Lomkit\Rest\Actions\Action` instances exposed under `/actions/{uriKey}`.
+- `actions()` — `Lomkit\Rest\Actions\Action` instances, each with its own route `/actions/{uriKey}`; read when the routes register, so keep the list the same for every user.
 - `instructions()` — `Lomkit\Rest\Instructions\Instruction` instances exposed under the `instructions` search key.
 - `text(): ?\Lomkit\Rest\Text\TextSearch` — the text search strategy of `search.text` (`Contains::make()`, `FullText::make()` or `ScoutEngine::make()`), `null` by default (no text search). See "Text search" and "Search engines" below.
 - `gates(): array` — the names of extra policy methods that `search.gates` accepts next to the built-in abilities, `[]` by default. See "2. Gates" below.
@@ -276,7 +276,7 @@ Rest::resource('posts', PostsController::class)
     ->except('destroy')                          // or ->only('details', 'search')
     ->names('blog.posts')                        // name prefix; ->names([...]) or ->name('search', 'posts.find') for exact names
     ->middleware('verified')                     // added after the package middleware
-    ->middlewareFor('operate', 'throttle:5,1')   // added after the resource middleware
+    ->middlewareFor('operate', 'throttle:5,1')   // added after the resource middleware, before each action's own
     ->withoutMiddleware('verified')              // or ->withoutMiddlewareFor('details', 'verified')
     ->register();                                // optional: routes register when the builder is released
 ```
@@ -288,7 +288,8 @@ Rest::resource('posts', PostsController::class)
 | `GET` | `/users` | `details` | Schema for the resource (fields, relations, scopes, limits, actions, instructions, rules, text search, gates) |
 | `POST` | `/users/search` | `search` | Filterable/sortable/paginated read |
 | `POST` | `/users/mutate` | `mutate` | Batch create/update + relation operations |
-| `POST` | `/users/actions/{action}` | `operate` | Run a custom action (`{action}` is its `uriKey`) |
+| `POST` | `/users/actions/{uriKey}` | `operate` | Run a custom action: one route per action, named `{name}.operate.{uriKey}`, with the action's own middleware |
+| `POST` | `/users/actions/{action}` | `operate` | Unknown keys: `403` without `viewAny`, else `404` (named `{name}.operate`) |
 | `DELETE` | `/users` | `destroy` | Batch (soft-)delete |
 | `POST` | `/users/restore` | `restore` | Opt-in via `withSoftDeletes()` |
 | `DELETE` | `/users/force` | `forceDestroy` | Opt-in via `withSoftDeletes()` |
@@ -588,6 +589,10 @@ class SendWelcomeNotificationAction extends \Lomkit\Rest\Actions\Action
     // Optional. Run every chunk in one database transaction (synchronous actions only).
     // public bool $atomic = true;
 
+    // Optional. Route middleware of this action, after the resource and operate middleware.
+    // public array $middleware = ['throttle:exports'];
+    // public array $withoutMiddleware = ['auth:sanctum'];
+
     public function handle(\Lomkit\Rest\Actions\ActionFields $fields, \Illuminate\Support\Collection $models): void
     {
         // $fields->expires_at is a CarbonImmutable; $fields->notify is a bool, true when not sent
@@ -668,6 +673,8 @@ smaller.
 **Chunks.** Rows reach `handle()` (or the jobs) in chunks of `$chunkCount`. A search without `sorts` and `limit` is read with `chunkById()` (ascending key), so an action that changes a filtered column still reaches every row; with `sorts` or `limit` the keys are read first in the search order and each chunk of keys is loaded through the same search; the `Resources` target loads `resources` in request order. Every target is capped by `$maxResources` (a count first, or at most `$maxResources` + 1 keys; `422` under `search`). Each synchronous chunk runs in a transaction on the resource model's connection; `->atomic()` (or `public bool $atomic = true`) runs all chunks in one (a queued atomic action throws `InvalidActionException`).
 
 **Abilities.** Before validation, `operate` resolves the action: an unknown action is a `404` for a user allowed `viewAny` on the resource and a `403` for the others. A known action checks, in this order, `viewAny` on the resource, the abilities the resource's `abilities()` returns for `Endpoint::Operate` (none by default), then those `Action::abilities(): array` returns (`['viewAny']` by default, for every action, whatever its target). Both lists add to `viewAny`: an action returning `['export']` checks `viewAny`, then `export`. An action returning `[]` runs with none of these checks (no `viewAny`, no `Endpoint::Operate` abilities, and its search does not check `viewAny` on the resource): use it for an action any user may run, guests included. Includes, aggregates and filters on relations in the action's `search` still need `viewAny` on the related resource, as in a search.
+
+**Routes and middleware.** `Rest::resource()` reads `actions()` when it registers the routes (at boot or during `route:cache`, without a user) and gives each action `POST /{resource}/actions/{uriKey}`, named `{name}.operate.{uriKey}`; `POST /{resource}/actions/{action}` comes last and answers unknown keys (`403` without `viewAny`, else `404`), also for an action that `actions()` returned only after the routes were registered. Keep `actions()` the same for every user and free of queries; run `route:cache` again after adding an action. `->middleware('throttle:exports')` and `->withoutMiddleware('auth:sanctum')` when declaring (or the `$middleware` and `$withoutMiddleware` properties) add to the package, resource and `middlewareFor('operate')` middleware and can remove any of them, group middleware included; name a removed middleware as declared, with its parameters. Two `throttle` middleware without a limiter name on one route count each request twice (they share the user's key): give the action a named limiter. Two actions with one `uriKey()` throw `InvalidResourceRouteException` when the routes register. The progress route of batches stays `GET /{resource}/actions/{action}/batches/{batch}`, without the action's middleware. `rest:check` reports an action route that removes the authentication middleware.
 
 **Row checks.** `authorizeEach(): ?string` (null by default) names a policy ability checked on every row of the `Search` or `Resources` target, through the resource's `authorizedTo()` (memo, `authorizationCache()`: one store read and one write per chunk). By default all chunks are read and checked before any `handle()`, job or batch, then read again to run: a refused row is a `403` (status and message of the first refusal; `AuthorizationDenied` holds every refusal, at most 50, under `resources.{index}` or `search`). With `->skipUnauthorized()` (or `public bool $skipUnauthorized = true`) each chunk is filtered just before it is handed and `impacted` counts the allowed rows. The worker of a queued action does not check again. `skipUnauthorized()` without an ability, or an ability on the `None` target, throws `InvalidActionException` when the actions are read.
 
@@ -885,7 +892,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 
 ## Pointers into the codebase
 
-- Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `ResourceRegistrar` and the route value objects)
+- Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `EndpointRoutes` (the routes of each endpoint, one per action for `operate`), `ResourceRegistrar` and the route value objects)
 - Config — `src/Config/RestConfig.php` (the typed values of `config/rest.php`, read once per request through `RestContext::config()`) and `src/Config/ConfigValue.php` (the typed read of one key, also used for `rest.limits` and `rest.precognition.enabled`)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details,Batch}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, read with `$resource->definition()`, and their lookups `relation()`, `scope()`, `action()`, `instruction()` and `inputFields()`; kept by `src/Http/RestContext.php`, whose limits are a `src/Http/ResourceLimits.php`), `src/Concerns/Resource/*` (`DeclaresFields`, `DeclaresScopes`, `Paginable`, `Relationable`, `Contextual` with `definition()` and `request()`, `DisableGates`, `DisableAuthorizationsCache`, hooks, ...)

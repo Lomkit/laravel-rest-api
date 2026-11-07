@@ -41,6 +41,8 @@ class ResourceVerbsTest extends PackageTestCase
             'documents.details' => 'GET|HEAD documents',
             'documents.search' => 'POST documents/find',
             'documents.mutate' => 'POST documents/write',
+            'documents.operate.archive-documents' => 'POST documents/run/archive-documents',
+            'documents.operate.queued-archive-documents' => 'POST documents/run/queued-archive-documents',
             'documents.operate' => 'POST documents/run/{action}',
             'documents.destroy' => 'DELETE documents',
             'documents.restore' => 'POST documents/undelete',
