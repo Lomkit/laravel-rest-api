@@ -16,6 +16,7 @@ use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Fields\WriteOperation;
+use Lomkit\Rest\Rules\MaxDepth;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -38,27 +39,28 @@ class FieldRulesTest extends TestCase
         $this->assertSame(['nullable', 'string', 'max:255', 'sometimes'], $rules->forWrite(WriteOperation::Update));
     }
 
-    /** @return iterable<string, array{Field, string}> */
+    /** @return iterable<string, array{Field, list<mixed>}> */
     public static function fieldTypes(): iterable
     {
-        yield 'id' => [ID::make('id'), 'integer'];
-        yield 'text' => [Text::make('title'), 'string'];
-        yield 'number' => [Number::make('rating'), 'numeric'];
-        yield 'integer' => [Integer::make('views'), 'integer'];
-        yield 'boolean' => [Boolean::make('featured'), 'boolean'];
-        yield 'date' => [Date::make('published_on'), 'date'];
-        yield 'datetime' => [DateTime::make('published_at'), 'date'];
-        yield 'json' => [Json::make('metadata'), 'array'];
+        yield 'id' => [ID::make('id'), ['integer']];
+        yield 'text' => [Text::make('title'), ['string']];
+        yield 'number' => [Number::make('rating'), ['numeric']];
+        yield 'integer' => [Integer::make('views'), ['integer']];
+        yield 'boolean' => [Boolean::make('featured'), ['boolean']];
+        yield 'date' => [Date::make('published_on'), ['date']];
+        yield 'datetime' => [DateTime::make('published_at'), ['date']];
+        yield 'json' => [Json::make('metadata'), ['array', new MaxDepth(64)]];
     }
 
+    /** @param list<mixed> $baseRules */
     #[Test]
     #[DataProvider('fieldTypes')]
-    public function it_puts_the_base_rule_of_each_type_between_nullable_and_the_declared_rules(Field $field, string $baseRule): void
+    public function it_puts_the_base_rules_of_each_type_between_nullable_and_the_declared_rules(Field $field, array $baseRules): void
     {
         $rules = $field->nullable()->rules('sometimes')->creationRules('required')->updateRules('filled')->getRules();
 
-        $this->assertSame(['nullable', $baseRule, 'sometimes', 'required'], $rules->forWrite(WriteOperation::Create));
-        $this->assertSame(['nullable', $baseRule, 'sometimes', 'filled'], $rules->forWrite(WriteOperation::Update));
+        $this->assertEquals(['nullable', ...$baseRules, 'sometimes', 'required'], $rules->forWrite(WriteOperation::Create));
+        $this->assertEquals(['nullable', ...$baseRules, 'sometimes', 'filled'], $rules->forWrite(WriteOperation::Update));
     }
 
     #[Test]

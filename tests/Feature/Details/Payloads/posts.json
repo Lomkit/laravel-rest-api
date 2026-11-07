@@ -42,7 +42,7 @@
     {"name": "rating", "label": null, "type": "number", "nullable": true, "select": true, "sort": true, "filter": {"operators": ["=", "!=", ">", ">=", "<", "<=", "between", "not between", "in", "not in", "is null", "is not null"]}, "create": true, "update": true, "rules": {"all": ["nullable", "numeric"], "create": [], "update": []}, "meta": {}},
     {"name": "published_on", "label": null, "type": "date", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", ">", ">=", "<", "<=", "between", "not between"]}, "create": true, "update": true, "rules": {"all": ["date"], "create": ["required"], "update": []}, "meta": {}},
     {"name": "published_at", "label": null, "type": "datetime", "nullable": true, "select": true, "sort": true, "filter": {"operators": ["=", "!=", ">", ">=", "<", "<=", "between", "not between", "is null", "is not null"]}, "create": true, "update": true, "rules": {"all": ["nullable", "date", "after_or_equal:published_on"], "create": [], "update": []}, "meta": {}},
-    {"name": "metadata", "label": null, "type": "json", "nullable": true, "select": true, "sort": false, "filter": {"operators": []}, "create": true, "update": true, "rules": {"all": ["nullable", "array"], "create": [], "update": []}, "meta": {}}],
+    {"name": "metadata", "label": null, "type": "json", "nullable": true, "select": true, "sort": false, "filter": {"operators": []}, "create": true, "update": true, "rules": {"all": ["nullable", "array", "max_depth:64"], "create": [], "update": []}, "meta": {}}],
   "limits": [10, 25, 50],
   "scopes": [
     {"name": "publishedSince", "fields": [{"name": "since", "label": null, "type": "date", "nullable": false, "default": null, "rules": ["date"], "meta": {}}], "meta": {}},

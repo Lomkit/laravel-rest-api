@@ -63,7 +63,7 @@ class FieldDetailsTest extends TestCase
             'a date' => [Date::make('published_on'), '{"name":"published_on","label":null,"type":"date","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::D8.'},"create":true,"update":true,"rules":{"all":["date"],"create":[],"update":[]},"meta":{}}'],
             'a date and time' => [DateTime::make('published_at'), '{"name":"published_at","label":null,"type":"datetime","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::D8.'},"create":true,"update":true,"rules":{"all":["date"],"create":[],"update":[]},"meta":{}}'],
             'an enum' => [Enum::make('status', PostStatus::class), '{"name":"status","label":null,"type":"enum","nullable":false,"select":true,"sort":true,"filter":{"operators":'.self::ID4.'},"create":true,"update":true,"rules":{"all":["enum"],"create":[],"update":[]},"meta":{},"values":["draft","review","published"]}'],
-            'a json' => [Json::make('metadata'), '{"name":"metadata","label":null,"type":"json","nullable":false,"select":true,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["array"],"create":[],"update":[]},"meta":{}}'],
+            'a json' => [Json::make('metadata'), '{"name":"metadata","label":null,"type":"json","nullable":false,"select":true,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["array","max_depth:64"],"create":[],"update":[]},"meta":{}}'],
         ];
     }
 

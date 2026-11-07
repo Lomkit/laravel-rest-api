@@ -16,6 +16,7 @@ use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Rules\MaxDepth;
 use Lomkit\Rest\Tests\Unit\Fields\Stubs\CurrencyAmount;
 use Lomkit\Rest\Tests\Unit\Fields\Stubs\Money;
 use Lomkit\Rest\Tests\Unit\Fields\Stubs\Priority;
@@ -40,7 +41,7 @@ class FieldTypesTest extends TestCase
             'date' => [Date::make('published_on'), 'date', $temporal, ['date']],
             'datetime' => [DateTime::make('published_at'), 'datetime', $temporal, ['date']],
             'enum' => [Enum::make('priority', Priority::class), 'enum', ['=', '!=', 'in', 'not in'], [Rule::enum(Priority::class)]],
-            'json' => [Json::make('metadata'), 'json', [], ['array']],
+            'json' => [Json::make('metadata'), 'json', [], ['array', new MaxDepth(64)]],
         ];
     }
 
