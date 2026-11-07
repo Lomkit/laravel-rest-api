@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Feature\Search\Stubs\Illustrated;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\MorphToMany;
 
@@ -26,7 +25,7 @@ class KeywordedPhotoResource extends Resource
     }
 
     #[\Override]
-    public function perimeterQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(Builder $query): Builder
     {
         return $query->where('photos.path', '!=', 'hidden.png');
     }

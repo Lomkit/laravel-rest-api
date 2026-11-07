@@ -60,4 +60,16 @@ class TypesenseActionTest extends TypesenseTestCase
         $this->assertSame([['handle', ['ids' => [1, 6]]], ['handle', ['ids' => [3, 4]]], ['handle', ['ids' => [5]]]], $this->received->calls());
         $report->assertOk()->assertExactJson($this->page([], 0));
     }
+
+    #[Test]
+    public function it_reads_the_user_of_each_request_in_the_index_perimeter_of_an_action(): void
+    {
+        $both = $this->postJson('/api/team-vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]]);
+        $this->actingAs(new GenericUser(['id' => 2, 'teams' => ['blue']]));
+        $blue = $this->postJson('/api/team-vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]]);
+
+        $both->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
+        $blue->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
+        $this->assertSame([['handle', ['ids' => [1, 3, 4, 5]]], ['handle', ['ids' => [4]]]], $this->received->calls());
+    }
 }

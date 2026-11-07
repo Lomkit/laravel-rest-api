@@ -8,7 +8,6 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Scopes\Scope;
@@ -79,7 +78,7 @@ class VoucherResource extends Resource
     }
 
     #[\Override]
-    public function perimeterQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(Builder $query): Builder
     {
         return $query->where('team', 'red');
     }

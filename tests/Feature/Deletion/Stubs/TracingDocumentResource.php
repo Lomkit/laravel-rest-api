@@ -4,10 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Deletion\Stubs;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Lomkit\Rest\Http\Requests\DestroyRequest;
-use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
-use Lomkit\Rest\Http\Requests\RestoreRequest;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Archive\DocumentResource;
 
 class TracingDocumentResource extends DocumentResource
@@ -49,62 +45,62 @@ class TracingDocumentResource extends DocumentResource
     }
 
     #[\Override]
-    public function destroying(DestroyRequest $request, Model $model): void
+    public function destroying(Model $model): void
     {
         DeletionTrace::record('destroying', $model);
     }
 
     #[\Override]
-    public function destroyed(DestroyRequest $request, Model $model): void
+    public function destroyed(Model $model): void
     {
         DeletionTrace::record('destroyed', $model);
     }
 
     #[\Override]
-    public function restoring(RestoreRequest $request, Model $model): void
+    public function restoring(Model $model): void
     {
         DeletionTrace::record('restoring', $model);
     }
 
     #[\Override]
-    public function restored(RestoreRequest $request, Model $model): void
+    public function restored(Model $model): void
     {
         DeletionTrace::record('restored', $model);
     }
 
     #[\Override]
-    public function forceDestroying(ForceDestroyRequest $request, Model $model): void
+    public function forceDestroying(Model $model): void
     {
         DeletionTrace::record('forceDestroying', $model);
     }
 
     #[\Override]
-    public function forceDestroyed(ForceDestroyRequest $request, Model $model): void
+    public function forceDestroyed(Model $model): void
     {
         DeletionTrace::record('forceDestroyed', $model);
     }
 
     #[\Override]
-    public function performDelete(RestRequest $request, Model $model): void
+    public function performDelete(Model $model): void
     {
         DeletionTrace::record('performDelete', $model);
 
-        parent::performDelete($request, $model);
+        parent::performDelete($model);
     }
 
     #[\Override]
-    public function performRestore(RestRequest $request, Model $model): void
+    public function performRestore(Model $model): void
     {
         DeletionTrace::record('performRestore', $model);
 
-        parent::performRestore($request, $model);
+        parent::performRestore($model);
     }
 
     #[\Override]
-    public function performForceDelete(RestRequest $request, Model $model): void
+    public function performForceDelete(Model $model): void
     {
         DeletionTrace::record('performForceDelete', $model);
 
-        parent::performForceDelete($request, $model);
+        parent::performForceDelete($model);
     }
 }

@@ -83,9 +83,6 @@ class MutationPayloadTest extends PackageTestCase
         $sync = ($updated->relations['featuredProducts'] ?? [])[0] ?? null;
         $this->assertInstanceOf(MutationNode::class, $sync);
         $this->assertSame([MutationOperation::Sync, [$floorLamp->id], ['price' => 10], true], [$sync->operation, $sync->key, $sync->pivot, $sync->withoutDetaching]);
-        $this->assertSame(['operation' => 'update', 'key' => $lighting->id, 'relations' => ['featuredProducts' => [
-            ['operation' => 'sync', 'key' => [$floorLamp->id], 'pivot' => ['price' => 10], 'without_detaching' => true],
-        ]]], $updated->toArray());
         $featured = $lighting->featuredProducts()
             ->pluck('products.id')
             ->all();

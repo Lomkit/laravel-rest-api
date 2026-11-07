@@ -55,7 +55,7 @@ final readonly class EngineSearch
             ->authorizer()
             ->ensurePlanned(Check::onClass($this->resource, 'viewAny'));
 
-        $query = $this->text->engineQuery($this->resource->context()->request, $this->search->trashed)
+        $query = $this->text->engineQuery($this->search->trashed)
             ?? throw InvalidTextSearchException::notOnEngine($this->resource::class);
 
         EngineCriteria::of($this->search->filters, $this->search->sorts)->applyTo($query);

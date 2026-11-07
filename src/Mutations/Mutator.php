@@ -5,14 +5,12 @@ namespace Lomkit\Rest\Mutations;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\MutationOperation;
-use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\AttributeWriter;
 
 final readonly class Mutator
 {
     public function __construct(
-        private MutateRequest $request,
         private RowSet $rows,
         public WriteChecks $checks,
     ) {}
@@ -81,7 +79,6 @@ final readonly class Mutator
      */
     private function write(Resource $resource, Model $model, MutationNode $node, OperationLog $log, array $owned, ?Closure $linking): Model
     {
-        $entry = $node->toArray();
         $writes = RelationWrites::ofNode($resource, $model, $node);
         $hooked = self::writesAttributes($node);
         $relationKeys = [];
@@ -94,7 +91,7 @@ final readonly class Mutator
         }
 
         if ($hooked) {
-            $resource->mutating($this->request, $entry, $model);
+            $resource->mutating($node, $model);
         }
 
         foreach ($writes as $write) {
@@ -133,7 +130,7 @@ final readonly class Mutator
         }
 
         if ($hooked) {
-            $resource->mutated($this->request, $entry, $model);
+            $resource->mutated($node, $model);
         }
 
         return $model;

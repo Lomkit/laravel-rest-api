@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Actions\Stubs;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Lomkit\Rest\Actions\ActionTarget;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Tests\Fixtures\Workspace\TeamNoteResource;
 
 class TargetNoteResource extends TeamNoteResource
@@ -27,7 +26,7 @@ class TargetNoteResource extends TeamNoteResource
     }
 
     #[\Override]
-    public function perimeterQuery(RestRequest $request, Builder $query): Builder
+    public function perimeterQuery(Builder $query): Builder
     {
         return $query->where('team', 'red')->orWhere('title', 'Public');
     }

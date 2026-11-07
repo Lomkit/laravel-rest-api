@@ -31,7 +31,7 @@ class ResolvedEngineTextTest extends EngineTestCase
         $this->assertNull($text->clause());
         $this->assertNull($text->relevance());
         $this->assertSame('ran', $text->run(fn (): string => 'ran'));
-        $this->assertEquals(new EnginePage(['V-c'], 1), $text->engineQuery($context->request)?->page(10, 1));
+        $this->assertEquals(new EnginePage(['V-c'], 1), $text->engineQuery()?->page(10, 1));
     }
 
     /** @param array<string, mixed> $search */
@@ -46,7 +46,7 @@ class ResolvedEngineTextTest extends EngineTestCase
         $this->assertSame(TextBackend::Engine, $text->backend);
         $this->assertFalse($text->usesEngine());
         $this->assertNull($text->engineGrammar());
-        $this->assertNull($text->engineQuery($context->request));
+        $this->assertNull($text->engineQuery());
     }
 
     /** @return array<string, array{array<string, mixed>}> */

@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Unit\Mutations;
 
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Mutations\ChildWrites;
 use Lomkit\Rest\Mutations\Mutator;
 use Lomkit\Rest\Mutations\NoWrites;
@@ -70,10 +69,9 @@ class RelationWritesTest extends PackageTestCase
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('The relation [replies] cannot be written.');
 
-        $request = MutateRequest::create('/api/teams/mutate', 'POST');
         $rows = new RowSet;
 
-        $writes->after(new Team, new Mutator($request, $rows, new WriteChecks($rows)), new OperationLog);
+        $writes->after(new Team, new Mutator($rows, new WriteChecks($rows)), new OperationLog);
     }
 
     #[Test]

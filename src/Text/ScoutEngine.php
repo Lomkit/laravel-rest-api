@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Text;
 
 use Closure;
 use Lomkit\Rest\Exceptions\InvalidTextSearchException;
-use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Text\Engine\EngineIndex;
 use Lomkit\Rest\Text\Engine\EngineQuery;
@@ -17,7 +16,7 @@ final readonly class ScoutEngine implements EngineTextSearch
     /**
      * @param  array<mixed>  $filterable
      * @param  array<mixed>  $sortable
-     * @param  (Closure(EngineQuery, RestRequest): mixed)|null  $perimeter
+     * @param  (Closure(EngineQuery): mixed)|null  $perimeter
      * @param  array<mixed>  $perimeterAttributes
      */
     private function __construct(
@@ -46,7 +45,7 @@ final readonly class ScoutEngine implements EngineTextSearch
     }
 
     /**
-     * @param  Closure(EngineQuery, RestRequest): mixed  $perimeter
+     * @param  Closure(EngineQuery): mixed  $perimeter
      * @param  array<mixed>  $attributes
      */
     public function perimeter(Closure $perimeter, array $attributes = []): self
@@ -66,12 +65,12 @@ final readonly class ScoutEngine implements EngineTextSearch
     }
 
     #[\Override]
-    public function query(TextQuery $text, TextTarget $target, RestRequest $request, ?Trashed $trashed = null): EngineQuery
+    public function query(TextQuery $text, TextTarget $target, ?Trashed $trashed = null): EngineQuery
     {
         $query = new EngineQuery($this->index($target), $text, $trashed);
 
         if ($this->perimeter !== null) {
-            ($this->perimeter)($query, $request);
+            ($this->perimeter)($query);
         }
 
         return $query;

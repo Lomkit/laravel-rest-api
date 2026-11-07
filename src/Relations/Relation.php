@@ -155,7 +155,7 @@ class Relation implements \JsonSerializable
     {
         $resource->context()->authorizer()->ensurePlanned(Check::onClass($resource, 'viewAny'));
 
-        $resource->perimeterQuery($resource->context()->request, $query);
+        $resource->perimeterQuery($query);
     }
 
     protected function modelRelation(): mixed
