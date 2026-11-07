@@ -19,17 +19,17 @@ class {{ class }}
 
     public function create({{ user }} $user): bool
     {
-        return false;
+        return true;
     }
 
     public function update({{ user }} $user, {{ model }} ${{ modelVariable }}): bool
     {
-        return false;
+        return true;
     }
 
     public function delete({{ user }} $user, {{ model }} ${{ modelVariable }}): bool
     {
-        return false;
+        return true;
     }
 {{ softDeleteMethods }}
 }

@@ -29,8 +29,8 @@ class QuickStartCommandTest extends ScaffoldingTestCase
           app/Rest/Controllers/Controller.php ... created
           app/Rest/Controllers/PostsController.php ... created
           app/Rest/Controllers/TagsController.php ... created
-          app/Policies/PostPolicy.php ... created (read-only)
-          app/Policies/TagPolicy.php ... created (read-only)
+          app/Policies/PostPolicy.php ... created (allows every ability)
+          app/Policies/TagPolicy.php ... created (allows every ability)
           routes/api.php ... posts, tags behind auth:sanctum
           checks (fresh process) ... 10 routes authenticated, 2 policies found
 
@@ -41,7 +41,7 @@ class QuickStartCommandTest extends ScaffoldingTestCase
           Next:
             php artisan tinker --execute="echo App\Models\User::first()->createToken('cli')->plainTextToken;"
             curl -X POST http://localhost/api/posts/search -H "Authorization: Bearer <token>" -H "Accept: application/json" -H "Content-Type: application/json" -d '{"search":{"limit":10}}'
-          PostPolicy and TagPolicy let signed-in users read and refuse every write. Edit app/Policies before production.
+          PostPolicy and TagPolicy let signed-in users do everything. Edit app/Policies before production.
 
         TXT;
 
@@ -118,7 +118,7 @@ class QuickStartCommandTest extends ScaffoldingTestCase
             $this->contents('Rest/Controllers/PostsController.php'),
         );
         $this->assertStringContainsString("    public function view(User \$user, Post \$post): bool\n    {\n        return true;\n    }", $this->contents('Policies/PostPolicy.php'));
-        $this->assertStringContainsString("    public function create(User \$user): bool\n    {\n        return false;\n    }", $this->contents('Policies/PostPolicy.php'));
+        $this->assertStringContainsString("    public function create(User \$user): bool\n    {\n        return true;\n    }", $this->contents('Policies/PostPolicy.php'));
     }
 
     #[Test]

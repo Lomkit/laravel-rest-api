@@ -18,7 +18,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use function Laravel\Prompts\suggest;
 
-#[AsCommand(name: 'rest:policy', description: 'Create a new read-only policy class')]
+#[AsCommand(name: 'rest:policy', description: 'Create a new policy class that allows every ability')]
 class PolicyMakeCommand extends RestGeneratorCommand
 {
     protected $type = 'Policy';
@@ -30,7 +30,7 @@ class PolicyMakeCommand extends RestGeneratorCommand
     #[\Override]
     protected function stub(): Stub
     {
-        return Stub::Policy;
+        return $this->blueprint->stub();
     }
 
     #[\Override]

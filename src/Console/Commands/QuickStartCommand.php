@@ -33,7 +33,7 @@ use function Illuminate\Support\artisan_binary;
 use function Illuminate\Support\php_binary;
 use function Laravel\Prompts\multiselect;
 
-#[AsCommand(name: 'rest:quick-start', description: 'Expose models through resources, controllers, read-only policies and authenticated API routes')]
+#[AsCommand(name: 'rest:quick-start', description: 'Expose models through authenticated API routes, with resources, controllers and policies that allow every ability')]
 class QuickStartCommand extends Command
 {
     use FindsAvailableModels;
@@ -43,7 +43,7 @@ class QuickStartCommand extends Command
         {--guard= : The guard of the routes to add, sanctum by default}
         {--install-api : Run php artisan install:api without asking when the application has no API routes, or no Laravel Sanctum or Laravel Passport for the guard}';
 
-    protected $description = 'Expose models through resources, controllers, read-only policies and authenticated API routes';
+    protected $description = 'Expose models through authenticated API routes, with resources, controllers and policies that allow every ability';
 
     public function handle(Filesystem $files, Gate $gate, Router $router): int
     {

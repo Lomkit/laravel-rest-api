@@ -143,8 +143,8 @@ class QuickStartExistingAppTest extends ScaffoldingTestCase
 
         $output = $this->quickStart('Post', 'Tag');
 
-        $this->assertStringContainsString("  app/Policies/Blog/Editorial.php ... kept\n  app/Policies/TagPolicy.php ... created (read-only)\n", $output);
-        $this->assertStringContainsString('TagPolicy lets signed-in users read and refuses every write.', $output);
+        $this->assertStringContainsString("  app/Policies/Blog/Editorial.php ... kept\n  app/Policies/TagPolicy.php ... created (allows every ability)\n", $output);
+        $this->assertStringContainsString('TagPolicy lets signed-in users do everything.', $output);
         $this->assertFileDoesNotExist(app_path('Policies/PostPolicy.php'));
     }
 
@@ -169,7 +169,7 @@ class QuickStartExistingAppTest extends ScaffoldingTestCase
 
         $output = $this->quickStart(User::class);
 
-        $this->assertStringContainsString("  app/Rest/Controllers/UsersController.php ... created\n  app/Policies/UserPolicy.php ... created (read-only)\n", $output);
+        $this->assertStringContainsString("  app/Rest/Controllers/UsersController.php ... created\n  app/Policies/UserPolicy.php ... created (allows every ability)\n", $output);
         $this->assertStringContainsString('  checks (fresh process) ... 5 routes authenticated, 1 policy found', $output);
     }
 

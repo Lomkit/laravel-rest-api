@@ -20,6 +20,16 @@ final readonly class PolicyBlueprint
         return new self($imports, $model, $user);
     }
 
+    public function stub(): Stub
+    {
+        return Stub::Policy;
+    }
+
+    public function detail(): string
+    {
+        return '(allows every ability)';
+    }
+
     /** @return array<string, string|null> */
     public function replacements(): array
     {
@@ -48,7 +58,7 @@ final readonly class PolicyBlueprint
 
         $parameters = "{$this->imports->name($this->user)} \$user, {$this->imports->name($this->model)} \${$this->variable()}";
         $methods = array_map(
-            fn (string $ability): string => "public function {$ability}({$parameters}): bool\n{\n    return false;\n}",
+            fn (string $ability): string => "public function {$ability}({$parameters}): bool\n{\n    return true;\n}",
             self::SOFT_DELETE_ABILITIES,
         );
 

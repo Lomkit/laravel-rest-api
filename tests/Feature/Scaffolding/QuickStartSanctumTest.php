@@ -96,7 +96,7 @@ class QuickStartSanctumTest extends ScaffoldingTestCase
             ."  app/Rest/Resources/PostResource.php ... created (6 fields, 0 relations)\n"
             ."  app/Rest/Controllers/Controller.php ... created\n"
             ."  app/Rest/Controllers/PostsController.php ... created\n"
-            ."  app/Policies/PostPolicy.php ... created (read-only)\n"
+            ."  app/Policies/PostPolicy.php ... created (allows every ability)\n"
             ."  routes/api.php ... posts behind auth:sanctum\n"
             ."  checks (fresh process) ... 5 routes authenticated, 1 policy found\n\n"
             ."  Skipped: Post.author: no resource for App\Models\User. Rerun with --model=User to expose users.\n"
@@ -105,7 +105,7 @@ class QuickStartSanctumTest extends ScaffoldingTestCase
             ."  Next:\n"
             ."    php artisan tinker --execute=\"echo App\Models\User::first()->createToken('cli')->plainTextToken;\"\n"
             ."    curl -X POST http://localhost/api/posts/search -H \"Authorization: Bearer <token>\" -H \"Accept: application/json\" -H \"Content-Type: application/json\" -d '{\"search\":{\"limit\":10}}'\n"
-            ."  PostPolicy lets signed-in users read and refuses every write. Edit app/Policies before production.\n",
+            ."  PostPolicy lets signed-in users do everything. Edit app/Policies before production.\n",
             $this->summary($output->fetch()),
         );
         $this->assertSame(self::ROUTES_WITH_POSTS, $this->routes());

@@ -34,24 +34,24 @@ class MakePolicyCommandTest extends ScaffoldingTestCase
 
             public function create(User $user): bool
             {
-                return false;
+                return true;
             }
 
             public function update(User $user, Ledger $ledger): bool
             {
-                return false;
+                return true;
             }
 
             public function delete(User $user, Ledger $ledger): bool
             {
-                return false;
+                return true;
             }
         }
 
         PHP;
 
     #[Test]
-    public function it_writes_a_policy_that_lets_signed_in_users_read_and_refuses_every_write(): void
+    public function it_writes_a_policy_that_allows_every_ability(): void
     {
         $this->writeModel('App\Models\Ledger');
 
@@ -63,16 +63,16 @@ class MakePolicyCommandTest extends ScaffoldingTestCase
     }
 
     #[Test]
-    public function it_refuses_restore_and_force_delete_for_a_soft_deletable_model(): void
+    public function it_allows_restore_and_force_delete_for_a_soft_deletable_model(): void
     {
         $this->writeModel('App\Models\Memo', 'use \Illuminate\Database\Eloquent\SoftDeletes;');
 
         $this->artisan('rest:policy', ['name' => 'MemoPolicy', '--model' => 'Memo', '--no-interaction' => true])->assertSuccessful();
 
         $this->assertStringEndsWith(
-            "    public function delete(User \$user, Memo \$memo): bool\n    {\n        return false;\n    }\n\n"
-            ."    public function restore(User \$user, Memo \$memo): bool\n    {\n        return false;\n    }\n\n"
-            ."    public function forceDelete(User \$user, Memo \$memo): bool\n    {\n        return false;\n    }\n}\n",
+            "    public function delete(User \$user, Memo \$memo): bool\n    {\n        return true;\n    }\n\n"
+            ."    public function restore(User \$user, Memo \$memo): bool\n    {\n        return true;\n    }\n\n"
+            ."    public function forceDelete(User \$user, Memo \$memo): bool\n    {\n        return true;\n    }\n}\n",
             $this->policy('MemoPolicy'),
         );
     }
