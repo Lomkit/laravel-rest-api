@@ -298,7 +298,7 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
   "actions": [{"name": "Retire Artworks", "uriKey": "retire-artworks", "target": "search",
     "fields": [{"name": "notify", "label": null, "type": "boolean", "nullable": false, "default": false, "rules": ["boolean"], "meta": {}}],
     "meta": {}, "destructive": false, "confirm": null}],
-  "metrics": [{"name": "Artworks By Medium", "uriKey": "artworks-by-medium", "type": "breakdown", "meta": {}}],
+  "metrics": [{"name": "Artworks By Medium", "uriKey": "artworks-by-medium", "type": "partition", "ranges": [], "meta": {}}],
   "instructions": [{"name": "By Medium", "uriKey": "by-medium",
     "fields": [{"name": "medium", "label": null, "type": "enum", "nullable": false, "default": null, "rules": ["enum", "required"], "meta": {}, "values": ["oil", "ink", "watercolor"]}],
     "meta": {}, "text": true}],
@@ -703,7 +703,36 @@ class TicketBacklog extends Metric
 - The search runs the resource's `searching()` event first, as a search does. A metric that must skip it declares `TicketBacklog::make()->withoutSearching()` in `metrics()`, or `public bool $withoutSearching = true;` in its class. The perimeter, `viewAny` and the validation still apply.
 - Abilities: `viewAny`, then the resource's `abilities(Endpoint::Metric)`, then the metric's `abilities()` (`['viewAny']` by default). `[]` runs without these checks, for example for guests with `->withoutMiddleware('auth')`. Relation filters still need `viewAny` on the related resource.
 - Routes: named `{name}.metric.{uriKey}`; `POST /{resource}/metrics/{metric}` comes last and answers unknown keys (`403` without `viewAny`, else `404`). `->middleware('throttle:reports')` and `->withoutMiddleware('auth:sanctum')` (or the `$middleware` and `$withoutMiddleware` properties) work as for actions. `Rest::resource()` reads `metrics()` when it registers the routes: keep it the same for every user and free of queries; two metrics with one `uriKey()` throw.
-- Details: `metrics` lists `{"name", "uriKey", "type", "meta"}` for each metric. `$resource->definition()->metrics()` and `metric($key)` read them.
+- Details: `metrics` lists `{"name", "uriKey", "type", "ranges", "meta"}` for each metric. `$resource->definition()->metrics()` and `metric($key)` read them.
+
+### Value, Partition and Progress
+
+Three built-in types compute the usual results in one query. Extend one and call its helpers in `calculate()`; each helper returns the result to return.
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Value;
+use Lomkit\Rest\Metrics\ValueResult;
+
+class TotalRevenue extends Value
+{
+    public function calculate(Builder $query): ValueResult
+    {
+        return $this->sum($query, 'price', 'placed_at');   // column, date column
+    }
+
+    public function ranges(): array
+    {
+        return [30 => '30 days', 90 => '90 days'];          // days; the first one is the default
+    }
+}
+```
+
+- `Value` (type `value`): `count($query, $dateColumn = 'created_at')`, `sum($query, $column, $dateColumn = 'created_at')`, `average()`, `min()` and `max()` with the parameters of `sum()`. With ranges, `{"value": <the last N days>, "previous": <the N days before>}`; without, `{"value": <every row>, "previous": null}` and the date column is not read. A count without ranges is the number of rows of the search.
+- Ranges: `ranges()` maps a number of days to a label. The request sends `{"range": 90}` for another range; an undeclared key, or `range` for a metric without ranges, is a `422`. In a custom metric, `$this->range()` gives the selected `MetricRange` (`value`, `label`) or null. `ranges()` keys are integers greater than 0, or `Rest::resource()` throws.
+- Numbers: a count is an integer; a sum, min or max is an integer for an `Integer` field and a float for another `Number` field; an average is a float. Over no row: count and sum `0`, average, min and max `null`. Floats keep their fraction in the response (`52.0`).
+- Fields: the helpers read fields that the resource declares. A sum, average, min or max needs a `Number` field (`Integer` included), the range a `Date` or `DateTime` field; any other field throws `InvalidMetricException` when the metric runs.
+- Response: `POST /api/orders/metrics/total-revenue` with `{}` -> `{"data": {"type": "value", "value": 52.0, "previous": 37.25}}`.
 
 ## Instructions (custom search refinements)
 

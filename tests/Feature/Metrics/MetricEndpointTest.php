@@ -239,13 +239,13 @@ class MetricEndpointTest extends HelpdeskTestCase
         $this->getJson('/metric-tickets')
             ->assertOk()
             ->assertJsonPath('data.metrics', [
-                ['name' => 'Ticket Backlog', 'uriKey' => 'ticket-backlog', 'type' => 'gauge', 'meta' => []],
-                ['name' => 'Tickets By Status', 'uriKey' => 'tickets-by-status', 'type' => 'breakdown', 'meta' => []],
-                ['name' => 'Guest Ticket Backlog', 'uriKey' => 'guest-ticket-backlog', 'type' => 'gauge', 'meta' => []],
-                ['name' => 'Reported Ticket Backlog', 'uriKey' => 'reported-ticket-backlog', 'type' => 'gauge', 'meta' => []],
-                ['name' => 'Unchecked Ticket Backlog', 'uriKey' => 'unchecked-ticket-backlog', 'type' => 'gauge', 'meta' => []],
-                ['name' => 'Quiet Ticket Backlog', 'uriKey' => 'quiet-ticket-backlog', 'type' => 'gauge', 'meta' => []],
-                ['name' => 'Typed Ticket Backlog', 'uriKey' => 'typed-ticket-backlog', 'type' => 'gauge', 'meta' => []],
+                ['name' => 'Ticket Backlog', 'uriKey' => 'ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
+                ['name' => 'Tickets By Status', 'uriKey' => 'tickets-by-status', 'type' => 'breakdown', 'ranges' => [], 'meta' => []],
+                ['name' => 'Guest Ticket Backlog', 'uriKey' => 'guest-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
+                ['name' => 'Reported Ticket Backlog', 'uriKey' => 'reported-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
+                ['name' => 'Unchecked Ticket Backlog', 'uriKey' => 'unchecked-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
+                ['name' => 'Quiet Ticket Backlog', 'uriKey' => 'quiet-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
+                ['name' => 'Typed Ticket Backlog', 'uriKey' => 'typed-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
             ]);
     }
 }
