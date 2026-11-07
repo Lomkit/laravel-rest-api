@@ -8,52 +8,24 @@ use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
-use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 
 final class DetailsEntryTypes
 {
-    /**
-     * @param  array<string, Type>  $properties
-     * @param  list<string>  $optional
-     */
-    public static function objectOf(array $properties, array $optional = [], string $description = ''): ObjectType
-    {
-        $type = new ObjectType;
-
-        foreach ($properties as $name => $property) {
-            $type->addProperty($name, $property);
-        }
-
-        $type->setRequired(array_values(array_diff(array_keys($properties), $optional)));
-        $type->setDescription($description);
-
-        return $type;
-    }
-
-    public static function listOf(Type $items, string $description = ''): ArrayType
-    {
-        $type = new ArrayType;
-        $type->setItems($items);
-        $type->setDescription($description);
-
-        return $type;
-    }
-
     public static function strings(): ArrayType
     {
-        return self::listOf(new StringType);
+        return Schemas::list(new StringType);
     }
 
     public static function operators(string $description = ''): ArrayType
     {
-        return self::listOf((new StringType)->enum(array_column(FilterOperator::cases(), 'value')), $description);
+        return Schemas::list((new StringType)->enum(array_column(FilterOperator::cases(), 'value')), $description);
     }
 
     public static function values(string $description): ArrayType
     {
-        return self::listOf(new MixedType, $description);
+        return Schemas::list(new MixedType, $description);
     }
 
     public static function field(): ObjectType
@@ -80,11 +52,11 @@ final class DetailsEntryTypes
 
     public static function action(): ObjectType
     {
-        return self::objectOf([
+        return Schemas::required([
             'name' => new StringType,
             'uriKey' => new StringType,
             'target' => (new StringType)->enum(array_column(ActionTarget::cases(), 'value')),
-            'fields' => self::listOf(self::input()),
+            'fields' => Schemas::list(self::input()),
             'meta' => new ObjectType,
             'destructive' => (new BooleanType)->setDescription('True when the action is declared with destructive(); a hint for clients, the endpoint runs the action the same way'),
             'confirm' => (new StringType)->nullable(true)->setDescription('The text set with confirm(), for clients to show before they run the action; null without one'),
@@ -94,11 +66,11 @@ final class DetailsEntryTypes
 
     public static function metric(): ObjectType
     {
-        return self::objectOf([
+        return Schemas::required([
             'name' => new StringType,
             'uriKey' => new StringType,
             'type' => (new StringType)->setDescription('The type of the result, given again as data.type in the response of the metric'),
-            'ranges' => self::listOf(self::objectOf(['value' => new IntegerType, 'label' => new StringType]), 'The values that the range key of the request accepts; the first one applies when the request sends none'),
+            'ranges' => Schemas::list(Schemas::required(['value' => new IntegerType, 'label' => new StringType]), 'The values that the range key of the request accepts; the first one applies when the request sends none'),
             'meta' => new ObjectType,
             'authorized' => (new BooleanType)->setDescription('True when the user passes the abilities that the metric route checks before it reads the request'),
         ]);
@@ -106,10 +78,10 @@ final class DetailsEntryTypes
 
     public static function instruction(): ObjectType
     {
-        return self::objectOf([
+        return Schemas::required([
             'name' => new StringType,
             'uriKey' => new StringType,
-            'fields' => self::listOf(self::input()),
+            'fields' => Schemas::list(self::input()),
             'meta' => new ObjectType,
             'text' => (new BooleanType)->setDescription('Can be sent with search.text on this resource'),
         ]);
@@ -117,16 +89,16 @@ final class DetailsEntryTypes
 
     public static function scope(): ObjectType
     {
-        return self::objectOf([
+        return Schemas::required([
             'name' => new StringType,
-            'fields' => self::listOf(self::input()),
+            'fields' => Schemas::list(self::input()),
             'meta' => new ObjectType,
         ]);
     }
 
     private static function input(): ObjectType
     {
-        return self::objectOf([
+        return Schemas::required([
             'name' => new StringType,
             'label' => (new StringType)->nullable(true)->setDescription('The name of the field in validation messages, set with label(); null without one'),
             'type' => new StringType,
@@ -140,19 +112,19 @@ final class DetailsEntryTypes
 
     private static function fieldEntry(string $select, string $sort, string $operators, string $create, string $update): ObjectType
     {
-        $rules = self::objectOf(
+        $rules = Schemas::required(
             ['all' => self::strings(), 'create' => self::strings(), 'update' => self::strings()],
             description: 'Validation rules as strings: all on every write, create and update on that operation only',
         );
 
-        return self::objectOf([
+        return Schemas::required([
             'name' => new StringType,
             'label' => (new StringType)->nullable(true)->setDescription('The name of the field in validation messages, set with label(); null without one'),
             'type' => new StringType,
             'nullable' => new BooleanType,
             'select' => (new BooleanType)->setDescription($select),
             'sort' => (new BooleanType)->setDescription($sort),
-            'filter' => self::objectOf(['operators' => self::operators($operators)]),
+            'filter' => Schemas::required(['operators' => self::operators($operators)]),
             'create' => (new BooleanType)->setDescription($create),
             'update' => (new BooleanType)->setDescription($update),
             'rules' => $rules,
