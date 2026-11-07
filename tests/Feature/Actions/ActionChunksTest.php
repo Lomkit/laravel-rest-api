@@ -178,6 +178,66 @@ class ActionChunksTest extends HelpdeskTestCase
         ];
     }
 
+    #[Test]
+    public function it_refuses_more_named_rows_than_max_resources(): void
+    {
+        ChunkedTicketResource::$target = ActionTarget::Resources;
+
+        $response = $this->postJson('/chunked-tickets/actions/capped-close-open-tickets', ['resources' => [7, 6, 5, 4, 3, 2]]);
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The resources field must not have more than 5 items.',
+            'errors' => ['resources' => ['The resources field must not have more than 5 items.']],
+        ]);
+        $this->assertSame([], CloseOpenTickets::$runs);
+    }
+
+    /**
+     * @param  array<string, mixed>  $body
+     * @param  list<list<int>>  $runs
+     * @param  list<string>  $queries
+     */
+    #[Test]
+    #[DataProvider('uncappedReadings')]
+    public function it_runs_an_action_without_a_cap_on_more_rows_than_max_resources_holds(ActionTarget $target, array $body, array $runs, array $queries): void
+    {
+        ChunkedTicketResource::$target = $target;
+        DB::enableQueryLog();
+
+        $response = $this->postJson('/chunked-tickets/actions/uncapped-close-open-tickets', $body);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 7, 'result' => null]]);
+        $this->assertSame($runs, CloseOpenTickets::$runs);
+        $this->assertSame($queries, $this->ticketQueries());
+    }
+
+    /** @return array<string, array{ActionTarget, array<string, mixed>, list<list<int>>, list<string>}> */
+    public static function uncappedReadings(): array
+    {
+        return [
+            'a search without sorts: chunks after the last key, without a count' => [ActionTarget::Search, ['search' => ['filters' => [self::OPEN]]], [[1, 2], [3, 4], [5, 6], [7]], [
+                'select * from tickets where (tickets.status = ?) and tickets.id is not null order by tickets.id asc limit 2',
+                'select * from tickets where (tickets.status = ?) and tickets.id > ? order by tickets.id asc limit 2',
+                'select * from tickets where (tickets.status = ?) and tickets.id > ? order by tickets.id asc limit 2',
+                'select * from tickets where (tickets.status = ?) and tickets.id > ? order by tickets.id asc limit 2',
+            ]],
+            'a sorted search: every key, then chunks of keys' => [ActionTarget::Search, ['search' => ['filters' => [self::OPEN], 'sorts' => [['field' => 'title']]]], [[4, 2], [5, 3], [6, 1], [7]], [
+                'select tickets.id from tickets where (tickets.status = ?) order by tickets.title asc',
+                'select * from tickets where (tickets.status = ?) and tickets.id in (4, 2)',
+                'select * from tickets where (tickets.status = ?) and tickets.id in (5, 3)',
+                'select * from tickets where (tickets.status = ?) and tickets.id in (6, 1)',
+                'select * from tickets where (tickets.status = ?) and tickets.id in (7)',
+            ]],
+            'named rows: the key check, then chunks of keys' => [ActionTarget::Resources, ['resources' => [7, 6, 5, 4, 3, 2, 1]], [[7, 6], [5, 4], [3, 2], [1]], [
+                'select tickets.id from tickets where tickets.id in (7, 6, 5, 4, 3, 2, 1)',
+                'select * from tickets where tickets.id in (7, 6)',
+                'select * from tickets where tickets.id in (5, 4)',
+                'select * from tickets where tickets.id in (3, 2)',
+                'select * from tickets where tickets.id in (1)',
+            ]],
+        ];
+    }
+
     /**
      * @param  array<string, mixed>  $body
      * @param  list<string>  $queries

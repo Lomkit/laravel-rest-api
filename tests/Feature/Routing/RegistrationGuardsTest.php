@@ -65,15 +65,6 @@ class RegistrationGuardsTest extends PackageTestCase
         $this->assertNotNull($this->app['router']->getRoutes()->getByName('model-with_default2.search'));
     }
 
-    #[Test]
-    public function it_rejects_the_removed_options_argument(): void
-    {
-        $this->assertRejected(
-            fn () => Rest::resource('documents', DocumentController::class, ['only' => ['search']]),
-            'Rest::resource() no longer takes an options array for [documents]. Use only(), except(), names(), middleware() and withSoftDeletes() instead.',
-        );
-    }
-
     /** @param Closure(PendingResourceRegistration): mixed $change */
     #[Test]
     #[DataProvider('unknownKeyCalls')]

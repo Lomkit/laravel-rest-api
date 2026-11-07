@@ -12,7 +12,7 @@ final readonly class EngineTargetKeys
     public function __construct(
         private EngineQuery $query,
         private int $chunkCount,
-        private int $maxResources,
+        private ?RowCap $cap,
         private ?int $limit = null,
     ) {}
 
@@ -31,9 +31,7 @@ final readonly class EngineTargetKeys
     {
         $count = min($first->total, $this->limit ?? $first->total);
 
-        if ($count > $this->maxResources) {
-            throw RowCap::refusal($this->maxResources);
-        }
+        $this->cap?->check($count);
 
         if ($this->limit === null) {
             $this->ensureReachable($first->total);
@@ -45,11 +43,9 @@ final readonly class EngineTargetKeys
     /** @return list<int|string> */
     private function uncounted(EnginePage $first, int $perPage): array
     {
-        $keys = $this->collect($first, $perPage, min($this->limit ?? PHP_INT_MAX, $this->maxResources + 1));
+        $keys = $this->collect($first, $perPage, $this->cap?->limit($this->limit) ?? $this->limit ?? PHP_INT_MAX);
 
-        if (count($keys) > $this->maxResources) {
-            throw RowCap::refusal($this->maxResources);
-        }
+        $this->cap?->check(count($keys));
 
         return self::distinct($keys, count($keys));
     }
@@ -59,7 +55,7 @@ final readonly class EngineTargetKeys
         $reachable = $this->query->reachable()
             ?? throw self::refusal('The search engine does not report how many results this search can reach; give the search a limit.');
 
-        if ($reachable <= $this->maxResources && $total >= $reachable) {
+        if ($total >= $reachable) {
             throw self::refusal("The search engine returns at most {$reachable} results for this search; narrow the search.");
         }
     }

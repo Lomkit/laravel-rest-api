@@ -22,11 +22,6 @@ final class InvalidResourceRouteException extends LogicException
         return new self("The resource name [{$name}] must be one URI segment made of letters, digits, dashes and underscores.");
     }
 
-    public static function optionsArgumentRemoved(string $name): self
-    {
-        return new self("Rest::resource() no longer takes an options array for [{$name}]. Use only(), except(), names(), middleware() and withSoftDeletes() instead.");
-    }
-
     public static function unknownEndpoint(string $key): self
     {
         $endpoints = implode(', ', array_map(fn (Endpoint $endpoint): string => $endpoint->value, Endpoint::cases()));

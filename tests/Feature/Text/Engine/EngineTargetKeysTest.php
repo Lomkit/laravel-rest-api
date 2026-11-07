@@ -7,6 +7,7 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Lomkit\Rest\Actions\EngineTargetKeys;
+use Lomkit\Rest\Actions\Rows\RowCap;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PagedMeilisearchEngine;
 use Lomkit\Rest\Tests\Feature\Text\Engine\Stubs\PagedTurbopufferEngine;
@@ -100,6 +101,36 @@ class EngineTargetKeysTest extends EngineSearchTestCase
     }
 
     /**
+     * @param  Closure(): mixed  $settings
+     * @param  list<int>  $ids
+     */
+    #[Test]
+    #[DataProvider('uncappedReaches')]
+    public function it_reads_every_key_of_an_action_without_a_cap_up_to_the_engine_limit(Closure $settings, ?string $refusal, array $ids): void
+    {
+        $this->useEngine(new PagedMeilisearchEngine(new SettingsClient($settings)));
+
+        $response = $this->postJson('/api/unsorted-vouchers/actions/uncapped-review-vouchers', ['search' => ['text' => ['value' => 'report']]]);
+
+        if ($refusal === null) {
+            $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids), 'result' => null]]);
+        } else {
+            $this->assertRefused($response->json(), $refusal);
+        }
+
+        $this->assertSame($ids === [] ? [] : [['handle', ['ids' => $ids]]], $this->received->calls());
+    }
+
+    /** @return array<string, array{Closure(): mixed, ?string, list<int>}> */
+    public static function uncappedReaches(): array
+    {
+        return [
+            'a total under the engine limit' => [fn (): array => ['maxTotalHits' => 5], null, [5, 4, 1, 3]],
+            'a total at the engine limit' => [fn (): array => ['maxTotalHits' => 4], 'The search engine returns at most 4 results for this search; narrow the search.', []],
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $search
      * @param  list<list<int>>  $chunks
      * @param  list<array{int, int}>  $pages
@@ -130,6 +161,7 @@ class EngineTargetKeysTest extends EngineSearchTestCase
             'pages of the chunk count' => ['retitle-vouchers', [], null, [[5, 4], [1, 3]], [[2, 1], [2, 2], [2, 3]]],
             'more keys than the maximum' => ['review-vouchers', [], 'This action can be run on at most 3 resources; narrow the search.', [], [[100, 1]]],
             'a limit under the maximum' => ['review-vouchers', ['limit' => 2], null, [[5, 4]], [[100, 1]]],
+            'no maximum' => ['uncapped-review-vouchers', [], null, [[5, 4, 1, 3]], [[100, 1]]],
         ];
     }
 
@@ -144,7 +176,7 @@ class EngineTargetKeysTest extends EngineSearchTestCase
         $this->assertNotNull($query);
 
         try {
-            (new EngineTargetKeys($query, $chunkCount, 20000))->resolve();
+            (new EngineTargetKeys($query, $chunkCount, new RowCap(20000)))->resolve();
             $this->fail('The keys past the engine window were read.');
         } catch (ValidationException $exception) {
             $this->assertSame(['search' => ['The search engine returns at most 10000 results for this search; narrow the search.']], $exception->errors());

@@ -16,11 +16,11 @@ final readonly class ChunkedRows implements ActionRows
     ) {}
 
     /** @param Builder<Model> $query */
-    public static function of(Builder $query, int $chunkCount, RowCap $cap): self
+    public static function of(Builder $query, int $chunkCount, ?RowCap $cap): self
     {
         $rows = $query->clone()->reorder();
 
-        $cap->check($rows->toBase()->getCountForPagination());
+        $cap?->check($rows->toBase()->getCountForPagination());
 
         return new self($rows, $chunkCount);
     }

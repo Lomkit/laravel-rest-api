@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Actions\Rows\ActionRows;
+use Lomkit\Rest\Actions\Rows\RowCap;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Query\EngineSearch;
 
@@ -31,7 +32,7 @@ final readonly class EngineTargets implements ActionRows
 
         $search = $request->payload()->search();
         $engine = new EngineSearch($request->resource, $text, $search);
-        $keys = (new EngineTargetKeys($engine->query(), $action->chunkCount, $action->maxResources, $search->limit))->resolve();
+        $keys = (new EngineTargetKeys($engine->query(), $action->chunkCount, RowCap::of($action->maxResources), $search->limit))->resolve();
 
         return new self($engine, array_chunk($keys, max(1, $action->chunkCount)));
     }

@@ -69,7 +69,7 @@ final readonly class DispatchAction
         }
 
         $query = $this->query($search);
-        $cap = new RowCap($this->action->maxResources);
+        $cap = RowCap::of($this->action->maxResources);
 
         if ($search->sorts === [] && $search->limit === null) {
             return ChunkedRows::of($query, $this->action->chunkCount, $cap);

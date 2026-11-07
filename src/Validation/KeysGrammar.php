@@ -13,11 +13,11 @@ final readonly class KeysGrammar
     private function __construct(
         private ID $id,
         private KeyLookup $lookup,
-        private int $max,
+        private ?int $max,
     ) {}
 
     /** @param Closure(): Builder<Model> $query */
-    public static function of(Resource $resource, Closure $query, int $max, KeyRead $read = KeyRead::Keys): self
+    public static function of(Resource $resource, Closure $query, ?int $max, KeyRead $read = KeyRead::Keys): self
     {
         $id = self::idOf($resource);
 
@@ -26,7 +26,7 @@ final readonly class KeysGrammar
 
     public function parse(Cursor $resources): KeyList
     {
-        $items = $resources->items($this->max);
+        $items = $resources->items($this->max ?? PHP_INT_MAX);
 
         if ($items === null) {
             return new KeyList([], [], $this->id);

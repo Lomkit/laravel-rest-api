@@ -57,7 +57,7 @@ final readonly class OperationParser
         return null;
     }
 
-    private function keys(Cursor $search, Cursor $resources, int $max, ValidationContext $context): KeyList
+    private function keys(Cursor $search, Cursor $resources, ?int $max, ValidationContext $context): KeyList
     {
         $rules = $context->rules;
         $rules->add($search->path, ['prohibited']);
