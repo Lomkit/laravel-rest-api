@@ -7,29 +7,6 @@ parameters:
 			path: src/Authorization/UserIdentity.php
 
 		-
-			message: '#^Trait Lomkit\\Rest\\Concerns\\Resource\\DisableAuthorizations is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Concerns/Resource/DisableAuthorizations.php
-
-		-
-			message: '#^Trait Lomkit\\Rest\\Concerns\\Resource\\DisableAuthorizationsCache is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Concerns/Resource/DisableAuthorizationsCache.php
-
-		-
-			message: '#^Trait Lomkit\\Rest\\Concerns\\Resource\\DisableGates is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Concerns/Resource/DisableGates.php
-
-		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 1
-			path: src/Contracts/QueryBuilder.php
-
-		-
 			message: '#^Parameter \#2 \$value of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:whereLike\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -64,52 +41,6 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: src/Http/ResourceRegistry.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:__construct\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:__construct\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Relations\\Relation but does not specify its types\: TRelatedModel, TDeclaringModel, TResult$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:toBase\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Query\\Builder\:\:toBase\(\) should return Illuminate\\Database\\Eloquent\\Builder but returns Illuminate\\Database\\Eloquent\\Builder\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			identifier: typeCoverage.propertyTypeCoverage
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			identifier: typeCoverage.returnTypeCoverage
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Query\\Builder\:\:\$queryBuilder \(Illuminate\\Database\\Eloquent\\Builder\|null\) does not accept Illuminate\\Database\\Eloquent\\Builder\|Illuminate\\Database\\Eloquent\\Relations\\Relation\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: src/Query/Builder.php
-
-		-
-			message: '#^Property Lomkit\\Rest\\Query\\Builder\:\:\$queryBuilder with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Query/Builder.php
 
 		-
 			message: '#^Cannot call method addProperty\(\) on mixed\.$#'

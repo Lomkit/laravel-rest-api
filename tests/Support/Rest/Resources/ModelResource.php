@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
-use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
@@ -36,8 +35,6 @@ use Lomkit\Rest\Tests\Support\Rest\Instructions\RequiredNumberedInstruction;
 
 class ModelResource extends Resource
 {
-    use DisableGates;
-
     public static string $model = Model::class;
 
     public function relations(): array
@@ -132,5 +129,11 @@ class ModelResource extends Resource
             RequiredNumberedInstruction::make(),
             ConditionalInstruction::make(),
         ];
+    }
+
+    #[\Override]
+    public function isGatingEnabled(): bool
+    {
+        return false;
     }
 }

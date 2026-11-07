@@ -7,7 +7,6 @@ use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Exceptions\UnplannedCheckException;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
-use Lomkit\Rest\Query\QueryBuilderFactory;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 use Lomkit\Rest\Tests\Feature\Search\Plan\ParsesSearchNodes;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
@@ -113,8 +112,8 @@ class StrictModeTest extends HelpdeskTestCase
         $context->authorizer()->plan([Check::onClass($resource, 'viewAny')]);
         $text = $context->text($resource);
 
-        $sorted = QueryBuilderFactory::make($resource)->search(SearchPlanner::paged($resource, $this->parse($resource, ['sorts' => [['field' => 'title', 'direction' => 'asc']]]), $text));
-        $unsorted = QueryBuilderFactory::make($resource)->search(SearchPlanner::paged($resource, $this->parse($resource, []), $text));
+        $sorted = SearchPlanner::paged($resource, $this->parse($resource, ['sorts' => [['field' => 'title', 'direction' => 'asc']]]), $text)->query();
+        $unsorted = SearchPlanner::paged($resource, $this->parse($resource, []), $text)->query();
 
         $this->assertSame(['Laptop setup', 'Password reset', 'Printer jam', 'Printer toner'], $sorted->pluck('title')->all());
         $this->assertSame(['Laptop setup', 'Printer toner', 'Password reset', 'Printer jam'], $unsorted->pluck('title')->all());

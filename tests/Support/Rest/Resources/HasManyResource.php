@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
-use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Http\Resource;
@@ -12,8 +11,6 @@ use Lomkit\Rest\Tests\Support\Models\HasManyRelation;
 
 class HasManyResource extends Resource
 {
-    use DisableGates;
-
     public static string $model = HasManyRelation::class;
 
     public function relations(): array
@@ -37,5 +34,11 @@ class HasManyResource extends Resource
         return [
             'id' => 'asc',
         ];
+    }
+
+    #[\Override]
+    public function isGatingEnabled(): bool
+    {
+        return false;
     }
 }

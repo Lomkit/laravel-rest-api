@@ -56,7 +56,7 @@ final readonly class GatePrefetch
     {
         $resource = $plan->resource;
 
-        if (! $resource->isGatingEnabled() || ! $resource->isAuthorizationCacheEnabled()) {
+        if (! $resource->isGatingEnabled() || ! $resource->context()->config()->cacheEnabled) {
             return [];
         }
 

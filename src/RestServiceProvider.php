@@ -18,9 +18,7 @@ use Lomkit\Rest\Console\Commands\QuickStartCommand;
 use Lomkit\Rest\Console\Commands\ResourceMakeCommand;
 use Lomkit\Rest\Console\Commands\ResponseMakeCommand;
 use Lomkit\Rest\Console\Generation\Stub;
-use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Query\Builder;
 use Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension;
 
 class RestServiceProvider extends ServiceProvider
@@ -29,8 +27,6 @@ class RestServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->replaceConfigRecursivelyFrom(__DIR__.'/../config/rest.php', 'rest');
-
-        $this->registerServices();
 
         $this->registerScramble();
     }
@@ -92,10 +88,5 @@ class RestServiceProvider extends ServiceProvider
                 __DIR__.'/../config/rest.php' => config_path('rest.php'),
             ], 'rest-config');
         }
-    }
-
-    protected function registerServices(): void
-    {
-        $this->app->bind(QueryBuilder::class, Builder::class);
     }
 }

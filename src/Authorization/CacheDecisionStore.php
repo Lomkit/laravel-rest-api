@@ -76,7 +76,7 @@ final readonly class CacheDecisionStore implements DecisionStore
     /** @return array{DecisionKey, int}|null */
     private function entry(Check $check): ?array
     {
-        if (! $check->resource->isAuthorizationCacheEnabled() || $check->isKeyedByInstance()) {
+        if ($check->isKeyedByInstance()) {
             return null;
         }
 

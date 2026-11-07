@@ -2,15 +2,12 @@
 
 namespace Lomkit\Rest\Tests\Support\Rest\Resources;
 
-use Lomkit\Rest\Concerns\Resource\DisableGates;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Tests\Support\Models\SoftDeletedModel;
 
 class SoftDeletedModelResource extends Resource
 {
-    use DisableGates;
-
     public static string $model = SoftDeletedModel::class;
 
     public function fields(): array
@@ -18,5 +15,11 @@ class SoftDeletedModelResource extends Resource
         return [
             ID::make('id'),
         ];
+    }
+
+    #[\Override]
+    public function isGatingEnabled(): bool
+    {
+        return false;
     }
 }

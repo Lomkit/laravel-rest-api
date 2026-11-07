@@ -24,7 +24,6 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Response;
 use Lomkit\Rest\Http\RowBatch;
 use Lomkit\Rest\Query\EngineSearch;
-use Lomkit\Rest\Query\QueryBuilderFactory;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 
@@ -78,7 +77,7 @@ abstract class Controller
         }
 
         $plan = SearchPlanner::paged($resource, $request->payload(), $text);
-        $query = QueryBuilderFactory::make($resource)->search($plan);
+        $query = $plan->query();
 
         $rows = $text->run(fn () => $resource->paginate($query, $plan->limit->perPage(), $plan->limit->page()));
 

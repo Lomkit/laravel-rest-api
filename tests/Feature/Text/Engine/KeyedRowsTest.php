@@ -2,13 +2,10 @@
 
 namespace Lomkit\Rest\Tests\Feature\Text\Engine;
 
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
-use Lomkit\Rest\Contracts\QueryBuilder;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Query\Builder;
 use Lomkit\Rest\Tests\Feature\Search\Plan\ParsesSearchNodes;
 use Lomkit\Rest\Tests\Fixtures\Ledger\NumberedVoucherResource;
 use Lomkit\Rest\Tests\Fixtures\Ledger\ScopedVoucherResource;
@@ -137,21 +134,6 @@ class KeyedRowsTest extends KeyedRowsTestCase
         ], ['V-e', 'V-c', 'V-a']);
 
         $this->assertSame([5, 1, 3], $vouchers->modelKeys());
-    }
-
-    #[Test]
-    public function it_resolves_the_query_builder_binding_once_for_the_page_rows(): void
-    {
-        $resolved = [];
-        $this->app->bind(QueryBuilder::class, function (Application $app, array $parameters) use (&$resolved): Builder {
-            $resolved[] = $parameters['resource']::class;
-
-            return new Builder($parameters['resource'], $parameters['query']);
-        });
-
-        $this->searched(VoucherResource::class, self::INCLUDES_AND_AGGREGATES, ['V-e', 'V-d', 'V-c', 'V-a']);
-
-        $this->assertSame([VoucherResource::class], $resolved);
     }
 
     /**

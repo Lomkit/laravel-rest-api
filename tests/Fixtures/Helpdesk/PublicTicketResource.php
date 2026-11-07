@@ -2,9 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Helpdesk;
 
-use Lomkit\Rest\Concerns\Resource\DisableAuthorizations;
-
 class PublicTicketResource extends TicketResource
 {
-    use DisableAuthorizations;
+    #[\Override]
+    public function isAuthorizingEnabled(): bool
+    {
+        return false;
+    }
 }

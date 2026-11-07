@@ -58,7 +58,7 @@ enum ColumnSelection
     {
         $column = $model->getUpdatedAtColumn();
 
-        if ($column === null || ! $model->usesTimestamps() || ! $resource->isGatingEnabled() || ! $resource->isAuthorizationCacheEnabled()) {
+        if ($column === null || ! $model->usesTimestamps() || ! $resource->isGatingEnabled() || ! $resource->context()->config()->cacheEnabled) {
             return [];
         }
 
