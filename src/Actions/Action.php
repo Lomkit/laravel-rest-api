@@ -7,6 +7,7 @@ use Illuminate\Bus\PendingBatch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use JsonSerializable;
 use Lomkit\Rest\Concerns\HasMeta;
@@ -76,17 +77,15 @@ class Action implements JsonSerializable
         ];
     }
 
-    /**
-     * @param  array<string, mixed>  $fields
-     * @param  Collection<array-key, Model>  $models
-     */
-    public function handle(array $fields, Collection $models): void {}
+    /** @param Collection<array-key, Model> $models */
+    public function handle(ActionFields $fields, Collection $models): void {}
 
-    /** @param array<string, mixed> $fields */
-    public function withBatch(array $fields, PendingBatch $batch): void {}
+    public function withBatch(ActionFields $fields, PendingBatch $batch): void {}
 
     public function handleRequest(OperateRequest $request): int
     {
-        return (new DispatchAction($request, $this, $request->resolveFields()))->dispatch($this->chunkCount);
+        $fields = ActionFields::of($this, $request->payload()->fields, Auth::getDefaultDriver(), $request->user());
+
+        return (new DispatchAction($request, $this, $fields))->dispatch($this->chunkCount);
     }
 }

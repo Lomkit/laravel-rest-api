@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use InvalidArgumentException;
 use Lomkit\Rest\Exceptions\InvalidInstructionException;
-use Lomkit\Rest\Fields\CastValues;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Instructions\InstructionFields;
 use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Search\InstructionNode;
 use Lomkit\Rest\Text\TextBackend;
@@ -18,12 +18,12 @@ final readonly class InstructionClause implements Clause
 {
     private function __construct(
         private Instruction $instruction,
-        private CastValues $fields,
+        private InstructionFields $fields,
     ) {}
 
     public static function of(InstructionNode $node): self
     {
-        return new self($node->instruction, CastValues::of($node->fields, $node->instruction::class.'::fields()'));
+        return new self($node->instruction, InstructionFields::of($node->instruction, $node->fields));
     }
 
     #[\Override]
@@ -33,7 +33,7 @@ final readonly class InstructionClause implements Clause
             throw InvalidInstructionException::engineOnly($this->instruction::class);
         }
 
-        $this->instruction->handle($this->fields->toArray(), self::eloquent($query));
+        $this->instruction->handle($this->fields, self::eloquent($query));
     }
 
     /** @return EloquentBuilder<Model> */

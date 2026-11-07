@@ -4,11 +4,12 @@ namespace Lomkit\Rest\Tests\Support\Rest\Actions;
 
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Fields\Text;
 
 class ConditionalFieldAction extends Action
 {
-    public function handle(array $fields, Collection $models): void
+    public function handle(ActionFields $fields, Collection $models): void
     {
         //
     }

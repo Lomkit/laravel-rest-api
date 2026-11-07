@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Fixtures\Publishing;
 
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
@@ -19,17 +20,14 @@ class ChangeStatus extends Action
         ];
     }
 
-    /**
-     * @param  array<string, mixed>  $fields
-     * @param  Collection<int, Post>  $models
-     */
+    /** @param Collection<int, Post> $models */
     #[\Override]
-    public function handle(array $fields, Collection $models): void
+    public function handle(ActionFields $fields, Collection $models): void
     {
-        app(ReceivedFields::class)->record('handle', $fields);
+        app(ReceivedFields::class)->record('handle', $fields->toArray());
 
         foreach ($models as $post) {
-            $post->update(['status' => $fields['status'], 'published_at' => $fields['at'] ?? null]);
+            $post->update(['status' => $fields->status, 'published_at' => $fields->at]);
         }
     }
 }

@@ -11,7 +11,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Lomkit\Rest\Authorization\UserReference;
 use Lomkit\Rest\Exceptions\QueuedActionException;
-use Lomkit\Rest\Fields\CastValues;
 use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -92,7 +91,7 @@ final class QueuedAction implements ShouldQueue
 
         $inputs = InputValues::fromGiven($resource->definition()->inputFields($action), $this->fields);
 
-        $action->handle(CastValues::of($inputs, $action::class.'::fields()')->toArray(), $models);
+        $action->handle(ActionFields::of($action, $inputs, $this->user->guard, $user), $models);
     }
 
     private function declared(Resource $resource): Action

@@ -6,6 +6,5 @@ use Lomkit\Rest\Text\Engine\EngineQuery;
 
 interface AppliesToEngine
 {
-    /** @param array<string, mixed> $fields */
-    public function handleEngine(array $fields, EngineQuery $query): void;
+    public function handleEngine(InstructionFields $fields, EngineQuery $query): void;
 }

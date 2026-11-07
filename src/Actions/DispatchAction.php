@@ -33,10 +33,9 @@ class DispatchAction
     /**
      * Create a new action dispatcher instance.
      *
-     * @param  array<string, mixed>  $fields
      * @return void
      */
-    public function __construct(OperateRequest $request, Action $action, array $fields)
+    public function __construct(OperateRequest $request, Action $action, ActionFields $fields)
     {
         $this->request = $request;
         $this->action = $action;

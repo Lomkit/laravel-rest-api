@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Fixtures\Catalog;
 use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Instructions\InstructionFields;
 
 class PricedAt extends Instruction
 {
@@ -15,8 +16,8 @@ class PricedAt extends Instruction
     }
 
     #[\Override]
-    public function handle(array $fields, Builder $query): void
+    public function handle(InstructionFields $fields, Builder $query): void
     {
-        $query->where('price', $fields['price']);
+        $query->where('price', $fields->price);
     }
 }

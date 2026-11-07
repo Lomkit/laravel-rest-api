@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Validation\Stubs;
 
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
@@ -16,13 +17,10 @@ class AttachPayload extends Action
         return [Text::make('reason'), Json::make('payload')];
     }
 
-    /**
-     * @param  array<string, mixed>  $fields
-     * @param  Collection<int, mixed>  $models
-     */
+    /** @param Collection<int, mixed> $models */
     #[\Override]
-    public function handle(array $fields, Collection $models): void
+    public function handle(ActionFields $fields, Collection $models): void
     {
-        app(ReceivedFields::class)->record('handle', $fields);
+        app(ReceivedFields::class)->record('handle', $fields->toArray());
     }
 }

@@ -287,15 +287,15 @@ Scopes:
 Instructions:
 
 - `fields()` returns `Field` objects instead of a map of rules: `['min_views' => ['integer']]` becomes `[Integer::make('min_views')]`. The field rules are the type rules, `nullable` and `rules()`; rules that compare fields, such as `required_if:status,published`, `date_equals:since` or `Rule::date()->after('since')`, compare with the other inputs of the instruction, as described under Validation engine.
-- `handle()` and `handleEngine()` receive a name-to-value map, with each value cast to its field type and defaults filled in. A field that is absent and has no default is missing from the array, so read optional fields with `$fields['name'] ?? null`. An entry sent without `value` counts as absent.
+- `handle()` and `handleEngine()` receive a `Lomkit\Rest\Instructions\InstructionFields`, which reads the inputs as `ActionFields` does, see [Actions](#actions). An entry sent without `value` counts as absent.
 - `Builder::instruction()` and `applyInstructions()` are removed. Each instruction of the search runs through `InstructionClause::of()`, with the cast values of its `InstructionNode`.
 - An instruction applied to an include receives the relation's Eloquent builder.
 
 Actions:
 
 - `fields()` returns `Field` objects instead of a map of rules.
-- `handle()`, `withBatch()` and queued jobs all receive the same cast name-to-value map, with defaults filled in. Before, queued and batched actions received the raw list of `{name, value}` entries.
-- `OperateRequest::resolveFields()` takes no argument. It returns the cast map of `payload()`, see [Validation engine](#validation-engine), and `Action::handleRequest()` calls it. Like `payload()`, it throws a `LogicException` before the request passed validation. Before, it read the raw input at any time.
+- `handle()` and `withBatch()` receive the same cast values, with defaults filled in, in a `Lomkit\Rest\Actions\ActionFields`, see [Actions](#actions); a queued action receives them in the worker too. Before, queued and batched actions received the raw list of `{name, value}` entries.
+- `OperateRequest::resolveFields()` is removed, see [Actions](#actions).
 - The `fields()` of an action run once per request, during validation. Before, they ran twice. The request keeps the fields and the action does not, so a queued job still carries no declarations.
 
 Instructions and actions:
@@ -325,12 +325,13 @@ A queued or batched action no longer serializes its resource, its rows and its i
   ```php
   use Illuminate\Queue\Attributes\Queue;
   use Illuminate\Queue\Attributes\Tries;
+  use Lomkit\Rest\Actions\ActionFields;
 
   #[Queue('exports')]
   #[Tries(3)]
   class ExportOrders extends Action implements ShouldQueue
   {
-      public function handle(array $fields, Collection $models): void
+      public function handle(ActionFields $fields, Collection $models): void
       {
           // Runs in the worker as the user who sent the request.
       }
@@ -383,6 +384,34 @@ A queued or batched action no longer serializes its resource, its rows and its i
 
   Scramble documents `target` as a string with these three values.
 - `php artisan rest:action` generates an action without a target: it has the `Search` target.
+- `handle()` and `withBatch()` receive a `Lomkit\Rest\Actions\ActionFields` instead of an array, and so does a queued action in the worker. PHP refuses to load an action whose `handle()` or `withBatch()` still declares `array $fields`, and the error names the method:
+
+  | Before | Now |
+  |---|---|
+  | `handle(array $fields, Collection $models)` | `handle(ActionFields $fields, Collection $models)` |
+  | `withBatch(array $fields, PendingBatch $batch)` | `withBatch(ActionFields $fields, PendingBatch $batch)` |
+  | `$fields['plan']` | `$fields->plan` |
+  | `$fields['reason'] ?? null` | `$fields->reason` |
+  | `array_key_exists('reason', $fields)` | `$fields->has('reason')` |
+  | `isset($fields['reason'])` | `$fields->filled('reason')` |
+  | `$fields` as an array | `$fields->toArray()` |
+
+  ```php
+  use Lomkit\Rest\Actions\ActionFields;
+
+  public function handle(ActionFields $fields, Collection $models): void
+  {
+      foreach ($models as $subscription) {
+          $subscription->update(['expires_at' => $fields->expires_at, 'plan' => $fields->plan]);
+      }
+  }
+  ```
+- Each input that `fields()` declares is a property, cast to its field type, with its `default()` filled in: a `Date` is a `CarbonImmutable`, an `Enum` the case. An input that the client did not send and that has no default is `null`. `has('reason')` is true when the client sent the input, `null` included, or when its field declares `default()`. `filled('reason')` is true when `has()` is true and the value is not `null`, and so is `isset($fields->reason)`. `only('plan', 'reason')` and `toArray()` return the inputs that `has()` reports, by name, in the order of `fields()`.
+- Reading an input that `fields()` does not declare throws `Lomkit\Rest\Exceptions\InvalidFieldException`, a `LogicException`, also through `isset()`, `has()`, `filled()` and `only()`: "App\Rest\Actions\ExtendSubscriptions::fields() does not declare the input [seat].". Before, `$fields['seat'] ?? null` read `null`. Check the actions that extend another action and declare their own `fields()`: the `handle()` that they inherit must read only their inputs.
+- `$fields->user()` returns the user who sent the request, `null` for a guest, also in the worker, and `$fields->target()` the `ActionTarget` of the action. `ActionFields` is read only.
+- `ActionFields` can be serialized, for example to pass it to a job of your own. It keeps the cast values, the target and a reference to the user, and finds the user again through the user provider of the guard when it is unserialized. When the provider no longer finds the user, `unserialize()` throws `QueuedActionException`.
+- `OperateRequest::resolveFields()` is removed. `handle()` receives the values in its `ActionFields`, and `$request->payload()->fields` keeps the input values of the request, see [Validation engine](#validation-engine).
+- Instructions: `handle(InstructionFields $fields, Builder $query)` and `AppliesToEngine::handleEngine(InstructionFields $fields, EngineQuery $query)`. `Lomkit\Rest\Instructions\InstructionFields` reads the inputs as `ActionFields` does, without `user()` and `target()`; both extend `Lomkit\Rest\Fields\FieldValues`. Scope parameters do not change: the model scope still receives the cast values as arguments.
 
 ### Native types
 
@@ -462,7 +491,7 @@ Controller endpoints:
 Requests:
 
 - `authorize()` returns `bool|Illuminate\Auth\Access\Response`, so it can still return `Response::deny()`.
-- `rules()` and `resolveFields()` return `array`.
+- `rules()` returns `array`.
 - `Lomkit\Rest\Http\Requests\ActionsRequest` is removed. Nothing used it: the operate hooks receive an `OperateRequest`.
 
 Service provider and facade:
@@ -705,7 +734,7 @@ Engine queries:
 
 Instructions:
 
-- `instructions()` is the only list of instructions. An instruction applies to a text search on a search engine when it implements `Lomkit\Rest\Instructions\AppliesToEngine`, whose `handleEngine(array $fields, EngineQuery $query): void` receives the cast fields, as `handle()` does. Another instruction gives a 422 there.
+- `instructions()` is the only list of instructions. An instruction applies to a text search on a search engine when it implements `Lomkit\Rest\Instructions\AppliesToEngine`, whose `handleEngine(InstructionFields $fields, EngineQuery $query): void` receives the input values, as `handle()` does. Another instruction gives a 422 there.
 - An instruction that implements `AppliesToEngine` and does not override `handle()` only applies to these searches: it gives a 422 in a SQL search, such as a search without text or with a blank text, an include, an action without text, or the search of a `Contains` or `FullText` resource.
 
   ```php
@@ -713,6 +742,7 @@ Instructions:
   use Lomkit\Rest\Fields\Number;
   use Lomkit\Rest\Instructions\AppliesToEngine;
   use Lomkit\Rest\Instructions\Instruction;
+  use Lomkit\Rest\Instructions\InstructionFields;
   use Lomkit\Rest\Text\Engine\EngineQuery;
 
   class PricedUpTo extends Instruction implements AppliesToEngine
@@ -722,14 +752,14 @@ Instructions:
           return [Number::make('max')->rules('required')];
       }
 
-      public function handle(array $fields, Builder $query): void
+      public function handle(InstructionFields $fields, Builder $query): void
       {
-          $query->where('price', '<=', $fields['max']);
+          $query->where('price', '<=', $fields->max);
       }
 
-      public function handleEngine(array $fields, EngineQuery $query): void
+      public function handleEngine(InstructionFields $fields, EngineQuery $query): void
       {
-          $query->where('price', '<=', $fields['max']);
+          $query->where('price', '<=', $fields->max);
       }
   }
   ```
@@ -752,7 +782,7 @@ From the Scout text search of 2.x:
 | `use Searchable` on the model enables `search.text` | `text()` returns `ScoutEngine::make()` |
 | `scoutFields()` | `ScoutEngine::make()->filterable([...])->sortable([...])` |
 | `scoutInstructions()` | `instructions()`, with `AppliesToEngine` on each instruction |
-| `handleScout(array $fields, Builder $query)` | `handleEngine(array $fields, EngineQuery $query)` |
+| `handleScout(array $fields, Builder $query)` | `handleEngine(InstructionFields $fields, EngineQuery $query)` |
 | `searchScoutQuery()` | `ScoutEngine::make()->perimeter(...)` |
 | `isModelSearchable()` | removed |
 
@@ -760,7 +790,7 @@ From the Scout text search of 2.x:
 - These methods and `isModelSearchable()` no longer exist on the package classes: an override marked `#[\Override]` is a fatal error when PHP loads the class. Delete them.
 - `Lomkit\Rest\Query\ScoutBuilder` is removed.
 - The rows of a search engine page are loaded by key through your `QueryBuilder` binding, with `search.trashed` and the includes and aggregates of the search, without `perimeterQuery()`.
-- The engine query is built from the nodes of `payload()`: `Lomkit\Rest\Text\Engine\EngineCriteria::of(FilterGroup $filters, array $sorts)` applies the `EngineFilterCondition` filters and the `EngineSort` sorts, and leaves `@relevance` to the order of the engine, and `EngineInstruction::of(InstructionNode $node)` passes the cast fields of an instruction to `handleEngine()`. `fromSearch()` is removed from both, and so is `InvalidInstructionException::undeclared()`.
+- The engine query is built from the nodes of `payload()`: `Lomkit\Rest\Text\Engine\EngineCriteria::of(FilterGroup $filters, array $sorts)` applies the `EngineFilterCondition` filters and the `EngineSort` sorts, and leaves `@relevance` to the order of the engine, and `EngineInstruction::of(InstructionNode $node)` passes the `InstructionFields` of an instruction to `handleEngine()`. `fromSearch()` is removed from both, and so is `InvalidInstructionException::undeclared()`.
 - The details response no longer has the `scout_fields` and `scout_instructions` keys.
 
 Scramble:
@@ -813,7 +843,7 @@ Requests:
 - Every package request records its validation pass in `passedValidation()`. An override of `passedValidation()` must call the parent.
 - To adjust the validator, use `withValidator()`, or override `createDefaultValidator()` and call the parent. A request that defines `validator()` builds the validator itself: it must use `validationData()` and `validationRules()`. The `label()` and `messages()` of fields do not apply there, and Laravel names its keys, such as `fields.status` for an input field.
 - Every key that the package parses in `mutate` is named as written in messages, at every level, as Laravel names wildcard keys, unless the request's `attributes()`, the field's `label()` or a `validation.attributes` translation line names it. Examples: `mutate.0.without_detaching`, `mutate.0.attributes.published_on`, `mutate.0.relations.latestLoan.operation`, `mutate.0.relations.lineItems.0.operation`, a relation that the entry does not send, such as `mutate.0.relations.featuredProducts`, and an explicit key of the resource rules, such as `mutate.0.attributes.metadata.source_url`. A key that Laravel expands from a wildcard rule of the request or of the resource rules, such as `mutate.0.attributes.metadata.tags.1`, is named as written too. The package gives a parsed key its name as written only where Laravel's formatting would change the key: when it holds `_`, whitespace or an uppercase letter. Laravel's formatting leaves the other parsed keys as written. `Validator::setImplicitAttributesFormatter()` applies to a key that Laravel expands only when no other name applies to it. So it does not apply to a parsed key that a wildcard rule meets when the key holds `_`, whitespace or an uppercase letter, such as `mutate.0.attributes.published_on` under `mutate.*.attributes.published_on`, or when its field declares `label()`. It still applies to the other parsed keys, such as `mutate.0.attributes.name` under `mutate.*.attributes.name` or `mutate.0.relations.products.0.operation` under `mutate.*.relations.products.*.operation`.
-- The input values added by `validationData()` also appear in `validated()` and `safe()`, under `fields.<name>` for an action. `resolveFields()` returns the cast map of `payload()`, and `handle()` receives the same map.
+- The input values added by `validationData()` also appear in `validated()` and `safe()`, under `fields.<name>` for an action. `handle()` receives these values, cast, in its `ActionFields`.
 - When the payload has no `fields`, `all()` and `validated()` no longer hold `fields: []`. A rule that a request adds on `fields` itself now meets an absent key. So `min:1` and `filled` no longer fail there, and `present` now fails. Before, the request merged `fields: []` before validation.
 - The request's `messages()` and `attributes()` now apply to the fields of actions and instructions, under `fields.<name>` and `search.instructions.<i>.fields.<name>`. Without them, the field's `label()` names such a field, then the `validation.attributes.<name>` translation, or else its name.
 - `FormRequest::failOnUnknownFields()` and the `#[FailOnUnknownFields]` attribute do not apply to package requests: `shouldFailOnUnknownFields()` returns `false`.
@@ -1695,6 +1725,7 @@ The classes that the generators write pass Pint with the `laravel` preset and La
 
 - They import the classes they use and mark each overriding method with `#[\Override]`. A model or a resource whose short name the file already uses is imported under an alias, for example `use App\Models\Resource as ResourceModel;`. In a resource, the reserved short names are the resource itself, `Resource`, `Rule`, the field classes and the relation classes, so a model named `Rule` or `Text` is imported as `RuleModel` or `TextModel`.
 - `rest:action` and `rest:instruction` generate a `fields()` method that returns `[]`. Before, it declared a required `id` field: the instruction refused every request without it, and the action ignored it and ran on every model of the search.
+- `rest:action` generates `handle(ActionFields $fields, Collection $models)` and `rest:instruction` `handle(InstructionFields $fields, Builder $query)`, with their `use` lines.
 - `rest:base-resource` generates an empty abstract class. Before, it declared the query hooks, which returned `$query` unchanged. Override `perimeterQuery()` in your base resource when its constraints apply to every resource.
 - `rest:base-controller` generates an empty abstract class.
 - `rest:response` generates a `map()` method with its array types in PHPDoc.
