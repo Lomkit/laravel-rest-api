@@ -53,7 +53,7 @@ class DeclarationRequestTest extends PackageTestCase
         $customerResponse = $this->actingAs(User::factory()->create())
             ->postJson('/staff-noted-posts/actions/staff-noted-publish-posts', $payload);
 
-        $staffResponse->assertOk()->assertExactJson(['data' => ['impacted' => 0]]);
+        $staffResponse->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
         $customerResponse->assertUnprocessable()->assertExactJson([
             'message' => 'The selected fields.0.name is invalid.',
             'errors' => ['fields.0.name' => ['The selected fields.0.name is invalid.']],

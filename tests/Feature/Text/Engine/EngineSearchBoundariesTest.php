@@ -32,7 +32,7 @@ class EngineSearchBoundariesTest extends EngineSearchTestCase
     {
         $response = $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => ' ']]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
         $this->assertSame([1, 2, 3, 5], $this->inactive());
         $this->assertSame([], $this->engine->searches);
     }
@@ -42,7 +42,7 @@ class EngineSearchBoundariesTest extends EngineSearchTestCase
     {
         $response = $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['filters' => [['field' => 'title', 'operator' => 'like', 'value' => 'Report%']]]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 3]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 3, 'result' => null]]);
         $this->assertSame([1, 3, 5], $this->inactive());
     }
 

@@ -15,6 +15,7 @@ use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
+use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
@@ -35,6 +36,10 @@ class Action implements JsonSerializable
     public int $chunkCount = 100;
 
     public int $maxResources = 1000;
+
+    public bool $destructive = false;
+
+    public ?string $confirm = null;
 
     public function name(): string
     {
@@ -58,13 +63,27 @@ class Action implements JsonSerializable
         return $this;
     }
 
+    public function destructive(): static
+    {
+        $this->destructive = true;
+
+        return $this;
+    }
+
+    public function confirm(string $text): static
+    {
+        $this->confirm = $text;
+
+        return $this;
+    }
+
     /** @return list<string> */
     public function abilities(): array
     {
         return ['viewAny'];
     }
 
-    /** @return array{name: string, uriKey: string, target: value-of<ActionTarget>, fields: list<array<string, mixed>>, meta: \stdClass} */
+    /** @return array{name: string, uriKey: string, target: value-of<ActionTarget>, fields: list<array<string, mixed>>, meta: \stdClass, destructive: bool, confirm: ?string} */
     #[\Override]
     public function jsonSerialize(): array
     {
@@ -74,6 +93,8 @@ class Action implements JsonSerializable
             'target' => $this->target->value,
             'fields' => InputFieldDetails::forFields($this->resource->definition()->inputFields($this)),
             'meta' => (object) $this->getMeta(),
+            'destructive' => $this->destructive,
+            'confirm' => $this->confirm,
         ];
     }
 
@@ -82,10 +103,16 @@ class Action implements JsonSerializable
 
     public function withBatch(ActionFields $fields, PendingBatch $batch): void {}
 
-    public function handleRequest(OperateRequest $request): int
+    public function respond(ActionFields $fields, int $impacted): ?ActionResponse
+    {
+        return null;
+    }
+
+    public function handleRequest(OperateRequest $request): OperateResponse
     {
         $fields = ActionFields::of($this, $request->payload()->fields, Auth::getDefaultDriver(), $request->user());
+        $impacted = (new DispatchAction($request, $this, $fields))->dispatch($this->chunkCount);
 
-        return (new DispatchAction($request, $this, $fields))->dispatch($this->chunkCount);
+        return new OperateResponse($impacted, $this->respond($fields, $impacted));
     }
 }

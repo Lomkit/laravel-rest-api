@@ -49,7 +49,7 @@ class ActionChecksTest extends HelpdeskTestCase
 
         $this->postJson('/api/tickets/actions/close-tickets', ['search' => ['filters' => [['field' => 'team.name', 'value' => 'Billing']]]])
             ->assertOk()
-            ->assertExactJson(['data' => ['impacted' => 2]]);
+            ->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
 
         $this->assertSame(['closed', 'closed'], [$jam->fresh()?->status, $toner->fresh()?->status]);
         $this->assertSame([['viewAny'], ['viewAny']], [$this->tickets->calls, $this->teams->calls]);
@@ -68,7 +68,7 @@ class ActionChecksTest extends HelpdeskTestCase
     #[Test]
     public function it_runs_a_standalone_action_once_listing_is_allowed(): void
     {
-        $this->postJson('/api/tickets/actions/refresh-tickets')->assertOk()->assertExactJson(['data' => ['impacted' => 0]]);
+        $this->postJson('/api/tickets/actions/refresh-tickets')->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
 
         $this->assertSame(['viewAny'], $this->tickets->calls);
     }
@@ -116,7 +116,7 @@ class ActionChecksTest extends HelpdeskTestCase
     {
         Rest::resource('lead-tickets', LeadTicketController::class)->register();
 
-        $this->postJson('/lead-tickets/actions/import-tickets')->assertOk()->assertExactJson(['data' => ['impacted' => 0]]);
+        $this->postJson('/lead-tickets/actions/import-tickets')->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
 
         $this->assertSame(['viewAny', 'runActions', 'create'], $this->tickets->calls);
     }
@@ -126,7 +126,7 @@ class ActionChecksTest extends HelpdeskTestCase
     {
         $this->tickets->answers['viewAny'] = Response::deny('Tickets are not listed.');
 
-        $this->postJson('/api/tickets/actions/report-outage')->assertOk()->assertExactJson(['data' => ['impacted' => 0]]);
+        $this->postJson('/api/tickets/actions/report-outage')->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
 
         $this->assertSame([], $this->tickets->calls);
     }
@@ -139,7 +139,7 @@ class ActionChecksTest extends HelpdeskTestCase
 
         $this->postJson('/api/tickets/actions/watch-tickets', ['search' => ['filters' => [['field' => 'status', 'value' => 'open']]]])
             ->assertOk()
-            ->assertExactJson(['data' => ['impacted' => 2]]);
+            ->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
 
         $this->assertSame([], $this->tickets->calls);
     }
@@ -151,7 +151,7 @@ class ActionChecksTest extends HelpdeskTestCase
         $this->tickets->answers['viewAny'] = Response::deny('Tickets are not listed.');
         $this->tickets->answers['runActions'] = Response::deny('Only the helpdesk lead does this.');
 
-        $this->postJson('/lead-tickets/actions/report-outage')->assertOk()->assertExactJson(['data' => ['impacted' => 0]]);
+        $this->postJson('/lead-tickets/actions/report-outage')->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
 
         $this->assertSame([], $this->tickets->calls);
     }

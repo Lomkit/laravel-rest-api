@@ -33,7 +33,7 @@ class ActionTextTest extends TextSearchTestCase
 
         $response = $this->postJson('/contains-posts/actions/publish-posts', ['search' => ['text' => $text]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted, 'result' => null]]);
         $this->assertSame($statuses, $this->statuses());
     }
 
@@ -76,7 +76,7 @@ class ActionTextTest extends TextSearchTestCase
 
         $response = $this->postJson('/api/documents/actions/archive-documents', ['search' => array_filter(['trashed' => $trashed])]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted, 'result' => null]]);
         $this->assertSame($archived, Document::withTrashed()
             ->orderBy('id')
             ->pluck('archived')

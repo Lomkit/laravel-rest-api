@@ -59,7 +59,7 @@ class AlgoliaSearchTest extends AlgoliaTestCase
         $response = $this->postJson('/api/unsorted-vouchers/actions/review-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 
         if ($refusal === null) {
-            $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids)]]);
+            $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids), 'result' => null]]);
         } else {
             $response->assertUnprocessable()->assertExactJson(['message' => $refusal, 'errors' => ['search' => [$refusal]]]);
         }

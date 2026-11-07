@@ -85,6 +85,8 @@ final class DetailsEntryTypes
             'target' => (new StringType)->enum(array_column(ActionTarget::cases(), 'value')),
             'fields' => self::listOf(self::input()),
             'meta' => new ObjectType,
+            'destructive' => (new BooleanType)->setDescription('True when the action is declared with destructive(); a hint for clients, the endpoint runs the action the same way'),
+            'confirm' => (new StringType)->nullable(true)->setDescription('The text set with confirm(), for clients to show before they run the action; null without one'),
         ]);
     }
 

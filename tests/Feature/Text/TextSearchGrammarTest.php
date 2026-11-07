@@ -170,7 +170,7 @@ class TextSearchGrammarTest extends TextSearchTestCase
             'search' => ['text' => ['value' => 'lamp'], 'filters' => [['field' => 'views', 'operator' => '<', 'value' => 100]]],
         ]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame(
             [PostStatus::Published, PostStatus::Draft, PostStatus::Draft, PostStatus::Published],
             Post::query()

@@ -48,7 +48,7 @@ class ResourceSerializationTest extends PackageTestCase
             'search' => ['sorts' => [['field' => 'title', 'direction' => 'asc']]],
         ]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame(2, Document::query()->where('archived', true)->count());
     }
 
@@ -65,7 +65,7 @@ class ResourceSerializationTest extends PackageTestCase
             'search' => ['filters' => [['field' => 'author.id', 'value' => $author->id]]],
         ]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame(2, Post::query()->whereBelongsTo($author)->where('status', PostStatus::Published)->count());
         $this->assertSame(0, Post::query()->whereNull('author_id')->where('status', PostStatus::Published)->count());
     }

@@ -4,10 +4,10 @@ namespace Lomkit\Rest\Concerns;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Response as IlluminateResponse;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Http\MutateResponse;
+use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\DetailsRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
@@ -83,21 +83,17 @@ trait PerformsRestOperations
         return $response;
     }
 
-    public function operate(OperateRequest $request): IlluminateResponse
+    public function operate(OperateRequest $request): OperateResponse
     {
         $request->resource($request->context()->resource(static::resourceClass()));
 
         $this->beforeOperate($request);
 
-        $modelsImpacted = $request->payload()->action->handleRequest($request);
+        $response = $request->payload()->action->handleRequest($request);
 
         $this->afterOperate($request);
 
-        return response([
-            'data' => [
-                'impacted' => $modelsImpacted,
-            ],
-        ]);
+        return $response;
     }
 
     public function destroy(DestroyRequest $request): Response

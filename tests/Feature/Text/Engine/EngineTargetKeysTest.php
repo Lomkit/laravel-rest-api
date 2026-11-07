@@ -77,7 +77,7 @@ class EngineTargetKeysTest extends EngineSearchTestCase
         $response = $this->postJson('/api/team-vouchers/actions/review-vouchers', ['search' => [...self::ACTIVE, ...$search]]);
 
         if ($refusal === null) {
-            $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids)]]);
+            $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids), 'result' => null]]);
         } else {
             $this->assertRefused($response->json(), $refusal);
         }
@@ -114,7 +114,7 @@ class EngineTargetKeysTest extends EngineSearchTestCase
         $response = $this->postJson("/api/unsorted-vouchers/actions/{$action}", ['search' => ['text' => ['value' => 'report'], ...$search]]);
 
         if ($refusal === null) {
-            $response->assertOk()->assertExactJson(['data' => ['impacted' => count(array_merge(...$chunks))]]);
+            $response->assertOk()->assertExactJson(['data' => ['impacted' => count(array_merge(...$chunks)), 'result' => null]]);
         } else {
             $this->assertRefused($response->json(), $refusal);
         }

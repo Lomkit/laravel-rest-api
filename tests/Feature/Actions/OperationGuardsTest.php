@@ -54,7 +54,7 @@ class OperationGuardsTest extends PackageTestCase
     {
         $response = $this->postJson("/field-counting-posts/actions/{$action}", $body);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted, 'result' => null]]);
         $this->assertSame($calls, CountedPublishPosts::$calls);
     }
 
@@ -106,7 +106,7 @@ class OperationGuardsTest extends PackageTestCase
     {
         $response = $this->postJson("/field-counting-posts/actions/{$action}", ['fields' => [['name' => 'reason', 'value' => 'spam']]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame(
             [PostStatus::Published, PostStatus::Published],
             Post::query()

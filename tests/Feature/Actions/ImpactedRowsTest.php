@@ -30,7 +30,7 @@ class ImpactedRowsTest extends PackageTestCase
     {
         parent::setUp();
 
-        TouchDocuments::$runs = [];
+        TouchDocuments::reset();
         Rest::resource('touch-documents', TouchDocumentController::class)->register();
 
         foreach (range(1, 12) as $id) {
@@ -48,7 +48,7 @@ class ImpactedRowsTest extends PackageTestCase
     {
         $response = $this->postJson('/touch-documents/actions/touch-documents', $body);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted, 'result' => null]]);
         $this->assertSame($runs, TouchDocuments::$runs);
     }
 
@@ -70,7 +70,7 @@ class ImpactedRowsTest extends PackageTestCase
 
         $response = $this->postJson('/touch-documents/actions/queued-touch-documents', ['search' => ['limit' => 50]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 11]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'result' => null]]);
         $this->assertSame(self::CHUNKS, Queue::pushed(QueuedAction::class)->map(fn (QueuedAction $job): array => $job->rows->keys)->all());
     }
 
@@ -81,7 +81,7 @@ class ImpactedRowsTest extends PackageTestCase
 
         $response = $this->postJson('/touch-documents/actions/batched-touch-documents', ['search' => ['limit' => 50]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 11]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'result' => null]]);
         Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->jobs->map(fn (QueuedAction $job): array => $job->rows->keys)->all() === self::CHUNKS);
     }
 }

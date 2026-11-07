@@ -36,7 +36,7 @@ class TargetedKeysTest extends PackageTestCase
     {
         $response = $this->pin([1, 2]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
 
         $this->assertSame([1, 2], $this->pinned());
     }

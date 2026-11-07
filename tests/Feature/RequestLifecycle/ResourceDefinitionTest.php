@@ -67,7 +67,7 @@ class ResourceDefinitionTest extends PackageTestCase
             ],
         ]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame(['actions' => 1, 'fields' => 1, 'instructions' => 1, 'limits' => 1, 'relations' => 1, 'scopes' => 1], $this->evaluated->counts());
     }
 

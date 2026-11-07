@@ -99,7 +99,7 @@ class EngineInstructionsTest extends EngineSearchTestCase
             'instructions' => [['name' => 'numbered-from', 'fields' => [['name' => 'min', 'value' => 3]]]],
         ]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 3]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 3, 'result' => null]]);
         $this->assertSame([['handleEngine', ['min' => 3]], ['handle', ['ids' => [5, 4, 1]]]], $this->received->calls());
     }
 

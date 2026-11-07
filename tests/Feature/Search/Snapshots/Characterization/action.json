@@ -6,12 +6,14 @@
     },
     "shape": {
         "data": {
-            "impacted": null
+            "impacted": null,
+            "result": null
         }
     },
     "response": {
         "data": {
-            "impacted": 1
+            "impacted": 1,
+            "result": null
         }
     },
     "raw_queries": [

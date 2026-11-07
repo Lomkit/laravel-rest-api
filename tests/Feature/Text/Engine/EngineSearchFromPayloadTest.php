@@ -44,7 +44,7 @@ class EngineSearchFromPayloadTest extends EngineSearchTestCase
 
         $response = $this->postJson('/api/input-editing-vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
         $this->assertSame([['handle', ['ids' => [5, 4, 1, 3]]]], $this->received->calls());
     }
 }

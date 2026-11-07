@@ -314,7 +314,7 @@ class QueuedActionsTest extends PackageTestCase
 
         $response = $this->postJson('/staff-documents/actions/export-documents', self::DUE);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
         $this->assertSame([[2, [4, 3, 2, 1], true]], array_map(fn (array $run): array => [$run['user'], $run['keys'], $run['shred']], QueuedRuns::$runs));
     }
 
@@ -325,7 +325,7 @@ class QueuedActionsTest extends PackageTestCase
 
         $response = $this->postJson('/staff-documents/actions/standalone-export-documents', self::DUE);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 0]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
         $this->assertSame([[2, [], null]], array_map(fn (array $run): array => [$run['user'], $run['keys'], $run['shred']], QueuedRuns::$runs));
     }
 

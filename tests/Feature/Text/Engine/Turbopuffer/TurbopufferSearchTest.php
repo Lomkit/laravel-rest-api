@@ -34,7 +34,7 @@ class TurbopufferSearchTest extends TurbopufferTestCase
 
         $response = $this->postJson('/api/unsorted-vouchers/actions/retitle-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
         $this->assertSame([['handle', ['ids' => [5, 4]]], ['handle', ['ids' => [1, 3]]]], $received->calls());
         $this->assertSame([2, 4, 6], array_values(array_filter(array_column($this->queries(), 'limit'))));
     }

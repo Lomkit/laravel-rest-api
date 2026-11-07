@@ -224,7 +224,7 @@ class ReadingActionFieldsTest extends PackageTestCase
 
         $this->postJson('/field-documents/actions/batched-read-document-fields', self::BODY)
             ->assertOk()
-            ->assertExactJson(['data' => ['impacted' => 4]]);
+            ->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
 
         $this->assertCount(1, ReadDocumentFields::$batches);
         $this->assertSame([[4, 3, 2, 1]], array_column(ReadDocumentFields::$runs, 'keys'));
@@ -242,7 +242,7 @@ class ReadingActionFieldsTest extends PackageTestCase
 
         $this->postJson('/field-documents/actions/chunked-read-document-fields', self::BODY)
             ->assertOk()
-            ->assertExactJson(['data' => ['impacted' => 4]]);
+            ->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
 
         $this->assertSame([[4, 3], [2, 1]], array_column(ReadDocumentFields::$runs, 'keys'));
         $this->assertSame(ReadDocumentFields::$runs[0]['fields'], ReadDocumentFields::$runs[1]['fields']);
