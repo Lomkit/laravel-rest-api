@@ -214,7 +214,7 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 - The `calculatedFields`, `calculatedScopes`, `calculatedRelations`, `calculatedInstructions`, `calculatedActions`, `calculatedLimits`, `calculatedScoutFields` and `calculatedScoutInstructions` properties of resources are removed. Read the declarations from `$resource->definition()`, see below. `getScoutFields()`, `getScoutInstructions()` and `scoutInstruction()` are removed with the declarations they read, and so is the `Lomkit\Rest\Concerns\Resource\Scoutable` trait, see [Search engines](#search-engines).
 - A queued or batched action does not carry the resource or its declarations: the worker builds the context again for the user who sent the request, and evaluates the declarations there, see [Actions](#actions). Closures in the declarations, such as field rules, scope fields, relation constraints, or actions and instructions built with closures, never reach the queue, and neither do the action and its input values.
 - `Resource` does not define `__sleep()`, and the `Lomkit\Rest\Concerns\Resource\ForgetsRequestState` trait is removed. A resource that overrides `__sleep()` must not call `parent::__sleep()`.
-- `$resource->definition()` returns the `Lomkit\Rest\Http\ResourceDefinition` that the context keeps for the request. It reads `fields()` (a `FieldSet`), `relations()`, `scopes()`, `actions()`, `instructions()`, `limits()`, `text()` and `gates()`, and finds one declaration with `relation($name)` (a dotted path is accepted), `scope($name)`, `instruction($key)`, `actionExists($key)` and `action($key)`. `inputFields($actionOrInstruction)` returns the fields of an action or an instruction of the resource, a `FieldSet` read once per request. `getFields()`, `getRelations()`, `getScopes()`, `getLimits()`, `getActions()`, `getInstructions()`, `relation()`, `scope()`, `actionExists()`, `action()` and `instruction()` are removed from `Resource`, and `getFields()` from actions and instructions: replace `$resource->getFields()` with `$resource->definition()->fields()`, `$resource->getLimits()` with `$resource->definition()->limits()->allowed` and `$action->getFields($request)` with `$resource->definition()->inputFields($action)`. An override of a removed method is no longer called: change the declaration instead. A resource that already defines a method named `definition()` must give it this signature: `definition(): Lomkit\Rest\Http\ResourceDefinition`.
+- `$resource->definition()` returns the `Lomkit\Rest\Http\ResourceDefinition` that the context keeps for the request. It reads `fields()` (a `FieldSet`), `relations()`, `scopes()`, `actions()`, `metrics()`, `instructions()`, `limits()`, `text()` and `gates()`, and finds one declaration with `relation($name)` (a dotted path is accepted), `scope($name)`, `instruction($key)`, `actionExists($key)`, `action($key)` and `metric($key)`. `inputFields($actionOrInstruction)` returns the fields of an action or an instruction of the resource, a `FieldSet` read once per request. `getFields()`, `getRelations()`, `getScopes()`, `getLimits()`, `getActions()`, `getInstructions()`, `relation()`, `scope()`, `actionExists()`, `action()` and `instruction()` are removed from `Resource`, and `getFields()` from actions and instructions: replace `$resource->getFields()` with `$resource->definition()->fields()`, `$resource->getLimits()` with `$resource->definition()->limits()->allowed` and `$action->getFields($request)` with `$resource->definition()->inputFields($action)`. An override of a removed method is no longer called: change the declaration instead. A resource that already defines a method named `definition()` must give it this signature: `definition(): Lomkit\Rest\Http\ResourceDefinition`.
 - `$resource->definition()->limits()` returns a `Lomkit\Rest\Http\ResourceLimits`: `allowed` holds the values of `limits()`, and `defaultLimit` and `includeLimit` the properties of the resource, checked as described in [Search](#search).
 - `Lomkit\Rest\Concerns\Resource\ConfiguresRestParameters` is removed. `scopes()` is declared by `Lomkit\Rest\Concerns\Resource\DeclaresScopes`, `limits()` by `Paginable` and `alwaysSelect()` by `DeclaresFields`. A class that used the trait uses these three.
 
@@ -225,11 +225,11 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 - `Rest::resource()` takes two arguments. Replace the `$options` array with the fluent methods: `only()`, `except()`, `names()`, `middleware()` and `withSoftDeletes()`. For the `as` option, use `names('prefix.users')` or a route group with `name()`. PHP ignores a third argument, so search your route files for each call that still passes one: a forgotten `['except' => ['destroy']]` registers `destroy`.
 - The resource name must be one URI segment made of letters, digits, `-` and `_`. A dotted name (`users.posts`) throws: its `{user}` parameter was never used, so register the child resource on its own and scope its query in the resource. A slashed name (`admin/users`) throws: wrap the call in `Route::prefix('admin')`.
 - `PendingResourceRegistration` is final and no longer extends Laravel's class. It keeps `only()`, `except()`, `withSoftDeletes()`, `names()`, `name()`, `middleware()`, `middlewareFor()`, `withoutMiddleware()`, `withoutMiddlewareFor()` and `register()`. `parameters()`, `parameter()`, `shallow()`, `scoped()`, `missing()` and `withTrashed()` are removed because they have no effect on these routes. `where()` and its variants, `metadata()` and the macros of Laravel's class are removed too: put `where()` or `metadata()` on the enclosing route group, for example `Route::where(['action' => '[a-z-]+'])->group(...)`. Repeated `names()` and `name()` calls add up: a prefix and exact names combine in any order.
-- Every method that takes endpoint keys throws on an unknown key. The keys are `details`, `search`, `mutate`, `operate`, `destroy`, `restore`, `forceDestroy` and `batch`, or the cases of `Lomkit\Rest\Http\Routing\Endpoint`. `withSoftDeletes()` only accepts `restore` and `forceDestroy`, and repeated calls add up.
+- Every method that takes endpoint keys throws on an unknown key. The keys are `details`, `search`, `mutate`, `operate`, `metric`, `destroy`, `restore`, `forceDestroy` and `batch`, or the cases of `Lomkit\Rest\Http\Routing\Endpoint`. `withSoftDeletes()` only accepts `restore` and `forceDestroy`, and repeated calls add up.
 - `Endpoint` has a `Batch` case, the opt-in route of `withBatchProgress()`, see [Actions](#actions). A `match` on `Endpoint` without a default arm handles it. `Endpoint::optIns()` is replaced by `Endpoint::softDeletes()`, which returns `Restore` and `ForceDestroy`.
 - `withSoftDeletes([...])` no longer overrides `except()`. For example, `except('destroy')->withSoftDeletes('restore')` no longer registers `destroy`.
 - `middleware()` adds to the package middleware instead of replacing it, so `EnforceExpectsJson` stays on every route, next to `HandlePrecognitiveRequests` when precognition is enabled. Requests without `Accept: application/json` now get JSON errors instead of a redirect. Repeated middleware calls add up, resource middleware always comes before endpoint middleware, and endpoint middleware before the middleware of an action.
-- `Route::resourceVerbs()` now changes the package URIs through the keys `search`, `mutate`, `actions`, `restore` and `forceDestroy`. An application that already sets one of these keys will see its URIs change.
+- `Route::resourceVerbs()` now changes the package URIs through the keys `search`, `mutate`, `actions`, `metrics`, `restore` and `forceDestroy`. An application that already sets one of these keys will see its URIs change.
 - Two endpoints of one resource cannot share a URI or a route name: the registration throws.
 - Each action that the resource declares has its own route, `POST {name}/actions/{uriKey}`, named `{name}.operate.{uriKey}`, registered before `POST {name}/actions/{action}` (`{name}.operate`). That last route answers the keys of no action: `403` to a user that `viewAny` refuses, `404` to the others, as before. `php artisan route:list` shows one route per action:
 
@@ -241,6 +241,7 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
   `names('helpdesk')` gives `helpdesk.operate.close-tickets`, `name('operate', 'tickets.run')` gives `tickets.run.close-tickets`, and `Route::resourceVerbs(['actions' => 'run'])` gives `tickets/run/close-tickets`. `route('tickets.operate', ['action' => 'close-tickets'])` still gives the URL of the action.
 - `Rest::resource()` reads the `actions()` of the resource when it registers the routes: at boot, without a user, or during `php artisan route:cache`. Return the same actions for every user and every request: refuse an action to some users with its `abilities()`, not by leaving it out of `actions()`. An action that `actions()` returns only later has no route and gets the answer of an unknown key, and so does a route whose action `actions()` no longer returns. With cached routes, run `php artisan route:cache` after you add, rename or remove an action. Keep `actions()` free of queries. An action that throws when the actions are read, such as `Lomkit\Rest\Exceptions\InvalidActionException`, now throws when the routes register.
 - Two actions of one resource with the same `uriKey()` throw `InvalidResourceRouteException` when the routes register: "Two endpoints of the resource use the route [POST tickets/actions/close-tickets].". Before, the second action could not be called.
+- Each metric has its own route in the same way: `POST {name}/metrics/{uriKey}`, named `{name}.metric.{uriKey}`, before `POST {name}/metrics/{metric}` (`{name}.metric`). `Rest::resource()` reads `metrics()` with `actions()`, with the same rules: the same metrics for every user, `route:cache` again after a change, two metrics with one `uriKey()` throw, a metric that `metrics()` returns only later gets the answer of an unknown key. See [Metrics](#metrics).
 - `Rest` and `PendingResourceRegistration` take the container as a last constructor argument. `Rest` comes from the container as before.
 - `Lomkit\Rest\Http\Routing\ResourceRegistrar` is final, no longer extends Laravel's class and has a new API. `Rest` receives it from the container, so remove any container binding of `ResourceRegistrar` to your own class. The `Lomkit\Rest\Contracts\Http\Routing\Registrar` interface is removed.
 - The force delete endpoint is renamed `forceDestroy`, like `destroy`, `ForceDestroyRequest` and the `forceDestroying` hooks: the controller method is `forceDestroy()`, the route name is `{name}.forceDestroy`, and the endpoint key and the `Route::resourceVerbs()` key are `forceDestroy`. The URI stays `{name}/force`. The policy ability stays `forceDelete`, like Laravel's, and so does `performForceDelete()`, which calls Eloquent's `forceDelete()`.
@@ -538,7 +539,7 @@ The controller hooks are removed. The resource has endpoint events instead: publ
 |---|---|---|
 | `beforeDetails()` | `describing(): void` | once `viewAny` passed, before the details are built |
 | (none) | `described(array $details): void` | after the details are built |
-| `beforeSearch()` | `searching(SearchContext $search): void` | after validation, before any query; also for the search of an action |
+| `beforeSearch()` | `searching(SearchContext $search): void` | after validation, before any query; also for the search of an action or a metric |
 | `afterSearch()` | `searched(LengthAwarePaginator $page): void` | after the query and the includes are read, before the rows are rendered |
 | `beforeMutate()` | `mutatingAll(array $entries): void` | inside the transaction, after the row checks, before the first write |
 | `afterMutate()` | `mutatedAll(array $operations): void` | inside the transaction, after the last write; the `response` block is read after the commit |
@@ -553,7 +554,7 @@ The controller hooks are removed. The resource has endpoint events instead: publ
 - `searched()` receives the page that the response renders. Before, `afterSearch()` ran before the query. `described()` is new: the controller had no hook after the details.
 - An event cannot change what the endpoint does: it returns nothing, and its payload is read-only. Do not change the rows, the page or the operations it receives. Read the request with `$this->request()`: it is the request of the endpoint. An edit of its input changes nothing.
 - `mutatingAll()` receives the entries of the mutation, each a `Lomkit\Rest\Mutations\MutationNode` with its `operation`, `key`, `attributes` and `relations`. `mutatedAll()` receives the operations that the response returns under `operations`.
-- Refuse a search that combines filters in `searching()`. The check also applies to the search of an action, before any row is read:
+- Refuse a search that combines filters in `searching()`. The check also applies to the search of an action, before any row is read, and to the search of a metric:
 
   ```php
   use Illuminate\Validation\ValidationException;
@@ -631,6 +632,52 @@ Hooks of each row and the perimeter:
   ```
 
 - The callbacks of `requiredOnCreation()` and the other relation constraints keep their request argument.
+
+### Metrics
+
+Metrics are new in 3.0. A resource declares them in `metrics()`, and each metric gets its own route, `POST {name}/metrics/{uriKey}`. A metric extends `Lomkit\Rest\Metrics\Metric`, names the type of its result in `type()` and computes it in `calculate()`. The query it receives holds the perimeter of the resource and the search of the request.
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Metric;
+use Lomkit\Rest\Metrics\MetricResult;
+
+class TicketBacklog extends Metric
+{
+    public function type(): string
+    {
+        return 'gauge';
+    }
+
+    public function calculate(Builder $query): MetricResult
+    {
+        return new Gauge($query->where('status', 'open')->count(), 500);
+    }
+}
+
+final readonly class Gauge implements MetricResult
+{
+    public function __construct(private int $value, private int $max) {}
+
+    public function jsonSerialize(): array
+    {
+        return ['value' => $this->value, 'max' => $this->max];
+    }
+}
+
+// TicketResource
+public function metrics(): array
+{
+    return [TicketBacklog::make()];
+}
+```
+
+`POST /api/tickets/metrics/ticket-backlog` with `{}` answers `{"data": {"type": "gauge", "value": 42, "max": 500}}`.
+
+- The resource now declares `metrics()`. A resource method named `metrics()` with another signature no longer loads: rename it.
+- Every resource gets `POST {name}/metrics/{metric}`, named `{name}.metric`, also without metrics. It answers the keys of no metric: `403` to a user that `viewAny` refuses, `404` to the others. `except('metric')` removes the metric routes. `php artisan route:list` and `rest:check` count one more route for each resource.
+- The details response has a new `metrics` key, after `actions`: `[]` for a resource without metrics.
+- `Lomkit\Rest\Http\Routing\Endpoint` has a `Metric` case, after `Operate`. A `match` on `Endpoint` without a default arm handles it.
 
 ### Native types
 
@@ -1814,7 +1861,7 @@ Scramble:
 
 ### Details
 
-The details endpoint, `GET /{resource}`, describes the resource with typed entries. Its keys are `actions`, `instructions`, `fields`, `limits`, `scopes`, `relations`, `rules`, `text` and `gates`. An excerpt:
+The details endpoint, `GET /{resource}`, describes the resource with typed entries. Its keys are `actions`, `metrics`, `instructions`, `fields`, `limits`, `scopes`, `relations`, `rules`, `text` and `gates`. An excerpt:
 
 ```json
 {"data": {

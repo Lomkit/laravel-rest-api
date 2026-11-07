@@ -28,11 +28,11 @@ final readonly class ValidationContext
         public array $reserved = [],
     ) {}
 
-    public static function root(Resource $resource, NodeBudget $budget, ParsedRules $rules): self
+    public static function root(Resource $resource, NodeBudget $budget, ParsedRules $rules, ?SearchGrammar $grammar = null): self
     {
         $context = $resource->context();
 
-        return new self($resource, $context->text($resource)->grammar(), $context->limits(), $rules, new PayloadReader($rules, $budget), $context->vocabulary());
+        return new self($resource, $grammar ?? $context->text($resource)->grammar(), $context->limits(), $rules, new PayloadReader($rules, $budget), $context->vocabulary());
     }
 
     public function for(Resource $resource): self

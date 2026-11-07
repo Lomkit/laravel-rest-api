@@ -35,7 +35,7 @@ class ResourceVerbsTest extends PackageTestCase
     #[Test]
     public function it_uses_the_verbs_set_with_route_resource_verbs(): void
     {
-        Route::resourceVerbs(['search' => 'find', 'mutate' => 'write', 'actions' => 'run', 'restore' => 'undelete', 'forceDestroy' => 'purge']);
+        Route::resourceVerbs(['search' => 'find', 'mutate' => 'write', 'actions' => 'run', 'metrics' => 'stats', 'restore' => 'undelete', 'forceDestroy' => 'purge']);
 
         $this->assertSame([
             'documents.details' => 'GET|HEAD documents',
@@ -44,6 +44,7 @@ class ResourceVerbsTest extends PackageTestCase
             'documents.operate.archive-documents' => 'POST documents/run/archive-documents',
             'documents.operate.queued-archive-documents' => 'POST documents/run/queued-archive-documents',
             'documents.operate' => 'POST documents/run/{action}',
+            'documents.metric' => 'POST documents/stats/{metric}',
             'documents.destroy' => 'DELETE documents',
             'documents.restore' => 'POST documents/undelete',
             'documents.forceDestroy' => 'DELETE documents/purge',

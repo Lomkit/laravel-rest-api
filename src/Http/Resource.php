@@ -22,6 +22,8 @@ use Lomkit\Rest\Fields\Details\FieldDetails;
 use Lomkit\Rest\Fields\Details\ResourceRuleDetails;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Instructions\Instructionable;
+use Lomkit\Rest\Metrics\HasMetrics;
+use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 
@@ -33,6 +35,7 @@ class Resource implements \JsonSerializable
     use DeclaresFields;
     use DeclaresScopes;
     use HasEndpointEvents;
+    use HasMetrics;
     use HasResourceHooks;
     use Instructionable;
     use Paginable;
@@ -107,6 +110,7 @@ class Resource implements \JsonSerializable
 
         return [
             'actions' => array_values(array_map(fn (Action $action): array => $action->jsonSerialize(), $definition->actions())),
+            'metrics' => array_values(array_map(fn (Metric $metric): array => $metric->jsonSerialize(), $definition->metrics())),
             'instructions' => array_values(array_map(fn (Instruction $instruction): array => $instruction->jsonSerialize(), $definition->instructions())),
             'fields' => FieldDetails::forFields($definition->fields()),
             'limits' => $definition->limits()->allowed,

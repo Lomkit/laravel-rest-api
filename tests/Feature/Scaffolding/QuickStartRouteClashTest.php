@@ -126,7 +126,7 @@ class QuickStartRouteClashTest extends ScaffoldingTestCase
             ."  app/Policies/NotePolicy.php ... created (allows every ability)\n"
             ."  app/Policies/Archive/NotePolicy.php ... created (allows every ability)\n"
             ."  routes/api.php ... kept\n"
-            ."  checks (fresh process) ... 10 routes authenticated, 2 policies found\n\n",
+            ."  checks (fresh process) ... 12 routes authenticated, 2 policies found\n\n",
             $output,
         );
         $this->assertSame($routes, (string) file_get_contents(base_path('routes/api.php')));

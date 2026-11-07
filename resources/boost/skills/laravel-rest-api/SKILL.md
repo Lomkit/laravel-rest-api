@@ -1,6 +1,6 @@
 ---
 name: laravel-rest-api
-description: Use this skill when working with the `lomkit/laravel-rest-api` package — building or modifying Resources, Controllers, Actions, Instructions, registering REST routes via `Rest::resource()`, or writing client payloads for the `search`, `mutate`, `operate`, `details`, `destroy`, `restore` and `force` endpoints. Triggers include the `Lomkit\Rest\` namespace, the `Rest` facade, the `rest:*` artisan commands, and `app/Rest/Resources` / `app/Rest/Controllers` directories.
+description: Use this skill when working with the `lomkit/laravel-rest-api` package — building or modifying Resources, Controllers, Actions, Metrics, Instructions, registering REST routes via `Rest::resource()`, or writing client payloads for the `search`, `mutate`, `operate`, `metric`, `details`, `destroy`, `restore` and `force` endpoints. Triggers include the `Lomkit\Rest\` namespace, the `Rest` facade, the `rest:*` artisan commands, and `app/Rest/Resources` / `app/Rest/Controllers` directories.
 ---
 
 # Laravel Rest API (lomkit/laravel-rest-api)
@@ -13,7 +13,7 @@ Official documentation: https://laravel-rest-api.lomkit.com/
 
 ## When to use this skill
 
-Use this skill when working with the `lomkit/laravel-rest-api` package — building or modifying Resources, Controllers, Actions, Instructions, registering REST routes via `Rest::resource()`, or writing client payloads for the `search`, `mutate`, `operate`, `details`, `destroy`, `restore` and `force` endpoints. Triggers include the `Lomkit\Rest\` namespace, the `Rest` facade, the `rest:*` artisan commands, and `app/Rest/Resources` / `app/Rest/Controllers` directories.
+Use this skill when working with the `lomkit/laravel-rest-api` package — building or modifying Resources, Controllers, Actions, Metrics, Instructions, registering REST routes via `Rest::resource()`, or writing client payloads for the `search`, `mutate`, `operate`, `metric`, `details`, `destroy`, `restore` and `force` endpoints. Triggers include the `Lomkit\Rest\` namespace, the `Rest` facade, the `rest:*` artisan commands, and `app/Rest/Resources` / `app/Rest/Controllers` directories.
 
 ## Features
 
@@ -29,7 +29,7 @@ Use this skill when working with the `lomkit/laravel-rest-api` package — build
   php artisan rest:controller UsersController --resource=UserResource
   ```
 
-- **Routing**: register all REST endpoints (`details`, `search`, `mutate`, `operate`, `destroy`, optional `restore`/`force`) for a model with a single call:
+- **Routing**: register all REST endpoints (`details`, `search`, `mutate`, `operate`, `metric`, `destroy`, optional `restore`/`force`) for a model with a single call:
 
   ```php
   Rest::resource('users', \App\Rest\Controllers\UsersController::class);
@@ -196,7 +196,7 @@ Override these methods. They take no argument: a list that depends on the user r
 - `rules(): array`, `createRules(): array`, `updateRules(): array` — resource-level rules applied during mutate, for rules that compare attributes and for nested keys (`metadata.source`). Put the rules of one attribute on its field instead. Each key gets one list: the field rules, then `createRules()` (on `create`) or `updateRules()` (on `update`, `sync`, `toggle`), then `rules()`; pipe strings are split first. The three methods are read once per request, so every entry shares the rule objects they return. For a rule that depends on the entry, use `\Lomkit\Rest\Mutations\Contextual::rule(fn (MutationContext $mutation) => Rule::unique(Post::class, 'title')->ignore($mutation->key))` or a rule object that implements `\Lomkit\Rest\Mutations\MutationAwareRule` (`setMutation(MutationContext $mutation): static`, called on a clone per entry); `MutationContext` holds the `operation`, `key` and `depth` of the entry. A `Rule::when()` condition reads the attributes of its entry. The same holds for field rules.
 - `defaultOrderBy()` — default sort (defaults to the model key in descending order, `[$model->getKeyName() => 'desc']`); a column may name its table (`posts.views`).
 - Resource hooks (model-lifecycle), inside the endpoint's transaction: `mutating(MutationNode $entry, Model $model): void` and `mutated()` receive the entry of `payload()` (`operation`, `key`, `attributes`, `pivot`, `withoutDetaching`, `relations`, `type`); `destroying(Model $model): void`, `destroyed`, `restoring`, `restored`, `forceDestroying`, `forceDestroyed` receive the row. They take no request: read it with `$this->request()`. `mutating`/`mutated` do not run for an entry that writes no attribute (a link-only target).
-- Endpoint events (one per endpoint moment, typed payload, return `void`): `describing()`, `described(array $details)`, `searching(SearchContext $search)` (also for the search of an action; throw `ValidationException` for a 422 before any query), `searched(LengthAwarePaginator $page)`, `mutatingAll(array $entries)` (`MutationNode` list) and `mutatedAll(array $operations)` inside the mutate transaction, `operating(Action $action, ActionFields $fields)` and `operated(Action $action, ActionFields $fields, int $impacted)` around the chunks (inside an `atomic()` transaction; `respond()` after), `destroyingAll(Collection $models)` / `destroyedAll()` and the `restoring`/`forceDestroying` twins inside the deletion transaction. They run after the entry checks and validation, the events that receive rows after the row checks; a throw inside a transaction rolls it back. Read the request with `$this->request()`.
+- Endpoint events (one per endpoint moment, typed payload, return `void`): `describing()`, `described(array $details)`, `searching(SearchContext $search)` (also for the search of an action or a metric; throw `ValidationException` for a 422 before any query), `searched(LengthAwarePaginator $page)`, `mutatingAll(array $entries)` (`MutationNode` list) and `mutatedAll(array $operations)` inside the mutate transaction, `operating(Action $action, ActionFields $fields)` and `operated(Action $action, ActionFields $fields, int $impacted)` around the chunks (inside an `atomic()` transaction; `respond()` after), `destroyingAll(Collection $models)` / `destroyedAll()` and the `restoring`/`forceDestroying` twins inside the deletion transaction. They run after the entry checks and validation, the events that receive rows after the row checks; a throw inside a transaction rolls it back. Read the request with `$this->request()`.
 
 A model that uses `Laravel\Scout\Searchable` gives its resource no text search by itself: declare `text()` with `ScoutEngine::make()`, see "Search engines" below.
 
@@ -257,7 +257,7 @@ Rest::resource('posts', \App\Rest\Controllers\PostsController::class)->withSoftD
 
 The name must be one URI segment (letters, digits, `-`, `_`). Dotted names (`users.posts`) and slashed names (`admin/users`) throw `InvalidResourceRouteException`: wrap the call in `Route::prefix('admin')` instead. `Rest::resource()` takes two arguments.
 
-`Rest::resource()` returns a builder with these options. Endpoint keys are `details`, `search`, `mutate`, `operate`, `destroy`, `restore`, `forceDestroy` and `batch` (or the `Lomkit\Rest\Http\Routing\Endpoint` cases); an unknown key throws. The result does not depend on the call order.
+`Rest::resource()` returns a builder with these options. Endpoint keys are `details`, `search`, `mutate`, `operate`, `metric`, `destroy`, `restore`, `forceDestroy` and `batch` (or the `Lomkit\Rest\Http\Routing\Endpoint` cases); an unknown key throws. The result does not depend on the call order.
 
 ```php
 Rest::resource('posts', PostsController::class)
@@ -271,15 +271,17 @@ Rest::resource('posts', PostsController::class)
     ->register();                                // optional: routes register when the builder is released
 ```
 
-`Rest::resource()` registers these routes. `Route::resourceVerbs()` changes the verbs through the keys `search`, `mutate`, `actions`, `restore` and `forceDestroy` (each must be one URI segment):
+`Rest::resource()` registers these routes. `Route::resourceVerbs()` changes the verbs through the keys `search`, `mutate`, `actions`, `metrics`, `restore` and `forceDestroy` (each must be one URI segment):
 
 | Method | URI | Endpoint | Purpose |
 | --- | --- | --- | --- |
-| `GET` | `/users` | `details` | Schema for the resource (fields, relations, scopes, limits, actions, instructions, rules, text search, gates) |
+| `GET` | `/users` | `details` | Schema for the resource (fields, relations, scopes, limits, actions, metrics, instructions, rules, text search, gates) |
 | `POST` | `/users/search` | `search` | Filterable/sortable/paginated read |
 | `POST` | `/users/mutate` | `mutate` | Batch create/update + relation operations |
 | `POST` | `/users/actions/{uriKey}` | `operate` | Run a custom action: one route per action, named `{name}.operate.{uriKey}`, with the action's own middleware |
 | `POST` | `/users/actions/{action}` | `operate` | Unknown keys: `403` without `viewAny`, else `404` (named `{name}.operate`) |
+| `POST` | `/users/metrics/{uriKey}` | `metric` | Compute a metric: one route per metric, named `{name}.metric.{uriKey}`, with the metric's own middleware |
+| `POST` | `/users/metrics/{metric}` | `metric` | Unknown keys: `403` without `viewAny`, else `404` (named `{name}.metric`) |
 | `DELETE` | `/users` | `destroy` | Batch (soft-)delete |
 | `POST` | `/users/restore` | `restore` | Opt-in via `withSoftDeletes()` |
 | `DELETE` | `/users/force` | `forceDestroy` | Opt-in via `withSoftDeletes()` |
@@ -289,13 +291,14 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
 
 ## `details` endpoint
 
-`GET /api/artworks` describes the resource. It lists what the declarations of the resource (`fields()`, `relations()`, `scopes()`, `actions()`, `instructions()`, the rules methods, `text()` and `gates()`) return for the current request, which can depend on `$this->request()->user()`. It checks `viewAny` only and applies no policy to the entries. With a `collector` morph-map alias:
+`GET /api/artworks` describes the resource. It lists what the declarations of the resource (`fields()`, `relations()`, `scopes()`, `actions()`, `metrics()`, `instructions()`, the rules methods, `text()` and `gates()`) return for the current request, which can depend on `$this->request()->user()`. It checks `viewAny` only and applies no policy to the entries. With a `collector` morph-map alias:
 
 ```json
 {"data": {
   "actions": [{"name": "Retire Artworks", "uriKey": "retire-artworks", "target": "search",
     "fields": [{"name": "notify", "label": null, "type": "boolean", "nullable": false, "default": false, "rules": ["boolean"], "meta": {}}],
     "meta": {}, "destructive": false, "confirm": null}],
+  "metrics": [{"name": "Artworks By Medium", "uriKey": "artworks-by-medium", "type": "breakdown", "meta": {}}],
   "instructions": [{"name": "By Medium", "uriKey": "by-medium",
     "fields": [{"name": "medium", "label": null, "type": "enum", "nullable": false, "default": null, "rules": ["enum", "required"], "meta": {}, "values": ["oil", "ink", "watercolor"]}],
     "meta": {}, "text": true}],
@@ -671,6 +674,37 @@ smaller, raise it, or set it to `null` to remove the cap on every target.
 
 **Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models. Combine with `Lomkit\Rest\Contracts\BatchableAction` and use `withBatch(ActionFields $fields, PendingBatch $batch): void` to register `then`/`catch`/`finally` callbacks. Route the jobs with Laravel's queue attributes on the action (`#[Queue('exports')]`, `#[Connection('redis')]`, `#[Tries(3)]`, `#[Timeout]`, `#[Backoff]`, `#[Delay]`, `#[MaxExceptions]`, `#[FailOnTimeout]`) or `Queue::route(ExportOrders::class, 'exports')`; an action has no `$queue`/`$connection` properties and no `dispatch()`. The job (`Lomkit\Rest\Actions\QueuedAction`) holds the resource and action classes, the action key, the input values as sent, the row keys and a reference to the user; the worker rebuilds the context for that user (`$this->request()->user()`, policies and `perimeterQuery()` see them; `auth()->user()` does not), casts the input values again, and reloads the rows by key through `perimeterQuery()` (not for an engine text search) with the global scopes and `search.trashed`, without the search's includes. Rows gone or out of the perimeter are skipped; a missing user or a removed action fails the job with `QueuedActionException`. `release()`, `attempts()` and `batch()` work in `handle()`. A `BatchableAction` answers `"batch": "<id>"`; its jobs skip once the batch is cancelled (`SkipIfBatchCancelled`). `Rest::resource(...)->withBatchProgress()` adds `GET /{resource}/actions/{action}/batches/{batch}` (`{name}.batch`): the progress (`id`, `total_jobs`, `pending_jobs`, `failed_jobs`, `progress`, `finished`, `cancelled`) for the user who started the batch, `404` for anyone else and for a guest's batch.
 
+## Metrics
+
+A metric computes one result over the rows of a search: a count, a total, a breakdown. Declare it in `metrics()` on the resource (no request parameter; read it with `$this->request()`); each metric gets `POST /{resource}/metrics/{uriKey}`.
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Lomkit\Rest\Metrics\Metric;
+use Lomkit\Rest\Metrics\MetricResult;
+
+class TicketBacklog extends Metric
+{
+    public function type(): string
+    {
+        return 'gauge';                          // lowercase letters, digits and dashes
+    }
+
+    public function calculate(Builder $query): MetricResult
+    {
+        return new Gauge($query->where('status', 'open')->count(), 500);
+    }
+}
+```
+
+- `calculate(Builder $query)` receives an Eloquent query on the model: the perimeter of the resource, then the `search` of the request (text, trashed, filters, scopes, instructions), without order, selected columns or limit. Group, sum or count on it. It takes no request: read it with `$this->request()`.
+- The result implements `Lomkit\Rest\Metrics\MetricResult` (`jsonSerialize(): array`). The response is `{"data": {"type": <type()>, ...<the result>}}`; a result with its own `type` key throws `InvalidMetricException`.
+- Request: `{}` or `{"search": {...}}`. `search` accepts `text`, `trashed`, `filters`, `scopes` and `instructions`; `sorts`, `selects`, `includes`, `aggregates`, `gates`, `limit` and `page` are a `422` ("The search.limit field is prohibited."). `search.text` works with `Contains` and `FullText`; on a resource searched on an engine it is a `422`.
+- The search runs the resource's `searching()` event first, as a search does. A metric that must skip it declares `TicketBacklog::make()->withoutSearching()` in `metrics()`, or `public bool $withoutSearching = true;` in its class. The perimeter, `viewAny` and the validation still apply.
+- Abilities: `viewAny`, then the resource's `abilities(Endpoint::Metric)`, then the metric's `abilities()` (`['viewAny']` by default). `[]` runs without these checks, for example for guests with `->withoutMiddleware('auth')`. Relation filters still need `viewAny` on the related resource.
+- Routes: named `{name}.metric.{uriKey}`; `POST /{resource}/metrics/{metric}` comes last and answers unknown keys (`403` without `viewAny`, else `404`). `->middleware('throttle:reports')` and `->withoutMiddleware('auth:sanctum')` (or the `$middleware` and `$withoutMiddleware` properties) work as for actions. `Rest::resource()` reads `metrics()` when it registers the routes: keep it the same for every user and free of queries; two metrics with one `uriKey()` throw.
+- Details: `metrics` lists `{"name", "uriKey", "type", "meta"}` for each metric. `$resource->definition()->metrics()` and `metric($key)` read them.
+
 ## Instructions (custom search refinements)
 
 Generate:
@@ -774,7 +808,7 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 
 | Policy method | Triggered by |
 | --- | --- |
-| `viewAny` | `search`, `details`, `operate` (unless the action's `abilities()` returns `[]`), and every resource reached by an include, an aggregate or a relation filter (each level, pivot columns included), a relation group or a relation sort, and the `response` block of `mutate` (its resource and every resource it reaches) |
+| `viewAny` | `search`, `details`, `operate` and `metric` (unless the action's or the metric's `abilities()` returns `[]`), and every resource reached by an include, an aggregate or a relation filter (each level, pivot columns included), a relation group or a relation sort, and the `response` block of `mutate` (its resource and every resource it reaches) |
 | `view` | per-row visibility, includes |
 | `create` | `mutate` create: once per created resource class with the model class, then per created row with its draft (`create($user, ?Model $draft = null)`) |
 | `update` | `mutate` update, with a `\Lomkit\Rest\Authorization\Changes` third argument (`has()`, `get()`, `keys()`); a child moved under a has-one/has-many relation |
@@ -786,7 +820,7 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 
 **Define a policy for every model you expose.** A relation that needs its own link check declares its abilities; a declared ability with no policy method is denied. `php artisan rest:policy PostPolicy --model=Post` writes a starting point that allows every ability: edit it before production.
 
-**Class-level checks run before validation and before any query.** The request checks its endpoint abilities (`viewAny` for `search` and `details`, none for `mutate`, `destroy`, `restore` and `forceDestroy`, and for `operate` `viewAny` followed by the resource's `Endpoint::Operate` abilities and the action's `abilities()`), then `viewAny` on every resource the payload reaches and `create` for every created resource. A denied check answers `403` (or the status of the policy's response) even for an invalid payload or a Precognition request. The request's own `authorize()` runs first, and both must pass. Row checks of `mutate` run in one batch inside the transaction, before the first write; those of `destroy`, `restore` and `forceDestroy` before their transaction.
+**Class-level checks run before validation and before any query.** The request checks its endpoint abilities (`viewAny` for `search` and `details`, none for `mutate`, `destroy`, `restore` and `forceDestroy`, for `operate` `viewAny` followed by the resource's `Endpoint::Operate` abilities and the action's `abilities()`, and the same for `metric` with `Endpoint::Metric` and the metric's `abilities()`), then `viewAny` on every resource the payload reaches and `create` for every created resource. A denied check answers `403` (or the status of the policy's response) even for an invalid payload or a Precognition request. The request's own `authorize()` runs first, and both must pass. Row checks of `mutate` run in one batch inside the transaction, before the first write; those of `destroy`, `restore` and `forceDestroy` before their transaction.
 
 To change the endpoint abilities of one resource, override `abilities()` on it:
 
@@ -883,7 +917,8 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 
 ## Pointers into the codebase
 
-- Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `EndpointRoutes` (the routes of each endpoint, one per action for `operate`), `ResourceRegistrar` and the route value objects)
+- Service provider & routing — `src/RestServiceProvider.php`, `src/Rest.php`, `src/Http/Routing/` (`Endpoint`, `PendingResourceRegistration`, `EndpointRoutes` (the routes of each endpoint, one per action for `operate` and one per metric for `metric`), `ResourceRegistrar` and the route value objects)
+- Metrics — `src/Metrics/` (`Metric`, `MetricResult`, `HasMetrics`, `MetricQuery`, `MetricNode`), `src/Http/Requests/MetricRequest.php`, `src/Http/MetricResponse.php`
 - Config — `src/Config/RestConfig.php` (the typed values of `config/rest.php`, read once per request through `RestContext::config()`) and `src/Config/ConfigValue.php` (the typed read of one key, also used for `rest.limits` and `rest.precognition.enabled`)
 - Request classes per verb — `src/Http/Requests/{Search,Mutate,Operate,Destroy,Restore,ForceDestroy,Details,Batch}Request.php`
 - Resource base class & traits — `src/Http/Resource.php`, `src/Http/ResourceDefinition.php` (the declarations of one resource for one request, read with `$resource->definition()`, and their lookups `relation()`, `scope()`, `action()`, `instruction()` and `inputFields()`; kept by `src/Http/RestContext.php`, whose limits are a `src/Http/ResourceLimits.php`), `src/Concerns/Resource/*` (`DeclaresFields`, `DeclaresScopes`, `Paginable`, `Relationable`, `Contextual` with `definition()` and `request()`, `DisableGates`, `DisableAuthorizationsCache`, hooks, ...)

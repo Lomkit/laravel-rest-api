@@ -20,6 +20,7 @@
        {"name": "status", "label": null, "type": "enum", "nullable": false, "default": null, "rules": ["enum", "required"], "meta": {}, "values": ["draft", "review", "published"]},
        {"name": "at", "label": null, "type": "datetime", "nullable": false, "default": null, "rules": ["date", "required_if:status,published"], "meta": {}}],
      "meta": {}, "destructive": false, "confirm": null}],
+  "metrics": [],
   "instructions": [
     {"name": "Highlight Posts", "uriKey": "highlight-posts",
      "fields": [

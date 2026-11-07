@@ -39,6 +39,7 @@ final class DetailsResponseType
     {
         return DetailsEntryTypes::objectOf([
             'actions' => DetailsEntryTypes::listOf(DetailsEntryTypes::action()),
+            'metrics' => DetailsEntryTypes::listOf(DetailsEntryTypes::metric()),
             'instructions' => DetailsEntryTypes::listOf(DetailsEntryTypes::instruction()),
             'fields' => DetailsEntryTypes::listOf(DetailsEntryTypes::field()),
             'limits' => DetailsEntryTypes::listOf(new IntegerType),

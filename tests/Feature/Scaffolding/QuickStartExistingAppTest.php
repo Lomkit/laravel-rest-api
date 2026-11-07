@@ -48,7 +48,7 @@ class QuickStartExistingAppTest extends ScaffoldingTestCase
         $this->quickStart('Post', 'Tag');
         $output = $this->quickStart('Post', 'Tag');
 
-        $this->assertStringContainsString('  checks (fresh process) ... 10 routes authenticated, 2 policies found', $output);
+        $this->assertStringContainsString('  checks (fresh process) ... 12 routes authenticated, 2 policies found', $output);
         $this->assertStringStartsWith("<?php\n\nnamespace MyApp\Rest\Resources;\n", $this->contents(app_path('Rest/Resources/PostResource.php')));
         $this->assertStringContainsString("use MyApp\Models\Post;\n", $this->contents(app_path('Rest/Resources/PostResource.php')));
         $this->assertStringContainsString("use MyApp\Rest\Resources\PostResource;\n", $this->contents(app_path('Rest/Controllers/PostsController.php')));
@@ -87,7 +87,7 @@ class QuickStartExistingAppTest extends ScaffoldingTestCase
         $output = $this->quickStart('Post', 'Tag');
 
         $this->assertStringContainsString('  routes/api.php ... tags behind auth:sanctum', $output);
-        $this->assertStringContainsString('  checks (fresh process) ... 10 routes authenticated, 2 policies found', $output);
+        $this->assertStringContainsString('  checks (fresh process) ... 12 routes authenticated, 2 policies found', $output);
         $this->assertStringEndsWith("\nRest::resource('tags', TagsController::class)\n    ->middleware('auth:sanctum');\n", $this->contents(base_path('routes/api.php')));
     }
 
@@ -99,7 +99,7 @@ class QuickStartExistingAppTest extends ScaffoldingTestCase
 
         $output = $this->quickStart('Note');
 
-        $this->assertStringContainsString('  checks (fresh process) ... 5 routes authenticated, 1 policy found', $output);
+        $this->assertStringContainsString('  checks (fresh process) ... 6 routes authenticated, 1 policy found', $output);
         $this->assertStringContainsString("use App\\Note;\n", $this->contents(app_path('Rest/Resources/NoteResource.php')));
         $this->assertStringContainsString("use App\\Note;\n", $this->contents(app_path('Policies/NotePolicy.php')));
     }
@@ -158,7 +158,7 @@ class QuickStartExistingAppTest extends ScaffoldingTestCase
         $output = $this->quickStart(User::class);
 
         $this->assertStringContainsString("  app/Rest/Controllers/UsersController.php ... created\n  app/Policies/AccountPolicy.php ... kept\n", $output);
-        $this->assertStringContainsString('  checks (fresh process) ... 5 routes authenticated, 1 policy found', $output);
+        $this->assertStringContainsString('  checks (fresh process) ... 6 routes authenticated, 1 policy found', $output);
         $this->assertFileDoesNotExist(app_path('Policies/UserPolicy.php'));
     }
 
@@ -170,7 +170,7 @@ class QuickStartExistingAppTest extends ScaffoldingTestCase
         $output = $this->quickStart(User::class);
 
         $this->assertStringContainsString("  app/Rest/Controllers/UsersController.php ... created\n  app/Policies/UserPolicy.php ... created (allows every ability)\n", $output);
-        $this->assertStringContainsString('  checks (fresh process) ... 5 routes authenticated, 1 policy found', $output);
+        $this->assertStringContainsString('  checks (fresh process) ... 6 routes authenticated, 1 policy found', $output);
     }
 
     #[Test]

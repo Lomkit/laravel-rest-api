@@ -10,6 +10,7 @@ use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Search\GateVocabulary;
@@ -32,6 +33,9 @@ final class ResourceDefinition
 
     /** @var array<int, Action>|null */
     private ?array $actions = null;
+
+    /** @var array<int, Metric>|null */
+    private ?array $metrics = null;
 
     private ?ResourceLimits $limits = null;
 
@@ -86,6 +90,15 @@ final class ResourceDefinition
         );
     }
 
+    /** @return array<int, Metric> */
+    public function metrics(): array
+    {
+        return $this->metrics ??= array_map(
+            fn (Metric $metric): Metric => $metric->resource($this->resource)->ensureValid(),
+            $this->resource->metrics(),
+        );
+    }
+
     public function scope(string $name): ?Scope
     {
         return array_find($this->scopes(), fn (Scope $scope): bool => $scope->name === $name);
@@ -121,6 +134,11 @@ final class ResourceDefinition
     public function action(string $key): Action
     {
         return collect($this->actions())->sole(fn (Action $action): bool => $action->uriKey() === $key);
+    }
+
+    public function metric(string $key): ?Metric
+    {
+        return array_find($this->metrics(), fn (Metric $metric): bool => $metric->uriKey() === $key);
     }
 
     public function inputFields(Action|Instruction $declaration): FieldSet

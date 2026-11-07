@@ -11,21 +11,7 @@ use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class SearchParser
 {
-    private const array KEYS = [
-        'text' => true,
-        'trashed' => true,
-        'filters' => true,
-        'gates' => true,
-        'scopes' => true,
-        'sorts' => true,
-        'selects' => true,
-        'aggregates' => true,
-        'includes' => true,
-        'instructions' => true,
-        'limit' => true,
-    ];
-
-    public function __construct(private bool $paged = true) {}
+    public function __construct(private SearchShape $shape = SearchShape::Page) {}
 
     public function parse(Cursor $search, ValidationContext $context): SearchNode
     {
@@ -35,9 +21,9 @@ final readonly class SearchParser
             return SearchNode::empty();
         }
 
-        $context->reader->known($search, $this->paged ? [...self::KEYS, 'page' => true] : self::KEYS);
+        $context->reader->known($search, $this->shape->keys());
 
-        $body = SearchBodyParser::keys($search, $context, $this->paged ? LevelBounds::Paged : LevelBounds::Limited);
+        $body = $this->shape->body($search, $context);
         $text = $this->text($search->at('text'), $context);
 
         return $body->node($text, $this->trashed($search->at('trashed'), $context));

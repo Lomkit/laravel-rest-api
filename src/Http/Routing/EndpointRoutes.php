@@ -9,6 +9,7 @@ use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\ResourceDefinition;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Metrics\Metric;
 
 final readonly class EndpointRoutes
 {
@@ -55,10 +56,10 @@ final readonly class EndpointRoutes
 
         $declarations = $definition === null ? [] : self::declarations($endpoint, $definition);
 
-        return [...array_map(fn (Action $declaration): RouteDefinition => $this->declarationRoute($endpoint, $route, $declaration), $declarations), $route];
+        return [...array_map(fn (Action|Metric $declaration): RouteDefinition => $this->declarationRoute($endpoint, $route, $declaration), $declarations), $route];
     }
 
-    private function declarationRoute(Endpoint $endpoint, RouteDefinition $catchAll, Action $declaration): RouteDefinition
+    private function declarationRoute(Endpoint $endpoint, RouteDefinition $catchAll, Action|Metric $declaration): RouteDefinition
     {
         $key = $declaration->uriKey();
 
@@ -72,16 +73,20 @@ final readonly class EndpointRoutes
         );
     }
 
-    /** @return list<Action> */
+    /** @return list<Action|Metric> */
     private static function declarations(Endpoint $endpoint, ResourceDefinition $definition): array
     {
-        return $endpoint === Endpoint::Operate ? array_values($definition->actions()) : [];
+        return match ($endpoint) {
+            Endpoint::Operate => array_values($definition->actions()),
+            Endpoint::Metric => array_values($definition->metrics()),
+            default => [],
+        };
     }
 
     /** @param list<Endpoint> $endpoints */
     private function definition(array $endpoints): ?ResourceDefinition
     {
-        if (! in_array(Endpoint::Operate, $endpoints, true) || ! is_subclass_of($this->controller, Controller::class)) {
+        if (! array_any($endpoints, fn (Endpoint $endpoint): bool => in_array($endpoint, [Endpoint::Operate, Endpoint::Metric], true)) || ! is_subclass_of($this->controller, Controller::class)) {
             return null;
         }
 
