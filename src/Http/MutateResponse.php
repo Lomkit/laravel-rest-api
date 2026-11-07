@@ -38,7 +38,13 @@ final readonly class MutateResponse implements Responsable
 
         $checks->authorize($resource, $nodes);
 
-        return (new Mutator($request, $request->rows(), $checks))->execute($resource, $nodes);
+        $resource->mutatingAll($nodes);
+
+        $operations = (new Mutator($request, $request->rows(), $checks))->execute($resource, $nodes);
+
+        $resource->mutatedAll($operations);
+
+        return $operations;
     }
 
     #[\Override]

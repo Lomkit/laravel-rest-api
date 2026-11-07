@@ -25,17 +25,23 @@ final readonly class RowBatch
     }
 
     /**
+     * @param  Closure(Collection<int, Model>): void  $before
      * @param  Closure(Model): void  $write
+     * @param  Closure(Collection<int, Model>): void  $after
      * @return Collection<int, Model>
      */
-    public function write(Closure $write): Collection
+    public function write(Closure $before, Closure $write, Closure $after): Collection
     {
         $this->resource::newModel()
             ->getConnection()
-            ->transaction(function () use ($write): void {
+            ->transaction(function () use ($before, $write, $after): void {
+                $before($this->rows);
+
                 foreach ($this->rows as $row) {
                     $write($row);
                 }
+
+                $after($this->rows);
             });
 
         return $this->rows;
