@@ -131,7 +131,7 @@ class ResourceDefinitionTest extends PackageTestCase
 
         $this->readEveryDeclaration($resource, 1);
 
-        $this->assertSame(['defaultLimit', 'includeLimit', "\0Lomkit\Rest\Http\Resource\0context"], array_keys((array) $resource));
+        $this->assertSame(['defaultLimit', 'includeLimit', 'maxTotal', "\0Lomkit\Rest\Http\Resource\0context"], array_keys((array) $resource));
     }
 
     private function readEveryDeclaration(Resource $resource, int $times): void

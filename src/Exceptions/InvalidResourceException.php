@@ -24,6 +24,11 @@ final class InvalidResourceException extends LogicException
         return new self("The resource [{$resource}] sets \${$property} to {$limit}, which is not one of its limits() [{$limits}]. Return {$limit} from limits(), or set \${$property} to one of them.");
     }
 
+    public static function maxTotalTooLow(string $resource, int $maxTotal, int $floor): self
+    {
+        return new self("The resource [{$resource}] sets \$maxTotal to {$maxTotal}, which is below its largest limit {$floor}. Set \$maxTotal to {$floor} or more, or to null to count every row.");
+    }
+
     public static function invalidGate(string $owner, int $index, mixed $gate): self
     {
         if (! is_string($gate)) {

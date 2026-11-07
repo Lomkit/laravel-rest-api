@@ -187,7 +187,7 @@ Override these methods. They take no argument: a list that depends on the user r
       ];
   }
   ```
-- `limits()` — allowed `limit` values (default `[10, 25, 50]`). The `$defaultLimit` property (`50`) sizes a page sent without `limit`, and `$includeLimit` (`10`) the rows of each parent row in an include of this resource sent without `limit`. Both must be values of `limits()`, or the resource throws `InvalidResourceException` when its limits are first read.
+- `limits()` — allowed `limit` values (default `[10, 25, 50]`). The `$defaultLimit` property (`50`) sizes a page sent without `limit`, and `$includeLimit` (`10`) the rows of each parent row in an include of this resource sent without `limit`. Both must be values of `limits()`, or the resource throws `InvalidResourceException` when its limits are first read. `$maxTotal` (`null`: exact count) caps the count of a SQL search: with `public ?int $maxTotal = 10000;` the count reads at most 10,001 rows, and the pages answer `"total_capped": true` after `total` (then `10000`) when more rows match, `false` otherwise; it must be at least the largest value of `limits()`.
 - `actions()` — `Lomkit\Rest\Actions\Action` instances, each with its own route `/actions/{uriKey}`; read when the routes register, so keep the list the same for every user.
 - `instructions()` — `Lomkit\Rest\Instructions\Instruction` instances exposed under the `instructions` search key.
 - `text(): ?\Lomkit\Rest\Text\TextSearch` — the text search strategy of `search.text` (`Contains::make()`, `FullText::make()` or `ScoutEngine::make()`), `null` by default (no text search). See "Text search" and "Search engines" below.
