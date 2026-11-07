@@ -11,6 +11,7 @@ use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Fields\WriteOperation;
+use Lomkit\Rest\Rules\MaxDepth;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -95,19 +96,21 @@ class FieldSetViewsTest extends TestCase
             Json::make('metadata')->nullable(),
         ]);
 
-        $this->assertSame([
+        $this->assertEquals([
             'title' => ['string', 'max:255', 'required'],
             'password' => ['string', 'required'],
             'featured' => ['boolean', 'required'],
-            'metadata' => ['nullable', 'array'],
+            'metadata' => ['nullable', 'array', new MaxDepth(64)],
         ], $set->rulesFor(WriteOperation::Create));
 
-        $this->assertSame([
+        $this->assertEquals([
             'title' => ['string', 'max:255'],
             'password' => ['string'],
             'published_on' => ['nullable', 'date', 'sometimes'],
-            'metadata' => ['nullable', 'array'],
+            'metadata' => ['nullable', 'array', new MaxDepth(64)],
         ], $set->rulesFor(WriteOperation::Update));
+        $this->assertSame(['title', 'password', 'featured', 'metadata'], array_keys($set->rulesFor(WriteOperation::Create)));
+        $this->assertSame(['title', 'password', 'published_on', 'metadata'], array_keys($set->rulesFor(WriteOperation::Update)));
     }
 
     #[Test]

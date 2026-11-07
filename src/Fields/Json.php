@@ -5,9 +5,12 @@ namespace Lomkit\Rest\Fields;
 use Illuminate\Database\Eloquent\Casts\AsStringable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Stringable;
+use Lomkit\Rest\Rules\MaxDepth;
 
 class Json extends Field
 {
+    private const int MAX_DEPTH = 64;
+
     private const array STRING_CASTS = ['string', 'encrypted', AsStringable::class];
 
     private bool $encodes = false;
@@ -49,7 +52,7 @@ class Json extends Field
     #[\Override]
     public function baseRules(): array
     {
-        return ['array'];
+        return ['array', new MaxDepth(self::MAX_DEPTH)];
     }
 
     #[\Override]
