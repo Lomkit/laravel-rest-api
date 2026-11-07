@@ -11,20 +11,20 @@ use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
-use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Scramble\DocumentationContext;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\TextSearchType;
 
 final readonly class SearchDocumenter implements EndpointDocumenter
 {
     #[\Override]
-    public function document(Operation $operation, Resource $resource, string $name): void
+    public function document(Operation $operation, DocumentationContext $context): void
     {
-        $operation->summary("Search {$name}");
+        $operation->summary("Search {$context->name}");
 
-        $fields = $resource->definition()->fields();
-        $text = TextSearchType::of($resource);
+        $fields = $context->resource->definition()->fields();
+        $text = TextSearchType::of($context->resource);
 
         $search = Schemas::object([
             'filters' => Schemas::list(Schemas::object([
@@ -39,7 +39,7 @@ final readonly class SearchDocumenter implements EndpointDocumenter
                 'direction' => (new StringType)->enum(array_column(SortDirection::cases(), 'value')),
             ])),
             'selects' => Schemas::list(Schemas::object(['field' => (new StringType)->enum($fields->selectable()->names())])),
-            'includes' => Schemas::list(self::include($resource->definition()->relations())),
+            'includes' => Schemas::list(self::include($context->resource->definition()->relations())),
             'scopes' => Schemas::list(Schemas::object(['name' => new StringType, 'parameters' => new ArrayType])),
         ]);
 

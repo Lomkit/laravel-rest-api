@@ -3,9 +3,9 @@
 namespace Lomkit\Rest\Scramble\Endpoints;
 
 use Dedoc\Scramble\Support\Generator\Operation;
-use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Scramble\DocumentationContext;
 
 interface EndpointDocumenter
 {
-    public function document(Operation $operation, Resource $resource, string $name): void;
+    public function document(Operation $operation, DocumentationContext $context): void;
 }

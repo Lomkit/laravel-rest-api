@@ -8,6 +8,7 @@ use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Lomkit\Rest\Fields\WriteOperation;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Scramble\DocumentationContext;
 use Lomkit\Rest\Scramble\RelationMutationType;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\WritableFieldsType;
@@ -15,16 +16,16 @@ use Lomkit\Rest\Scramble\WritableFieldsType;
 final readonly class MutateDocumenter implements EndpointDocumenter
 {
     #[\Override]
-    public function document(Operation $operation, Resource $resource, string $name): void
+    public function document(Operation $operation, DocumentationContext $context): void
     {
-        $operation->summary("Mutate {$name}");
+        $operation->summary("Mutate {$context->name}");
 
         $entry = new ObjectType;
         $entry->addProperty('operation', (new StringType)->enum(['create', 'update']));
         $entry->addProperty('key', (new IntegerType)->setDescription('Required for update'));
-        $entry->addProperty('attributes', self::attributes($resource));
+        $entry->addProperty('attributes', self::attributes($context->resource));
 
-        $relations = $resource->definition()->relations();
+        $relations = $context->resource->definition()->relations();
 
         if ($relations !== []) {
             $relationsType = new ObjectType;

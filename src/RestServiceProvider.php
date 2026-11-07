@@ -20,7 +20,8 @@ use Lomkit\Rest\Console\Commands\ResourceMakeCommand;
 use Lomkit\Rest\Console\Commands\ResponseMakeCommand;
 use Lomkit\Rest\Console\Generation\Stub;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension;
+use Lomkit\Rest\Scramble\RestDocument;
+use Lomkit\Rest\Scramble\RestOperations;
 
 class RestServiceProvider extends ServiceProvider
 {
@@ -28,8 +29,6 @@ class RestServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->replaceConfigRecursivelyFrom(__DIR__.'/../config/rest.php', 'rest');
-
-        $this->registerScramble();
     }
 
     public function boot(): void
@@ -38,15 +37,18 @@ class RestServiceProvider extends ServiceProvider
         $this->registerPublishing();
 
         $this->registerStubs();
+        $this->registerDocumentation();
     }
 
-    private function registerScramble(): void
+    private function registerDocumentation(): void
     {
         if (! class_exists(Scramble::class)) {
             return;
         }
 
-        Scramble::registerExtension(LomkitLaravelRestApiOperationExtension::class);
+        Scramble::configure()
+            ->withOperationTransformers(RestOperations::class)
+            ->withDocumentTransformers(RestDocument::class);
 
         FormRequestParametersExtractor::ignoreInstanceOf(RestRequest::class);
     }

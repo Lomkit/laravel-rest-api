@@ -25,7 +25,7 @@
     "tomasvotruba/type-coverage": "^2.5"
   },
   "suggest": {
-    "dedoc/scramble": "Documents the API in OpenAPI through the package's Scramble extension.",
+    "dedoc/scramble": "Documents the API in OpenAPI.",
     "laravel/scout": "Runs text searches on a search engine through the ScoutEngine text strategy."
   },
   "conflict": {

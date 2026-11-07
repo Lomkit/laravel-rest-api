@@ -3,14 +3,14 @@
 namespace Lomkit\Rest\Scramble\Endpoints;
 
 use Dedoc\Scramble\Support\Generator\Operation;
-use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Scramble\DetailsResponseType;
+use Lomkit\Rest\Scramble\DocumentationContext;
 
 final readonly class DetailsDocumenter implements EndpointDocumenter
 {
     #[\Override]
-    public function document(Operation $operation, Resource $resource, string $name): void
+    public function document(Operation $operation, DocumentationContext $context): void
     {
-        DetailsResponseType::document($operation, $name);
+        DetailsResponseType::document($operation, $context->name);
     }
 }

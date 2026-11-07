@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Scramble\Endpoints;
 
 use Dedoc\Scramble\Support\Generator\Operation;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
-use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Scramble\DocumentationContext;
 use Lomkit\Rest\Scramble\Schemas;
 
 final readonly class KeysDocumenter implements EndpointDocumenter
@@ -14,9 +14,9 @@ final readonly class KeysDocumenter implements EndpointDocumenter
     ) {}
 
     #[\Override]
-    public function document(Operation $operation, Resource $resource, string $name): void
+    public function document(Operation $operation, DocumentationContext $context): void
     {
-        $operation->summary("{$this->verb} {$name}");
+        $operation->summary("{$this->verb} {$context->name}");
 
         Schemas::requestBody($operation, Schemas::object(['resources' => Schemas::list(new IntegerType)]));
     }

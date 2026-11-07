@@ -8,12 +8,6 @@
                     "Note"
                 ],
                 "responses": {
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
                     "200": {
                         "description": "The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource",
                         "content": {
@@ -860,7 +854,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -868,12 +862,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -1110,7 +1098,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1118,12 +1106,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -1212,164 +1194,14 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "operations": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "required": [
-                                                "operations"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "operations": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "records": {
-                                                    "type": [
-                                                        "array",
-                                                        "null"
-                                                    ],
-                                                    "items": {
-                                                        "type": [
-                                                            "object",
-                                                            "null"
-                                                        ],
-                                                        "additionalProperties": {}
-                                                    }
-                                                }
-                                            },
-                                            "required": [
-                                                "operations",
-                                                "records"
-                                            ]
-                                        }
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/notes/actions/{action}": {
-            "post": {
-                "operationId": "notes.operate",
-                "tags": [
-                    "Note"
-                ],
-                "parameters": [
-                    {
-                        "name": "action",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "impacted": {
-                                                    "anyOf": [
-                                                        {
-                                                            "type": "integer"
-                                                        },
-                                                        {}
-                                                    ]
-                                                },
-                                                "result": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "impacted",
-                                                "result"
-                                            ],
-                                            "additionalProperties": {}
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/notes/metrics/{metric}": {
-            "post": {
-                "operationId": "notes.metric",
-                "tags": [
-                    "Note"
-                ],
-                "parameters": [
-                    {
-                        "name": "metric",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -1382,12 +1214,6 @@
                     "Show"
                 ],
                 "responses": {
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
                     "200": {
                         "description": "The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource",
                         "content": {
@@ -2234,7 +2060,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2242,12 +2068,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -2535,7 +2355,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2543,12 +2363,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -2778,63 +2592,14 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "operations": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "required": [
-                                                "operations"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "operations": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "records": {
-                                                    "type": [
-                                                        "array",
-                                                        "null"
-                                                    ],
-                                                    "items": {
-                                                        "type": [
-                                                            "object",
-                                                            "null"
-                                                        ],
-                                                        "additionalProperties": {}
-                                                    }
-                                                }
-                                            },
-                                            "required": [
-                                                "operations",
-                                                "records"
-                                            ]
-                                        }
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -2842,54 +2607,20 @@
         "/shows/actions/reschedule-shows": {
             "post": {
                 "operationId": "shows.operate.reschedule-shows",
+                "summary": "Reschedule Shows",
                 "tags": [
                     "Show"
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "impacted": {
-                                                    "anyOf": [
-                                                        {
-                                                            "type": "integer"
-                                                        },
-                                                        {}
-                                                    ]
-                                                },
-                                                "result": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "impacted",
-                                                "result"
-                                            ],
-                                            "additionalProperties": {}
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -2897,54 +2628,20 @@
         "/shows/actions/cancel-shows": {
             "post": {
                 "operationId": "shows.operate.cancel-shows",
+                "summary": "Cancel Shows",
                 "tags": [
                     "Show"
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "impacted": {
-                                                    "anyOf": [
-                                                        {
-                                                            "type": "integer"
-                                                        },
-                                                        {}
-                                                    ]
-                                                },
-                                                "result": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "impacted",
-                                                "result"
-                                            ],
-                                            "additionalProperties": {}
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -2952,54 +2649,20 @@
         "/shows/actions/import-shows": {
             "post": {
                 "operationId": "shows.operate.import-shows",
+                "summary": "Import Shows",
                 "tags": [
                     "Show"
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "impacted": {
-                                                    "anyOf": [
-                                                        {
-                                                            "type": "integer"
-                                                        },
-                                                        {}
-                                                    ]
-                                                },
-                                                "result": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "impacted",
-                                                "result"
-                                            ],
-                                            "additionalProperties": {}
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -3007,119 +2670,20 @@
         "/shows/actions/archive-shows": {
             "post": {
                 "operationId": "shows.operate.archive-shows",
+                "summary": "Archive Shows",
                 "tags": [
                     "Show"
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "impacted": {
-                                                    "anyOf": [
-                                                        {
-                                                            "type": "integer"
-                                                        },
-                                                        {}
-                                                    ]
-                                                },
-                                                "result": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "impacted",
-                                                "result"
-                                            ],
-                                            "additionalProperties": {}
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/shows/actions/{action}": {
-            "post": {
-                "operationId": "shows.operate",
-                "tags": [
-                    "Show"
-                ],
-                "parameters": [
-                    {
-                        "name": "action",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "impacted": {
-                                                    "anyOf": [
-                                                        {
-                                                            "type": "integer"
-                                                        },
-                                                        {}
-                                                    ]
-                                                },
-                                                "result": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "impacted",
-                                                "result"
-                                            ],
-                                            "additionalProperties": {}
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -3127,25 +2691,20 @@
         "/shows/metrics/show-count": {
             "post": {
                 "operationId": "shows.metric.show-count",
+                "summary": "Show Count",
                 "tags": [
                     "Show"
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -3153,25 +2712,20 @@
         "/shows/metrics/shows-per-month": {
             "post": {
                 "operationId": "shows.metric.shows-per-month",
+                "summary": "Shows Per Month",
                 "tags": [
                     "Show"
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -3179,25 +2733,20 @@
         "/shows/metrics/shows-by-status": {
             "post": {
                 "operationId": "shows.metric.shows-by-status",
+                "summary": "Shows By Status",
                 "tags": [
                     "Show"
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -3205,25 +2754,20 @@
         "/shows/metrics/top-stages": {
             "post": {
                 "operationId": "shows.metric.top-stages",
+                "summary": "Top Stages",
                 "tags": [
                     "Show"
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -3231,25 +2775,20 @@
         "/shows/metrics/seats-goal": {
             "post": {
                 "operationId": "shows.metric.seats-goal",
+                "summary": "Seats Goal",
                 "tags": [
                     "Show"
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -3257,61 +2796,20 @@
         "/shows/metrics/occupancy": {
             "post": {
                 "operationId": "shows.metric.occupancy",
+                "summary": "Occupancy",
                 "tags": [
                     "Show"
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/shows/metrics/{metric}": {
-            "post": {
-                "operationId": "shows.metric",
-                "tags": [
-                    "Show"
-                ],
-                "parameters": [
-                    {
-                        "name": "metric",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -3342,7 +2840,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3350,12 +2848,6 @@
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -3363,12 +2855,30 @@
         "/shows/force": {
             "delete": {
                 "operationId": "shows.forceDestroy",
+                "summary": "Force delete Show",
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "resources": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3376,12 +2886,6 @@
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -3389,6 +2893,7 @@
         "/shows/actions/{action}/batches/{batch}": {
             "get": {
                 "operationId": "shows.batch",
+                "summary": "Batch progress of Show actions",
                 "tags": [
                     "Show"
                 ],
@@ -3412,62 +2917,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "total_jobs": {
-                                                    "type": "string"
-                                                },
-                                                "pending_jobs": {
-                                                    "type": "string"
-                                                },
-                                                "failed_jobs": {
-                                                    "type": "string"
-                                                },
-                                                "progress": {
-                                                    "type": "integer",
-                                                    "minimum": 0,
-                                                    "maximum": 100
-                                                },
-                                                "finished": {
-                                                    "type": "boolean"
-                                                },
-                                                "cancelled": {
-                                                    "type": "boolean"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "total_jobs",
-                                                "pending_jobs",
-                                                "failed_jobs",
-                                                "progress",
-                                                "finished",
-                                                "cancelled"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -3480,9 +2937,6 @@
                     "Stage"
                 ],
                 "responses": {
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "200": {
                         "description": "The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource",
                         "content": {
@@ -4329,7 +3783,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4337,9 +3791,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -4577,7 +4028,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4585,9 +4036,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -4696,207 +4144,13 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "",
+                        "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "operations": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "required": [
-                                                "operations"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "operations": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "records": {
-                                                    "type": [
-                                                        "array",
-                                                        "null"
-                                                    ],
-                                                    "items": {
-                                                        "type": [
-                                                            "object",
-                                                            "null"
-                                                        ],
-                                                        "additionalProperties": {}
-                                                    }
-                                                }
-                                            },
-                                            "required": [
-                                                "operations",
-                                                "records"
-                                            ]
-                                        }
-                                    ]
+                                    "type": "object"
                                 }
                             }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/stages/actions/{action}": {
-            "post": {
-                "operationId": "stages.operate",
-                "tags": [
-                    "Stage"
-                ],
-                "parameters": [
-                    {
-                        "name": "action",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "impacted": {
-                                                    "anyOf": [
-                                                        {
-                                                            "type": "integer"
-                                                        },
-                                                        {}
-                                                    ]
-                                                },
-                                                "result": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "impacted",
-                                                "result"
-                                            ],
-                                            "additionalProperties": {}
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/stages/metrics/{metric}": {
-            "post": {
-                "operationId": "stages.metric",
-                "tags": [
-                    "Stage"
-                ],
-                "parameters": [
-                    {
-                        "name": "metric",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        }
-    },
-    "components": {
-        "responses": {
-            "ValidationException": {
-                "description": "Validation error",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string",
-                                    "description": "Errors overview."
-                                },
-                                "errors": {
-                                    "type": "object",
-                                    "description": "A detailed description of each field that failed validation.",
-                                    "additionalProperties": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            },
-                            "required": [
-                                "message",
-                                "errors"
-                            ]
-                        }
-                    }
-                }
-            },
-            "AuthenticationException": {
-                "description": "Unauthenticated",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string",
-                                    "description": "Error overview."
-                                }
-                            },
-                            "required": [
-                                "message"
-                            ]
                         }
                     }
                 }
