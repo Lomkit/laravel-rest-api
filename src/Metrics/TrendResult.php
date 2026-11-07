@@ -35,7 +35,8 @@ final readonly class TrendResult implements MetricResult
     /** @param array<int|string, string> $labels */
     public function labels(array $labels, ?string $other = null): self
     {
-        $splits = $this->splits === null ? null : array_map(fn (TrendSplit $split): TrendSplit => $split->labelled(self::label($labels, $split)), $this->splits);
+        $renamed = new KeyLabels($labels);
+        $splits = $this->splits === null ? null : array_map(fn (TrendSplit $split): TrendSplit => $split->labelled($renamed->for($split->key, $split->label)), $this->splits);
 
         return new self($this->series, $splits, $other === null ? $this->other : $this->other?->labelled($other));
     }
@@ -91,13 +92,5 @@ final readonly class TrendResult implements MetricResult
         }
 
         return array_map(fn (int|string|bool|null $key, array $partials): array => ['key' => $key, 'partials' => $partials], $keys, $totals);
-    }
-
-    /** @param array<int|string, string> $labels */
-    private static function label(array $labels, TrendSplit $split): ?string
-    {
-        $key = is_bool($split->key) ? (int) $split->key : $split->key;
-
-        return $key !== null && array_key_exists($key, $labels) ? $labels[$key] : $split->label;
     }
 }

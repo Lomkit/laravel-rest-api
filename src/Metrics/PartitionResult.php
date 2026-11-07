@@ -31,7 +31,8 @@ final readonly class PartitionResult implements MetricResult
     /** @param array<int|string, string> $labels */
     public function labels(array $labels, ?string $other = null): self
     {
-        $parts = array_map(fn (PartitionPart $part): PartitionPart => $part->labelled(self::label($labels, $part)), $this->parts);
+        $renamed = new KeyLabels($labels);
+        $parts = array_map(fn (PartitionPart $part): PartitionPart => $part->labelled($renamed->for($part->key, $part->label)), $this->parts);
 
         return new self($parts, $other === null ? $this->other : $this->other?->labelled($other));
     }
@@ -48,13 +49,5 @@ final readonly class PartitionResult implements MetricResult
     private static function order(PartitionPart $one, PartitionPart $two): int
     {
         return [$one->value === null, $two->value, $one->key === null, $one->key] <=> [$two->value === null, $one->value, $two->key === null, $two->key];
-    }
-
-    /** @param array<int|string, string> $labels */
-    private static function label(array $labels, PartitionPart $part): ?string
-    {
-        $key = is_bool($part->key) ? (int) $part->key : $part->key;
-
-        return $key !== null && array_key_exists($key, $labels) ? $labels[$key] : $part->label;
     }
 }

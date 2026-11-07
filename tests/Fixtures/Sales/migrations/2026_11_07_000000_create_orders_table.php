@@ -14,8 +14,10 @@ return new class extends Migration
             $table->string('reference');
             $table->string('status')->nullable();
             $table->string('channel')->nullable();
+            $table->string('customer')->nullable();
             $table->decimal('price', 10, 2);
             $table->integer('quantity');
+            $table->unsignedTinyInteger('rating')->nullable();
             $table->boolean('gift');
             $table->dateTime('placed_at')->index();
             $table->date('delivered_on')->nullable();
