@@ -122,7 +122,7 @@ class SortOrderTest extends PackageTestCase
         ]);
 
         $response->assertOk()->assertExactJson($this->page([
-            ['last_name' => 'Lovelace', 'posts' => [['title' => 'Annual report'], ['title' => 'Spring launch'], ['title' => 'Team offsite']]],
+            ['last_name' => 'Lovelace', 'posts' => [['title' => 'Annual report'], ['title' => 'Spring launch'], ['title' => 'Team offsite']], '@more' => []],
         ]));
     }
 

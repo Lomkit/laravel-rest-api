@@ -87,7 +87,7 @@ class IncludeRelationsTest extends PackageTestCase
         $response = $this->postJson('/api/authors/search', ['search' => ['includes' => [['relation' => 'posts.author.tags', 'selects' => [['field' => 'id']]]]]]);
 
         $response->assertOk()
-            ->assertJsonPath('data.0.posts.0.author', ['id' => 1, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'settings' => null, 'tags' => [['id' => 1, 'pivot' => []]]])
+            ->assertJsonPath('data.0.posts.0.author', ['id' => 1, 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'settings' => null, 'tags' => [['id' => 1, 'pivot' => []]], '@more' => []])
             ->assertJsonPath('data.0.posts.0.title', 'Notes')
             ->assertJsonPath('data.0.posts.0.views', 3);
     }

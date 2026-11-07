@@ -102,7 +102,7 @@ class DottedAggregateTest extends PackageTestCase
             ]],
         ]]);
 
-        $response->assertOk()->assertJsonPath('data', [['id' => 1, 'tickets' => [['id' => 1, 'labels_labelled_tickets_count' => 3]]]]);
+        $response->assertOk()->assertJsonPath('data', [['id' => 1, 'tickets' => [['id' => 1, 'labels_labelled_tickets_count' => 3]], '@more' => ['tickets']]]);
     }
 
     #[Test]

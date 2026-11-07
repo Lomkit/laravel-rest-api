@@ -58,7 +58,7 @@ class DottedAggregateRulesTest extends PackageTestCase
             'includes' => [['relation' => 'tickets', 'selects' => [['field' => 'id']], 'aggregates' => [['relation' => 'tags.labelledTickets', 'type' => 'count']]]],
         ]]);
 
-        $response->assertOk()->assertJsonPath('data', [['id' => 2, 'tickets' => [['id' => 4, 'tags_labelled_tickets_count' => 3]]]]);
+        $response->assertOk()->assertJsonPath('data', [['id' => 2, 'tickets' => [['id' => 4, 'tags_labelled_tickets_count' => 3]], '@more' => []]]);
     }
 
     #[Test]

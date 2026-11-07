@@ -46,6 +46,27 @@ class RowKeyReservationTest extends PackageTestCase
         $response->assertUnprocessable()->assertJsonPath('errors', [$key => ["The {$key} is reserved."]]);
     }
 
+    /** @param array<string, mixed> $search */
+    #[Test]
+    #[DataProvider('moreKeys')]
+    public function it_reserves_the_more_key_on_every_row(array $search, string $key): void
+    {
+        config(['rest.search.more_key' => 'extra']);
+
+        $response = $this->postJson('/api/books/search', ['search' => $search]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', [$key => ["The {$key} is reserved."]]);
+    }
+
+    /** @return array<string, array{array<string, mixed>, string}> */
+    public static function moreKeys(): array
+    {
+        return [
+            'an aggregate alias' => [['aggregates' => [['relation' => 'labels', 'type' => 'count', 'alias' => 'extra']]], 'search.aggregates.0.alias'],
+            'an include alias' => [['includes' => [['relation' => 'labels', 'alias' => 'extra']]], 'search.includes.0.alias'],
+        ];
+    }
+
     #[Test]
     public function it_leaves_the_type_key_free_on_other_rows(): void
     {

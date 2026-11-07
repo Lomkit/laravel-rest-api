@@ -82,19 +82,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Search Columns
+    | Search
     |--------------------------------------------------------------------------
     |
     | A search loads only the columns it needs: the selected fields, the
     | keys of its includes and the columns that each resource always
     | selects. When a policy, an accessor or map() reads another column,
     | add it to the resource's alwaysSelect() method or to the field's
-    | requires(). Set this option to false to load every column.
+    | requires(). Set "select_columns" to false to load every column.
+    |
+    | A to-many include returns at most its limit of rows for each parent.
+    | Each row of a level with such an include lists under "more_key" the
+    | includes that have more rows than they returned. A resource cannot
+    | declare a field with this name.
     |
     */
 
     'search' => [
         'select_columns' => true,
+
+        'more_key' => '@more',
     ],
 
     /*

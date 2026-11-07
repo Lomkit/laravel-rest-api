@@ -40,7 +40,7 @@ final readonly class EngineSearch
             ->defaultLimit;
         $page = $this->search->page ?? 1;
         $result = $query->page($perPage, $page);
-        $plan = $this->plan($result->keys, ColumnSelection::of($this->resource));
+        $plan = $this->plan($result->keys, ColumnSelection::of($this->resource), true);
 
         return new PlannedPage($plan, new LengthAwarePaginator($result->keys === [] ? new Collection : $this->load($plan), $result->total, $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
@@ -77,16 +77,16 @@ final readonly class EngineSearch
             return new Collection;
         }
 
-        return $this->load($this->plan($keys, ColumnSelection::Every));
+        return $this->load($this->plan($keys, ColumnSelection::Every, false));
     }
 
     /** @param list<int|string> $keys */
-    private function plan(array $keys, ColumnSelection $columns): QueryPlan
+    private function plan(array $keys, ColumnSelection $columns, bool $rendered): QueryPlan
     {
         $model = $this->resource::newModel();
         $keyed = new KeyedRows(EngineKeys::of(ScoutModel::tryFrom($model) ?? throw InvalidResourceException::unsearchableModel($model::class), $keys));
 
-        return (new SearchPlanner($keyed, $columns))->plan($this->resource, $this->search, LimitPolicy::none());
+        return (new SearchPlanner($keyed, $columns, $rendered))->plan($this->resource, $this->search, LimitPolicy::none());
     }
 
     /** @return Collection<int, Model> */

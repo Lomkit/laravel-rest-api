@@ -92,6 +92,7 @@ class SearchPlannerTest extends PackageTestCase
         $default = $this->paged($posts, [])->limit;
         $sent = $this->paged($posts, ['limit' => 25, 'page' => 3])->limit;
         $include = $this->paged($authors, ['includes' => [['relation' => 'posts', 'limit' => 10]]])->includes[0];
+        $rowsInclude = $this->all($authors, ['includes' => [['relation' => 'posts', 'limit' => 10]]])->includes[0];
         $aggregate = Author::query();
         $this->paged($authors, ['aggregates' => [['relation' => 'posts', 'type' => 'count']]])->aggregates[0]->apply($aggregate);
 
@@ -100,7 +101,9 @@ class SearchPlannerTest extends PackageTestCase
         $this->assertSame('select * from posts limit 10', $this->limited($this->all($posts, ['limit' => 10])->limit));
         $this->assertSame('select * from posts', $this->limited($this->all($posts, [])->limit));
         $this->assertInstanceOf(IncludeClause::class, $include);
-        $this->assertSame('select * from posts limit 10', $this->limited($include->plan->limit));
+        $this->assertSame('select * from posts limit 11', $this->limited($include->plan->limit));
+        $this->assertInstanceOf(IncludeClause::class, $rowsInclude);
+        $this->assertSame('select * from posts limit 10', $this->limited($rowsInclude->plan->limit));
         $this->assertSame('select authors.*, (select count(*) from posts where authors.id = posts.author_id) as @aggregate_0 from authors where authors.deleted_at is null', str_replace(['"', '`'], '', $aggregate->toRawSql()));
     }
 

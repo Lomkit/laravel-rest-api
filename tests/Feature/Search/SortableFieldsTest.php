@@ -115,7 +115,7 @@ class SortableFieldsTest extends PackageTestCase
         ]);
 
         $response->assertOk()->assertExactJson($this->page([
-            ['first_name' => 'Ada', 'posts' => array_map(fn (string $title): array => ['title' => $title], $titles)],
+            ['first_name' => 'Ada', 'posts' => array_map(fn (string $title): array => ['title' => $title], $titles), '@more' => []],
         ]));
     }
 
@@ -145,7 +145,7 @@ class SortableFieldsTest extends PackageTestCase
         ]);
 
         $response->assertOk()->assertExactJson($this->page([
-            ['name' => 'Lighting', 'featured_products' => [['name' => 'Desk lamp', 'pivot' => []], ['name' => 'Floor lamp', 'pivot' => []]]],
+            ['name' => 'Lighting', 'featured_products' => [['name' => 'Desk lamp', 'pivot' => []], ['name' => 'Floor lamp', 'pivot' => []]], '@more' => []],
         ]));
         $joined = array_values(array_filter(
             array_map(fn (array $query): string => str_replace(['"', '`'], '', $query['query']), DB::getQueryLog()),

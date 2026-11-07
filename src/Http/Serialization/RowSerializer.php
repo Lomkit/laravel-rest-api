@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Http\Serialization;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\Plan\Columns\StrictColumns;
+use Lomkit\Rest\Search\Plan\IncludeOverflow;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 
 final readonly class RowSerializer implements RowRenderer
@@ -16,9 +17,9 @@ final readonly class RowSerializer implements RowRenderer
         private StrictColumns $strict,
     ) {}
 
-    public static function of(QueryPlan $plan, ?Relation $through = null, ?GateReach $reach = null): self
+    public static function of(QueryPlan $plan, ?Relation $through = null, ?GateReach $reach = null, ?IncludeOverflow $overflow = null): self
     {
-        return new self(RowFields::of($plan), GateTable::of($plan, $reach ?? GateReach::everyRow()), RelationRenderer::of($plan, $through), StrictColumns::of($plan));
+        return new self(RowFields::of($plan), GateTable::of($plan, $reach ?? GateReach::everyRow()), RelationRenderer::of($plan, $through, $overflow ?? IncludeOverflow::none()), StrictColumns::of($plan));
     }
 
     /** @return array<string, mixed> */

@@ -76,7 +76,7 @@ class IncludeLimitRelationsTest extends PackageTestCase
         ]]);
 
         $rows = array_map(fn (int $tag): array => ['id' => $tag, 'pivot' => ['position' => $tag]], range(12, 3));
-        $response->assertOk()->assertJsonPath('data', [['id' => 13, $relation => $rows], ['id' => 1, $relation => $rows]]);
+        $response->assertOk()->assertJsonPath('data', [['id' => 13, $relation => $rows, '@more' => [$relation]], ['id' => 1, $relation => $rows, '@more' => [$relation]]]);
     }
 
     /** @return array<string, array{string}> */

@@ -44,7 +44,7 @@ class IncludeKeyTest extends PackageTestCase
     {
         $response = $this->postJson('/tag-labelled-authors/search', ['search' => ['selects' => [['field' => 'tags']], 'includes' => [['relation' => 'tags', 'alias' => 'topics']]]]);
 
-        $response->assertOk()->assertJsonPath('data', [['tags' => 'none', 'topics' => []]]);
+        $response->assertOk()->assertJsonPath('data', [['tags' => 'none', 'topics' => [], '@more' => []]]);
     }
 
     #[Test]

@@ -40,7 +40,7 @@ class RenderedFromPlanTest extends PackageTestCase
 
         $response->assertOk();
         $this->assertSame(
-            '{"current_page":1,"data":[{"id":1,"posts":[{"title":"Notes"},{"title":"Engines"}]},{"id":2,"posts":[]}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{}}',
+            '{"current_page":1,"data":[{"id":1,"posts":[{"title":"Notes"},{"title":"Engines"}],"@more":[]},{"id":2,"posts":[],"@more":[]}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{}}',
             $response->getContent(),
         );
     }

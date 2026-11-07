@@ -5,8 +5,10 @@ namespace Lomkit\Rest\Tests\Feature\Fields;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Tests\Feature\Fields\Stubs\GatesFieldResource;
+use Lomkit\Rest\Tests\Feature\Fields\Stubs\MoreFieldResource;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -48,11 +50,32 @@ class ReservedFieldNameTest extends PackageTestCase
         $this->assertSame(['id', 'gates', 'abilities'], $this->fields()->names());
     }
 
-    private function fields(): FieldSet
+    #[Test]
+    #[DataProvider('moreKeys')]
+    public function it_refuses_a_field_named_like_the_more_key(string $key): void
+    {
+        config(['rest.search.more_key' => $key]);
+
+        $this->expectExceptionObject(InvalidResourceException::moreKeyField(MoreFieldResource::class, $key));
+
+        $this->fields(MoreFieldResource::class);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function moreKeys(): array
+    {
+        return [
+            'the default key' => ['@more'],
+            'a configured key' => ['partial'],
+        ];
+    }
+
+    /** @param class-string<Resource> $resource */
+    private function fields(string $resource = GatesFieldResource::class): FieldSet
     {
         $context = new RestContext(RestRequest::create('/api/posts/search', 'POST'), $this->app);
 
-        return $context->resource(GatesFieldResource::class)
+        return $context->resource($resource)
             ->definition()
             ->fields();
     }

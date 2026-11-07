@@ -25,6 +25,7 @@ final readonly class RestConfig
         public string $morphTypeKey,
         public bool $selectColumns,
         public int $transactionAttempts,
+        public string $moreKey,
     ) {}
 
     public static function from(Repository $config): self
@@ -38,6 +39,7 @@ final readonly class RestConfig
             morphTypeKey: ConfigValue::of($config, 'rest.morph.type_key')->string(),
             selectColumns: ConfigValue::of($config, 'rest.search.select_columns')->boolean(),
             transactionAttempts: ConfigValue::of($config, 'rest.transactions.attempts')->integer(1),
+            moreKey: ConfigValue::of($config, 'rest.search.more_key')->string(),
         );
     }
 }

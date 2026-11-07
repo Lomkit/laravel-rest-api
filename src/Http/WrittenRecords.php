@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Mutations\OperationEntry;
 use Lomkit\Rest\Mutations\RecordKeys;
 use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
+use Lomkit\Rest\Search\Plan\IncludeOverflow;
 use Lomkit\Rest\Search\Plan\KeyedRows;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
@@ -24,10 +25,14 @@ final readonly class WrittenRecords
     public static function read(Resource $resource, SearchNode $block, array $operations): self
     {
         $keys = RecordKeys::of(KeysGrammar::idOf($resource), $operations);
-        $plan = (new SearchPlanner(new KeyedRows($keys), ColumnSelection::of($resource)))->plan($resource, $block, LimitPolicy::none());
+        $plan = (new SearchPlanner(new KeyedRows($keys), ColumnSelection::of($resource), true))->plan($resource, $block, LimitPolicy::none());
         $rows = $plan->query()->get();
 
-        return new self($resource::newResponse()->plan($plan), $keys->align($rows));
+        $response = $resource::newResponse()
+            ->plan($plan)
+            ->overflow(IncludeOverflow::trim($plan, $rows->all()));
+
+        return new self($response, $keys->align($rows));
     }
 
     /** @return list<array<string, mixed>|null> */

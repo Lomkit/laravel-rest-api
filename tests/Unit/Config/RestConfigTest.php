@@ -36,6 +36,7 @@ class RestConfigTest extends TestCase
         $this->assertSame('@type', $config->morphTypeKey);
         $this->assertTrue($config->selectColumns);
         $this->assertSame(1, $config->transactionAttempts);
+        $this->assertSame('@more', $config->moreKey);
         $this->assertSame([
             'authorized_to_view' => 'authorized_to_view',
             'authorized_to_create' => 'authorized_to_create',
@@ -141,6 +142,7 @@ class RestConfigTest extends TestCase
             'zero transaction attempts' => ['rest.transactions.attempts', '0', 'The [rest.transactions.attempts] option must be an integer of 1 or more.'],
             'transaction attempts that are not a number' => ['rest.transactions.attempts', 'abc', 'The [rest.transactions.attempts] option must be an integer of 1 or more.'],
             'null transaction attempts' => ['rest.transactions.attempts', null, 'The [rest.transactions.attempts] option must be an integer of 1 or more.'],
+            'the more key' => ['rest.search.more_key', '', 'The [rest.search.more_key] option must be a non-empty string.'],
         ];
     }
 

@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Http\Serialization;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Search\Plan\IncludeOverflow;
 use Lomkit\Rest\Search\Plan\MorphToIncludeClause;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 
@@ -16,13 +17,13 @@ final readonly class MorphToSerializer implements RowRenderer
         private array $branches,
     ) {}
 
-    public static function of(MorphToIncludeClause $include, Resource $resource): self
+    public static function of(MorphToIncludeClause $include, Resource $resource, IncludeOverflow $overflow): self
     {
         $relation = $resource->definition()->relation($include->relation);
 
         return new self(
             $resource->context()->config()->morphTypeKey,
-            array_map(static fn (QueryPlan $plan): RowSerializer => RowSerializer::of($plan, $relation), $include->branches),
+            array_map(static fn (QueryPlan $plan): RowSerializer => RowSerializer::of($plan, $relation, overflow: $overflow), $include->branches),
         );
     }
 

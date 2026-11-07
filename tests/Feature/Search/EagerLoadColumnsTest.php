@@ -72,7 +72,7 @@ class EagerLoadColumnsTest extends PackageTestCase
 
         $response = $this->postJson('/counted-books/search', ['search' => ['selects' => [['field' => 'id']], 'includes' => [$include]]]);
 
-        $response->assertOk()->assertJsonPath('data', [['id' => 1, $key => [['borrower' => 'Ada']]]]);
+        $response->assertOk()->assertJsonPath('data', [['id' => 1, $key => [['borrower' => 'Ada']], '@more' => []]]);
         $this->assertSame($query, self::loggedQueries()[1]);
     }
 
@@ -83,12 +83,12 @@ class EagerLoadColumnsTest extends PackageTestCase
             'a count that the model always loads' => [
                 ['relation' => 'countedLoans', 'selects' => [['field' => 'borrower']]],
                 'counted_loans',
-                'select * from (select loans.borrower, loans.id, loans.book_id, (select count(*) from books where loans.book_id = books.id) as book_count, row_number() over (partition by loans.book_id order by loans.id desc) as laravel_row from loans where loans.book_id in (1)) as laravel_table where laravel_row <= 10 order by laravel_row',
+                'select * from (select loans.borrower, loans.id, loans.book_id, (select count(*) from books where loans.book_id = books.id) as book_count, row_number() over (partition by loans.book_id order by loans.id desc) as laravel_row from loans where loans.book_id in (1)) as laravel_table where laravel_row <= 11 order by laravel_row',
             ],
             'a subquery that an instruction selects' => [
                 ['relation' => 'loans', 'selects' => [['field' => 'borrower']], 'instructions' => [['name' => 'book-title']]],
                 'loans',
-                'select * from (select loans.borrower, loans.id, loans.book_id, (select title from books where books.id = loans.book_id limit 1) as book_title, row_number() over (partition by loans.book_id order by loans.id desc) as laravel_row from loans where loans.book_id in (1)) as laravel_table where laravel_row <= 10 order by laravel_row',
+                'select * from (select loans.borrower, loans.id, loans.book_id, (select title from books where books.id = loans.book_id limit 1) as book_title, row_number() over (partition by loans.book_id order by loans.id desc) as laravel_row from loans where loans.book_id in (1)) as laravel_table where laravel_row <= 11 order by laravel_row',
             ],
         ];
     }

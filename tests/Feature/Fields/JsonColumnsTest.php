@@ -110,6 +110,7 @@ class JsonColumnsTest extends PackageTestCase
                 'calibration' => null,
                 'pivot' => ['wiring' => ['pins' => [3]]],
             ]],
+            '@more' => [],
         ]]);
     }
 

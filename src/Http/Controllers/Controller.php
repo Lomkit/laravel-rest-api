@@ -25,6 +25,7 @@ use Lomkit\Rest\Http\Response;
 use Lomkit\Rest\Http\RowBatch;
 use Lomkit\Rest\Query\EngineSearch;
 use Lomkit\Rest\Search\Plan\Columns\StrictColumns;
+use Lomkit\Rest\Search\Plan\IncludeOverflow;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 
@@ -72,9 +73,7 @@ abstract class Controller
         if ($text->usesEngine()) {
             $page = (new EngineSearch($resource, $text, $request->payload()))->paginate();
 
-            StrictColumns::of($page->plan)->run(fn () => $resource->searched($page->rows));
-
-            return $this->buildResponse($page->plan, $page->rows);
+            return $this->pageResponse($resource, $page->plan, $page->rows);
         }
 
         $plan = SearchPlanner::paged($resource, $request->payload(), $text);
@@ -82,9 +81,17 @@ abstract class Controller
 
         $rows = $text->run(fn () => $resource->paginate($query, $plan->limit->perPage(), $plan->limit->page()));
 
+        return $this->pageResponse($resource, $plan, $rows);
+    }
+
+    /** @param LengthAwarePaginator<int, Model> $rows */
+    private function pageResponse(Resource $resource, QueryPlan $plan, LengthAwarePaginator $rows): Response
+    {
+        $overflow = IncludeOverflow::trim($plan, $rows->items());
+
         StrictColumns::of($plan)->run(fn () => $resource->searched($rows));
 
-        return $this->buildResponse($plan, $rows);
+        return $this->buildResponse($plan, $rows)->overflow($overflow);
     }
 
     /** @param LengthAwarePaginator<int, Model>|Collection<int, Model> $rows */

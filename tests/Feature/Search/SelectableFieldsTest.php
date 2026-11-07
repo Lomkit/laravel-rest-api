@@ -157,11 +157,11 @@ class SelectableFieldsTest extends PackageTestCase
         ]);
 
         $response->assertOk()->assertExactJson($this->page([
-            ['last_name' => 'Turing', 'posts' => []],
+            ['last_name' => 'Turing', 'posts' => [], '@more' => []],
             ['last_name' => 'Lovelace', 'posts' => [
                 ['title' => 'Spring launch', 'author' => ['first_name' => 'Ada']],
                 ['title' => 'Annual report', 'author' => ['first_name' => 'Ada']],
-            ]],
+            ], '@more' => []],
         ]));
     }
 
