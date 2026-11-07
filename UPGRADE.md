@@ -312,6 +312,7 @@ Instructions:
 - `handle()` and `handleEngine()` receive a `Lomkit\Rest\Instructions\InstructionFields`, which reads the inputs as `ActionFields` does, see [Actions](#actions). An entry sent without `value` counts as absent.
 - `Builder::instruction()` and `applyInstructions()` are removed. Each instruction of the search runs through `InstructionClause::of()`, with the cast values of its `InstructionNode`.
 - An instruction applied to an include receives the relation's Eloquent builder.
+- The conditions that a scope or an instruction adds form one group, joined to the rest of the search with `and`: an `orWhere()` at their top level no longer widens `perimeterQuery()`, the filters, the other scopes or the soft-delete condition. Check the scopes and instructions that start with `orWhere()` or hold one at their top level.
 
 Actions:
 
