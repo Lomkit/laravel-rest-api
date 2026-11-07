@@ -2,15 +2,9 @@
 
 namespace Lomkit\Rest\Actions;
 
-use Illuminate\Bus\PendingBatch;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Queue;
-use Lomkit\Rest\Contracts\BatchableAction;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Query\QueryBuilderFactory;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
@@ -32,21 +26,9 @@ class DispatchAction
      */
     protected $action;
 
-    /**
-     * The resolved field values, keyed by field name.
-     *
-     * @var array<string, mixed>
-     */
-    protected $fields;
-
-    /**
-     * The pending batch instance.
-     *
-     * @var PendingBatch|null
-     */
-    protected $batchJob;
-
     private readonly ?EngineTargets $engineTargets;
+
+    private readonly ActionRunner $runner;
 
     /**
      * Create a new action dispatcher instance.
@@ -58,34 +40,8 @@ class DispatchAction
     {
         $this->request = $request;
         $this->action = $action;
-        $this->fields = $fields;
         $this->engineTargets = EngineTargets::of($request, $action);
-
-        if ($action instanceof BatchableAction) {
-            $this->configureBatchJob($action, $fields);
-        }
-    }
-
-    /**
-     * Configure the batch job for the action.
-     *
-     * @param  array<string, mixed>  $fields
-     * @return void
-     */
-    protected function configureBatchJob(Action $action, array $fields)
-    {
-        $batch = Bus::batch([]);
-        $batch->name($action->uriKey());
-
-        if (! is_null($connection = $this->connection())) {
-            $batch->onConnection($connection);
-        }
-        if (! is_null($queue = $this->queue())) {
-            $batch->onQueue($queue);
-        }
-
-        $action->withBatch($fields, $batch);
-        $this->batchJob = $batch;
+        $this->runner = ActionRunner::for($action, $fields);
     }
 
     /**
@@ -106,9 +62,7 @@ class DispatchAction
             $modelsImpacted = $this->handleClassic($chunkCount);
         }
 
-        if (! is_null($this->batchJob)) {
-            $this->batchJob->dispatch();
-        }
+        $this->runner->finish();
 
         return $modelsImpacted;
     }
@@ -125,7 +79,7 @@ class DispatchAction
     public function handleClassic(int $chunkCount)
     {
         if ($this->engineTargets !== null) {
-            return $this->engineTargets->dispatch($this->forModels(...));
+            return $this->engineTargets->dispatch($this->runner->run(...));
         }
 
         $query = $this->modelsQuery($this->request->payload()->search());
@@ -179,21 +133,21 @@ class DispatchAction
             ->chunk(
                 $chunkCount,
                 function ($chunk, $page) use ($limit, $chunkCount, &$impacted) {
-                    $collection = \Illuminate\Database\Eloquent\Collection::make($chunk);
+                    $collection = Collection::make($chunk);
 
                     // This is to remove for Laravel 12, chunking with limit does not work
                     // in Laravel 11
                     if (! is_null($limit) && $page * $chunkCount >= $limit) {
                         $collection = $collection->take($limit - ($page - 1) * $chunkCount);
                         $impacted += $collection->count();
-                        $this->forModels($collection);
+                        $this->runner->run($collection);
 
                         return false;
                     }
 
                     $impacted += $collection->count();
 
-                    $this->forModels($collection);
+                    $this->runner->run($collection);
                 }
             );
 
@@ -207,84 +161,10 @@ class DispatchAction
      */
     public function handleStandalone()
     {
-        $this->forModels(
-            \Illuminate\Database\Eloquent\Collection::make()
+        $this->runner->run(
+            Collection::make()
         );
 
         return 0;
-    }
-
-    /**
-     * Dispatch the given action.
-     */
-    public function forModels(Collection $models): void
-    {
-        if ($models->isEmpty() && ! $this->action->isStandalone()) {
-            return;
-        }
-
-        if ($this->action instanceof ShouldQueue) {
-            $this->addQueuedActionJob($models);
-
-            return;
-        }
-
-        $this->dispatchSynchronouslyForCollection($models);
-    }
-
-    /**
-     * Dispatch the given action synchronously for a model collection.
-     *
-     * @throws \Throwable
-     */
-    protected function dispatchSynchronouslyForCollection(Collection $models): void
-    {
-        DB::transaction(function () use ($models) {
-            $this->action->handle($this->fields, $models);
-        });
-    }
-
-    /**
-     * Dispatch the given action to the queue for a model collection.
-     *
-     * @param  string  $method
-     * @return $this
-     *
-     * @throws \Throwable
-     */
-    protected function addQueuedActionJob(Collection $models): self
-    {
-        $job = new CallRestApiAction($this->action, $this->fields, $models);
-
-        if ($this->action instanceof BatchableAction) {
-            $this->batchJob->add([$job]);
-        } else {
-            Queue::connection($this->connection())->pushOn(
-                $this->queue(),
-                $job
-            );
-        }
-
-        return $this;
-    }
-
-    /**
-     * Extract the queue connection for the action.
-     *
-     * @return string|null
-     */
-    protected function connection()
-    {
-        return property_exists($this->action, 'connection') ? $this->action->connection : null;
-    }
-
-    /**
-     * Extract the queue name for the action.
-     *
-     * @return string|null
-     */
-    protected function queue()
-    {
-        return property_exists($this->action, 'queue') ? $this->action->queue : null;
     }
 }

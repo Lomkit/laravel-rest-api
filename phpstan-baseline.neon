@@ -29,30 +29,6 @@ parameters:
 			path: src/Actions/CallRestApiAction.php
 
 		-
-			message: '#^Call to function property_exists\(\) with Lomkit\\Rest\\Actions\\Action and ''connection'' will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Call to function property_exists\(\) with Lomkit\\Rest\\Actions\\Action and ''queue'' will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Cannot call method add\(\) on Illuminate\\Bus\\PendingBatch\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:addQueuedActionJob\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
 			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:dispatch\(\) has parameter \$chunkCount with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -65,36 +41,18 @@ parameters:
 			path: src/Actions/DispatchAction.php
 
 		-
-			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:dispatchSynchronouslyForCollection\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Method Lomkit\\Rest\\Actions\\DispatchAction\:\:forModels\(\) has parameter \$models with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
 			identifier: typeCoverage.propertyTypeCoverage
-			count: 4
+			count: 2
 			path: src/Actions/DispatchAction.php
 
 		-
 			identifier: typeCoverage.returnTypeCoverage
-			count: 8
+			count: 5
 			path: src/Actions/DispatchAction.php
 
 		-
 			identifier: typeCoverage.paramTypeCoverage
 			count: 3
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^PHPDoc tag @param references unknown parameter\: \$method$#'
-			identifier: parameter.notFound
-			count: 1
 			path: src/Actions/DispatchAction.php
 
 		-
@@ -105,12 +63,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$chunkCount of method Lomkit\\Rest\\Actions\\DispatchAction\:\:handleTargeted\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Actions/DispatchAction.php
-
-		-
-			message: '#^Parameter \#1 \$queue of method Illuminate\\Contracts\\Queue\\Queue\:\:pushOn\(\) expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Actions/DispatchAction.php
