@@ -24,6 +24,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Response;
 use Lomkit\Rest\Http\RowBatch;
 use Lomkit\Rest\Query\EngineSearch;
+use Lomkit\Rest\Search\Plan\Columns\StrictColumns;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 
@@ -71,7 +72,7 @@ abstract class Controller
         if ($text->usesEngine()) {
             $page = (new EngineSearch($resource, $text, $request->payload()))->paginate();
 
-            $resource->searched($page->rows);
+            StrictColumns::of($page->plan)->run(fn () => $resource->searched($page->rows));
 
             return $this->buildResponse($page->plan, $page->rows);
         }
@@ -81,7 +82,7 @@ abstract class Controller
 
         $rows = $text->run(fn () => $resource->paginate($query, $plan->limit->perPage(), $plan->limit->page()));
 
-        $resource->searched($rows);
+        StrictColumns::of($plan)->run(fn () => $resource->searched($rows));
 
         return $this->buildResponse($plan, $rows);
     }
