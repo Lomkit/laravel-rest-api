@@ -14,9 +14,9 @@ final readonly class RowSerializer implements RowRenderer
         private RelationRenderer $relations,
     ) {}
 
-    public static function of(QueryPlan $plan, ?Relation $through = null): self
+    public static function of(QueryPlan $plan, ?Relation $through = null, ?GateReach $reach = null): self
     {
-        return new self(RowFields::of($plan), GateTable::of($plan), RelationRenderer::of($plan, $through));
+        return new self(RowFields::of($plan), GateTable::of($plan, $reach ?? GateReach::everyRow()), RelationRenderer::of($plan, $through));
     }
 
     /** @return array<string, mixed> */
