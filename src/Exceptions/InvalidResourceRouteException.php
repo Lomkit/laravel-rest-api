@@ -36,7 +36,7 @@ final class InvalidResourceRouteException extends LogicException
 
     public static function notSoftDeletable(Endpoint $endpoint): self
     {
-        $endpoints = implode(', ', array_map(fn (Endpoint $endpoint): string => $endpoint->value, Endpoint::optIns()));
+        $endpoints = implode(', ', array_map(fn (Endpoint $endpoint): string => $endpoint->value, Endpoint::softDeletes()));
 
         return new self("The endpoint [{$endpoint->value}] is not a soft delete endpoint. withSoftDeletes() accepts: {$endpoints}.");
     }

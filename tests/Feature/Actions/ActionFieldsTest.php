@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Actions;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
@@ -11,10 +12,13 @@ use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithMigration;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use Ramsey\Uuid\Uuid;
 
 #[WithMigration('queue')]
 class ActionFieldsTest extends PackageTestCase
 {
+    private const string BATCH = '9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f';
+
     private ReceivedFields $received;
 
     #[\Override]
@@ -39,18 +43,22 @@ class ActionFieldsTest extends PackageTestCase
         $app['config']->set('queue.batching.database', $app['config']->get('database.default'));
     }
 
-    /** @param list<string> $hooks */
+    /**
+     * @param  list<string>  $hooks
+     * @param  array<string, string>  $batch
+     */
     #[Test]
     #[DataProvider('runs')]
-    public function it_passes_the_same_cast_map_to_every_run(string $action, array $hooks): void
+    public function it_passes_the_same_cast_map_to_every_run(string $action, array $hooks, array $batch): void
     {
         Post::factory()->count(2)->create();
+        Str::createUuidsUsingSequence([Uuid::fromString(self::BATCH)]);
 
         $response = $this->postJson("/api/posts/actions/{$action}", [
             'fields' => [['name' => 'at', 'value' => '2026-03-01 09:30:00']],
         ]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, ...$batch, 'result' => null]]);
         $this->assertSame($hooks, array_column($this->received->calls(), 0));
 
         foreach ($this->received->calls() as [, $fields]) {
@@ -63,13 +71,13 @@ class ActionFieldsTest extends PackageTestCase
         $this->assertSame(2, Post::query()->where('status', PostStatus::Published)->where('published_at', '2026-03-01 09:30:00')->count());
     }
 
-    /** @return array<string, array{string, list<string>}> */
+    /** @return array<string, array{string, list<string>, array<string, string>}> */
     public static function runs(): array
     {
         return [
-            'synchronous' => ['publish-posts', ['handle']],
-            'queued' => ['queued-publish-posts', ['handle']],
-            'batched' => ['batched-publish-posts', ['withBatch', 'handle']],
+            'synchronous' => ['publish-posts', ['handle'], []],
+            'queued' => ['queued-publish-posts', ['handle'], []],
+            'batched' => ['batched-publish-posts', ['withBatch', 'handle'], ['batch' => self::BATCH]],
         ];
     }
 

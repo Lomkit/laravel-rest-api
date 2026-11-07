@@ -13,6 +13,7 @@ enum Endpoint: string
     case Destroy = 'destroy';
     case Restore = 'restore';
     case ForceDestroy = 'forceDestroy';
+    case Batch = 'batch';
 
     public static function fromKey(self|string $key): self
     {
@@ -41,16 +42,16 @@ enum Endpoint: string
     }
 
     /** @return list<self> */
-    public static function optIns(): array
+    public static function softDeletes(): array
     {
-        return array_values(array_filter(self::cases(), fn (self $endpoint): bool => $endpoint->isOptIn()));
+        return [self::Restore, self::ForceDestroy];
     }
 
     /** @return list<string> */
     public function methods(): array
     {
         return match ($this) {
-            self::Details => ['GET', 'HEAD'],
+            self::Details, self::Batch => ['GET', 'HEAD'],
             self::Search, self::Mutate, self::Operate, self::Restore => ['POST'],
             self::Destroy, self::ForceDestroy => ['DELETE'],
         };
@@ -61,7 +62,7 @@ enum Endpoint: string
         return match ($this) {
             self::Details, self::Destroy => null,
             self::Search, self::Mutate, self::Restore, self::ForceDestroy => $this->value,
-            self::Operate => 'actions',
+            self::Operate, self::Batch => 'actions',
         };
     }
 
@@ -70,7 +71,7 @@ enum Endpoint: string
         return match ($this) {
             self::Details, self::Destroy => null,
             self::Search, self::Mutate, self::Restore => $this->value,
-            self::Operate => 'actions',
+            self::Operate, self::Batch => 'actions',
             self::ForceDestroy => 'force',
         };
     }
@@ -78,7 +79,7 @@ enum Endpoint: string
     public function parameter(): ?string
     {
         return match ($this) {
-            self::Operate => 'action',
+            self::Operate, self::Batch => 'action',
             self::Details, self::Search, self::Mutate, self::Destroy, self::Restore, self::ForceDestroy => null,
         };
     }
@@ -88,14 +89,14 @@ enum Endpoint: string
     {
         return match ($this) {
             self::Details, self::Search => ['viewAny'],
-            self::Mutate, self::Operate, self::Destroy, self::Restore, self::ForceDestroy => [],
+            self::Mutate, self::Operate, self::Destroy, self::Restore, self::ForceDestroy, self::Batch => [],
         };
     }
 
     public function isOptIn(): bool
     {
         return match ($this) {
-            self::Restore, self::ForceDestroy => true,
+            self::Restore, self::ForceDestroy, self::Batch => true,
             self::Details, self::Search, self::Mutate, self::Operate, self::Destroy => false,
         };
     }
@@ -106,6 +107,10 @@ enum Endpoint: string
 
         if ($this->parameter() !== null) {
             $segments[] = '{'.$this->parameter().'}';
+        }
+
+        if ($this === self::Batch) {
+            $segments[] = 'batches/{batch}';
         }
 
         return implode('/', array_filter($segments, fn (?string $segment): bool => $segment !== null));

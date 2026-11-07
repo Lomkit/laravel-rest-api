@@ -9,6 +9,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\SkipIfBatchCancelled;
 use Lomkit\Rest\Authorization\UserReference;
 use Lomkit\Rest\Exceptions\QueuedActionException;
 use Lomkit\Rest\Fields\InputValues;
@@ -62,6 +63,12 @@ final class QueuedAction implements ShouldQueue
         } finally {
             $auth->shouldUse($guard);
         }
+    }
+
+    /** @return list<object> */
+    public function middleware(): array
+    {
+        return [new SkipIfBatchCancelled];
     }
 
     public function displayName(): string

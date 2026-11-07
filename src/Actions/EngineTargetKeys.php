@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Actions;
 
 use Illuminate\Validation\ValidationException;
+use Lomkit\Rest\Actions\Rows\RowCap;
 use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 
@@ -31,7 +32,7 @@ final readonly class EngineTargetKeys
         $count = min($first->total, $this->limit ?? $first->total);
 
         if ($count > $this->maxResources) {
-            throw self::refusal("This action can be run on at most {$this->maxResources} resources; narrow the search.");
+            throw RowCap::refusal($this->maxResources);
         }
 
         if ($this->limit === null) {
@@ -47,7 +48,7 @@ final readonly class EngineTargetKeys
         $keys = $this->collect($first, $perPage, min($this->limit ?? PHP_INT_MAX, $this->maxResources + 1));
 
         if (count($keys) > $this->maxResources) {
-            throw self::refusal("This action can be run on at most {$this->maxResources} resources; narrow the search.");
+            throw RowCap::refusal($this->maxResources);
         }
 
         return self::distinct($keys, count($keys));

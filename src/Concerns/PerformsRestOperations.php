@@ -6,8 +6,10 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Http\BatchProgress;
 use Lomkit\Rest\Http\MutateResponse;
 use Lomkit\Rest\Http\OperateResponse;
+use Lomkit\Rest\Http\Requests\BatchRequest;
 use Lomkit\Rest\Http\Requests\DestroyRequest;
 use Lomkit\Rest\Http\Requests\DetailsRequest;
 use Lomkit\Rest\Http\Requests\ForceDestroyRequest;
@@ -94,6 +96,13 @@ trait PerformsRestOperations
         $this->afterOperate($request);
 
         return $response;
+    }
+
+    public function batch(BatchRequest $request): BatchProgress
+    {
+        $request->resource($resource = $request->context()->resource(static::resourceClass()));
+
+        return BatchProgress::of($request, $resource);
     }
 
     public function destroy(DestroyRequest $request): Response

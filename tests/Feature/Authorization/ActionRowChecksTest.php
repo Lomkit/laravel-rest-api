@@ -26,9 +26,9 @@ use PHPUnit\Framework\Attributes\Test;
 
 class ActionRowChecksTest extends HelpdeskTestCase
 {
-    private const array CHUNKS = [[7, 6], [5, 4], [3, 2], [1]];
+    private const array CHUNKS = [[1, 2], [3, 4], [5, 6], [7]];
 
-    private const array UPDATES = ['viewAny', 'update 7', 'update 6', 'update 5', 'update 4', 'update 3', 'update 2', 'update 1'];
+    private const array UPDATES = ['viewAny', 'update 1', 'update 2', 'update 3', 'update 4', 'update 5', 'update 6', 'update 7'];
 
     private const string READ_ONLY = 'Closed tickets are read-only.';
 
@@ -76,8 +76,8 @@ class ActionRowChecksTest extends HelpdeskTestCase
                 ['path' => 'resources.1', 'ability' => 'update', 'key' => 2, 'message' => self::READ_ONLY],
             ]],
             'rows of the search in two chunks' => [ActionTarget::Search, 'update', [], [2, 6], 423, [
-                ['path' => 'search', 'ability' => 'update', 'key' => 6, 'message' => self::READ_ONLY],
                 ['path' => 'search', 'ability' => 'update', 'key' => 2, 'message' => self::READ_ONLY],
+                ['path' => 'search', 'ability' => 'update', 'key' => 6, 'message' => self::READ_ONLY],
             ]],
             'a plain refusal' => [ActionTarget::Search, 'delete', ['search' => ['filters' => [['field' => 'title', 'value' => 'Ticket 3']]]], [], 403, [
                 ['path' => 'search', 'ability' => 'delete', 'key' => 3, 'message' => $lead],
@@ -136,8 +136,8 @@ class ActionRowChecksTest extends HelpdeskTestCase
     public static function skippedRows(): array
     {
         return [
-            'refused rows in two chunks' => [[2, 6], [[7], [5, 4], [3], [1]], 5],
-            'a chunk without an allowed row' => [[4, 5], [[7, 6], [3, 2], [1]], 5],
+            'refused rows in two chunks' => [[2, 6], [[1], [3, 4], [5], [7]], 5],
+            'a chunk without an allowed row' => [[3, 4], [[1, 2], [5, 6], [7]], 5],
             'every row refused' => [[1, 2, 3, 4, 5, 6, 7], [], 0],
         ];
     }
@@ -159,8 +159,8 @@ class ActionRowChecksTest extends HelpdeskTestCase
     public static function rechecks(): array
     {
         return [
-            'before the rows are handled' => ['review-tickets', [...self::UPDATES, 'update 7', 'update 6', 'update 5', 'update 4', 'update 3', 'update 2', 'update 1']],
-            'before the allowed rows are handled' => ['review-allowed-tickets', ['viewAny', 'update 7', 'update 6', 'update 7', 'update 6', 'update 5', 'update 4', 'update 5', 'update 4', 'update 3', 'update 2', 'update 3', 'update 2', 'update 1', 'update 1']],
+            'before the rows are handled' => ['review-tickets', [...self::UPDATES, 'update 1', 'update 2', 'update 3', 'update 4', 'update 5', 'update 6', 'update 7']],
+            'before the allowed rows are handled' => ['review-allowed-tickets', ['viewAny', 'update 1', 'update 2', 'update 1', 'update 2', 'update 3', 'update 4', 'update 3', 'update 4', 'update 5', 'update 6', 'update 5', 'update 6', 'update 7', 'update 7']],
         ];
     }
 
@@ -184,7 +184,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
         $response = $this->postJson('/reviewed-tickets/actions/queued-review-allowed-tickets');
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 5, 'result' => null]]);
-        $this->assertSame([[7], [5, 4], [3], [1]], Queue::pushed(QueuedAction::class)->map(fn (QueuedAction $job): array => $job->rows->keys)->all());
+        $this->assertSame([[1], [3, 4], [5], [7]], Queue::pushed(QueuedAction::class)->map(fn (QueuedAction $job): array => $job->rows->keys)->all());
     }
 
     #[Test]
@@ -206,7 +206,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
         $this->seedRows();
         $this->postJson('/reviewed-tickets/actions/queued-review-tickets')->assertOk();
         $job = Queue::pushed(QueuedAction::class)->first();
-        Ticket::query()->whereKey(7)->update(['status' => 'closed']);
+        Ticket::query()->whereKey(1)->update(['status' => 'closed']);
         $this->tickets->calls = [];
 
         $this->app['auth']->forgetGuards();
@@ -214,7 +214,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
         $worker->setJob(new SyncJob($this->app, '{}', 'sync', 'default'));
         $this->app->call([$worker, 'handle']);
 
-        $this->assertSame([[7, 6]], ReviewTickets::$runs);
+        $this->assertSame([[1, 2]], ReviewTickets::$runs);
         $this->assertSame([], $this->tickets->calls);
     }
 

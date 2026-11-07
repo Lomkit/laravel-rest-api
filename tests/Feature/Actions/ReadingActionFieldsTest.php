@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Queue\Jobs\SyncJob;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Actions\QueuedAction;
@@ -26,6 +27,7 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use Ramsey\Uuid\Uuid;
 
 #[WithMigration('queue')]
 #[WithConfig('auth.providers.users.model', ArchiveUser::class)]
@@ -171,7 +173,7 @@ class ReadingActionFieldsTest extends PackageTestCase
         $this->work(Queue::pushed(QueuedAction::class)->sole());
 
         $fields = ReadDocumentFields::$runs[0]['fields'];
-        $this->assertSame([[4, 2]], array_column(ReadDocumentFields::$runs, 'keys'));
+        $this->assertSame([[2, 4]], array_column(ReadDocumentFields::$runs, 'keys'));
         $this->assertSame([2, ActionTarget::Resources, DocumentPriority::Normal], [$fields->user()?->getAuthIdentifier(), $fields->target(), $fields->priority]);
         $this->assertEquals(self::cast(), $fields->toArray());
     }
@@ -221,13 +223,14 @@ class ReadingActionFieldsTest extends PackageTestCase
     public function it_gives_the_same_fields_to_with_batch_and_to_the_jobs(): void
     {
         $this->actingAs($this->grace);
+        Str::createUuidsUsingSequence([Uuid::fromString('9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f')]);
 
         $this->postJson('/field-documents/actions/batched-read-document-fields', self::BODY)
             ->assertOk()
-            ->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
+            ->assertExactJson(['data' => ['impacted' => 4, 'batch' => '9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f', 'result' => null]]);
 
         $this->assertCount(1, ReadDocumentFields::$batches);
-        $this->assertSame([[4, 3, 2, 1]], array_column(ReadDocumentFields::$runs, 'keys'));
+        $this->assertSame([[1, 2, 3, 4]], array_column(ReadDocumentFields::$runs, 'keys'));
 
         foreach ([ReadDocumentFields::$batches[0], ReadDocumentFields::$runs[0]['fields']] as $fields) {
             $this->assertEquals(self::cast(), $fields->toArray());
@@ -244,7 +247,7 @@ class ReadingActionFieldsTest extends PackageTestCase
             ->assertOk()
             ->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
 
-        $this->assertSame([[4, 3], [2, 1]], array_column(ReadDocumentFields::$runs, 'keys'));
+        $this->assertSame([[1, 2], [3, 4]], array_column(ReadDocumentFields::$runs, 'keys'));
         $this->assertSame(ReadDocumentFields::$runs[0]['fields'], ReadDocumentFields::$runs[1]['fields']);
         $this->assertSame(3, ReadDocumentFields::$runs[1]['fields']->copies);
     }

@@ -45,16 +45,21 @@ final class PendingResourceRegistration
     public function withSoftDeletes(Endpoint|string|array ...$endpoints): self
     {
         return $this->apply(function () use ($endpoints): void {
-            $softDeletes = Endpoint::list(...$endpoints) ?: Endpoint::optIns();
+            $softDeletes = Endpoint::list(...$endpoints) ?: Endpoint::softDeletes();
 
             foreach ($softDeletes as $endpoint) {
-                if (! $endpoint->isOptIn()) {
+                if (! in_array($endpoint, Endpoint::softDeletes(), true)) {
                     throw InvalidResourceRouteException::notSoftDeletable($endpoint);
                 }
             }
 
             $this->selection = $this->selection->optIn($softDeletes);
         });
+    }
+
+    public function withBatchProgress(): self
+    {
+        return $this->apply(fn () => $this->selection = $this->selection->optIn([Endpoint::Batch]));
     }
 
     /** @param string|array<string, string> $names */

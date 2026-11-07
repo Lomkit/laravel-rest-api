@@ -1,8 +1,8 @@
 {
     "queries": {
-        "sqlite": 2,
-        "mysql": 2,
-        "pgsql": 2
+        "sqlite": 3,
+        "mysql": 3,
+        "pgsql": 3
     },
     "shape": {
         "data": {
@@ -17,7 +17,8 @@
         }
     },
     "raw_queries": [
-        "select * from \"posts\" where (\"posts\".\"status\" = 'draft') order by \"posts\".\"id\" desc limit 10 offset 0",
+        "select \"posts\".\"id\" from \"posts\" where (\"posts\".\"status\" = 'draft') order by \"posts\".\"id\" desc limit 10",
+        "select * from \"posts\" where (\"posts\".\"status\" = 'draft') and \"posts\".\"id\" in (2)",
         "update \"posts\" set \"status\" = 'published', \"updated_at\" = '2026-01-02 00:00:00' where \"id\" = 2"
     ]
 }

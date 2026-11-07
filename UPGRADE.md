@@ -225,7 +225,8 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 - `Rest::resource()` takes two arguments. A third argument (the old `$options` array) throws `Lomkit\Rest\Exceptions\InvalidResourceRouteException`, so a forgotten `['except' => ['destroy']]` cannot silently expose an endpoint. Use the fluent methods instead: `only()`, `except()`, `names()`, `middleware()` and `withSoftDeletes()`. For the `as` option, use `names('prefix.users')` or a route group with `name()`.
 - The resource name must be one URI segment made of letters, digits, `-` and `_`. A dotted name (`users.posts`) throws: its `{user}` parameter was never used, so register the child resource on its own and scope its query in the resource. A slashed name (`admin/users`) throws: wrap the call in `Route::prefix('admin')`.
 - `PendingResourceRegistration` is final and no longer extends Laravel's class. It keeps `only()`, `except()`, `withSoftDeletes()`, `names()`, `name()`, `middleware()`, `middlewareFor()`, `withoutMiddleware()`, `withoutMiddlewareFor()` and `register()`. `parameters()`, `parameter()`, `shallow()`, `scoped()`, `missing()` and `withTrashed()` are removed because they have no effect on these routes. `where()` and its variants, `metadata()` and the macros of Laravel's class are removed too: put `where()` or `metadata()` on the enclosing route group, for example `Route::where(['action' => '[a-z-]+'])->group(...)`. Repeated `names()` and `name()` calls add up: a prefix and exact names combine in any order.
-- Every method that takes endpoint keys throws on an unknown key. The keys are `details`, `search`, `mutate`, `operate`, `destroy`, `restore` and `forceDestroy`, or the cases of `Lomkit\Rest\Http\Routing\Endpoint`. `withSoftDeletes()` only accepts `restore` and `forceDestroy`, and repeated calls add up.
+- Every method that takes endpoint keys throws on an unknown key. The keys are `details`, `search`, `mutate`, `operate`, `destroy`, `restore`, `forceDestroy` and `batch`, or the cases of `Lomkit\Rest\Http\Routing\Endpoint`. `withSoftDeletes()` only accepts `restore` and `forceDestroy`, and repeated calls add up.
+- `Endpoint` has a `Batch` case, the opt-in route of `withBatchProgress()`, see [Actions](#actions). A `match` on `Endpoint` without a default arm handles it. `Endpoint::optIns()` is replaced by `Endpoint::softDeletes()`, which returns `Restore` and `ForceDestroy`.
 - `withSoftDeletes([...])` no longer overrides `except()`. For example, `except('destroy')->withSoftDeletes('restore')` no longer registers `destroy`.
 - `middleware()` adds to the package middleware instead of replacing it, so `EnforceExpectsJson` stays on every route, next to `HandlePrecognitiveRequests` when precognition is enabled. Requests without `Accept: application/json` now get JSON errors instead of a redirect. Repeated middleware calls add up, and resource middleware always comes before endpoint middleware.
 - `Route::resourceVerbs()` now changes the package URIs through the keys `search`, `mutate`, `actions`, `restore` and `forceDestroy`. An application that already sets one of these keys will see its URIs change.
@@ -351,7 +352,7 @@ A queued or batched action no longer serializes its resource, its rows and its i
 
   | Target | Request | Rows | Before |
   |---|---|---|---|
-  | `ActionTarget::Search`, the default | `search` is optional, `resources` is refused | the rows that `search` matches inside `perimeterQuery()`, every row when the request sends no `search` | neither `standalone` nor `targeted` |
+  | `ActionTarget::Search`, the default | `search` is optional, `resources` is refused | the rows that `search` matches inside `perimeterQuery()`, every row when the request sends no `search`, at most `$maxResources` | neither `standalone` nor `targeted` |
   | `ActionTarget::Resources` | `resources` is required, `search` is refused | the rows of the keys in `resources`, at most `$maxResources` | `targeted()` |
   | `ActionTarget::None` | `search` and `resources` are refused | no row: `handle()` receives an empty collection | `standalone()` |
 
@@ -457,9 +458,43 @@ A queued or batched action no longer serializes its resource, its rows and its i
   The action checks the ability through the resource's `authorizedTo()` on every row before it runs on any row: it reads the rows chunk by chunk, checks them, then reads them again to run. A refused row gives the status and the message of the first refusal, `{"message": "Closed tickets are read-only."}`, and `AuthorizationDenied` holds every refused row, at most 50, under `resources.<index>` for the `Resources` target or `search` for the `Search` target. No row is handled, no job is queued and no batch is created. `authorizeEach()` returns `null` by default: no row is checked.
 - With `->skipUnauthorized()` when the resource declares the action, or `public bool $skipUnauthorized = true`, the action runs on the allowed rows only: each chunk is checked just before it is handled or queued, a refused row is left out, and `impacted` counts the rows handled. A chunk without an allowed row is not handled.
 - The rows are checked in the request. A queued action does not check them again in the worker: call `$this->resource->authorizedTo('update', $model)` in `handle()` to check the rows as they are when the job runs.
-- A row is checked as the request reads it. A row that changes, or enters the search, after it is checked and before the action runs on it is not checked again.
+- A row is checked as the request reads it. A search with `sorts` or a `limit`, and the `Resources` target, run the action on the rows whose keys were checked: a row that enters the search after the checks is not given to the action. A search without `sorts` and without `limit` reads its rows again after the checks: a row that enters the search in between is given to the action without a check. A row that changes after its check is not checked again.
 - An action that calls `skipUnauthorized()` without an ability in `authorizeEach()`, or returns an ability on the `None` target, throws `Lomkit\Rest\Exceptions\InvalidActionException` when the resource's actions are read, for example on the details endpoint.
 - An action that already defines `authorizeEach()`, `skipUnauthorized()` or `ensureValid()`, or a `$skipUnauthorized` property, gives them these signatures and this meaning.
+- An action reads its rows in chunks that stay in place when the action changes them. Without `sorts` and without `limit` in its `search`, it reads the rows in the order of their key, from the lowest, each chunk after the last key of the previous one. With `sorts` or a `limit`, it reads the keys of the rows first, in the order of the search, then loads each chunk of keys through the same search. Before, it read pages of `chunkCount` rows by offset, so an action that changed a column that its search filters on skipped rows: a search on `status` `open` that closed 1,000 open tickets closed 500 of them. It now closes 1,000.
+- The chunks of a search without `sorts` and without `limit` come in the order of the key, from the lowest, and no longer in the order of `defaultOrderBy()`. Add `sorts` to choose the order.
+- A row that no longer matches the search when its chunk is loaded is not given to the action, and `impacted` does not count it.
+- An action with the `Resources` target gives `handle()` its rows in the order of `resources`, in chunks of `chunkCount` keys. Before, they came in the order of `defaultOrderBy()`.
+- Every target is capped by the `$maxResources` property of the action, 1000 by default. An action whose `search` matches more rows answers 422 under `search` before it runs on any row: "This action can be run on at most 1000 resources; narrow the search.". Before, only the `Resources` target and a text search on a search engine were capped. A search without `sorts` and without `limit` counts its rows first; with `sorts` or a `limit`, the action reads at most `$maxResources` + 1 keys. Raise the cap on an action that runs on more rows:
+
+  ```php
+  public int $maxResources = 5000;
+  ```
+- Each chunk of a synchronous action runs in a database transaction on the connection of the model of the resource. Before, it ran on the default connection, so the rows of a model on another connection were written outside it.
+- `->atomic()` when the resource declares the action, or `public bool $atomic = true` on the action, runs every chunk in one transaction: when `handle()` throws on a chunk, the rows of every chunk are rolled back. Without it, the chunks handled before the failure stay written and the request answers with the error. `respond()` runs after the commit. An action that implements `ShouldQueue` and is atomic throws `Lomkit\Rest\Exceptions\InvalidActionException` when the resource's actions are read: "App\Rest\Actions\ExportOrders runs its chunks in one transaction through atomic(), but it implements ShouldQueue: its chunks run in the worker, outside the request."
+- An action that already defines `atomic()` or an `$atomic` property gives them this signature and this meaning.
+- A batched action (`BatchableAction`) gives the id of its batch in the response, between `impacted` and `result`:
+
+  ```json
+  {"data": {"impacted": 250, "batch": "9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f", "result": null}}
+  ```
+
+  Read the batch with `Bus::findBatch($id)`. The batch keeps the resource, the action and the user who started it in its options, under `lomkit_rest_owner`.
+- `withBatchProgress()` on `Rest::resource()` adds `GET {name}/actions/{action}/batches/{batch}`, named `{name}.batch`:
+
+  ```php
+  Rest::resource('invoices', InvoiceController::class)->withBatchProgress();
+  ```
+
+  It answers the user who started the batch, through the same guard:
+
+  ```json
+  {"data": {"id": "9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f", "total_jobs": 3, "pending_jobs": 1, "failed_jobs": 0, "progress": 67, "finished": false, "cancelled": false}}
+  ```
+
+  Another user, a guest, another action and an unknown batch get a 404, and so does every batch started by a guest. The route checks the abilities that the resource's `abilities()` returns for `Endpoint::Batch`, none by default.
+- The jobs of a batched action skip their rows once the batch is cancelled, with Laravel's `SkipIfBatchCancelled` middleware: `$this->batch()?->cancel()` in `handle()`, or `Bus::findBatch($id)?->cancel()`, stops the jobs that did not run yet.
+- `DispatchAction::dispatch()` returns the `OperateResponse` of the action, without `result`; `OperateResponse::answer()` gives a copy with the result.
 
 ### Native types
 
@@ -517,7 +552,7 @@ Actions, instructions and relations:
 - `Action`, `Instruction` and `BatchableAction` declare native types:
   - a redeclared property keeps its type: `public ?string $name`, `public ActionTarget $target`, `public int $chunkCount`;
   - an override declares its return type: `handle(): void`, `withBatch(): void`, `name(): string`, `uriKey(): string`, `target(): static`, `destructive(): static`, `confirm(): static`, `respond(): ?ActionResponse`, `handleRequest(): OperateResponse`.
-- `DispatchAction::dispatch(int $chunkCount): int` declares its types. `handleClassic()`, `handleTargeted()`, `dispatchInChunks()` and `handleStandalone()` take, as their last argument, the closure that runs on each chunk, and return `int`. A class that extends `DispatchAction` and overrides one of them declares the new signature.
+- `Lomkit\Rest\Actions\DispatchAction` is final and readonly. `dispatch()` takes no argument. `handleClassic()`, `handleTargeted()`, `handleStandalone()`, `dispatchInChunks()` and `modelsQuery()` are removed: the rows of each target come from a class of `Lomkit\Rest\Actions\Rows`, and `EngineTargets::dispatch()` is renamed `each()`. To change how an action runs, override `handleRequest()` on the action.
 - An action's `handle()` returns `void`. Before, a synchronous action that returned `false` stopped the remaining chunks; the chunks now always run.
 - `make()` returns `static`. An action or instruction that redefines it must declare `: static`. On relations, `make()` takes the arguments of the constructor: `make(string $relation, string $type)`, and `make(string $relation, string|array $types)` on `MorphTo`. A relation that redefines it declares them, and a relation whose constructor takes other arguments redefines `make()`: it no longer passes every argument to the constructor.
 - Relations declare native types: `__construct(string $relation, string $type)`, `name(): string`, `hasMultipleEntries(): bool`, `resource(): Resource` and `rules(Resource $resource, string $prefix): array`, where `Resource` is `Lomkit\Rest\Http\Resource`. A relation that overrides one of them declares the same types.
@@ -550,7 +585,7 @@ Service provider and facade:
 Query builder:
 
 - `Lomkit\Rest\Query\Builder::$resource` is declared `protected Resource $resource`, where `Resource` is `Lomkit\Rest\Http\Resource`. A query builder that extends `Builder` and redeclares `$resource` keeps that type.
-- `Builder::disableDefaultLimit()` and its property are removed. Remove the calls: an action applies `search.limit` when it is sent, and loads every row of its search otherwise.
+- `Builder::disableDefaultLimit()` and its property are removed. Remove the calls: an action applies `search.limit` when it is sent, and loads every row of its search otherwise, at most `$maxResources` (see [Actions](#actions)).
 
 ### Search
 
@@ -619,7 +654,7 @@ Query builder and requests:
 - An include that a dotted include goes through, such as `posts` next to `posts.author`, keeps its filters, sorts, scopes, instructions, limit, includes, aggregates and the `perimeterQuery()` of its resource whatever their order in `includes`. Before, it lost them when it was listed first.
 - Each relation of a dotted include applies the `perimeterQuery()` of its resource, also when it is not listed as an include of its own: `posts` in `posts.author` loads only the posts that the `perimeterQuery()` of their resource returns, and `author` in `author.tags` renders `null` for an author that the `perimeterQuery()` of its resource leaves out. The rows below a left-out row are not rendered, and the limit of the relation counts the rows that `perimeterQuery()` keeps. Before, these levels ignored `perimeterQuery()` and rendered every row.
 - When `includes` lists one relation twice without an alias, directly or through dotted paths, the response renders the last entry: its `selects`, `gates`, `aggregates` and `includes`, as its rows already did. Before, the response rendered the first entry over the rows of the last.
-- `OperationNode::search()` returns the search of the action, empty when it is not sent. `DispatchAction::modelsQuery(SearchNode $search)` takes it. `Lomkit\Rest\Query\EngineSearch` takes the search as a third constructor argument and reads it: `query()` takes no argument, `paginate()` takes none and returns a `Lomkit\Rest\Search\Plan\PlannedPage`, which holds the `plan` of the page and the paginator of its `rows`, and `rows(array $keys)` loads the rows of a page.
+- `OperationNode::search()` returns the search of the action, empty when it is not sent. `Lomkit\Rest\Query\EngineSearch` takes the search as a third constructor argument and reads it: `query()` takes no argument, `paginate()` takes none and returns a `Lomkit\Rest\Search\Plan\PlannedPage`, which holds the `plan` of the page and the paginator of its `rows`, and `rows(array $keys)` loads the rows of a page.
 
 ### Text search
 
@@ -822,7 +857,7 @@ Actions:
 - Meilisearch and Algolia count the results up to a setting of the index: `pagination.maxTotalHits` on Meilisearch and `paginationLimitedTo` on Algolia. Without `search.limit`, the action reads this setting, so the key of the application must be allowed to read the settings of the index. Set it above the `maxResources` of the actions: when it is not above, and the search reaches it, the action gives a 422, "The search engine returns at most 1000 results for this search; narrow the search.". When the settings cannot be read, the action gives a 422, "The search engine does not report how many results this search can reach; give the search a limit.".
 - On Turbopuffer, whose total does not count the text, the action reads the keys until a page is not full.
 - When the results change while the action reads them, it gives a 422, "The search results changed while the action was resolving them; run the action again.". Set `scout.after_commit` to `true`, so that the index changes once the database transactions commit.
-- The actions of `Contains` and `FullText` resources do not change: they still act on the rows of the SQL search, in chunks.
+- The actions of `Contains` and `FullText` resources act on the rows of the SQL search, in chunks, capped by `maxResources` as well, see [Actions](#actions).
 
 From the Scout text search of 2.x:
 

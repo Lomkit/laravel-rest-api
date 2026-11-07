@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Actions\ActionResponse;
 use Lomkit\Rest\Actions\ActionTarget;
@@ -19,6 +20,7 @@ use Lomkit\Rest\Tests\Fixtures\Archive\Document;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use Ramsey\Uuid\Uuid;
 
 class ActionResultsTest extends PackageTestCase
 {
@@ -79,7 +81,7 @@ class ActionResultsTest extends PackageTestCase
         $response = $this->postJson('/touch-documents/actions/touch-documents', self::NOTE);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'result' => ['type' => 'message', 'message' => 'Quarterly: 11']]]);
-        $this->assertSame([[11, 10, 9, 8], [7, 6, 5, 4], [3, 2, 1]], TouchDocuments::$runs);
+        $this->assertSame([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]], TouchDocuments::$runs);
         $this->assertCount(1, TouchDocuments::$responds);
         $this->assertSame(TouchDocuments::$handled, TouchDocuments::$responds[0]['fields']);
         $this->assertSame([11, 3], [TouchDocuments::$responds[0]['impacted'], TouchDocuments::$responds[0]['runs']]);
@@ -115,10 +117,11 @@ class ActionResultsTest extends PackageTestCase
     {
         Bus::fake();
         TouchDocuments::$answer = fn (ActionFields $fields, int $impacted): ActionResponse => ActionResponse::message(count(Bus::dispatchedBatches())." batch for {$impacted} documents");
+        Str::createUuidsUsingSequence([Uuid::fromString('9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f')]);
 
         $response = $this->postJson('/touch-documents/actions/batched-touch-documents');
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'result' => ['type' => 'message', 'message' => '1 batch for 11 documents']]]);
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'batch' => '9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f', 'result' => ['type' => 'message', 'message' => '1 batch for 11 documents']]]);
     }
 
     #[Test]

@@ -5,10 +5,11 @@ namespace Lomkit\Rest\Actions;
 use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Actions\Rows\ActionRows;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Query\EngineSearch;
 
-final readonly class EngineTargets
+final readonly class EngineTargets implements ActionRows
 {
     /** @param list<list<int|string>> $chunks */
     private function __construct(
@@ -35,13 +36,14 @@ final readonly class EngineTargets
         return new self($engine, array_chunk($keys, max(1, $action->chunkCount)));
     }
 
-    /** @param Closure(Collection<int, Model>): int $dispatch */
-    public function dispatch(Closure $dispatch): int
+    /** @param Closure(Collection<int, Model>): int $each */
+    #[\Override]
+    public function each(Closure $each): int
     {
         $impacted = 0;
 
         foreach ($this->chunks as $keys) {
-            $impacted += $dispatch($this->search->rows($keys));
+            $impacted += $each($this->search->rows($keys));
         }
 
         return $impacted;
