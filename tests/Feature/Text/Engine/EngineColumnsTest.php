@@ -16,8 +16,8 @@ class EngineColumnsTest extends EngineSearchTestCase
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'selects' => [['field' => 'title']]]);
 
-        $response->assertOk()->assertJsonPath('data', [['title' => 'Report inactive'], ['title' => 'Report alpha'], ['title' => 'Report beta']]);
-        $this->assertSame('select vouchers.title, vouchers.id, vouchers.code from vouchers where (team = ?) and vouchers.code in (?, ?, ?, ?) and vouchers.deleted_at is null', $this->loggedQuery(1));
+        $response->assertOk()->assertJsonPath('data', [['title' => 'Report inactive'], ['title' => 'Report blue'], ['title' => 'Report alpha'], ['title' => 'Report beta']]);
+        $this->assertSame('select vouchers.title, vouchers.id, vouchers.code from vouchers where vouchers.code in (?, ?, ?, ?) and vouchers.deleted_at is null', $this->loggedQuery(1));
     }
 
     #[Test]
@@ -27,8 +27,8 @@ class EngineColumnsTest extends EngineSearchTestCase
 
         $response = $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 
-        $response->assertOk()->assertJsonPath('data.impacted', 3);
-        $this->assertSame('select * from vouchers where (team = ?) and vouchers.code in (?, ?, ?, ?) and vouchers.deleted_at is null', $this->loggedQuery(1));
+        $response->assertOk()->assertJsonPath('data.impacted', 4);
+        $this->assertSame('select * from vouchers where vouchers.code in (?, ?, ?, ?) and vouchers.deleted_at is null', $this->loggedQuery(1));
     }
 
     private function loggedQuery(int $index): string

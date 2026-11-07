@@ -127,9 +127,9 @@ class EngineTargetKeysTest extends EngineSearchTestCase
     public static function uncounted(): array
     {
         return [
-            'pages of the chunk count' => ['retitle-vouchers', [], null, [[5], [1, 3]], [[2, 1], [2, 2], [2, 3]]],
+            'pages of the chunk count' => ['retitle-vouchers', [], null, [[5, 4], [1, 3]], [[2, 1], [2, 2], [2, 3]]],
             'more keys than the maximum' => ['review-vouchers', [], 'This action can be run on at most 3 resources; narrow the search.', [], [[100, 1]]],
-            'a limit under the maximum' => ['review-vouchers', ['limit' => 2], null, [[5]], [[100, 1]]],
+            'a limit under the maximum' => ['review-vouchers', ['limit' => 2], null, [[5, 4]], [[100, 1]]],
         ];
     }
 

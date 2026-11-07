@@ -27,7 +27,7 @@ class DatabaseEnginePageTest extends EngineSearchTestCase
     {
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'selects' => [['field' => 'title']]]);
 
-        $response->assertOk()->assertJsonPath('data', [['title' => 'Report inactive'], ['title' => 'Report alpha'], ['title' => 'Report beta']]);
+        $response->assertOk()->assertJsonPath('data', [['title' => 'Report inactive'], ['title' => 'Report blue'], ['title' => 'Report alpha'], ['title' => 'Report beta']]);
         $this->assertStringStartsWith('select count(*) as aggregate from vouchers where ', $this->loggedQuery(0));
         $this->assertStringStartsWith('select vouchers.code from vouchers where ', $this->loggedQuery(1));
         $this->assertStringEndsWith(' order by vouchers.code desc limit 50 offset 0', $this->loggedQuery(1));
@@ -38,7 +38,7 @@ class DatabaseEnginePageTest extends EngineSearchTestCase
     {
         $response = $this->postJson('/api/vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 
-        $response->assertOk()->assertJsonPath('data.impacted', 3);
+        $response->assertOk()->assertJsonPath('data.impacted', 4);
         $this->assertStringStartsWith('select vouchers.code from vouchers where ', $this->loggedQuery(1));
         $this->assertStringEndsWith(' order by vouchers.code desc limit 100 offset 0', $this->loggedQuery(1));
     }
@@ -48,7 +48,7 @@ class DatabaseEnginePageTest extends EngineSearchTestCase
     {
         $response = $this->search('lined-vouchers', ['text' => ['value' => 'report'], 'selects' => [['field' => 'title']]]);
 
-        $response->assertOk()->assertJsonPath('data', [['title' => 'Report inactive'], ['title' => 'Report alpha'], ['title' => 'Report beta']]);
+        $response->assertOk()->assertJsonPath('data', [['title' => 'Report inactive'], ['title' => 'Report blue'], ['title' => 'Report alpha'], ['title' => 'Report beta']]);
         $this->assertStringStartsWith('select vouchers.code from vouchers where ', $this->loggedQuery(1));
         $this->assertStringStartsWith('select vouchers.title, vouchers.id, vouchers.code from vouchers where ', $this->loggedQuery(2));
     }
@@ -58,7 +58,7 @@ class DatabaseEnginePageTest extends EngineSearchTestCase
     {
         $response = $this->postJson('/api/lined-vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 
-        $response->assertOk()->assertJsonPath('data.impacted', 3);
+        $response->assertOk()->assertJsonPath('data.impacted', 4);
         $this->assertStringStartsWith('select vouchers.code from vouchers where ', $this->loggedQuery(1));
         $this->assertStringStartsWith('select * from vouchers where ', $this->loggedQuery(2));
     }

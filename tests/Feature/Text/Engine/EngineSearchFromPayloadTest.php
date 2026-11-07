@@ -32,7 +32,7 @@ class EngineSearchFromPayloadTest extends EngineSearchTestCase
 
         $response = $this->search('input-editing-vouchers', ['text' => ['value' => 'report']]);
 
-        $response->assertOk()->assertExactJson($this->page([5, 1, 3], 4));
+        $response->assertOk()->assertExactJson($this->page([5, 4, 1, 3], 4));
         $this->assertSame([], $this->received->calls());
     }
 
@@ -44,7 +44,7 @@ class EngineSearchFromPayloadTest extends EngineSearchTestCase
 
         $response = $this->postJson('/api/input-editing-vouchers/actions/deactivate-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 3]]);
-        $this->assertSame([['handle', ['ids' => [5, 1, 3]]]], $this->received->calls());
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4]]);
+        $this->assertSame([['handle', ['ids' => [5, 4, 1, 3]]]], $this->received->calls());
     }
 }

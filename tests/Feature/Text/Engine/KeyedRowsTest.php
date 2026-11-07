@@ -39,7 +39,7 @@ class KeyedRowsTest extends KeyedRowsTestCase
      */
     #[Test]
     #[DataProvider('pages')]
-    public function it_loads_the_rows_of_the_engine_keys_inside_the_perimeter_in_key_order(string $resource, array $search, array $ids): void
+    public function it_loads_the_rows_of_the_engine_keys_in_key_order(string $resource, array $search, array $ids): void
     {
         $vouchers = $this->searched($resource, $search, self::ENGINE_KEYS);
 
@@ -50,10 +50,10 @@ class KeyedRowsTest extends KeyedRowsTestCase
     public static function pages(): array
     {
         return [
-            'the rows kept by the perimeter and soft deletes' => [VoucherResource::class, [], [5, 1, 3]],
-            'the rows kept by the global scope of the model' => [ScopedVoucherResource::class, [], [1, 3]],
-            'the trashed rows added' => [VoucherResource::class, ['trashed' => 'with'], [6, 5, 1, 3]],
-            'the trashed rows added under the global scope' => [ScopedVoucherResource::class, ['trashed' => 'with'], [6, 1, 3]],
+            'the rows kept by soft deletes' => [VoucherResource::class, [], [5, 4, 1, 3]],
+            'the rows kept by the global scope of the model' => [ScopedVoucherResource::class, [], [4, 1, 3]],
+            'the trashed rows added' => [VoucherResource::class, ['trashed' => 'with'], [6, 5, 4, 1, 3]],
+            'the trashed rows added under the global scope' => [ScopedVoucherResource::class, ['trashed' => 'with'], [6, 4, 1, 3]],
             'the trashed rows only' => [VoucherResource::class, ['trashed' => 'only'], [6]],
         ];
     }
@@ -118,7 +118,7 @@ class KeyedRowsTest extends KeyedRowsTestCase
         $vouchers = $this->searched(VoucherResource::class, self::INCLUDES_AND_AGGREGATES, ['V-e', 'V-d', 'V-c', 'V-a']);
 
         $this->assertSame(
-            [[5, ['l5a'], 1], [1, ['l1b', 'l1a'], 2], [3, ['l3a'], 1]],
+            [[5, ['l5a'], 1], [4, ['l4a'], 1], [1, ['l1b', 'l1a'], 2], [3, ['l3a'], 1]],
             $vouchers
                 ->map(fn (Model $voucher): array => [$voucher->getKey(), array_column($voucher->getRelation('lines')->all(), 'label'), (int) $voucher->getAttribute('@aggregate_0')])
                 ->all(),

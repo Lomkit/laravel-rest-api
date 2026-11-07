@@ -62,6 +62,28 @@ class PivotPathFiltersTest extends PackageTestCase
 
     /**
      * @param  array<string, mixed>  $filter
+     * @param  list<string>  $titles
+     */
+    #[Test]
+    #[DataProvider('includeFilters')]
+    public function it_filters_an_include_on_a_pivot_field_of_a_relation_of_the_included_rows(array $filter, array $titles): void
+    {
+        $response = $this->postJson('/api/teams/search', ['search' => ['includes' => [['relation' => 'tickets', 'filters' => [$filter]]]]]);
+
+        $response->assertOk()->assertJsonPath('data.*.tickets.*.title', $titles);
+    }
+
+    /** @return array<string, array{array<string, mixed>, list<string>}> */
+    public static function includeFilters(): array
+    {
+        return [
+            'a pivot field' => [['field' => 'tags.pivot.position', 'operator' => 'between', 'value' => [1, 2]], ['Password reset', 'Printer jam']],
+            'a nullable pivot field' => [['field' => 'labels.pivot.position', 'operator' => 'is null'], ['Printer jam']],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
      * @param  list<string>  $matches
      */
     #[Test]

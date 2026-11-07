@@ -17,7 +17,7 @@ class EngineSearchTest extends EngineSearchTestCase
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report']]);
 
-        $response->assertOk()->assertExactJson($this->page([5, 1, 3], 4));
+        $response->assertOk()->assertExactJson($this->page([5, 4, 1, 3], 4));
     }
 
     /**
@@ -42,19 +42,19 @@ class EngineSearchTest extends EngineSearchTestCase
     {
         $filters = [
             'an integer equal to' => [['field' => 'number', 'value' => 3], [1], 1],
-            'an integer different from' => [['field' => 'number', 'operator' => '!=', 'value' => '3'], [5, 3], 3],
-            'a number greater than' => [['field' => 'price', 'operator' => '>', 'value' => 7.25], [5], 2],
-            'a number at least' => [['field' => 'price', 'operator' => '>=', 'value' => '7.25'], [5, 3], 3],
+            'an integer different from' => [['field' => 'number', 'operator' => '!=', 'value' => '3'], [5, 4, 3], 3],
+            'a number greater than' => [['field' => 'price', 'operator' => '>', 'value' => 7.25], [5, 4], 2],
+            'a number at least' => [['field' => 'price', 'operator' => '>=', 'value' => '7.25'], [5, 4, 3], 3],
             'a number less than' => [['field' => 'price', 'operator' => '<', 'value' => 7.25], [1], 1],
             'a number at most' => [['field' => 'price', 'operator' => '<=', 'value' => 7.25], [1, 3], 2],
             'a number equal to a decimal string' => [['field' => 'price', 'value' => '1.5'], [1], 1],
             'integers in a list' => [['field' => 'number', 'operator' => 'in', 'value' => [1, '3']], [1, 3], 2],
-            'integers outside a list' => [['field' => 'number', 'operator' => 'not in', 'value' => [1, 3]], [5], 2],
+            'integers outside a list' => [['field' => 'number', 'operator' => 'not in', 'value' => [1, 3]], [5, 4], 2],
             'a false boolean' => [['field' => 'active', 'value' => false], [5], 1],
-            'a true boolean with an and type' => [['field' => 'active', 'value' => true, 'type' => 'and'], [1, 3], 3],
+            'a true boolean with an and type' => [['field' => 'active', 'value' => true, 'type' => 'and'], [4, 1, 3], 3],
             'a text equal to' => [['field' => 'code', 'value' => 'V-a'], [3], 1],
             'texts in a list' => [['field' => 'code', 'operator' => 'in', 'value' => ['V-a', 'V-e']], [5, 3], 2],
-            'texts outside a list' => [['field' => 'code', 'operator' => 'not in', 'value' => ['V-a', 'V-e']], [1], 2],
+            'texts outside a list' => [['field' => 'code', 'operator' => 'not in', 'value' => ['V-a', 'V-e']], [4, 1], 2],
         ];
 
         foreach (self::drivers() as $engine => [$driver]) {
@@ -77,7 +77,7 @@ class EngineSearchTest extends EngineSearchTestCase
         ]]);
 
         $response->assertOk()
-            ->assertJsonPath('data.*.id', [3])
+            ->assertJsonPath('data.*.id', [4, 3])
             ->assertJsonPath('total', 2);
     }
 
@@ -102,12 +102,12 @@ class EngineSearchTest extends EngineSearchTestCase
     public static function sorts(): iterable
     {
         $sorts = [
-            'a number in ascending order' => [[['field' => 'price', 'direction' => 'asc']], [1, 3, 5]],
-            'a number in descending order' => [[['field' => 'price', 'direction' => 'desc']], [5, 3, 1]],
-            'an integer without direction' => [[['field' => 'number']], [3, 1, 5]],
-            'two attributes' => [[['field' => 'number', 'direction' => 'desc'], ['field' => 'price']], [5, 1, 3]],
-            'the engine order' => [[['field' => '@relevance']], [5, 1, 3]],
-            'the engine order in descending order' => [[['field' => '@relevance', 'direction' => 'desc']], [5, 1, 3]],
+            'a number in ascending order' => [[['field' => 'price', 'direction' => 'asc']], [1, 3, 4, 5]],
+            'a number in descending order' => [[['field' => 'price', 'direction' => 'desc']], [5, 4, 3, 1]],
+            'an integer without direction' => [[['field' => 'number']], [3, 1, 4, 5]],
+            'two attributes' => [[['field' => 'number', 'direction' => 'desc'], ['field' => 'price']], [5, 4, 1, 3]],
+            'the engine order' => [[['field' => '@relevance']], [5, 4, 1, 3]],
+            'the engine order in descending order' => [[['field' => '@relevance', 'direction' => 'desc']], [5, 4, 1, 3]],
         ];
 
         foreach (self::drivers() as $engine => [$driver]) {
@@ -119,7 +119,7 @@ class EngineSearchTest extends EngineSearchTestCase
 
     #[Test]
     #[DataProvider('drivers')]
-    public function it_pages_on_the_engine_and_keeps_the_engine_total_when_the_page_loses_rows(string $driver): void
+    public function it_pages_on_the_engine_with_full_pages_and_the_engine_total(string $driver): void
     {
         config(['scout.driver' => $driver]);
 
@@ -127,7 +127,7 @@ class EngineSearchTest extends EngineSearchTestCase
         $second = $this->search('vouchers', ['text' => ['value' => 'report'], 'limit' => 2, 'page' => 2]);
         $past = $this->search('vouchers', ['text' => ['value' => 'report'], 'limit' => 2, 'page' => 3]);
 
-        $first->assertOk()->assertExactJson($this->page([5], 4, 2));
+        $first->assertOk()->assertExactJson($this->page([5, 4], 4, 2));
         $second->assertOk()->assertExactJson($this->page([1, 3], 4, 2, 2));
         $past->assertOk()->assertExactJson($this->page([], 4, 2, 3));
     }

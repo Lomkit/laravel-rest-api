@@ -11,6 +11,7 @@ use Lomkit\Rest\Query\Clauses\AggregateSortClause;
 use Lomkit\Rest\Query\Clauses\Clause;
 use Lomkit\Rest\Query\Clauses\FilterGroupClause;
 use Lomkit\Rest\Query\Clauses\InstructionClause;
+use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Query\Clauses\RelationSortClause;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
 use Lomkit\Rest\Query\Clauses\ScopeClause;
@@ -27,6 +28,12 @@ use Lomkit\Rest\Text\ResolvedText;
 final readonly class SqlRows implements RowSource
 {
     public function __construct(private ?ResolvedText $text, private bool $ordered = true) {}
+
+    #[\Override]
+    public function perimeter(Resource $resource): array
+    {
+        return [new PerimeterClause($resource)];
+    }
 
     #[\Override]
     public function clauses(Resource $resource, SearchNode $search, array $aggregates = []): array

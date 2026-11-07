@@ -15,7 +15,7 @@ trait SearchesAnIndex
     {
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]);
 
-        $response->assertOk()->assertExactJson($this->page([1, 3, 5], 4));
+        $response->assertOk()->assertExactJson($this->page([1, 3, 4, 5], 4));
     }
 
     /**
@@ -38,25 +38,25 @@ trait SearchesAnIndex
     {
         return [
             'an integer equal to' => [[['field' => 'number', 'value' => 3]], [1], 1],
-            'an integer different from' => [[['field' => 'number', 'operator' => '!=', 'value' => '3']], [3, 5], 3],
-            'a number greater than' => [[['field' => 'price', 'operator' => '>', 'value' => 7.25]], [5], 2],
-            'a number at least' => [[['field' => 'price', 'operator' => '>=', 'value' => '7.25']], [3, 5], 3],
+            'an integer different from' => [[['field' => 'number', 'operator' => '!=', 'value' => '3']], [3, 4, 5], 3],
+            'a number greater than' => [[['field' => 'price', 'operator' => '>', 'value' => 7.25]], [4, 5], 2],
+            'a number at least' => [[['field' => 'price', 'operator' => '>=', 'value' => '7.25']], [3, 4, 5], 3],
             'a number less than' => [[['field' => 'price', 'operator' => '<', 'value' => 7.25]], [1], 1],
             'a number at most' => [[['field' => 'price', 'operator' => '<=', 'value' => 7.25]], [1, 3], 2],
             'a number equal to a decimal string' => [[['field' => 'price', 'value' => '1.5']], [1], 1],
             'decimals in a list' => [[['field' => 'price', 'operator' => 'in', 'value' => [1.5, '7.25']]], [1, 3], 2],
             'integers in a list' => [[['field' => 'number', 'operator' => 'in', 'value' => [1, '3']]], [1, 3], 2],
-            'integers outside a list' => [[['field' => 'number', 'operator' => 'not in', 'value' => [1, 3]]], [5], 2],
+            'integers outside a list' => [[['field' => 'number', 'operator' => 'not in', 'value' => [1, 3]]], [4, 5], 2],
             'a false boolean' => [[['field' => 'active', 'value' => false]], [5], 1],
-            'a true boolean with an and type' => [[['field' => 'active', 'value' => true, 'type' => 'and']], [1, 3], 3],
+            'a true boolean with an and type' => [[['field' => 'active', 'value' => true, 'type' => 'and']], [1, 3, 4], 3],
             'a text equal to' => [[['field' => 'code', 'value' => 'V-a']], [3], 1],
             'texts in a list' => [[['field' => 'code', 'operator' => 'in', 'value' => ['V-a', 'V-e']]], [3, 5], 2],
-            'texts outside a list' => [[['field' => 'code', 'operator' => 'not in', 'value' => ['V-a', 'V-e']]], [1], 2],
+            'texts outside a list' => [[['field' => 'code', 'operator' => 'not in', 'value' => ['V-a', 'V-e']]], [1, 4], 2],
             'every filter' => [[
                 ['field' => 'price', 'operator' => '>', 'value' => 1],
                 ['field' => 'active', 'value' => true],
                 ['field' => 'number', 'operator' => 'in', 'value' => [1, 4, 5]],
-            ], [3], 2],
+            ], [3, 4], 2],
         ];
     }
 
@@ -79,10 +79,10 @@ trait SearchesAnIndex
     public static function sorts(): array
     {
         return [
-            'a number in ascending order' => [self::BY_PRICE, [1, 3, 5]],
-            'a number in descending order' => [[['field' => 'price', 'direction' => 'desc']], [5, 3, 1]],
-            'an integer without direction' => [[['field' => 'number']], [3, 1, 5]],
-            'two attributes' => [[['field' => 'number', 'direction' => 'desc'], ['field' => 'price']], [5, 1, 3]],
+            'a number in ascending order' => [self::BY_PRICE, [1, 3, 4, 5]],
+            'a number in descending order' => [[['field' => 'price', 'direction' => 'desc']], [5, 4, 3, 1]],
+            'an integer without direction' => [[['field' => 'number']], [3, 1, 4, 5]],
+            'two attributes' => [[['field' => 'number', 'direction' => 'desc'], ['field' => 'price']], [5, 4, 1, 3]],
         ];
     }
 
@@ -92,18 +92,18 @@ trait SearchesAnIndex
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'sorts' => [['field' => '@relevance']]]);
 
         $response->assertOk()->assertJsonPath('total', 4);
-        $this->assertEqualsCanonicalizing([1, 3, 5], $response->json('data.*.id'));
+        $this->assertEqualsCanonicalizing([1, 3, 4, 5], $response->json('data.*.id'));
     }
 
     #[Test]
-    public function it_pages_on_the_engine_and_keeps_the_engine_total_when_the_page_loses_rows(): void
+    public function it_pages_on_the_engine_with_full_pages_and_the_engine_total(): void
     {
         $first = $this->search('vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE, 'limit' => 2]);
         $second = $this->search('vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE, 'limit' => 2, 'page' => 2]);
         $past = $this->search('vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE, 'limit' => 2, 'page' => 3]);
 
         $first->assertOk()->assertExactJson($this->page([1, 3], 4, 2));
-        $second->assertOk()->assertExactJson($this->page([5], 4, 2, 2));
+        $second->assertOk()->assertExactJson($this->page([4, 5], 4, 2, 2));
         $past->assertOk()->assertExactJson($this->page([], 4, 2, 3));
     }
 
@@ -149,7 +149,7 @@ trait SearchesAnIndex
     public static function trashedSearches(): array
     {
         return [
-            'with the trashed rows' => [['trashed' => 'with'], [1, 6, 3, 5], 5],
+            'with the trashed rows' => [['trashed' => 'with'], [1, 6, 3, 4, 5], 5],
             'only the trashed rows' => [['trashed' => 'only'], [6], 1],
         ];
     }
@@ -165,11 +165,12 @@ trait SearchesAnIndex
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.*.id', [1, 3, 5])
-            ->assertJsonPath('data.*.lines_count', [2, 1, 1])
+            ->assertJsonPath('data.*.id', [1, 3, 4, 5])
+            ->assertJsonPath('data.*.lines_count', [2, 1, 1, 1])
             ->assertJsonPath('data.0.lines.*.label', ['l1b', 'l1a'])
             ->assertJsonPath('data.1.lines.*.label', ['l3a'])
-            ->assertJsonPath('data.2.lines.*.label', ['l5a']);
+            ->assertJsonPath('data.2.lines.*.label', ['l4a'])
+            ->assertJsonPath('data.3.lines.*.label', ['l5a']);
     }
 
     #[Test]
@@ -178,7 +179,7 @@ trait SearchesAnIndex
         $response = $this->search('scoped-vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]);
 
         $response->assertOk()
-            ->assertJsonPath('data.*.id', [1, 3])
+            ->assertJsonPath('data.*.id', [1, 3, 4])
             ->assertJsonPath('total', 4);
     }
 }

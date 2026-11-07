@@ -19,7 +19,7 @@ class TurbopufferSearchTest extends TurbopufferTestCase
 
         $response = $this->search('unsorted-vouchers', ['text' => ['value' => 'report'], 'filters' => [['field' => 'price', 'operator' => '<', 'value' => 40]], 'limit' => 2]);
 
-        $response->assertOk()->assertExactJson($this->page([1], 4, 2));
+        $response->assertOk()->assertExactJson($this->page([4, 1], 4, 2));
         $this->assertSame([
             ['rank_by' => ['title', 'BM25', 'report'], 'filters' => self::FILTERS, 'limit' => 2],
             ['aggregate_by' => ['count' => ['Count']], 'filters' => self::FILTERS],
@@ -34,8 +34,8 @@ class TurbopufferSearchTest extends TurbopufferTestCase
 
         $response = $this->postJson('/api/unsorted-vouchers/actions/retitle-vouchers', ['search' => ['text' => ['value' => 'report']]]);
 
-        $response->assertOk()->assertExactJson(['data' => ['impacted' => 3]]);
-        $this->assertSame([['handle', ['ids' => [5]]], ['handle', ['ids' => [1, 3]]]], $received->calls());
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4]]);
+        $this->assertSame([['handle', ['ids' => [5, 4]]], ['handle', ['ids' => [1, 3]]]], $received->calls());
         $this->assertSame([2, 4, 6], array_values(array_filter(array_column($this->queries(), 'limit'))));
     }
 

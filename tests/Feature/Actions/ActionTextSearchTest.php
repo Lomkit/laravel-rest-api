@@ -35,7 +35,7 @@ class ActionTextSearchTest extends EngineSearchTestCase
      */
     #[Test]
     #[DataProvider('engineMatches')]
-    public function it_acts_on_the_rows_the_engine_matches_inside_the_database_perimeter(string $driver, array $search, array $ids): void
+    public function it_acts_on_every_row_the_engine_matches(string $driver, array $search, array $ids): void
     {
         config(['scout.driver' => $driver]);
 
@@ -43,15 +43,15 @@ class ActionTextSearchTest extends EngineSearchTestCase
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => count($ids)]]);
         $this->assertSame([['handle', ['ids' => $ids]]], $this->received->calls());
-        $this->assertSame(array_values(array_diff([4, 6], $ids)), $this->activeAmong([4, 6, ...$ids]));
+        $this->assertSame(array_values(array_diff([6], $ids)), $this->activeAmong([6, ...$ids]));
     }
 
     /** @return iterable<string, array{string, array<string, mixed>, list<int>}> */
     public static function engineMatches(): iterable
     {
         foreach (self::drivers() as $engine => [$driver]) {
-            yield "the indexed rows on {$engine}" => [$driver, [], [5, 1, 3]];
-            yield "the indexed and trashed rows on {$engine}" => [$driver, ['trashed' => 'with'], [6, 5, 1, 3]];
+            yield "the indexed rows on {$engine}" => [$driver, [], [5, 4, 1, 3]];
+            yield "the indexed and trashed rows on {$engine}" => [$driver, ['trashed' => 'with'], [6, 5, 4, 1, 3]];
         }
     }
 

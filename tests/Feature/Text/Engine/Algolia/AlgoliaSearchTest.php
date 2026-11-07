@@ -34,13 +34,13 @@ class AlgoliaSearchTest extends AlgoliaTestCase
     }
 
     #[Test]
-    public function it_drops_the_hits_outside_the_database_perimeter_from_the_page(): void
+    public function it_keeps_the_hits_outside_the_database_perimeter(): void
     {
         $this->hits(['V-e', 'V-d', 'V-c', 'V-a', 'V-f'], 5);
 
         $response = $this->search('unsorted-vouchers', ['text' => ['value' => 'report'], 'trashed' => 'with']);
 
-        $response->assertOk()->assertExactJson($this->page([5, 1, 3, 6], 5));
+        $response->assertOk()->assertExactJson($this->page([5, 4, 1, 3, 6], 5));
         $this->assertSame([['POST', "/1/indexes/{$this->index}/query", ['query' => 'report', 'filters' => '', 'hitsPerPage' => 50, 'page' => 0]]], $this->algolia->sent('POST', "/1/indexes/{$this->index}/query"));
     }
 

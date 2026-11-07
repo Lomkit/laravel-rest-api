@@ -92,16 +92,15 @@ class KeyedRowsQueryTest extends KeyedRowsTestCase
     }
 
     #[Test]
-    public function it_binds_string_keys_after_the_perimeter_in_its_own_group(): void
+    public function it_binds_string_keys_without_the_database_perimeter(): void
     {
         $query = $this->keyedQuery(EitherTeamVoucherResource::class, ['V-d', 'V-c']);
 
         $this->assertSame(
-            'select * from '.$this->table().' where ('.$this->wrap('team').' = ? or '.$this->wrap('team').' = ?) and '
-            .$this->wrap('vouchers.code').' in (?, ?) and '.$this->wrap('vouchers.deleted_at').' is null',
+            'select * from '.$this->table().' where '.$this->wrap('vouchers.code').' in (?, ?) and '.$this->wrap('vouchers.deleted_at').' is null',
             $query->toSql(),
         );
-        $this->assertSame(['red', 'blue', 'V-d', 'V-c'], $query->getBindings());
+        $this->assertSame(['V-d', 'V-c'], $query->getBindings());
         $this->assertSame([4, 1], $query->get()->modelKeys());
     }
 
@@ -113,11 +112,10 @@ class KeyedRowsQueryTest extends KeyedRowsTestCase
         $query = $this->keyedQuery($resource, ['3', '1']);
 
         $this->assertSame(
-            'select * from '.$this->table().' where ('.$this->wrap('team').' = ?) and '
-            .$this->wrap('vouchers.number').' in (3, 1) and '.$this->wrap('vouchers.deleted_at').' is null',
+            'select * from '.$this->table().' where '.$this->wrap('vouchers.number').' in (3, 1) and '.$this->wrap('vouchers.deleted_at').' is null',
             $query->toSql(),
         );
-        $this->assertSame(['red'], $query->getBindings());
+        $this->assertSame([], $query->getBindings());
         $this->assertSame([1, 3], $query->get()->modelKeys());
     }
 

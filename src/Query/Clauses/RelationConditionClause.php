@@ -39,10 +39,7 @@ final readonly class RelationConditionClause implements Clause
             }
 
             $this->through($query, $relations, 'and');
-
-            if ($relation instanceof PolymorphicRelation) {
-                $this->perimeter($query, $relation);
-            }
+            $this->perimeter($query, $relation);
         };
 
         if ($relation instanceof PolymorphicRelation) {

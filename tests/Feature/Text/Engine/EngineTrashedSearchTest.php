@@ -28,8 +28,8 @@ class EngineTrashedSearchTest extends EngineSearchTestCase
     public static function trashedSearches(): iterable
     {
         foreach (self::drivers() as $engine => [$driver]) {
-            yield "without the trashed rows on {$engine}" => [$driver, [], [5, 1, 3], 4];
-            yield "with the trashed rows on {$engine}" => [$driver, ['trashed' => 'with'], [6, 5, 1, 3], 5];
+            yield "without the trashed rows on {$engine}" => [$driver, [], [5, 4, 1, 3], 4];
+            yield "with the trashed rows on {$engine}" => [$driver, ['trashed' => 'with'], [6, 5, 4, 1, 3], 5];
             yield "only the trashed rows on {$engine}" => [$driver, ['trashed' => 'only'], [6], 1];
         }
     }

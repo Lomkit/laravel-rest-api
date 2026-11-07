@@ -42,7 +42,7 @@ class EngineSearchAuthorizationTest extends EngineSearchTestCase
 
         $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'includes' => [['relation' => 'lines']]]);
 
-        $response->assertOk()->assertJsonPath('data.*.id', [5, 1, 3]);
+        $response->assertOk()->assertJsonPath('data.*.id', [5, 4, 1, 3]);
         $this->assertSame([['viewAny', [Voucher::class]], ['viewAny', [VoucherLine::class]]], $checks);
     }
 

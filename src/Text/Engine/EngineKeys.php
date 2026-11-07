@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
+use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Search\Plan\KeySet;
 
 final readonly class EngineKeys implements KeySet
@@ -51,6 +52,12 @@ final readonly class EngineKeys implements KeySet
     public function columns(): array
     {
         return [$this->model->keyColumn()];
+    }
+
+    #[\Override]
+    public function perimeter(Resource $resource): array
+    {
+        return [];
     }
 
     /**

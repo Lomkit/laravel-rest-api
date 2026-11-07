@@ -19,6 +19,6 @@ class MeilisearchSearchTest extends MeilisearchTestCase
         $report = $this->search('numbered-vouchers', ['text' => ['value' => 'report'], 'sorts' => self::BY_PRICE]);
 
         $alpha->assertOk()->assertExactJson($this->page([1], 1));
-        $report->assertOk()->assertExactJson($this->page([1, 3, 5], 4));
+        $report->assertOk()->assertExactJson($this->page([1, 3, 4, 5], 4));
     }
 }
