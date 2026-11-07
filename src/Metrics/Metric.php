@@ -16,6 +16,7 @@ use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Exceptions\InvalidMetricException;
 use Lomkit\Rest\Http\Requests\MetricRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Routing\Endpoint;
 
 /** @phpstan-consistent-constructor */
 abstract class Metric implements JsonSerializable
@@ -97,6 +98,14 @@ abstract class Metric implements JsonSerializable
     public function abilities(): array
     {
         return ['viewAny'];
+    }
+
+    /** @return list<string> */
+    final public function entryAbilities(): array
+    {
+        $abilities = $this->abilities();
+
+        return $abilities === [] ? [] : array_values(array_unique(['viewAny', ...$this->resource->abilities(Endpoint::Metric), ...$abilities]));
     }
 
     public function ensureValid(): static

@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Route;
 use LogicException;
-use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\OperationNode;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
@@ -46,15 +45,7 @@ class OperateRequest extends RestRequest
             $authorizer->plan([Check::onClass($resource, 'viewAny')]);
         }
 
-        $authorizer->enter($resource, self::checksOn($resource, $this->entryAbilities($resource, $action)));
-    }
-
-    /** @return list<string> */
-    private function entryAbilities(Resource $resource, Action $action): array
-    {
-        $abilities = $action->abilities();
-
-        return $abilities === [] ? [] : ['viewAny', ...$resource->abilities(Endpoint::Operate), ...$abilities];
+        $authorizer->enter($resource, self::checksOn($resource, $action->entryAbilities()));
     }
 
     /** @return array<string, mixed> */
