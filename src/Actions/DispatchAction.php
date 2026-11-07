@@ -71,7 +71,7 @@ class DispatchAction
      * the search is omitted.
      *
      * @param  int  $chunkCount  The number of models to process per chunk.
-     * @return int The effective result limit if set, or the number of models dispatched.
+     * @return int The number of models dispatched.
      */
     public function handleClassic(int $chunkCount)
     {
@@ -118,7 +118,7 @@ class DispatchAction
      *
      * @param  Builder  $query  The query resolving the models to act on.
      * @param  int  $chunkCount  The number of models to process per chunk.
-     * @return int The effective result limit if set, or the number of models dispatched.
+     * @return int The number of models dispatched.
      */
     protected function dispatchInChunks(Builder $query, int $chunkCount)
     {
@@ -135,20 +135,16 @@ class DispatchAction
                     // This is to remove for Laravel 12, chunking with limit does not work
                     // in Laravel 11
                     if (! is_null($limit) && $page * $chunkCount >= $limit) {
-                        $collection = $collection->take($limit - ($page - 1) * $chunkCount);
-                        $impacted += $collection->count();
-                        $this->runner->run($collection);
+                        $impacted += $this->runner->run($collection->take($limit - ($page - 1) * $chunkCount));
 
                         return false;
                     }
 
-                    $impacted += $collection->count();
-
-                    $this->runner->run($collection);
+                    $impacted += $this->runner->run($collection);
                 }
             );
 
-        return $limit ?? $impacted;
+        return $impacted;
     }
 
     /**
@@ -158,10 +154,6 @@ class DispatchAction
      */
     public function handleStandalone()
     {
-        $this->runner->run(
-            Collection::make()
-        );
-
-        return 0;
+        return $this->runner->run(Collection::make());
     }
 }

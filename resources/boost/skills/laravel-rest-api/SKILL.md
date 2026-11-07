@@ -646,7 +646,7 @@ smaller.
 
 **`$request->payload()` returns the parsed `Lomkit\Rest\Actions\OperationNode`** once the request passed validation, in `beforeOperate()` for example. The node has `action`, `fields` (the input values) and `target`: the parsed search of the `Search` target (a `SearchNode`), the keys of the `Resources` target (a `KeyList`), or `null` for the `None` target. `$request->payload()->keys()` returns the keys of the `Resources` target. The action's `fields()` runs once per request.
 
-**Response**: `{"data": {"impacted": 150}}`.
+**Response**: `{"data": {"impacted": 150}}`. `impacted` is the number of rows given to `handle()`, or put into jobs for a queued action, never the search `limit`.
 
 **Abilities.** Before validation, `operate` resolves the action: an unknown action is a `404` for a user allowed `viewAny` on the resource and a `403` for the others. A known action checks, in this order, `viewAny` on the resource, the abilities the resource's `abilities()` returns for `Endpoint::Operate` (none by default), then those `Action::abilities(): array` returns (`['viewAny']` by default, for every action, whatever its target). Both lists add to `viewAny`: an action returning `['export']` checks `viewAny`, then `export`. An action returning `[]` runs with none of these checks (no `viewAny`, no `Endpoint::Operate` abilities, and its search does not check `viewAny` on the resource): use it for an action any user may run, guests included. Includes, aggregates and filters on relations in the action's `search` still need `viewAny` on the related resource, as in a search.
 

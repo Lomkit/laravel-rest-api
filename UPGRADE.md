@@ -412,6 +412,7 @@ A queued or batched action no longer serializes its resource, its rows and its i
 - `ActionFields` can be serialized, for example to pass it to a job of your own. It keeps the cast values, the target and a reference to the user, and finds the user again through the user provider of the guard when it is unserialized. When the provider no longer finds the user, `unserialize()` throws `QueuedActionException`.
 - `OperateRequest::resolveFields()` is removed. `handle()` receives the values in its `ActionFields`, and `$request->payload()->fields` keeps the input values of the request, see [Validation engine](#validation-engine).
 - Instructions: `handle(InstructionFields $fields, Builder $query)` and `AppliesToEngine::handleEngine(InstructionFields $fields, EngineQuery $query)`. `Lomkit\Rest\Instructions\InstructionFields` reads the inputs as `ActionFields` does, without `user()` and `target()`; both extend `Lomkit\Rest\Fields\FieldValues`. Scope parameters do not change: the model scope still receives the cast values as arguments.
+- `impacted` in the response of `operate` is the number of rows that the action ran on: the rows given to `handle()`, or the rows put into the jobs of a queued or batched action. Before, an action whose `search` sent a `limit` answered that limit, even when the search matched fewer rows: `{"search": {"limit": 50}}` on 11 rows answered `"impacted": 50`, and now answers `11`. A queued action counts the rows of its jobs when the request ends: the worker can later find fewer rows, see above.
 
 ### Native types
 
