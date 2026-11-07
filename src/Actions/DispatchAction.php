@@ -12,7 +12,6 @@ use Lomkit\Rest\Actions\Rows\RowCap;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
-use Lomkit\Rest\Query\QueryBuilderFactory;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 use Lomkit\Rest\Search\SearchContext;
 use Lomkit\Rest\Search\SearchNode;
@@ -83,7 +82,7 @@ final readonly class DispatchAction
     {
         $resource = $this->request->resource;
 
-        return QueryBuilderFactory::make($resource)->search(SearchPlanner::all($resource, $search, $this->request->context()->text($resource)));
+        return SearchPlanner::all($resource, $search, $this->request->context()->text($resource))->query();
     }
 
     private function id(): ID

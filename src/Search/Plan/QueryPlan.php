@@ -3,6 +3,8 @@
 namespace Lomkit\Rest\Search\Plan;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\Clause;
@@ -32,6 +34,15 @@ final readonly class QueryPlan implements Clause
     public static function bare(Resource $resource): self
     {
         return new self($resource, [], [], [], LimitPolicy::none());
+    }
+
+    /** @return EloquentBuilder<Model> */
+    public function query(): EloquentBuilder
+    {
+        $query = $this->resource::newModel()->query();
+        $this->apply($query);
+
+        return $query;
     }
 
     #[\Override]

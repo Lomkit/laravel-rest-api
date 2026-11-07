@@ -92,8 +92,6 @@ final readonly class EngineSearch
     /** @return Collection<int, Model> */
     private function load(QueryPlan $plan): Collection
     {
-        return QueryBuilderFactory::make($this->resource)
-            ->search($plan)
-            ->get();
+        return $plan->query()->get();
     }
 }

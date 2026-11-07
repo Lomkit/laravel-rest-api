@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Metrics;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Query\QueryBuilderFactory;
 use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
@@ -20,8 +19,6 @@ final readonly class MetricQuery
     {
         $plan = (new SearchPlanner(new SqlRows($text, ordered: false), ColumnSelection::Every))->plan($resource, $search, LimitPolicy::none());
 
-        return QueryBuilderFactory::make($resource)
-            ->search($plan)
-            ->reorder();
+        return $plan->query()->reorder();
     }
 }

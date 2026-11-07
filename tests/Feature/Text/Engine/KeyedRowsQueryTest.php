@@ -12,7 +12,6 @@ use LogicException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Exceptions\UnplannedCheckException;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Query\QueryBuilderFactory;
 use Lomkit\Rest\Search\Plan\Columns\ColumnSelection;
 use Lomkit\Rest\Search\Plan\KeyedRows;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
@@ -138,7 +137,7 @@ class KeyedRowsQueryTest extends KeyedRowsTestCase
         $model = ScoutModel::tryFrom($resource::newModel()) ?? throw new LogicException($class.' is indexed.');
         $plan = (new SearchPlanner(new KeyedRows(EngineKeys::of($model, $keys)), ColumnSelection::Every))->plan($resource, SearchNode::empty(), LimitPolicy::none());
 
-        return QueryBuilderFactory::make($resource)->search($plan);
+        return $plan->query();
     }
 
     private function wrap(string $value): string
