@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Http;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\Actionable;
+use Lomkit\Rest\Authorization\ClassAuthorizations;
 use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
 use Lomkit\Rest\Concerns\PerformsQueries;
@@ -102,10 +103,11 @@ class Resource implements \JsonSerializable
     public function jsonSerialize(): mixed
     {
         $definition = $this->definition();
+        $authorizations = ClassAuthorizations::of($this);
 
         return [
-            'actions' => array_values(array_map(fn (Action $action): array => $action->jsonSerialize(), $definition->actions())),
-            'metrics' => array_values(array_map(fn (Metric $metric): array => $metric->jsonSerialize(), $definition->metrics())),
+            'actions' => array_values(array_map(fn (Action $action): array => [...$action->jsonSerialize(), 'authorized' => $authorizations->allow($action->entryAbilities())], $definition->actions())),
+            'metrics' => array_values(array_map(fn (Metric $metric): array => [...$metric->jsonSerialize(), 'authorized' => $authorizations->allow($metric->entryAbilities())], $definition->metrics())),
             'instructions' => array_values(array_map(fn (Instruction $instruction): array => $instruction->jsonSerialize(), $definition->instructions())),
             'fields' => FieldDetails::forFields($definition->fields()),
             'limits' => $definition->limits()->allowed,
@@ -114,6 +116,7 @@ class Resource implements \JsonSerializable
             'rules' => ResourceRuleDetails::of($this)->jsonSerialize(),
             'text' => $this->context()->text($this)->capabilities?->jsonSerialize(),
             'gates' => $this->isGatingEnabled() ? $definition->gates()->names() : [],
+            'authorizations' => $authorizations->jsonSerialize(),
         ];
     }
 }

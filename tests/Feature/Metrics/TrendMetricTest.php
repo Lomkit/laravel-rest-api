@@ -212,6 +212,6 @@ class TrendMetricTest extends TrendTestCase
 
         $this->getJson('/metric-orders')
             ->assertOk()
-            ->assertJsonPath('data.metrics', [['name' => 'Revenue Per Month', 'uriKey' => 'revenue-per-month', 'type' => 'trend', 'ranges' => [['value' => 3, 'label' => '3 months'], ['value' => 6, 'label' => '6 months'], ['value' => 12, 'label' => '12 months']], 'meta' => []]]);
+            ->assertJsonPath('data.metrics', [['name' => 'Revenue Per Month', 'uriKey' => 'revenue-per-month', 'type' => 'trend', 'ranges' => [['value' => 3, 'label' => '3 months'], ['value' => 6, 'label' => '6 months'], ['value' => 12, 'label' => '12 months']], 'meta' => [], 'authorized' => true]]);
     }
 }

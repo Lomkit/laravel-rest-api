@@ -179,8 +179,8 @@ class ValueMetricTest extends SalesTestCase
         $this->getJson('/metric-orders')
             ->assertOk()
             ->assertJsonPath('data.metrics', [
-                ['name' => 'Total Revenue', 'uriKey' => 'total-revenue', 'type' => 'value', 'ranges' => [['value' => 30, 'label' => '30 days'], ['value' => 90, 'label' => '90 days']], 'meta' => []],
-                ['name' => 'Order Value', 'uriKey' => 'order-value', 'type' => 'value', 'ranges' => [], 'meta' => []],
+                ['name' => 'Total Revenue', 'uriKey' => 'total-revenue', 'type' => 'value', 'ranges' => [['value' => 30, 'label' => '30 days'], ['value' => 90, 'label' => '90 days']], 'meta' => [], 'authorized' => true],
+                ['name' => 'Order Value', 'uriKey' => 'order-value', 'type' => 'value', 'ranges' => [], 'meta' => [], 'authorized' => true],
             ]);
     }
 }

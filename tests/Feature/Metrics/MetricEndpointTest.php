@@ -239,13 +239,13 @@ class MetricEndpointTest extends HelpdeskTestCase
         $this->getJson('/metric-tickets')
             ->assertOk()
             ->assertJsonPath('data.metrics', [
-                ['name' => 'Ticket Backlog', 'uriKey' => 'ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
-                ['name' => 'Tickets By Status', 'uriKey' => 'tickets-by-status', 'type' => 'breakdown', 'ranges' => [], 'meta' => []],
-                ['name' => 'Guest Ticket Backlog', 'uriKey' => 'guest-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
-                ['name' => 'Reported Ticket Backlog', 'uriKey' => 'reported-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
-                ['name' => 'Unchecked Ticket Backlog', 'uriKey' => 'unchecked-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
-                ['name' => 'Quiet Ticket Backlog', 'uriKey' => 'quiet-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
-                ['name' => 'Typed Ticket Backlog', 'uriKey' => 'typed-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => []],
+                ['name' => 'Ticket Backlog', 'uriKey' => 'ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => [], 'authorized' => true],
+                ['name' => 'Tickets By Status', 'uriKey' => 'tickets-by-status', 'type' => 'breakdown', 'ranges' => [], 'meta' => [], 'authorized' => true],
+                ['name' => 'Guest Ticket Backlog', 'uriKey' => 'guest-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => [], 'authorized' => true],
+                ['name' => 'Reported Ticket Backlog', 'uriKey' => 'reported-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => [], 'authorized' => false],
+                ['name' => 'Unchecked Ticket Backlog', 'uriKey' => 'unchecked-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => [], 'authorized' => true],
+                ['name' => 'Quiet Ticket Backlog', 'uriKey' => 'quiet-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => [], 'authorized' => true],
+                ['name' => 'Typed Ticket Backlog', 'uriKey' => 'typed-ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => [], 'authorized' => true],
             ]);
     }
 }

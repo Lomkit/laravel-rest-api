@@ -127,6 +127,7 @@ class ActionFieldsTest extends PackageTestCase
             'meta' => ['color' => '#FFFFFF'],
             'destructive' => false,
             'confirm' => null,
+            'authorized' => true,
         ]);
     }
 

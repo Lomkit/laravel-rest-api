@@ -66,7 +66,7 @@ class EntryChecksTest extends HelpdeskTestCase
 
         $this->getJson('/hooked-tickets')->assertOk();
 
-        $this->assertSame(['viewAny', 'describing'], $this->tickets->calls);
+        $this->assertSame(['viewAny', 'describing', 'create'], $this->tickets->calls);
     }
 
     #[Test]

@@ -96,6 +96,6 @@ class ProgressMetricTest extends SalesTestCase
 
         $this->getJson('/metric-orders')
             ->assertOk()
-            ->assertJsonPath('data.metrics', [['name' => 'Sales Goal', 'uriKey' => 'sales-goal', 'type' => 'progress', 'ranges' => [['value' => 30, 'label' => '30 days']], 'meta' => []]]);
+            ->assertJsonPath('data.metrics', [['name' => 'Sales Goal', 'uriKey' => 'sales-goal', 'type' => 'progress', 'ranges' => [['value' => 30, 'label' => '30 days']], 'meta' => [], 'authorized' => true]]);
     }
 }

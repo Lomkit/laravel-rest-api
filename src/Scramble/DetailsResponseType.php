@@ -48,7 +48,19 @@ final class DetailsResponseType
             'rules' => self::rules(),
             'text' => self::text(),
             'gates' => DetailsEntryTypes::listOf(new StringType, 'The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off'),
+            'authorizations' => self::authorizations(),
         ]);
+    }
+
+    private static function authorizations(): ObjectType
+    {
+        $answer = DetailsEntryTypes::objectOf(['allowed' => new BooleanType, 'message' => (new StringType)->nullable(true)]);
+
+        $authorizations = new ObjectType;
+        $authorizations->additionalProperties($answer);
+        $authorizations->setDescription('The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics');
+
+        return $authorizations;
     }
 
     private static function relation(): ObjectType

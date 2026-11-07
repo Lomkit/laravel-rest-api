@@ -69,6 +69,12 @@ class ScrambleDetailsTest extends ScrambleTestCase
     }
 
     #[Test]
+    public function it_documents_the_answers_to_the_class_level_abilities(): void
+    {
+        $this->assertSame('{"type":"object","description":"The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics","additionalProperties":{"type":"object","properties":{"allowed":{"type":"boolean"},"message":{"type":["string","null"]}},"required":["allowed","message"]}}', json_encode($this->details()['authorizations']));
+    }
+
+    #[Test]
     #[DataProvider('declarations')]
     public function it_documents_the_input_entries_of_each_declaration(string $declaration, string $entry): void
     {
@@ -81,8 +87,8 @@ class ScrambleDetailsTest extends ScrambleTestCase
         $fields = '"fields":{"type":"array","items":'.self::INPUT.'},"meta":{"type":"object"}';
 
         return [
-            'actions' => ['actions', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string"},"target":{"type":"string","enum":["search","resources","none"]},'.$fields.',"destructive":{"type":"boolean","description":"True when the action is declared with destructive(); a hint for clients, the endpoint runs the action the same way"},"confirm":{"type":["string","null"],"description":"The text set with confirm(), for clients to show before they run the action; null without one"}},"required":["name","uriKey","target","fields","meta","destructive","confirm"]}'],
-            'metrics' => ['metrics', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string"},"type":{"type":"string","description":"The type of the result, given again as data.type in the response of the metric"},"ranges":{"type":"array","description":"The values that the range key of the request accepts; the first one applies when the request sends none","items":{"type":"object","properties":{"value":{"type":"integer"},"label":{"type":"string"}},"required":["value","label"]}},"meta":{"type":"object"}},"required":["name","uriKey","type","ranges","meta"]}'],
+            'actions' => ['actions', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string"},"target":{"type":"string","enum":["search","resources","none"]},'.$fields.',"destructive":{"type":"boolean","description":"True when the action is declared with destructive(); a hint for clients, the endpoint runs the action the same way"},"confirm":{"type":["string","null"],"description":"The text set with confirm(), for clients to show before they run the action; null without one"},"authorized":{"type":"boolean","description":"True when the user passes the abilities that the action route checks before it reads the request"}},"required":["name","uriKey","target","fields","meta","destructive","confirm","authorized"]}'],
+            'metrics' => ['metrics', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string"},"type":{"type":"string","description":"The type of the result, given again as data.type in the response of the metric"},"ranges":{"type":"array","description":"The values that the range key of the request accepts; the first one applies when the request sends none","items":{"type":"object","properties":{"value":{"type":"integer"},"label":{"type":"string"}},"required":["value","label"]}},"meta":{"type":"object"},"authorized":{"type":"boolean","description":"True when the user passes the abilities that the metric route checks before it reads the request"}},"required":["name","uriKey","type","ranges","meta","authorized"]}'],
             'instructions' => ['instructions', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string"},'.$fields.',"text":{"type":"boolean","description":"Can be sent with search.text on this resource"}},"required":["name","uriKey","fields","meta","text"]}'],
             'scopes' => ['scopes', '{"type":"object","properties":{"name":{"type":"string"},'.$fields.'},"required":["name","fields","meta"]}'],
         ];

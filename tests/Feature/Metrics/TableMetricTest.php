@@ -334,6 +334,6 @@ class TableMetricTest extends TableTestCase
 
         $this->getJson('/metric-orders')
             ->assertOk()
-            ->assertJsonPath('data.metrics', [['name' => 'Top Customers', 'uriKey' => 'top-customers', 'type' => 'table', 'ranges' => [['value' => 30, 'label' => '30 days'], ['value' => 365, 'label' => '365 days']], 'meta' => []]]);
+            ->assertJsonPath('data.metrics', [['name' => 'Top Customers', 'uriKey' => 'top-customers', 'type' => 'table', 'ranges' => [['value' => 30, 'label' => '30 days'], ['value' => 365, 'label' => '365 days']], 'meta' => [], 'authorized' => true]]);
     }
 }
