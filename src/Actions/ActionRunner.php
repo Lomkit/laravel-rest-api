@@ -51,10 +51,10 @@ final readonly class ActionRunner
     public function through(ActionRows $rows): int
     {
         if (! $this->action->atomic) {
-            return $rows->each($this->run(...));
+            return $this->operate($rows);
         }
 
-        return $this->connection->transaction(fn (): int => $rows->each($this->run(...)));
+        return $this->connection->transaction(fn (): int => $this->operate($rows));
     }
 
     /** @param Collection<array-key, Model> $models */
@@ -74,6 +74,19 @@ final readonly class ActionRunner
     public function finish(): ?string
     {
         return $this->batch?->dispatch()->id;
+    }
+
+    private function operate(ActionRows $rows): int
+    {
+        $resource = $this->action->resource;
+
+        $resource->operating($this->action, $this->fields);
+
+        $impacted = $rows->each($this->run(...));
+
+        $resource->operated($this->action, $this->fields, $impacted);
+
+        return $impacted;
     }
 
     /** @param Collection<array-key, Model> $models */

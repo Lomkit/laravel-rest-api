@@ -43,19 +43,19 @@ class DeletionDenialsTest extends PackageTestCase
         $this->app->make(ExceptionHandler::class)->renderable(new DenialsRenderer);
     }
 
-    /** @return array<string, array{string, string, ?string, string, string, string}> */
+    /** @return array<string, array{string, string, ?string, string, string}> */
     public static function endpoints(): array
     {
         return [
-            'destroy' => ['DELETE', '/tracing-documents', null, 'delete', 'beforeDestroy', ' and documents.deleted_at is null'],
-            'restore' => ['POST', '/tracing-documents/restore', self::TRASHED, 'restore', 'beforeRestore', ''],
-            'force destroy' => ['DELETE', '/tracing-documents/force', self::TRASHED, 'forceDelete', 'beforeForceDestroy', ''],
+            'destroy' => ['DELETE', '/tracing-documents', null, 'delete', ' and documents.deleted_at is null'],
+            'restore' => ['POST', '/tracing-documents/restore', self::TRASHED, 'restore', ''],
+            'force destroy' => ['DELETE', '/tracing-documents/force', self::TRASHED, 'forceDelete', ''],
         ];
     }
 
     #[Test]
     #[DataProvider('endpoints')]
-    public function it_checks_every_row_before_refusing(string $method, string $uri, ?string $deletedAt, string $ability, string $before, string $scope): void
+    public function it_checks_every_row_before_refusing(string $method, string $uri, ?string $deletedAt, string $ability, string $scope): void
     {
         $this->seedDocuments($deletedAt, $deletedAt, $deletedAt);
         DeletionTrace::$denials = [2 => 'Budget is locked.', 3 => 'Charter is locked.'];
@@ -70,7 +70,7 @@ class DeletionDenialsTest extends PackageTestCase
                 ['path' => 'resources.2', 'ability' => $ability, 'key' => 3, 'message' => 'Charter is locked.'],
             ],
         ]);
-        $this->assertSame(['sql select * from documents where documents.id in (1, 2, 3)'.$scope, $before, "policy {$ability} 1", "policy {$ability} 2", "policy {$ability} 3"], DeletionTrace::$lines);
+        $this->assertSame(['sql select * from documents where documents.id in (1, 2, 3)'.$scope, "policy {$ability} 1", "policy {$ability} 2", "policy {$ability} 3"], DeletionTrace::$lines);
         $this->assertSame([[1, $deletedAt], [2, $deletedAt], [3, $deletedAt]], $this->rows());
     }
 
@@ -89,7 +89,7 @@ class DeletionDenialsTest extends PackageTestCase
                 ['path' => 'resources.2', 'ability' => 'delete', 'key' => 2, 'message' => 'Budget is locked.'],
             ],
         ]);
-        $this->assertSame(['beforeDestroy', 'policy delete 3', 'policy delete 1', 'policy delete 2'], DeletionTrace::$lines);
+        $this->assertSame(['policy delete 3', 'policy delete 1', 'policy delete 2'], DeletionTrace::$lines);
     }
 
     #[Test]
@@ -104,8 +104,8 @@ class DeletionDenialsTest extends PackageTestCase
             ->assertJsonPath('message', 'This action is unauthorized.')
             ->assertJsonCount(50, 'denials')
             ->assertJsonPath('denials.49', ['path' => 'resources.49', 'ability' => 'delete', 'key' => 50, 'message' => 'This action is unauthorized.']);
-        $this->assertCount(52, DeletionTrace::$lines);
-        $this->assertSame('policy delete 51', DeletionTrace::$lines[51]);
+        $this->assertCount(51, DeletionTrace::$lines);
+        $this->assertSame('policy delete 51', DeletionTrace::$lines[50]);
         $this->assertSame(51, Document::query()->count());
     }
 }

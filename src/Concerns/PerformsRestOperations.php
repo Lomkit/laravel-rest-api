@@ -33,10 +33,14 @@ trait PerformsRestOperations
 
         $request->context()->authorizer()->ensurePlanned(Check::onClass($resource, 'viewAny'));
 
-        $this->beforeDetails($request);
+        $resource->describing();
+
+        $details = $resource->jsonSerialize();
+
+        $resource->described($details);
 
         return [
-            'data' => $resource->jsonSerialize(),
+            'data' => $details,
         ];
     }
 
@@ -44,14 +48,14 @@ trait PerformsRestOperations
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $this->beforeSearch($request);
+        $resource->searching($request->searchContext());
 
         $text = $request->context()->text($resource);
 
         if ($text->usesEngine()) {
             $page = (new EngineSearch($resource, $text, $request->payload()))->paginate();
 
-            $this->afterSearch($request);
+            $resource->searched($page->rows);
 
             return $this->buildResponse($page->plan, $page->rows);
         }
@@ -59,9 +63,11 @@ trait PerformsRestOperations
         $plan = SearchPlanner::paged($resource, $request->payload(), $text);
         $query = QueryBuilderFactory::make($resource)->search($plan);
 
-        $this->afterSearch($request);
+        $rows = $text->run(fn () => $resource->paginate($query, $plan->limit->perPage(), $plan->limit->page()));
 
-        return $this->buildResponse($plan, $text->run(fn () => $resource->paginate($query, $plan->limit->perPage(), $plan->limit->page())));
+        $resource->searched($rows);
+
+        return $this->buildResponse($plan, $rows);
     }
 
     /** @param LengthAwarePaginator<int, Model>|Collection<int, Model> $rows */
@@ -76,26 +82,14 @@ trait PerformsRestOperations
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $this->beforeMutate($request);
-
-        $response = MutateResponse::of($request, $resource);
-
-        $this->afterMutate($request);
-
-        return $response;
+        return MutateResponse::of($request, $resource);
     }
 
     public function operate(OperateRequest $request): OperateResponse
     {
         $request->resource($request->context()->resource(static::resourceClass()));
 
-        $this->beforeOperate($request);
-
-        $response = $request->payload()->action->handleRequest($request);
-
-        $this->afterOperate($request);
-
-        return $response;
+        return $request->payload()->action->handleRequest($request);
     }
 
     public function batch(BatchRequest $request): BatchProgress
@@ -109,9 +103,7 @@ trait PerformsRestOperations
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $this->beforeDestroy($request);
-
-        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'delete')->write(function (Model $model) use ($request, $resource): void {
+        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'delete')->write($resource->destroyingAll(...), function (Model $model) use ($request, $resource): void {
             $resource->destroying($request, $model);
 
             $resource->performDelete($request, $model);
@@ -119,9 +111,7 @@ trait PerformsRestOperations
             $request->context()->authorizer()->forget($model);
 
             $resource->destroyed($request, $model);
-        });
-
-        $this->afterDestroy($request);
+        }, $resource->destroyedAll(...));
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }
@@ -130,9 +120,7 @@ trait PerformsRestOperations
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $this->beforeRestore($request);
-
-        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'restore')->write(function (Model $model) use ($request, $resource): void {
+        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'restore')->write($resource->restoringAll(...), function (Model $model) use ($request, $resource): void {
             $resource->restoring($request, $model);
 
             $resource->performRestore($request, $model);
@@ -140,9 +128,7 @@ trait PerformsRestOperations
             $request->context()->authorizer()->forget($model);
 
             $resource->restored($request, $model);
-        });
-
-        $this->afterRestore($request);
+        }, $resource->restoredAll(...));
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }
@@ -151,9 +137,7 @@ trait PerformsRestOperations
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $this->beforeForceDestroy($request);
-
-        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'forceDelete')->write(function (Model $model) use ($request, $resource): void {
+        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'forceDelete')->write($resource->forceDestroyingAll(...), function (Model $model) use ($request, $resource): void {
             $resource->forceDestroying($request, $model);
 
             $resource->performForceDelete($request, $model);
@@ -161,9 +145,7 @@ trait PerformsRestOperations
             $request->context()->authorizer()->forget($model);
 
             $resource->forceDestroyed($request, $model);
-        });
-
-        $this->afterForceDestroy($request);
+        }, $resource->forceDestroyedAll(...));
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }

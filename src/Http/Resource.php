@@ -11,6 +11,7 @@ use Lomkit\Rest\Concerns\PerformsQueries;
 use Lomkit\Rest\Concerns\Resource\Contextual;
 use Lomkit\Rest\Concerns\Resource\DeclaresFields;
 use Lomkit\Rest\Concerns\Resource\DeclaresScopes;
+use Lomkit\Rest\Concerns\Resource\HasEndpointEvents;
 use Lomkit\Rest\Concerns\Resource\HasResourceHooks;
 use Lomkit\Rest\Concerns\Resource\Paginable;
 use Lomkit\Rest\Concerns\Resource\Relationable;
@@ -31,6 +32,7 @@ class Resource implements \JsonSerializable
     use Contextual;
     use DeclaresFields;
     use DeclaresScopes;
+    use HasEndpointEvents;
     use HasResourceHooks;
     use Instructionable;
     use Paginable;
@@ -97,6 +99,7 @@ class Resource implements \JsonSerializable
         return $this->context()->config()->cacheEnabled;
     }
 
+    /** @return array<string, mixed> */
     #[\Override]
     public function jsonSerialize(): mixed
     {

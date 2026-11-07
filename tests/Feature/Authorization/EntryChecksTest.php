@@ -59,17 +59,17 @@ class EntryChecksTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_runs_the_details_hook_once_listing_is_allowed(): void
+    public function it_runs_describing_once_listing_is_allowed(): void
     {
         Rest::resource('hooked-tickets', HookedTicketController::class)->register();
 
         $this->getJson('/hooked-tickets')->assertOk();
 
-        $this->assertSame(['viewAny', 'beforeDetails'], $this->tickets->calls);
+        $this->assertSame(['viewAny', 'describing'], $this->tickets->calls);
     }
 
     #[Test]
-    public function it_does_not_run_the_details_hook_for_a_user_who_cannot_list(): void
+    public function it_does_not_run_describing_for_a_user_who_cannot_list(): void
     {
         Rest::resource('hooked-tickets', HookedTicketController::class)->register();
         $this->tickets->answers['viewAny'] = Response::deny('Tickets are not listed.');

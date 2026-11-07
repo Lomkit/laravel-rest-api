@@ -45,30 +45,33 @@ class DeletionTransactionTest extends PackageTestCase
             ->register();
     }
 
-    /** @return array<string, array{string, string, ?string, list<array{int, ?string}>, list<string>, list<string>, list<string>, string}> */
+    /** @return array<string, array{string, string, ?string, list<array{int, ?string}>, list<string>, list<string>, list<string>, string, string}> */
     public static function endpoints(): array
     {
         return [
             'destroy' => [
                 'DELETE', '/tracing-documents', null, [[1, self::NOW], [2, self::NOW], [3, self::NOW]],
-                ['sql select * from documents where documents.id in (1, 2, 3) and documents.deleted_at is null', 'beforeDestroy', 'policy delete 1', 'policy delete 2', 'policy delete 3'],
+                ['sql select * from documents where documents.id in (1, 2, 3) and documents.deleted_at is null', 'policy delete 1', 'policy delete 2', 'policy delete 3'],
                 ['destroying #', 'performDelete #', 'model deleting #', self::SOFT_DELETE, 'model deleted #', 'destroyed #'],
                 ['committed deleted #'],
-                'afterDestroy',
+                'destroyingAll',
+                'destroyedAll',
             ],
             'restore' => [
                 'POST', '/tracing-documents/restore', self::TRASHED, [[1, null], [2, null], [3, null]],
-                ['sql select * from documents where documents.id in (1, 2, 3)', 'beforeRestore', 'policy restore 1', 'policy restore 2', 'policy restore 3'],
+                ['sql select * from documents where documents.id in (1, 2, 3)', 'policy restore 1', 'policy restore 2', 'policy restore 3'],
                 ['restoring #', 'performRestore #', 'model restoring #', self::SOFT_DELETE, 'model restored #', 'restored #'],
                 ['committed restored #'],
-                'afterRestore',
+                'restoringAll',
+                'restoredAll',
             ],
             'force destroy' => [
                 'DELETE', '/tracing-documents/force', self::TRASHED, [],
-                ['sql select * from documents where documents.id in (1, 2, 3)', 'beforeForceDestroy', 'policy forceDelete 1', 'policy forceDelete 2', 'policy forceDelete 3'],
+                ['sql select * from documents where documents.id in (1, 2, 3)', 'policy forceDelete 1', 'policy forceDelete 2', 'policy forceDelete 3'],
                 ['forceDestroying #', 'performForceDelete #', 'model forceDeleting #', 'model deleting #', 'sql delete from documents where id = ?', 'model deleted #', 'model forceDeleted #', 'forceDestroyed #'],
                 ['committed deleted #', 'committed forceDeleted #'],
-                'afterForceDestroy',
+                'forceDestroyingAll',
+                'forceDestroyedAll',
             ],
         ];
     }
@@ -81,7 +84,7 @@ class DeletionTransactionTest extends PackageTestCase
      */
     #[Test]
     #[DataProvider('endpoints')]
-    public function it_writes_every_row_in_one_transaction(string $method, string $uri, ?string $deletedAt, array $written, array $checks, array $steps, array $committed, string $after): void
+    public function it_writes_every_row_in_one_transaction(string $method, string $uri, ?string $deletedAt, array $written, array $checks, array $steps, array $committed, string $before, string $after): void
     {
         $this->seedDocuments($deletedAt, $deletedAt, $deletedAt);
         DeletionTrace::listen();
@@ -92,10 +95,11 @@ class DeletionTransactionTest extends PackageTestCase
         $this->assertSame([
             ...$checks,
             'begin level 2',
+            "{$before} 1,2,3",
             ...DeletionTrace::forRows($steps, 1, 2, 3),
+            "{$after} 1,2,3",
             ...DeletionTrace::forRows($committed, 1, 2, 3),
             'commit level 1',
-            $after,
         ], DeletionTrace::$lines);
         $this->assertSame($written, $this->rows());
     }
@@ -113,6 +117,12 @@ class DeletionTransactionTest extends PackageTestCase
             'forceDestroying' => ['DELETE', '/tracing-documents/force', self::TRASHED, 'forceDestroying 2'],
             'performForceDelete' => ['DELETE', '/tracing-documents/force', self::TRASHED, 'performForceDelete 2'],
             'forceDestroyed' => ['DELETE', '/tracing-documents/force', self::TRASHED, 'forceDestroyed 2'],
+            'destroyingAll' => ['DELETE', '/tracing-documents', null, 'destroyingAll 1,2,3'],
+            'destroyedAll' => ['DELETE', '/tracing-documents', null, 'destroyedAll 1,2,3'],
+            'restoringAll' => ['POST', '/tracing-documents/restore', self::TRASHED, 'restoringAll 1,2,3'],
+            'restoredAll' => ['POST', '/tracing-documents/restore', self::TRASHED, 'restoredAll 1,2,3'],
+            'forceDestroyingAll' => ['DELETE', '/tracing-documents/force', self::TRASHED, 'forceDestroyingAll 1,2,3'],
+            'forceDestroyedAll' => ['DELETE', '/tracing-documents/force', self::TRASHED, 'forceDestroyedAll 1,2,3'],
         ];
     }
 
@@ -128,7 +138,7 @@ class DeletionTransactionTest extends PackageTestCase
 
         $response->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
         $this->assertSame([$failure, 'rollback level 1'], array_slice(DeletionTrace::$lines, -2));
-        $this->assertSame([], preg_grep('/^(committed |commit |after)/', DeletionTrace::$lines));
+        $this->assertSame([], preg_grep('/^(committed |commit )/', DeletionTrace::$lines));
         $this->assertSame([[1, $deletedAt], [2, $deletedAt], [3, $deletedAt]], $this->rows());
     }
 }

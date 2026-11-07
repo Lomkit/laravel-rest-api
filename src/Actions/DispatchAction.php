@@ -14,6 +14,7 @@ use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Query\QueryBuilderFactory;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
+use Lomkit\Rest\Search\SearchContext;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Validation\KeysGrammar;
 
@@ -51,7 +52,7 @@ final readonly class DispatchAction
         $payload = $this->request->payload();
 
         return match ($this->action->target) {
-            ActionTarget::Search => EngineTargets::of($this->request, $this->action) ?? $this->search($payload->search()),
+            ActionTarget::Search => $this->search($payload->search()),
             ActionTarget::Resources => KeyChunks::of($this->query(SearchNode::empty()), $this->id(), $payload->keys()->keys, $this->action->chunkCount),
             ActionTarget::None => new NoRows,
         };
@@ -59,6 +60,14 @@ final readonly class DispatchAction
 
     private function search(SearchNode $search): ActionRows
     {
+        $this->request->resource->searching(SearchContext::of($search));
+
+        $engine = EngineTargets::of($this->request, $this->action);
+
+        if ($engine !== null) {
+            return $engine;
+        }
+
         $query = $this->query($search);
         $cap = new RowCap($this->action->maxResources);
 
