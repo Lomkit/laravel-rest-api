@@ -48,7 +48,7 @@ final readonly class RowBatch
                 $after($this->rows);
             });
 
-        $this->resource->context()->events()->dispatch(new $written($this->resource, $this->rows));
+        $this->resource->context()->events()->dispatch($written::of($this->resource, $this->rows));
 
         return $this->rows;
     }

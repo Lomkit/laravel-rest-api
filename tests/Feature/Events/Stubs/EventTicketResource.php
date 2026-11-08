@@ -20,6 +20,7 @@ class EventTicketResource extends TicketResource
     {
         return [
             CloseEventTickets::make(),
+            AnnotatedCloseEventTickets::make(),
             AtomicCloseEventTickets::make(),
             TransactionlessCloseEventTickets::make()->withoutTransaction(),
             QueuedCloseEventTickets::make(),

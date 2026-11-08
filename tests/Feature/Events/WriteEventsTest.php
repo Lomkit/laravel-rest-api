@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Events;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Actions\QueuedAction;
 use Lomkit\Rest\Events\ActionOperated;
 use Lomkit\Rest\Events\ResourceDestroyed;
@@ -13,17 +14,22 @@ use Lomkit\Rest\Events\ResourceMutated;
 use Lomkit\Rest\Events\ResourceRestored;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
+use Lomkit\Rest\Tests\Feature\Events\Stubs\AnnotatedCloseEventTickets;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\AtomicCloseEventTickets;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\CloseEventTickets;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventLog;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventTicketController;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\EventTicketResource;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\QueuedCloseEventTickets;
+use Lomkit\Rest\Tests\Feature\Events\Stubs\QueuedWriteListener;
 use Lomkit\Rest\Tests\Feature\Events\Stubs\TransactionlessCloseEventTickets;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
+use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+
+use function Orchestra\Testbench\default_migration_path;
 
 class WriteEventsTest extends HelpdeskTestCase
 {
@@ -38,11 +44,20 @@ class WriteEventsTest extends HelpdeskTestCase
     private array $events = [];
 
     #[\Override]
+    protected function defineDatabaseMigrations(): void
+    {
+        parent::defineDatabaseMigrations();
+
+        $this->loadMigrationsFrom(default_migration_path().'/0001_01_01_000002_testbench_create_jobs_table.php');
+    }
+
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
 
         EventLog::reset();
+        QueuedWriteListener::$events = [];
         Rest::resource('event-tickets', EventTicketController::class)->register();
         $this->ids = array_map(fn (Ticket $ticket): int => $ticket->getKey(), $this->seedTickets());
         $this->actingAs(new GenericUser(['id' => TicketPolicy::LEAD]));
@@ -53,11 +68,11 @@ class WriteEventsTest extends HelpdeskTestCase
         });
         Event::listen(ResourceDestroyed::class, function (ResourceDestroyed $event): void {
             $this->events[] = $event;
-            EventLog::record('ResourceDestroyed '.implode(',', $event->models->modelKeys()));
+            EventLog::record('ResourceDestroyed '.implode(',', $event->keys));
         });
         Event::listen(ActionOperated::class, function (ActionOperated $event): void {
             $this->events[] = $event;
-            EventLog::record("ActionOperated {$event->action->uriKey()} {$event->impacted}");
+            EventLog::record("ActionOperated {$event->uriKey} {$event->impacted}");
         });
     }
 
@@ -81,11 +96,14 @@ class WriteEventsTest extends HelpdeskTestCase
         ], EventLog::$lines);
         $this->assertCount(1, $this->events);
         $this->assertInstanceOf(ResourceMutated::class, $this->events[0]);
-        $this->assertInstanceOf(EventTicketResource::class, $this->events[0]->resource);
+        $this->assertSame([
+            'resource' => EventTicketResource::class,
+            'operations' => [['operation' => 'update', 'key' => $this->ids['Printer toner']]],
+        ], get_object_vars($this->events[0]));
     }
 
     #[Test]
-    public function it_dispatches_resource_destroyed_with_the_deleted_models_once_the_deletion_is_committed(): void
+    public function it_dispatches_resource_destroyed_with_the_deleted_keys_once_the_deletion_is_committed(): void
     {
         $response = $this->deleteJson('/event-tickets', ['resources' => [$this->ids['Laptop setup'], $this->ids['Password reset']]]);
 
@@ -97,8 +115,11 @@ class WriteEventsTest extends HelpdeskTestCase
         ], array_slice(EventLog::$lines, -3));
         $this->assertCount(1, $this->events);
         $this->assertInstanceOf(ResourceDestroyed::class, $this->events[0]);
-        $this->assertInstanceOf(EventTicketResource::class, $this->events[0]->resource);
-        $this->assertFalse($this->events[0]->models[0]->exists);
+        $this->assertSame([
+            'resource' => EventTicketResource::class,
+            'model' => Ticket::class,
+            'keys' => [$this->ids['Laptop setup'], $this->ids['Password reset']],
+        ], get_object_vars($this->events[0]));
     }
 
     /** @return array<string, array{string, class-string, list<string>}> */
@@ -124,13 +145,27 @@ class WriteEventsTest extends HelpdeskTestCase
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame($tail, array_slice(EventLog::$lines, -5));
         $this->assertCount(1, $this->events);
-        $event = $this->events[0];
-        $this->assertInstanceOf(ActionOperated::class, $event);
-        $this->assertInstanceOf(EventTicketResource::class, $event->resource);
-        $this->assertInstanceOf($class, $event->action);
-        $this->assertSame(EventLog::$payloads[1], $event->fields);
-        $this->assertSame(2, $event->impacted);
-        $this->assertNull($event->batch);
+        $this->assertInstanceOf(ActionOperated::class, $this->events[0]);
+        $this->assertSame([
+            'resource' => EventTicketResource::class,
+            'action' => $class,
+            'uriKey' => $action,
+            'fields' => [],
+            'impacted' => 2,
+            'batch' => null,
+        ], get_object_vars($this->events[0]));
+    }
+
+    #[Test]
+    public function it_dispatches_action_operated_with_the_values_of_the_fields(): void
+    {
+        $response = $this->postJson('/event-tickets/actions/annotated-close-event-tickets', ['search' => self::OPEN, 'fields' => [['name' => 'reason', 'value' => 'Duplicate']]]);
+
+        $response->assertOk();
+        $this->assertCount(1, $this->events);
+        $this->assertInstanceOf(ActionOperated::class, $this->events[0]);
+        $this->assertSame(['reason' => 'Duplicate', 'minutes' => 30], $this->events[0]->fields);
+        $this->assertSame(EventLog::$payloads[1]->toArray(), $this->events[0]->fields);
     }
 
     #[Test]
@@ -143,8 +178,47 @@ class WriteEventsTest extends HelpdeskTestCase
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame(['operated queued-close-event-tickets 2', 'ActionOperated queued-close-event-tickets 2', 'respond 2'], array_slice(EventLog::$lines, -3));
         $this->assertCount(1, $this->events);
-        $this->assertInstanceOf(QueuedCloseEventTickets::class, $this->events[0]->action);
+        $this->assertInstanceOf(ActionOperated::class, $this->events[0]);
+        $this->assertSame([QueuedCloseEventTickets::class, 'queued-close-event-tickets', 2], [$this->events[0]->action, $this->events[0]->uriKey, $this->events[0]->impacted]);
         Queue::assertPushed(QueuedAction::class, 2);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function writes(): array
+    {
+        return [
+            'mutate' => ['mutate'],
+            'destroy' => ['destroy'],
+            'operate' => ['operate'],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('writes')]
+    public function it_dispatches_an_event_that_serializes(string $write): void
+    {
+        $this->write($write)->assertOk();
+
+        $this->assertCount(1, $this->events);
+        $this->assertSame($this->payload($write), get_object_vars(unserialize(serialize($this->events[0]))));
+    }
+
+    #[Test]
+    #[DataProvider('writes')]
+    #[WithConfig('queue.default', 'database')]
+    public function it_hands_the_event_to_a_queued_listener_in_the_worker(string $write): void
+    {
+        Event::listen(self::EVENTS, QueuedWriteListener::class);
+
+        $this->write($write)->assertOk();
+        $this->assertSame([], QueuedWriteListener::$events);
+        $this->assertDatabaseCount('jobs', 1);
+        $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
+
+        $this->assertDatabaseCount('jobs', 0);
+        $this->assertCount(1, QueuedWriteListener::$events);
+        $this->assertNotSame($this->events[0], QueuedWriteListener::$events[0]);
+        $this->assertSame($this->payload($write), get_object_vars(QueuedWriteListener::$events[0]));
     }
 
     /** @return array<string, array{string, string, string}> */
@@ -191,5 +265,33 @@ class WriteEventsTest extends HelpdeskTestCase
         foreach (self::EVENTS as $event) {
             Event::assertNotDispatched($event);
         }
+    }
+
+    private function write(string $write): TestResponse
+    {
+        return match ($write) {
+            'mutate' => $this->postJson('/event-tickets/mutate', ['mutate' => [
+                ['operation' => 'update', 'key' => $this->ids['Printer toner'], 'relations' => ['team' => ['operation' => 'attach', 'key' => $this->supportTeam()]]],
+            ]]),
+            'destroy' => $this->deleteJson('/event-tickets', ['resources' => [$this->ids['Laptop setup'], $this->ids['Password reset']]]),
+            default => $this->postJson('/event-tickets/actions/annotated-close-event-tickets', ['search' => self::OPEN, 'fields' => [['name' => 'reason', 'value' => 'Duplicate']]]),
+        };
+    }
+
+    /** @return array<string, mixed> */
+    private function payload(string $write): array
+    {
+        return match ($write) {
+            'mutate' => ['resource' => EventTicketResource::class, 'operations' => [
+                ['operation' => 'update', 'key' => $this->ids['Printer toner'], 'relations' => ['team' => ['operation' => 'attach', 'key' => $this->supportTeam()]]],
+            ]],
+            'destroy' => ['resource' => EventTicketResource::class, 'model' => Ticket::class, 'keys' => [$this->ids['Laptop setup'], $this->ids['Password reset']]],
+            default => ['resource' => EventTicketResource::class, 'action' => AnnotatedCloseEventTickets::class, 'uriKey' => 'annotated-close-event-tickets', 'fields' => ['reason' => 'Duplicate', 'minutes' => 30], 'impacted' => 2, 'batch' => null],
+        };
+    }
+
+    private function supportTeam(): int
+    {
+        return Ticket::query()->findOrFail($this->ids['Password reset'])->team_id;
     }
 }

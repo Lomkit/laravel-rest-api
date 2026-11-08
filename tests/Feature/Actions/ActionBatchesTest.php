@@ -84,11 +84,14 @@ class ActionBatchesTest extends HelpdeskTestCase
         $this->postJson('/chunked-tickets/actions/batched-close-open-tickets')->assertOk();
 
         Event::assertDispatchedTimes(ActionOperated::class, 1);
-        Event::assertDispatched(ActionOperated::class, fn (ActionOperated $event): bool => $event->resource instanceof ChunkedTicketResource
-            && $event->action instanceof BatchedCloseOpenTickets
-            && $event->impacted === 7
-            && $event->batch === self::BATCH
-            && Bus::findBatch(self::BATCH)?->totalJobs === 4);
+        Event::assertDispatched(ActionOperated::class, fn (ActionOperated $event): bool => get_object_vars($event) === [
+            'resource' => ChunkedTicketResource::class,
+            'action' => BatchedCloseOpenTickets::class,
+            'uriKey' => 'batched-close-open-tickets',
+            'fields' => [],
+            'impacted' => 7,
+            'batch' => self::BATCH,
+        ] && Bus::findBatch(self::BATCH)?->totalJobs === 4);
     }
 
     #[Test]

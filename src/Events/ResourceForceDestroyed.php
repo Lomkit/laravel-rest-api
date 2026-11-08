@@ -9,9 +9,20 @@ use Lomkit\Rest\Http\Resource;
 
 final readonly class ResourceForceDestroyed implements ShouldDispatchAfterCommit
 {
-    /** @param Collection<int, Model> $models */
+    /**
+     * @param  class-string<Resource>  $resource
+     * @param  class-string<Model>  $model
+     * @param  list<int|string>  $keys
+     */
     public function __construct(
-        public Resource $resource,
-        public Collection $models,
+        public string $resource,
+        public string $model,
+        public array $keys,
     ) {}
+
+    /** @param Collection<int, Model> $models */
+    public static function of(Resource $resource, Collection $models): self
+    {
+        return new self($resource::class, $resource::modelClass(), array_values($models->modelKeys()));
+    }
 }

@@ -629,26 +629,27 @@ The controller hooks are removed. The resource has endpoint events instead: publ
 
 Laravel events:
 
-- After each write, the package dispatches a Laravel event through the event dispatcher, for every resource. Listen to it with `Event::listen()` in place of a resource event that only reports the write:
+- After each write, the package dispatches a Laravel event through the event dispatcher, for every resource. Listen to it with `Event::listen()` in place of a resource event that only reports the write. `resource` is the class of the resource:
 
   | Event (`Lomkit\Rest\Events`) | Endpoint | Properties |
   |---|---|---|
-  | `ResourceMutated` | `mutate` | `resource`, `operations` (the list that `mutatedAll()` receives) |
-  | `ResourceDestroyed`, `ResourceRestored`, `ResourceForceDestroyed` | `destroy`, `restore`, `forceDestroy` | `resource`, `models` (the `Collection` that `destroyedAll()` and its twins receive) |
-  | `ActionOperated` | `operate` | `resource`, `action`, `fields` (`ActionFields`), `impacted`, `batch` (the id of the batch, or `null`) |
+  | `ResourceMutated` | `mutate` | `resource`, `operations` (the `operations` of the response, as arrays) |
+  | `ResourceDestroyed`, `ResourceForceDestroyed` | `destroy`, `forceDestroy` | `resource`, `model` (the class of the model), `keys` (the keys of the rows, in the order of `resources`) |
+  | `ResourceRestored` | `restore` | `resource`, `models` (the `Collection` that `restoredAll()` receives) |
+  | `ActionOperated` | `operate` | `resource`, `action` (the class of the action), `uriKey`, `fields` (the values of the fields, by name), `impacted`, `batch` (the id of the batch, or `null`) |
 
 - The event is dispatched once the write is committed, once per request: never for a write that rolls back, nor for an attempt that a deadlock runs again. The events implement `ShouldDispatchAfterCommit`: inside a transaction of your application, they wait for its commit, and a rollback drops them. A listener cannot refuse or change the write: refuse it in the resource events.
 - `ActionOperated` is dispatched once the run ends without error: after the last chunk, after the commit of `ActionTransaction::Whole`, and, for a queued action, in the request once the jobs are queued and the batch is dispatched. A run that throws dispatches nothing, even when earlier chunks stay committed. The queued jobs dispatch no event. Searches, details and metrics dispatch none.
-- A listener filters by resource: `$event->resource instanceof TicketResource`. Log every deletion:
+- A listener filters by resource: `$event->resource === TicketResource::class`. Log every deletion:
 
   ```php
   use Illuminate\Support\Facades\Event;
   use Lomkit\Rest\Events\ResourceDestroyed;
 
-  Event::listen(ResourceDestroyed::class, fn (ResourceDestroyed $event) => ActivityLog::record($event->resource::class, 'destroyed', $event->models->modelKeys()));
+  Event::listen(ResourceDestroyed::class, fn (ResourceDestroyed $event) => ActivityLog::record($event->resource, 'destroyed', $event->keys));
   ```
 
-- The events hold the resource, which does not serialize: a queued listener (`ShouldQueue`) cannot take them. Read what you need in a listener and dispatch a job with it.
+- A listener may implement `ShouldQueue`. The events serialize: `ResourceRestored` uses `SerializesModels`, so the worker reloads its rows. `ResourceDestroyed` and `ResourceForceDestroyed` carry keys, since a deleted row may no longer load.
 - A resource method that already dispatches its own event for these writes now runs next to the package event: remove one of the two.
 
 Hooks of each row and the perimeter:

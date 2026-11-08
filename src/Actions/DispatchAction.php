@@ -45,7 +45,7 @@ final readonly class DispatchAction
         $impacted = $runner->through($rows);
         $batch = $runner->finish();
 
-        $this->request->context()->events()->dispatch(new ActionOperated($this->request->resource, $this->action, $this->fields, $impacted, $batch));
+        $this->request->context()->events()->dispatch(ActionOperated::of($this->request->resource, $this->action, $this->fields, $impacted, $batch));
 
         return new OperateResponse($impacted, null, $batch);
     }

@@ -90,6 +90,12 @@ final class OperationEntry implements JsonSerializable
     #[\Override]
     public function jsonSerialize(): array
     {
+        return $this->toArray();
+    }
+
+    /** @return array<string, mixed> */
+    public function toArray(): array
+    {
         $entry = ['operation' => $this->operation->value];
 
         if ($this->type !== null) {
@@ -105,7 +111,7 @@ final class OperationEntry implements JsonSerializable
         $entry['relations'] = [];
 
         foreach ($this->relations as $name => $entries) {
-            $entry['relations'][$name] = $this->lists[$name] ?? true ? $entries : $entries[0] ?? null;
+            $entry['relations'][$name] = $this->lists[$name] ?? true ? array_map(fn (self $child): array => $child->toArray(), $entries) : ($entries[0] ?? null)?->toArray();
         }
 
         return $entry;
