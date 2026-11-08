@@ -4674,6 +4674,10 @@
                                                 "null"
                                             ],
                                             "description": "The text set with confirm(), for clients to show before they run the action; null without one"
+                                        },
+                                        "authorized": {
+                                            "type": "boolean",
+                                            "description": "True when the user passes the abilities that the action route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -4683,7 +4687,8 @@
                                         "fields",
                                         "meta",
                                         "destructive",
-                                        "confirm"
+                                        "confirm",
+                                        "authorized"
                                     ]
                                 }
                             },
@@ -4723,6 +4728,10 @@
                                         },
                                         "meta": {
                                             "type": "object"
+                                        },
+                                        "authorized": {
+                                            "type": "boolean",
+                                            "description": "True when the user passes the abilities that the metric route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -4730,7 +4739,8 @@
                                         "uriKey",
                                         "type",
                                         "ranges",
-                                        "meta"
+                                        "meta",
+                                        "authorized"
                                     ]
                                 }
                             },
@@ -5395,6 +5405,28 @@
                                         "forceDelete"
                                     ]
                                 }
+                            },
+                            "authorizations": {
+                                "type": "object",
+                                "description": "The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
+                                "additionalProperties": {
+                                    "type": "object",
+                                    "properties": {
+                                        "allowed": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "allowed",
+                                        "message"
+                                    ]
+                                }
                             }
                         },
                         "required": [
@@ -5407,7 +5439,8 @@
                             "relations",
                             "rules",
                             "text",
-                            "gates"
+                            "gates",
+                            "authorizations"
                         ]
                     }
                 },
@@ -6927,6 +6960,10 @@
                                                 "null"
                                             ],
                                             "description": "The text set with confirm(), for clients to show before they run the action; null without one"
+                                        },
+                                        "authorized": {
+                                            "type": "boolean",
+                                            "description": "True when the user passes the abilities that the action route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -6936,7 +6973,8 @@
                                         "fields",
                                         "meta",
                                         "destructive",
-                                        "confirm"
+                                        "confirm",
+                                        "authorized"
                                     ]
                                 }
                             },
@@ -6984,6 +7022,10 @@
                                         },
                                         "meta": {
                                             "type": "object"
+                                        },
+                                        "authorized": {
+                                            "type": "boolean",
+                                            "description": "True when the user passes the abilities that the metric route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -6991,7 +7033,8 @@
                                         "uriKey",
                                         "type",
                                         "ranges",
-                                        "meta"
+                                        "meta",
+                                        "authorized"
                                     ]
                                 }
                             },
@@ -7677,6 +7720,28 @@
                                         "feature"
                                     ]
                                 }
+                            },
+                            "authorizations": {
+                                "type": "object",
+                                "description": "The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
+                                "additionalProperties": {
+                                    "type": "object",
+                                    "properties": {
+                                        "allowed": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "allowed",
+                                        "message"
+                                    ]
+                                }
                             }
                         },
                         "required": [
@@ -7689,7 +7754,8 @@
                             "relations",
                             "rules",
                             "text",
-                            "gates"
+                            "gates",
+                            "authorizations"
                         ]
                     }
                 },
@@ -12051,6 +12117,10 @@
                                                 "null"
                                             ],
                                             "description": "The text set with confirm(), for clients to show before they run the action; null without one"
+                                        },
+                                        "authorized": {
+                                            "type": "boolean",
+                                            "description": "True when the user passes the abilities that the action route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -12060,7 +12130,8 @@
                                         "fields",
                                         "meta",
                                         "destructive",
-                                        "confirm"
+                                        "confirm",
+                                        "authorized"
                                     ]
                                 }
                             },
@@ -12100,6 +12171,10 @@
                                         },
                                         "meta": {
                                             "type": "object"
+                                        },
+                                        "authorized": {
+                                            "type": "boolean",
+                                            "description": "True when the user passes the abilities that the metric route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -12107,7 +12182,8 @@
                                         "uriKey",
                                         "type",
                                         "ranges",
-                                        "meta"
+                                        "meta",
+                                        "authorized"
                                     ]
                                 }
                             },
@@ -12773,6 +12849,28 @@
                                         "forceDelete"
                                     ]
                                 }
+                            },
+                            "authorizations": {
+                                "type": "object",
+                                "description": "The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
+                                "additionalProperties": {
+                                    "type": "object",
+                                    "properties": {
+                                        "allowed": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "allowed",
+                                        "message"
+                                    ]
+                                }
                             }
                         },
                         "required": [
@@ -12785,7 +12883,8 @@
                             "relations",
                             "rules",
                             "text",
-                            "gates"
+                            "gates",
+                            "authorizations"
                         ]
                     }
                 },
