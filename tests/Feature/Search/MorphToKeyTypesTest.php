@@ -110,7 +110,7 @@ class MorphToKeyTypesTest extends PackageTestCase
 
         $response->assertOk()->assertJsonPath('data.*.notes.*.id', [3]);
         $this->assertSame([[
-            'select * from (select notes.id, notes.body, notes.notable_id, notes.notable_type, row_number() over (partition by notes.notable_id order by notes.id desc) as laravel_row from notes where notes.notable_id in (?, ?) and notes.notable_type = ? and (('.self::targets().'))) as laravel_table where laravel_row <= 10 order by laravel_row',
+            'select * from (select notes.id, notes.body, notes.notable_id, notes.notable_type, row_number() over (partition by notes.notable_id order by notes.id desc) as laravel_row from notes where notes.notable_id in (?, ?) and notes.notable_type = ? and (('.self::targets().'))) as laravel_table where laravel_row <= 11 order by laravel_row',
             ['main', 'side', Stage::class, Show::class, true, Stage::class, 'main'],
         ]], $this->readsOf('notes'));
     }
