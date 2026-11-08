@@ -2033,6 +2033,15 @@ The document:
 - has the summaries `Get {Resource} details`, `Search {Resource}`, `Mutate {Resource}`, `Delete {Resource}`, `Restore {Resource}`, `Force delete {Resource}` and `Batch progress of {Resource} actions`, where `{Resource}` is the resource class name without its `Resource` suffix, also used as the tag;
 - holds the responses that the package writes for its operations. Scramble no longer infers the responses of the package routes; it still infers those of the other routes of the application.
 
+Records and read responses:
+
+- `components.schemas` holds the record of each resource that a documented operation reaches, named like the tag (`Post`). It lists the selectable fields with their type, the gates of a row under the gates key, and each relation under its key in the response: the record of its resource or `null` for a to-one relation, a list of records for a to-many relation, with the `pivot` and its selectable pivot fields for a many-to-many relation. A `MorphTo` relation is `oneOf` the `{Resource}WithType` record of each target, which adds the type key (`@type`) with the morph type, with a `discriminator` on that key. The record requires no key, since the `selects` of a search decide which keys a row holds, and the aggregates and include aliases of a search add keys that it does not name.
+- `RestGateAnswer` is the answer to one gate: `allowed` and `message`.
+- A search answers `{Resource}Paginated`: `current_page`, `data`, `from`, `last_page`, `per_page`, `to`, `total` and `meta`, whose gates key holds the `create` answer. `destroy`, `restore` and `forceDestroy` answer `{Resource}Rows`: `data` and `meta`.
+- The body of `destroy`, `restore` and `forceDestroy` requires `resources`: from 1 to `limits.sizes.resources` distinct keys, typed by the `ID` field of the resource. Its request example holds one key: the first value of `examples()` on the `ID` field, else `1` for an integer key, `a` for a string key, `00000000-0000-0000-0000-000000000000` for a UUID key and `00000000000000000000000000` for a ULID key.
+- A resource that has the name of another documented resource, such as a second `TagResource` in another namespace, names its records with its namespace: `App.Rest.Admin.Tag`, `App.Rest.Admin.TagPaginated`.
+- A `Date` field is documented with `format: date`, and the `date` cast of Laravel renders a date and a time (`2026-07-01T00:00:00.000000Z`). Cast the attribute with `date:Y-m-d` so that the response holds the date alone, as the document says. A `DateTime` field is documented with `format: date-time`, which the `datetime` cast renders. A `Json` field is documented as an object: a value that is a list does not match it.
+
 Error responses:
 
 - `components.responses` holds four shared responses: `RestUnauthenticated` (`401`, `{"message"}`), `RestForbidden` (`403`, `{"message"}`, plus the `denials` list when the application registers `DenialsRenderer`, see [Authorization](#authorization)), `RestNotFound` (`404`, `{"message"}`) and `RestValidationFailed` (`422`, `{"message", "errors"}`).

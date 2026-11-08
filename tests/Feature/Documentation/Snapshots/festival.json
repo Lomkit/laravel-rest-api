@@ -876,6 +876,7 @@
                     "Note"
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
@@ -885,7 +886,22 @@
                                         "type": "array",
                                         "items": {
                                             "type": "integer"
-                                        }
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 1000,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "resources"
+                                ]
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "resources": [
+                                            1
+                                        ]
                                     }
                                 }
                             }
@@ -894,11 +910,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The deleted rows",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/NoteRows"
                                 }
                             }
                         }
@@ -1148,11 +1164,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "A page of rows",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/NotePaginated"
                                 }
                             }
                         }
@@ -2154,6 +2170,7 @@
                     "Show"
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
@@ -2163,7 +2180,22 @@
                                         "type": "array",
                                         "items": {
                                             "type": "integer"
-                                        }
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 1000,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "resources"
+                                ]
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "resources": [
+                                            1
+                                        ]
                                     }
                                 }
                             }
@@ -2172,11 +2204,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The deleted rows",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/ShowRows"
                                 }
                             }
                         }
@@ -2479,11 +2511,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "A page of rows",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/ShowPaginated"
                                 }
                             }
                         }
@@ -3088,6 +3120,7 @@
                     "Show"
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
@@ -3097,7 +3130,22 @@
                                         "type": "array",
                                         "items": {
                                             "type": "integer"
-                                        }
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 1000,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "resources"
+                                ]
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "resources": [
+                                            1
+                                        ]
                                     }
                                 }
                             }
@@ -3106,11 +3154,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The restored rows",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/ShowRows"
                                 }
                             }
                         }
@@ -3138,6 +3186,7 @@
                     "Show"
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
@@ -3147,7 +3196,22 @@
                                         "type": "array",
                                         "items": {
                                             "type": "integer"
-                                        }
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 1000,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "resources"
+                                ]
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "resources": [
+                                            1
+                                        ]
                                     }
                                 }
                             }
@@ -3156,11 +3220,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The deleted rows",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/ShowRows"
                                 }
                             }
                         }
@@ -4104,6 +4168,7 @@
                     "Stage"
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
@@ -4112,8 +4177,26 @@
                                     "resources": {
                                         "type": "array",
                                         "items": {
-                                            "type": "integer"
-                                        }
+                                            "type": "string",
+                                            "examples": [
+                                                "main"
+                                            ]
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 1000,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "resources"
+                                ]
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "resources": [
+                                            "main"
+                                        ]
                                     }
                                 }
                             }
@@ -4122,11 +4205,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The deleted rows",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/StageRows"
                                 }
                             }
                         }
@@ -4377,11 +4460,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "A page of rows",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/StagePaginated"
                                 }
                             }
                         }
@@ -4527,6 +4610,706 @@
         }
     },
     "components": {
+        "schemas": {
+            "Artist": {
+                "type": "object",
+                "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "gates": {
+                        "type": "object",
+                        "description": "Present when the search lists gates: the answer to each gate that it lists",
+                        "properties": {
+                            "authorized_to_view": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_update": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_restore": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_force_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            }
+                        }
+                    }
+                },
+                "title": "Artist"
+            },
+            "Comment": {
+                "type": "object",
+                "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "rating": {
+                        "type": "integer"
+                    },
+                    "body": {
+                        "type": "string"
+                    },
+                    "gates": {
+                        "type": "object",
+                        "description": "Present when the search lists gates: the answer to each gate that it lists",
+                        "properties": {
+                            "authorized_to_view": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_update": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_restore": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_force_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            }
+                        }
+                    },
+                    "show": {
+                        "anyOf": [
+                            {
+                                "description": "Present when the search includes the relation",
+                                "$ref": "#/components/schemas/Show"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "title": "Comment"
+            },
+            "Label": {
+                "type": "object",
+                "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "gates": {
+                        "type": "object",
+                        "description": "Present when the search lists gates: the answer to each gate that it lists",
+                        "properties": {
+                            "authorized_to_view": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_update": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_restore": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_force_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            }
+                        }
+                    }
+                },
+                "title": "Label"
+            },
+            "Note": {
+                "type": "object",
+                "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "body": {
+                        "type": "string"
+                    },
+                    "gates": {
+                        "type": "object",
+                        "description": "Present when the search lists gates: the answer to each gate that it lists",
+                        "properties": {
+                            "authorized_to_view": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_update": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_restore": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_force_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            }
+                        }
+                    },
+                    "notable": {
+                        "anyOf": [
+                            {
+                                "description": "Present when the search includes the relation",
+                                "discriminator": {
+                                    "propertyName": "@type",
+                                    "mapping": {
+                                        "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Show": "#/components/schemas/ShowWithType",
+                                        "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Stage": "#/components/schemas/StageWithType"
+                                    }
+                                },
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/components/schemas/ShowWithType"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/StageWithType"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "title": "Note"
+            },
+            "NotePaginated": {
+                "type": "object",
+                "description": "A page of rows",
+                "properties": {
+                    "current_page": {
+                        "type": "integer"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Note"
+                        }
+                    },
+                    "from": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "last_page": {
+                        "type": "integer"
+                    },
+                    "per_page": {
+                        "type": "integer"
+                    },
+                    "to": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "meta": {
+                        "type": "object",
+                        "properties": {
+                            "gates": {
+                                "type": "object",
+                                "description": "Present when the search lists the create gate",
+                                "properties": {
+                                    "authorized_to_create": {
+                                        "$ref": "#/components/schemas/RestGateAnswer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "current_page",
+                    "data",
+                    "from",
+                    "last_page",
+                    "per_page",
+                    "to",
+                    "total",
+                    "meta"
+                ],
+                "title": "NotePaginated"
+            },
+            "NoteRows": {
+                "type": "object",
+                "description": "The rows that the request changed",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Note"
+                        }
+                    },
+                    "meta": {
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "data",
+                    "meta"
+                ],
+                "title": "NoteRows"
+            },
+            "RestGateAnswer": {
+                "type": "object",
+                "properties": {
+                    "allowed": {
+                        "type": "boolean"
+                    },
+                    "message": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "allowed",
+                    "message"
+                ],
+                "title": "RestGateAnswer"
+            },
+            "Show": {
+                "type": "object",
+                "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string",
+                        "examples": [
+                            "Opening night",
+                            "Closing night"
+                        ]
+                    },
+                    "summary": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "price": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "examples": [
+                            12.5
+                        ],
+                        "x-lomkit-meta": {
+                            "unit": "EUR"
+                        }
+                    },
+                    "seats": {
+                        "type": "integer"
+                    },
+                    "featured": {
+                        "type": "boolean"
+                    },
+                    "starts_on": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "starts_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "planned",
+                            "on_sale",
+                            "sold_out"
+                        ]
+                    },
+                    "level": {
+                        "type": "integer",
+                        "enum": [
+                            1,
+                            2,
+                            3
+                        ]
+                    },
+                    "settings": {
+                        "type": [
+                            "object",
+                            "null"
+                        ]
+                    },
+                    "gates": {
+                        "type": "object",
+                        "description": "Present when the search lists gates: the answer to each gate that it lists",
+                        "properties": {
+                            "authorized_to_view": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_update": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_restore": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_force_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_feature": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            }
+                        }
+                    },
+                    "stage": {
+                        "anyOf": [
+                            {
+                                "description": "Present when the search includes the relation",
+                                "$ref": "#/components/schemas/Stage"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "artists": {
+                        "type": "array",
+                        "description": "Present when the search includes the relation",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/Artist"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "pivot": {
+                                            "type": "object",
+                                            "properties": {
+                                                "role": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "comments": {
+                        "type": "array",
+                        "description": "Present when the search includes the relation",
+                        "items": {
+                            "$ref": "#/components/schemas/Comment"
+                        }
+                    },
+                    "labels": {
+                        "type": "array",
+                        "description": "Present when the search includes the relation",
+                        "items": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/Label"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "pivot": {
+                                            "type": "object",
+                                            "properties": {
+                                                "position": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "title": "Show"
+            },
+            "ShowPaginated": {
+                "type": "object",
+                "description": "A page of rows",
+                "properties": {
+                    "current_page": {
+                        "type": "integer"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Show"
+                        }
+                    },
+                    "from": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "last_page": {
+                        "type": "integer"
+                    },
+                    "per_page": {
+                        "type": "integer"
+                    },
+                    "to": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "meta": {
+                        "type": "object",
+                        "properties": {
+                            "gates": {
+                                "type": "object",
+                                "description": "Present when the search lists the create gate",
+                                "properties": {
+                                    "authorized_to_create": {
+                                        "$ref": "#/components/schemas/RestGateAnswer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "current_page",
+                    "data",
+                    "from",
+                    "last_page",
+                    "per_page",
+                    "to",
+                    "total",
+                    "meta"
+                ],
+                "title": "ShowPaginated"
+            },
+            "ShowRows": {
+                "type": "object",
+                "description": "The rows that the request changed",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Show"
+                        }
+                    },
+                    "meta": {
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "data",
+                    "meta"
+                ],
+                "title": "ShowRows"
+            },
+            "ShowWithType": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Show"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "@type": {
+                                "type": "string",
+                                "const": "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Show"
+                            }
+                        },
+                        "required": [
+                            "@type"
+                        ]
+                    }
+                ],
+                "title": "ShowWithType"
+            },
+            "Stage": {
+                "type": "object",
+                "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "examples": [
+                            "main"
+                        ]
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "gates": {
+                        "type": "object",
+                        "description": "Present when the search lists gates: the answer to each gate that it lists",
+                        "properties": {
+                            "authorized_to_view": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_update": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_restore": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            },
+                            "authorized_to_force_delete": {
+                                "$ref": "#/components/schemas/RestGateAnswer"
+                            }
+                        }
+                    },
+                    "shows": {
+                        "type": "array",
+                        "description": "Present when the search includes the relation",
+                        "items": {
+                            "$ref": "#/components/schemas/Show"
+                        }
+                    },
+                    "comments": {
+                        "type": "array",
+                        "description": "Present when the search includes the relation",
+                        "items": {
+                            "$ref": "#/components/schemas/Comment"
+                        }
+                    }
+                },
+                "title": "Stage"
+            },
+            "StagePaginated": {
+                "type": "object",
+                "description": "A page of rows",
+                "properties": {
+                    "current_page": {
+                        "type": "integer"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Stage"
+                        }
+                    },
+                    "from": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "last_page": {
+                        "type": "integer"
+                    },
+                    "per_page": {
+                        "type": "integer"
+                    },
+                    "to": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "meta": {
+                        "type": "object",
+                        "properties": {
+                            "gates": {
+                                "type": "object",
+                                "description": "Present when the search lists the create gate",
+                                "properties": {
+                                    "authorized_to_create": {
+                                        "$ref": "#/components/schemas/RestGateAnswer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "current_page",
+                    "data",
+                    "from",
+                    "last_page",
+                    "per_page",
+                    "to",
+                    "total",
+                    "meta"
+                ],
+                "title": "StagePaginated"
+            },
+            "StageRows": {
+                "type": "object",
+                "description": "The rows that the request changed",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Stage"
+                        }
+                    },
+                    "meta": {
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "data",
+                    "meta"
+                ],
+                "title": "StageRows"
+            },
+            "StageWithType": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Stage"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "@type": {
+                                "type": "string",
+                                "const": "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Stage"
+                            }
+                        },
+                        "required": [
+                            "@type"
+                        ]
+                    }
+                ],
+                "title": "StageWithType"
+            }
+        },
         "responses": {
             "RestForbidden": {
                 "description": "Forbidden",

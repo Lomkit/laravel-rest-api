@@ -2,8 +2,12 @@
 
 namespace Lomkit\Rest\Scramble;
 
+use Dedoc\Scramble\Support\Generator\Example;
+use Dedoc\Scramble\Support\Generator\MediaType;
 use Dedoc\Scramble\Support\Generator\Operation;
+use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\RequestBodyObject;
+use Dedoc\Scramble\Support\Generator\Response;
 use Dedoc\Scramble\Support\Generator\Schema;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
@@ -45,11 +49,29 @@ final class Schemas
         return $type;
     }
 
-    public static function requestBody(Operation $operation, ObjectType $body): void
+    /** @param array<string, mixed> $examples */
+    public static function requestBody(Operation $operation, ObjectType $body, array $examples = []): void
     {
         $schema = new Schema;
         $schema->type = $body;
+        $content = new MediaType($schema);
 
-        $operation->addRequestBodyObject(RequestBodyObject::make()->setContent('application/json', $schema));
+        foreach ($examples as $name => $example) {
+            $content->addExample($name, new Example($example));
+        }
+
+        $operation->addRequestBodyObject(RequestBodyObject::make()
+            ->required($body->required !== [])
+            ->addContent('application/json', $content));
+    }
+
+    public static function response(int $status, string $description, Type $type): Response
+    {
+        $schema = new Schema;
+        $schema->type = $type;
+
+        return Response::make($status)
+            ->setDescription($description)
+            ->setContent('application/json', $type instanceof Reference ? $type : $schema);
     }
 }

@@ -60,7 +60,7 @@ class Show extends Model
             'price' => 'float',
             'seats' => 'integer',
             'featured' => 'boolean',
-            'starts_on' => 'date',
+            'starts_on' => 'date:Y-m-d',
             'starts_at' => 'datetime',
             'status' => ShowStatus::class,
             'level' => ShowLevel::class,

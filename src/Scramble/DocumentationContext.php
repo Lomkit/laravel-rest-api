@@ -21,15 +21,21 @@ final readonly class DocumentationContext
         public Endpoint $endpoint,
         public Resource $resource,
         public string $name,
+        public ComponentRegistry $components,
     ) {}
 
     /** @param class-string<Controller> $controller */
-    public static function guest(Route $route, string $method, Endpoint $endpoint, string $controller, Container $container): self
+    public static function guest(Route $route, string $method, Endpoint $endpoint, string $controller, Container $container, ComponentRegistry $components): self
     {
         $request = RestRequest::createFrom(Request::create('/'.$route->uri(), strtoupper($method)));
         $resource = (new RestContext($request, $container))->resource($controller::resourceClass());
 
-        return new self($route, $endpoint, $resource, str_replace('Resource', '', class_basename($resource)));
+        return new self($route, $endpoint, $resource, self::nameOf($resource), $components);
+    }
+
+    public static function nameOf(Resource $resource): string
+    {
+        return str_replace('Resource', '', class_basename($resource));
     }
 
     public function declaration(): Action|Metric|null

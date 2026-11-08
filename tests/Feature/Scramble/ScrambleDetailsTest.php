@@ -108,7 +108,7 @@ class ScrambleDetailsTest extends ScrambleTestCase
     {
         $schemas = app(Generator::class)()['components']['schemas'] ?? [];
 
-        $this->assertSame([], array_values(array_diff(array_keys($schemas), ['LengthAwarePaginator'])));
+        $this->assertSame([], array_values(array_filter(array_keys($schemas), fn (string $name): bool => str_ends_with($name, 'Details'))));
     }
 
     /** @return array<string, mixed> */

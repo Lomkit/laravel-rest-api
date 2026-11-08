@@ -7,7 +7,6 @@ use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\Operation;
 use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\Response;
-use Dedoc\Scramble\Support\Generator\Schema;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\RouteInfo;
 use Illuminate\Contracts\Container\Container;
@@ -36,7 +35,7 @@ final readonly class RestOperations implements OperationTransformer
             return;
         }
 
-        $context = DocumentationContext::guest($routeInfo->route, $routeInfo->method, $endpoint, $controller, $this->container);
+        $context = DocumentationContext::guest($routeInfo->route, $routeInfo->method, $endpoint, $controller, $this->container, new ComponentRegistry($this->document->components));
 
         if ($context->isCatchAll()) {
             $operation->setAttribute(self::OMITTED, true);
@@ -54,7 +53,7 @@ final readonly class RestOperations implements OperationTransformer
             $operation->addResponse(self::success());
         }
 
-        (new ErrorResponses(new ComponentRegistry($this->document->components)))->attach($operation, $context);
+        (new ErrorResponses($context->components))->attach($operation, $context);
     }
 
     /** @return list<string> */
@@ -73,11 +72,6 @@ final readonly class RestOperations implements OperationTransformer
 
     private static function success(): Response
     {
-        $schema = new Schema;
-        $schema->type = new ObjectType;
-
-        return Response::make(200)
-            ->setDescription('Success')
-            ->setContent('application/json', $schema);
+        return Schemas::response(200, 'Success', new ObjectType);
     }
 }
