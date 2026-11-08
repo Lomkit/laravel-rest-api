@@ -43,7 +43,17 @@ final readonly class ActionSchema
             $properties['confirmation'] = (new StringType)->setDescription('The token of the 428 answer of this action, sent back with the same body to run the action');
         }
 
-        return Schemas::required($properties, $target === ActionTarget::Resources ? ['search', 'fields', 'confirmation'] : ['search', 'resources', 'fields', 'confirmation'], self::description($action));
+        return Schemas::required($properties, self::optional($target), self::description($action));
+    }
+
+    /** @return list<string> */
+    private static function optional(ActionTarget $target): array
+    {
+        return match ($target) {
+            ActionTarget::Search => ['resources', 'fields', 'confirmation'],
+            ActionTarget::Resources => ['search', 'fields', 'confirmation'],
+            ActionTarget::None => ['search', 'resources', 'fields', 'confirmation'],
+        };
     }
 
     private static function fields(FieldSet $fields, int $max): ArrayType
@@ -75,7 +85,7 @@ final readonly class ActionSchema
     private static function description(Action $action): string
     {
         return match ($action->target) {
-            ActionTarget::Search => 'The action runs on the rows that `search` matches, every row without `search`'.($action->maxResources === null ? '' : ", at most {$action->maxResources}: a search that matches more answers 422"),
+            ActionTarget::Search => 'The action runs on the rows that `search` matches, every row with an empty `search`'.($action->maxResources === null ? '' : ", at most {$action->maxResources}: a search that matches more answers 422"),
             ActionTarget::Resources => 'The action runs on the rows of the keys in `resources`',
             ActionTarget::None => 'The action runs without rows',
         };

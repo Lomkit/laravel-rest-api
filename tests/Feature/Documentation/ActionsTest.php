@@ -11,6 +11,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Scramble\Actions\ActionExample;
 use Lomkit\Rest\Scramble\Components\KeySchema;
+use Lomkit\Rest\Tests\Feature\Documentation\Stubs\UnfilteredLabelResource;
 use Lomkit\Rest\Tests\Fixtures\Festival\ShowResource;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -31,10 +32,10 @@ class ActionsTest extends DocumentationTestCase
     public static function bodies(): array
     {
         return [
-            'a search without a cap and two fields' => ['/shows/actions/reschedule-shows', '{"type":"object","description":"The action runs on the rows that `search` matches, every row without `search`","properties":{"search":{"$ref":"#\/components\/schemas\/ShowActionSearch"},"resources":false,"fields":{'.self::FIELDS.',"items":{"oneOf":[{"type":"object","properties":{"name":{"type":"string","const":"at"},"value":{"type":["string","null"],"format":"date-time","description":"Rules: nullable, date"}},"required":["name"],"additionalProperties":false},{"type":"object","properties":{"name":{"type":"string","const":"notify"},"value":{"type":"boolean","description":"Rules: boolean"}},"required":["name"],"additionalProperties":false}]},"maxItems":100}}}'],
+            'a search without a cap and two fields' => ['/shows/actions/reschedule-shows', '{"type":"object","description":"The action runs on the rows that `search` matches, every row with an empty `search`","properties":{"search":{"$ref":"#\/components\/schemas\/ShowActionSearch"},"resources":false,"fields":{'.self::FIELDS.',"items":{"oneOf":[{"type":"object","properties":{"name":{"type":"string","const":"at"},"value":{"type":["string","null"],"format":"date-time","description":"Rules: nullable, date"}},"required":["name"],"additionalProperties":false},{"type":"object","properties":{"name":{"type":"string","const":"notify"},"value":{"type":"boolean","description":"Rules: boolean"}},"required":["name"],"additionalProperties":false}]},"maxItems":100}},"required":["search"]}'],
             'keys and one field' => ['/shows/actions/cancel-shows', '{"type":"object","description":"The action runs on the rows of the keys in `resources`","properties":{"search":false,"resources":{"type":"array","items":{"type":"integer"},"minItems":1,"maxItems":2,"uniqueItems":true},"fields":{'.self::FIELDS.',"items":{"type":"object","properties":{"name":{"type":"string","const":"reason"},"value":{"type":["string","null"],"description":"Rules: nullable, string","examples":["Rain"]}},"required":["name"],"additionalProperties":false},"maxItems":100},"confirmation":{"type":"string","description":"The token of the 428 answer of this action, sent back with the same body to run the action"}},"required":["resources"]}'],
             'no rows and no field' => ['/shows/actions/import-shows', '{"type":"object","description":"The action runs without rows","properties":{"search":false,"resources":false,"fields":false}}'],
-            'a search with the default cap' => ['/shows/actions/archive-shows', '{"type":"object","description":"The action runs on the rows that `search` matches, every row without `search`, at most 1000: a search that matches more answers 422","properties":{"search":{"$ref":"#\/components\/schemas\/ShowActionSearch"},"resources":false,"fields":false}}'],
+            'a search with the default cap' => ['/shows/actions/archive-shows', '{"type":"object","description":"The action runs on the rows that `search` matches, every row with an empty `search`, at most 1000: a search that matches more answers 422","properties":{"search":{"$ref":"#\/components\/schemas\/ShowActionSearch"},"resources":false,"fields":false},"required":["search"]}'],
         ];
     }
 
@@ -115,6 +116,15 @@ class ActionsTest extends DocumentationTestCase
         };
 
         $this->assertSame('{"fields":[{"name":"reason","value":"Rain"},{"name":"delay","value":0},{"name":"note","value":"a"}]}', json_encode(ActionExample::of($resource, $action)));
+    }
+
+    #[Test]
+    public function it_gives_an_empty_search_to_the_example_of_a_search_action_without_a_filter_example(): void
+    {
+        $resource = (new RestContext(RestRequest::createFrom(Request::create('/api/labels/actions/tag-labels', 'POST')), $this->app))->resource(UnfilteredLabelResource::class);
+        $action = new class extends Action {};
+
+        $this->assertSame('{"search":{}}', json_encode(ActionExample::of($resource, $action)));
     }
 
     #[Test]

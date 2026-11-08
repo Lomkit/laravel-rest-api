@@ -52,7 +52,7 @@ class ListLimitsTest extends PackageTestCase
             'the fields of an instruction' => ['fields', 'POST', '/api/posts/search', ['search' => ['instructions' => [
                 ['name' => 'highlight-posts', 'fields' => $name],
             ]]], 'search.instructions.0.fields'],
-            'the fields of an action' => ['fields', 'POST', '/api/posts/actions/publish-posts', ['fields' => $name], 'fields'],
+            'the fields of an action' => ['fields', 'POST', '/api/posts/actions/publish-posts', ['search' => [], 'fields' => $name], 'fields'],
             'aggregates' => ['aggregates', 'POST', '/api/categories/search', ['search' => [
                 'aggregates' => self::three(['relation' => 'secret', 'type' => 'count']),
             ]], 'search.aggregates'],

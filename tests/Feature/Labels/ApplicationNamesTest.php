@@ -57,7 +57,7 @@ class ApplicationNamesTest extends PackageTestCase
         $this->app->make('translator')->load('*', 'validation', 'en');
         $this->app->make('translator')->addLines(['validation.custom.fields.status.required' => 'Choose a status.'], 'en');
 
-        $response = $this->postJson('/api/posts/actions/change-status', ['fields' => []]);
+        $response = $this->postJson('/api/posts/actions/change-status', ['search' => [], 'fields' => []]);
 
         $this->assertExactErrors($response, ['fields.status' => ['Choose a status.']]);
     }

@@ -24,7 +24,7 @@ class OperateRouteTest extends PackageTestCase
     {
         Document::factory()->count(2)->create();
 
-        $response = $this->postJson('/api/documents/actions/archive-documents');
+        $response = $this->postJson('/api/documents/actions/archive-documents', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->assertSame(2, Document::query()->where('archived', true)->count());
@@ -36,7 +36,7 @@ class OperateRouteTest extends PackageTestCase
     {
         Document::factory()->create();
 
-        $response = $this->postJson('/acme/api/documents/actions/archive-documents');
+        $response = $this->postJson('/acme/api/documents/actions/archive-documents', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
     }
@@ -47,7 +47,7 @@ class OperateRouteTest extends PackageTestCase
     {
         Document::factory()->create();
 
-        $response = $this->postJson('http://acme.archive.test/tenant-api/documents/actions/archive-documents');
+        $response = $this->postJson('http://acme.archive.test/tenant-api/documents/actions/archive-documents', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
     }

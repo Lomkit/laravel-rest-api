@@ -411,7 +411,7 @@ A queued or batched action no longer serializes its resource, its rows and its i
 
   | Target | Request | Rows | Before |
   |---|---|---|---|
-  | `ActionTarget::Search`, the default | `search` is optional, `resources` is refused | the rows that `search` matches inside `perimeterQuery()`, every row when the request sends no `search`, at most `$maxResources` | neither `standalone` nor `targeted` |
+  | `ActionTarget::Search`, the default | `search` is required, `resources` is refused | the rows that `search` matches inside `perimeterQuery()`, every row with `"search": {}`, at most `$maxResources` | neither `standalone` nor `targeted` |
   | `ActionTarget::Resources` | `resources` is required, `search` is refused | the rows of the keys in `resources`, at most `$maxResources` | `targeted()` |
   | `ActionTarget::None` | `search` and `resources` are refused | no row: `handle()` receives an empty collection | `standalone()` |
 
@@ -433,8 +433,9 @@ A queued or batched action no longer serializes its resource, its rows and its i
   }
   ```
 
+- An action with the `Search` target requires `search`. Send `"search": {}` to run an action on every row of the perimeter; a body without `search` answers 422 under `search`: "The search field is required.". Before, a body without `search` ran the action on every row. Add `"search": {}` to each client call that runs such an action without a search.
 - Replace `public bool $standalone = true` and `->standalone()` with `public ActionTarget $target = ActionTarget::None` and `->target(ActionTarget::None)`. Replace `public bool $targeted = true` and `->targeted()` with `ActionTarget::Resources`. Replace `$action->isStandalone()` and `$action->isTargeted()` with `$action->target === ActionTarget::None` and `$action->target === ActionTarget::Resources`.
-- Search your actions for `standalone` and `targeted` before you deploy. A `$standalone` or `$targeted` property that stays on an action is no longer read: the action then has the `Search` target, and a request without `search` runs it on every row that `perimeterQuery()` returns. A call to `standalone()` or `targeted()` fails with "Call to undefined method".
+- Search your actions for `standalone` and `targeted` before you deploy. A `$standalone` or `$targeted` property that stays on an action is no longer read: the action then has the `Search` target, a request without `search` answers 422, and a request with `"search": {}` runs it on every row that `perimeterQuery()` returns. A call to `standalone()` or `targeted()` fails with "Call to undefined method".
 - `Lomkit\Rest\Exceptions\InvalidActionStateException` is removed. An action has one target.
 - In the details response, each action entry gives `target`, `"search"`, `"resources"` or `"none"`, in place of `standalone` and `targeted`:
 

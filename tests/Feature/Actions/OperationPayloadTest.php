@@ -69,9 +69,9 @@ class OperationPayloadTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_reads_a_missing_search_as_an_empty_search(): void
+    public function it_reads_an_empty_search_as_an_empty_search_node(): void
     {
-        $this->postJson('/api/posts/actions/publish-posts', [])->assertOk();
+        $this->postJson('/api/posts/actions/publish-posts', ['search' => (object) []])->assertOk();
 
         $this->assertEquals(SearchNode::empty(), $this->read()->target);
         $this->assertSame(['notify' => true], $this->read()->fields->toArray());

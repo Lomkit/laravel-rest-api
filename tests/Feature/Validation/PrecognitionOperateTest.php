@@ -82,6 +82,30 @@ class PrecognitionOperateTest extends PackageTestCase
         $this->assertExactErrors($response, ['search.page' => ['The search.page field is prohibited.']]);
     }
 
+    #[Test]
+    public function it_requires_the_search_of_an_action_under_its_validate_only_name(): void
+    {
+        $response = $this->precognitiveOperation('publish-posts', ['fields' => [['name' => 'notify', 'value' => false]]], 'search');
+
+        $this->assertExactErrors($response, ['search' => ['The search field is required.']]);
+    }
+
+    #[Test]
+    public function it_requires_the_search_of_an_action_without_a_validate_only_name(): void
+    {
+        $response = $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 'notify', 'value' => false]]], ['Precognition' => 'true']);
+
+        $this->assertExactErrors($response, ['search' => ['The search field is required.']]);
+    }
+
+    #[Test]
+    public function it_accepts_an_empty_search_under_its_validate_only_name(): void
+    {
+        $response = $this->precognitiveOperation('publish-posts', ['search' => (object) []], 'search');
+
+        $response->assertNoContent()->assertHeader('Precognition-Success', 'true');
+    }
+
     /** @param array<string, mixed> $body */
     private function precognitiveOperation(string $action, array $body, string $validateOnly): TestResponse
     {

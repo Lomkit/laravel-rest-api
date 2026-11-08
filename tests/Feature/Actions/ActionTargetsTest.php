@@ -16,6 +16,7 @@ use Lomkit\Rest\Tests\Fixtures\Workspace\Workspace;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use stdClass;
 
 class ActionTargetsTest extends PackageTestCase
 {
@@ -64,7 +65,7 @@ class ActionTargetsTest extends PackageTestCase
     public static function targets(): array
     {
         return [
-            'the search target by default, without a search' => [null, 'record-notes', [], [['keys' => [1, 2, 4], 'reason' => null]], 3],
+            'the search target by default, with an empty search' => [null, 'record-notes', ['search' => new stdClass], [['keys' => [1, 2, 4], 'reason' => null]], 3],
             'the search target by default, with a search' => [null, 'record-notes', ['search' => ['filters' => [['field' => 'title', 'value' => 'Retro']]]], [['keys' => [2], 'reason' => null]], 1],
             'the resources target as a property' => [null, 'record-named-notes', ['resources' => [1, 4]], [['keys' => [1, 4], 'reason' => null]], 2],
             'the resources target under a perimeter with or' => [null, 'record-named-notes', ['resources' => [1]], [['keys' => [1], 'reason' => null]], 1],
@@ -94,7 +95,10 @@ class ActionTargetsTest extends PackageTestCase
         $search = ['filters' => [['field' => 'title', 'value' => 'Retro']]];
 
         return [
-            'resources on the search target' => ['record-notes', ['resources' => [1]], ['resources' => ['The resources field is prohibited.']]],
+            'no search on the search target' => ['record-notes', [], ['search' => ['The search field is required.']]],
+            'a null search on the search target' => ['record-notes', ['search' => null], ['search' => ['The search field is required.']]],
+            'a search that is not an object on the search target' => ['record-notes', ['search' => 'every'], ['search' => ['The search field must be an array.']]],
+            'resources on the search target' => ['record-notes', ['search' => [], 'resources' => [1]], ['resources' => ['The resources field is prohibited.']]],
             'no resources on the resources target' => ['record-named-notes', [], ['resources' => ['The resources field is required.']]],
             'empty resources on the resources target' => ['record-named-notes', ['resources' => []], ['resources' => ['The resources field is required.']]],
             'a search on the resources target' => ['record-named-notes', ['resources' => [1], 'search' => $search], ['search' => ['The search field is prohibited.']]],
@@ -145,7 +149,7 @@ class ActionTargetsTest extends PackageTestCase
     public static function queuedTargets(): array
     {
         return [
-            'the search target' => [ActionTarget::Search, [], [1, 2, 4]],
+            'the search target' => [ActionTarget::Search, ['search' => []], [1, 2, 4]],
             'the resources target' => [ActionTarget::Resources, ['resources' => [1, 4]], [1, 4]],
             'the none target' => [ActionTarget::None, [], []],
         ];

@@ -17,7 +17,7 @@ class OperateLabelsTest extends PackageTestCase
 
     private const string LA = '/labelled-posts/actions/labelled-change-status';
 
-    private const array PUBLISHED_SOON = ['fields' => [['name' => 'status', 'value' => 'published'], ['name' => 'at', 'value' => 'soon']]];
+    private const array PUBLISHED_SOON = ['search' => [], 'fields' => [['name' => 'status', 'value' => 'published'], ['name' => 'at', 'value' => 'soon']]];
 
     #[\Override]
     protected function fixtures(): array
@@ -44,7 +44,7 @@ class OperateLabelsTest extends PackageTestCase
     #[Test]
     public function it_words_an_action_field_by_its_message(): void
     {
-        $response = $this->postJson(self::LA, ['fields' => []]);
+        $response = $this->postJson(self::LA, ['search' => [], 'fields' => []]);
 
         $this->assertExactErrors($response, ['fields.status' => ['Choose a publication status.']]);
     }
@@ -52,7 +52,7 @@ class OperateLabelsTest extends PackageTestCase
     #[Test]
     public function it_names_the_other_field_of_a_rule_by_its_label(): void
     {
-        $response = $this->postJson(self::LA, ['fields' => [['name' => 'status', 'value' => 'published']]]);
+        $response = $this->postJson(self::LA, ['search' => [], 'fields' => [['name' => 'status', 'value' => 'published']]]);
 
         $this->assertExactErrors($response, ['fields.at' => ['The release date field is required when publication status is published.']]);
     }
@@ -62,7 +62,7 @@ class OperateLabelsTest extends PackageTestCase
     {
         $this->app->bind(OperateRequest::class, LabelledOperateRequest::class);
 
-        $this->assertExactErrors($this->postJson(self::LA, ['fields' => []]), ['fields.status' => ['Pick a status.']]);
+        $this->assertExactErrors($this->postJson(self::LA, ['search' => [], 'fields' => []]), ['fields.status' => ['Pick a status.']]);
         $this->assertExactErrors($this->postJson(self::LA, self::PUBLISHED_SOON), ['fields.at' => ['The publication date field must be a valid date.']]);
     }
 }

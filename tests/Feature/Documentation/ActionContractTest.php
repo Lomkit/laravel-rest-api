@@ -103,7 +103,7 @@ class ActionContractTest extends DocumentationTestCase
     {
         return [
             'a search and the fields of the action' => ['/shows/actions/reschedule-shows', ['search' => ['filters' => [['field' => 'featured', 'value' => true]]], 'fields' => [['name' => 'at', 'value' => null], ['name' => 'notify', 'value' => false]]]],
-            'every row without a search' => ['/shows/actions/reschedule-shows', new stdClass],
+            'every row with an empty search' => ['/shows/actions/reschedule-shows', ['search' => new stdClass]],
             'a search with sorts and a limit' => ['/shows/actions/reschedule-shows', ['search' => ['sorts' => [['field' => 'title']], 'limit' => 10]]],
             'a field set to null' => ['/shows/actions/cancel-shows', ['resources' => [2], 'fields' => [['name' => 'reason', 'value' => null]]]],
             'an action without rows' => ['/shows/actions/import-shows', new stdClass],
@@ -146,7 +146,8 @@ class ActionContractTest extends DocumentationTestCase
     public static function refusedActions(): array
     {
         return [
-            'keys on a search action' => ['/shows/actions/reschedule-shows', ['resources' => [1]]],
+            'no search on a search action' => ['/shows/actions/reschedule-shows', ['fields' => [['name' => 'notify', 'value' => false]]]],
+            'keys on a search action' => ['/shows/actions/reschedule-shows', ['search' => new stdClass, 'resources' => [1]]],
             'a search on a keyed action' => ['/shows/actions/cancel-shows', ['search' => ['limit' => 10], 'resources' => [1]]],
             'a search on an action without rows' => ['/shows/actions/import-shows', ['search' => ['filters' => [['field' => 'title', 'value' => 'Opening night']]]]],
             'keys on an action without rows' => ['/shows/actions/import-shows', ['resources' => [1]]],
@@ -155,11 +156,11 @@ class ActionContractTest extends DocumentationTestCase
             'the same key twice' => ['/shows/actions/cancel-shows', ['resources' => [1, 1]]],
             'more keys than the action takes' => ['/shows/actions/cancel-shows', ['resources' => [1, 2, 3]]],
             'a key of another type' => ['/shows/actions/cancel-shows', ['resources' => ['one']]],
-            'a field that the action does not declare' => ['/shows/actions/reschedule-shows', ['fields' => [['name' => 'reason', 'value' => 'Rain']]]],
-            'a value of another type' => ['/shows/actions/reschedule-shows', ['fields' => [['name' => 'notify', 'value' => 'yes']]]],
-            'an unknown key in a field entry' => ['/shows/actions/reschedule-shows', ['fields' => [['name' => 'at', 'value' => null, 'label' => 'Now']]]],
-            'fields that are not a list' => ['/shows/actions/reschedule-shows', ['fields' => ['at' => null]]],
-            'a field on an action without fields' => ['/shows/actions/archive-shows', ['fields' => [['name' => 'reason', 'value' => 'Rain']]]],
+            'a field that the action does not declare' => ['/shows/actions/reschedule-shows', ['search' => new stdClass, 'fields' => [['name' => 'reason', 'value' => 'Rain']]]],
+            'a value of another type' => ['/shows/actions/reschedule-shows', ['search' => new stdClass, 'fields' => [['name' => 'notify', 'value' => 'yes']]]],
+            'an unknown key in a field entry' => ['/shows/actions/reschedule-shows', ['search' => new stdClass, 'fields' => [['name' => 'at', 'value' => null, 'label' => 'Now']]]],
+            'fields that are not a list' => ['/shows/actions/reschedule-shows', ['search' => new stdClass, 'fields' => ['at' => null]]],
+            'a field on an action without fields' => ['/shows/actions/archive-shows', ['search' => new stdClass, 'fields' => [['name' => 'reason', 'value' => 'Rain']]]],
             'a filter on a field that the search does not know' => ['/shows/actions/archive-shows', ['search' => ['filters' => [['field' => 'nickname', 'value' => 'Ada']]]]],
         ];
     }
@@ -169,7 +170,7 @@ class ActionContractTest extends DocumentationTestCase
     {
         $document = $this->document();
         $validator = new OpenApiValidator;
-        $started = $this->postJson('api/shows/actions/archive-shows');
+        $started = $this->postJson('api/shows/actions/archive-shows', ['search' => new stdClass]);
 
         $started->assertOk();
         $this->assertSame([], $validator->responseErrors($document, '/shows/actions/archive-shows', 'post', 200, (string) $started->getContent()));

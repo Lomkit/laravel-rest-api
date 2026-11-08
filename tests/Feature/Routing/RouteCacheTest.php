@@ -35,7 +35,7 @@ class RouteCacheTest extends PackageTestCase
         $this->assertInstanceOf(CompiledRouteCollection::class, $this->app['router']->getRoutes());
         $this->getJson('/api/documents')->assertOk();
         $this->postJson('/api/documents/search')->assertOk()->assertJsonCount(2, 'data');
-        $this->postJson('/api/documents/actions/archive-documents')->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
+        $this->postJson('/api/documents/actions/archive-documents', ['search' => []])->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
         $this->deleteJson('/api/documents', ['resources' => [$removed->getKey()]])->assertOk();
         $this->postJson('/api/documents/restore', ['resources' => [$removed->getKey()]])->assertOk();
         $this->deleteJson('/api/documents/force', ['resources' => [$kept->getKey()]])->assertOk();
@@ -64,7 +64,7 @@ class RouteCacheTest extends PackageTestCase
 
         $this->assertSame('api/documents/actions/archive-documents', $route?->uri());
         $this->assertSame(['action' => 'archive-documents'], $route->defaults);
-        $this->postJson('/api/documents/actions/archive-documents')
+        $this->postJson('/api/documents/actions/archive-documents', ['search' => []])
             ->assertOk()
             ->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
         $this->postJson('/api/documents/actions/publish-documents')->assertNotFound();
@@ -85,6 +85,6 @@ class RouteCacheTest extends PackageTestCase
 
         $this->useCompiledRoutes();
 
-        $this->postJson('/api/literal-documents/actions/archive-documents')->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
+        $this->postJson('/api/literal-documents/actions/archive-documents', ['search' => []])->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
     }
 }

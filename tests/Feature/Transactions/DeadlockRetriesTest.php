@@ -124,11 +124,11 @@ class DeadlockRetriesTest extends PackageTestCase
         return [
             'mutate' => ['POST', '/retried-documents/mutate', self::MUTATE, 0, ['mutatedAll', 'mutatedAll'], $retried, ['Final report', 'Roadmap', 'Minutes', 'Agenda']],
             'destroy' => ['DELETE', '/retried-documents', ['resources' => [1, 3]], 0, ['destroyedAll', 'destroyedAll'], $retried, ['Roadmap']],
-            'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', [], 1, ['handle 1,2', 'handle 3', 'handle 3'], ['begin secondary', 'commit secondary', ...$retried], $renamed],
-            'a queued action chunk' => ['POST', '/retried-documents/actions/queued-rename-retried-documents', [], 1, ['handle 1,2', 'handle 3', 'handle 3'], ['begin secondary', 'commit secondary', ...$retried], $renamed],
-            'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', [], 1, ['handle 1,2', 'handle 3', 'handle 1,2', 'handle 3'], $retried, $renamed],
-            'an action row' => ['POST', '/retried-documents/actions/rename-retried-documents-per-row', [], 1, self::RETRIED_ROW, ['begin secondary', 'commit secondary', ...$retried, 'begin secondary', 'commit secondary'], $renamed],
-            'a queued action row' => ['POST', '/retried-documents/actions/queued-rename-retried-documents-per-row', [], 1, self::RETRIED_ROW, ['begin secondary', 'commit secondary', ...$retried, 'begin secondary', 'commit secondary'], $renamed],
+            'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', ['search' => []], 1, ['handle 1,2', 'handle 3', 'handle 3'], ['begin secondary', 'commit secondary', ...$retried], $renamed],
+            'a queued action chunk' => ['POST', '/retried-documents/actions/queued-rename-retried-documents', ['search' => []], 1, ['handle 1,2', 'handle 3', 'handle 3'], ['begin secondary', 'commit secondary', ...$retried], $renamed],
+            'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', ['search' => []], 1, ['handle 1,2', 'handle 3', 'handle 1,2', 'handle 3'], $retried, $renamed],
+            'an action row' => ['POST', '/retried-documents/actions/rename-retried-documents-per-row', ['search' => []], 1, self::RETRIED_ROW, ['begin secondary', 'commit secondary', ...$retried, 'begin secondary', 'commit secondary'], $renamed],
+            'a queued action row' => ['POST', '/retried-documents/actions/queued-rename-retried-documents-per-row', ['search' => []], 1, self::RETRIED_ROW, ['begin secondary', 'commit secondary', ...$retried, 'begin secondary', 'commit secondary'], $renamed],
         ];
     }
 
@@ -161,9 +161,9 @@ class DeadlockRetriesTest extends PackageTestCase
         return [
             'mutate' => ['POST', '/retried-documents/mutate', self::MUTATE, 0, ['mutatedAll'], $rolledBack, $seeded],
             'destroy' => ['DELETE', '/retried-documents', ['resources' => [1, 3]], 0, ['destroyedAll'], $rolledBack, $seeded],
-            'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', [], 1, ['handle 1,2', 'handle 3'], ['begin secondary', 'commit secondary', ...$rolledBack], ['Renamed', 'Renamed', 'Minutes']],
-            'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', [], 1, ['handle 1,2', 'handle 3'], $rolledBack, $seeded],
-            'an action row' => ['POST', '/retried-documents/actions/rename-retried-documents-per-row', [], 1, ['before 1', 'row 1', 'before 2', 'row 2'], ['begin secondary', 'commit secondary', ...$rolledBack], ['Renamed', 'Roadmap', 'Minutes']],
+            'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', ['search' => []], 1, ['handle 1,2', 'handle 3'], ['begin secondary', 'commit secondary', ...$rolledBack], ['Renamed', 'Renamed', 'Minutes']],
+            'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', ['search' => []], 1, ['handle 1,2', 'handle 3'], $rolledBack, $seeded],
+            'an action row' => ['POST', '/retried-documents/actions/rename-retried-documents-per-row', ['search' => []], 1, ['before 1', 'row 1', 'before 2', 'row 2'], ['begin secondary', 'commit secondary', ...$rolledBack], ['Renamed', 'Roadmap', 'Minutes']],
         ];
     }
 
@@ -175,10 +175,10 @@ class DeadlockRetriesTest extends PackageTestCase
         return [
             'mutate' => ['POST', '/retried-documents/mutate', self::MUTATE, 0, [...$retried, 'ResourceMutated']],
             'destroy' => ['DELETE', '/retried-documents', ['resources' => [1, 3]], 0, [...$retried, 'ResourceDestroyed']],
-            'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', [], 1, ['begin secondary', 'commit secondary', ...$retried, 'ActionOperated']],
-            'a queued action chunk' => ['POST', '/retried-documents/actions/queued-rename-retried-documents', [], 1, ['begin secondary', 'commit secondary', ...$retried, 'ActionOperated']],
-            'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', [], 1, [...$retried, 'ActionOperated']],
-            'an action row' => ['POST', '/retried-documents/actions/rename-retried-documents-per-row', [], 1, ['begin secondary', 'commit secondary', ...$retried, 'begin secondary', 'commit secondary', 'ActionOperated']],
+            'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', ['search' => []], 1, ['begin secondary', 'commit secondary', ...$retried, 'ActionOperated']],
+            'a queued action chunk' => ['POST', '/retried-documents/actions/queued-rename-retried-documents', ['search' => []], 1, ['begin secondary', 'commit secondary', ...$retried, 'ActionOperated']],
+            'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', ['search' => []], 1, [...$retried, 'ActionOperated']],
+            'an action row' => ['POST', '/retried-documents/actions/rename-retried-documents-per-row', ['search' => []], 1, ['begin secondary', 'commit secondary', ...$retried, 'begin secondary', 'commit secondary', 'ActionOperated']],
         ];
     }
 

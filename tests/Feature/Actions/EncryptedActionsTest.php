@@ -55,7 +55,7 @@ class EncryptedActionsTest extends PackageTestCase
     #[DataProvider('encryptedActions')]
     public function it_encrypts_the_queued_payload_of_an_action_that_should_be_encrypted(string $action, ?string $batch): void
     {
-        $this->postJson("/staff-documents/actions/{$action}", self::FIELDS)->assertOk();
+        $this->postJson("/staff-documents/actions/{$action}", ['search' => [], ...self::FIELDS])->assertOk();
 
         $this->assertStringNotContainsString('Quarterly figures', $this->payload());
 
@@ -78,7 +78,7 @@ class EncryptedActionsTest extends PackageTestCase
     #[DataProvider('plainActions')]
     public function it_keeps_the_queued_payload_of_another_action_readable(string $action, ?string $batch): void
     {
-        $this->postJson("/staff-documents/actions/{$action}", self::FIELDS)->assertOk();
+        $this->postJson("/staff-documents/actions/{$action}", ['search' => [], ...self::FIELDS])->assertOk();
 
         $this->assertStringContainsString('s:4:\"note\";s:17:\"Quarterly figures\";', $this->payload());
 

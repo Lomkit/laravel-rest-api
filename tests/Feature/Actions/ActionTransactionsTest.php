@@ -69,7 +69,7 @@ class ActionTransactionsTest extends PackageTestCase
     {
         SecondaryDocument::query()->insert(array_map(fn (int $id): array => ['id' => $id, 'title' => $titles[$id - 1]], range(1, count($titles))));
 
-        $response = $this->postJson("/renamed-documents/actions/{$action}");
+        $response = $this->postJson("/renamed-documents/actions/{$action}", ['search' => []]);
 
         $response->assertStatus($status);
         $this->assertSame($transactions, $this->transactions);

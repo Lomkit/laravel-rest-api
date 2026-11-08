@@ -28,7 +28,7 @@ class ActionFieldValidationTest extends PackageTestCase
     {
         $post = Post::factory()->create(['status' => PostStatus::Draft]);
 
-        $response = $this->postJson("/api/posts/actions/{$action}", $payload);
+        $response = $this->postJson("/api/posts/actions/{$action}", ['search' => [], ...$payload]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', $errors);
         $this->assertSame(PostStatus::Draft, $post->fresh()?->status);
@@ -120,7 +120,7 @@ class ActionFieldValidationTest extends PackageTestCase
     {
         Post::factory()->create();
 
-        $response = $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 'at', 'value' => 'soon']]]);
+        $response = $this->postJson('/api/posts/actions/publish-posts', ['search' => [], 'fields' => [['name' => 'at', 'value' => 'soon']]]);
 
         $response->assertUnprocessable()->assertExactJson([
             'message' => 'The at field must be a valid date.',
@@ -135,7 +135,7 @@ class ActionFieldValidationTest extends PackageTestCase
     {
         $post = Post::factory()->create(['status' => PostStatus::Draft]);
 
-        $response = $this->postJson('/api/posts/actions/change-status', ['fields' => [
+        $response = $this->postJson('/api/posts/actions/change-status', ['search' => [], 'fields' => [
             ['name' => 'status', 'value' => 'published'],
             ['name' => 'at', 'value' => '2026-03-01 09:30:00'],
         ]]);
@@ -149,7 +149,7 @@ class ActionFieldValidationTest extends PackageTestCase
     {
         $post = Post::factory()->create(['status' => PostStatus::Draft]);
 
-        $response = $this->postJson('/api/posts/actions/change-status', ['fields' => [['name' => 'status', 'value' => 'review']]]);
+        $response = $this->postJson('/api/posts/actions/change-status', ['search' => [], 'fields' => [['name' => 'status', 'value' => 'review']]]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
         $this->assertSame(PostStatus::Review, $post->fresh()?->status);
