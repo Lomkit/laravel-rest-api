@@ -26,11 +26,8 @@ use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Response;
 use Lomkit\Rest\Http\RowBatch;
-use Lomkit\Rest\Query\EngineSearch;
-use Lomkit\Rest\Search\Plan\Columns\StrictColumns;
-use Lomkit\Rest\Search\Plan\IncludeOverflow;
 use Lomkit\Rest\Search\Plan\QueryPlan;
-use Lomkit\Rest\Search\Plan\SearchPlanner;
+use Lomkit\Rest\Search\Run\SearchRun;
 
 abstract class Controller
 {
@@ -69,32 +66,9 @@ abstract class Controller
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $resource->searching($request->searchContext());
-
-        $text = $request->context()->text($resource);
-
-        if ($text->usesEngine()) {
-            $page = (new EngineSearch($resource, $text, $request->payload()))->paginate();
-
-            return $this->pageResponse($resource, $page->plan, $page->rows);
-        }
-
-        $plan = SearchPlanner::paged($resource, $request->payload(), $text);
-        $query = $plan->query();
-
-        $rows = $text->run(fn () => $resource->paginate($query, $plan->limit->perPage(), $plan->limit->page()));
-
-        return $this->pageResponse($resource, $plan, $rows);
-    }
-
-    /** @param LengthAwarePaginator<int, Model> $rows */
-    private function pageResponse(Resource $resource, QueryPlan $plan, LengthAwarePaginator $rows): Response
-    {
-        $overflow = IncludeOverflow::trim($plan, $rows->items());
-
-        StrictColumns::of($plan)->run(fn () => $resource->searched($rows));
-
-        return $this->buildResponse($plan, $rows)->overflow($overflow);
+        return SearchRun::of($resource, $request->payload())
+            ->page()
+            ->response();
     }
 
     /** @param LengthAwarePaginator<int, Model>|Collection<int, Model> $rows */

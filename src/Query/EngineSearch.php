@@ -24,7 +24,7 @@ use Lomkit\Rest\Text\Engine\EngineQuery;
 use Lomkit\Rest\Text\Engine\ScoutModel;
 use Lomkit\Rest\Text\ResolvedText;
 
-final readonly class EngineSearch
+final readonly class EngineSearch implements SearchSource
 {
     public function __construct(
         private Resource $resource,
@@ -32,6 +32,7 @@ final readonly class EngineSearch
         private SearchNode $search,
     ) {}
 
+    #[\Override]
     public function paginate(): PlannedPage
     {
         $query = $this->query();
