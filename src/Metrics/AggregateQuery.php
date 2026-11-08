@@ -9,7 +9,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Lomkit\Rest\Metrics\Grouping\AggregateRank;
 use Lomkit\Rest\Query\Expressions\AggregateSelect;
 
-final readonly class AggregateQuery
+final readonly class AggregateQuery implements Measure
 {
     public function __construct(
         private Aggregate $function,
@@ -32,6 +32,12 @@ final readonly class AggregateQuery
     }
 
     /** @param Builder<Model> $query */
+    public static function stored(Builder $query, DateTimeInterface $date): string
+    {
+        return (string) $query->getModel()->fromDateTime($date);
+    }
+
+    #[\Override]
     public function total(Builder $query): int|float|null
     {
         $base = self::base($query);
@@ -49,10 +55,7 @@ final readonly class AggregateQuery
         return $this->value($this->row($base), 'total');
     }
 
-    /**
-     * @param  Builder<Model>  $query
-     * @return array{int|float|null, int|float|null}
-     */
+    #[\Override]
     public function periods(Builder $query, MetricColumn $date, RangePeriods $periods): array
     {
         $base = self::window(self::base($query), $query, $date, $periods->from, $periods->to);
@@ -62,29 +65,23 @@ final readonly class AggregateQuery
         return [$this->value($row, 'current'), $this->value($row, 'previous')];
     }
 
-    /**
-     * @param  Builder<Model>  $query
-     * @return list<array{key: int|string|bool|null, partials: list<int|float|null>}>
-     */
-    public function groups(Builder $query, MetricColumn $group): array
+    #[\Override]
+    public function groups(Builder $query, MetricColumn $group): PartialGroups
     {
         $base = self::base($query);
         $base->addSelect("{$group->column} as group_key");
         $this->select($base, 'group');
         $base->groupBy($group->column);
 
-        return array_values(array_map(function (object $row) use ($group): array {
+        return new PartialGroups($this->function, $this->integer(), array_values(array_map(function (object $row) use ($group): array {
             $values = get_object_vars($row);
 
             return ['key' => $group->key($values['group_key'] ?? null), 'partials' => $this->partials($values, 'group')];
-        }, $base->get()->all()));
+        }, $base->get()->all())));
     }
 
-    /**
-     * @param  Builder<Model>  $query
-     * @return list<array{key: int|string|bool|null, partials: list<int|float|null>|null, previous: list<int|float|null>|null}>
-     */
-    public function comparedGroups(Builder $query, MetricColumn $group, MetricColumn $date, RangePeriods $periods): array
+    #[\Override]
+    public function comparedGroups(Builder $query, MetricColumn $group, MetricColumn $date, RangePeriods $periods): ComparedGroups
     {
         $base = self::window(self::base($query), $query, $date, $periods->from, $periods->to);
         $base->addSelect("{$group->column} as group_key");
@@ -92,23 +89,27 @@ final readonly class AggregateQuery
         $rows = new self(Aggregate::Count, null);
         $rows->compare($base, $query, $date, $periods, '_rows');
         $base->groupBy($group->column);
+        $current = [];
+        $previous = [];
 
-        return array_values(array_map(function (object $row) use ($group, $rows): array {
+        foreach ($base->get()->all() as $row) {
             $values = get_object_vars($row);
+            $key = $group->key($values['group_key'] ?? null);
 
-            return [
-                'key' => $group->key($values['group_key'] ?? null),
-                'partials' => $rows->value($values, 'current_rows') === 0 ? null : $this->partials($values, 'current'),
-                'previous' => $rows->value($values, 'previous_rows') === 0 ? null : $this->partials($values, 'previous'),
-            ];
-        }, $base->get()->all()));
+            if ($rows->value($values, 'current_rows') !== 0) {
+                $current[] = ['key' => $key, 'partials' => $this->partials($values, 'current')];
+            }
+
+            if ($rows->value($values, 'previous_rows') !== 0) {
+                $previous[] = ['key' => $key, 'partials' => $this->partials($values, 'previous')];
+            }
+        }
+
+        return new ComparedGroups(new PartialGroups($this->function, $this->integer(), $current), new PartialGroups($this->function, $this->integer(), $previous));
     }
 
-    /**
-     * @param  Builder<Model>  $query
-     * @return list<array{period: string, key: int|string|bool|null, partials: list<int|float|null>}>
-     */
-    public function trend(Builder $query, Periods $periods, ?MetricColumn $split): array
+    #[\Override]
+    public function trend(Builder $query, Periods $periods, ?MetricColumn $split): PartialPeriods
     {
         $base = $periods->group($query);
 
@@ -119,14 +120,21 @@ final readonly class AggregateQuery
 
         $this->select($base, 'period');
 
-        return array_values(array_map(function (object $row) use ($split): array {
+        return new PartialPeriods($this->function, $this->integer(), array_values(array_map(function (object $row) use ($split): array {
             $values = get_object_vars($row);
             $period = $values['period'] ?? null;
 
             return ['period' => is_string($period) ? $period : '', 'key' => $split?->key($values['split_key'] ?? null), 'partials' => $this->partials($values, 'period')];
-        }, $base->get()->all()));
+        }, $base->get()->all())));
     }
 
+    #[\Override]
+    public function rows(QueryBuilder $base, string $alias, array $partition): QueryBuilder
+    {
+        return $base;
+    }
+
+    #[\Override]
     public function select(QueryBuilder $base, string $alias, ?MetricColumn $date = null, string $operator = '>=', ?string $since = null): void
     {
         foreach ($this->function->functions() as $index => $function) {
@@ -138,15 +146,27 @@ final readonly class AggregateQuery
         }
     }
 
-    public function rank(): AggregateRank
+    #[\Override]
+    public function rank(string $alias): AggregateRank
     {
         return new AggregateRank($this->function, $this->column?->column);
     }
 
-    /** @param array<mixed> $row */
+    #[\Override]
+    public function nullable(): bool
+    {
+        return in_array($this->function, [Aggregate::Average, Aggregate::Min, Aggregate::Max], true);
+    }
+
+    #[\Override]
     public function value(array $row, string $alias): int|float|null
     {
         return $this->function->value($this->partials($row, $alias));
+    }
+
+    private function integer(): bool
+    {
+        return $this->column?->integer() ?? true;
     }
 
     /** @return array<mixed> */
@@ -165,7 +185,7 @@ final readonly class AggregateQuery
     {
         $values = array_map(fn (int $index): mixed => $row["{$alias}_{$index}"] ?? null, array_keys($this->function->functions()));
 
-        return $this->function->partials($values, $this->column?->integer() ?? true);
+        return $this->function->partials($values, $this->integer());
     }
 
     /** @param Builder<Model> $query */
@@ -174,11 +194,5 @@ final readonly class AggregateQuery
         $split = self::stored($query, $periods->split);
         $this->select($base, "current{$suffix}", $date, '>=', $split);
         $this->select($base, "previous{$suffix}", $date, '<', $split);
-    }
-
-    /** @param Builder<Model> $query */
-    private static function stored(Builder $query, DateTimeInterface $date): string
-    {
-        return (string) $query->getModel()->fromDateTime($date);
     }
 }

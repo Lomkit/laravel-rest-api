@@ -8,7 +8,7 @@ use Lomkit\Rest\Query\Expressions\NullsLast;
 
 final readonly class TableQuery
 {
-    /** @param array<string, AggregateQuery> $columns */
+    /** @param array<string, Measure> $columns */
     public function __construct(
         private MetricColumn $group,
         private array $columns,
@@ -17,15 +17,20 @@ final readonly class TableQuery
     /** @return list<array{key: int|string|bool|null, values: array<string, int|float|null>}> */
     public function rows(QueryBuilder $base, string $orderBy, SortDirection $direction, int $limit): array
     {
+        foreach ($this->columns as $name => $column) {
+            $base = $column->rows($base, $name, [$this->group->column]);
+        }
+
         $base->addSelect("{$this->group->column} as group_key");
 
         foreach ($this->columns as $name => $column) {
             $column->select($base, $name);
         }
 
-        $rank = $this->columns[$orderBy]->rank();
+        $order = $this->columns[$orderBy];
+        $rank = $order->rank($orderBy);
 
-        if ($rank->nullable()) {
+        if ($order->nullable()) {
             $base->orderBy(new NullsLast($rank));
         }
 

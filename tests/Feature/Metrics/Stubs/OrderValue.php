@@ -14,6 +14,7 @@ class OrderValue extends Value
         private string $column = 'price',
         private string $dateColumn = 'placed_at',
         private array $declaredRanges = [30 => '30 days', 90 => '90 days'],
+        private float $percentile = 0.5,
     ) {}
 
     #[\Override]
@@ -31,6 +32,8 @@ class OrderValue extends Value
             'average' => $this->average($query, $this->column, $this->dateColumn),
             'min' => $this->min($query, $this->column, $this->dateColumn),
             'max' => $this->max($query, $this->column, $this->dateColumn),
+            'median' => $this->median($query, $this->column, $this->dateColumn),
+            'percentile' => $this->percentile($query, $this->column, $this->percentile, $this->dateColumn),
         };
     }
 }

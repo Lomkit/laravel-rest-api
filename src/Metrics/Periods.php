@@ -59,12 +59,18 @@ final readonly class Periods
     {
         $label = $this->label();
 
+        return $this->window($query)
+            ->select([$label->as('period')])
+            ->groupBy([$label]);
+    }
+
+    /** @param Builder<Model> $query */
+    public function window(Builder $query): QueryBuilder
+    {
         return $query->clone()
             ->toBase()
             ->reorder()
-            ->select([$label->as('period')])
-            ->whereBetween($this->date->column, [$this->stored($this->from), $this->stored($this->to)])
-            ->groupBy([$label]);
+            ->whereBetween($this->date->column, [$this->stored($this->from), $this->stored($this->to)]);
     }
 
     /**

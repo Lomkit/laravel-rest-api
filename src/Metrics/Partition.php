@@ -65,18 +65,50 @@ abstract class Partition extends Metric
     }
 
     /** @param Builder<Model> $query */
+    public function median(Builder $query, string $column, string $groupBy, ?string $dateColumn = null): PartitionResult
+    {
+        return $this->percentiles($query, Percentile::median(), $column, $groupBy, $dateColumn);
+    }
+
+    /** @param Builder<Model> $query */
+    public function percentile(Builder $query, string $column, float $percentile, string $groupBy, ?string $dateColumn = null): PartitionResult
+    {
+        return $this->percentiles($query, Percentile::of($percentile), $column, $groupBy, $dateColumn);
+    }
+
+    /** @param Builder<Model> $query */
     protected function aggregate(Builder $query, Aggregate $function, ?string $column, string $groupBy, ?string $dateColumn = null): PartitionResult
     {
         $group = MetricColumn::group($this, $query, $function->value, $groupBy);
         $aggregate = new AggregateQuery($function, $column === null ? null : MetricColumn::aggregated($this, $query, $function->value, $column));
-        $range = $this->range();
 
-        if ($dateColumn === null || $range === null) {
-            return PartitionResult::of($function, $group, $aggregate->groups($query, $group), $this->limit, $dateColumn !== null);
+        return $this->measure($query, $aggregate, $function->value, $group, $dateColumn);
+    }
+
+    /** @param Builder<Model> $query */
+    protected function percentiles(Builder $query, Percentile $percentile, string $column, string $groupBy, ?string $dateColumn = null): PartitionResult
+    {
+        $group = MetricColumn::group($this, $query, $percentile->value, $groupBy);
+        $measure = PercentileQuery::of($this, $query, $percentile->value, $percentile, $column);
+
+        return $this->measure($query, $measure, $percentile->value, $group, $dateColumn);
+    }
+
+    /** @param Builder<Model> $query */
+    protected function measure(Builder $query, Measure $measure, string $helper, MetricColumn $group, ?string $dateColumn): PartitionResult
+    {
+        if ($dateColumn === null) {
+            return PartitionResult::of($measure->groups($query, $group), $group, $this->limit);
         }
 
-        $date = MetricColumn::date($this, $query, $function->value, $dateColumn);
+        $range = $this->range();
 
-        return PartitionResult::of($function, $group, $aggregate->comparedGroups($query, $group, $date, RangePeriods::of($range)), $this->limit, true);
+        if ($range === null) {
+            return PartitionResult::compared(new ComparedGroups($measure->groups($query, $group), null), $group, $this->limit);
+        }
+
+        $date = MetricColumn::date($this, $query, $helper, $dateColumn);
+
+        return PartitionResult::compared($measure->comparedGroups($query, $group, $date, RangePeriods::of($range)), $group, $this->limit);
     }
 }
