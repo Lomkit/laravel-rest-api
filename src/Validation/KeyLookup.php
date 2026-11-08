@@ -32,16 +32,17 @@ final class KeyLookup
         private readonly Closure $query,
         private readonly ID $id,
         private readonly KeyRead $read = KeyRead::Keys,
+        private readonly ?ReachRecorder $reach = null,
     ) {}
 
-    public function expect(int|string $key): ExistingKey
+    public function expect(int|string $key, string $path): ExistingKey
     {
         $this->register($key);
 
-        return new ExistingKey($this, [$key]);
+        return new ExistingKey($this, [$path => $key]);
     }
 
-    /** @param list<int|string> $keys */
+    /** @param array<string, int|string> $keys */
     public function expectAll(array $keys): ExistingKey
     {
         foreach ($keys as $key) {
@@ -56,6 +57,11 @@ final class KeyLookup
         $this->resolve();
 
         return isset($this->found[$key]);
+    }
+
+    public function refuse(string $path, int|string $key): void
+    {
+        $this->reach?->refuse($path, $key);
     }
 
     /** @return list<Model> */

@@ -49,7 +49,7 @@ final class MutationKeys
         $parsed = $this->parsed($this->scalar($key, $resource));
 
         if ($parsed !== null) {
-            $this->rules->add($key->path, [$this->lookup($resource)->expect($parsed)]);
+            $this->rules->add($key->path, [$this->lookup($resource)->expect($parsed, $key->path)]);
         }
 
         return $parsed;
@@ -72,7 +72,7 @@ final class MutationKeys
             $parsed = $this->parsed($id->parseKey($item->value));
 
             if ($parsed !== null) {
-                $keys[] = $parsed;
+                $keys[$item->path] = $parsed;
             }
         }
 
@@ -80,7 +80,7 @@ final class MutationKeys
             $this->rules->add($key->path, [$this->lookup($resource)->expectAll($keys)]);
         }
 
-        return $keys;
+        return array_values($keys);
     }
 
     private function parsed(int|string|null $key): int|string|null

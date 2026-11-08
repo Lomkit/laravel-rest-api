@@ -12,6 +12,7 @@ use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\Traits\InteractsWithRules;
+use Lomkit\Rest\Http\Requests\Traits\ReportsKeysOutOfReach;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Http\Routing\Endpoint;
@@ -23,6 +24,7 @@ use Lomkit\Rest\Validation\ValidateOnly;
 class RestRequest extends FormRequest
 {
     use InteractsWithRules;
+    use ReportsKeysOutOfReach;
     use Resourcable;
 
     private ?RestContext $context = null;

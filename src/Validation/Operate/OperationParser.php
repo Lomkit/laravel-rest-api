@@ -14,6 +14,7 @@ use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\InputSet;
 use Lomkit\Rest\Validation\KeyList;
 use Lomkit\Rest\Validation\KeysGrammar;
+use Lomkit\Rest\Validation\ReachLog;
 use Lomkit\Rest\Validation\Search\SearchParser;
 use Lomkit\Rest\Validation\Search\SearchShape;
 use Lomkit\Rest\Validation\ValidationContext;
@@ -21,7 +22,10 @@ use Lomkit\Rest\Validation\ValidationContext;
 final readonly class OperationParser
 {
     /** @param Closure(): Builder<Model> $keysQuery */
-    public function __construct(private Closure $keysQuery) {}
+    public function __construct(
+        private Closure $keysQuery,
+        private ReachLog $reach,
+    ) {}
 
     public function parse(Cursor $root, Action $action, ValidationContext $context): OperationNode
     {
@@ -64,7 +68,7 @@ final readonly class OperationParser
     {
         $rules = $context->rules;
         $rules->add($search->path, ['prohibited']);
-        $keys = KeysGrammar::of($context->resource, $this->keysQuery, $max)->parse($resources);
+        $keys = KeysGrammar::of($context->resource, $this->keysQuery, $max, log: $this->reach)->parse($resources);
 
         if ($rules->violations()->has($resources->path)) {
             $context->reader->close($resources);

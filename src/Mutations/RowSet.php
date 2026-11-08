@@ -10,6 +10,7 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\KeyLookup;
 use Lomkit\Rest\Validation\KeyRead;
+use Lomkit\Rest\Validation\ReachLog;
 
 final class RowSet
 {
@@ -25,10 +26,12 @@ final class RowSet
     /** @var array<string, Model> */
     private array $handed = [];
 
+    public function __construct(private readonly ?ReachLog $reach = null) {}
+
     /** @param Closure(): Builder<Model> $query */
     public function lookup(Resource $resource, Closure $query, ID $id): KeyLookup
     {
-        return $this->lookups[$resource::class] ??= new KeyLookup($query, $id, KeyRead::Rows);
+        return $this->lookups[$resource::class] ??= new KeyLookup($query, $id, KeyRead::Rows, $this->reach?->recorder($resource));
     }
 
     public function find(Resource $resource, int|string|null $key): Model

@@ -94,7 +94,7 @@ class PivotFieldsTest extends WeightedPivotTestCase
 
         $related = $declared->resource();
         $rows = new RowSet;
-        $rows->lookup($related, fn (): Builder => $related::newModel()->newQuery(), KeysGrammar::idOf($related))->expect($this->related($relation)->getKey());
+        $rows->lookup($related, fn (): Builder => $related::newModel()->newQuery(), KeysGrammar::idOf($related))->expect($this->related($relation)->getKey(), 'mutate.0.key');
 
         RelationWrites::of($this->parent($relation), $declared, [$node])->after($this->parent($relation), new Mutator($rows, new WriteChecks($rows)), new OperationLog);
 

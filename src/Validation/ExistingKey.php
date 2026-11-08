@@ -7,7 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 final readonly class ExistingKey implements ValidationRule
 {
-    /** @param list<int|string> $keys */
+    /** @param array<string, int|string> $keys */
     public function __construct(
         private KeyLookup $lookup,
         private array $keys,
@@ -16,12 +16,17 @@ final readonly class ExistingKey implements ValidationRule
     #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        foreach ($this->keys as $key) {
-            if (! $this->lookup->has($key)) {
-                $fail('validation.exists')->translate();
+        $refused = false;
 
-                return;
+        foreach ($this->keys as $path => $key) {
+            if (! $this->lookup->has($key)) {
+                $this->lookup->refuse($path, $key);
+                $refused = true;
             }
+        }
+
+        if ($refused) {
+            $fail('validation.exists')->translate();
         }
     }
 }
