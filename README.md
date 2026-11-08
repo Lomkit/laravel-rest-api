@@ -8,6 +8,8 @@
 <a href="LICENSE"><img src="https://img.shields.io/packagist/l/lomkit/laravel-rest-api" alt="License"></a>
 </p>
 
+<p align="center"><a href="https://laravel-rest-api.lomkit.com"><strong>Documentation</strong></a> · <a href="UPGRADE.md">Upgrade from 2.x</a></p>
+
 # Laravel Rest Api
 
 **Describe a model once. Get a complete API.**
@@ -21,6 +23,10 @@ No controller methods to write, no query parsing to maintain.
 - **Laravel policies everywhere**: every resource a request reaches, every row it writes.
 - **Built for frontends**: a `details` endpoint, per-row abilities, Precognition, precise `422` messages.
 - **Documented for you**: an OpenAPI document with typed schemas and examples, through Scramble.
+
+## Documentation
+
+The full guide lives on the [documentation site](https://laravel-rest-api.lomkit.com): installation, every endpoint, configuration and recipes. Coming from 2.x? Read the [upgrade guide](UPGRADE.md).
 
 ## Requirements
 
@@ -343,10 +349,6 @@ class ShowsByStatus extends Partition
 - **Predictable limits**: list sizes, nesting depths and totals are bounded in `config/rest.php`, and an oversized request answers one clear `422`.
 - **Generators**: `rest:resource --generate` reads the table, and `rest:controller`, `rest:policy`, `rest:action`, `rest:instruction`, `rest:metric` and `rest:response` scaffold the rest.
 - **Laravel Boost**: the package ships a Boost skill with the full feature reference.
-
-## Documentation
-
-Everything else lives on the [documentation site](https://laravel-rest-api.lomkit.com). Coming from 2.x? Read the [upgrade guide](UPGRADE.md).
 
 ## Contributing
 
