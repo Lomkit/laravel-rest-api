@@ -11196,6 +11196,12 @@
                         "type": "string",
                         "const": "only-featured"
                     },
+                    "alias": {
+                        "type": "string",
+                        "description": "The key of this entry among the instructions of the search, in place of the instruction name. It lets a search send one instruction several times.",
+                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                        "maxLength": 255
+                    },
                     "fields": {
                         "type": "array",
                         "items": {

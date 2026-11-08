@@ -10,5 +10,11 @@ final readonly class InstructionNode
     public function __construct(
         public Instruction $instruction,
         public InputValues $fields,
+        public ?string $alias = null,
     ) {}
+
+    public function key(): string
+    {
+        return $this->alias ?? $this->instruction->uriKey();
+    }
 }

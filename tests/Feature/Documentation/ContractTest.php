@@ -192,6 +192,7 @@ class ContractTest extends DocumentationTestCase
             ]]],
             'a scope with its parameters' => ['/shows/search', ['scopes' => [['name' => 'startingFrom', 'parameters' => ['2026-07-01']]]]],
             'an instruction with its fields' => ['/shows/search', ['instructions' => [['name' => 'only-featured', 'fields' => [['name' => 'featured', 'value' => true], ['name' => 'min_seats', 'value' => null]]]]]],
+            'one instruction twice under two keys' => ['/shows/search', ['instructions' => [['name' => 'only-featured'], ['name' => 'only-featured', 'alias' => 'large', 'fields' => [['name' => 'min_seats', 'value' => 100]]]]]],
             'the gates of a resource that turns its gates off' => ['/notes/search', ['gates' => ['view']], [NoteResource::class => UngatedNoteResource::class]],
         ];
     }
@@ -226,6 +227,7 @@ class ContractTest extends DocumentationTestCase
             'a text on a resource without a text search' => ['/stages/search', ['text' => ['value' => 'main']]],
             'an unknown key in a filter' => ['/shows/search', ['filters' => [['field' => 'title', 'value' => 'Opening night', 'note' => 'a']]]],
             'an unknown key in an include' => ['/shows/search', ['includes' => [['relation' => 'comments', 'note' => 'a']]]],
+            'an instruction alias that is not an identifier' => ['/shows/search', ['instructions' => [['name' => 'only-featured', 'alias' => 'only-featured']]]],
         ];
     }
 
