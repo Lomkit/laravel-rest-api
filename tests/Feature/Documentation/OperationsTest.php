@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Documentation\Stubs\DocumentedStageController;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\ViewerStageController;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -120,5 +121,18 @@ class OperationsTest extends DocumentationTestCase
 
         $response->assertOk();
         $this->assertSame(['code', 'name'], $response->json('paths./viewer-stages/search.post.requestBody.content.application/json.schema.properties.search.properties.selects.items.properties.field.enum'));
+    }
+
+    #[Test]
+    public function it_keeps_the_summary_and_the_body_of_an_endpoint_that_the_controller_overrides_with_a_docblock(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('documented-stages', DocumentedStageController::class));
+
+        $paths = $this->document()['paths'];
+
+        $this->assertSame('Search Stage', $paths['/documented-stages/search']['post']['summary']);
+        $this->assertSame('Mutate Stage', $paths['/documented-stages/mutate']['post']['summary']);
+        $this->assertSame($paths['/stages/search']['post']['requestBody'], $paths['/documented-stages/search']['post']['requestBody']);
+        $this->assertSame($paths['/stages/mutate']['post']['requestBody'], $paths['/documented-stages/mutate']['post']['requestBody']);
     }
 }
