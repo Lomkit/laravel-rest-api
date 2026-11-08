@@ -20,7 +20,7 @@ class ReadResponsesTest extends DocumentationTestCase
     {
         $this->assertSame(
             ['Artist', 'Comment', 'Label', 'Note', 'NoteDetails', 'NotePaginated', 'NoteRows', 'RestGateAnswer', 'Show', 'ShowDetails', 'ShowPaginated', 'ShowRows', 'ShowWithType', 'Stage', 'StageDetails', 'StagePaginated', 'StageRows', 'StageWithType'],
-            array_values(preg_grep('/^(Rest[A-Z]\w+|[A-Z][a-z]+(Details|Paginated|Rows|WithType)?)$/', array_keys($this->document()['components']['schemas']))),
+            array_values(preg_grep('/^(RestGateAnswer|[A-Z][a-z]+(Details|Paginated|Rows|WithType)?)$/', array_keys($this->document()['components']['schemas']))),
         );
     }
 

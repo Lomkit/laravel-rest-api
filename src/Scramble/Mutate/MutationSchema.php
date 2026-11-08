@@ -13,9 +13,12 @@ use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\KeySchema;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Scramble\Schemas;
+use Lomkit\Rest\Scramble\Search\SearchSchema;
 
 final readonly class MutationSchema
 {
+    private const array RESPONSE_KEYS = ['selects', 'aggregates', 'includes', 'gates'];
+
     private RecordSchema $records;
 
     private WritableSchema $writable;
@@ -36,7 +39,7 @@ final readonly class MutationSchema
         $mutate->setMin(1);
         $mutate->setMax($resource->context()->limits()->sizes->mutate);
 
-        return Schemas::required(['mutate' => $mutate]);
+        return Schemas::required(['mutate' => $mutate, 'response' => $this->response($resource)], ['response']);
     }
 
     public function reference(Resource $resource): Reference
@@ -59,5 +62,14 @@ final readonly class MutationSchema
         ]);
 
         return Schemas::closed($properties, array_values(array_intersect(['operation', 'key'], array_keys($properties))));
+    }
+
+    private function response(Resource $resource): Reference
+    {
+        return $this->components->schema($this->records->name($resource).'MutationResponse', $resource::class, fn (): Type => Schemas::closed(
+            (new SearchSchema($this->components))->properties($resource, self::RESPONSE_KEYS, false),
+            [],
+            'The records to return after the mutation: one for each entry of `mutate`, at the same index, read and rendered as a search reads its rows.',
+        ));
     }
 }

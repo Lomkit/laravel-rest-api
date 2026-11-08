@@ -85,11 +85,12 @@ class ScrambleDocumentTest extends ScrambleTestCase
     }
 
     #[Test]
-    public function it_documents_each_mutate_response_as_an_object(): void
+    public function it_documents_the_result_of_each_mutation(): void
     {
         $schema = $this->operation('/categories/mutate', 'post')['responses'][200]['content']['application/json']['schema'];
 
-        $this->assertSame(['object'], array_values(array_unique(array_column($schema['anyOf'] ?? [$schema], 'type'))));
+        $this->assertSame(['$ref' => '#/components/schemas/CategoryMutateResult'], $schema);
+        $this->assertSame(['operations', 'records'], array_keys($this->schemas()['CategoryMutateResult']['properties']));
     }
 
     #[Test]

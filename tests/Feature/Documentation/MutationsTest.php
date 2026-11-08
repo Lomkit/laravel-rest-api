@@ -18,7 +18,7 @@ class MutationsTest extends DocumentationTestCase
         $schemas = $document['components']['schemas'];
 
         $this->assertSame(
-            '{"type":"object","properties":{"mutate":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowMutation"},"minItems":1,"maxItems":100}},"required":["mutate"]}',
+            '{"type":"object","properties":{"mutate":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowMutation"},"minItems":1,"maxItems":100},"response":{"$ref":"#\\/components\\/schemas\\/ShowMutationResponse"}},"required":["mutate"]}',
             json_encode($document['paths']['/shows/mutate']['post']['requestBody']['content']['application/json']['schema']),
         );
         $this->assertSame(
@@ -146,5 +146,34 @@ class MutationsTest extends DocumentationTestCase
             ]]]]],
             'a key that the client sends' => ['/stages/mutate', ['mutate' => [['operation' => 'create', 'attributes' => ['code' => 'main', 'name' => 'Main stage']]]]],
         ];
+    }
+
+    #[Test]
+    public function it_documents_the_records_that_a_mutation_returns(): void
+    {
+        $document = $this->document();
+
+        $this->assertSame(['$ref' => '#/components/schemas/ShowMutationResponse'], $document['paths']['/shows/mutate']['post']['requestBody']['content']['application/json']['schema']['properties']['response']);
+        $this->assertSame(
+            '{"type":"object","description":"The records to return after the mutation: one for each entry of `mutate`, at the same index, read and rendered as a search reads its rows.","properties":{"selects":{"type":"array","items":{"$ref":"#\\/components\\/schemas\\/ShowSelect"},"maxItems":100},"aggregates":{"type":"array","items":{"$ref":"#\\/components\\/schemas\\/ShowAggregate"},"maxItems":20},"includes":{"type":"array","items":{"$ref":"#\\/components\\/schemas\\/ShowInclude"},"maxItems":20},"gates":{"type":"array","description":"The abilities to answer for each row, under `gates` in the row","items":{"type":"string","enum":["view","update","delete","restore","forceDelete","feature"]},"uniqueItems":true}},"additionalProperties":false,"title":"ShowMutationResponse"}',
+            json_encode($document['components']['schemas']['ShowMutationResponse']),
+        );
+    }
+
+    #[Test]
+    public function it_documents_the_operations_and_the_records_of_the_result_of_a_mutation(): void
+    {
+        $document = $this->document();
+        $schemas = $document['components']['schemas'];
+
+        $this->assertSame(['$ref' => '#/components/schemas/ShowMutateResult'], $document['paths']['/shows/mutate']['post']['responses'][200]['content']['application/json']['schema']);
+        $this->assertSame(
+            '{"type":"object","description":"The operations that the mutation wrote","properties":{"operations":{"type":"array","description":"One entry for each entry of `mutate`, at the same index","items":{"$ref":"#\\/components\\/schemas\\/RestMutateOperation"}},"records":{"type":"array","description":"Present when the request sends `response`: one record for each entry of `mutate`, at the same index, or `null` for a row that the search of the resource does not return","items":{"anyOf":[{"$ref":"#\\/components\\/schemas\\/Show"},{"type":"null"}]}}},"required":["operations"],"title":"ShowMutateResult"}',
+            json_encode($schemas['ShowMutateResult']),
+        );
+        $this->assertSame(
+            '{"type":"object","description":"The operation of one entry and the key of its row","properties":{"operation":{"type":"string","enum":["create","update","attach","detach","sync","toggle"]},"type":{"type":"string","description":"The morph type of the row, on an entry of a `MorphTo` relation"},"key":{"anyOf":[{"description":"The key of the row that a `create` wrote, else the key that the entry sent. An entry with a list of keys answers a list.","oneOf":[{"type":"integer"},{"type":"string"},{"type":"array","items":{"oneOf":[{"type":"integer"},{"type":"string"}]}}]},{"type":"null"}]},"relations":{"type":"object","description":"Present when the entry sends `relations`: the entries of each relation that it sends, an object for a relation to one, a list for a relation to many","additionalProperties":{"anyOf":[{"oneOf":[{"$ref":"#\\/components\\/schemas\\/RestMutateOperation"},{"type":"array","items":{"$ref":"#\\/components\\/schemas\\/RestMutateOperation"}}]},{"type":"null"}]}}},"required":["operation","key"],"title":"RestMutateOperation"}',
+            json_encode($schemas['RestMutateOperation']),
+        );
     }
 }

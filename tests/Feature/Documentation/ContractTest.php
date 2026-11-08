@@ -244,25 +244,29 @@ class ContractTest extends DocumentationTestCase
         $this->assertSame(['/stages/mutate'], $sent);
     }
 
-    /** @param list<array<string, mixed>> $mutate */
+    /**
+     * @param  list<array<string, mixed>>  $mutate
+     * @param  array<string, mixed>  $records
+     */
     #[Test]
     #[DataProvider('acceptedMutations')]
-    public function it_answers_a_mutation_that_the_document_describes(string $path, array $mutate): void
+    public function it_answers_a_mutation_that_the_document_describes(string $path, array $mutate, array $records = []): void
     {
         $this->seedFestival();
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
         $document = $this->document();
         $validator = new OpenApiValidator;
+        $body = ['mutate' => $mutate, ...($records === [] ? [] : ['response' => $records])];
 
-        $this->assertSame([], $validator->requestErrors($document, $path, 'post', ['mutate' => $mutate]));
+        $this->assertSame([], $validator->requestErrors($document, $path, 'post', $body));
 
-        $response = $this->postJson('api'.$path, ['mutate' => $mutate]);
+        $response = $this->postJson('api'.$path, $body);
 
         $response->assertOk();
         $this->assertSame([], $validator->responseErrors($document, $path, 'post', 200, (string) $response->getContent()));
     }
 
-    /** @return array<string, array{string, list<array<string, mixed>>}> */
+    /** @return array<string, array{0: string, 1: list<array<string, mixed>>, 2?: array<string, mixed>}> */
     public static function acceptedMutations(): array
     {
         return [
@@ -281,22 +285,32 @@ class ContractTest extends DocumentationTestCase
             'nested relations' => ['/stages/mutate', [['operation' => 'create', 'attributes' => ['code' => 'jazz', 'name' => 'Jazz tent'], 'relations' => ['shows' => [
                 ['operation' => 'attach', 'key' => 2, 'relations' => ['artists' => [['operation' => 'attach', 'key' => 1, 'pivot' => ['role' => 'guest']]]]],
             ]]]]],
+            'the records of the written rows' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Late show']], ['operation' => 'update', 'key' => 2, 'attributes' => ['featured' => true]]], [
+                'selects' => [['field' => 'title']],
+                'aggregates' => [['relation' => 'comments', 'type' => 'count']],
+                'includes' => [['relation' => 'stage'], ['relation' => 'artists']],
+                'gates' => ['view', 'feature'],
+            ]],
         ];
     }
 
-    /** @param list<array<string, mixed>> $mutate */
+    /**
+     * @param  list<array<string, mixed>>  $mutate
+     * @param  array<string, mixed>  $records
+     */
     #[Test]
     #[DataProvider('refusedMutations')]
-    public function it_refuses_a_mutation_that_the_document_does_not_describe(string $path, array $mutate): void
+    public function it_refuses_a_mutation_that_the_document_does_not_describe(string $path, array $mutate, array $records = []): void
     {
         $this->seedFestival();
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $body = ['mutate' => $mutate, ...($records === [] ? [] : ['response' => $records])];
 
-        $this->assertNotSame([], (new OpenApiValidator)->requestErrors($this->document(), $path, 'post', ['mutate' => $mutate]));
-        $this->postJson('api'.$path, ['mutate' => $mutate])->assertUnprocessable();
+        $this->assertNotSame([], (new OpenApiValidator)->requestErrors($this->document(), $path, 'post', $body));
+        $this->postJson('api'.$path, $body)->assertUnprocessable();
     }
 
-    /** @return array<string, array{string, list<array<string, mixed>>}> */
+    /** @return array<string, array{0: string, 1: list<array<string, mixed>>, 2?: array<string, mixed>}> */
     public static function refusedMutations(): array
     {
         return [
@@ -318,6 +332,8 @@ class ContractTest extends DocumentationTestCase
             'an unknown key in an entry' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'comment' => 'Late']]],
             'an attribute that the resource does not declare' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['nickname' => 'Ada']]]],
             'a relation that the resource does not declare' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['sponsors' => []]]]],
+            'the create gate in the records' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Late show']]], ['gates' => ['create']]],
+            'a filter in the records' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Late show']]], ['filters' => [['field' => 'title', 'value' => 'Late show']]]],
         ];
     }
 
