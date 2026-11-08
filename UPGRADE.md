@@ -2004,6 +2004,36 @@ Response block:
 - The records go through the `map()` of the resource's `Response`, as the rows of a search. They are read and rendered after the commit, after `mutatedAll()`: one query for the rows of every entry, plus one query for each include.
 - `MutateRequest::responseBlock()` returns the block as a `Lomkit\Rest\Search\SearchNode` once the request passed validation, or `null` without `response`. `Lomkit\Rest\Http\MutateResponse::$records` holds the rendered records, or `null`.
 
+Versioned rows:
+
+- A resource can refuse an update of a row that another request changed since the client read it. Return `true` from `versioned()` (`false` by default) and declare the `updated_at` field:
+
+  ```php
+  #[\Override]
+  public function fields(): array
+  {
+      return [
+          ID::make('id'),
+          Text::make('title'),
+          DateTime::make('updated_at')->readonly(),
+      ];
+  }
+
+  #[\Override]
+  public function versioned(): bool
+  {
+      return true;
+  }
+  ```
+
+- An `update` entry of a versioned resource then accepts `version`: the `updated_at` that the client read, as the search returns it. When a row has another `updated_at`, the mutation answers `409` and writes nothing: `{"message": "The record was changed by another request.", "conflicts": [{"path": "mutate.1", "key": 7, "version": "2026-12-01T10:04:12.000000Z"}]}`. `conflicts` lists every entry whose version differs, with the version of the row now, or `null` when the row is gone. An entry without `version` writes as before.
+- The check runs in the transaction of the mutation, after the row checks (`403` first) and before `mutatingAll()`: one `SELECT ... FOR UPDATE` per resource reads the rows again, on every attempt of `transactions.attempts`. A `409` runs no hook and dispatches no `ResourceMutated`.
+- Entries under `relations` accept `version` when their resource is versioned, with paths such as `mutate.0.relations.lines.1`. With a list of keys, every row of the list has to hold that version.
+- `version` on a resource that is not versioned is a `422`, as another unknown key, and so is `version` on an operation other than `update`. `destroy`, `restore` and `forceDestroy` take no version.
+- `versioned()` on a model without timestamps, or without an `updated_at` field on the resource, throws `Lomkit\Rest\Exceptions\InvalidResourceException` when the fields of the resource are read.
+- Store the timestamps with microseconds, `$table->timestamps(precision: 6)`: with seconds, two saves in the same second give the same version. To save a row twice, read its new version from `records`: `"response": {"selects": [{"field": "updated_at"}]}`.
+- `MutationParser::of()` takes a `Lomkit\Rest\Mutations\VersionClaims`, which `MutateRequest::versions()` returns once the request passed validation.
+
 Custom relations and query builders:
 
 - `Lomkit\Rest\Fields\MutationOperation` lists the operations: `create`, `update`, `attach`, `detach`, `sync`, `toggle` and `delete`. `Relation::mutationOperations()` returns a list of its cases instead of strings, for example `[MutationOperation::Create, MutationOperation::Attach]`.
@@ -2017,6 +2047,7 @@ Custom relations and query builders:
 Scramble:
 
 - The `mutate` body documents each entry by operation, with the fields that the operation writes and their type, and each relation by its operations, see [OpenAPI documentation](#openapi-documentation).
+- The `update` entries of a versioned resource document `version`, typed like its `updated_at` field. A `mutate` operation that writes a versioned resource, at its root or under its relations, documents the `409` response, the shared `RestConflict` component.
 
 ### Pivot fields
 

@@ -31,7 +31,7 @@ class ReadResponsesTest extends DocumentationTestCase
     public function it_documents_the_selectable_fields_the_gates_and_the_relations_of_a_record(): void
     {
         $this->assertSame(
-            ['id', 'title', 'summary', 'price', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'settings', 'gates', 'stage', 'artists', 'comments', 'labels', '@more'],
+            ['id', 'title', 'summary', 'price', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'settings', 'updated_at', 'gates', 'stage', 'artists', 'comments', 'labels', '@more'],
             array_keys($this->document()['components']['schemas']['Show']['properties']),
         );
     }

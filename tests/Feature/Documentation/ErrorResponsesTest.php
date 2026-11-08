@@ -24,6 +24,22 @@ class ErrorResponsesTest extends DocumentationTestCase
             ],
             'required' => ['message'],
         ];
+        $conflict = [
+            'type' => 'object',
+            'properties' => [
+                'message' => ['type' => 'string'],
+                'conflicts' => [
+                    'type' => 'array',
+                    'description' => 'The update entries whose `version` is not the version of their row: nothing was written',
+                    'items' => [
+                        'type' => 'object',
+                        'properties' => ['path' => ['type' => 'string'], 'key' => ['type' => ['integer', 'string']], 'version' => ['description' => 'The version of the row as the request found it, written as the search returns it; null when the row is gone']],
+                        'required' => ['path', 'key', 'version'],
+                    ],
+                ],
+            ],
+            'required' => ['message', 'conflicts'],
+        ];
         $validation = [
             'type' => 'object',
             'properties' => ['message' => ['type' => 'string'], 'errors' => ['type' => 'object', 'additionalProperties' => ['type' => 'array', 'items' => ['type' => 'string']]]],
@@ -49,6 +65,7 @@ class ErrorResponsesTest extends DocumentationTestCase
 
         $this->assertSame([
             'RestConfirmationRequired' => ['description' => 'Confirmation required: send the same body again with the token in confirmation', 'content' => ['application/json' => ['schema' => $confirmation]]],
+            'RestConflict' => ['description' => 'Conflict', 'content' => ['application/json' => ['schema' => $conflict]]],
             'RestForbidden' => ['description' => 'Forbidden', 'content' => ['application/json' => ['schema' => $forbidden]]],
             'RestNotFound' => ['description' => 'Not found', 'content' => ['application/json' => ['schema' => $message]]],
             'RestUnauthenticated' => ['description' => 'Unauthenticated', 'content' => ['application/json' => ['schema' => $message]]],
@@ -68,7 +85,8 @@ class ErrorResponsesTest extends DocumentationTestCase
             'batch progress' => ['/shows/actions/{action}/batches/{batch}', 'get', [200, 401, 403, 404], true],
             'force delete' => ['/shows/force', 'delete', [200, 401, 403, 404, 422], true],
             'details of a resource registered after one behind auth' => ['/notes', 'get', [200, 403, 404, 422], false],
-            'mutate of a resource registered after one behind auth' => ['/notes/mutate', 'post', [200, 403, 404, 422], false],
+            'mutate of a resource registered after one behind auth' => ['/notes/mutate', 'post', [200, 403, 404, 409, 422], false],
+            'mutate of a versioned resource' => ['/shows/mutate', 'post', [200, 401, 403, 404, 409, 422], true],
             'restore' => ['/shows/restore', 'post', [200, 401, 403, 404, 422], true],
         ];
     }
@@ -79,7 +97,7 @@ class ErrorResponsesTest extends DocumentationTestCase
     public function it_lists_the_error_responses_of_each_operation(string $path, string $method, array $statuses, bool $authenticated): void
     {
         $operation = $this->operation($path, $method);
-        $names = [401 => 'RestUnauthenticated', 403 => 'RestForbidden', 404 => 'RestNotFound', 422 => 'RestValidationFailed', 428 => 'RestConfirmationRequired'];
+        $names = [401 => 'RestUnauthenticated', 403 => 'RestForbidden', 404 => 'RestNotFound', 409 => 'RestConflict', 422 => 'RestValidationFailed', 428 => 'RestConfirmationRequired'];
 
         $this->assertSame($statuses, array_keys($operation['responses']));
 

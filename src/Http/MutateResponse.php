@@ -39,6 +39,7 @@ final readonly class MutateResponse implements Responsable
         $checks = new WriteChecks($request->rows());
 
         $checks->authorize($resource, $nodes);
+        $request->versions()->verify();
 
         $resource->mutatingAll($nodes);
 

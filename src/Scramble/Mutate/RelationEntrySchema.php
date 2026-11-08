@@ -146,6 +146,7 @@ final readonly class RelationEntrySchema
 
         return array_filter([
             'key' => $operation->requiresKey() ? $this->key($relation, $related) : null,
+            'version' => MutationSchema::version($related, $operation),
             'attributes' => $write === null ? null : $this->writable->attributes($related, $write),
             'pivot' => $pivot === null ? null : $this->writable->pivot($relation, $pivot),
             'without_detaching' => $operation === MutationOperation::Sync ? (new BooleanType)->setDescription('When true, the rows that `key` does not list stay attached') : null,
