@@ -20,4 +20,9 @@ final class InvalidActionException extends LogicException
     {
         return new self("{$action} runs its chunks in one transaction through atomic(), but it implements ShouldQueue: its chunks run in the worker, outside the request.");
     }
+
+    public static function dataList(): self
+    {
+        return new self('The data of an ActionResponse is a list, but the result gives it as a JSON object: pass an array with string keys, such as [\'skipped\' => [4, 9]].');
+    }
 }

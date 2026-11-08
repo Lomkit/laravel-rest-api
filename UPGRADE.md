@@ -464,9 +464,11 @@ A queued or batched action no longer serializes its resource, its rows and its i
   | `ActionResponse::download($url, 'subscriptions.csv')` | `{"type": "download", "url": "...", "name": "subscriptions.csv"}` |
   | `ActionResponse::redirect($url)` | `{"type": "redirect", "url": "..."}` |
   | `ActionResponse::created($invoices)` | `{"type": "created", "keys": [29, 30]}` |
+  | `ActionResponse::data(['export' => 41, 'rows' => 120])` | `{"type": "data", "data": {"export": 41, "rows": 120}}` |
+  | `ActionResponse::message('Export started')->withData(['export' => 41])` | `{"type": "message", "message": "Export started", "data": {"export": 41}}` |
   | `null` | `null` |
 
-  The status stays 200. The package does not send the file or follow the URL: the client acts on the result. `created()` takes the models, in a collection or an array, and gives their keys in that order; read the rows with a search.
+  The status stays 200. The package does not send the file or follow the URL: the client acts on the result. `created()` takes the models, in a collection or an array, and gives their keys in that order; read the rows with a search. `data()`, and `withData()` on every type, take an array with string keys and give it as a JSON object, `{}` when empty; a list throws `Lomkit\Rest\Exceptions\InvalidActionException`.
 - Clients that compare the whole response body of `operate` now also receive `result`.
 - `->destructive()` and `->confirm('Extend the selected subscriptions?')` mark an action for clients, when the resource declares it or as the `$destructive` and `$confirm` properties of the action. The details response gives both in each action entry, after `meta`: `"destructive": false` and `"confirm": null` by default. Scramble documents both. The endpoint runs the action the same way.
 - `Action::handleRequest()` returns `Lomkit\Rest\Http\OperateResponse`, which holds `impacted` and `result`, instead of the count, and the `operate()` method of the controller returns that `OperateResponse`. A class that overrides one of them declares the new return type: PHP refuses to load an override that keeps `int` or `Illuminate\Http\Response`, and names the method.
