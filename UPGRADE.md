@@ -2,7 +2,7 @@
 
 ## Upgrading to 3.0 from 2.x
 
-Version 3.0 is in development on the `3.x` branch. This guide lists each breaking change that is merged into that branch.
+This guide lists every breaking change of version 3.0, area by area. Update the requirements first, then go through the sections of the features that your application uses.
 
 ### Requirements
 
