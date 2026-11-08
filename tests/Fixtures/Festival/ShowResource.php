@@ -106,6 +106,7 @@ class ShowResource extends Resource
             ShowsPerMonth::make(),
             ShowsByStatus::make()->withoutMiddleware('auth'),
             ShowsByLevel::make(),
+            SeatsByLevel::make(),
             TopStages::make(),
             SeatsGoal::make(),
             Occupancy::make(),

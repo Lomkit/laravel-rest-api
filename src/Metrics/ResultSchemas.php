@@ -53,8 +53,9 @@ final class ResultSchemas
         $column = self::object([
             'name' => new StringType,
             'label' => new StringType,
-            'aggregate' => (new StringType)->enum(array_column(Aggregate::cases(), 'value')),
-        ]);
+            'aggregate' => (new StringType)->enum([...array_column(Aggregate::cases(), 'value'), Percentile::MEDIAN, Percentile::PERCENTILE]),
+            'percentile' => self::fraction(),
+        ], ['percentile']);
 
         return self::object([
             'columns' => self::list($column),
@@ -100,6 +101,16 @@ final class ResultSchemas
     private static function number(): Type
     {
         return (new NumberType)->nullable(true);
+    }
+
+    private static function fraction(): NumberType
+    {
+        $fraction = new NumberType;
+        $fraction->setMin(0);
+        $fraction->setMax(1);
+        $fraction->setDescription('The percentile of the column, from 0 to 1, present when `aggregate` is `percentile`');
+
+        return $fraction;
     }
 
     private static function previous(): Type

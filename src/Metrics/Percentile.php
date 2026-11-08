@@ -4,6 +4,10 @@ namespace Lomkit\Rest\Metrics;
 
 final readonly class Percentile
 {
+    public const string MEDIAN = 'median';
+
+    public const string PERCENTILE = 'percentile';
+
     private function __construct(
         public string $value,
         public float $fraction,
@@ -11,12 +15,12 @@ final readonly class Percentile
 
     public static function median(): self
     {
-        return new self('median', 0.5);
+        return new self(self::MEDIAN, 0.5);
     }
 
     public static function of(float $fraction): self
     {
-        return new self('percentile', $fraction);
+        return new self(self::PERCENTILE, $fraction);
     }
 
     public function valid(): bool

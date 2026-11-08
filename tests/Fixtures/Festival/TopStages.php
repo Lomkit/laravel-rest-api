@@ -17,6 +17,8 @@ class TopStages extends Table
         return $this->rows($query, 'status', [
             'shows' => TableColumn::count(),
             'seats' => TableColumn::sum('seats'),
+            'median' => TableColumn::median('seats'),
+            'p90' => TableColumn::percentile('seats', 0.9),
         ], orderBy: 'seats', dateColumn: 'starts_at');
     }
 }

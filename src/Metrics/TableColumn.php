@@ -57,7 +57,7 @@ final readonly class TableColumn
     {
         $column = ['name' => $name, 'label' => $this->label ?? Str::headline($name), 'aggregate' => $this->function->value];
 
-        if (! $this->function instanceof Percentile || $this->function->value === 'median') {
+        if (! $this->function instanceof Percentile || $this->function->value === Percentile::MEDIAN) {
             return $column;
         }
 
