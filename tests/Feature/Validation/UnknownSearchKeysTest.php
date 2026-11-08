@@ -2,7 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Validation;
 
+use Lomkit\Rest\Tests\Concerns\CapturesQueries;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
+use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -10,6 +12,8 @@ use PHPUnit\Framework\Attributes\Test;
 
 class UnknownSearchKeysTest extends PackageTestCase
 {
+    use CapturesQueries;
+
     private const string POSTS = '/api/posts/search';
 
     private const string CATEGORIES = '/api/categories/search';
@@ -36,7 +40,6 @@ class UnknownSearchKeysTest extends PackageTestCase
     public static function unknownKeys(): array
     {
         return [
-            'in the search' => [self::POSTS, ['filter' => [['field' => 'views', 'value' => 1]]], 'search.filter'],
             'in a filter' => [self::POSTS, ['filters' => [['field' => 'title', 'operater' => 'like', 'value' => '%report%']]], 'search.filters.0.operater'],
             'in a nested filter' => [self::POSTS, ['filters' => [['nested' => [['field' => 'views', 'value' => 1, 'typ' => 'or']]]]], 'search.filters.0.nested.0.typ'],
             'in a sort' => [self::POSTS, ['sorts' => [['field' => 'views', 'order' => 'desc']]], 'search.sorts.0.order'],
@@ -53,6 +56,44 @@ class UnknownSearchKeysTest extends PackageTestCase
             'types in an include' => [self::POSTS, ['includes' => [['relation' => 'author', 'types' => []]]], 'search.includes.0.types'],
             'in an aggregate' => [self::CATEGORIES, ['aggregates' => [['relation' => 'products', 'type' => 'count', 'as' => 'total']]], 'search.aggregates.0.as'],
             'named with an underscore' => [self::POSTS, ['filters' => [['field' => 'views', 'value' => 1, 'sort_by' => 'views']]], 'search.filters.0.sort_by'],
+        ];
+    }
+
+    /** @param array<string, mixed> $unknown */
+    #[Test]
+    #[DataProvider('unknownRootKeys')]
+    public function it_answers_as_if_an_unknown_key_of_the_search_were_absent(array $unknown): void
+    {
+        Post::factory()->create(['id' => 1, 'title' => 'Annual report', 'views' => 10]);
+        Post::factory()->create(['id' => 2, 'title' => 'Draft notes', 'views' => 3]);
+        Post::factory()->create(['id' => 3, 'title' => 'Release plan', 'views' => 40]);
+        $search = ['filters' => [['field' => 'views', 'operator' => '>', 'value' => 5]], 'sorts' => [['field' => 'id']], 'selects' => [['field' => 'title']]];
+        $this->captureQueries();
+
+        $response = $this->postJson(self::POSTS, ['search' => [...$unknown, ...$search]]);
+
+        $response->assertOk()->assertExactJson([
+            'current_page' => 1,
+            'data' => [['title' => 'Annual report'], ['title' => 'Release plan']],
+            'from' => 1,
+            'last_page' => 1,
+            'meta' => [],
+            'per_page' => 50,
+            'to' => 2,
+            'total' => 2,
+        ]);
+        $this->assertSame([
+            ['select posts.title, posts.id from posts where (posts.views > ?) order by posts.id asc limit 50 offset 0', [5]],
+        ], $this->statements);
+    }
+
+    /** @return array<string, array{array<string, mixed>}> */
+    public static function unknownRootKeys(): array
+    {
+        return [
+            'a misspelled list' => [['filtres' => [['field' => 'views', 'value' => 1]]]],
+            'named with an underscore' => [['sort_by' => 'views']],
+            'holding a wildcard, a dot or a final backslash' => [['*' => 1, 'filters.0.field' => 'secret', 'a\\' => 3]],
         ];
     }
 

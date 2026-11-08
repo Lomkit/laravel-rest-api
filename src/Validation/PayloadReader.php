@@ -84,6 +84,20 @@ final readonly class PayloadReader
         return array_map($list->item(...), array_keys($list->value));
     }
 
+    /** @param list<string> $keys */
+    public function refuse(Cursor $object, array $keys): void
+    {
+        if (! is_array($object->value)) {
+            return;
+        }
+
+        foreach (array_keys($object->value) as $key) {
+            if (in_array($key, $keys, true)) {
+                $this->rules->reject(Violation::unknown($object->at($key)->path));
+            }
+        }
+    }
+
     /** @param array<string, true> $keys */
     public function known(Cursor $object, array $keys): void
     {

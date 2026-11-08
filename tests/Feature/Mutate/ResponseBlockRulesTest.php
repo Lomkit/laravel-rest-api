@@ -50,11 +50,24 @@ class ResponseBlockRulesTest extends PackageTestCase
             'text' => [['text' => ['value' => 'Emma']], 'response.text', 'The response.text field is prohibited.'],
             'limit' => [['limit' => 10], 'response.limit', 'The response.limit field is prohibited.'],
             'page' => [['page' => 1], 'response.page', 'The response.page field is prohibited.'],
+            'trashed next to an unknown key' => [['trashed' => 'with', 'select' => []], 'response.trashed', 'The response.trashed field is prohibited.'],
             'the create gate' => [['gates' => ['create']], 'response.gates.0', 'The response.gates.0 field is prohibited.'],
             'the create gate of an include' => [['includes' => [['relation' => 'labels', 'gates' => ['create']]]], 'response.includes.0.gates.0', 'The response.includes.0.gates.0 field is prohibited.'],
             'an unknown gate' => [['gates' => ['viewAny']], 'response.gates.0', 'The selected response.gates.0 is invalid.'],
             'an unknown relation' => [['includes' => [['relation' => 'author']]], 'response.includes.0.relation', 'The response.includes.0.relation field is not a valid or allowed relation for this resource.'],
             'an unknown field' => [['selects' => [['field' => 'isbn']]], 'response.selects.0.field', 'The selected response.selects.0.field is invalid.'],
         ];
+    }
+
+    #[Test]
+    public function it_reads_a_response_block_as_if_its_unknown_keys_were_absent(): void
+    {
+        $mutate = [['operation' => 'update', 'key' => $this->emma->id, 'attributes' => ['title' => 'Persuasion']]];
+
+        $expected = $this->postJson('/api/books/mutate', ['mutate' => $mutate, 'response' => ['selects' => [['field' => 'title']]]])->assertOk();
+        $response = $this->postJson('/api/books/mutate', ['mutate' => $mutate, 'response' => ['selects' => [['field' => 'title']], 'select' => [['field' => 'id']], 'filtres' => [], '*' => 1]]);
+
+        $response->assertOk()->assertExactJson($expected->json());
+        $this->assertSame([['title' => 'Persuasion']], $response->json('records'));
     }
 }

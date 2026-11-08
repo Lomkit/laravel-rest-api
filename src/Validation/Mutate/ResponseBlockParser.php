@@ -13,7 +13,7 @@ use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class ResponseBlockParser
 {
-    private const array KEYS = ['selects' => true, 'aggregates' => true, 'includes' => true, 'gates' => true];
+    private const array REFUSED = ['text', 'trashed', 'filters', 'scopes', 'sorts', 'instructions', 'limit', 'page'];
 
     public function __construct(
         private ParsedRules $rules,
@@ -33,7 +33,7 @@ final readonly class ResponseBlockParser
             return null;
         }
 
-        $context->reader->known($response, self::KEYS);
+        $context->reader->refuse($response, self::REFUSED);
         $this->rules->reach(Check::onClass($resource, 'viewAny', $response->path));
 
         return SearchBodyParser::block($response, $context)->node(null, null);

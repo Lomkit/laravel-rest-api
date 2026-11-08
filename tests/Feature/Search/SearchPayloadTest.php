@@ -214,7 +214,7 @@ class SearchPayloadTest extends PackageTestCase
     {
         return [
             'a partial parse' => [['filters' => [['field' => 'secret']]]],
-            'a recorded violation' => [['filter' => []]],
+            'a recorded violation' => [['includes' => [['relation' => 'author', 'page' => 2]]]],
         ];
     }
 

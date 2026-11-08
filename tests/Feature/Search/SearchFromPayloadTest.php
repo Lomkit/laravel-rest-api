@@ -71,6 +71,6 @@ class SearchFromPayloadTest extends PackageTestCase
 
         $this->expectExceptionObject(new LogicException('The search was read before the request passed validation.'));
 
-        $this->postJson('/api/posts/search', ['search' => ['filter' => []]]);
+        $this->postJson('/api/posts/search', ['search' => ['includes' => [['relation' => 'author', 'page' => 2]]]]);
     }
 }

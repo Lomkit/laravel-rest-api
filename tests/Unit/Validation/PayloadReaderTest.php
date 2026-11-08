@@ -121,6 +121,28 @@ class PayloadReaderTest extends TestCase
     }
 
     #[Test]
+    public function it_refuses_the_listed_keys_in_payload_order(): void
+    {
+        $this->reader()->refuse($this->object(['b' => 1, 'x' => 2, 'a' => 3, 'y' => 4]), ['y', 'x', 'z']);
+
+        $rules = $this->rules->rules();
+
+        $this->assertSame(['o.x', 'o.y'], array_keys($rules));
+        $this->assertRejected(Violation::unknown('o.x'), $rules['o.x']);
+        $this->assertRejected(Violation::unknown('o.y'), $rules['o.y']);
+    }
+
+    #[Test]
+    public function it_leaves_the_keys_it_does_not_list_alone(): void
+    {
+        $this->reader()->refuse($this->object(['sort_by' => 1, '*' => 2, 'a\\' => 3, 'a.b' => 4]), ['page']);
+
+        $this->assertSame([], $this->rules->rules());
+        $this->assertTrue($this->rules->violations()->isEmpty());
+        $this->assertFalse($this->rules->isPartial());
+    }
+
+    #[Test]
     public function it_rejects_unknown_keys_in_payload_order(): void
     {
         $this->reader()->known($this->object(['b' => 1, 'x' => 2, 'a' => 3, 'y' => 4]), ['a' => true, 'b' => true]);

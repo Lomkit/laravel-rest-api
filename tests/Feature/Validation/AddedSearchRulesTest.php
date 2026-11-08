@@ -38,11 +38,13 @@ class AddedSearchRulesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_keeps_the_rejection_of_an_unknown_key_that_an_application_rule_names(): void
+    public function it_applies_an_application_rule_to_a_search_key_that_the_package_does_not_read(): void
     {
-        $response = $this->postJson('/api/products/search', ['search' => ['flag' => true]]);
+        $refused = $this->postJson('/api/products/search', ['search' => ['flag' => 'maybe']]);
+        $accepted = $this->postJson('/api/products/search', ['search' => ['flag' => true]]);
 
-        $this->assertExactErrors($response, ['search.flag' => ['The search.flag field is prohibited.']]);
+        $this->assertExactErrors($refused, ['search.flag' => ['The search.flag field must be true or false.']]);
+        $accepted->assertOk()->assertJsonPath('data', []);
     }
 
     #[Test]

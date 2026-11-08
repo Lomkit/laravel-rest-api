@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Actions;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Publishing;
+use Lomkit\Rest\Tests\Fixtures\ReceivedFields;
 use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -78,9 +79,6 @@ class ActionFieldValidationTest extends PackageTestCase
             'a search that is not an array' => ['publish-posts', ['search' => 'drafts'], [
                 'search' => ['The search field must be an array.'],
             ]],
-            'an unknown key in the search' => ['publish-posts', ['search' => ['filter' => []]], [
-                'search.filter' => ['The search.filter field is prohibited.'],
-            ]],
             'an unknown key in an entry' => ['publish-posts', ['fields' => [['name' => 'notify', 'value' => true, 'default' => false]]], [
                 'fields.0.default' => ['The fields.0.default field is prohibited.'],
             ]],
@@ -97,6 +95,24 @@ class ActionFieldValidationTest extends PackageTestCase
                 'fields.at' => ['The at field is required when status is published.'],
             ]],
         ];
+    }
+
+    #[Test]
+    public function it_runs_an_action_as_if_an_unknown_key_of_the_body_or_of_the_search_were_absent(): void
+    {
+        $received = $this->app->instance(ReceivedFields::class, new ReceivedFields);
+        $draft = Post::factory()->create(['id' => 1, 'views' => 10]);
+        $other = Post::factory()->create(['id' => 2, 'views' => 1]);
+
+        $response = $this->postJson('/api/posts/actions/publish-posts', [
+            'search' => ['filter' => [['field' => 'views', 'value' => 1]], 'filters' => [['field' => 'views', 'operator' => '>', 'value' => 5]]],
+            'fields' => [['name' => 'notify', 'value' => false]],
+            'options' => ['dry_run' => true],
+        ]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
+        $this->assertSame([['handle', ['notify' => false]]], $received->calls());
+        $this->assertSame([PostStatus::Published, PostStatus::Draft], [$draft->fresh()?->status, $other->fresh()?->status]);
     }
 
     #[Test]

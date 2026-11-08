@@ -93,11 +93,34 @@ class ValueMetricTest extends SalesTestCase
             'mysql' => 'select sum(case when `orders`.`placed_at` >= ? then `orders`.`price` end) as `current_0`, sum(case when `orders`.`placed_at` < ? then `orders`.`price` end) as `previous_0` from `orders` where (`orders`.`team_id` = ?) and (`orders`.`status` = ?) and `orders`.`placed_at` between ? and ?',
             'pgsql' => 'select sum(case when "orders"."placed_at" >= ? then "orders"."price" end) as "current_0", sum(case when "orders"."placed_at" < ? then "orders"."price" end) as "previous_0" from "orders" where ("orders"."team_id" = ?) and ("orders"."status" = ?) and "orders"."placed_at" between ? and ?',
         ], ['2026-10-08 12:00:00', '2026-10-08 12:00:00', 1, 'paid', '2026-09-08 12:00:00', '2026-11-07 12:00:00']];
+        yield 'a range, a filter and unknown keys' => [true, ['search' => ['filters' => [['field' => 'status', 'value' => 'paid']], 'filter' => [['field' => 'status', 'value' => 'refunded']]], 'timezon' => 'Europe/Paris'], '{"data":{"type":"value","value":32.5,"previous":0.0}}', [
+            'sqlite' => 'select sum(case when "orders"."placed_at" >= ? then "orders"."price" end) as "current_0", sum(case when "orders"."placed_at" < ? then "orders"."price" end) as "previous_0" from "orders" where ("orders"."team_id" = ?) and ("orders"."status" = ?) and "orders"."placed_at" between ? and ?',
+            'mysql' => 'select sum(case when `orders`.`placed_at` >= ? then `orders`.`price` end) as `current_0`, sum(case when `orders`.`placed_at` < ? then `orders`.`price` end) as `previous_0` from `orders` where (`orders`.`team_id` = ?) and (`orders`.`status` = ?) and `orders`.`placed_at` between ? and ?',
+            'pgsql' => 'select sum(case when "orders"."placed_at" >= ? then "orders"."price" end) as "current_0", sum(case when "orders"."placed_at" < ? then "orders"."price" end) as "previous_0" from "orders" where ("orders"."team_id" = ?) and ("orders"."status" = ?) and "orders"."placed_at" between ? and ?',
+        ], ['2026-10-08 12:00:00', '2026-10-08 12:00:00', 1, 'paid', '2026-09-08 12:00:00', '2026-11-07 12:00:00']];
         yield 'no range and a text' => [false, ['search' => ['text' => ['value' => 'A-100']]], '{"data":{"type":"value","value":7,"previous":null}}', [
             'sqlite' => 'select count(*) as "total_0" from "orders" where ("orders"."team_id" = ?) and (("orders"."reference" like ? escape \'!\'))',
             'mysql' => 'select count(*) as `total_0` from `orders` where (`orders`.`team_id` = ?) and ((`orders`.`reference` like ? escape \'!\'))',
             'pgsql' => 'select count(*) as "total_0" from "orders" where ("orders"."team_id" = ?) and (("orders"."reference" ilike ? escape \'!\'))',
         ], [1, '%A-100%']];
+    }
+
+    #[Test]
+    public function it_refuses_the_search_keys_that_a_metric_does_not_run_and_ignores_unknown_ones(): void
+    {
+        $this->serve(OrderValue::make('count', 'price', 'placed_at', []));
+        $this->logQueries();
+
+        $this->metric('order-value', ['search' => ['limit' => 5, 'flter' => [], 'sorts' => [['field' => 'price']]]])
+            ->assertUnprocessable()
+            ->assertExactJson([
+                'message' => 'The search.limit field is prohibited. (and 1 more error)',
+                'errors' => [
+                    'search.limit' => ['The search.limit field is prohibited.'],
+                    'search.sorts' => ['The search.sorts field is prohibited.'],
+                ],
+            ]);
+        $this->assertSame([], DB::getQueryLog());
     }
 
     /** @param array<string, mixed> $body */
