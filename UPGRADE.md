@@ -142,6 +142,7 @@ After, in 3.0:
         'mutate' => 100,
         'relation_entries' => 100,
         'resources' => 1000,
+        'jobs' => 100,
     ],
 
     'depths' => [
@@ -398,6 +399,7 @@ A queued or batched action no longer serializes its resource, its rows and its i
   `#[Connection]`, `#[Queue]`, `#[Delay]`, `#[Tries]`, `#[Timeout]`, `#[Backoff]`, `#[MaxExceptions]` and `#[FailOnTimeout]` apply to the jobs of the action. An attribute wins over a route. A batched action sends its batch to the same connection and queue.
 - `release()`, `attempts()`, `fail()`, `delete()` and `batch()` work in `handle()`: the worker gives the action its job and its batch.
 - An action that implements `Illuminate\Contracts\Queue\ShouldBeEncrypted` gets its queued payload encrypted, input values included.
+- One run of a queued or batched action creates at most `limits.sizes.jobs` jobs, 100 by default and at least 1. When its rows need more jobs, each job takes the number of rows divided by `limits.sizes.jobs`, rounded up, instead of `$chunkCount`: 250 rows with a `$chunkCount` of 2 give 84 jobs of 3 rows, not 125 jobs. Raise `limits.sizes.jobs` if each job must keep `$chunkCount` rows.
 - The job class is `Lomkit\Rest\Actions\QueuedAction`, and `Lomkit\Rest\Actions\CallRestApiAction` is removed. In tests, assert `Queue::assertPushed(QueuedAction::class)`. The job shows the action class as its name.
 - Run the queued actions of the previous version before you deploy this one: a job queued before the upgrade cannot run after it.
 - A resource and its `RestContext` can no longer be serialized. Do not put a resource, an action or a context in a job of your own: pass the class names and the keys.

@@ -13,6 +13,6 @@ class TargetTeamVoucherResource extends TeamVoucherResource
     #[\Override]
     public function actions(): array
     {
-        return [DeactivateVouchers::make()->target(self::$target)];
+        return [DeactivateVouchers::make()->target(self::$target), QueuedRetitleVouchers::make()];
     }
 }

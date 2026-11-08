@@ -21,28 +21,28 @@ final readonly class KeyChunks implements ActionRows
         private Builder $rows,
         private ID $id,
         private array $keys,
-        private int $chunkCount,
+        private ChunkSize $size,
     ) {}
 
     /**
      * @param  Builder<Model>  $query
      * @param  list<int|string>  $keys
      */
-    public static function of(Builder $query, ID $id, array $keys, int $chunkCount): self
+    public static function of(Builder $query, ID $id, array $keys, ChunkSize $size): self
     {
         $rows = $query
             ->clone()
             ->reorder()
             ->limit(null);
 
-        return new self($rows, $id, $keys, $chunkCount);
+        return new self($rows, $id, $keys, $size);
     }
 
     /**
      * @param  Builder<Model>  $query
      * @param  Builder<Model>|null  $rows
      */
-    public static function read(Builder $query, ID $id, int $chunkCount, ?int $limit, ?RowCap $cap, ?Builder $rows = null): self
+    public static function read(Builder $query, ID $id, ChunkSize $size, ?int $limit, ?RowCap $cap, ?Builder $rows = null): self
     {
         $values = $query
             ->clone()
@@ -60,7 +60,7 @@ final readonly class KeyChunks implements ActionRows
 
         $cap?->check(count($keys));
 
-        return self::of($rows ?? $query, $id, array_values($keys), $chunkCount);
+        return self::of($rows ?? $query, $id, array_values($keys), $size);
     }
 
     #[\Override]
@@ -84,7 +84,7 @@ final readonly class KeyChunks implements ActionRows
     /** @return Generator<int, Collection<int, Model>> */
     public function chunks(): Generator
     {
-        foreach (array_chunk($this->keys, max(1, $this->chunkCount)) as $keys) {
+        foreach (array_chunk($this->keys, $this->size->for(fn (): int => count($this->keys))) as $keys) {
             yield $this->load($keys);
         }
     }

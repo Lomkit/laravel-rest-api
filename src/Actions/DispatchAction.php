@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Actions\Rows\ActionRows;
 use Lomkit\Rest\Actions\Rows\ChunkedRows;
+use Lomkit\Rest\Actions\Rows\ChunkSize;
 use Lomkit\Rest\Actions\Rows\KeyChunks;
 use Lomkit\Rest\Actions\Rows\NoRows;
 use Lomkit\Rest\Actions\Rows\RowCap;
@@ -57,7 +58,7 @@ final readonly class DispatchAction
 
         return match ($this->action->target) {
             ActionTarget::Search => $this->search($payload->search()),
-            ActionTarget::Resources => KeyChunks::of($this->query(SearchNode::empty()), $this->id(), $payload->keys()->keys, $this->action->chunkCount),
+            ActionTarget::Resources => KeyChunks::of($this->query(SearchNode::empty()), $this->id(), $payload->keys()->keys, $this->size()),
             ActionTarget::None => new NoRows,
         };
     }
@@ -76,10 +77,10 @@ final readonly class DispatchAction
         $cap = RowCap::of($this->action->maxResources);
 
         if ($search->sorts === [] && $search->limit === null) {
-            return ChunkedRows::of($query, $this->action->chunkCount, $cap);
+            return ChunkedRows::of($query, $this->size(), $cap);
         }
 
-        return KeyChunks::read($query, $this->id(), $this->action->chunkCount, $search->limit, $cap);
+        return KeyChunks::read($query, $this->id(), $this->size(), $search->limit, $cap);
     }
 
     /** @return Builder<Model> */
@@ -93,5 +94,10 @@ final readonly class DispatchAction
     private function id(): ID
     {
         return KeysGrammar::idOf($this->request->resource);
+    }
+
+    private function size(): ChunkSize
+    {
+        return ChunkSize::of($this->action, $this->request->context()->limits());
     }
 }

@@ -29,6 +29,7 @@ class LimitsTest extends TestCase
         $this->assertSame(100, $limits->sizes->mutate);
         $this->assertSame(100, $limits->sizes->relationEntries);
         $this->assertSame(1000, $limits->sizes->resources);
+        $this->assertSame(100, $limits->sizes->jobs);
         $this->assertSame(['filters' => 1, 'includes' => 3, 'mutations' => 3], get_object_vars($limits->depths));
         $this->assertSame(['filters' => 500, 'entries' => 1000, 'relations' => 20], get_object_vars($limits->totals));
         $this->assertSame(['patterns' => 255], get_object_vars($limits->lengths));
@@ -96,6 +97,24 @@ class LimitsTest extends TestCase
         $config = $present ? $this->withLimit('totals', 'relations', $value) : $this->withoutLimit('totals', 'relations');
 
         $this->expectExceptionObject(new InvalidArgumentException('The [rest.limits.totals.relations] option must be an integer of 1 or more.'));
+
+        Limits::fromConfig($config);
+    }
+
+    #[Test]
+    public function it_reads_the_job_limit(): void
+    {
+        $this->assertSame(42, Limits::fromConfig($this->withLimit('sizes', 'jobs', '42'))->sizes->jobs);
+        $this->assertSame(1, Limits::fromConfig($this->withLimit('sizes', 'jobs', 1))->sizes->jobs);
+    }
+
+    #[Test]
+    #[DataProvider('invalidRelationTotals')]
+    public function it_refuses_a_job_limit_that_is_not_an_integer_of_one_or_more(bool $present, mixed $value): void
+    {
+        $config = $present ? $this->withLimit('sizes', 'jobs', $value) : $this->withoutLimit('sizes', 'jobs');
+
+        $this->expectExceptionObject(new InvalidArgumentException('The [rest.limits.sizes.jobs] option must be an integer of 1 or more.'));
 
         Limits::fromConfig($config);
     }
