@@ -64,7 +64,7 @@ class DetailsTest extends DocumentationTestCase
             'scopes' => ['scopes', 'name', ['startingFrom']],
             'instructions' => ['instructions', 'uriKey', ['only-featured']],
             'actions' => ['actions', 'uriKey', ['reschedule-shows', 'cancel-shows', 'import-shows', 'archive-shows']],
-            'metrics' => ['metrics', 'uriKey', ['show-count', 'shows-per-month', 'shows-by-status', 'top-stages', 'seats-goal', 'occupancy']],
+            'metrics' => ['metrics', 'uriKey', ['show-count', 'shows-per-month', 'shows-by-status', 'shows-by-level', 'top-stages', 'seats-goal', 'occupancy']],
             'gates' => ['gates', '', ['view', 'create', 'update', 'delete', 'restore', 'forceDelete', 'feature']],
         ];
     }

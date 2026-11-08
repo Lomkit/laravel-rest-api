@@ -15,6 +15,7 @@ class MetricsTest extends DocumentationTestCase
         '/shows/metrics/show-count',
         '/shows/metrics/shows-per-month',
         '/shows/metrics/shows-by-status',
+        '/shows/metrics/shows-by-level',
         '/shows/metrics/top-stages',
         '/shows/metrics/seats-goal',
         '/shows/metrics/occupancy',
@@ -51,6 +52,7 @@ class MetricsTest extends DocumentationTestCase
             '/shows/metrics/show-count' => '{"default":{"value":{"range":30,"timezone":"UTC"}}}',
             '/shows/metrics/shows-per-month' => '{"default":{"value":{"range":3,"timezone":"UTC"}}}',
             '/shows/metrics/shows-by-status' => '{"default":{"value":{"timezone":"UTC"}}}',
+            '/shows/metrics/shows-by-level' => '{"default":{"value":{"range":30,"timezone":"UTC"}}}',
             '/shows/metrics/top-stages' => '{"default":{"value":{"timezone":"UTC"}}}',
             '/shows/metrics/seats-goal' => '{"default":{"value":{"timezone":"UTC"}}}',
             '/shows/metrics/occupancy' => '{"default":{"value":{"timezone":"UTC"}}}',
@@ -84,6 +86,7 @@ class MetricsTest extends DocumentationTestCase
             'a value' => ['/shows/metrics/show-count', self::typed('value', '{"$ref":"#\/components\/schemas\/RestValueResult"}')],
             'a trend' => ['/shows/metrics/shows-per-month', self::typed('trend', '{"$ref":"#\/components\/schemas\/RestTrendResult"}')],
             'a partition' => ['/shows/metrics/shows-by-status', self::typed('partition', '{"$ref":"#\/components\/schemas\/RestPartitionResult"}')],
+            'a partition that compares two periods' => ['/shows/metrics/shows-by-level', self::typed('partition', '{"$ref":"#\/components\/schemas\/RestPartitionResult"}')],
             'a table' => ['/shows/metrics/top-stages', self::typed('table', '{"$ref":"#\/components\/schemas\/RestTableResult"}')],
             'a progress' => ['/shows/metrics/seats-goal', self::typed('progress', '{"$ref":"#\/components\/schemas\/RestProgressResult"}')],
             'a type of the application with its schema' => ['/shows/metrics/occupancy', self::typed('occupancy', '{"type":"object","properties":{"seats":{"type":"integer"},"capacity":{"type":"integer"}},"required":["seats","capacity"]}')],
@@ -104,11 +107,12 @@ class MetricsTest extends DocumentationTestCase
         $key = '{"type":["integer","string","boolean","null"]}';
         $label = '{"type":["string","null"]}';
         $series = '{"type":"array","items":{"type":"object","properties":{"label":{"type":"string"},"value":'.$number.'},"required":["label","value"]}}';
+        $previous = '"previous":{"type":["number","null"],"description":"The value of the period before the range, present when the partition compares two periods"}';
 
         return [
             'value' => ['RestValueResult', '{"type":"object","properties":{"value":'.$number.',"previous":{"type":["number","null"],"description":"The value of the period before the range"}},"required":["value","previous"],"title":"RestValueResult"}'],
             'trend' => ['RestTrendResult', '{"type":"object","properties":{"series":'.$series.',"splits":{"type":"array","description":"One series for each value of the split column, present when the trend is split","items":{"type":"object","properties":{"key":'.$key.',"label":'.$label.',"series":'.$series.'},"required":["key","label","series"]}},"other":{"type":["object","null"],"description":"The splits that the limit folds, present with `splits`","properties":{"label":'.$label.',"series":'.$series.'},"required":["label","series"]}},"required":["series"],"title":"RestTrendResult"}'],
-            'partition' => ['RestPartitionResult', '{"type":"object","properties":{"parts":{"type":"array","items":{"type":"object","properties":{"key":'.$key.',"label":'.$label.',"value":'.$number.'},"required":["key","label","value"]}},"other":{"type":["object","null"],"description":"The parts that the limit folds","properties":{"label":'.$label.',"value":'.$number.'},"required":["label","value"]}},"required":["parts","other"],"title":"RestPartitionResult"}'],
+            'partition' => ['RestPartitionResult', '{"type":"object","properties":{"parts":{"type":"array","items":{"type":"object","properties":{"key":'.$key.',"label":'.$label.',"value":'.$number.','.$previous.'},"required":["key","label","value"]}},"other":{"type":["object","null"],"description":"The parts that the limit folds","properties":{"label":'.$label.',"value":'.$number.','.$previous.'},"required":["label","value"]}},"required":["parts","other"],"title":"RestPartitionResult"}'],
             'table' => ['RestTableResult', '{"type":"object","properties":{"columns":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"label":{"type":"string"},"aggregate":{"type":"string","enum":["count","sum","average","min","max"]}},"required":["name","label","aggregate"]}},"rows":{"type":"array","items":{"type":"object","properties":{"key":'.$key.',"label":'.$label.',"values":{"type":"object","description":"One value for each column, under the `name` of the column","additionalProperties":'.$number.'}},"required":["key","label","values"]}}},"required":["columns","rows"],"title":"RestTableResult"}'],
             'progress' => ['RestProgressResult', '{"type":"object","properties":{"value":'.$number.',"target":{"type":"number"}},"required":["value","target"],"title":"RestProgressResult"}'],
         ];

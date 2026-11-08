@@ -61,6 +61,6 @@ class ScrambleTextSearchTest extends ScrambleTestCase
         $search = $this->search('/authors/search');
 
         $this->assertSame(['type' => 'string', 'enum' => ['with', 'only']], $search['trashed']);
-        $this->assertArrayNotHasKey('text', $search);
+        $this->assertFalse($search['text']);
     }
 }

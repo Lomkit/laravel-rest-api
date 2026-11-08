@@ -14,6 +14,7 @@ use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Scramble\Schemas;
+use Lomkit\Rest\Scramble\Types\Nothing;
 use Lomkit\Rest\Validation\Search\RowKeys;
 use Lomkit\Rest\Validation\Search\SearchShape;
 
@@ -70,10 +71,9 @@ final readonly class SearchSchema
     /** @param list<string> $keys */
     private function search(Resource $resource, array $keys): Type
     {
-        $properties = $this->properties($resource, $keys, true);
-        $prohibited = array_values(array_diff(array_intersect(['text', 'trashed'], $keys), array_keys($properties)));
+        $refused = array_fill_keys(array_intersect(['text', 'trashed'], $keys), new Nothing);
 
-        return Schemas::open($properties, $prohibited);
+        return Schemas::object(array_replace($refused, $this->properties($resource, $keys, true)));
     }
 
     private function property(Resource $resource, string $key, bool $root): ?Type

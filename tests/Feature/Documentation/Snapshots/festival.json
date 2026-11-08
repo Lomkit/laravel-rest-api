@@ -1104,6 +1104,97 @@
                 "security": []
             }
         },
+        "/shows/metrics/shows-by-level": {
+            "post": {
+                "operationId": "shows.metric.shows-by-level",
+                "summary": "Shows By Level",
+                "tags": [
+                    "Show"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The metric runs on the rows that `search` matches, every row without `search`",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowMetricSearch"
+                                    },
+                                    "range": {
+                                        "type": "integer",
+                                        "description": "The range of the metric: `30` when the request sends none",
+                                        "enum": [
+                                            30
+                                        ]
+                                    },
+                                    "timezone": {
+                                        "type": "string",
+                                        "description": "The time zone of the periods of the metric, such as `Europe/Paris`; the time zone of the application when the request sends none"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "range": 30,
+                                        "timezone": "UTC"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The result of the metric",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "type": {
+                                                            "type": "string",
+                                                            "const": "partition"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "type"
+                                                    ]
+                                                },
+                                                {
+                                                    "$ref": "#/components/schemas/RestPartitionResult"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
+                    }
+                }
+            }
+        },
         "/shows/metrics/top-stages": {
             "post": {
                 "operationId": "shows.metric.top-stages",
@@ -6282,6 +6373,8 @@
             "NoteSearch": {
                 "type": "object",
                 "properties": {
+                    "text": false,
+                    "trashed": false,
                     "filters": {
                         "type": "array",
                         "items": {
@@ -6337,20 +6430,6 @@
                         "minimum": 1,
                         "maximum": 184467440737095517
                     }
-                },
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "text"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "trashed"
-                            ]
-                        }
-                    ]
                 },
                 "title": "NoteSearch"
             },
@@ -6833,6 +6912,13 @@
                                         "number",
                                         "null"
                                     ]
+                                },
+                                "previous": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "description": "The value of the period before the range, present when the partition compares two periods"
                                 }
                             },
                             "required": [
@@ -6860,6 +6946,13 @@
                                     "number",
                                     "null"
                                 ]
+                            },
+                            "previous": {
+                                "type": [
+                                    "number",
+                                    "null"
+                                ],
+                                "description": "The value of the period before the range, present when the partition compares two periods"
                             }
                         },
                         "required": [
@@ -8025,6 +8118,7 @@
                                                 "show-count",
                                                 "shows-per-month",
                                                 "shows-by-status",
+                                                "shows-by-level",
                                                 "top-stages",
                                                 "seats-goal",
                                                 "occupancy"
@@ -16500,6 +16594,8 @@
             "StageSearch": {
                 "type": "object",
                 "properties": {
+                    "text": false,
+                    "trashed": false,
                     "filters": {
                         "type": "array",
                         "items": {
@@ -16562,20 +16658,6 @@
                         "minimum": 1,
                         "maximum": 184467440737095517
                     }
-                },
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "text"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "trashed"
-                            ]
-                        }
-                    ]
                 },
                 "title": "StageSearch"
             },
