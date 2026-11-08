@@ -68,10 +68,10 @@ final readonly class FieldFilterSchema
     private function value(Field $field, string $shape): ?Type
     {
         return match ($shape) {
-            'value' => FieldSchema::value($field),
+            'value' => $this->bounded(FieldSchema::value($field)),
             'pattern' => $this->pattern(),
-            'list' => self::items(FieldSchema::value($field), 1, $this->limits->sizes->values),
-            'pair' => self::items(FieldSchema::value($field), 2, 2),
+            'list' => self::items($this->bounded(FieldSchema::value($field)), 1, $this->limits->sizes->values),
+            'pair' => self::items($this->bounded(FieldSchema::value($field)), 2, 2),
             default => null,
         };
     }
@@ -79,9 +79,21 @@ final readonly class FieldFilterSchema
     private function pattern(): StringType
     {
         $pattern = new StringType;
-        $pattern->setMax($this->limits->lengths->patterns);
+        $pattern->setMax($this->limits->lengths->pattern());
 
         return $pattern;
+    }
+
+    private function bounded(Type $type): Type
+    {
+        if (! $type instanceof StringType || $type->enum !== []) {
+            return $type;
+        }
+
+        $values = $this->limits->lengths->values;
+        $type->setMax(is_int($type->max) ? min($type->max, $values) : $values);
+
+        return $type;
     }
 
     private static function items(Type $item, int $min, int $max): ArrayType

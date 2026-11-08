@@ -15,6 +15,7 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Rules\MaxLength;
 use Lomkit\Rest\Tests\Fixtures\Publishing\Post;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -32,7 +33,7 @@ class FilterValueRulesTest extends PackageTestCase
     #[DataProvider('values')]
     public function it_validates_the_filter_value_for_the_operator_and_the_field_type(Closure $field, string $operator, array $input, bool $passes): void
     {
-        $validator = Validator::make($input, $field()->filterValueRules($operator, 'value', new Lengths(8)));
+        $validator = Validator::make($input, $field()->filterValueRules($operator, 'value', new Lengths(8, 1000)));
 
         $this->assertSame($passes, $validator->passes());
     }
@@ -104,22 +105,52 @@ class FilterValueRulesTest extends PackageTestCase
 
     /**
      * @param  Closure(): Field  $field
-     * @param  array<string, list<string>>  $expected
+     * @param  array<string, mixed>  $input
+     */
+    #[Test]
+    #[DataProvider('valueLengths')]
+    public function it_bounds_the_length_of_a_string_value(Closure $field, string $operator, array $input, bool $passes): void
+    {
+        $validator = Validator::make($input, $field()->filterValueRules($operator, 'value', new Lengths(255, 8)));
+
+        $this->assertSame($passes, $validator->passes());
+    }
+
+    /** @return iterable<string, array{Closure(): Field, string, array<string, mixed>, bool}> */
+    public static function valueLengths(): iterable
+    {
+        $title = fn (): Field => Text::make('title');
+        $rating = fn (): Field => Number::make('rating');
+
+        yield 'a text at the limit' => [$title, '=', ['value' => 'Releases'], true];
+        yield 'a text one character over the limit' => [$title, '!=', ['value' => 'Releases1'], false];
+        yield 'a multibyte text at the limit' => [$title, '=', ['value' => 'éééééééé'], true];
+        yield 'a list item over the limit' => [$title, 'in', ['value' => ['Release', 'Releases1']], false];
+        yield 'a pattern at the value length' => [$title, 'like', ['value' => 'Release%'], true];
+        yield 'a pattern over the value length' => [$title, 'like', ['value' => 'Release%%'], false];
+        yield 'a numeric string over the limit' => [$rating, '>', ['value' => '100000000'], false];
+        yield 'a numeric string of a range over the limit' => [$rating, 'between', ['value' => ['1', '100000000']], false];
+        yield 'a number of more digits than the limit' => [$rating, '>', ['value' => 123456789], true];
+    }
+
+    /**
+     * @param  Closure(): Field  $field
+     * @param  array<string, list<mixed>>  $expected
      */
     #[Test]
     #[DataProvider('ruleSets')]
     public function it_returns_the_rules_of_each_condition_family(Closure $field, FilterOperator|string $operator, array $expected): void
     {
-        $this->assertSame($expected, $field()->filterValueRules($operator, 'filters.0.value', new Lengths(8)));
+        $this->assertEquals($expected, $field()->filterValueRules($operator, 'filters.0.value', new Lengths(8, 1000)));
     }
 
-    /** @return iterable<string, array{Closure(): Field, FilterOperator|string, array<string, list<string>>}> */
+    /** @return iterable<string, array{Closure(): Field, FilterOperator|string, array<string, list<mixed>>}> */
     public static function ruleSets(): iterable
     {
-        $comparison = ['filters.0.value' => ['required', 'integer']];
+        $comparison = ['filters.0.value' => ['required', 'integer', new MaxLength(1000)]];
         $pattern = ['filters.0.value' => ['required', 'string', 'max:8']];
-        $membership = ['filters.0.value' => ['present', 'array', 'list', 'min:1'], 'filters.0.value.*' => ['required', 'ulid']];
-        $range = ['filters.0.value' => ['present', 'array', 'list', 'size:2'], 'filters.0.value.*' => ['required', 'date']];
+        $membership = ['filters.0.value' => ['present', 'array', 'list', 'min:1'], 'filters.0.value.*' => ['required', 'ulid', new MaxLength(1000)]];
+        $range = ['filters.0.value' => ['present', 'array', 'list', 'size:2'], 'filters.0.value.*' => ['required', 'date', new MaxLength(1000)]];
         $nullity = ['filters.0.value' => ['prohibited']];
 
         yield 'comparison' => [fn (): Field => Integer::make('views'), '>=', $comparison];
@@ -133,11 +164,11 @@ class FilterValueRulesTest extends PackageTestCase
     #[Test]
     public function it_uses_the_enum_rule_as_the_type_rule_of_an_enum(): void
     {
-        $rules = Enum::make('status', PostStatus::class)->filterValueRules('in', 'value', new Lengths(8));
+        $rules = Enum::make('status', PostStatus::class)->filterValueRules('in', 'value', new Lengths(8, 1000));
 
         $this->assertEquals([
             'value' => ['present', 'array', 'list', 'min:1'],
-            'value.*' => ['required', Rule::enum(PostStatus::class)],
+            'value.*' => ['required', Rule::enum(PostStatus::class), new MaxLength(1000)],
         ], $rules);
     }
 
@@ -147,6 +178,6 @@ class FilterValueRulesTest extends PackageTestCase
         $this->expectException(InvalidFieldException::class);
         $this->expectExceptionMessage('Unknown filter operator [contains].');
 
-        Text::make('title')->filterValueRules('contains', 'value', new Lengths(8));
+        Text::make('title')->filterValueRules('contains', 'value', new Lengths(8, 1000));
     }
 }

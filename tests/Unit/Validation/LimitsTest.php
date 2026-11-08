@@ -32,7 +32,7 @@ class LimitsTest extends TestCase
         $this->assertSame(100, $limits->sizes->jobs);
         $this->assertSame(['filters' => 1, 'includes' => 3, 'mutations' => 3], get_object_vars($limits->depths));
         $this->assertSame(['filters' => 500, 'entries' => 1000, 'relations' => 20, 'patterns' => 10], get_object_vars($limits->totals));
-        $this->assertSame(['patterns' => 255], get_object_vars($limits->lengths));
+        $this->assertSame(['patterns' => 255, 'values' => 1000], get_object_vars($limits->lengths));
     }
 
     #[Test]
@@ -97,6 +97,24 @@ class LimitsTest extends TestCase
         $config = $present ? $this->withLimit('totals', 'relations', $value) : $this->withoutLimit('totals', 'relations');
 
         $this->expectExceptionObject(new InvalidArgumentException('The [rest.limits.totals.relations] option must be an integer of 1 or more.'));
+
+        Limits::fromConfig($config);
+    }
+
+    #[Test]
+    public function it_reads_the_value_length(): void
+    {
+        $this->assertSame(42, Limits::fromConfig($this->withLimit('lengths', 'values', '42'))->lengths->values);
+        $this->assertSame(1, Limits::fromConfig($this->withLimit('lengths', 'values', 1))->lengths->values);
+    }
+
+    #[Test]
+    #[DataProvider('invalidPositiveTotals')]
+    public function it_refuses_a_value_length_that_is_not_an_integer_of_one_or_more(bool $present, mixed $value): void
+    {
+        $config = $present ? $this->withLimit('lengths', 'values', $value) : $this->withoutLimit('lengths', 'values');
+
+        $this->expectExceptionObject(new InvalidArgumentException('The [rest.limits.lengths.values] option must be an integer of 1 or more.'));
 
         Limits::fromConfig($config);
     }

@@ -23,6 +23,6 @@ final readonly class CaseInsensitivePattern implements Condition
     #[\Override]
     public function valueRules(array $typeRules, Lengths $lengths): ValueRules
     {
-        return new ValueRules(['required', 'string', 'max:'.$lengths->patterns]);
+        return new ValueRules(['required', 'string', 'max:'.$lengths->pattern()]);
     }
 }

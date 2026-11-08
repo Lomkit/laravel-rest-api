@@ -40,11 +40,11 @@ class SearchFiltersTest extends DocumentationTestCase
         return [
             'a boolean' => ['ShowFilterFeatured', '{"type":"object","properties":{"field":{"type":"string","const":"featured"},"operator":{"type":"string","enum":["=","!="]},"value":{"type":"boolean"},'.self::JOINT.'},"required":["field","value"],"additionalProperties":false,"title":"ShowFilterFeatured"}'],
             'an integer' => ['ShowFilterSeats', '{"oneOf":['.self::branch('seats', '"=","!=",">",">=","<","<="', '{"type":"integer"}', false).','.self::branch('seats', '"between","not between"', '{"type":"array","items":{"type":"integer"},"minItems":2,"maxItems":2}').','.self::branch('seats', '"in","not in"', '{"type":"array","items":{"type":"integer"},"minItems":1,"maxItems":100}').'],"title":"ShowFilterSeats"}'],
-            'a nullable text' => ['ShowFilterSummary', '{"oneOf":['.self::branch('summary', '"=","!="', '{"type":"string"}', false).','.self::branch('summary', '"like","not like","ilike","not ilike"', '{"type":"string","maxLength":255}').','.self::branch('summary', '"in","not in"', '{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":100}').','.self::nullity('summary').'],"title":"ShowFilterSummary"}'],
-            'a text with examples' => ['ShowFilterTitle', '{"oneOf":['.self::branch('title', '"=","!="', '{"type":"string","examples":["Opening night","Closing night"]}', false).','.self::branch('title', '"like","not like","ilike","not ilike"', '{"type":"string","maxLength":255}').','.self::branch('title', '"in","not in"', '{"type":"array","items":{"type":"string","examples":["Opening night","Closing night"]},"minItems":1,"maxItems":100}').'],"title":"ShowFilterTitle"}'],
-            'a date' => ['ShowFilterStartsOn', '{"oneOf":['.self::branch('starts_on', '"=","!=",">",">=","<","<="', '{"type":"string","format":"date"}', false).','.self::branch('starts_on', '"between","not between"', '{"type":"array","items":{"type":"string","format":"date"},"minItems":2,"maxItems":2}').'],"title":"ShowFilterStartsOn"}'],
+            'a nullable text' => ['ShowFilterSummary', '{"oneOf":['.self::branch('summary', '"=","!="', '{"type":"string","maxLength":1000}', false).','.self::branch('summary', '"like","not like","ilike","not ilike"', '{"type":"string","maxLength":255}').','.self::branch('summary', '"in","not in"', '{"type":"array","items":{"type":"string","maxLength":1000},"minItems":1,"maxItems":100}').','.self::nullity('summary').'],"title":"ShowFilterSummary"}'],
+            'a text with examples' => ['ShowFilterTitle', '{"oneOf":['.self::branch('title', '"=","!="', '{"type":"string","examples":["Opening night","Closing night"],"maxLength":1000}', false).','.self::branch('title', '"like","not like","ilike","not ilike"', '{"type":"string","maxLength":255}').','.self::branch('title', '"in","not in"', '{"type":"array","items":{"type":"string","examples":["Opening night","Closing night"],"maxLength":1000},"minItems":1,"maxItems":100}').'],"title":"ShowFilterTitle"}'],
+            'a date' => ['ShowFilterStartsOn', '{"oneOf":['.self::branch('starts_on', '"=","!=",">",">=","<","<="', '{"type":"string","format":"date","maxLength":1000}', false).','.self::branch('starts_on', '"between","not between"', '{"type":"array","items":{"type":"string","format":"date","maxLength":1000},"minItems":2,"maxItems":2}').'],"title":"ShowFilterStartsOn"}'],
             'an enum backed by integers' => ['ShowFilterLevel', '{"oneOf":['.self::branch('level', '"=","!="', '{"type":"integer","enum":[1,2,3]}', false).','.self::branch('level', '"in","not in"', '{"type":"array","items":{"type":"integer","enum":[1,2,3]},"minItems":1,"maxItems":100}').'],"title":"ShowFilterLevel"}'],
-            'a string key with an example' => ['StageFilterCode', '{"oneOf":['.self::branch('code', '"=","!="', '{"type":"string","examples":["main"]}', false).','.self::branch('code', '"in","not in"', '{"type":"array","items":{"type":"string","examples":["main"]},"minItems":1,"maxItems":100}').'],"title":"StageFilterCode"}'],
+            'a string key with an example' => ['StageFilterCode', '{"oneOf":['.self::branch('code', '"=","!="', '{"type":"string","examples":["main"],"maxLength":1000}', false).','.self::branch('code', '"in","not in"', '{"type":"array","items":{"type":"string","examples":["main"],"maxLength":1000},"minItems":1,"maxItems":100}').'],"title":"StageFilterCode"}'],
             'a nullable pivot field' => ['ShowFilterLabels_Pivot_Position', '{"oneOf":['.self::branch('labels.pivot.position', '"=","!=",">",">=","<","<="', '{"type":"integer"}', false).','.self::branch('labels.pivot.position', '"between","not between"', '{"type":"array","items":{"type":"integer"},"minItems":2,"maxItems":2}').','.self::branch('labels.pivot.position', '"in","not in"', '{"type":"array","items":{"type":"integer"},"minItems":1,"maxItems":100}').','.self::nullity('labels.pivot.position').'],"title":"ShowFilterLabels_Pivot_Position"}'],
         ];
     }
@@ -121,6 +121,18 @@ class SearchFiltersTest extends DocumentationTestCase
         $this->assertSame(40, $schemas['ShowFilterTitle']['oneOf'][1]['properties']['value']['maxLength']);
         $this->assertSame(5, $schemas['ShowFilterTitle']['oneOf'][2]['properties']['value']['maxItems']);
         $this->assertSame('Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most 2 deep.', $schemas['ShowFilterGroup']['description']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.limits.lengths.patterns', 40)]
+    #[WithConfig('rest.limits.lengths.values', 30)]
+    public function it_takes_the_value_length_from_the_configuration_and_bounds_patterns_by_it(): void
+    {
+        $title = $this->document()['components']['schemas']['ShowFilterTitle']['oneOf'];
+
+        $this->assertSame(30, $title[0]['properties']['value']['maxLength']);
+        $this->assertSame(30, $title[1]['properties']['value']['maxLength']);
+        $this->assertSame(30, $title[2]['properties']['value']['items']['maxLength']);
     }
 
     #[Test]
