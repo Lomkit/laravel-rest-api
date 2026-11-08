@@ -12,6 +12,7 @@ use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Scramble\Components\PageSchema;
 use Lomkit\Rest\Scramble\DocumentationContext;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\TextSearchType;
@@ -60,6 +61,8 @@ final readonly class SearchDocumenter implements EndpointDocumenter
         $search->addProperty('limit', new IntegerType);
 
         Schemas::requestBody($operation, Schemas::object(['search' => $search]));
+
+        $operation->addResponse(Schemas::response(200, 'A page of rows', (new PageSchema($context->components))->paginated($context->resource)));
     }
 
     /** @param array<int, Relation> $relations */

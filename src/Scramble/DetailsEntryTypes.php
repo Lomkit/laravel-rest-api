@@ -28,9 +28,11 @@ final class DetailsEntryTypes
         return Schemas::list(new MixedType, $description);
     }
 
-    public static function field(): ObjectType
+    /** @param list<string> $names */
+    public static function field(array $names): ObjectType
     {
         return self::fieldEntry(
+            $names,
             'Accepted in search.selects and returned',
             'Accepted in search.sorts',
             'Accepted by search.filters on this field; empty when it is not filterable',
@@ -42,6 +44,7 @@ final class DetailsEntryTypes
     public static function pivotField(): ObjectType
     {
         return self::fieldEntry(
+            [],
             'Returned in the pivot of an included row; false when the model method is not a many-to-many relation',
             'Always false: no endpoint sorts on a pivot column',
             'Accepted by <relation>.pivot.<field> filters; empty when it is not filterable',
@@ -50,11 +53,12 @@ final class DetailsEntryTypes
         );
     }
 
-    public static function action(): ObjectType
+    /** @param list<string> $uriKeys */
+    public static function action(array $uriKeys): ObjectType
     {
         return Schemas::required([
             'name' => new StringType,
-            'uriKey' => new StringType,
+            'uriKey' => (new StringType)->enum($uriKeys),
             'target' => (new StringType)->enum(array_column(ActionTarget::cases(), 'value')),
             'fields' => Schemas::list(self::input()),
             'meta' => new ObjectType,
@@ -64,11 +68,12 @@ final class DetailsEntryTypes
         ]);
     }
 
-    public static function metric(): ObjectType
+    /** @param list<string> $uriKeys */
+    public static function metric(array $uriKeys): ObjectType
     {
         return Schemas::required([
             'name' => new StringType,
-            'uriKey' => new StringType,
+            'uriKey' => (new StringType)->enum($uriKeys),
             'type' => (new StringType)->setDescription('The type of the result, given again as data.type in the response of the metric'),
             'ranges' => Schemas::list(Schemas::required(['value' => new IntegerType, 'label' => new StringType]), 'The values that the range key of the request accepts; the first one applies when the request sends none'),
             'meta' => new ObjectType,
@@ -76,21 +81,23 @@ final class DetailsEntryTypes
         ]);
     }
 
-    public static function instruction(): ObjectType
+    /** @param list<string> $uriKeys */
+    public static function instruction(array $uriKeys): ObjectType
     {
         return Schemas::required([
             'name' => new StringType,
-            'uriKey' => new StringType,
+            'uriKey' => (new StringType)->enum($uriKeys),
             'fields' => Schemas::list(self::input()),
             'meta' => new ObjectType,
             'text' => (new BooleanType)->setDescription('Can be sent with search.text on this resource'),
         ]);
     }
 
-    public static function scope(): ObjectType
+    /** @param list<string> $names */
+    public static function scope(array $names): ObjectType
     {
         return Schemas::required([
-            'name' => new StringType,
+            'name' => (new StringType)->enum($names),
             'fields' => Schemas::list(self::input()),
             'meta' => new ObjectType,
         ]);
@@ -110,7 +117,8 @@ final class DetailsEntryTypes
         ], ['values']);
     }
 
-    private static function fieldEntry(string $select, string $sort, string $operators, string $create, string $update): ObjectType
+    /** @param list<string> $names */
+    private static function fieldEntry(array $names, string $select, string $sort, string $operators, string $create, string $update): ObjectType
     {
         $rules = Schemas::required(
             ['all' => self::strings(), 'create' => self::strings(), 'update' => self::strings()],
@@ -118,7 +126,7 @@ final class DetailsEntryTypes
         );
 
         return Schemas::required([
-            'name' => new StringType,
+            'name' => (new StringType)->enum($names),
             'label' => (new StringType)->nullable(true)->setDescription('The name of the field in validation messages, set with label(); null without one'),
             'type' => new StringType,
             'nullable' => new BooleanType,

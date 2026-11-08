@@ -11,6 +11,6 @@ final readonly class DetailsDocumenter implements EndpointDocumenter
     #[\Override]
     public function document(Operation $operation, DocumentationContext $context): void
     {
-        DetailsResponseType::document($operation, $context->name);
+        DetailsResponseType::document($operation, $context);
     }
 }

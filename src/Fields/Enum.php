@@ -3,6 +3,9 @@
 namespace Lomkit\Rest\Fields;
 
 use BackedEnum;
+use Dedoc\Scramble\Support\Generator\Types\IntegerType;
+use Dedoc\Scramble\Support\Generator\Types\StringType;
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
@@ -64,6 +67,14 @@ class Enum extends Field
     public function type(): string
     {
         return 'enum';
+    }
+
+    #[\Override]
+    public function toSchema(): Type
+    {
+        $values = $this->values();
+
+        return (array_all($values, fn (int|string $value): bool => is_int($value)) ? new IntegerType : new StringType)->enum($values);
     }
 
     #[\Override]

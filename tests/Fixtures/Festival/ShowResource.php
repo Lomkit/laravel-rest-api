@@ -32,11 +32,13 @@ class ShowResource extends Resource
             Text::make('title')
                 ->searchable()
                 ->rules('max:80')
-                ->creationRules('required'),
+                ->creationRules('required')
+                ->examples('Opening night', 'Closing night'),
             Text::make('summary')->nullable(),
             Number::make('price')
                 ->nullable()
-                ->meta(['unit' => 'EUR']),
+                ->meta(['unit' => 'EUR'])
+                ->examples(12.5),
             Integer::make('seats')->rules('min:0'),
             Boolean::make('featured'),
             Date::make('starts_on')->creationRules('required'),

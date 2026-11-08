@@ -43,7 +43,7 @@ class LengthAwarePaginator extends BaseLengthAwarePaginator
             'to' => $this->lastItem(),
             'total' => $this->total(),
             ...($this->totalCapped === null ? [] : ['total_capped' => $this->totalCapped]),
-            'meta' => $this->meta(),
+            'meta' => (object) $this->meta(),
         ];
     }
 }

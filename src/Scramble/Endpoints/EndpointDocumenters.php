@@ -15,9 +15,9 @@ final class EndpointDocumenters
             Endpoint::Operate => new OperateDocumenter,
             Endpoint::Metric => new MetricDocumenter,
             Endpoint::Batch => new BatchDocumenter,
-            Endpoint::Destroy => new KeysDocumenter('Delete'),
-            Endpoint::Restore => new KeysDocumenter('Restore'),
-            Endpoint::ForceDestroy => new KeysDocumenter('Force delete'),
+            Endpoint::Destroy => new KeysDocumenter('Delete', 'The deleted rows'),
+            Endpoint::Restore => new KeysDocumenter('Restore', 'The restored rows'),
+            Endpoint::ForceDestroy => new KeysDocumenter('Force delete', 'The deleted rows'),
         };
     }
 }

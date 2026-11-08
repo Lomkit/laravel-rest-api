@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Relations\Relation;
+use stdClass;
 
 final readonly class PivotRenderer
 {
@@ -16,11 +17,10 @@ final readonly class PivotRenderer
         return new self($relation);
     }
 
-    /** @return array<string, mixed> */
-    public function render(Pivot $pivot): array
+    public function render(Pivot $pivot): stdClass
     {
         $fields = $this->relation instanceof PivotRelation ? $this->relation->getPivotFields() : FieldSet::of([]);
 
-        return array_intersect_key($fields->fromStorage($pivot->toArray()), array_flip($fields->selectable()->names()));
+        return (object) array_intersect_key($fields->fromStorage($pivot->toArray()), array_flip($fields->selectable()->names()));
     }
 }

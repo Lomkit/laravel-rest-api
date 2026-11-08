@@ -278,6 +278,22 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 - `rest:resource` generates `ID::make()` with the key name of the model, `ID::make('id')` by default. See [Generators](#generators).
 - `Lomkit\Rest\Fields\DateTime` has the same short name as PHP's `\DateTime`. In a file that uses both, alias one of them.
 - A field can declare `label()` and `messages()`. The label names the field's key in validation messages, and the messages replace Laravel's text for the rules of that key. See "Labels and messages" in [Validation engine](#validation-engine).
+- A field gives its OpenAPI type with `toSchema()`, which returns a Scramble type (`Dedoc\Scramble\Support\Generator\Types\Type`): `ID` an `integer` or a `string` from the key type (`format: uuid` for a UUID key), `Text` a `string`, `Number` a `number`, `Integer` an `integer`, `Boolean` a `boolean`, `Date` a `string` with `format: date`, `DateTime` a `string` with `format: date-time`, `Enum` an `enum` of its backing values, `Json` an `object`. The document adds `null` for a `nullable()` field and the `meta()` of the field under `x-lomkit-meta`. A field type of the application documents a `string` until it overrides `toSchema()`. The package reads it only when Scramble builds the document:
+
+  ```php
+  use Dedoc\Scramble\Support\Generator\Types\NumberType;
+  use Dedoc\Scramble\Support\Generator\Types\Type;
+
+  class Money extends Field
+  {
+      public function toSchema(): Type
+      {
+          return new NumberType;
+      }
+  }
+  ```
+
+- `examples(...$values)` gives the example values of a field, which its OpenAPI type lists under `examples`: `Text::make('title')->examples('Weekly report')`, `Text::make('priority')->examples('low', 'normal', 'urgent')`. Each call replaces the list. A value is an integer, a float, a string, a boolean, an array or `null`, and is not checked when the field is declared. An `Enum` field lists its cases in `enum` and needs no example. The request examples of the document use the first value.
 
 ### Typed inputs
 
@@ -1459,7 +1475,8 @@ The package renders the rows of a response from the plan of the search: the `sel
 - A custom `Response` class keeps `map(Model $model, array $responseModel): array` only. It receives each row of the page or of the list, and each record of a mutation, as the package rendered it, and returns the row to send. `modelToResponse()`, `buildGatesForModel()` and `requestArrayForRelation()` are removed.
 - `Lomkit\Rest\Http\Response::resource()` is replaced by `plan(QueryPlan $plan)`, which takes the `Lomkit\Rest\Search\Plan\QueryPlan` of the rows. `responsable()` takes an `Illuminate\Contracts\Pagination\LengthAwarePaginator`, a `Collection` of models or one model. `plan()` and `responsable()` return the response.
 - `rows(array $models): array` renders models with the plan of the response and `map()`, and keeps their keys. The records of a mutation use it, see [Writes](#writes). A `Response` subclass that already defines a method named `rows()` must give it this signature.
-- `toResponse()` returns an `Illuminate\Http\JsonResponse`. The JSON does not change: a page holds `current_page`, `data`, `from`, `last_page`, `per_page`, `to`, `total` and `meta`, and a list or one model holds `data` and `meta`. The pages of a resource that sets `$maxTotal` add `total_capped` after `total`, see [Search](#search).
+- `toResponse()` returns an `Illuminate\Http\JsonResponse`. A page holds `current_page`, `data`, `from`, `last_page`, `per_page`, `to`, `total` and `meta`, and a list or one model holds `data` and `meta`. The pages of a resource that sets `$maxTotal` add `total_capped` after `total`, see [Search](#search).
+- `meta` is always an object: `{}` when it holds nothing. The `pivot` of a row is an object too: `{}` when its relation returns no pivot field. Before, both were `[]` when empty.
 - A paginator that `paginate()` returns renders as a page when it implements `Illuminate\Contracts\Pagination\LengthAwarePaginator`, whatever its class. Before, only an `Illuminate\Pagination\LengthAwarePaginator` did.
 - `Lomkit\Rest\Pagination\LengthAwarePaginator` declares native types: `__construct(array $items, int $total, int $perPage, int $currentPage, array $options = [], array $meta = [], ?bool $totalCapped = null)`. Its items are the rendered rows, and `toArray()` adds `total_capped` when `$totalCapped` is not `null`. The default `paginate()` of a resource that sets `$maxTotal` returns a `Lomkit\Rest\Pagination\CappedPaginator`, whose `totalCapped` fills it.
 - The classes of `Lomkit\Rest\Http\Serialization` render the rows: `RowSerializer` renders the rows of one level of the plan with `RowFields`, `GateTable`, `RelationRenderer` and `PivotRenderer`, and `PageEnvelope` or `PlainEnvelope` wraps them. Each gate is still read through the `authorizedTo()` of the resource, except a write gate on a row that its endpoint does not reach, see "Gates" below.
@@ -1491,7 +1508,7 @@ Gates:
   ```
 
   Before, each answer was `true` or `false` unless `gates.message.enabled` was `true`, and that format triggered a deprecation. `gates.message.enabled` and `Lomkit\Rest\Config\RestConfig::$gateMessages` are removed, see [Configuration](#configuration).
-- A row whose `gates` hold no answer returns `{}`: with `"gates": []`, or with `create` alone, whose answer goes to `meta`. Before, it returned `[]`. A search without `gates` returns no `gates` key, and `meta` stays `[]` without the `create` gate, as before.
+- A row whose `gates` hold no answer returns `{}`: with `"gates": []`, or with `create` alone, whose answer goes to `meta`. Before, it returned `[]`. A search without `gates` returns no `gates` key, and `meta` is `{}` without the `create` gate.
 - `update`, `delete`, `restore` and `forceDelete` answer for the rows that their endpoint reaches. A row that `mutate`, `destroy`, `restore` or `forceDestroy` would refuse with a 422 answers `{"allowed": false, "message": null}`, and its policy is not called:
   - a row of a search engine page that `perimeterQuery()` leaves out. The page comes from the index, see [Search engines](#search-engines), so the package checks its rows against `perimeterQuery()`, with one query per page, or two when the page holds trashed rows and `gates` lists `restore` or `forceDelete`;
   - a trashed row, for `update` and `delete`, unless `perimeterQuery()` takes trashed rows in: `mutate` and `destroy` do not reach trashed rows. A search with `trashed` and one of these gates runs one more query.
@@ -2016,7 +2033,7 @@ Behaviour:
 
 Scramble:
 
-- Scramble documents the details response: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
+- Scramble documents the details response of each resource in its own schema, `{Resource}Details`, which lists the names of the resource as enums: the `name` of the fields, the `relation` of the relations, the `name` of the scopes, the `uriKey` of the instructions, actions and metrics, and the gates. It holds the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
 
 ### OpenAPI documentation
 
@@ -2034,6 +2051,16 @@ The document:
 - has one operation for each route of an action and of a metric, with the name of the declaration as its summary. The routes `{resource}/actions/{action}` and `{resource}/metrics/{metric}`, which only answer an unknown name, are left out;
 - has the summaries `Get {Resource} details`, `Search {Resource}`, `Mutate {Resource}`, `Delete {Resource}`, `Restore {Resource}`, `Force delete {Resource}` and `Batch progress of {Resource} actions`, where `{Resource}` is the resource class name without its `Resource` suffix, also used as the tag;
 - holds the responses that the package writes for its operations. Scramble no longer infers the responses of the package routes; it still infers those of the other routes of the application.
+
+Records and read responses:
+
+- `components.schemas` holds the record of each resource that a documented operation reaches, named like the tag (`Post`). It lists the selectable fields with their type, the gates of a row under the gates key, and each relation under its key in the response: the record of its resource or `null` for a to-one relation, a list of records for a to-many relation, with the `pivot` and its selectable pivot fields for a many-to-many relation. A `MorphTo` relation is `oneOf` the `{Resource}WithType` record of each target, which adds the type key (`@type`) with the morph type, with a `discriminator` on that key. The record requires no key, since the `selects` of a search decide which keys a row holds, and the aggregates and include aliases of a search add keys that it does not name.
+- `RestGateAnswer` is the answer to one gate: `allowed` and `message`.
+- The details answer `{Resource}Details`, see [Details](#details).
+- A search answers `{Resource}Paginated`: `current_page`, `data`, `from`, `last_page`, `per_page`, `to`, `total` and `meta`, whose gates key holds the `create` answer. `destroy`, `restore` and `forceDestroy` answer `{Resource}Rows`: `data` and `meta`.
+- The body of `destroy`, `restore` and `forceDestroy` requires `resources`: from 1 to `limits.sizes.resources` distinct keys, typed by the `ID` field of the resource. Its request example holds one key: the first value of `examples()` on the `ID` field, else `1` for an integer key, `a` for a string key, `00000000-0000-0000-0000-000000000000` for a UUID key and `00000000000000000000000000` for a ULID key.
+- A resource that has the name of another documented resource, such as a second `TagResource` in another namespace, names its records with its namespace: `App.Rest.Admin.Tag`, `App.Rest.Admin.TagPaginated`.
+- A `Date` field is documented with `format: date`, and the `date` cast of Laravel renders a date and a time (`2026-07-01T00:00:00.000000Z`). Cast the attribute with `date:Y-m-d` so that the response holds the date alone, as the document says. A `DateTime` field is documented with `format: date-time`, which the `datetime` cast renders. A `Json` field is documented as an object: a value that is a list does not match it.
 
 Error responses:
 

@@ -26,7 +26,7 @@ class StrictColumnsTest extends PackageTestCase
 {
     private const array GATES = ['search' => ['selects' => [['field' => 'title']], 'gates' => ['update', 'escalate']]];
 
-    private const string DECIDED = '{"current_page":1,"data":[{"title":"Paper tray","gates":{"authorized_to_update":{"allowed":true,"message":null},"authorized_to_escalate":{"allowed":true,"message":null}}},{"title":"Printer jam","gates":{"authorized_to_update":{"allowed":false,"message":"Closed tickets are read-only."},"authorized_to_escalate":{"allowed":false,"message":"Closed tickets are not escalated."}}}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":[]}';
+    private const string DECIDED = '{"current_page":1,"data":[{"title":"Paper tray","gates":{"authorized_to_update":{"allowed":true,"message":null},"authorized_to_escalate":{"allowed":true,"message":null}}},{"title":"Printer jam","gates":{"authorized_to_update":{"allowed":false,"message":"Closed tickets are read-only."},"authorized_to_escalate":{"allowed":false,"message":"Closed tickets are not escalated."}}}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{}}';
 
     #[\Override]
     protected function fixtures(): array
@@ -129,7 +129,7 @@ class StrictColumnsTest extends PackageTestCase
         $response = $this->postJson('/partial-tickets/search', ['search' => ['selects' => [['field' => 'title']]]]);
 
         $response->assertOk();
-        $this->assertSame('{"current_page":1,"data":[{"title":"Paper tray"},{"title":"Printer jam"}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":[]}', $response->getContent());
+        $this->assertSame('{"current_page":1,"data":[{"title":"Paper tray"},{"title":"Printer jam"}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{}}', $response->getContent());
         $this->assertFalse(Model::preventsAccessingMissingAttributes());
     }
 

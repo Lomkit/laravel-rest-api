@@ -2,6 +2,9 @@
 
 namespace Lomkit\Rest\Fields;
 
+use Dedoc\Scramble\Support\Generator\Types\IntegerType;
+use Dedoc\Scramble\Support\Generator\Types\Type;
+
 class Integer extends Number
 {
     #[\Override]
@@ -14,6 +17,12 @@ class Integer extends Number
     public function type(): string
     {
         return 'integer';
+    }
+
+    #[\Override]
+    public function toSchema(): Type
+    {
+        return new IntegerType;
     }
 
     #[\Override]

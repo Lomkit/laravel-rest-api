@@ -3,7 +3,8 @@
 namespace Lomkit\Rest\Scramble\Endpoints;
 
 use Dedoc\Scramble\Support\Generator\Operation;
-use Dedoc\Scramble\Support\Generator\Types\IntegerType;
+use Lomkit\Rest\Scramble\Components\KeySchema;
+use Lomkit\Rest\Scramble\Components\PageSchema;
 use Lomkit\Rest\Scramble\DocumentationContext;
 use Lomkit\Rest\Scramble\Schemas;
 
@@ -11,6 +12,7 @@ final readonly class KeysDocumenter implements EndpointDocumenter
 {
     public function __construct(
         private string $verb,
+        private string $result,
     ) {}
 
     #[\Override]
@@ -18,6 +20,12 @@ final readonly class KeysDocumenter implements EndpointDocumenter
     {
         $operation->summary("{$this->verb} {$context->name}");
 
-        Schemas::requestBody($operation, Schemas::object(['resources' => Schemas::list(new IntegerType)]));
+        Schemas::requestBody(
+            $operation,
+            Schemas::required(['resources' => KeySchema::list($context->resource)]),
+            ['default' => ['resources' => [KeySchema::example($context->resource)]]],
+        );
+
+        $operation->addResponse(Schemas::response(200, $this->result, (new PageSchema($context->components))->rows($context->resource)));
     }
 }

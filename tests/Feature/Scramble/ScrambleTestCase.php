@@ -29,6 +29,15 @@ abstract class ScrambleTestCase extends PackageTestCase
         return app(Generator::class)()['paths'][$path][$method];
     }
 
+    /** @return array<string, mixed> */
+    protected function detailsSchema(string $path): array
+    {
+        $document = app(Generator::class)();
+        $reference = $document['paths'][$path]['get']['responses'][200]['content']['application/json']['schema']['$ref'];
+
+        return $document['components']['schemas'][substr($reference, strlen('#/components/schemas/'))];
+    }
+
     /**
      * @param  array<string, mixed>  $operation
      * @return array<string, mixed>

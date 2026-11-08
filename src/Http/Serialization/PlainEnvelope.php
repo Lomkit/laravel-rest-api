@@ -16,7 +16,7 @@ final readonly class PlainEnvelope implements Envelope
     {
         return [
             'data' => $this->rows instanceof Model ? $row($this->rows) : array_map($row, $this->rows->all()),
-            'meta' => $meta,
+            'meta' => (object) $meta,
         ];
     }
 }

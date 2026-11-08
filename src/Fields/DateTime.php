@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Fields;
 
+use Dedoc\Scramble\Support\Generator\Types\StringType;
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Support\Carbon;
 
 class DateTime extends Date
@@ -10,6 +12,12 @@ class DateTime extends Date
     public function type(): string
     {
         return 'datetime';
+    }
+
+    #[\Override]
+    public function toSchema(): Type
+    {
+        return (new StringType)->format('date-time');
     }
 
     #[\Override]

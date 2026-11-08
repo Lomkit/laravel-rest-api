@@ -2,6 +2,9 @@
 
 namespace Lomkit\Rest\Fields;
 
+use Dedoc\Scramble\Support\Generator\Types\BooleanType;
+use Dedoc\Scramble\Support\Generator\Types\Type;
+
 class Boolean extends Field
 {
     #[\Override]
@@ -20,6 +23,12 @@ class Boolean extends Field
     public function type(): string
     {
         return 'boolean';
+    }
+
+    #[\Override]
+    public function toSchema(): Type
+    {
+        return new BooleanType;
     }
 
     #[\Override]

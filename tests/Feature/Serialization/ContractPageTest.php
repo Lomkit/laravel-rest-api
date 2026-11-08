@@ -38,7 +38,7 @@ class ContractPageTest extends PackageTestCase
 
         $response->assertOk();
         $this->assertSame(
-            '{"current_page":1,"data":[{"id":1},{"id":2},{"id":3}],"from":1,"last_page":1,"per_page":50,"to":3,"total":3,"meta":[]}',
+            '{"current_page":1,"data":[{"id":1},{"id":2},{"id":3}],"from":1,"last_page":1,"per_page":50,"to":3,"total":3,"meta":{}}',
             $response->getContent(),
         );
     }

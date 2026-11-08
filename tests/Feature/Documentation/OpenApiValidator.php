@@ -40,12 +40,21 @@ final readonly class OpenApiValidator
      */
     public function responseErrors(array $document, string $path, string $method, int $status, string $body): array
     {
+        $pointer = implode('/', ['#', 'paths', self::escape($path), $method, 'responses', (string) $status, 'content', 'application~1json', 'schema']);
+
+        return $this->schemaErrors($document, $pointer, json_decode($body, flags: JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * @param  array<string, mixed>  $document
+     * @return array<string, list<string>>
+     */
+    public function schemaErrors(array $document, string $pointer, mixed $data): array
+    {
         $this->validator->resolver()?->unregisterRaw(self::DOCUMENT);
         $this->validator->resolver()?->registerRaw(self::toObject($document), self::DOCUMENT);
 
-        $pointer = implode('/', ['#', 'paths', self::escape($path), $method, 'responses', (string) $status, 'content', 'application~1json', 'schema']);
-
-        return $this->errors(json_decode($body, flags: JSON_THROW_ON_ERROR), self::DOCUMENT.$pointer);
+        return $this->errors(self::toObject($data), self::DOCUMENT.$pointer);
     }
 
     /** @return array<string, list<string>> */
