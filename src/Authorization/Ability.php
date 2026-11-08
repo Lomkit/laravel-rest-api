@@ -15,4 +15,9 @@ enum Ability: string
     {
         return $this === self::Create;
     }
+
+    public function needsSoftDeletes(): bool
+    {
+        return $this === self::Restore || $this === self::ForceDelete;
+    }
 }

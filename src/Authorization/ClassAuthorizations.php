@@ -7,6 +7,7 @@ use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Metrics\Metric;
+use Lomkit\Rest\Query\Trashed;
 
 final readonly class ClassAuthorizations implements JsonSerializable
 {
@@ -47,9 +48,19 @@ final readonly class ClassAuthorizations implements JsonSerializable
         return array_values(array_unique([
             'viewAny',
             'create',
-            ...array_merge(...array_map($resource->abilities(...), Endpoint::cases())),
+            ...array_merge([], ...array_map($resource->abilities(...), self::endpoints($resource))),
             ...array_merge([], ...array_map(fn (Action $action): array => $action->entryAbilities(), array_values($definition->actions()))),
             ...array_merge([], ...array_map(fn (Metric $metric): array => $metric->entryAbilities(), array_values($definition->metrics()))),
         ]));
+    }
+
+    /** @return list<Endpoint> */
+    private static function endpoints(Resource $resource): array
+    {
+        if (Trashed::supportedBy($resource::modelClass())) {
+            return Endpoint::cases();
+        }
+
+        return array_values(array_filter(Endpoint::cases(), fn (Endpoint $endpoint): bool => ! in_array($endpoint, Endpoint::softDeletes(), true)));
     }
 }

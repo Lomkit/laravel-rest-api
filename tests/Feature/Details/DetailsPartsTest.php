@@ -125,7 +125,7 @@ class DetailsPartsTest extends PackageTestCase
             'the meta of the scopes' => ['scopes.meta', 'scopes', '[{"name":"pricedUnder","meta":{}}]', ['fields', 'limits', 'scopes', 'meta']],
             'the rules' => ['rules', 'rules', '{"all":{},"create":{"price":["required","min:0"]},"update":{}}', ['fields', 'limits', 'rules', 'meta']],
             'the text search' => ['text', 'text', '{"fields":["title"],"modes":["words","phrase"],"relevance":false,"trashed":false,"max_length":255,"engine":null}', ['fields', 'limits', 'text', 'meta']],
-            'the gates' => ['gates', 'gates', '["view","create","update","delete","restore","forceDelete"]', ['fields', 'limits', 'gates', 'meta']],
+            'the gates' => ['gates', 'gates', '["view","create","update","delete"]', ['fields', 'limits', 'gates', 'meta']],
             'the authorizations' => ['authorizations', 'authorizations', '{"viewAny":'.self::ALLOWED.',"create":'.self::ALLOWED.'}', ['fields', 'limits', 'authorizations', 'meta']],
         ];
     }

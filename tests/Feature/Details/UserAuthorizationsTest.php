@@ -8,8 +8,10 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\LeadTicketController;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\TrashableLeadTicketController;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\MetricTicketController;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\MetricTicketResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
@@ -164,10 +166,15 @@ class UserAuthorizationsTest extends HelpdeskTestCase
         ];
     }
 
+    /**
+     * @param  class-string<Controller>  $controller
+     * @param  list<string>  $soft
+     */
     #[Test]
-    public function it_answers_the_abilities_that_the_resource_adds_to_its_endpoints(): void
+    #[DataProvider('leads')]
+    public function it_answers_the_abilities_that_the_resource_adds_to_its_endpoints(string $controller, array $soft): void
     {
-        Rest::resource('lead-tickets', LeadTicketController::class)->register();
+        Rest::resource('lead-tickets', $controller)->register();
         $this->tickets->answers['runActions'] = Response::deny('Actions are for the helpdesk lead.');
 
         $this->getJson('/lead-tickets?with=authorizations,actions.authorized,metrics.authorized')
@@ -178,12 +185,20 @@ class UserAuthorizationsTest extends HelpdeskTestCase
                 'updateAny' => self::ALLOWED,
                 'runActions' => ['allowed' => false, 'message' => 'Actions are for the helpdesk lead.'],
                 'deleteAny' => self::ALLOWED,
-                'restoreAny' => self::ALLOWED,
-                'forceDeleteAny' => self::ALLOWED,
+                ...array_fill_keys($soft, self::ALLOWED),
             ])
             ->assertJsonPath('data.actions.*.authorized', [false, false, false, true, true]);
 
-        $this->assertSame(['viewAny', 'create', 'updateAny', 'runActions', 'deleteAny', 'restoreAny', 'forceDeleteAny'], $this->tickets->calls);
+        $this->assertSame(['viewAny', 'create', 'updateAny', 'runActions', 'deleteAny', ...$soft], $this->tickets->calls);
+    }
+
+    /** @return array<string, array{class-string<Controller>, list<string>}> */
+    public static function leads(): array
+    {
+        return [
+            'a model without soft deletes' => [LeadTicketController::class, []],
+            'a soft-deletable model' => [TrashableLeadTicketController::class, ['restoreAny', 'forceDeleteAny']],
+        ];
     }
 
     #[Test]

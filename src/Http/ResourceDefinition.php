@@ -12,6 +12,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Mutations\RowVersion;
+use Lomkit\Rest\Query\Trashed;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Search\GateVocabulary;
@@ -168,7 +169,7 @@ final class ResourceDefinition
 
     public function gates(): GateVocabulary
     {
-        return $this->gates ??= GateVocabulary::of($this->resource->gates(), $this->resource::class.'::gates()');
+        return $this->gates ??= GateVocabulary::of($this->resource->gates(), $this->resource::class.'::gates()', Trashed::supportedBy($this->resource::modelClass()));
     }
 
     public function cachedAbilities(): CachedAbilities
