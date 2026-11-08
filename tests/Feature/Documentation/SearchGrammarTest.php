@@ -31,11 +31,11 @@ class SearchGrammarTest extends DocumentationTestCase
 
         $this->assertSame('{"type":"object","properties":{"search":{"$ref":"#\/components\/schemas\/ShowSearch"}}}', json_encode($this->operation('/shows/search', 'post')['requestBody']['content']['application/json']['schema']));
         $this->assertSame(['text', 'trashed', 'filters', 'gates', 'scopes', 'sorts', 'selects', 'aggregates', 'includes', 'instructions', 'limit', 'page'], array_keys($schemas['ShowSearch']['properties']));
-        $this->assertSame(['filters', 'gates', 'sorts', 'selects', 'aggregates', 'includes', 'limit', 'page'], array_keys($schemas['StageSearch']['properties']));
-        $this->assertSame(['filters', 'gates', 'sorts', 'selects', 'includes', 'limit', 'page'], array_keys($schemas['NoteSearch']['properties']));
+        $this->assertSame(['text', 'trashed', 'filters', 'gates', 'sorts', 'selects', 'aggregates', 'includes', 'limit', 'page'], array_keys($schemas['StageSearch']['properties']));
+        $this->assertSame(['text' => false, 'trashed' => false], array_slice($schemas['StageSearch']['properties'], 0, 2));
+        $this->assertSame(['text', 'trashed', 'filters', 'gates', 'sorts', 'selects', 'includes', 'limit', 'page'], array_keys($schemas['NoteSearch']['properties']));
         $this->assertArrayNotHasKey('additionalProperties', $schemas['ShowSearch']);
-        $this->assertArrayNotHasKey('not', $schemas['ShowSearch']);
-        $this->assertSame(['anyOf' => [['required' => ['text']], ['required' => ['trashed']]]], $schemas['StageSearch']['not']);
+        $this->assertArrayNotHasKey('not', $schemas['StageSearch']);
         $this->assertFalse($schemas['ShowSort']['additionalProperties']);
     }
 
@@ -78,7 +78,7 @@ class SearchGrammarTest extends DocumentationTestCase
         $this->app->bind(LabelResource::class, UngatedLabelResource::class);
         $schemas = $this->document()['components']['schemas'];
 
-        $this->assertSame(['filters', 'sorts', 'selects', 'includes', 'limit', 'page'], array_keys($schemas['UngatedNoteSearch']['properties']));
+        $this->assertSame(['text', 'trashed', 'filters', 'sorts', 'selects', 'includes', 'limit', 'page'], array_keys($schemas['UngatedNoteSearch']['properties']));
         $this->assertSame(['relation', 'alias', 'filters', 'sorts', 'selects', 'limit'], array_keys($schemas['ShowIncludeLabels']['properties']));
         $this->assertArrayHasKey('gates', $schemas['ShowSearch']['properties']);
         $this->assertArrayHasKey('gates', $schemas['ShowIncludeComments']['properties']);

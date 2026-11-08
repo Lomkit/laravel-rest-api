@@ -269,10 +269,21 @@ class ContractTest extends DocumentationTestCase
             'a field that an average does not take' => ['/shows/search', ['aggregates' => [['relation' => 'comments', 'type' => 'avg', 'field' => 'body']]]],
             'a scope without its first parameter' => ['/shows/search', ['scopes' => [['name' => 'startingFrom']]]],
             'a text on a resource without a text search' => ['/stages/search', ['text' => ['value' => 'main']]],
+            'the trashed rows on a resource without soft deletes' => ['/stages/search', ['trashed' => 'with']],
             'an unknown key in a filter' => ['/shows/search', ['filters' => [['field' => 'title', 'value' => 'Opening night', 'note' => 'a']]]],
             'an unknown key in an include' => ['/shows/search', ['includes' => [['relation' => 'comments', 'note' => 'a']]]],
             'an instruction alias that is not an identifier' => ['/shows/search', ['instructions' => [['name' => 'only-featured', 'alias' => 'only-featured']]]],
         ];
+    }
+
+    #[Test]
+    public function it_refuses_the_text_and_the_trashed_rows_at_their_key_on_a_resource_without_them(): void
+    {
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $search = ['text' => ['value' => 'main'], 'trashed' => 'with'];
+
+        $this->assertSame(['/search' => ["Property 'text' is not allowed"]], (new OpenApiValidator)->requestErrors($this->document(), '/stages/search', 'post', ['search' => $search]));
+        $this->postJson('api/stages/search', ['search' => $search])->assertUnprocessable()->assertJsonValidationErrors(['search.text', 'search.trashed']);
     }
 
     #[Test]

@@ -13,7 +13,6 @@ use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Scramble\Types\Nothing;
-use Lomkit\Rest\Scramble\Types\ProhibitingObject;
 
 final class Schemas
 {
@@ -52,25 +51,6 @@ final class Schemas
         $type->setRequired($required);
         $type->setDescription($description);
         $type->additionalProperties(new Nothing);
-
-        return $type;
-    }
-
-    /**
-     * @param  array<string, Type>  $properties
-     * @param  list<string>  $prohibited
-     */
-    public static function open(array $properties, array $prohibited = []): ObjectType
-    {
-        if ($prohibited === []) {
-            return self::object($properties);
-        }
-
-        $type = new ProhibitingObject($prohibited);
-
-        foreach ($properties as $name => $property) {
-            $type->addProperty($name, $property);
-        }
 
         return $type;
     }

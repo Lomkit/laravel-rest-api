@@ -41,7 +41,7 @@ class ScrambleDocumentTest extends ScrambleTestCase
     {
         $price = $this->schemas()['ProductFilterPrice']['oneOf'];
 
-        $this->assertSame(['filters', 'gates', 'sorts', 'selects', 'aggregates', 'includes', 'instructions', 'limit', 'page'], array_keys($this->search('/products/search')));
+        $this->assertSame(['text', 'trashed', 'filters', 'gates', 'sorts', 'selects', 'aggregates', 'includes', 'instructions', 'limit', 'page'], array_keys($this->search('/products/search')));
         $this->assertSame([['=', '!=', '>', '>=', '<', '<='], ['between', 'not between'], ['in', 'not in']], array_map(fn (array $branch): array => $branch['properties']['operator']['enum'], $price));
         $this->assertSame(['type' => 'integer'], $price[0]['properties']['value']);
     }

@@ -35,12 +35,12 @@ final class ResultSchemas
 
     public static function partition(): ObjectType
     {
-        $other = self::object(['label' => self::label(), 'value' => self::number()]);
+        $other = self::object(['label' => self::label(), 'value' => self::number(), 'previous' => self::previous()], ['previous']);
         $other->nullable(true);
         $other->setDescription('The parts that the limit folds');
 
         return self::object([
-            'parts' => self::list(self::object(['key' => self::key(), 'label' => self::label(), 'value' => self::number()])),
+            'parts' => self::list(self::object(['key' => self::key(), 'label' => self::label(), 'value' => self::number(), 'previous' => self::previous()], ['previous'])),
             'other' => $other,
         ]);
     }
@@ -100,6 +100,11 @@ final class ResultSchemas
     private static function number(): Type
     {
         return (new NumberType)->nullable(true);
+    }
+
+    private static function previous(): Type
+    {
+        return self::number()->setDescription('The value of the period before the range, present when the partition compares two periods');
     }
 
     private static function label(): Type

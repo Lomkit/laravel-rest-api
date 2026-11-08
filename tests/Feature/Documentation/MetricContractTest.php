@@ -46,7 +46,7 @@ class MetricContractTest extends DocumentationTestCase
             $checked[] = $path;
         }
 
-        $this->assertSame(['/shows/metrics/show-count', '/shows/metrics/shows-per-month', '/shows/metrics/shows-by-status', '/shows/metrics/top-stages', '/shows/metrics/seats-goal', '/shows/metrics/occupancy'], $checked);
+        $this->assertSame(['/shows/metrics/show-count', '/shows/metrics/shows-per-month', '/shows/metrics/shows-by-status', '/shows/metrics/shows-by-level', '/shows/metrics/top-stages', '/shows/metrics/seats-goal', '/shows/metrics/occupancy'], $checked);
     }
 
     #[Test]
@@ -57,6 +57,22 @@ class MetricContractTest extends DocumentationTestCase
         $response->assertOk();
         $this->assertSame('{"data":{"type":"trend","series":[{"label":"2026-05","value":0},{"label":"2026-06","value":1},{"label":"2026-07","value":2}],"splits":[{"key":"on_sale","label":"OnSale","series":[{"label":"2026-05","value":0},{"label":"2026-06","value":1},{"label":"2026-07","value":1}]}],"other":{"label":"Other","series":[{"label":"2026-05","value":0},{"label":"2026-06","value":0},{"label":"2026-07","value":1}]}}}', (string) $response->getContent());
         $this->assertSame([], (new OpenApiValidator)->responseErrors($this->document(), '/shows/metrics/shows-per-month', 'post', 200, (string) $response->getContent()));
+    }
+
+    #[Test]
+    public function it_answers_a_partition_compared_with_the_previous_period_as_the_document_describes(): void
+    {
+        DB::table('shows')->insert(['id' => 4, 'title' => 'Preview', 'seats' => 80, 'featured' => false, 'starts_on' => '2026-06-01', 'starts_at' => '2026-06-01 18:00:00', 'status' => 'planned', 'level' => 1, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00']);
+        $document = $this->document();
+        $partition = $document['components']['schemas']['RestPartitionResult']['properties'];
+
+        $response = $this->postJson('api/shows/metrics/shows-by-level', []);
+
+        $response->assertOk();
+        $this->assertSame('{"data":{"type":"partition","parts":[{"key":1,"label":"Open","value":1,"previous":1},{"key":2,"label":"Main","value":1,"previous":null}],"other":{"label":"Other","value":1,"previous":null}}}', (string) $response->getContent());
+        $this->assertSame([], (new OpenApiValidator)->responseErrors($document, '/shows/metrics/shows-by-level', 'post', 200, (string) $response->getContent()));
+        $this->assertSame(array_keys($partition['parts']['items']['properties']), array_keys($response->json('data.parts.0')));
+        $this->assertSame(array_keys($partition['other']['properties']), array_keys($response->json('data.other')));
     }
 
     /** @param array<string, mixed> $body */
