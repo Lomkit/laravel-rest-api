@@ -38,6 +38,10 @@ final readonly class FieldMapping
 
     private function mapColumn(Column $column, Table $table, FieldList $list): FieldList
     {
+        if ($this->columns->isAuthColumn($column)) {
+            return $list->withNote("{$this->prefix}{$column->name}: written by the authentication flow, left out.");
+        }
+
         if ($this->columns->isLeftOut($column)) {
             return $list->withNote("{$this->prefix}{$column->name}: hidden and not fillable on the model, left out.");
         }

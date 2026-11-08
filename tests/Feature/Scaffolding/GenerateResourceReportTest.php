@@ -130,22 +130,65 @@ class GenerateResourceReportTest extends ScaffoldingTestCase
     #[Test]
     public function it_reports_a_morph_to_relation_as_skipped(): void
     {
-        $this->artisan('rest:resource', ['name' => 'SkippedPhotoResource', '--model' => Photo::class, '--generate' => true, '--no-interaction' => true])
-            ->expectsOutputToContain('4 fields, 0 relations')
-            ->expectsOutputToContain("  Skipped: imageable: MorphTo relations are not generated, declare it in relations() by hand with its targets, for example MorphTo::make('imageable', [...]).")
-            ->assertSuccessful();
+        $exitCode = Artisan::call('rest:resource', ['name' => 'SkippedPhotoResource', '--model' => Photo::class, '--generate' => true, '--no-interaction' => true], $output = new BufferedOutput);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertMatchesRegularExpression(
+            '/^  SkippedPhotoResource \.+ 4 fields, 0 relations\s*\n'
+            .'  Skipped: imageable: MorphTo relations are not generated, declare it in relations\(\) by hand with its targets\.\n$/m',
+            $output->fetch(),
+        );
     }
 
     #[Test]
-    public function it_names_the_resources_of_the_morph_map_in_the_note_of_a_morph_to_relation(): void
+    public function it_names_the_mapped_resources_whose_models_point_back_to_a_morph_to_relation(): void
     {
-        Relation::morphMap(['story' => Story::class, 'desk' => Desk::class, 'topic' => Topic::class], false);
+        $this->writeModel('App\Models\Gallery', 'public function cover(): \Illuminate\Database\Eloquent\Relations\MorphOne { return $this->morphOne(\\'.Photo::class.'::class, "cover"); }');
+        Relation::morphMap(['story' => Story::class, 'desk' => Desk::class, 'gallery' => 'App\Models\Gallery', 'topic' => Topic::class], false);
         $this->artisan('rest:resource', ['name' => 'MappedStoryResource', '--model' => Story::class, '--no-interaction' => true])->assertSuccessful();
         $this->artisan('rest:resource', ['name' => 'MappedDeskResource', '--model' => Desk::class, '--no-interaction' => true])->assertSuccessful();
+        $this->artisan('rest:resource', ['name' => 'MappedGalleryResource', '--model' => 'Gallery', '--no-interaction' => true])->assertSuccessful();
 
-        $this->artisan('rest:resource', ['name' => 'MappedPhotoResource', '--model' => Photo::class, '--generate' => true, '--no-interaction' => true])
-            ->expectsOutputToContain("  Skipped: imageable: MorphTo relations are not generated, declare it in relations() by hand with its targets, for example MorphTo::make('imageable', [MappedDeskResource::class, MappedStoryResource::class]).")
-            ->assertSuccessful();
+        $exitCode = Artisan::call('rest:resource', ['name' => 'MappedPhotoResource', '--model' => Photo::class, '--generate' => true, '--no-interaction' => true], $output = new BufferedOutput);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertStringContainsString(
+            "\n  Skipped: imageable: MorphTo relations are not generated, declare it in relations() by hand with its targets, for example MorphTo::make('imageable', [MappedStoryResource::class]).\n",
+            $output->fetch(),
+        );
+    }
+
+    #[Test]
+    public function it_names_the_mapped_resources_whose_models_reach_the_pivot_of_a_morph_to_relation(): void
+    {
+        $this->writeModel('App\Models\Keywordable', "protected \$table = 'keywordables';\n\n    public function keywordable(): \\Illuminate\\Database\\Eloquent\\Relations\\MorphTo { return \$this->morphTo(); }");
+        Relation::morphMap(['story' => Story::class, 'desk' => Desk::class, 'keyword' => Keyword::class], false);
+        $this->artisan('rest:resource', ['name' => 'PivotStoryResource', '--model' => Story::class, '--no-interaction' => true])->assertSuccessful();
+        $this->artisan('rest:resource', ['name' => 'PivotDeskResource', '--model' => Desk::class, '--no-interaction' => true])->assertSuccessful();
+        $this->artisan('rest:resource', ['name' => 'PivotKeywordResource', '--model' => Keyword::class, '--no-interaction' => true])->assertSuccessful();
+
+        $exitCode = Artisan::call('rest:resource', ['name' => 'KeywordableResource', '--model' => 'Keywordable', '--generate' => true, '--no-interaction' => true], $output = new BufferedOutput);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertStringContainsString(
+            "\n  Skipped: keywordable: MorphTo relations are not generated, declare it in relations() by hand with its targets, for example MorphTo::make('keywordable', [PivotDeskResource::class, PivotStoryResource::class]).\n",
+            $output->fetch(),
+        );
+    }
+
+    #[Test]
+    public function it_names_no_resource_when_no_mapped_model_points_back_to_a_morph_to_relation(): void
+    {
+        Relation::morphMap(['desk' => Desk::class], false);
+        $this->artisan('rest:resource', ['name' => 'UnrelatedDeskResource', '--model' => Desk::class, '--no-interaction' => true])->assertSuccessful();
+
+        $exitCode = Artisan::call('rest:resource', ['name' => 'UnrelatedPhotoResource', '--model' => Photo::class, '--generate' => true, '--no-interaction' => true], $output = new BufferedOutput);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertStringContainsString(
+            "\n  Skipped: imageable: MorphTo relations are not generated, declare it in relations() by hand with its targets.\n",
+            $output->fetch(),
+        );
     }
 
     #[Test]
