@@ -144,6 +144,12 @@ return [
     | is the most jobs that one run of a queued action creates, at least
     | 1. When its rows need more jobs, each job takes more rows than its
     | $chunkCount: the number of rows divided by "jobs", rounded up.
+    | "rows" is the most rows that one search page or the "response" of
+    | a mutation renders, at least 1: its rows and every included row.
+    | It is counted from the limits that the request asks for, before
+    | any query: the page limit, and for each to-many include its limit
+    | for each parent row, nested includes multiplying. A to-one include
+    | counts one row for each parent.
     |
     | "depths" is how many levels nest: "nested" filter groups, includes,
     | and relations in a mutation. A text search run by a search engine
@@ -184,6 +190,7 @@ return [
             'relation_entries' => 100,
             'resources' => 1000,
             'jobs' => 100,
+            'rows' => 10000,
         ],
 
         'depths' => [

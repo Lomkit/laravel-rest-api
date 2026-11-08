@@ -20,15 +20,18 @@ final class PayloadSearchRequest extends SearchRequest
 
     private ?RestContext $restContext = null;
 
+    private bool $paged = true;
+
     /**
      * @param  class-string<Resource>  $resource
      * @param  array<string, mixed>  $body
      */
-    public static function of(Container $container, string $resource, array $body, ActingUser $user): self
+    public static function of(Container $container, string $resource, array $body, ActingUser $user, bool $paged = true): self
     {
         $request = self::create('/', 'POST', $body);
         $request->resourceClass = $resource;
         $request->actingUser = $user;
+        $request->paged = $paged;
         $request->setContainer($container);
         $request->setUserResolver(fn (): ?Authenticatable => $user->user);
 
@@ -47,6 +50,12 @@ final class PayloadSearchRequest extends SearchRequest
     public function context(): RestContext
     {
         return $this->restContext ??= new RestContext($this, $this->container, $this->actingUser);
+    }
+
+    #[\Override]
+    protected function rendersPage(): bool
+    {
+        return $this->paged;
     }
 
     #[\Override]

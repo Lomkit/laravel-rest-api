@@ -6,6 +6,7 @@ use LogicException;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Validation\Cursor;
+use Lomkit\Rest\Validation\Search\RowLimit;
 use Lomkit\Rest\Validation\Search\SearchParser;
 use Lomkit\Rest\Validation\ValidationContext;
 
@@ -18,12 +19,22 @@ trait ParsesSearch
     {
         $rules = $this->parsedRules();
 
-        $this->parsedSearch ??= (new SearchParser)->parse(
-            Cursor::of($this->all(), $rules->violations())->at('search'),
-            ValidationContext::root($resource, $this->budget(), $rules),
-        );
+        if ($this->parsedSearch === null) {
+            $search = Cursor::of($this->all(), $rules->violations())->at('search');
+            $context = ValidationContext::root($resource, $this->budget(), $rules);
+            $this->parsedSearch = (new SearchParser)->parse($search, $context);
+
+            if ($this->rendersPage()) {
+                RowLimit::of($context)->page($search, $this->parsedSearch, $context);
+            }
+        }
 
         return $rules->rules();
+    }
+
+    protected function rendersPage(): bool
+    {
+        return true;
     }
 
     protected function searchNode(): SearchNode

@@ -47,7 +47,7 @@ class MutateRequest extends RestRequest
             $links = new LinkReplay($this->rows);
             $this->mutations = MutationParser::of($this, $this->parsedRules(), $this->budget(), $this->rows, $links, $this->versions)
                 ->parse($input->at('mutate'), $resource);
-            $this->responseBlock = (new ResponseBlockParser($this->parsedRules(), $this->budget()))->parse($input->at('response'), $resource);
+            $this->responseBlock = (new ResponseBlockParser($this->parsedRules(), $this->budget()))->parse($input->at('response'), $resource, self::entries($input->at('mutate')));
 
             if (! $this->parsedRules()->isPartial()) {
                 $links->plan($resource, $this->mutations);
@@ -98,5 +98,10 @@ class MutateRequest extends RestRequest
         (new PerimeterClause($resource))->apply($query);
 
         return $query;
+    }
+
+    private static function entries(Cursor $mutate): int
+    {
+        return is_array($mutate->value) ? count($mutate->value) : 0;
     }
 }

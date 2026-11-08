@@ -53,6 +53,11 @@ final readonly class Violation
         return new self($key, 'The :attribute field goes over the limit of :max entries, each deleted key counting as one entry.', ['max' => (string) $max]);
     }
 
+    public static function tooManyRows(string $key, int $rows, int $max): self
+    {
+        return new self($key, 'The :attribute field takes the response over the limit of :max rows: it can render up to :rows rows.', ['max' => (string) $max, 'rows' => (string) $rows]);
+    }
+
     public static function unknown(string $key): self
     {
         return new self($key, 'validation.prohibited');

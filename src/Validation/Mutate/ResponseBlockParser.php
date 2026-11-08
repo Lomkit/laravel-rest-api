@@ -8,6 +8,7 @@ use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\NodeBudget;
 use Lomkit\Rest\Validation\ParsedRules;
+use Lomkit\Rest\Validation\Search\RowLimit;
 use Lomkit\Rest\Validation\Search\SearchBodyParser;
 use Lomkit\Rest\Validation\ValidationContext;
 
@@ -20,7 +21,7 @@ final readonly class ResponseBlockParser
         private NodeBudget $budget,
     ) {}
 
-    public function parse(Cursor $response, Resource $resource): ?SearchNode
+    public function parse(Cursor $response, Resource $resource, int $records): ?SearchNode
     {
         if (! $response->present) {
             return null;
@@ -36,6 +37,9 @@ final readonly class ResponseBlockParser
         $context->reader->refuse($response, self::REFUSED);
         $this->rules->reach(Check::onClass($resource, 'viewAny', $response->path));
 
-        return SearchBodyParser::block($response, $context)->node(null, null);
+        $node = SearchBodyParser::block($response, $context)->node(null, null);
+        RowLimit::of($context)->records($response, $node, $records);
+
+        return $node;
     }
 }
