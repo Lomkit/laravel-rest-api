@@ -1304,7 +1304,7 @@ Payloads:
 - The lists of a search must be JSON lists: `filters`, each `nested` group, `sorts`, `selects`, `scopes`, `aggregates`, `includes`, `instructions`, `gates`, and the `filters` of includes and aggregates. An object gives a 422 on the list, `The search.filters field must be a list.`, and its entries are not validated. Before, an object was read entry by entry, and a `*` entry key gave `The * key is not valid for the search.filters field.`
 - A list entry that is not an object, such as `"includes": ["category"]` or `"mutate": ["create"]`, gives a 422 on that entry: `The search.includes.0 field must be an array.` A to-one relation given a list or `null` in `mutate` also gives a 422. Some of these payloads gave a 500 before.
 - Under a to-many relation in `mutate`, the errors are listed entry by entry.
-- `sync` and `toggle` are accepted on many-to-many relations only: `BelongsToMany`, `MorphToMany` and `MorphedByMany`. On another relation they give a 422 under the `operation` key of the entry, such as `The selected mutate.0.relations.author.operation is invalid.` Send `attach` there instead. A relation lists the operations it accepts in `mutationOperations()`.
+- `sync` and `toggle` are accepted on many-to-many relations only: `BelongsToMany`, `MorphToMany` and `MorphedByMany`. On another relation they give a 422 under the `operation` key of the entry, such as `The selected mutate.0.relations.author.operation is invalid.` Send `attach` there instead. A relation lists the operations it accepts in `mutationOperations()`. A relation that returns `[]` takes no entry: `mutate` refuses it as a whole, such as `The mutate.0.relations.replies field is prohibited.`, as on `HasOneThrough` and `HasManyThrough`.
 
 Search payload:
 
@@ -2026,7 +2026,7 @@ Reads:
 
 Scramble:
 
-- The relations are read from the relation objects that `relations()` returns. A field declared in `pivotFields()` is no longer documented as a relation. A custom relation is documented with the operations of its `mutationOperations()`, as a list when it has many entries, and with its pivot when it implements `PivotRelation`.
+- The relations are read from the relation objects that `relations()` returns. A field declared in `pivotFields()` is no longer documented as a relation. A custom relation is documented with the operations of its `mutationOperations()`, as a list when it has many entries, and with its pivot when it implements `PivotRelation`. A relation whose `mutationOperations()` returns `[]` is left out.
 - The `pivot` of a relation entry lists the pivot fields that the operation of the entry writes, with their type and rules: the creatable ones on `create` and `attach`, the updatable ones on `update`, `sync` and `toggle`.
 
 ### Details

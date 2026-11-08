@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Scramble;
 
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ReadOnlyTicketsTeamController;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTagController;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTicketController;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\CuratedTicketController;
@@ -104,6 +105,19 @@ class ScrambleRelationsTest extends ScrambleTestCase
             'properties' => ['position' => ['type' => ['integer', 'null'], 'description' => 'Rules: nullable, integer']],
             'additionalProperties' => false,
         ], $tags[0]['properties']['pivot']);
+    }
+
+    #[Test]
+    public function it_leaves_out_a_relation_that_accepts_no_operation(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('read-only-tickets-teams', ReadOnlyTicketsTeamController::class)->register());
+
+        $schemas = $this->schemas();
+
+        $this->assertArrayHasKey('ReadOnlyTicketsTeamMutationCreate', $schemas);
+        $this->assertArrayNotHasKey('ReadOnlyTicketsTeamRelations', $schemas);
+        $this->assertArrayNotHasKey('ReadOnlyTicketsTeamRelationMutationTickets', $schemas);
+        $this->assertArrayNotHasKey('TeamRelationMutationReplies', $schemas);
     }
 
     #[Test]

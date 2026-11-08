@@ -111,6 +111,10 @@ final readonly class MutationParser
         $attributes = $this->values($entry->at('attributes'));
         $withoutDetaching = $this->flag($entry->at('without_detaching'));
 
+        if ($operations === []) {
+            return null;
+        }
+
         if ($operation === null || ! in_array($operation, $operations, true)) {
             $this->rules->partial();
 
@@ -147,7 +151,7 @@ final readonly class MutationParser
         $attributes = $entry->at('attributes');
         $write = $operation?->writeOperation();
 
-        $this->rules->add($entry->at('operation')->path, ['required', Rule::enum(MutationOperation::class)->only($operations)]);
+        $this->rules->add($entry->at('operation')->path, ['required', $operations === [] ? Rule::enum(MutationOperation::class) : Rule::enum(MutationOperation::class)->only($operations)]);
         $this->rules->add($attributes->path, ['array', ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => $candidate->writeOperation() === null)]);
 
         if ($write !== null) {

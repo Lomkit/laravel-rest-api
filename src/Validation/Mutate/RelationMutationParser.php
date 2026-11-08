@@ -183,6 +183,10 @@ final readonly class RelationMutationParser
 
     private function relationRules(Cursor $value, Relation $relation, Resource $resource): void
     {
+        if ($relation->acceptedOperations() === []) {
+            $this->rules->add($value->path, ['prohibited']);
+        }
+
         foreach ($relation->rules($resource, $value->path) as $key => $list) {
             $this->rules->add($key, WriteRules::listOf($list));
         }
