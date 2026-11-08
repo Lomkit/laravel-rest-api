@@ -116,7 +116,8 @@ final class DetailsEntryTypes
             'rules' => self::strings(),
             'meta' => new ObjectType,
             'values' => self::values('Enum fields only: the backing values'),
-        ], ['values']);
+            'offered' => self::values('Enum fields that offer only some cases: the backing values that writes accept'),
+        ], ['values', 'offered']);
     }
 
     /**
@@ -143,7 +144,8 @@ final class DetailsEntryTypes
             'rules' => $rules,
             'meta' => new ObjectType,
             'values' => self::values('Enum fields only: the backing values'),
-        ], [...$parts, 'values']);
+            'offered' => self::values('Enum fields that offer only some cases: the backing values that writes accept'),
+        ], [...$parts, 'values', 'offered']);
     }
 
     private static function meta(string $description): ObjectType

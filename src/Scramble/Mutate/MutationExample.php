@@ -19,7 +19,7 @@ final class MutationExample
             ->writableOn(WriteOperation::Create);
 
         foreach ($fields as $field) {
-            $attributes[$field->name] = $field->getExamples() === [] && isset($types[$field->name]) ? $types[$field->name][0] : FieldExample::of($field);
+            $attributes[$field->name] = $field->getExamples() === [] && isset($types[$field->name]) ? $types[$field->name][0] : FieldExample::written($field);
         }
 
         $entry = ['operation' => WriteOperation::Create->value];

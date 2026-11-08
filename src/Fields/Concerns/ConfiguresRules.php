@@ -52,7 +52,7 @@ trait ConfiguresRules
 
     public function getRules(): FieldRules
     {
-        return new FieldRules([...($this->nullable ? ['nullable'] : []), ...$this->baseRules(), ...$this->rules], $this->creationRules, $this->updateRules);
+        return new FieldRules([...($this->nullable ? ['nullable'] : []), ...$this->writeBaseRules(), ...$this->rules], $this->creationRules, $this->updateRules);
     }
 
     /**

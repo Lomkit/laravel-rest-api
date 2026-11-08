@@ -310,6 +310,7 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 
 - A field gives the response form of a value with `render(mixed $value): mixed`, which receives the value read from the model or returned by `resolveUsing()`: `Number` and `Integer` turn a numeric string into a number, `Json` turns an empty array into `{}`, and the other types return the value as it is. A field type of the application that documents another type in `toSchema()` overrides `render()` to return that type. An application field type that already defines a method named `render()` must rename it or give it this signature.
 - `examples(...$values)` gives the example values of a field, which its OpenAPI type lists under `examples`: `Text::make('title')->examples('Weekly report')`, `Text::make('priority')->examples('low', 'normal', 'urgent')`. Each call replaces the list. A value is an integer, a float, a string, a boolean, an array or `null`, and is not checked when the field is declared. An `Enum` field lists its cases in `enum` and needs no example. The request examples of the document use the first value.
+- An `Enum` field can offer only some cases on writes, with a list of cases or a closure: `Enum::make('status')->offered([PostStatus::Draft, PostStatus::Published])`, `->offered(fn (PostStatus $status): bool => $status !== PostStatus::Archived)`. Without `offered()`, every case is offered. A case left out stays readable, filterable and sortable, so the rows that hold it keep working, but writes refuse it with `The selected {key} is invalid.` on its key: `mutate` attributes at every level, pivot fields, action, instruction and scope fields, Precognition included. The document lists the offered cases in the create, update, pivot and input schemas, and every case in the records and the filters; details add `offered` next to `values`. A case of another enum or a list that offers no case throws `InvalidFieldException` when the offered cases are first read. A field type of the application documents the values that writes accept with `toWriteSchema()`, which returns `toSchema()` unless it is overridden.
 
 ### Typed inputs
 
@@ -2196,7 +2197,7 @@ Fields:
 - `filter.operators` lists the operators that `search.filters` accept on the field. It is `[]` when the field is not filterable.
 - `create` and `update` are `true` when the field is writable on that operation.
 - `rules` holds strings. `all` is the type rule, `nullable` and `rules()`. `create` and `update` are `creationRules()` and `updateRules()`.
-- `Enum` entries add `values`, the backing values of the enum.
+- `Enum` entries add `values`, the backing values of the enum, and `offered`, the values that writes accept, when `offered()` leaves cases out.
 
 Rules:
 
@@ -2206,7 +2207,7 @@ Rules:
 Inputs:
 
 - `scopes` is a list of `{name, fields, meta}` instead of a list of names.
-- The `fields` of actions, instructions and scopes are input entries `{name, label, type, nullable, default, rules, meta}`, with `meta` as an object. `Enum` entries add `values`.
+- The `fields` of actions, instructions and scopes are input entries `{name, label, type, nullable, default, rules, meta}`, with `meta` as an object. `Enum` entries add `values`, and `offered` when `offered()` leaves cases out.
 
 Relations:
 

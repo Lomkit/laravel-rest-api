@@ -83,7 +83,7 @@ final readonly class WritableSchema
         $properties = [];
 
         foreach ($fields as $field) {
-            $type = FieldSchema::of($field);
+            $type = FieldSchema::written($field);
             $described = (new RuleDescriptions($rules[$field->name] ?? []))->toArray();
 
             if (isset($morphTypes[$field->name])) {

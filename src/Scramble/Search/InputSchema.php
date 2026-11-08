@@ -82,7 +82,7 @@ final readonly class InputSchema
         $given = 0;
 
         foreach ($fields as $field) {
-            $items[] = FieldSchema::of($field);
+            $items[] = FieldSchema::written($field);
             $given = $field->hasDefault() ? $given : count($items);
         }
 
@@ -104,7 +104,7 @@ final readonly class InputSchema
         $entries = [];
 
         foreach ($fields as $field) {
-            $entries[] = Schemas::closed(['name' => (new StringType)->const($field->name), 'value' => FieldSchema::of($field)], ['name']);
+            $entries[] = Schemas::closed(['name' => (new StringType)->const($field->name), 'value' => FieldSchema::written($field)], ['name']);
         }
 
         if ($entries !== []) {

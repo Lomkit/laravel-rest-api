@@ -45,7 +45,9 @@ class ShowResource extends Resource
             Boolean::make('featured'),
             Date::make('starts_on')->creationRules('required'),
             DateTime::make('starts_at')->nullable(),
-            Enum::make('status')->creationRules('required'),
+            Enum::make('status')
+                ->creationRules('required')
+                ->offered([ShowStatus::Planned, ShowStatus::OnSale]),
             Enum::make('level'),
             Json::make('settings')->nullable(),
             Text::make('secret')

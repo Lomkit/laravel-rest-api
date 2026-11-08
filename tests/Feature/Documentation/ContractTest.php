@@ -546,6 +546,30 @@ class ContractTest extends DocumentationTestCase
         return true;
     }
 
+    #[Test]
+    public function it_documents_the_offered_cases_on_writes_and_every_case_on_reads(): void
+    {
+        $this->seedFestival();
+        DB::table('shows')
+            ->where('id', 2)
+            ->update(['status' => 'sold_out']);
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+        $validator = new OpenApiValidator;
+        $write = ['mutate' => [['operation' => 'update', 'key' => 1, 'attributes' => ['status' => 'sold_out']]]];
+        $search = ['search' => ['filters' => [['field' => 'status', 'value' => 'sold_out']], 'selects' => [['field' => 'id'], ['field' => 'status']]]];
+
+        $this->assertNotSame([], $validator->requestErrors($document, '/shows/mutate', 'post', $write));
+        $this->postJson('api/shows/mutate', $write)->assertUnprocessable();
+        $this->assertSame([], $validator->requestErrors($document, '/shows/search', 'post', $search));
+
+        $response = $this->postJson('api/shows/search', $search);
+
+        $response->assertOk();
+        $this->assertSame([['id' => 2, 'status' => 'sold_out']], $response->json('data'));
+        $this->assertSame([], $validator->responseErrors($document, '/shows/search', 'post', 200, (string) $response->getContent()));
+    }
+
     private function seedFestival(): void
     {
         DB::table('stages')->insert([['code' => 'main', 'name' => 'Main stage'], ['code' => 'side', 'name' => 'Side stage']]);
