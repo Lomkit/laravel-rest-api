@@ -13,6 +13,7 @@ return [
     'pattern_filters_total' => 'Le champ :attribute dépasse la limite de :max filtres de motif par recherche.',
     'entries_total' => 'Le champ :attribute dépasse la limite de :max entrées de liste par requête.',
     'relation_entries_total' => 'Le champ :attribute dépasse la limite de :max entrées, chaque clé supprimée comptant pour une entrée.',
+    'response_rows' => 'Le champ :attribute fait dépasser à la réponse la limite de :max lignes : elle peut en rendre jusqu\'à :rows.',
     'owner_include' => 'Le champ :attribute est interdit : cette relation charge au plus un élément par parent.',
     'gates_off' => 'Le champ :attribute est interdit : la ressource incluse désactive ses gates.',
     'several_types' => 'Le champ :attribute est interdit : cette relation a plusieurs types. Indiquez-le pour chaque type, sous types.',
