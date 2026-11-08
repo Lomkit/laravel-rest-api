@@ -31,11 +31,13 @@ class ScrambleTextSearchTest extends ScrambleTestCase
             'type' => 'object',
             'description' => 'Text to search in the searchable fields',
             'properties' => [
-                'value' => ['type' => 'string'],
+                'value' => ['type' => ['string', 'null'], 'maxLength' => 255],
                 'mode' => ['type' => 'string', 'enum' => ['words', 'phrase']],
             ],
+            'additionalProperties' => false,
         ], $search['text']);
-        $this->assertNotContains('@relevance', $search['sorts']['items']['properties']['field']['enum']);
+        $this->assertSame(['$ref' => '#/components/schemas/ContainsPostSort'], $search['sorts']['items']);
+        $this->assertNotContains('@relevance', $this->schemas()['ContainsPostSort']['properties']['field']['enum']);
     }
 
     #[Test]
@@ -43,13 +45,14 @@ class ScrambleTextSearchTest extends ScrambleTestCase
     {
         $search = $this->search('/full-text-posts/search');
         $fullText = in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb', 'pgsql'], true);
-        $sorts = ['id', 'title', 'summary', 'status', 'featured', 'views', 'rating', 'published_on', 'published_at'];
+        $sorts = ['id', 'title', 'summary', 'status', 'featured', 'views', 'rating', 'published_on', 'published_at', 'author.first_name', 'author.last_name', 'author_count', 'author_min_first_name', 'author_min_last_name', 'author_max_first_name', 'author_max_last_name', 'author_exists'];
+        $sort = $fullText ? $search['sorts']['items'] : $this->schemas()['FullTextPostSort'];
 
         $this->assertSame(
             $fullText ? ['words', 'prefix', 'phrase', 'websearch'] : ['words', 'phrase'],
             $search['text']['properties']['mode']['enum'],
         );
-        $this->assertSame($fullText ? [...$sorts, '@relevance'] : $sorts, $search['sorts']['items']['properties']['field']['enum']);
+        $this->assertSame($fullText ? [...$sorts, '@relevance'] : $sorts, $sort['properties']['field']['enum']);
     }
 
     #[Test]
@@ -59,11 +62,5 @@ class ScrambleTextSearchTest extends ScrambleTestCase
 
         $this->assertSame(['type' => 'string', 'enum' => ['with', 'only']], $search['trashed']);
         $this->assertArrayNotHasKey('text', $search);
-    }
-
-    /** @return array<string, mixed> */
-    private function search(string $path): array
-    {
-        return $this->body($this->operation($path, 'post'))['properties']['search']['properties'];
     }
 }

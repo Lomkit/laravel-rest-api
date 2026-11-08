@@ -4,12 +4,14 @@ namespace Lomkit\Rest\Scramble;
 
 use Closure;
 use Dedoc\Scramble\Support\Generator\Components;
+use Dedoc\Scramble\Support\Generator\Discriminator;
 use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\Response;
 use Dedoc\Scramble\Support\Generator\Schema;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Exceptions\InvalidDocumentationException;
+use Lomkit\Rest\Scramble\Types\OneOf;
 
 final readonly class ComponentRegistry
 {
@@ -67,5 +69,20 @@ final readonly class ComponentRegistry
         $schema->type->setAttribute(self::OWNER, $owner);
 
         return $reference;
+    }
+
+    /** @param list<array{string, string, Closure(): Type}> $branches */
+    public function discriminated(string $property, string $owner, array $branches): OneOf
+    {
+        $discriminator = new Discriminator($property);
+        $items = [];
+
+        foreach ($branches as [$value, $name, $build]) {
+            $reference = $this->schema($name, $owner, $build);
+            $discriminator->addMapping($value, $reference->getUri());
+            $items[] = $reference;
+        }
+
+        return new OneOf($items, $discriminator);
     }
 }

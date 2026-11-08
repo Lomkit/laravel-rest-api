@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Scramble\Components;
 
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Scramble\FieldExample;
 use Lomkit\Rest\Scramble\FieldSchema;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Validation\KeysGrammar;
@@ -25,15 +26,6 @@ final class KeySchema
         $id = KeysGrammar::idOf($resource);
         $declared = $id->getExamples()[0] ?? null;
 
-        if (is_int($declared) || is_string($declared)) {
-            return $declared;
-        }
-
-        return match ($id->resolvedKeyType()) {
-            'int' => 1,
-            'string' => 'a',
-            'uuid' => '00000000-0000-0000-0000-000000000000',
-            'ulid' => '00000000000000000000000000',
-        };
+        return is_int($declared) || is_string($declared) ? $declared : FieldExample::key($id);
     }
 }

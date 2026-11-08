@@ -19,39 +19,29 @@ class ScrambleDocumentTest extends ScrambleTestCase
         $operation = $this->operation('/products/search', 'post');
 
         $this->assertSame('Search Product', $operation['summary']);
-        $this->assertSame(
-            ['id', 'category_id', 'name', 'price'],
-            $this->body($operation)['properties']['search']['properties']['filters']['items']['properties']['field']['enum'],
-        );
+        $this->assertSame(['id', 'category_id', 'name', 'price', 'category.id', 'category.name'], array_keys((array) $this->schemas()['ProductFieldFilter']['discriminator']['mapping']));
     }
 
     #[Test]
     public function it_documents_the_filterable_sortable_and_selectable_fields_of_the_search_body(): void
     {
-        $search = $this->body($this->operation('/authors/search', 'post'))['properties']['search']['properties'];
+        $schemas = $this->schemas();
 
-        $this->assertSame(
-            ['id', 'first_name', 'last_name', 'full_name'],
-            $search['filters']['items']['properties']['field']['enum'],
-        );
-        $this->assertSame(['first_name', 'last_name', 'full_name'], $search['sorts']['items']['properties']['field']['enum']);
-        $this->assertSame(['asc', 'desc'], $search['sorts']['items']['properties']['direction']['enum']);
-        $this->assertSame(['id', 'first_name', 'last_name', 'settings'], $search['selects']['items']['properties']['field']['enum']);
-        $this->assertSame(['count', 'min', 'max', 'avg', 'sum', 'exists'], $search['aggregates']['items']['properties']['type']['enum']);
+        $this->assertSame(['id', 'first_name', 'last_name', 'full_name', 'posts.id', 'posts.title', 'posts.summary', 'posts.status', 'posts.featured', 'posts.views', 'posts.rating', 'posts.published_on', 'posts.published_at', 'drafts.id', 'drafts.title', 'tags.id', 'tags.name', 'tags.slug', 'tags.archived_at', 'tags.created_at'], array_keys((array) $schemas['AuthorFieldFilter']['discriminator']['mapping']));
+        $this->assertSame(['first_name', 'last_name', 'full_name', 'posts_count', 'posts_min_id'], array_slice($schemas['AuthorSort']['properties']['field']['enum'], 0, 5));
+        $this->assertSame(['asc', 'desc'], $schemas['AuthorSort']['properties']['direction']['enum']);
+        $this->assertSame(['id', 'first_name', 'last_name', 'settings'], $schemas['AuthorSelect']['properties']['field']['enum']);
+        $this->assertSame([['count', 'exists'], ['min', 'max'], ['avg', 'sum']], array_map(fn (array $branch): array => $branch['properties']['type']['enum'], $schemas['AuthorAggregatePosts']['oneOf']));
     }
 
     #[Test]
     public function it_documents_the_parameters_and_the_filter_operators_of_the_search_body(): void
     {
-        $search = $this->body($this->operation('/products/search', 'post'))['properties']['search']['properties'];
-        $filter = $search['filters']['items']['properties'];
+        $price = $this->schemas()['ProductFilterPrice']['oneOf'];
 
-        $this->assertSame(['filters', 'sorts', 'selects', 'includes', 'scopes', 'aggregates', 'instructions', 'gates', 'page', 'limit'], array_keys($search));
-        $this->assertSame(
-            ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'ilike', 'not ilike', 'in', 'not in', 'between', 'not between', 'is null', 'is not null'],
-            $filter['operator']['enum'],
-        );
-        $this->assertArrayNotHasKey('type', (array) $filter['value']);
+        $this->assertSame(['filters', 'gates', 'sorts', 'selects', 'aggregates', 'includes', 'instructions', 'limit', 'page'], array_keys($this->search('/products/search')));
+        $this->assertSame([['=', '!=', '>', '>=', '<', '<='], ['between', 'not between'], ['in', 'not in']], array_map(fn (array $branch): array => $branch['properties']['operator']['enum'], $price));
+        $this->assertSame(['type' => 'integer'], $price[0]['properties']['value']);
     }
 
     #[Test]
@@ -64,13 +54,11 @@ class ScrambleDocumentTest extends ScrambleTestCase
     }
 
     #[Test]
-    public function it_documents_the_include_relation_as_a_plain_string_when_the_resource_declares_no_relation(): void
+    public function it_documents_no_include_when_the_resource_declares_no_relation(): void
     {
         Route::prefix('api')->group(fn () => Rest::resource('tags', TagController::class)->register());
 
-        $includes = $this->body($this->operation('/tags/search', 'post'))['properties']['search']['properties']['includes'];
-
-        $this->assertSame(['type' => 'string'], $includes['items']['properties']['relation']);
+        $this->assertArrayNotHasKey('includes', $this->search('/tags/search'));
     }
 
     #[Test]

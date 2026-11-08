@@ -3,9 +3,14 @@
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Support\Facades\DB;
+use Lomkit\Rest\Tests\Feature\Documentation\Stubs\UngatedLabelResource;
+use Lomkit\Rest\Tests\Feature\Documentation\Stubs\UngatedNoteResource;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
+use Lomkit\Rest\Tests\Fixtures\Festival\LabelResource;
+use Lomkit\Rest\Tests\Fixtures\Festival\NoteResource;
 use Lomkit\Rest\Tests\Fixtures\Festival\Show;
 use Lomkit\Rest\Tests\Fixtures\Festival\Stage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 class ContractTest extends DocumentationTestCase
@@ -88,7 +93,113 @@ class ContractTest extends DocumentationTestCase
             }
         }
 
-        $this->assertSame(['DELETE /notes default', 'DELETE /shows default', 'POST /shows/restore default', 'DELETE /shows/force default', 'DELETE /stages default'], $checked);
+        $this->assertSame(['DELETE /notes default', 'POST /notes/search default', 'DELETE /shows default', 'POST /shows/search default', 'POST /shows/restore default', 'DELETE /shows/force default', 'DELETE /stages default', 'POST /stages/search default'], $checked);
+    }
+
+    /**
+     * @param  array<string, mixed>  $search
+     * @param  array<class-string, class-string>  $bindings
+     */
+    #[Test]
+    #[DataProvider('acceptedSearches')]
+    public function it_answers_a_search_that_the_document_describes(string $path, array $search, array $bindings = []): void
+    {
+        foreach ($bindings as $abstract => $concrete) {
+            $this->app->bind($abstract, $concrete);
+        }
+
+        $this->seedFestival();
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+        $validator = new OpenApiValidator;
+
+        $this->assertSame([], $validator->requestErrors($document, $path, 'post', ['search' => $search]));
+
+        $response = $this->postJson('api'.$path, ['search' => $search]);
+
+        $response->assertOk();
+        $this->assertSame([], $validator->responseErrors($document, $path, 'post', 200, (string) $response->getContent()));
+    }
+
+    /** @return array<string, array{0: string, 1: array<string, mixed>, 2?: array<class-string, class-string>}> */
+    public static function acceptedSearches(): array
+    {
+        return [
+            'a field with its default operator' => ['/shows/search', ['filters' => [['field' => 'title', 'value' => 'Opening night']]]],
+            'a pattern' => ['/shows/search', ['filters' => [['field' => 'title', 'operator' => 'like', 'value' => 'Open%']]]],
+            'a list of values' => ['/shows/search', ['filters' => [['field' => 'seats', 'operator' => 'in', 'value' => [0, 300]]]]],
+            'a range' => ['/shows/search', ['filters' => [['field' => 'starts_on', 'operator' => 'between', 'value' => ['2026-07-01', '2026-07-03']]]]],
+            'a null check' => ['/shows/search', ['filters' => [['field' => 'summary', 'operator' => 'is null']]]],
+            'a pivot field' => ['/shows/search', ['filters' => [['field' => 'artists.pivot.role', 'value' => 'lead']]]],
+            'a field of a related resource' => ['/shows/search', ['filters' => [['field' => 'stage.name', 'value' => 'Main stage']]]],
+            'related rows' => ['/shows/search', ['filters' => [['relation' => 'comments', 'exists' => false, 'nested' => [['field' => 'rating', 'operator' => '>=', 'value' => 4]]]]]],
+            'related rows of one type' => ['/notes/search', ['filters' => [['relation' => 'notable', 'types' => [Stage::class => [['field' => 'code', 'value' => 'main']]]]]]],
+            'a group joined with or' => ['/shows/search', ['filters' => [['field' => 'featured', 'value' => true], ['type' => 'or', 'nested' => [['field' => 'seats', 'operator' => '>', 'value' => 100]]]]]],
+            'a string key' => ['/stages/search', ['filters' => [['field' => 'code', 'operator' => 'in', 'value' => ['main', 'side']]]]],
+            'sorts on a field and on a field of a relation' => ['/shows/search', ['sorts' => [['field' => 'stage.name', 'direction' => 'desc'], ['field' => 'title']]]],
+            'a sort on the key of an aggregate' => ['/shows/search', ['aggregates' => [['relation' => 'comments', 'type' => 'count']], 'sorts' => [['field' => 'comments_count', 'direction' => 'desc']]]],
+            'selects, gates, a limit and a page' => ['/shows/search', ['selects' => [['field' => 'title']], 'gates' => ['view', 'create'], 'limit' => 25, 'page' => 2]],
+            'a text and the trashed rows' => ['/shows/search', ['text' => ['value' => 'night', 'mode' => 'phrase'], 'trashed' => 'with']],
+            'includes of each family' => ['/shows/search', ['includes' => [
+                ['relation' => 'stage', 'selects' => [['field' => 'name']]],
+                ['relation' => 'comments', 'alias' => 'top_comments', 'limit' => 10, 'sorts' => [['field' => 'rating', 'direction' => 'desc']], 'gates' => ['view']],
+                ['relation' => 'artists', 'filters' => [['field' => 'name', 'value' => 'Ada']]],
+            ]]],
+            'an include of each type' => ['/notes/search', ['includes' => [['relation' => 'notable', 'types' => [Show::class => ['selects' => [['field' => 'title']]], Stage::class => ['includes' => [['relation' => 'shows']]]]]]]],
+            'aggregates of each kind' => ['/shows/search', ['aggregates' => [
+                ['relation' => 'comments', 'type' => 'count'],
+                ['relation' => 'comments', 'type' => 'max', 'field' => 'rating', 'alias' => 'best_rating'],
+                ['relation' => 'comments', 'type' => 'avg', 'field' => 'rating', 'filters' => [['field' => 'rating', 'operator' => '>', 'value' => 1]]],
+            ]]],
+            'a scope with its parameters' => ['/shows/search', ['scopes' => [['name' => 'startingFrom', 'parameters' => ['2026-07-01']]]]],
+            'an instruction with its fields' => ['/shows/search', ['instructions' => [['name' => 'only-featured', 'fields' => [['name' => 'featured', 'value' => true], ['name' => 'min_seats', 'value' => null]]]]]],
+            'the gates of a resource that turns its gates off' => ['/notes/search', ['gates' => ['view']], [NoteResource::class => UngatedNoteResource::class]],
+        ];
+    }
+
+    /** @param array<string, mixed> $search */
+    #[Test]
+    #[DataProvider('refusedSearches')]
+    public function it_refuses_a_search_that_the_document_does_not_describe(string $path, array $search): void
+    {
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+
+        $this->assertNotSame([], (new OpenApiValidator)->requestErrors($this->document(), $path, 'post', ['search' => $search]));
+        $this->postJson('api'.$path, ['search' => $search])->assertUnprocessable();
+    }
+
+    /** @return array<string, array{string, array<string, mixed>}> */
+    public static function refusedSearches(): array
+    {
+        return [
+            'a list for an equality' => ['/shows/search', ['filters' => [['field' => 'seats', 'value' => [1]]]]],
+            'a value for a null check' => ['/shows/search', ['filters' => [['field' => 'summary', 'operator' => 'is null', 'value' => 'a']]]],
+            'a pattern over the length' => ['/shows/search', ['filters' => [['field' => 'title', 'operator' => 'like', 'value' => str_repeat('a', 256)]]]],
+            'an operator of another type' => ['/shows/search', ['filters' => [['field' => 'featured', 'operator' => '>', 'value' => true]]]],
+            'one value for a range' => ['/shows/search', ['filters' => [['field' => 'seats', 'operator' => 'between', 'value' => [1]]]]],
+            'a field that cannot be filtered' => ['/shows/search', ['filters' => [['field' => 'settings', 'value' => 'a']]]],
+            'nested filters on related rows of two types' => ['/notes/search', ['filters' => [['relation' => 'notable', 'nested' => [['field' => 'id', 'value' => 1]]]]]],
+            'a limit outside the page sizes' => ['/shows/search', ['limit' => 7]],
+            'a limit on an include of a relation to one' => ['/shows/search', ['includes' => [['relation' => 'stage', 'limit' => 10]]]],
+            'the create gate on an include' => ['/shows/search', ['includes' => [['relation' => 'comments', 'gates' => ['create']]]]],
+            'a field that an average does not take' => ['/shows/search', ['aggregates' => [['relation' => 'comments', 'type' => 'avg', 'field' => 'body']]]],
+            'a scope without its first parameter' => ['/shows/search', ['scopes' => [['name' => 'startingFrom']]]],
+            'a text on a resource without a text search' => ['/stages/search', ['text' => ['value' => 'main']]],
+            'an unknown key in a filter' => ['/shows/search', ['filters' => [['field' => 'title', 'value' => 'Opening night', 'note' => 'a']]]],
+            'an unknown key in an include' => ['/shows/search', ['includes' => [['relation' => 'comments', 'note' => 'a']]]],
+        ];
+    }
+
+    #[Test]
+    public function it_answers_the_gates_of_an_include_whose_resource_turns_its_gates_off(): void
+    {
+        $this->app->bind(LabelResource::class, UngatedLabelResource::class);
+        $this->seedFestival();
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $search = ['includes' => [['relation' => 'labels', 'gates' => ['view']]]];
+
+        $this->assertSame(['/search/includes/0/relation', '/search/includes/0'], array_keys((new OpenApiValidator)->requestErrors($this->document(), '/shows/search', 'post', ['search' => $search])));
+        $this->postJson('api/shows/search', ['search' => $search])->assertOk();
     }
 
     #[Test]

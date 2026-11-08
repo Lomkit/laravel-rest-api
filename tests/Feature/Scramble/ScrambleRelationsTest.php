@@ -8,6 +8,8 @@ use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTagController;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTicketController;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\CuratedTicketController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
+use Lomkit\Rest\Tests\Fixtures\Gallery\Collector;
+use Lomkit\Rest\Tests\Fixtures\Gallery\Gallery;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Helpdesk;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
@@ -20,16 +22,13 @@ class ScrambleRelationsTest extends ScrambleTestCase
     #[\Override]
     protected function fixtures(): array
     {
-        return [new Catalog, new Helpdesk, new Library];
+        return [new Catalog, new Gallery, new Helpdesk, new Library];
     }
 
     #[Test]
     public function it_documents_the_declared_relations_and_not_the_fields_of_their_pivot(): void
     {
-        $relation = $this->body($this->operation('/tickets/search', 'post'))['properties']['search']['properties']['includes']['items']['properties']['relation'];
-
-        $this->assertSame(['team', 'tags', 'labels'], $relation['enum']);
-        $this->assertSame("**Available relations:**\n\n- `team` (BelongsTo)\n- `tags` (BelongsToMany)\n- `labels` (MorphToMany)", $relation['description']);
+        $this->assertSame(['team', 'tags', 'labels'], array_keys((array) $this->schemas()['TicketInclude']['discriminator']['mapping']));
         $this->assertSame(['team', 'tags', 'labels'], array_keys($this->mutateEntry('/tickets')['relations']['properties']));
     }
 
@@ -100,10 +99,21 @@ class ScrambleRelationsTest extends ScrambleTestCase
     public function it_documents_the_type_of_a_morph_to_entry_and_the_types_of_a_morph_to_include(): void
     {
         $labelable = $this->mutateEntry('/labels')['relations']['properties']['labelable'];
-        $include = $this->body($this->operation('/labels/search', 'post'))['properties']['search']['properties']['includes']['items']['properties'];
+        $types = $this->schemas()['LabelIncludeLabelable']['properties']['types'];
 
         $this->assertSame(['operation', 'key', 'attributes', 'type'], array_keys($labelable['properties']));
         $this->assertSame(['type' => 'string', 'description' => 'The morph type of the related record; required when the relation has several types', 'enum' => [Book::class, Shelf::class]], $labelable['properties']['type']);
-        $this->assertSame(['type' => 'object', 'description' => 'MorphTo relations only: the search of each type, keyed by morph type, with selects, filters, scopes, includes, aggregates, instructions and gates'], $include['types']);
+        $this->assertSame([Book::class, Shelf::class], array_keys($types['properties']));
+        $this->assertSame('The search of each type of related row, keyed by morph type', $types['description']);
+    }
+
+    #[Test]
+    public function it_documents_the_search_of_a_morph_to_relation_of_one_type_in_place_or_by_type(): void
+    {
+        $schemas = $this->schemas();
+
+        $this->assertSame(['relation', 'alias', 'filters', 'gates', 'selects', 'types'], array_keys($schemas['ArtworkIncludeOwner']['properties']));
+        $this->assertSame([Collector::class], array_keys($schemas['ArtworkIncludeOwner']['properties']['types']['properties']));
+        $this->assertSame(['relation', 'exists', 'type', 'nested', 'types'], array_keys($schemas['ArtworkRelationFilterOwner']['properties']));
     }
 }

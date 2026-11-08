@@ -1019,7 +1019,7 @@ Query builder:
 
 Scramble:
 
-- The search body documents `text` only on the resources with a text search: `value` and the `mode`s of the strategy. The `fields` key of `text`, which the package never read, is removed.
+- The search body documents `text` only on the resources with a text search: `value`, a string or `null` of at most the `max_length` of the strategy, and the `mode`s of the strategy. The `fields` key of `text`, which the package never read, is removed.
 - `trashed` is documented on the resources whose model uses `SoftDeletes`, and the sort `field` lists `@relevance` when the strategy orders by relevance.
 
 ### Search engines
@@ -1676,7 +1676,7 @@ Include aliases:
 
 Scramble:
 
-- The search body documents the sortable fields under `sorts` and the selectable fields under `selects`, with the values of `SortDirection` and `AggregateFunction`.
+- The search body documents under `sorts` the sortable fields, the fields of the to-one relations (`author.last_name`) and the default key of each aggregate (`comments_count`), the selectable fields under `selects`, the values of `SortDirection`, and under `aggregates` the functions of `AggregateFunction` with the fields that each one takes.
 
 ### Filters
 
@@ -1771,7 +1771,7 @@ Query builder and custom relations:
 
 Scramble:
 
-- The `filters` of the search body list the filterable fields of the resource under `field`, without the dotted paths, and the operators of `FilterOperator` under `operator`.
+- The `filters` of the search body document one condition per filterable field, with the operators of that field and the value that each operator takes, see [OpenAPI documentation](#openapi-documentation).
 
 ### Writes
 
@@ -2097,6 +2097,18 @@ Records and read responses:
 - The body of `destroy`, `restore` and `forceDestroy` requires `resources`: from 1 to `limits.sizes.resources` distinct keys, typed by the `ID` field of the resource. Its request example holds one key: the first value of `examples()` on the `ID` field, else `1` for an integer key, `a` for a string key, `00000000-0000-0000-0000-000000000000` for a UUID key and `00000000000000000000000000` for a ULID key.
 - A resource that has the name of another documented resource, such as a second `TagResource` in another namespace, names its records with its namespace: `App.Rest.Admin.Tag`, `App.Rest.Admin.TagPaginated`.
 - A `Date` field is documented with `format: date`, and the `date` cast of Laravel renders a date and a time (`2026-07-01T00:00:00.000000Z`). Cast the attribute with `date:Y-m-d` so that the response holds the date alone, as the document says. A `DateTime` field is documented with `format: date-time`, which the `datetime` cast renders. A `Json` field is documented as an object: a value that is a list does not match it.
+
+Search requests:
+
+- The `filters` of a search are `{Resource}Filter`: `oneOf` a condition on a field (`{Resource}FieldFilter`), a condition on related rows (`{Resource}RelationFilter`) and a group of filters (`{Resource}FilterGroup`, with `nested` and `type`). The description of the group gives the nesting depth of `limits.depths.filters`.
+- `{Resource}FieldFilter` has one schema per filterable field, `{Resource}Filter{Field}`, with a `discriminator` on `field` (`{Resource}Filter{Relation}_{Field}` for a dotted path). It lists the operators of the field, grouped by the value that they take: the type of the field for `=`, `!=`, `>`, `>=`, `<` and `<=`; a string of at most `limits.lengths.patterns` characters for `like`, `not like`, `ilike` and `not ilike`; a list of 1 to `limits.sizes.values` values for `in` and `not in`; two values for `between` and `not between`; no `value` for `is null` and `is not null`. Without `operator`, the condition is `=`. The filterable fields of each related resource are listed one level deep, such as `author.last_name`, with the operators and the value of their own filter, and the filterable pivot fields as `{relation}.pivot.{field}`, such as `tags.pivot.weight`. Deeper dotted paths are accepted and are not listed; a `MorphTo` relation of several types takes none.
+- `{Resource}RelationFilter` has one schema per relation, `{Resource}RelationFilter{Relation}`, with a `discriminator` on `relation`: `exists`, `type`, and `nested`, the filters of the related resource. A `MorphTo` relation adds `types`, the filters of each morph type, and has no `nested` when it has several types.
+- The body of a search is `{Resource}Search`: `text` and `trashed` where the resource supports them, `filters`, `gates`, `scopes`, `sorts`, `selects`, `aggregates`, `includes`, `instructions`, `limit` (the page sizes of the resource) and `page` (from 1). A list holds at most its `limits.sizes` entries, and a key that the resource cannot use is left out. `{Resource}Search` lists its keys without refusing others, and excludes `text` and `trashed` with `not` where the resource does not support them. Every object inside it lists its keys and refuses the others (`"additionalProperties": false`).
+- `{Resource}Sort` lists the sortable fields, the fields of the to-one relations (`author.last_name`) and the default key of each aggregate that the same search can declare (`comments_count`, `comments_max_rating`); such a key sorts only when the search declares that aggregate. The key of an aggregate with an `alias` is accepted too and is not listed. `{Resource}Select` lists the selectable fields. `gates` lists the abilities of the resource; an include does not list `create`. A resource whose `isGatingEnabled()` returns `false` has no `gates` in its search: the endpoint still accepts the key there, and the rows hold no answer.
+- `{Resource}Include` has one schema per relation, `{Resource}Include{Relation}`, with a `discriminator` on `relation`: `relation`, `alias`, and the search of the related resource. An include of a `BelongsTo` relation has no `limit` and no `sorts`, and a `MorphTo` include has `types`, the search of each morph type. The description gives the nesting depth of `limits.depths.includes`. Dotted relation paths are accepted and are not listed: use the `includes` of an include.
+- `{Resource}Aggregate` has one schema per relation but `MorphTo`, `{Resource}Aggregate{Relation}`: `count` and `exists` take no `field`, `min` and `max` take the fields that they can order, `avg` and `sum` the `Number` and `Integer` fields.
+- `{Resource}Scope` and `{Resource}Instruction` have one schema per scope and per instruction, with a `discriminator` on `name`. A scope lists its `parameters` in order, with their type; the parameters without a default are required. An instruction lists its `fields` as `{"name", "value"}` entries, typed by each field.
+- Each search operation has a request example that filters on one field: the first filterable field that declares `examples()`, else the first filterable field, with its first example or a value of its type (`1`, `a`, `true`, `2026-01-01`, the first value of an enum). The example leaves out `operator`, as `=` is the default.
 
 Error responses:
 
