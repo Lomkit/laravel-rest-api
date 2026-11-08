@@ -1195,6 +1195,97 @@
                 }
             }
         },
+        "/shows/metrics/seats-by-level": {
+            "post": {
+                "operationId": "shows.metric.seats-by-level",
+                "summary": "Seats By Level",
+                "tags": [
+                    "Show"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The metric runs on the rows that `search` matches, every row without `search`",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowMetricSearch"
+                                    },
+                                    "range": {
+                                        "type": "integer",
+                                        "description": "The range of the metric: `30` when the request sends none",
+                                        "enum": [
+                                            30
+                                        ]
+                                    },
+                                    "timezone": {
+                                        "type": "string",
+                                        "description": "The time zone of the periods of the metric, such as `Europe/Paris`; the time zone of the application when the request sends none"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "range": 30,
+                                        "timezone": "UTC"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The result of the metric",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "type": {
+                                                            "type": "string",
+                                                            "const": "partition"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "type"
+                                                    ]
+                                                },
+                                                {
+                                                    "$ref": "#/components/schemas/RestPartitionResult"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/RestUnauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/RestForbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
+                    }
+                }
+            }
+        },
         "/shows/metrics/top-stages": {
             "post": {
                 "operationId": "shows.metric.top-stages",
@@ -7007,8 +7098,16 @@
                                         "sum",
                                         "average",
                                         "min",
-                                        "max"
+                                        "max",
+                                        "median",
+                                        "percentile"
                                     ]
+                                },
+                                "percentile": {
+                                    "type": "number",
+                                    "description": "The percentile of the column, from 0 to 1, present when `aggregate` is `percentile`",
+                                    "minimum": 0,
+                                    "maximum": 1
                                 }
                             },
                             "required": [
@@ -8119,6 +8218,7 @@
                                                 "shows-per-month",
                                                 "shows-by-status",
                                                 "shows-by-level",
+                                                "seats-by-level",
                                                 "top-stages",
                                                 "seats-goal",
                                                 "occupancy"
