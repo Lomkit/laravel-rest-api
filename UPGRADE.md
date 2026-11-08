@@ -1008,8 +1008,8 @@ return response()->streamDownload(function () use ($rows): void {
 
 - `lazy(chunk: 500, max: null)` returns an `Illuminate\Support\LazyCollection` of rendered rows. Each row is the row that the endpoint returns in `data`: its fields, its includes cut to their limits with `@more`, and the `gates` that the payload asks for. In order, `lazy()` returns the rows of every page of the endpoint, each row once.
 - When `lazy()` is called, it validates the payload, checks `viewAny`, runs `searching()` and reads the keys of the rows in the order of the search. A validation error or a denial throws there, before a streamed response starts.
-- The rows load and render by chunks of `chunk` keys while you iterate, with their includes and aggregates. Only the keys of all rows stay in memory. A row deleted after its key was read is skipped. Each iteration loads the rows again.
-- `max` reads the first `max` rows only. `lazy()` ignores the `limit` and the `page` of the payload. `searched()` does not run.
+- The rows load and render by chunks of `chunk` keys while you iterate, with their includes and aggregates. The query of the keys selects the model key only, so only the keys of all rows stay in memory. A row deleted after its key was read is skipped. Each iteration loads the rows again.
+- `max` reads the first `max` rows only. `lazy()` ignores the `limit` and the `page` of the payload. `searched()` does not run, and an override of `paginate()` in the resource does not apply to `lazy()`.
 - On a text search that runs on a search engine (`ScoutEngine`), `lazy()` throws `Lomkit\Rest\Exceptions\SearchRunException`, which names the result window of the engine. Search without text, or read the pages with `page()`.
 - A `chunk` below 1 or a negative `max` throws `SearchRunException`.
 

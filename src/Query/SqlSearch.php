@@ -33,9 +33,9 @@ final readonly class SqlSearch implements SearchSource
     public function chunks(int $chunk, ?int $max): PlannedRows
     {
         $plan = SearchPlanner::rendered($this->resource, $this->search, $this->text);
-        $query = $plan->query();
+        $keys = $plan->keys()->query();
         $id = KeysGrammar::idOf($this->resource);
-        $chunks = $this->text->run(fn (): KeyChunks => KeyChunks::read($query, $id, $chunk, $max, null));
+        $chunks = $this->text->run(fn (): KeyChunks => KeyChunks::read($keys, $id, $chunk, $max, null, $plan->query()));
 
         return new PlannedRows($plan, $chunks);
     }

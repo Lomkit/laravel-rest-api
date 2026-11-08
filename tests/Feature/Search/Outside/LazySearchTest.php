@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Search\Outside;
 
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -98,6 +99,43 @@ class LazySearchTest extends PackageTestCase
             ->lazy();
 
         $this->assertSame(range(1, 23), $rows->pluck('id')->all());
+    }
+
+    /**
+     * @param  class-string<\Lomkit\Rest\Http\Resource>  $resource
+     * @param  array<string, mixed>  $search
+     */
+    #[Test]
+    #[DataProvider('keyQueries')]
+    public function it_reads_the_keys_without_the_columns_of_the_rows(string $endpoint, string $resource, array $search, string $select): void
+    {
+        $queries = [];
+        DB::listen(function (QueryExecuted $query) use (&$queries): void {
+            $queries[] = str_replace(['"', '`'], '', $query->sql);
+        });
+
+        $rows = Rest::search($resource)
+            ->as(null)
+            ->payload($search)
+            ->lazy(chunk: 4);
+
+        $this->assertCount(1, $queries);
+        $this->assertStringStartsWith($select, $queries[0]);
+        $this->assertSame($this->postJson($endpoint, ['search' => $search])->json('data.*.id'), $rows->pluck('id')->all());
+    }
+
+    /** @return array<string, array{string, class-string<\Lomkit\Rest\Http\Resource>, array<string, mixed>, string}> */
+    public static function keyQueries(): array
+    {
+        $posts = 'select posts.id from posts ';
+        $authors = 'select authors.id from authors ';
+
+        return [
+            'a sort' => ['/api/posts/search', PostResource::class, ['sorts' => [['field' => 'views']], 'selects' => [['field' => 'title']]], $posts],
+            'a nullable sort' => ['/api/posts/search', PostResource::class, ['sorts' => [['field' => 'rating', 'direction' => 'desc']], 'filters' => [['field' => 'featured', 'value' => true]]], $posts],
+            'a relation sort' => ['/api/posts/search', PostResource::class, ['sorts' => [['field' => 'author.first_name'], ['field' => 'id']], 'filters' => [['field' => 'status', 'value' => 'draft']], 'includes' => [['relation' => 'author']]], $posts],
+            'an aggregate sort' => ['/api/authors/search', AuthorResource::class, ['aggregates' => [['relation' => 'posts', 'type' => 'sum', 'field' => 'views', 'alias' => 'total_views'], ['relation' => 'posts', 'type' => 'count']], 'sorts' => [['field' => 'total_views', 'direction' => 'desc']]], $authors],
+        ];
     }
 
     #[Test]

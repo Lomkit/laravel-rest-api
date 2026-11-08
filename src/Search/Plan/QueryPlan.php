@@ -36,6 +36,11 @@ final readonly class QueryPlan implements Clause
         return new self($resource, [], [], [], LimitPolicy::none());
     }
 
+    public function keys(): self
+    {
+        return new self($this->resource, $this->clauses, [], [], LimitPolicy::none());
+    }
+
     /** @return EloquentBuilder<Model> */
     public function query(): EloquentBuilder
     {

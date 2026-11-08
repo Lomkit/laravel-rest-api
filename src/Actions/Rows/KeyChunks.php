@@ -38,8 +38,11 @@ final readonly class KeyChunks implements ActionRows
         return new self($rows, $id, $keys, $chunkCount);
     }
 
-    /** @param Builder<Model> $query */
-    public static function read(Builder $query, ID $id, int $chunkCount, ?int $limit, ?RowCap $cap): self
+    /**
+     * @param  Builder<Model>  $query
+     * @param  Builder<Model>|null  $rows
+     */
+    public static function read(Builder $query, ID $id, int $chunkCount, ?int $limit, ?RowCap $cap, ?Builder $rows = null): self
     {
         $values = $query
             ->clone()
@@ -57,7 +60,7 @@ final readonly class KeyChunks implements ActionRows
 
         $cap?->check(count($keys));
 
-        return self::of($query, $id, array_values($keys), $chunkCount);
+        return self::of($rows ?? $query, $id, array_values($keys), $chunkCount);
     }
 
     #[\Override]

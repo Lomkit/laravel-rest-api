@@ -475,8 +475,8 @@ return response()->streamDownload(function () use ($rows): void {
 ```
 
 - A `LazyCollection` of rendered rows: each one is the row of the endpoint `data` (fields, includes cut to their limits with `@more`, `gates`). Its rows are the rows of every page of the endpoint, in order, each once.
-- The keys are read once, in the order of the search; includes and aggregates load per chunk; only the keys of all rows stay in memory. A row deleted after its key was read is skipped. Each iteration loads the rows again.
-- `max` keeps the first `max` rows. `limit` and `page` of the payload are ignored. `searched()` does not run.
+- The keys are read once, in the order of the search; includes and aggregates load per chunk; the key query selects the model key only, so only the keys of all rows stay in memory. A row deleted after its key was read is skipped. Each iteration loads the rows again.
+- `max` keeps the first `max` rows. `limit` and `page` of the payload are ignored. `searched()` does not run. An override of `Resource::paginate()` does not apply to `lazy()`.
 - A text search on a search engine (`ScoutEngine`) throws `SearchRunException`, which names the result window of the engine: search without text or use `page()`. A `chunk` below 1 or a negative `max` throws it too.
 
 ## Text search
