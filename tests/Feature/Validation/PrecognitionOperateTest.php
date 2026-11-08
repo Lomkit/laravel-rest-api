@@ -39,6 +39,28 @@ class PrecognitionOperateTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_reports_fields_that_are_not_a_list_to_an_action_field_name(): void
+    {
+        $response = $this->precognitiveOperation('change-status', ['fields' => ['status' => 'archived']], 'fields.status');
+
+        $this->assertExactErrors($response, ['fields' => ['The fields field must be a list.']]);
+    }
+
+    #[Test]
+    public function it_reports_a_repeated_entry_name_to_its_action_field(): void
+    {
+        $response = $this->precognitiveOperation('change-status', ['fields' => [
+            ['name' => 'status', 'value' => 'draft'],
+            ['name' => 'status', 'value' => 'published'],
+        ]], 'fields.status');
+
+        $this->assertExactErrors($response, [
+            'fields.0.name' => ['The fields.0.name field has a duplicate value.'],
+            'fields.1.name' => ['The fields.1.name field has a duplicate value.'],
+        ]);
+    }
+
+    #[Test]
     public function it_leaves_the_action_fields_out_of_another_validate_only_name(): void
     {
         $post = Post::factory()->create(['id' => 1, 'title' => 'Annual report', 'status' => PostStatus::Draft]);

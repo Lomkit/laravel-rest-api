@@ -67,6 +67,7 @@ final readonly class IncludeParser
         $levels = $name === null || $relations === null ? null : $this->levels($entry, $name, $relations, $context);
         $body = $levels === null || $through === null || $through instanceof PolymorphicRelation ? null : self::body($entry, $through, $levels);
 
+        $rules->gate($entry, $relation);
         $rules->add($relation->path, ['required', new KnownRelation($context->resource)]);
         $rules->add($entry->at('text')->path, ['prohibited']);
         $rules->add($entry->at('trashed')->path, ['prohibited']);

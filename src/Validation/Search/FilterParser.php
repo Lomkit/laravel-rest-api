@@ -55,6 +55,7 @@ final readonly class FilterParser
         $path = $name === null ? null : $this->path($name, $entry, $context);
         $long = $path !== null && self::long($path, $field, $context);
 
+        $rules->gate($entry, $field, $operator);
         $rules->add($field->path, ['string', 'required_without:'.$nested->path, new OneOf($path === null ? [] : [$name])]);
         $children = $this->nested($entry, $context);
         $rules->add($operator->path, self::operatorRules($path));
