@@ -53,11 +53,10 @@ final readonly class AggregateQuery
      * @param  Builder<Model>  $query
      * @return array{int|float|null, int|float|null}
      */
-    public function periods(Builder $query, MetricColumn $date, DateTimeInterface $from, DateTimeInterface $split, DateTimeInterface $to): array
+    public function periods(Builder $query, MetricColumn $date, RangePeriods $periods): array
     {
-        $base = self::window(self::base($query), $query, $date, $from, $to);
-        $this->select($base, 'current', $date, '>=', self::stored($query, $split));
-        $this->select($base, 'previous', $date, '<', self::stored($query, $split));
+        $base = self::window(self::base($query), $query, $date, $periods->from, $periods->to);
+        $this->compare($base, $query, $date, $periods);
         $row = $this->row($base);
 
         return [$this->value($row, 'current'), $this->value($row, 'previous')];
@@ -78,6 +77,30 @@ final readonly class AggregateQuery
             $values = get_object_vars($row);
 
             return ['key' => $group->key($values['group_key'] ?? null), 'partials' => $this->partials($values, 'group')];
+        }, $base->get()->all()));
+    }
+
+    /**
+     * @param  Builder<Model>  $query
+     * @return list<array{key: int|string|bool|null, partials: list<int|float|null>|null, previous: list<int|float|null>|null}>
+     */
+    public function comparedGroups(Builder $query, MetricColumn $group, MetricColumn $date, RangePeriods $periods): array
+    {
+        $base = self::window(self::base($query), $query, $date, $periods->from, $periods->to);
+        $base->addSelect("{$group->column} as group_key");
+        $this->compare($base, $query, $date, $periods);
+        $rows = new self(Aggregate::Count, null);
+        $rows->compare($base, $query, $date, $periods, '_rows');
+        $base->groupBy($group->column);
+
+        return array_values(array_map(function (object $row) use ($group, $rows): array {
+            $values = get_object_vars($row);
+
+            return [
+                'key' => $group->key($values['group_key'] ?? null),
+                'partials' => $rows->value($values, 'current_rows') === 0 ? null : $this->partials($values, 'current'),
+                'previous' => $rows->value($values, 'previous_rows') === 0 ? null : $this->partials($values, 'previous'),
+            ];
         }, $base->get()->all()));
     }
 
@@ -143,6 +166,14 @@ final readonly class AggregateQuery
         $values = array_map(fn (int $index): mixed => $row["{$alias}_{$index}"] ?? null, array_keys($this->function->functions()));
 
         return $this->function->partials($values, $this->column?->integer() ?? true);
+    }
+
+    /** @param Builder<Model> $query */
+    private function compare(QueryBuilder $base, Builder $query, MetricColumn $date, RangePeriods $periods, string $suffix = ''): void
+    {
+        $split = self::stored($query, $periods->split);
+        $this->select($base, "current{$suffix}", $date, '>=', $split);
+        $this->select($base, "previous{$suffix}", $date, '<', $split);
     }
 
     /** @param Builder<Model> $query */
