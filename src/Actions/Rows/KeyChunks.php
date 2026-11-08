@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Actions\Rows;
 
 use Closure;
+use Generator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -64,8 +65,8 @@ final readonly class KeyChunks implements ActionRows
     {
         $impacted = 0;
 
-        foreach (array_chunk($this->keys, max(1, $this->chunkCount)) as $keys) {
-            $impacted += $each($this->load($keys));
+        foreach ($this->chunks() as $rows) {
+            $impacted += $each($rows);
         }
 
         return $impacted;
@@ -75,6 +76,14 @@ final readonly class KeyChunks implements ActionRows
     public function count(): int
     {
         return count($this->keys);
+    }
+
+    /** @return Generator<int, Collection<int, Model>> */
+    public function chunks(): Generator
+    {
+        foreach (array_chunk($this->keys, max(1, $this->chunkCount)) as $keys) {
+            yield $this->load($keys);
+        }
     }
 
     /**

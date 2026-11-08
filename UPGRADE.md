@@ -983,7 +983,35 @@ $body = $search->render(page: 2);
 - `viewAny` is checked before the search, as on the endpoint: a denial throws `Lomkit\Rest\Exceptions\AuthorizationDenied`.
 - `page()` returns the `Illuminate\Contracts\Pagination\LengthAwarePaginator` of the models of the page, with their includes cut to their limits. `render()` returns the body of the endpoint as an array: `json_encode()` turns it into the content of the endpoint response. The objects that stay `{}` when empty, such as `meta`, `pivot` and `gates`, are `stdClass` instances in that array.
 - `page(page: 2)` and `render(page: 2)` read that page instead of the `page` of the payload. It is validated as `search.page`.
-- `searching()` runs before the query and `searched()` after it, as on the endpoint.
+- `page()` and `render()` run `searching()` before the query and `searched()` after it, as on the endpoint.
+
+`lazy()` reads every row of the search, for an export of what a user sees or a job that goes through the rows of a saved search:
+
+```php
+use Lomkit\Rest\Facades\Rest;
+
+$rows = Rest::search(TicketResource::class)
+    ->as($request->user())
+    ->payload($request->input('search', []))
+    ->lazy();
+
+return response()->streamDownload(function () use ($rows): void {
+    $file = fopen('php://output', 'w');
+
+    foreach ($rows as $row) {
+        fputcsv($file, [$row['id'], $row['title'], $row['status']]);
+    }
+
+    fclose($file);
+}, 'tickets.csv');
+```
+
+- `lazy(chunk: 500, max: null)` returns an `Illuminate\Support\LazyCollection` of rendered rows. Each row is the row that the endpoint returns in `data`: its fields, its includes cut to their limits with `@more`, and the `gates` that the payload asks for. In order, `lazy()` returns the rows of every page of the endpoint, each row once.
+- When `lazy()` is called, it validates the payload, checks `viewAny`, runs `searching()` and reads the keys of the rows in the order of the search. A validation error or a denial throws there, before a streamed response starts.
+- The rows load and render by chunks of `chunk` keys while you iterate, with their includes and aggregates. Only the keys of all rows stay in memory. A row deleted after its key was read is skipped. Each iteration loads the rows again.
+- `max` reads the first `max` rows only. `lazy()` ignores the `limit` and the `page` of the payload. `searched()` does not run.
+- On a text search that runs on a search engine (`ScoutEngine`), `lazy()` throws `Lomkit\Rest\Exceptions\SearchRunException`, which names the result window of the engine. Search without text, or read the pages with `page()`.
+- A `chunk` below 1 or a negative `max` throws `SearchRunException`.
 
 ### Text search
 
