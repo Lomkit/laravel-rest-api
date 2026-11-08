@@ -3,6 +3,9 @@
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Documentation\Stubs\CappedStageController;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\UngatedLabelResource;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\UngatedNoteResource;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
@@ -70,6 +73,38 @@ class ContractTest extends DocumentationTestCase
         }
 
         $this->assertSame(['/notes/search', '/shows/search', '/stages/search'], $checked);
+    }
+
+    #[Test]
+    public function it_answers_a_search_whose_includes_have_more_rows_as_the_document_describes(): void
+    {
+        $this->seedFestival();
+        DB::table('comments')->insert(array_fill(0, 10, ['show_id' => 1, 'rating' => 4, 'body' => 'Again']));
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+
+        $response = $this->postJson('api/stages/search', ['search' => ['includes' => [['relation' => 'shows'], ['relation' => 'comments'], ['relation' => 'comments', 'alias' => 'reviews']]]]);
+
+        $response->assertOk();
+        $this->assertSame([['comments', 'reviews'], []], array_column($response->json('data'), '@more'));
+        $this->assertSame([], (new OpenApiValidator)->responseErrors($document, '/stages/search', 'post', 200, (string) $response->getContent()));
+        $this->assertSame(['reviews'], array_values(array_diff(array_keys($response->json('data.0')), array_keys($document['components']['schemas']['Stage']['properties']))));
+    }
+
+    #[Test]
+    public function it_answers_a_search_of_a_resource_with_a_maximum_total_as_the_document_describes(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('capped-stages', CappedStageController::class));
+        $this->seedFestival();
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+
+        $response = $this->postJson('api/capped-stages/search', ['search' => ['includes' => [['relation' => 'shows']]]]);
+
+        $response->assertOk();
+        $this->assertFalse($response->json('total_capped'));
+        $this->assertSame([], (new OpenApiValidator)->responseErrors($document, '/capped-stages/search', 'post', 200, (string) $response->getContent()));
+        $this->assertSame(array_keys($document['components']['schemas']['CappedStagePaginated']['properties']), array_keys($response->json()));
     }
 
     #[Test]

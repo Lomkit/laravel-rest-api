@@ -5973,6 +5973,26 @@
                                 }
                             ]
                         }
+                    },
+                    "@more": {
+                        "type": "array",
+                        "description": "Present when the search includes a to-many relation: the includes of the row that have more rows than their limit, by relation or alias",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "enum": [
+                                        "artists",
+                                        "comments",
+                                        "labels"
+                                    ]
+                                },
+                                {
+                                    "type": "string",
+                                    "description": "The alias of an include"
+                                }
+                            ]
+                        }
                     }
                 },
                 "title": "Show"
@@ -11371,6 +11391,25 @@
                         "description": "Present when the search includes the relation",
                         "items": {
                             "$ref": "#/components/schemas/Comment"
+                        }
+                    },
+                    "@more": {
+                        "type": "array",
+                        "description": "Present when the search includes a to-many relation: the includes of the row that have more rows than their limit, by relation or alias",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "enum": [
+                                        "shows",
+                                        "comments"
+                                    ]
+                                },
+                                {
+                                    "type": "string",
+                                    "description": "The alias of an include"
+                                }
+                            ]
                         }
                     }
                 },

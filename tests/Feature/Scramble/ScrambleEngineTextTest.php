@@ -2,9 +2,13 @@
 
 namespace Lomkit\Rest\Tests\Feature\Scramble;
 
+use Dedoc\Scramble\Generator;
 use Dedoc\Scramble\ScrambleServiceProvider;
+use Illuminate\Support\Facades\Route;
 use Laravel\Scout\ScoutServiceProvider;
+use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\RestServiceProvider;
+use Lomkit\Rest\Tests\Feature\Scramble\Stubs\CappedVoucherController;
 use Lomkit\Rest\Tests\Fixtures\Ledger\Ledger;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -72,5 +76,19 @@ class ScrambleEngineTextTest extends ScrambleTestCase
                 'enum' => ['with', 'only'],
             ]],
         ];
+    }
+
+    #[Test]
+    public function it_documents_a_capped_total_that_a_text_search_on_the_engine_leaves_out(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('capped-vouchers', CappedVoucherController::class));
+
+        $page = app(Generator::class)()['components']['schemas']['CappedVoucherPaginated'];
+
+        $this->assertSame(
+            '{"type":"boolean","description":"True when more rows match than the resource counts: total is then a lower bound. Absent on a text search, which takes its total from the search index"}',
+            json_encode($page['properties']['total_capped']),
+        );
+        $this->assertSame(['current_page', 'data', 'from', 'last_page', 'per_page', 'to', 'total', 'meta'], $page['required']);
     }
 }
