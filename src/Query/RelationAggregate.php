@@ -15,13 +15,12 @@ use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\Expressions\AggregateColumn;
-use Lomkit\Rest\Query\Expressions\ExistsQuery;
 use Lomkit\Rest\Query\Expressions\TextColumn;
 
 final readonly class RelationAggregate implements AggregateQuery
 {
     public function __construct(
-        private string $relation,
+        private ModelRelation $relation,
         private AggregateFunction $function,
         private ?Field $field,
     ) {}
@@ -32,7 +31,13 @@ final readonly class RelationAggregate implements AggregateQuery
     {
         $query = self::eloquent($query);
 
-        $query->withAggregate([$this->relation.' as '.$name => $constraint], $this->column($query, false), $this->function->value);
+        if ($this->relation->textKeys) {
+            (new SubqueryAggregate($this->subquery($query, $constraint), $this->function))->select($query, $name);
+
+            return;
+        }
+
+        $query->withAggregate([$this->relation->name.' as '.$name => $constraint], $this->column($query, false), $this->function->value);
     }
 
     /** @param Closure(EloquentBuilder<Model>): void $constraint */
@@ -40,16 +45,8 @@ final readonly class RelationAggregate implements AggregateQuery
     public function order(Builder $query, Closure $constraint, SortDirection $direction): void
     {
         $query = self::eloquent($query);
-        $subquery = $this->subquery($query, $constraint);
 
-        if ($this->function !== AggregateFunction::Exists) {
-            $query->orderBy($subquery, $direction->value);
-
-            return;
-        }
-
-        $query->orderBy(new ExistsQuery($subquery), $direction->value);
-        $query->getQuery()->addBinding($subquery->getBindings(), 'order');
+        (new SubqueryAggregate($this->subquery($query, $constraint), $this->function))->order($query, $direction);
     }
 
     /**
@@ -59,7 +56,7 @@ final readonly class RelationAggregate implements AggregateQuery
     private function subquery(EloquentBuilder $query, Closure $constraint): QueryBuilder
     {
         $column = new AggregateColumn($this->function, $this->column($query, true));
-        $relation = $this->relation($query);
+        $relation = $this->relation->on($query->getModel());
         $subquery = $relation
             ->getRelationExistenceQuery($relation->getRelated()->newQuery(), $query)
             ->select($column)
@@ -101,28 +98,13 @@ final readonly class RelationAggregate implements AggregateQuery
     /** @param EloquentBuilder<Model> $query */
     private function qualifiedColumn(EloquentBuilder $query, string $column): string
     {
-        $relation = $this->relation($query);
+        $relation = $this->relation->on($query->getModel());
 
         if ($query->getQuery()->from === $relation->getQuery()->getQuery()->from) {
             return $relation->getRelationCountHash(false).'.'.$column;
         }
 
         return $relation->getRelated()->qualifyColumn($column);
-    }
-
-    /**
-     * @param  EloquentBuilder<Model>  $query
-     * @return Relation<Model, Model, mixed>
-     */
-    private function relation(EloquentBuilder $query): Relation
-    {
-        $relation = Relation::noConstraintsForRelation(fn (): mixed => $query->getModel()->{$this->relation}());
-
-        if (! $relation instanceof Relation) {
-            throw new InvalidArgumentException($query->getModel()::class.'::'.$this->relation.'() is not a relation.');
-        }
-
-        return $relation;
     }
 
     /** @return EloquentBuilder<Model> */

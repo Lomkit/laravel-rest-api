@@ -12,6 +12,7 @@ use Lomkit\Rest\Query\Clauses\AggregateClause;
 use Lomkit\Rest\Query\Clauses\Clause;
 use Lomkit\Rest\Query\Clauses\FilterGroupClause;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
+use Lomkit\Rest\Query\TextMorphKeys;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\AggregateNode;
 use Lomkit\Rest\Search\IncludeNode;
@@ -87,7 +88,7 @@ final readonly class SearchPlanner
             if ($include->alias !== null) {
                 $entries[] = $include instanceof MorphIncludeNode
                     ? $this->morph($parent, $include, [])
-                    : new AliasedIncludeClause($include->relation, $include->alias, $this->explicit($parent, $include, []));
+                    : new AliasedIncludeClause($include->relation, $include->alias, $this->explicit($parent, $include, []), count($include->relations) === 1 && TextMorphKeys::of($include->relations[0]));
 
                 continue;
             }
@@ -136,7 +137,7 @@ final readonly class SearchPlanner
 
         $plan = $this->group($parent, $relation, $level, $children);
 
-        return $relation instanceof PolymorphicRelation ? MorphToIncludeClause::of($relation, null, array_fill_keys($relation->targets()->types(), $plan)) : new IncludeClause($name, $plan);
+        return $relation instanceof PolymorphicRelation ? MorphToIncludeClause::of($relation, null, array_fill_keys($relation->targets()->types(), $plan)) : new IncludeClause($name, $plan, TextMorphKeys::of($relation));
     }
 
     /** @param list<IncludeNode|MorphIncludeNode> $children */

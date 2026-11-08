@@ -9,6 +9,7 @@ use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Fields\Filtering\FilterOperator;
+use Lomkit\Rest\Query\ModelRelation;
 use Lomkit\Rest\Relations\Relation;
 
 final readonly class RelationConditionClause implements Clause
@@ -48,7 +49,7 @@ final readonly class RelationConditionClause implements Clause
             return;
         }
 
-        $query->has($relation->relation, '>=', 1, $boolean, $constraint);
+        ModelRelation::of($relation)->has($query, '>=', $boolean, $constraint);
     }
 
     /** @param EloquentBuilder<Model> $query */

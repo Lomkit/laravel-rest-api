@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Lomkit\Rest\Query\Clauses\Clause;
+use Lomkit\Rest\Query\ModelRelation;
 
 final readonly class AliasedIncludeClause implements Clause
 {
@@ -14,6 +15,7 @@ final readonly class AliasedIncludeClause implements Clause
         public string $relation,
         public string $alias,
         public QueryPlan $plan,
+        private bool $textKeys = false,
     ) {}
 
     #[\Override]
@@ -37,15 +39,27 @@ final readonly class AliasedIncludeClause implements Clause
         $parents = $models->all();
         $copies = array_map(self::copy(...), $parents);
 
-        $first->newCollection($copies)->load([$this->relation => function (Relation $relation): void {
-            $this->plan->apply($relation);
-        }]);
+        $this->loadOn($first->newCollection($copies));
 
         foreach ($parents as $index => $parent) {
             $parent->setRelation($this->alias, $copies[$index]->getRelation($this->relation));
         }
 
         return $models;
+    }
+
+    /** @param Collection<int, Model> $copies */
+    private function loadOn(Collection $copies): void
+    {
+        if ($this->textKeys) {
+            (new TextKeyLoad(new ModelRelation($this->relation, true), $this->plan))->load($copies);
+
+            return;
+        }
+
+        $copies->load([$this->relation => function (Relation $relation): void {
+            $this->plan->apply($relation);
+        }]);
     }
 
     private static function copy(Model $model): Model

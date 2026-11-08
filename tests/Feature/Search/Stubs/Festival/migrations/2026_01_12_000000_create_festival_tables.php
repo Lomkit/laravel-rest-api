@@ -26,10 +26,24 @@ return new class extends Migration
             $table->string('notable_id')->nullable();
             $table->index(['notable_type', 'notable_id']);
         });
+
+        Schema::create('tags', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+        });
+
+        Schema::create('taggables', function (Blueprint $table): void {
+            $table->unsignedBigInteger('tag_id');
+            $table->string('taggable_type');
+            $table->string('taggable_id');
+            $table->index(['taggable_type', 'taggable_id']);
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('taggables');
+        Schema::dropIfExists('tags');
         Schema::dropIfExists('notes');
         Schema::dropIfExists('stages');
         Schema::dropIfExists('shows');
