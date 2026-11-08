@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use stdClass;
 
 class DetailsTest extends DocumentationTestCase
 {
@@ -15,6 +16,32 @@ class DetailsTest extends DocumentationTestCase
 
         $this->assertSame(['#/components/schemas/NoteDetails', '#/components/schemas/ShowDetails', '#/components/schemas/StageDetails'], array_map(fn (array $response): string => $response['content']['application/json']['schema']['$ref'], $responses));
         $this->assertSame(['data'], $document['components']['schemas']['ShowDetails']['required']);
+    }
+
+    #[Test]
+    public function it_closes_the_meta_of_a_resource_without_details_meta(): void
+    {
+        $document = $this->document();
+        $data = $document['components']['schemas']['StageDetails']['properties']['data'];
+        $pointer = '#/components/schemas/StageDetails/properties/data/properties/meta';
+        $validator = new OpenApiValidator;
+
+        $this->assertSame(['type' => 'object', 'description' => 'Empty: the resource adds no keys with detailsMeta()', 'additionalProperties' => false], $data['properties']['meta']);
+        $this->assertContains('meta', $data['required']);
+        $this->assertSame([], $validator->schemaErrors($document, $pointer, (object) []));
+        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['label' => 'Stages']));
+    }
+
+    #[Test]
+    public function it_opens_the_meta_of_a_resource_that_declares_details_meta(): void
+    {
+        $document = $this->document();
+        $meta = $document['components']['schemas']['ShowDetails']['properties']['data']['properties']['meta'];
+
+        $this->assertSame('object', $meta['type']);
+        $this->assertSame('The keys that detailsMeta() of the resource returns for the user of the request', $meta['description']);
+        $this->assertEquals(new stdClass, $meta['additionalProperties']);
+        $this->assertSame([], (new OpenApiValidator)->schemaErrors($document, '#/components/schemas/ShowDetails/properties/data/properties/meta', ['label' => 'Shows', 'default_sort' => ['field' => 'starts_on']]));
     }
 
     /** @param list<string> $names */

@@ -2003,7 +2003,7 @@ Scramble:
 
 ### Details
 
-The details endpoint, `GET /{resource}`, describes the resource with typed entries. Its keys are `actions`, `metrics`, `instructions`, `fields`, `limits`, `scopes`, `relations`, `rules`, `text`, `gates` and `authorizations`. An excerpt:
+The details endpoint, `GET /{resource}`, describes the resource with typed entries. Its keys are `actions`, `metrics`, `instructions`, `fields`, `limits`, `scopes`, `relations`, `rules`, `text`, `gates`, `authorizations` and `meta`. An excerpt:
 
 ```json
 {"data": {
@@ -2021,7 +2021,8 @@ The details endpoint, `GET /{resource}`, describes the resource with typed entri
      "morph": {"type_column": "owner_type", "key_column": "owner_id"}}],
   "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
   "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null},
-  "authorizations": {"viewAny": {"allowed": true, "message": null}, "create": {"allowed": false, "message": "Only curators add artworks."}}
+  "authorizations": {"viewAny": {"allowed": true, "message": null}, "create": {"allowed": false, "message": "Only curators add artworks."}},
+  "meta": {"label": "Artworks"}
 }}
 ```
 
@@ -2080,6 +2081,11 @@ Authorizations:
 - A resource whose `isAuthorizingEnabled()` returns `false` answers `"allowed": true` to every ability.
 - The answers go through the decisions of the request: an ability that `authorizationCache()` declares is read from the cache and written to it, as on the other endpoints.
 
+Meta:
+
+- `meta` is a new key, after `authorizations`. It holds what the new `detailsMeta(): array` method of the resource returns, and is `{}` when the resource does not override it. The method runs on each details request, for the user of the request: read it with `$this->request()->user()`.
+- `described()` receives the details with `meta`. It cannot change them.
+
 Behaviour:
 
 - Empty maps are `{}`: the `meta` of every entry, input entries, actions, instructions and scopes included, and the maps of `rules`. Lists stay `[]`.
@@ -2093,7 +2099,7 @@ Behaviour:
 
 Scramble:
 
-- Scramble documents the details response of each resource in its own schema, `{Resource}Details`, which lists the names of the resource as enums: the `name` of the fields, the `relation` of the relations, the `name` of the scopes, the `uriKey` of the instructions, actions and metrics, and the gates. It holds the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
+- Scramble documents the details response of each resource in its own schema, `{Resource}Details`, which lists the names of the resource as enums: the `name` of the fields, the `relation` of the relations, the `name` of the scopes, the `uriKey` of the instructions, actions and metrics, and the gates. It holds the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, `meta`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. `meta` accepts no key, unless the resource overrides `detailsMeta()`: it then accepts any key. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
 
 ### OpenAPI documentation
 

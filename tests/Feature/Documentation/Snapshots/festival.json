@@ -5219,6 +5219,11 @@
                                         "message"
                                     ]
                                 }
+                            },
+                            "meta": {
+                                "type": "object",
+                                "description": "Empty: the resource adds no keys with detailsMeta()",
+                                "additionalProperties": false
                             }
                         },
                         "required": [
@@ -5232,7 +5237,8 @@
                             "rules",
                             "text",
                             "gates",
-                            "authorizations"
+                            "authorizations",
+                            "meta"
                         ]
                     }
                 },
@@ -8608,6 +8614,11 @@
                                         "message"
                                     ]
                                 }
+                            },
+                            "meta": {
+                                "type": "object",
+                                "description": "The keys that detailsMeta() of the resource returns for the user of the request",
+                                "additionalProperties": {}
                             }
                         },
                         "required": [
@@ -8621,7 +8632,8 @@
                             "rules",
                             "text",
                             "gates",
-                            "authorizations"
+                            "authorizations",
+                            "meta"
                         ]
                     }
                 },
@@ -13860,6 +13872,11 @@
                                         "message"
                                     ]
                                 }
+                            },
+                            "meta": {
+                                "type": "object",
+                                "description": "Empty: the resource adds no keys with detailsMeta()",
+                                "additionalProperties": false
                             }
                         },
                         "required": [
@@ -13873,7 +13890,8 @@
                             "rules",
                             "text",
                             "gates",
-                            "authorizations"
+                            "authorizations",
+                            "meta"
                         ]
                     }
                 },

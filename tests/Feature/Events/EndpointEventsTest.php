@@ -48,7 +48,7 @@ class EndpointEventsTest extends HelpdeskTestCase
         $response = $this->getJson('/event-tickets');
 
         $response->assertOk();
-        $this->assertSame(['describing', 'described actions,metrics,instructions,fields,limits,scopes,relations,rules,text,gates,authorizations'], EventLog::$lines);
+        $this->assertSame(['describing', 'described actions,metrics,instructions,fields,limits,scopes,relations,rules,text,gates,authorizations,meta'], EventLog::$lines);
         $this->assertSame(['viewAny', 'create'], $this->tickets->calls);
     }
 
