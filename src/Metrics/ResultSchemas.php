@@ -22,27 +22,26 @@ final class ResultSchemas
         ]);
     }
 
-    public static function trend(): ObjectType
+    public static function trend(?int $groups = null): ObjectType
     {
         $other = self::object(['label' => self::label(), 'series' => self::series()]);
         $other->nullable(true);
         $other->setDescription('The splits that the limit folds, present with `splits`');
-        $splits = self::list(self::object(['key' => self::key(), 'label' => self::label(), 'series' => self::series()]));
-        $splits->setDescription('One series for each value of the split column, present when the trend is split');
+        $splits = self::list(self::object(['key' => self::key(), 'label' => self::label(), 'series' => self::series()]), $groups);
+        $splits->setDescription('One series for each value of the split column with the largest totals, up to the limit of the metric, present when the trend is split');
 
         return self::object(['series' => self::series(), 'splits' => $splits, 'other' => $other], ['splits', 'other']);
     }
 
-    public static function partition(): ObjectType
+    public static function partition(?int $groups = null): ObjectType
     {
         $other = self::object(['label' => self::label(), 'value' => self::number(), 'previous' => self::previous()], ['previous']);
         $other->nullable(true);
         $other->setDescription('The parts that the limit folds');
+        $parts = self::list(self::object(['key' => self::key(), 'label' => self::label(), 'value' => self::number(), 'previous' => self::previous()], ['previous']), $groups);
+        $parts->setDescription('The parts with the largest values, up to the limit of the metric');
 
-        return self::object([
-            'parts' => self::list(self::object(['key' => self::key(), 'label' => self::label(), 'value' => self::number(), 'previous' => self::previous()], ['previous'])),
-            'other' => $other,
-        ]);
+        return self::object(['parts' => $parts, 'other' => $other]);
     }
 
     public static function table(): ObjectType
@@ -85,10 +84,14 @@ final class ResultSchemas
         return $object;
     }
 
-    private static function list(Type $items): ArrayType
+    private static function list(Type $items, ?int $max = null): ArrayType
     {
         $list = new ArrayType;
         $list->setItems($items);
+
+        if ($max !== null) {
+            $list->setMax($max);
+        }
 
         return $list;
     }

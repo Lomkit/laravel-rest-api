@@ -23,7 +23,7 @@ abstract class Partition extends Metric
     #[\Override]
     public function schema(): ?Type
     {
-        return ResultSchemas::partition();
+        return ResultSchemas::partition($this->groupLimit());
     }
 
     #[\Override]
@@ -97,18 +97,20 @@ abstract class Partition extends Metric
     /** @param Builder<Model> $query */
     protected function measure(Builder $query, Measure $measure, string $helper, MetricColumn $group, ?string $dateColumn): PartitionResult
     {
+        $limit = $this->groupLimit();
+
         if ($dateColumn === null) {
-            return PartitionResult::of($measure->groups($query, $group), $group, $this->limit);
+            return PartitionResult::of(RankedGroups::largest($measure, AggregateQuery::base($query), $group, $limit + 1), $group, $limit);
         }
 
         $range = $this->range();
 
         if ($range === null) {
-            return PartitionResult::compared(new ComparedGroups($measure->groups($query, $group), null), $group, $this->limit);
+            return PartitionResult::compared(new ComparedGroups(RankedGroups::largest($measure, AggregateQuery::base($query), $group, $limit + 1), null), $group, $limit);
         }
 
         $date = MetricColumn::date($this, $query, $helper, $dateColumn);
 
-        return PartitionResult::compared($measure->comparedGroups($query, $group, $date, RangePeriods::of($range)), $group, $this->limit);
+        return PartitionResult::compared($measure->comparedGroups($query, $group, $date, RangePeriods::of($range), $limit), $group, $limit);
     }
 }

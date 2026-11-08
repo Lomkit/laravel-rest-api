@@ -90,9 +90,9 @@ class PartitionMetricTest extends SalesTestCase
 
         $this->assertSame('{"data":{"type":"partition","parts":[{"key":"paid","label":"Paid","value":2},{"key":"pending","label":"Pending","value":1},{"key":null,"label":null,"value":1}],"other":null}}', $response->getContent());
         $sql = [
-            'sqlite' => 'select "orders"."status" as "group_key", count(*) as "group_0" from "orders" where ("orders"."team_id" = ?) and ("orders"."channel" = ?) group by "orders"."status"',
-            'mysql' => 'select `orders`.`status` as `group_key`, count(*) as `group_0` from `orders` where (`orders`.`team_id` = ?) and (`orders`.`channel` = ?) group by `orders`.`status`',
-            'pgsql' => 'select "orders"."status" as "group_key", count(*) as "group_0" from "orders" where ("orders"."team_id" = ?) and ("orders"."channel" = ?) group by "orders"."status"',
+            'sqlite' => 'select "orders"."status" as "group_key", count(*) as "group_0" from "orders" where ("orders"."team_id" = ?) and ("orders"."channel" = ?) group by "orders"."status" order by count(*) desc, case when "orders"."status" is null then 1 else 0 end asc, "orders"."status" asc limit 101',
+            'mysql' => 'select `orders`.`status` as `group_key`, count(*) as `group_0` from `orders` where (`orders`.`team_id` = ?) and (`orders`.`channel` = ?) group by `orders`.`status` order by count(*) desc, case when `orders`.`status` is null then 1 else 0 end asc, `orders`.`status` asc limit 101',
+            'pgsql' => 'select "orders"."status" as "group_key", count(*) as "group_0" from "orders" where ("orders"."team_id" = ?) and ("orders"."channel" = ?) group by "orders"."status" order by count(*) desc, case when "orders"."status" is null then 1 else 0 end asc, "orders"."status" asc limit 101',
         ];
         $queries = DB::getQueryLog();
         $this->assertCount(1, $queries);

@@ -14,7 +14,7 @@ final readonly class TrendResult implements MetricResult
         public ?TrendSplit $other = null,
     ) {}
 
-    public static function of(PeriodValues $values, Periods $periods, ?MetricColumn $split, ?int $limit): self
+    public static function of(MeasurePeriods $values, Periods $periods, ?MetricColumn $split, int $limit): self
     {
         $empty = $values->empty();
         $series = self::series($periods, $values->series(), $empty);
@@ -23,13 +23,14 @@ final readonly class TrendResult implements MetricResult
             return new self($series);
         }
 
-        $parts = PartitionResult::ranked($values->groups($split), $split);
+        $parts = PartitionResult::ranked($values->largest($split, $limit + 1), $split);
         $kept = array_map(fn (PartitionPart $part): int|string|bool|null => $part->key, array_slice($parts, 0, $limit));
         usort($kept, fn (int|string|bool|null $one, int|string|bool|null $two): int => [$one === null, $one] <=> [$two === null, $two]);
-        $cells = $values->cells($split);
+        $folded = count($kept) < count($parts);
+        $cells = $values->cells($split, $folded ? $kept : null);
         $splits = array_map(fn (int|string|bool|null $key): TrendSplit => new TrendSplit($key, $split->label($key), self::series($periods, self::keyed($cells, $key), $empty)), $kept);
 
-        if (count($kept) === count($parts)) {
+        if (! $folded) {
             return new self($series, $splits);
         }
 

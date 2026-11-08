@@ -995,7 +995,123 @@
                                                     ]
                                                 },
                                                 {
-                                                    "$ref": "#/components/schemas/RestTrendResult"
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "series": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "value": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "label",
+                                                                    "value"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "splits": {
+                                                            "type": "array",
+                                                            "description": "One series for each value of the split column with the largest totals, up to the limit of the metric, present when the trend is split",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "key": {
+                                                                        "type": [
+                                                                            "integer",
+                                                                            "string",
+                                                                            "boolean",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "label": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "series": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "label": {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                "value": {
+                                                                                    "type": [
+                                                                                        "number",
+                                                                                        "null"
+                                                                                    ]
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "label",
+                                                                                "value"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "key",
+                                                                    "label",
+                                                                    "series"
+                                                                ]
+                                                            },
+                                                            "maxItems": 1
+                                                        },
+                                                        "other": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "description": "The splits that the limit folds, present with `splits`",
+                                                            "properties": {
+                                                                "label": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "series": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "label": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "value": {
+                                                                                "type": [
+                                                                                    "number",
+                                                                                    "null"
+                                                                                ]
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "label",
+                                                                            "value"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "label",
+                                                                "series"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "series"
+                                                    ]
                                                 }
                                             ]
                                         }
@@ -1168,7 +1284,87 @@
                                                     ]
                                                 },
                                                 {
-                                                    "$ref": "#/components/schemas/RestPartitionResult"
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "parts": {
+                                                            "type": "array",
+                                                            "description": "The parts with the largest values, up to the limit of the metric",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "key": {
+                                                                        "type": [
+                                                                            "integer",
+                                                                            "string",
+                                                                            "boolean",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "label": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "value": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "previous": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ],
+                                                                        "description": "The value of the period before the range, present when the partition compares two periods"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "key",
+                                                                    "label",
+                                                                    "value"
+                                                                ]
+                                                            },
+                                                            "maxItems": 2
+                                                        },
+                                                        "other": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "description": "The parts that the limit folds",
+                                                            "properties": {
+                                                                "label": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "value": {
+                                                                    "type": [
+                                                                        "number",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "previous": {
+                                                                    "type": [
+                                                                        "number",
+                                                                        "null"
+                                                                    ],
+                                                                    "description": "The value of the period before the range, present when the partition compares two periods"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "label",
+                                                                "value"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "parts",
+                                                        "other"
+                                                    ]
                                                 }
                                             ]
                                         }
@@ -7007,6 +7203,7 @@
                 "properties": {
                     "parts": {
                         "type": "array",
+                        "description": "The parts with the largest values, up to the limit of the metric",
                         "items": {
                             "type": "object",
                             "properties": {
@@ -7043,7 +7240,8 @@
                                 "label",
                                 "value"
                             ]
-                        }
+                        },
+                        "maxItems": 100
                     },
                     "other": {
                         "type": [
@@ -7186,125 +7384,6 @@
                     "rows"
                 ],
                 "title": "RestTableResult"
-            },
-            "RestTrendResult": {
-                "type": "object",
-                "properties": {
-                    "series": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "label": {
-                                    "type": "string"
-                                },
-                                "value": {
-                                    "type": [
-                                        "number",
-                                        "null"
-                                    ]
-                                }
-                            },
-                            "required": [
-                                "label",
-                                "value"
-                            ]
-                        }
-                    },
-                    "splits": {
-                        "type": "array",
-                        "description": "One series for each value of the split column, present when the trend is split",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "key": {
-                                    "type": [
-                                        "integer",
-                                        "string",
-                                        "boolean",
-                                        "null"
-                                    ]
-                                },
-                                "label": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
-                                },
-                                "series": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "label": {
-                                                "type": "string"
-                                            },
-                                            "value": {
-                                                "type": [
-                                                    "number",
-                                                    "null"
-                                                ]
-                                            }
-                                        },
-                                        "required": [
-                                            "label",
-                                            "value"
-                                        ]
-                                    }
-                                }
-                            },
-                            "required": [
-                                "key",
-                                "label",
-                                "series"
-                            ]
-                        }
-                    },
-                    "other": {
-                        "type": [
-                            "object",
-                            "null"
-                        ],
-                        "description": "The splits that the limit folds, present with `splits`",
-                        "properties": {
-                            "label": {
-                                "type": [
-                                    "string",
-                                    "null"
-                                ]
-                            },
-                            "series": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "label": {
-                                            "type": "string"
-                                        },
-                                        "value": {
-                                            "type": [
-                                                "number",
-                                                "null"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "label",
-                                        "value"
-                                    ]
-                                }
-                            }
-                        },
-                        "required": [
-                            "label",
-                            "series"
-                        ]
-                    }
-                },
-                "required": [
-                    "series"
-                ],
-                "title": "RestTrendResult"
             },
             "RestValueResult": {
                 "type": "object",

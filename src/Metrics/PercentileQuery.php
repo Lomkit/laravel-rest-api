@@ -8,7 +8,6 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Lomkit\Rest\Exceptions\InvalidMetricException;
 use Lomkit\Rest\Metrics\Grouping\PercentileGrammar;
 use Lomkit\Rest\Metrics\Grouping\PercentileValue;
-use Lomkit\Rest\Metrics\Grouping\PeriodLabel;
 
 final readonly class PercentileQuery implements Measure
 {
@@ -41,25 +40,34 @@ final readonly class PercentileQuery implements Measure
     #[\Override]
     public function periods(Builder $query, MetricColumn $date, RangePeriods $periods): array
     {
-        return [$this->single(self::current($query, $date, $periods)), $this->single(self::previous($query, $date, $periods))];
+        return [$this->single($periods->current($query, $date)), $this->single($periods->previous($query, $date))];
     }
 
     #[\Override]
-    public function groups(Builder $query, MetricColumn $group): GroupValues
+    public function comparedGroups(Builder $query, MetricColumn $group, MetricColumn $date, RangePeriods $periods, int $limit): ComparedGroups
     {
-        return new PercentileGroups($this, AggregateQuery::base($query), $group);
+        $current = RankedGroups::largest($this, $periods->current($query, $date), $group, $limit + 1);
+        $keys = array_column($current->groups, 'key');
+        $previous = $periods->previous($query, $date);
+        $values = $keys === [] ? [] : RankedGroups::within($this, $previous, $group, $keys);
+
+        return new ComparedGroups($current, new RankedGroups([...$values, ...RankedGroups::firstOutside($this, $previous, $group, $keys, $limit + 1)], $this, $previous, $group));
     }
 
     #[\Override]
-    public function comparedGroups(Builder $query, MetricColumn $group, MetricColumn $date, RangePeriods $periods): ComparedGroups
+    public function single(QueryBuilder $filtered): ?float
     {
-        return new ComparedGroups(new PercentileGroups($this, self::current($query, $date, $periods), $group), new PercentileGroups($this, self::previous($query, $date, $periods), $group));
+        $base = $this->rows($filtered, 'total', []);
+        $this->select($base, 'total');
+        $row = $base->get()->all()[0] ?? null;
+
+        return $row === null ? null : $this->value(get_object_vars($row), 'total');
     }
 
     #[\Override]
-    public function trend(Builder $query, Periods $periods, ?MetricColumn $split): PeriodValues
+    public function empty(): null
     {
-        return new PercentilePeriods($this, $periods->window($query), $periods->label());
+        return null;
     }
 
     #[\Override]
@@ -92,82 +100,5 @@ final readonly class PercentileQuery implements Measure
         $value = $row["{$alias}_0"] ?? null;
 
         return is_numeric($value) ? (float) $value : null;
-    }
-
-    public function single(QueryBuilder $filtered): ?float
-    {
-        $base = $this->rows($filtered, 'total', []);
-        $this->select($base, 'total');
-        $row = $base->get()->all()[0] ?? null;
-
-        return $row === null ? null : $this->value(get_object_vars($row), 'total');
-    }
-
-    /** @return list<array{key: int|string|bool|null, value: float|null}> */
-    public function grouped(QueryBuilder $filtered, MetricColumn $group): array
-    {
-        $base = $this->rows($filtered, 'group', [$group->column]);
-        $base->addSelect("{$group->column} as group_key");
-        $this->select($base, 'group');
-        $base->groupBy($group->column);
-
-        return array_values(array_map(function (object $row) use ($group): array {
-            $values = get_object_vars($row);
-
-            return ['key' => $group->key($values['group_key'] ?? null), 'value' => $this->value($values, 'group')];
-        }, $base->get()->all()));
-    }
-
-    /** @return list<array{period: string, key: int|string|bool|null, value: float|null}> */
-    public function periodic(QueryBuilder $filtered, PeriodLabel $label, ?MetricColumn $split): array
-    {
-        $partition = $split === null ? [$label] : [$label, $split->column];
-        $base = $this->rows($filtered, 'period', $partition);
-        $base->addSelect($label->as('period'));
-
-        if ($split !== null) {
-            $base->addSelect("{$split->column} as split_key");
-        }
-
-        $this->select($base, 'period');
-        $base->groupBy($partition);
-
-        return array_values(array_map(function (object $row) use ($split): array {
-            $values = get_object_vars($row);
-            $period = $values['period'] ?? null;
-
-            return ['period' => is_string($period) ? $period : '', 'key' => $split?->key($values['split_key'] ?? null), 'value' => $this->value($values, 'period')];
-        }, $base->get()->all()));
-    }
-
-    /** @param list<int|string|bool|null> $kept */
-    public static function outside(QueryBuilder $base, MetricColumn $group, array $kept): QueryBuilder
-    {
-        $values = array_values(array_filter($kept, fn (int|string|bool|null $key): bool => $key !== null));
-        $withoutNull = count($values) < count($kept);
-
-        if ($values === []) {
-            return $withoutNull ? $base->whereNotNull($group->column) : $base;
-        }
-
-        if ($withoutNull) {
-            return $base->whereNotIn($group->column, $values);
-        }
-
-        return $base->where(fn (QueryBuilder $query): QueryBuilder => $query->whereNotIn($group->column, $values)->orWhereNull($group->column));
-    }
-
-    /** @param Builder<Model> $query */
-    private static function current(Builder $query, MetricColumn $date, RangePeriods $periods): QueryBuilder
-    {
-        return AggregateQuery::window(AggregateQuery::base($query), $query, $date, $periods->split, $periods->to);
-    }
-
-    /** @param Builder<Model> $query */
-    private static function previous(Builder $query, MetricColumn $date, RangePeriods $periods): QueryBuilder
-    {
-        return AggregateQuery::base($query)
-            ->where($date->column, '>=', AggregateQuery::stored($query, $periods->from))
-            ->where($date->column, '<', AggregateQuery::stored($query, $periods->split));
     }
 }

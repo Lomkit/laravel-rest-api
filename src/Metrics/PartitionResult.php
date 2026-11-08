@@ -14,12 +14,12 @@ final readonly class PartitionResult implements MetricResult
         public ?PartitionPart $other = null,
     ) {}
 
-    public static function of(GroupValues $values, MetricColumn $group, ?int $limit): self
+    public static function of(RankedGroups $values, MetricColumn $group, int $limit): self
     {
         return self::limited(self::ranked($values, $group), $limit, fn (array $kept): PartitionPart => new PartitionPart(null, self::OTHER, $values->others($kept)));
     }
 
-    public static function compared(ComparedGroups $values, MetricColumn $group, ?int $limit): self
+    public static function compared(ComparedGroups $values, MetricColumn $group, int $limit): self
     {
         $parts = $values->parts($group);
         usort($parts, self::order(...));
@@ -28,9 +28,9 @@ final readonly class PartitionResult implements MetricResult
     }
 
     /** @return list<PartitionPart> */
-    public static function ranked(GroupValues $values, MetricColumn $group): array
+    public static function ranked(RankedGroups $values, MetricColumn $group): array
     {
-        $parts = array_map(fn (array $row): PartitionPart => new PartitionPart($row['key'], $group->label($row['key']), $row['value']), $values->groups());
+        $parts = array_map(fn (array $row): PartitionPart => new PartitionPart($row['key'], $group->label($row['key']), $row['value']), $values->groups);
         usort($parts, self::order(...));
 
         return $parts;
@@ -62,7 +62,7 @@ final readonly class PartitionResult implements MetricResult
      * @param  list<PartitionPart>  $parts
      * @param  Closure(list<int|string|bool|null>): PartitionPart  $other
      */
-    private static function limited(array $parts, ?int $limit, Closure $other): self
+    private static function limited(array $parts, int $limit, Closure $other): self
     {
         $kept = array_slice($parts, 0, $limit);
 

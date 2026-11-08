@@ -150,6 +150,9 @@ return [
     | any query: the page limit, and for each to-many include its limit
     | for each parent row, nested includes multiplying. A to-one include
     | counts one row for each parent.
+    | "groups" is the most parts of a partition metric and the most
+    | splits of a trend in a response, at least 1. A metric sets its own
+    | with limit(). The other groups fold into "other".
     |
     | "depths" is how many levels nest: "nested" filter groups, includes,
     | and relations in a mutation. A text search run by a search engine
@@ -191,6 +194,7 @@ return [
             'resources' => 1000,
             'jobs' => 100,
             'rows' => 10000,
+            'groups' => 100,
         ],
 
         'depths' => [

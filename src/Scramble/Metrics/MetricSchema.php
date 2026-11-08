@@ -10,7 +10,9 @@ use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Metrics\MetricRange;
+use Lomkit\Rest\Metrics\Partition;
 use Lomkit\Rest\Metrics\ResultSchemas;
+use Lomkit\Rest\Metrics\Trend;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\Search\SearchSchema;
@@ -42,7 +44,8 @@ final readonly class MetricSchema
         }
 
         $data = new AllOf;
-        $data->setItems([$type, $this->result($schema)]);
+        $groups = $metric instanceof Partition || $metric instanceof Trend ? $metric->resource->context()->limits()->sizes->groups : null;
+        $data->setItems([$type, $this->result($schema, $groups)]);
 
         return Schemas::required(['data' => $data]);
     }
@@ -59,11 +62,11 @@ final readonly class MetricSchema
         return ['range' => $values[0], 'timezone' => 'UTC'];
     }
 
-    private function result(Type $schema): Type
+    private function result(Type $schema, ?int $groups): Type
     {
         $json = json_encode($schema->serializeAs31());
 
-        foreach (self::results() as $name => $result) {
+        foreach (self::results($groups) as $name => $result) {
             if (json_encode($result->serializeAs31()) === $json) {
                 return $this->components->schema($name, self::class, fn (): Type => $result);
             }
@@ -90,14 +93,18 @@ final readonly class MetricSchema
     }
 
     /** @return array<string, ObjectType> */
-    private static function results(): array
+    private static function results(?int $groups): array
     {
-        return [
+        $results = [
             'RestValueResult' => ResultSchemas::value(),
-            'RestTrendResult' => ResultSchemas::trend(),
-            'RestPartitionResult' => ResultSchemas::partition(),
             'RestTableResult' => ResultSchemas::table(),
             'RestProgressResult' => ResultSchemas::progress(),
         ];
+
+        if ($groups === null) {
+            return $results;
+        }
+
+        return [...$results, 'RestTrendResult' => ResultSchemas::trend($groups), 'RestPartitionResult' => ResultSchemas::partition($groups)];
     }
 }

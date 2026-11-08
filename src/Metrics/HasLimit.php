@@ -15,6 +15,11 @@ trait HasLimit
         return $this;
     }
 
+    public function groupLimit(): int
+    {
+        return $this->limit ?? $this->resource->context()->limits()->sizes->groups;
+    }
+
     protected function ensureValidLimit(): void
     {
         if ($this->limit !== null && $this->limit < 1) {

@@ -24,7 +24,7 @@ abstract class Trend extends Metric
     #[\Override]
     public function schema(): ?Type
     {
-        return ResultSchemas::trend();
+        return ResultSchemas::trend($this->groupLimit());
     }
 
     #[\Override]
@@ -190,7 +190,7 @@ abstract class Trend extends Metric
         $split = $splitBy === null ? null : MetricColumn::group($this, $query, $helper, $splitBy);
         $periods = $this->periodsFor($helper, $query, $dateColumn, $unit, null);
 
-        return TrendResult::of($measure->trend($query, $periods, $split), $periods, $split, $this->limit);
+        return TrendResult::of(new MeasurePeriods($measure, $periods->window($query), $periods->label()), $periods, $split, $this->groupLimit());
     }
 
     private static function helper(string $aggregate, PeriodUnit $unit): string
