@@ -43,6 +43,12 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     }
 
     #[\Override]
+    public function relationFilters(Cursor $filters, ValidationContext $context): int
+    {
+        return 0;
+    }
+
+    #[\Override]
     public function scopeRules(): array
     {
         return ['prohibited'];

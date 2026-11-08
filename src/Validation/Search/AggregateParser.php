@@ -92,7 +92,8 @@ final readonly class AggregateParser
         $field = $this->field($entry, $function, $related, $context);
         $rules->addWhenPresent($filters, ['array']);
         $nested = $context->related($related);
-        $group = $nested->grammar->filters($context->reader->entries($filters, $context->limits->sizes->filters, true) ?? [], $nested);
+        $entries = $context->reader->entries($filters, $context->limits->sizes->filters, true, $nested->grammar->relationFilters($filters, $nested));
+        $group = $nested->grammar->filters($entries ?? [], $nested);
 
         if ($function === null || ($alias->present && ! is_string($alias->value))) {
             $rules->partial();

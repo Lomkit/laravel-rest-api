@@ -37,8 +37,8 @@ final readonly class LimitGroup
         }
     }
 
-    public function read(string $key): int
+    public function read(string $key, int $min = 0): int
     {
-        return ConfigValue::at("{$this->path}.{$key}", $this->values[$key] ?? null)->integer();
+        return ConfigValue::at("{$this->path}.{$key}", $this->values[$key] ?? null)->integer($min);
     }
 }

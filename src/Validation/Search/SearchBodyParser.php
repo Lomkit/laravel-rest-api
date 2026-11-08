@@ -45,7 +45,7 @@ final readonly class SearchBodyParser
             $context->rules->addWhenPresent($page, ['integer', 'min:1', ...$grammar->pageRules($limit->value, $sizes->defaultLimit)]);
         }
 
-        $filters = self::list($search->at('filters'), ['array'], $limits->sizes->filters, $context, true);
+        $filters = self::filters($search->at('filters'), $context);
         $gates = (new GatesParser)->parse($search->at('gates'), $context);
         $lists = [
             'filters' => $filters,
@@ -83,7 +83,7 @@ final readonly class SearchBodyParser
     {
         $sizes = $context->limits->sizes;
         $lists = [
-            'filters' => self::list($search->at('filters'), ['array'], $sizes->filters, $context, true),
+            'filters' => self::filters($search->at('filters'), $context),
             'scopes' => self::list($search->at('scopes'), ['array', ...$context->grammar->scopeRules()], $sizes->scopes, $context),
             'instructions' => self::list($search->at('instructions'), ['array'], $sizes->instructions, $context),
         ];
@@ -158,11 +158,19 @@ final readonly class SearchBodyParser
      * @param  list<mixed>  $rules
      * @return list<Cursor>|null
      */
-    private static function list(Cursor $list, array $rules, int $max, ValidationContext $context, bool $filters = false): ?array
+    private static function list(Cursor $list, array $rules, int $max, ValidationContext $context): ?array
     {
         $context->rules->addWhenPresent($list, $rules);
 
-        return $context->reader->entries($list, $max, $filters);
+        return $context->reader->entries($list, $max);
+    }
+
+    /** @return list<Cursor>|null */
+    private static function filters(Cursor $list, ValidationContext $context): ?array
+    {
+        $context->rules->addWhenPresent($list, ['array']);
+
+        return $context->reader->entries($list, $context->limits->sizes->filters, true, $context->grammar->relationFilters($list, $context));
     }
 
     /** @return list<Cursor>|null */

@@ -89,6 +89,33 @@ class NodeBudgetTest extends TestCase
     }
 
     #[Test]
+    public function it_counts_relation_filters_toward_their_own_total(): void
+    {
+        $budget = new NodeBudget(10, 10, 2);
+
+        $this->assertTrue($budget->admit('a', 3, 10, true, 1));
+        $this->assertFalse($budget->admit('b', 1, 10, true, 2));
+        $this->assertFalse($budget->admit('c', 1, 10, true, 2));
+        $this->assertTrue($budget->admit('d', 1, 10, true, 1));
+        $this->assertFalse($budget->admit('e', 1, 10, true, 1));
+
+        $rules = $budget->applyTo(['a' => ['array'], 'b' => ['array'], 'c' => ['array'], 'd' => ['array'], 'e' => ['array']]);
+
+        $this->assertRejected(Violation::tooManyRelationFilters('b', 2), $rules['b'][0]);
+        $this->assertSame([['array'], ['array'], ['array'], ['array']], [$rules['a'], $rules['c'], $rules['d'], $rules['e']]);
+    }
+
+    #[Test]
+    public function it_takes_a_list_without_relation_filters_after_the_relation_total(): void
+    {
+        $budget = new NodeBudget(10, 10, 1);
+
+        $this->assertTrue($budget->admit('a', 1, 10, true, 1));
+        $this->assertTrue($budget->admit('b', 2, 10, true));
+        $this->assertSame(['a' => ['array'], 'b' => ['array']], $budget->applyTo(['a' => ['array'], 'b' => ['array']]));
+    }
+
+    #[Test]
     public function it_puts_the_rejection_first_in_the_rules_of_its_key(): void
     {
         $violations = new Violations;

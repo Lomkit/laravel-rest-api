@@ -150,7 +150,10 @@ return [
     | "totals" count across lists. "filters" is the most filters in one
     | search, at every level and in its includes and aggregates.
     | "entries" is the most entries of all the lists above and of the
-    | "gates" lists in one request, except "resources".
+    | "gates" lists in one request, except "resources". "relations" is
+    | the most relation filters in one search, at least 1: each filter
+    | on a dotted field path and each "relation" group, at every level
+    | and in its includes and aggregates. Each one runs a subquery.
     |
     | "lengths" is the most characters of one value. "patterns" covers the
     | value of a "like", "not like", "ilike" or "not ilike" filter, at
@@ -183,6 +186,7 @@ return [
         'totals' => [
             'filters' => 500,
             'entries' => 1000,
+            'relations' => 20,
         ],
 
         'lengths' => [
