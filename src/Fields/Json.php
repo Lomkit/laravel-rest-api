@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Casts\AsStringable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Stringable;
 use Lomkit\Rest\Rules\MaxDepth;
+use stdClass;
 
 class Json extends Field
 {
@@ -43,6 +44,12 @@ class Json extends Field
         }
 
         return json_decode((string) $value, true);
+    }
+
+    #[\Override]
+    public function render(mixed $value): mixed
+    {
+        return $value === [] ? new stdClass : $value;
     }
 
     #[\Override]

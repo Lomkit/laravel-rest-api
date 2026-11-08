@@ -155,9 +155,9 @@ final readonly class FieldSet implements Countable, IteratorAggregate
      * @param  array<TKey, mixed>  $values
      * @return array<TKey, mixed>
      */
-    public function fromStorage(array $values): array
+    public function render(array $values): array
     {
-        return $this->mapValues($values, fn (Field $field, mixed $value): mixed => $field->fromStorage($value));
+        return $this->mapValues($values, fn (Field $field, mixed $value): mixed => $field->render($field->fromStorage($value)));
     }
 
     /** @return ArrayIterator<int, Field> */

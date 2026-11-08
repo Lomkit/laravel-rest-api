@@ -21,6 +21,6 @@ final readonly class PivotRenderer
     {
         $fields = $this->relation instanceof PivotRelation ? $this->relation->getPivotFields() : FieldSet::of([]);
 
-        return (object) array_intersect_key($fields->fromStorage($pivot->toArray()), array_flip($fields->selectable()->names()));
+        return (object) array_intersect_key($fields->render($pivot->toArray()), array_flip($fields->selectable()->names()));
     }
 }

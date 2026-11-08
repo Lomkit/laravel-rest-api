@@ -57,7 +57,7 @@ class Show extends Model
     protected function casts(): array
     {
         return [
-            'price' => 'float',
+            'price' => 'decimal:2',
             'seats' => 'integer',
             'featured' => 'boolean',
             'starts_on' => 'date:Y-m-d',

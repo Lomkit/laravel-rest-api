@@ -81,6 +81,11 @@ trait ConfiguresReading
         return $value;
     }
 
+    public function render(mixed $value): mixed
+    {
+        return $value;
+    }
+
     /** @return list<string> */
     public function getRequires(): array
     {
