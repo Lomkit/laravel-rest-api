@@ -12,6 +12,7 @@ use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\FilterNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ValidationContext;
+use Lomkit\Rest\Validation\Violation;
 
 final readonly class FilterParser
 {
@@ -52,6 +53,7 @@ final readonly class FilterParser
         $value = $entry->at('value');
         $name = is_string($field->value) ? $field->value : null;
         $path = $name === null ? null : $this->path($name, $entry, $context);
+        $long = $path !== null && self::long($path, $field, $context);
 
         $rules->add($field->path, ['string', 'required_without:'.$nested->path, new OneOf($path === null ? [] : [$name])]);
         $children = $this->nested($entry, $context);
@@ -72,7 +74,7 @@ final readonly class FilterParser
             return $group;
         }
 
-        if ($context->reader->filled($nested) || $name === null || $path === null || $resolved === null) {
+        if ($long || $context->reader->filled($nested) || $name === null || $path === null || $resolved === null) {
             return $this->partial($context);
         }
 
@@ -86,6 +88,19 @@ final readonly class FilterParser
         }
 
         return FieldPath::resolve($context->resource, $name);
+    }
+
+    private static function long(FieldPath $path, Cursor $field, ValidationContext $context): bool
+    {
+        $limit = $context->limits->depths->includes;
+
+        if (count($path->relations) <= $limit) {
+            return false;
+        }
+
+        $context->rules->reject(Violation::tooManyRelations($field->path, $limit));
+
+        return true;
     }
 
     /** @return list<Cursor>|null */

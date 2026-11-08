@@ -144,7 +144,8 @@ return [
     |
     | "depths" is how many levels nest: "nested" filter groups, includes,
     | and relations in a mutation. A text search run by a search engine
-    | never nests filters.
+    | never nests filters. "includes" also bounds the relations of a
+    | dotted filter field, such as "author.posts.title" (two relations).
     |
     | "totals" count across lists. "filters" is the most filters in one
     | search, at every level and in its includes and aggregates.

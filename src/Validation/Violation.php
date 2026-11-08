@@ -58,6 +58,11 @@ final readonly class Violation
         return new self($key, 'The :attribute field goes deeper than the limit of :max include levels.', ['max' => (string) $max]);
     }
 
+    public static function tooManyRelations(string $key, int $max): self
+    {
+        return new self($key, 'The :attribute field goes through more relations than the limit of :max.', ['max' => (string) $max]);
+    }
+
     public static function takenKey(string $key, string $name): self
     {
         return new self($key, 'The :attribute field is required, because the key :key is already used.', ['key' => $name]);
