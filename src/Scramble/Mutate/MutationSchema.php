@@ -63,7 +63,9 @@ final readonly class MutationSchema
             'relations' => $this->relations->relations($resource, $operation),
         ]);
 
-        return Schemas::closed($properties, array_values(array_intersect(['operation', 'key'], array_keys($properties))));
+        $required = ['operation', 'key', ...(RelationEntrySchema::required($resource, $operation) === [] ? [] : ['relations'])];
+
+        return Schemas::closed($properties, array_values(array_intersect($required, array_keys($properties))));
     }
 
     public static function version(Resource $resource, MutationOperation $operation): ?Type

@@ -7,13 +7,20 @@ use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Fields\Boolean;
 use Lomkit\Rest\Fields\DateTime;
+use Lomkit\Rest\Fields\Integer;
 
 class RescheduleShows extends Action
 {
     #[\Override]
     public function fields(): array
     {
-        return [DateTime::make('at')->nullable(), Boolean::make('notify')->default(true)];
+        return [
+            DateTime::make('at')->nullable(),
+            Integer::make('notice_days')
+                ->nullable()
+                ->rules('between:7,365'),
+            Boolean::make('notify')->default(true),
+        ];
     }
 
     /** @param Collection<int, Show> $models */

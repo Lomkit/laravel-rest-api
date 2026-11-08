@@ -140,7 +140,7 @@ final readonly class SearchSchema
         $sort = fn (): Type => Schemas::closed([
             'field' => (new StringType)->enum($ranked),
             'direction' => (new StringType)->enum(array_column(SortDirection::cases(), 'value')),
-        ], ['field'], '`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.');
+        ], ['field'], '`field` lists the default key of each aggregate that sorts, such as `comments_count`: an aggregate over a relation to many, on no field or on a field that is not a key. It sorts only when the same search declares that aggregate. The key of such an aggregate with an `alias` is accepted too, and is not listed.');
 
         return $ranked === $names ? $this->components->schema($this->records->name($resource).'Sort', $resource::class, $sort) : $sort();
     }

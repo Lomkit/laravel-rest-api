@@ -12,6 +12,7 @@ use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Rules\OneOf;
 use Lomkit\Rest\Search\AggregateKey;
 use Lomkit\Rest\Search\AggregateNode;
+use Lomkit\Rest\Search\SortableAggregate;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ValidationContext;
 use Lomkit\Rest\Validation\Violation;
@@ -112,7 +113,7 @@ final readonly class AggregateParser
             return null;
         }
 
-        return new AggregateNode($relation->value, $related, $function, $field, $name, $key, $group, array_slice($relations, 0, -1), $relations[array_key_last($relations)]);
+        return new AggregateNode($relation->value, $related, $function, $field, $name, $key, $group, array_slice($relations, 0, -1), $relations[array_key_last($relations)], SortableAggregate::accepts($relations, $field?->name));
     }
 
     private function field(Cursor $entry, ?AggregateFunction $function, Resource $related, ValidationContext $context): ?Field

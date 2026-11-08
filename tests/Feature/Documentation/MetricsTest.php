@@ -43,14 +43,14 @@ class MetricsTest extends DocumentationTestCase
     public static function bodies(): array
     {
         return [
-            'a value with two ranges' => ['/shows/metrics/show-count', '{'.self::BODY.'"range":{"type":"integer","description":"The range of the metric: `30` when the request sends none","enum":[30,90]},'.self::TIMEZONE.'}}'],
-            'a trend with two ranges' => ['/shows/metrics/shows-per-month', '{'.self::BODY.'"range":{"type":"integer","description":"The range of the metric: `3` when the request sends none","enum":[3,12]},'.self::TIMEZONE.'}}'],
+            'a value with two ranges' => ['/shows/metrics/show-count', '{'.self::BODY.'"range":{"type":"integer","description":"The range of the metric: `30` when the request sends none","enum":[30,90],"default":30},'.self::TIMEZONE.'}}'],
+            'a trend with two ranges' => ['/shows/metrics/shows-per-month', '{'.self::BODY.'"range":{"type":"integer","description":"The range of the metric: `3` when the request sends none","enum":[3,12],"default":3},'.self::TIMEZONE.'}}'],
             'a metric without ranges' => ['/shows/metrics/shows-by-status', '{'.self::BODY.'"range":false,'.self::TIMEZONE.'}}'],
         ];
     }
 
     #[Test]
-    public function it_gives_each_metric_a_request_example_with_its_first_range_and_a_time_zone(): void
+    public function it_gives_each_metric_an_empty_request_example_since_its_range_and_its_time_zone_have_defaults(): void
     {
         $document = $this->document();
         $examples = [];
@@ -60,14 +60,14 @@ class MetricsTest extends DocumentationTestCase
         }
 
         $this->assertSame([
-            '/shows/metrics/show-count' => '{"default":{"value":{"range":30,"timezone":"UTC"}}}',
-            '/shows/metrics/shows-per-month' => '{"default":{"value":{"range":3,"timezone":"UTC"}}}',
-            '/shows/metrics/shows-by-status' => '{"default":{"value":{"timezone":"UTC"}}}',
-            '/shows/metrics/shows-by-level' => '{"default":{"value":{"range":30,"timezone":"UTC"}}}',
-            '/shows/metrics/seats-by-level' => '{"default":{"value":{"range":30,"timezone":"UTC"}}}',
-            '/shows/metrics/top-stages' => '{"default":{"value":{"timezone":"UTC"}}}',
-            '/shows/metrics/seats-goal' => '{"default":{"value":{"timezone":"UTC"}}}',
-            '/shows/metrics/occupancy' => '{"default":{"value":{"timezone":"UTC"}}}',
+            '/shows/metrics/show-count' => '{"default":{"value":{}}}',
+            '/shows/metrics/shows-per-month' => '{"default":{"value":{}}}',
+            '/shows/metrics/shows-by-status' => '{"default":{"value":{}}}',
+            '/shows/metrics/shows-by-level' => '{"default":{"value":{}}}',
+            '/shows/metrics/seats-by-level' => '{"default":{"value":{}}}',
+            '/shows/metrics/top-stages' => '{"default":{"value":{}}}',
+            '/shows/metrics/seats-goal' => '{"default":{"value":{}}}',
+            '/shows/metrics/occupancy' => '{"default":{"value":{}}}',
         ], $examples);
     }
 

@@ -6,18 +6,19 @@ use Closure;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\WriteOperation;
 use stdClass;
 
 final class FieldExample
 {
-    public static function of(Field $field): mixed
+    public static function of(Field $field, ?WriteOperation $operation = null): mixed
     {
-        return self::from($field, $field->toSchema(...));
+        return self::from($field, $field->toSchema(...), $operation);
     }
 
-    public static function written(Field $field): mixed
+    public static function written(Field $field, ?WriteOperation $operation = null): mixed
     {
-        return self::from($field, $field->toWriteSchema(...));
+        return self::from($field, $field->toWriteSchema(...), $operation);
     }
 
     public static function key(ID $id): int|string
@@ -31,7 +32,7 @@ final class FieldExample
     }
 
     /** @param Closure(): Type $schema */
-    private static function from(Field $field, Closure $schema): mixed
+    private static function from(Field $field, Closure $schema, ?WriteOperation $operation): mixed
     {
         $examples = $field->getExamples();
 
@@ -39,7 +40,13 @@ final class FieldExample
             return $examples[0];
         }
 
-        return $field instanceof ID ? self::key($field) : self::typed($schema());
+        if ($field instanceof ID) {
+            return self::key($field);
+        }
+
+        $rules = $field->getRules();
+
+        return RuleExample::honour($operation === null ? $rules->shared() : $rules->forWrite($operation), self::typed($schema()));
     }
 
     private static function typed(Type $type): mixed

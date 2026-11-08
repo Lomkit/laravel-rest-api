@@ -36,7 +36,9 @@ class ShowResource extends Resource
                 ->rules('max:80')
                 ->creationRules('required')
                 ->examples('Opening night', 'Closing night'),
-            Text::make('summary')->nullable(),
+            Text::make('summary')
+                ->nullable()
+                ->rules('min:8'),
             Number::make('price')
                 ->nullable()
                 ->meta(['unit' => 'EUR'])
@@ -94,6 +96,7 @@ class ShowResource extends Resource
             RescheduleShows::make()->maxResources(null),
             CancelShows::make()
                 ->destructive()
+                ->confirm('Cancel the selected shows?')
                 ->maxResources(2),
             ImportShows::make(),
             ArchiveShows::make(),

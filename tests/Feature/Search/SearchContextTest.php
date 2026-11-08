@@ -115,12 +115,14 @@ class SearchContextTest extends PackageTestCase
     #[Test]
     public function it_names_the_relation_and_aggregate_sorts(): void
     {
-        $context = $this->context(PostResource::class, [
-            'aggregates' => [['relation' => 'author', 'type' => 'count']],
-            'sorts' => [['field' => 'author.last_name'], ['field' => 'author_count', 'direction' => 'desc']],
+        $post = $this->context(PostResource::class, ['sorts' => [['field' => 'author.last_name']]]);
+        $author = $this->context(AuthorResource::class, [
+            'aggregates' => [['relation' => 'posts', 'type' => 'count']],
+            'sorts' => [['field' => 'posts_count', 'direction' => 'desc']],
         ]);
 
-        $this->assertSame([true, true, false, false], array_map($context->sortsOn(...), ['author.last_name', 'author_count', 'author', 'last_name']));
+        $this->assertSame([true, false, false], array_map($post->sortsOn(...), ['author.last_name', 'author', 'last_name']));
+        $this->assertSame([true, false], array_map($author->sortsOn(...), ['posts_count', 'posts']));
     }
 
     #[Test]

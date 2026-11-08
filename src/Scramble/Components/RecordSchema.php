@@ -19,6 +19,7 @@ use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\DocumentationContext;
 use Lomkit\Rest\Scramble\FieldSchema;
+use Lomkit\Rest\Scramble\Mutate\WritableSchema;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\Types\OneOf;
 
@@ -68,8 +69,11 @@ final readonly class RecordSchema
         $record = new ObjectType;
         $record->setDescription('A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.');
 
+        $types = WritableSchema::morphTypes($resource);
+
         foreach ($definition->fields()->selectable() as $field) {
-            $record->addProperty($field->name, FieldSchema::of($field));
+            $type = FieldSchema::of($field);
+            $record->addProperty($field->name, isset($types[$field->name]) ? $type->enum($types[$field->name]) : $type);
         }
 
         $gates = $this->gates($resource, false);

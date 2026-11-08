@@ -15,7 +15,7 @@ class CommentResource extends Resource
     #[\Override]
     public function fields(): array
     {
-        return [ID::make('id'), Integer::make('rating')->rules('between:1,5'), Text::make('body')];
+        return [ID::make('id'), Integer::make('show_id')->readonly(), Integer::make('rating')->rules('between:1,5'), Text::make('body')];
     }
 
     #[\Override]
