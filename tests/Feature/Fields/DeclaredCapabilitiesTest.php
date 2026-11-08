@@ -87,7 +87,7 @@ class DeclaredCapabilitiesTest extends PackageTestCase
     {
         $this->expectExceptionObject(new InvalidFieldException($message));
 
-        $field()->filterValueRules($operator, 'search.filters.0.value', new Lengths(255));
+        $field()->filterValueRules($operator, 'search.filters.0.value', new Lengths(255, 1000));
     }
 
     #[Test]

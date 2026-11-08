@@ -1981,7 +1981,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -2049,7 +2050,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -2429,7 +2431,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -2497,7 +2500,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -3207,7 +3211,8 @@
                             },
                             "value": {
                                 "type": "string",
-                                "format": "date-time"
+                                "format": "date-time",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -3241,7 +3246,8 @@
                                 "type": "array",
                                 "items": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 2,
                                 "maxItems": 2
@@ -3314,7 +3320,8 @@
                             },
                             "value": {
                                 "type": "string",
-                                "format": "date"
+                                "format": "date",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -3348,7 +3355,8 @@
                                 "type": "array",
                                 "items": {
                                     "type": "string",
-                                    "format": "date"
+                                    "format": "date",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 2,
                                 "maxItems": 2
@@ -3471,7 +3479,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -3539,7 +3548,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -3611,7 +3621,8 @@
                                 "examples": [
                                     "Opening night",
                                     "Closing night"
-                                ]
+                                ],
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -3683,7 +3694,8 @@
                                     "examples": [
                                         "Opening night",
                                         "Closing night"
-                                    ]
+                                    ],
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -3728,7 +3740,8 @@
                             },
                             "value": {
                                 "type": "string",
-                                "format": "date-time"
+                                "format": "date-time",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -3762,7 +3775,8 @@
                                 "type": "array",
                                 "items": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 2,
                                 "maxItems": 2
@@ -4296,7 +4310,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -4364,7 +4379,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -5430,7 +5446,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -5498,7 +5515,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -8992,7 +9010,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -9060,7 +9079,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -9100,7 +9120,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -9168,7 +9189,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -9236,7 +9258,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -9304,7 +9327,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -9734,7 +9758,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -9802,7 +9827,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -10335,7 +10361,8 @@
                                 "type": "string",
                                 "examples": [
                                     "main"
-                                ]
+                                ],
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -10371,7 +10398,8 @@
                                     "type": "string",
                                     "examples": [
                                         "main"
-                                    ]
+                                    ],
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -10414,7 +10442,8 @@
                                 "type": "string",
                                 "examples": [
                                     "Main stage"
-                                ]
+                                ],
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -10485,7 +10514,8 @@
                                     "type": "string",
                                     "examples": [
                                         "Main stage"
-                                    ]
+                                    ],
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -10530,7 +10560,8 @@
                             },
                             "value": {
                                 "type": "string",
-                                "format": "date-time"
+                                "format": "date-time",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -10564,7 +10595,8 @@
                                 "type": "array",
                                 "items": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 2,
                                 "maxItems": 2
@@ -10637,7 +10669,8 @@
                             },
                             "value": {
                                 "type": "string",
-                                "format": "date"
+                                "format": "date",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -10671,7 +10704,8 @@
                                 "type": "array",
                                 "items": {
                                     "type": "string",
-                                    "format": "date"
+                                    "format": "date",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 2,
                                 "maxItems": 2
@@ -10794,7 +10828,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -10862,7 +10897,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -10934,7 +10970,8 @@
                                 "examples": [
                                     "Opening night",
                                     "Closing night"
-                                ]
+                                ],
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -11006,7 +11043,8 @@
                                     "examples": [
                                         "Opening night",
                                         "Closing night"
-                                    ]
+                                    ],
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -11051,7 +11089,8 @@
                             },
                             "value": {
                                 "type": "string",
-                                "format": "date-time"
+                                "format": "date-time",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -11085,7 +11124,8 @@
                                 "type": "array",
                                 "items": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 2,
                                 "maxItems": 2
@@ -14255,7 +14295,8 @@
                                 "type": "string",
                                 "examples": [
                                     "main"
-                                ]
+                                ],
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -14291,7 +14332,8 @@
                                     "type": "string",
                                     "examples": [
                                         "main"
-                                    ]
+                                    ],
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -14331,7 +14373,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -14399,7 +14442,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -14654,7 +14698,8 @@
                                 "type": "string",
                                 "examples": [
                                     "Main stage"
-                                ]
+                                ],
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -14725,7 +14770,8 @@
                                     "type": "string",
                                     "examples": [
                                         "Main stage"
-                                    ]
+                                    ],
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -15223,7 +15269,8 @@
                             },
                             "value": {
                                 "type": "string",
-                                "format": "date-time"
+                                "format": "date-time",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -15257,7 +15304,8 @@
                                 "type": "array",
                                 "items": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 2,
                                 "maxItems": 2
@@ -15330,7 +15378,8 @@
                             },
                             "value": {
                                 "type": "string",
-                                "format": "date"
+                                "format": "date",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -15364,7 +15413,8 @@
                                 "type": "array",
                                 "items": {
                                     "type": "string",
-                                    "format": "date"
+                                    "format": "date",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 2,
                                 "maxItems": 2
@@ -15487,7 +15537,8 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -15555,7 +15606,8 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -15627,7 +15679,8 @@
                                 "examples": [
                                     "Opening night",
                                     "Closing night"
-                                ]
+                                ],
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -15699,7 +15752,8 @@
                                     "examples": [
                                         "Opening night",
                                         "Closing night"
-                                    ]
+                                    ],
+                                    "maxLength": 1000
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -15744,7 +15798,8 @@
                             },
                             "value": {
                                 "type": "string",
-                                "format": "date-time"
+                                "format": "date-time",
+                                "maxLength": 1000
                             },
                             "type": {
                                 "type": "string",
@@ -15778,7 +15833,8 @@
                                 "type": "array",
                                 "items": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "maxLength": 1000
                                 },
                                 "minItems": 2,
                                 "maxItems": 2

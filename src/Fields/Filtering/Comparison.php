@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Fields\Filtering;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Lomkit\Rest\Rules\MaxLength;
 use Lomkit\Rest\Validation\Lengths;
 
 final readonly class Comparison implements Condition
@@ -18,6 +19,6 @@ final readonly class Comparison implements Condition
     #[\Override]
     public function valueRules(array $typeRules, Lengths $lengths): ValueRules
     {
-        return new ValueRules(['required', ...$typeRules]);
+        return new ValueRules(['required', ...$typeRules, new MaxLength($lengths->values)]);
     }
 }

@@ -163,7 +163,9 @@ return [
     |
     | "lengths" is the most characters of one value. "patterns" covers the
     | value of a "like", "not like", "ilike" or "not ilike" filter, at
-    | every level.
+    | every level. "values" covers every string value of a filter, each
+    | item of a list too, at every level. A pattern takes the smaller of
+    | the two. "values" is at least 1.
     |
     */
 
@@ -199,6 +201,7 @@ return [
 
         'lengths' => [
             'patterns' => 255,
+            'values' => 1000,
         ],
     ],
 
