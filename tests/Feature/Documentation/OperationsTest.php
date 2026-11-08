@@ -120,7 +120,7 @@ class OperationsTest extends DocumentationTestCase
         $response = $this->actingAs(new User(['id' => 1, 'name' => 'Ada']))->getJson('docs/api.json');
 
         $response->assertOk();
-        $this->assertSame(['code', 'name'], $response->json('paths./viewer-stages/search.post.requestBody.content.application/json.schema.properties.search.properties.selects.items.properties.field.enum'));
+        $this->assertSame(['code', 'name'], $response->json('components.schemas.ViewerStageSelect.properties.field.enum'));
     }
 
     #[Test]

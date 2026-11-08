@@ -124,6 +124,22 @@ class ContractTest extends DocumentationTestCase
             'related rows of each type' => ['/notes/search', ['filters' => [['relation' => 'notable', 'types' => [Show::class => [['field' => 'featured', 'value' => true]], Stage::class => [['field' => 'code', 'value' => 'main']]]]]]],
             'a group joined with or' => ['/shows/search', ['filters' => [['field' => 'featured', 'value' => true], ['type' => 'or', 'nested' => [['field' => 'seats', 'operator' => '>', 'value' => 100]]]]]],
             'a string key' => ['/stages/search', ['filters' => [['field' => 'code', 'operator' => 'in', 'value' => ['main', 'side']]]]],
+            'sorts on a field and on a field of a relation' => ['/shows/search', ['sorts' => [['field' => 'stage.name', 'direction' => 'desc'], ['field' => 'title']]]],
+            'selects, gates, a limit and a page' => ['/shows/search', ['selects' => [['field' => 'title']], 'gates' => ['view', 'create'], 'limit' => 25, 'page' => 2]],
+            'a text and the trashed rows' => ['/shows/search', ['text' => ['value' => 'night', 'mode' => 'phrase'], 'trashed' => 'with']],
+            'includes of each family' => ['/shows/search', ['includes' => [
+                ['relation' => 'stage', 'selects' => [['field' => 'name']]],
+                ['relation' => 'comments', 'alias' => 'top_comments', 'limit' => 10, 'sorts' => [['field' => 'rating', 'direction' => 'desc']], 'gates' => ['view']],
+                ['relation' => 'artists', 'filters' => [['field' => 'name', 'value' => 'Ada']]],
+            ]]],
+            'an include of each type' => ['/notes/search', ['includes' => [['relation' => 'notable', 'types' => [Show::class => ['selects' => [['field' => 'title']]], Stage::class => ['includes' => [['relation' => 'shows']]]]]]]],
+            'aggregates of each kind' => ['/shows/search', ['aggregates' => [
+                ['relation' => 'comments', 'type' => 'count'],
+                ['relation' => 'comments', 'type' => 'max', 'field' => 'rating', 'alias' => 'best_rating'],
+                ['relation' => 'comments', 'type' => 'avg', 'field' => 'rating', 'filters' => [['field' => 'rating', 'operator' => '>', 'value' => 1]]],
+            ]]],
+            'a scope with its parameters' => ['/shows/search', ['scopes' => [['name' => 'startingFrom', 'parameters' => ['2026-07-01']]]]],
+            'an instruction with its fields' => ['/shows/search', ['instructions' => [['name' => 'only-featured', 'fields' => [['name' => 'featured', 'value' => true], ['name' => 'min_seats', 'value' => null]]]]]],
         ];
     }
 
@@ -149,6 +165,12 @@ class ContractTest extends DocumentationTestCase
             'one value for a range' => ['/shows/search', ['filters' => [['field' => 'seats', 'operator' => 'between', 'value' => [1]]]]],
             'a field that cannot be filtered' => ['/shows/search', ['filters' => [['field' => 'settings', 'value' => 'a']]]],
             'nested filters on related rows of two types' => ['/notes/search', ['filters' => [['relation' => 'notable', 'nested' => [['field' => 'id', 'value' => 1]]]]]],
+            'a limit outside the page sizes' => ['/shows/search', ['limit' => 7]],
+            'a limit on an include of a relation to one' => ['/shows/search', ['includes' => [['relation' => 'stage', 'limit' => 10]]]],
+            'the create gate on an include' => ['/shows/search', ['includes' => [['relation' => 'comments', 'gates' => ['create']]]]],
+            'a field that an average does not take' => ['/shows/search', ['aggregates' => [['relation' => 'comments', 'type' => 'avg', 'field' => 'body']]]],
+            'a scope without its first parameter' => ['/shows/search', ['scopes' => [['name' => 'startingFrom']]]],
+            'a text on a resource without a text search' => ['/stages/search', ['text' => ['value' => 'main']]],
         ];
     }
 

@@ -7,8 +7,10 @@ use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Query\Clauses\RelevanceClause;
 use Lomkit\Rest\Query\Trashed;
+use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Text\ResolvedText;
 use Lomkit\Rest\Text\TextBackend;
+use Lomkit\Rest\Text\TextCapabilities;
 
 final readonly class TextSearchType
 {
@@ -22,6 +24,15 @@ final readonly class TextSearchType
         return new self($resource, $resource->context()->text($resource));
     }
 
+    public static function value(TextCapabilities $capabilities): StringType
+    {
+        $value = new StringType;
+        $value->setMax($capabilities->maxLength);
+        $value->nullable(true);
+
+        return $value;
+    }
+
     /**
      * @param  list<string>  $sortable
      * @return list<string>
@@ -31,32 +42,36 @@ final readonly class TextSearchType
         return $this->text->capabilities?->relevance === true ? [...$sortable, RelevanceClause::FIELD] : $sortable;
     }
 
-    public function addTo(ObjectType $search): void
+    public function text(): ?ObjectType
     {
-        $engine = $this->text->backend === TextBackend::Engine && $this->text->capabilities !== null
-            ? new EngineTextType($this->text->capabilities)
-            : null;
+        $capabilities = $this->text->capabilities;
 
-        if ($this->text->backend !== TextBackend::None) {
-            $search->addProperty('text', $engine?->text() ?? $this->textType());
+        if ($this->text->backend === TextBackend::None || $capabilities === null) {
+            return null;
         }
 
-        if (Trashed::supportedBy($this->resource::modelClass())) {
-            $search->addProperty('trashed', $engine?->trashed() ?? (new StringType)->enum(array_column(Trashed::cases(), 'value')));
+        if ($this->text->backend === TextBackend::Engine) {
+            return (new EngineTextType($capabilities))->text();
         }
+
+        return Schemas::closed([
+            'value' => self::value($capabilities),
+            'mode' => (new StringType)->enum($capabilities->modeNames()),
+        ], [], 'Text to search in the searchable fields');
     }
 
-    private function textType(): ObjectType
+    public function trashed(): ?StringType
     {
-        $type = new ObjectType;
-        $type->addProperty('value', new StringType);
-
-        if ($this->text->capabilities !== null) {
-            $type->addProperty('mode', (new StringType)->enum($this->text->capabilities->modeNames()));
+        if (! Trashed::supportedBy($this->resource::modelClass())) {
+            return null;
         }
 
-        $type->setDescription('Text to search in the searchable fields');
+        $capabilities = $this->text->capabilities;
 
-        return $type;
+        if ($this->text->backend === TextBackend::Engine && $capabilities !== null) {
+            return (new EngineTextType($capabilities))->trashed();
+        }
+
+        return (new StringType)->enum(array_column(Trashed::cases(), 'value'));
     }
 }

@@ -34,9 +34,10 @@ class ScrambleEngineTextTest extends ScrambleTestCase
             'type' => 'object',
             'description' => 'Words to search in the search index of the resource; the index decides which attributes they match',
             'properties' => [
-                'value' => ['type' => 'string'],
+                'value' => ['type' => ['string', 'null'], 'maxLength' => 255],
                 'mode' => ['type' => 'string', 'enum' => ['words']],
             ],
+            'additionalProperties' => false,
         ], $search['text']);
     }
 

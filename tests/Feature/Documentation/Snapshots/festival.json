@@ -104,171 +104,7 @@
                                 "type": "object",
                                 "properties": {
                                     "search": {
-                                        "type": "object",
-                                        "properties": {
-                                            "filters": {
-                                                "type": "array",
-                                                "items": {
-                                                    "$ref": "#/components/schemas/NoteFilter"
-                                                },
-                                                "maxItems": 100
-                                            },
-                                            "sorts": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "field": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "id",
-                                                                "body"
-                                                            ]
-                                                        },
-                                                        "direction": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "asc",
-                                                                "desc"
-                                                            ]
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "selects": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "field": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "id",
-                                                                "body"
-                                                            ]
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "includes": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "relation": {
-                                                            "type": "string",
-                                                            "description": "**Available relations:**\n\n- `notable` (MorphTo)",
-                                                            "enum": [
-                                                                "notable"
-                                                            ]
-                                                        },
-                                                        "alias": {
-                                                            "type": "string",
-                                                            "description": "Optional output key for this include, used verbatim. Allows including the same relation several times under different keys. Must match ^[A-Za-z_][A-Za-z0-9_]*$, be unique across the includes, and not collide with a field, a relation, the key of an aggregate or the gates key. Not allowed on a dotted relation path."
-                                                        },
-                                                        "limit": {
-                                                            "type": "integer"
-                                                        },
-                                                        "filters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "sorts": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "types": {
-                                                            "type": "object",
-                                                            "description": "MorphTo relations only: the search of each type, keyed by morph type, with selects, filters, scopes, includes, aggregates, instructions and gates"
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "scopes": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "name": {
-                                                            "type": "string"
-                                                        },
-                                                        "parameters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "aggregates": {
-                                                "type": "array",
-                                                "description": "Aggregate values over relations",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "relation": {
-                                                            "type": "string"
-                                                        },
-                                                        "type": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "count",
-                                                                "min",
-                                                                "max",
-                                                                "avg",
-                                                                "sum",
-                                                                "exists"
-                                                            ]
-                                                        },
-                                                        "field": {
-                                                            "type": "string"
-                                                        },
-                                                        "filters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "instructions": {
-                                                "type": "array",
-                                                "description": "Named query instructions defined on the resource",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "name": {
-                                                            "type": "string"
-                                                        },
-                                                        "fields": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "gates": {
-                                                "type": "array",
-                                                "description": "Gates to evaluate for the current user on each result",
-                                                "items": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "page": {
-                                                "type": "integer"
-                                            },
-                                            "limit": {
-                                                "type": "integer"
-                                            }
-                                        }
+                                        "$ref": "#/components/schemas/NoteSearch"
                                     }
                                 }
                             },
@@ -527,214 +363,7 @@
                                 "type": "object",
                                 "properties": {
                                     "search": {
-                                        "type": "object",
-                                        "properties": {
-                                            "filters": {
-                                                "type": "array",
-                                                "items": {
-                                                    "$ref": "#/components/schemas/ShowFilter"
-                                                },
-                                                "maxItems": 100
-                                            },
-                                            "sorts": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "field": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "id",
-                                                                "title",
-                                                                "summary",
-                                                                "price",
-                                                                "seats",
-                                                                "featured",
-                                                                "starts_on",
-                                                                "starts_at",
-                                                                "status",
-                                                                "level"
-                                                            ]
-                                                        },
-                                                        "direction": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "asc",
-                                                                "desc"
-                                                            ]
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "selects": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "field": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "id",
-                                                                "title",
-                                                                "summary",
-                                                                "price",
-                                                                "seats",
-                                                                "featured",
-                                                                "starts_on",
-                                                                "starts_at",
-                                                                "status",
-                                                                "level",
-                                                                "settings"
-                                                            ]
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "includes": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "relation": {
-                                                            "type": "string",
-                                                            "description": "**Available relations:**\n\n- `stage` (BelongsTo)\n- `artists` (BelongsToMany)\n- `comments` (HasMany)\n- `labels` (MorphToMany)",
-                                                            "enum": [
-                                                                "stage",
-                                                                "artists",
-                                                                "comments",
-                                                                "labels"
-                                                            ]
-                                                        },
-                                                        "alias": {
-                                                            "type": "string",
-                                                            "description": "Optional output key for this include, used verbatim. Allows including the same relation several times under different keys. Must match ^[A-Za-z_][A-Za-z0-9_]*$, be unique across the includes, and not collide with a field, a relation, the key of an aggregate or the gates key. Not allowed on a dotted relation path."
-                                                        },
-                                                        "limit": {
-                                                            "type": "integer"
-                                                        },
-                                                        "filters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "sorts": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "types": {
-                                                            "type": "object",
-                                                            "description": "MorphTo relations only: the search of each type, keyed by morph type, with selects, filters, scopes, includes, aggregates, instructions and gates"
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "scopes": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "name": {
-                                                            "type": "string"
-                                                        },
-                                                        "parameters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "text": {
-                                                "type": "object",
-                                                "description": "Text to search in the searchable fields",
-                                                "properties": {
-                                                    "value": {
-                                                        "type": "string"
-                                                    },
-                                                    "mode": {
-                                                        "type": "string",
-                                                        "enum": [
-                                                            "words",
-                                                            "phrase"
-                                                        ]
-                                                    }
-                                                }
-                                            },
-                                            "trashed": {
-                                                "type": "string",
-                                                "enum": [
-                                                    "with",
-                                                    "only"
-                                                ]
-                                            },
-                                            "aggregates": {
-                                                "type": "array",
-                                                "description": "Aggregate values over relations",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "relation": {
-                                                            "type": "string"
-                                                        },
-                                                        "type": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "count",
-                                                                "min",
-                                                                "max",
-                                                                "avg",
-                                                                "sum",
-                                                                "exists"
-                                                            ]
-                                                        },
-                                                        "field": {
-                                                            "type": "string"
-                                                        },
-                                                        "filters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "instructions": {
-                                                "type": "array",
-                                                "description": "Named query instructions defined on the resource",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "name": {
-                                                            "type": "string"
-                                                        },
-                                                        "fields": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "gates": {
-                                                "type": "array",
-                                                "description": "Gates to evaluate for the current user on each result",
-                                                "items": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "page": {
-                                                "type": "integer"
-                                            },
-                                            "limit": {
-                                                "type": "integer"
-                                            }
-                                        }
+                                        "$ref": "#/components/schemas/ShowSearch"
                                     }
                                 }
                             },
@@ -1645,172 +1274,7 @@
                                 "type": "object",
                                 "properties": {
                                     "search": {
-                                        "type": "object",
-                                        "properties": {
-                                            "filters": {
-                                                "type": "array",
-                                                "items": {
-                                                    "$ref": "#/components/schemas/StageFilter"
-                                                },
-                                                "maxItems": 100
-                                            },
-                                            "sorts": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "field": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "code",
-                                                                "name"
-                                                            ]
-                                                        },
-                                                        "direction": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "asc",
-                                                                "desc"
-                                                            ]
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "selects": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "field": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "code",
-                                                                "name"
-                                                            ]
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "includes": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "relation": {
-                                                            "type": "string",
-                                                            "description": "**Available relations:**\n\n- `shows` (HasMany)\n- `comments` (HasManyThrough)",
-                                                            "enum": [
-                                                                "shows",
-                                                                "comments"
-                                                            ]
-                                                        },
-                                                        "alias": {
-                                                            "type": "string",
-                                                            "description": "Optional output key for this include, used verbatim. Allows including the same relation several times under different keys. Must match ^[A-Za-z_][A-Za-z0-9_]*$, be unique across the includes, and not collide with a field, a relation, the key of an aggregate or the gates key. Not allowed on a dotted relation path."
-                                                        },
-                                                        "limit": {
-                                                            "type": "integer"
-                                                        },
-                                                        "filters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "sorts": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "types": {
-                                                            "type": "object",
-                                                            "description": "MorphTo relations only: the search of each type, keyed by morph type, with selects, filters, scopes, includes, aggregates, instructions and gates"
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "scopes": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "name": {
-                                                            "type": "string"
-                                                        },
-                                                        "parameters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "aggregates": {
-                                                "type": "array",
-                                                "description": "Aggregate values over relations",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "relation": {
-                                                            "type": "string"
-                                                        },
-                                                        "type": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "count",
-                                                                "min",
-                                                                "max",
-                                                                "avg",
-                                                                "sum",
-                                                                "exists"
-                                                            ]
-                                                        },
-                                                        "field": {
-                                                            "type": "string"
-                                                        },
-                                                        "filters": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "instructions": {
-                                                "type": "array",
-                                                "description": "Named query instructions defined on the resource",
-                                                "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "name": {
-                                                            "type": "string"
-                                                        },
-                                                        "fields": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "gates": {
-                                                "type": "array",
-                                                "description": "Gates to evaluate for the current user on each result",
-                                                "items": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "page": {
-                                                "type": "integer"
-                                            },
-                                            "limit": {
-                                                "type": "integer"
-                                            }
-                                        }
+                                        "$ref": "#/components/schemas/StageSearch"
                                     }
                                 }
                             },
@@ -2255,6 +1719,48 @@
                 ],
                 "title": "ArtistFilterName"
             },
+            "ArtistSelect": {
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "id",
+                            "name"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "ArtistSelect"
+            },
+            "ArtistSort": {
+                "type": "object",
+                "description": "The key of an aggregate of the same search is accepted as `field` too, and is not listed.",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "direction": {
+                        "type": "string",
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "ArtistSort"
+            },
             "Comment": {
                 "type": "object",
                 "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
@@ -2302,6 +1808,151 @@
                     }
                 },
                 "title": "Comment"
+            },
+            "CommentAggregate": {
+                "description": "A value computed over the related rows of each row.",
+                "discriminator": {
+                    "propertyName": "relation",
+                    "mapping": {
+                        "show": "#/components/schemas/CommentAggregateShow"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/CommentAggregateShow"
+                    }
+                ],
+                "title": "CommentAggregate"
+            },
+            "CommentAggregateShow": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "show"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "count",
+                                    "exists"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ShowFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "show"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "min",
+                                    "max"
+                                ]
+                            },
+                            "field": {
+                                "type": "string",
+                                "enum": [
+                                    "id",
+                                    "title",
+                                    "summary",
+                                    "price",
+                                    "seats",
+                                    "starts_on",
+                                    "starts_at",
+                                    "status",
+                                    "level"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ShowFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type",
+                            "field"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "show"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "avg",
+                                    "sum"
+                                ]
+                            },
+                            "field": {
+                                "type": "string",
+                                "enum": [
+                                    "price",
+                                    "seats"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ShowFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type",
+                            "field"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "CommentAggregateShow"
             },
             "CommentFieldFilter": {
                 "description": "A condition on a field. Without `operator`, the condition is `=`. A dotted path to a field of a related resource is accepted too and is not listed: a condition on related rows covers it.",
@@ -2661,6 +2312,99 @@
                 ],
                 "title": "CommentFilterRating"
             },
+            "CommentInclude": {
+                "description": "Related rows to add to each row. Includes nest at most 3 deep: each `includes` inside an include is one more level.",
+                "discriminator": {
+                    "propertyName": "relation",
+                    "mapping": {
+                        "show": "#/components/schemas/CommentIncludeShow"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/CommentIncludeShow"
+                    }
+                ],
+                "title": "CommentInclude"
+            },
+            "CommentIncludeShow": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "show"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                        "maxLength": 255
+                    },
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete",
+                                "feature"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowScope"
+                        },
+                        "maxItems": 10
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "aggregates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowAggregate"
+                        },
+                        "maxItems": 20
+                    },
+                    "includes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowInclude"
+                        },
+                        "maxItems": 20
+                    },
+                    "instructions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowInstruction"
+                        },
+                        "maxItems": 10
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "CommentIncludeShow"
+            },
             "CommentRelationFilter": {
                 "description": "The rows that have a related row matching `nested`, or that have none when `exists` is false.",
                 "discriminator": {
@@ -2706,6 +2450,59 @@
                 ],
                 "additionalProperties": false,
                 "title": "CommentRelationFilterShow"
+            },
+            "CommentSelect": {
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "id",
+                            "rating",
+                            "body"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "CommentSelect"
+            },
+            "CommentSort": {
+                "type": "object",
+                "description": "The key of an aggregate of the same search is accepted as `field` too, and is not listed.",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "id",
+                            "rating",
+                            "body",
+                            "show.id",
+                            "show.title",
+                            "show.summary",
+                            "show.price",
+                            "show.seats",
+                            "show.starts_on",
+                            "show.starts_at",
+                            "show.status",
+                            "show.level"
+                        ]
+                    },
+                    "direction": {
+                        "type": "string",
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "CommentSort"
             },
             "Label": {
                 "type": "object",
@@ -2978,6 +2775,48 @@
                 ],
                 "title": "LabelFilterName"
             },
+            "LabelSelect": {
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "id",
+                            "name"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "LabelSelect"
+            },
+            "LabelSort": {
+                "type": "object",
+                "description": "The key of an aggregate of the same search is accepted as `field` too, and is not listed.",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "direction": {
+                        "type": "string",
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "LabelSort"
+            },
             "Note": {
                 "type": "object",
                 "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
@@ -3123,10 +2962,6 @@
                                                 "null"
                                             ],
                                             "description": "The text set with confirm(), for clients to show before they run the action; null without one"
-                                        },
-                                        "authorized": {
-                                            "type": "boolean",
-                                            "description": "True when the user passes the abilities that the action route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -3136,8 +2971,7 @@
                                         "fields",
                                         "meta",
                                         "destructive",
-                                        "confirm",
-                                        "authorized"
+                                        "confirm"
                                     ]
                                 }
                             },
@@ -3177,10 +3011,6 @@
                                         },
                                         "meta": {
                                             "type": "object"
-                                        },
-                                        "authorized": {
-                                            "type": "boolean",
-                                            "description": "True when the user passes the abilities that the metric route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -3188,8 +3018,7 @@
                                         "uriKey",
                                         "type",
                                         "ranges",
-                                        "meta",
-                                        "authorized"
+                                        "meta"
                                     ]
                                 }
                             },
@@ -3854,28 +3683,6 @@
                                         "forceDelete"
                                     ]
                                 }
-                            },
-                            "authorizations": {
-                                "type": "object",
-                                "description": "The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
-                                "additionalProperties": {
-                                    "type": "object",
-                                    "properties": {
-                                        "allowed": {
-                                            "type": "boolean"
-                                        },
-                                        "message": {
-                                            "type": [
-                                                "string",
-                                                "null"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "allowed",
-                                        "message"
-                                    ]
-                                }
                             }
                         },
                         "required": [
@@ -3888,8 +3695,7 @@
                             "relations",
                             "rules",
                             "text",
-                            "gates",
-                            "authorizations"
+                            "gates"
                         ]
                     }
                 },
@@ -4138,6 +3944,161 @@
                 ],
                 "title": "NoteFilterId"
             },
+            "NoteInclude": {
+                "description": "Related rows to add to each row. Includes nest at most 3 deep: each `includes` inside an include is one more level.",
+                "discriminator": {
+                    "propertyName": "relation",
+                    "mapping": {
+                        "notable": "#/components/schemas/NoteIncludeNotable"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/NoteIncludeNotable"
+                    }
+                ],
+                "title": "NoteInclude"
+            },
+            "NoteIncludeNotable": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "notable"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                        "maxLength": 255
+                    },
+                    "types": {
+                        "type": "object",
+                        "description": "The search of each type of related row, keyed by morph type",
+                        "properties": {
+                            "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Show": {
+                                "type": "object",
+                                "properties": {
+                                    "filters": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/ShowFilter"
+                                        },
+                                        "maxItems": 100
+                                    },
+                                    "gates": {
+                                        "type": "array",
+                                        "description": "The abilities to answer for each row, under `gates` in the row",
+                                        "items": {
+                                            "type": "string",
+                                            "enum": [
+                                                "view",
+                                                "update",
+                                                "delete",
+                                                "restore",
+                                                "forceDelete",
+                                                "feature"
+                                            ]
+                                        },
+                                        "uniqueItems": true
+                                    },
+                                    "scopes": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/ShowScope"
+                                        },
+                                        "maxItems": 10
+                                    },
+                                    "selects": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/ShowSelect"
+                                        },
+                                        "maxItems": 100
+                                    },
+                                    "aggregates": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/ShowAggregate"
+                                        },
+                                        "maxItems": 20
+                                    },
+                                    "includes": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/ShowInclude"
+                                        },
+                                        "maxItems": 20
+                                    },
+                                    "instructions": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/ShowInstruction"
+                                        },
+                                        "maxItems": 10
+                                    }
+                                },
+                                "additionalProperties": false
+                            },
+                            "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Stage": {
+                                "type": "object",
+                                "properties": {
+                                    "filters": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/StageFilter"
+                                        },
+                                        "maxItems": 100
+                                    },
+                                    "gates": {
+                                        "type": "array",
+                                        "description": "The abilities to answer for each row, under `gates` in the row",
+                                        "items": {
+                                            "type": "string",
+                                            "enum": [
+                                                "view",
+                                                "update",
+                                                "delete",
+                                                "restore",
+                                                "forceDelete"
+                                            ]
+                                        },
+                                        "uniqueItems": true
+                                    },
+                                    "selects": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/StageSelect"
+                                        },
+                                        "maxItems": 100
+                                    },
+                                    "aggregates": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/StageAggregate"
+                                        },
+                                        "maxItems": 20
+                                    },
+                                    "includes": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/StageInclude"
+                                        },
+                                        "maxItems": 20
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "NoteIncludeNotable"
+            },
             "NotePaginated": {
                 "type": "object",
                 "description": "A page of rows",
@@ -4278,6 +4239,111 @@
                     "meta"
                 ],
                 "title": "NoteRows"
+            },
+            "NoteSearch": {
+                "type": "object",
+                "properties": {
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NoteFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row, and for `create` under `gates` in `meta`",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "create",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "sorts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NoteSort"
+                        },
+                        "maxItems": 20
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NoteSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "includes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NoteInclude"
+                        },
+                        "maxItems": 20
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ]
+                    },
+                    "page": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                },
+                "additionalProperties": false,
+                "title": "NoteSearch"
+            },
+            "NoteSelect": {
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "id",
+                            "body"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "NoteSelect"
+            },
+            "NoteSort": {
+                "type": "object",
+                "description": "The key of an aggregate of the same search is accepted as `field` too, and is not listed.",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "id",
+                            "body"
+                        ]
+                    },
+                    "direction": {
+                        "type": "string",
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "NoteSort"
             },
             "RestGateAnswer": {
                 "type": "object",
@@ -4468,6 +4534,399 @@
                 },
                 "title": "Show"
             },
+            "ShowAggregate": {
+                "description": "A value computed over the related rows of each row.",
+                "discriminator": {
+                    "propertyName": "relation",
+                    "mapping": {
+                        "stage": "#/components/schemas/ShowAggregateStage",
+                        "artists": "#/components/schemas/ShowAggregateArtists",
+                        "comments": "#/components/schemas/ShowAggregateComments",
+                        "labels": "#/components/schemas/ShowAggregateLabels"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ShowAggregateStage"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowAggregateArtists"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowAggregateComments"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowAggregateLabels"
+                    }
+                ],
+                "title": "ShowAggregate"
+            },
+            "ShowAggregateArtists": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "artists"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "count",
+                                    "exists"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ArtistFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "artists"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "min",
+                                    "max"
+                                ]
+                            },
+                            "field": {
+                                "type": "string",
+                                "enum": [
+                                    "id",
+                                    "name"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ArtistFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type",
+                            "field"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowAggregateArtists"
+            },
+            "ShowAggregateComments": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "comments"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "count",
+                                    "exists"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/CommentFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "comments"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "min",
+                                    "max"
+                                ]
+                            },
+                            "field": {
+                                "type": "string",
+                                "enum": [
+                                    "id",
+                                    "rating",
+                                    "body"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/CommentFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type",
+                            "field"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "comments"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "avg",
+                                    "sum"
+                                ]
+                            },
+                            "field": {
+                                "type": "string",
+                                "enum": [
+                                    "rating"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/CommentFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type",
+                            "field"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowAggregateComments"
+            },
+            "ShowAggregateLabels": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "labels"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "count",
+                                    "exists"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/LabelFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "labels"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "min",
+                                    "max"
+                                ]
+                            },
+                            "field": {
+                                "type": "string",
+                                "enum": [
+                                    "id",
+                                    "name"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/LabelFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type",
+                            "field"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowAggregateLabels"
+            },
+            "ShowAggregateStage": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "stage"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "count",
+                                    "exists"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/StageFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "stage"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "min",
+                                    "max"
+                                ]
+                            },
+                            "field": {
+                                "type": "string",
+                                "enum": [
+                                    "code",
+                                    "name"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/StageFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type",
+                            "field"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowAggregateStage"
+            },
             "ShowDetails": {
                 "type": "object",
                 "properties": {
@@ -4560,10 +5019,6 @@
                                                 "null"
                                             ],
                                             "description": "The text set with confirm(), for clients to show before they run the action; null without one"
-                                        },
-                                        "authorized": {
-                                            "type": "boolean",
-                                            "description": "True when the user passes the abilities that the action route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -4573,8 +5028,7 @@
                                         "fields",
                                         "meta",
                                         "destructive",
-                                        "confirm",
-                                        "authorized"
+                                        "confirm"
                                     ]
                                 }
                             },
@@ -4622,10 +5076,6 @@
                                         },
                                         "meta": {
                                             "type": "object"
-                                        },
-                                        "authorized": {
-                                            "type": "boolean",
-                                            "description": "True when the user passes the abilities that the metric route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -4633,8 +5083,7 @@
                                         "uriKey",
                                         "type",
                                         "ranges",
-                                        "meta",
-                                        "authorized"
+                                        "meta"
                                     ]
                                 }
                             },
@@ -5320,28 +5769,6 @@
                                         "feature"
                                     ]
                                 }
-                            },
-                            "authorizations": {
-                                "type": "object",
-                                "description": "The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
-                                "additionalProperties": {
-                                    "type": "object",
-                                    "properties": {
-                                        "allowed": {
-                                            "type": "boolean"
-                                        },
-                                        "message": {
-                                            "type": [
-                                                "string",
-                                                "null"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "allowed",
-                                        "message"
-                                    ]
-                                }
                             }
                         },
                         "required": [
@@ -5354,8 +5781,7 @@
                             "relations",
                             "rules",
                             "text",
-                            "gates",
-                            "authorizations"
+                            "gates"
                         ]
                     }
                 },
@@ -6715,6 +7141,373 @@
                 ],
                 "title": "ShowFilterTitle"
             },
+            "ShowInclude": {
+                "description": "Related rows to add to each row. Includes nest at most 3 deep: each `includes` inside an include is one more level.",
+                "discriminator": {
+                    "propertyName": "relation",
+                    "mapping": {
+                        "stage": "#/components/schemas/ShowIncludeStage",
+                        "artists": "#/components/schemas/ShowIncludeArtists",
+                        "comments": "#/components/schemas/ShowIncludeComments",
+                        "labels": "#/components/schemas/ShowIncludeLabels"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ShowIncludeStage"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowIncludeArtists"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowIncludeComments"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowIncludeLabels"
+                    }
+                ],
+                "title": "ShowInclude"
+            },
+            "ShowIncludeArtists": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "artists"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                        "maxLength": 255
+                    },
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ArtistFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "sorts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ArtistSort"
+                        },
+                        "maxItems": 20
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ArtistSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ]
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "ShowIncludeArtists"
+            },
+            "ShowIncludeComments": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "comments"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                        "maxLength": 255
+                    },
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "sorts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentSort"
+                        },
+                        "maxItems": 20
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "aggregates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentAggregate"
+                        },
+                        "maxItems": 20
+                    },
+                    "includes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentInclude"
+                        },
+                        "maxItems": 20
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ]
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "ShowIncludeComments"
+            },
+            "ShowIncludeLabels": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "labels"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                        "maxLength": 255
+                    },
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LabelFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "sorts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LabelSort"
+                        },
+                        "maxItems": 20
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LabelSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ]
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "ShowIncludeLabels"
+            },
+            "ShowIncludeStage": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "stage"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                        "maxLength": 255
+                    },
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "aggregates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageAggregate"
+                        },
+                        "maxItems": 20
+                    },
+                    "includes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageInclude"
+                        },
+                        "maxItems": 20
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "ShowIncludeStage"
+            },
+            "ShowInstruction": {
+                "discriminator": {
+                    "propertyName": "name",
+                    "mapping": {
+                        "only-featured": "#/components/schemas/ShowInstructionOnlyFeatured"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ShowInstructionOnlyFeatured"
+                    }
+                ],
+                "title": "ShowInstruction"
+            },
+            "ShowInstructionOnlyFeatured": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "const": "only-featured"
+                    },
+                    "fields": {
+                        "type": "array",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "const": "featured"
+                                        },
+                                        "value": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "name"
+                                    ],
+                                    "additionalProperties": false
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "const": "min_seats"
+                                        },
+                                        "value": {
+                                            "type": [
+                                                "integer",
+                                                "null"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "name"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        },
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "additionalProperties": false,
+                "title": "ShowInstructionOnlyFeatured"
+            },
             "ShowPaginated": {
                 "type": "object",
                 "description": "A page of rows",
@@ -6947,6 +7740,224 @@
                 ],
                 "title": "ShowRows"
             },
+            "ShowScope": {
+                "discriminator": {
+                    "propertyName": "name",
+                    "mapping": {
+                        "startingFrom": "#/components/schemas/ShowScopeStartingFrom"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ShowScopeStartingFrom"
+                    }
+                ],
+                "title": "ShowScope"
+            },
+            "ShowScopeStartingFrom": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "const": "startingFrom"
+                    },
+                    "parameters": {
+                        "type": "array",
+                        "description": "In this order: from, min_seats",
+                        "prefixItems": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
+                        "minItems": 1,
+                        "maxItems": 2
+                    }
+                },
+                "required": [
+                    "name",
+                    "parameters"
+                ],
+                "additionalProperties": false,
+                "title": "ShowScopeStartingFrom"
+            },
+            "ShowSearch": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "object",
+                        "description": "Text to search in the searchable fields",
+                        "properties": {
+                            "value": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            },
+                            "mode": {
+                                "type": "string",
+                                "enum": [
+                                    "words",
+                                    "phrase"
+                                ]
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "trashed": {
+                        "type": "string",
+                        "enum": [
+                            "with",
+                            "only"
+                        ]
+                    },
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row, and for `create` under `gates` in `meta`",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "create",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete",
+                                "feature"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowScope"
+                        },
+                        "maxItems": 10
+                    },
+                    "sorts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowSort"
+                        },
+                        "maxItems": 20
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "aggregates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowAggregate"
+                        },
+                        "maxItems": 20
+                    },
+                    "includes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowInclude"
+                        },
+                        "maxItems": 20
+                    },
+                    "instructions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowInstruction"
+                        },
+                        "maxItems": 10
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ]
+                    },
+                    "page": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                },
+                "additionalProperties": false,
+                "title": "ShowSearch"
+            },
+            "ShowSelect": {
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "id",
+                            "title",
+                            "summary",
+                            "price",
+                            "seats",
+                            "featured",
+                            "starts_on",
+                            "starts_at",
+                            "status",
+                            "level",
+                            "settings"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "ShowSelect"
+            },
+            "ShowSort": {
+                "type": "object",
+                "description": "The key of an aggregate of the same search is accepted as `field` too, and is not listed.",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "id",
+                            "title",
+                            "summary",
+                            "price",
+                            "seats",
+                            "featured",
+                            "starts_on",
+                            "starts_at",
+                            "status",
+                            "level",
+                            "stage.code",
+                            "stage.name"
+                        ]
+                    },
+                    "direction": {
+                        "type": "string",
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "ShowSort"
+            },
             "ShowWithType": {
                 "allOf": [
                     {
@@ -7017,6 +8028,278 @@
                     }
                 },
                 "title": "Stage"
+            },
+            "StageAggregate": {
+                "description": "A value computed over the related rows of each row.",
+                "discriminator": {
+                    "propertyName": "relation",
+                    "mapping": {
+                        "shows": "#/components/schemas/StageAggregateShows",
+                        "comments": "#/components/schemas/StageAggregateComments"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/StageAggregateShows"
+                    },
+                    {
+                        "$ref": "#/components/schemas/StageAggregateComments"
+                    }
+                ],
+                "title": "StageAggregate"
+            },
+            "StageAggregateComments": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "comments"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "count",
+                                    "exists"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/CommentFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "comments"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "min",
+                                    "max"
+                                ]
+                            },
+                            "field": {
+                                "type": "string",
+                                "enum": [
+                                    "id",
+                                    "rating",
+                                    "body"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/CommentFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type",
+                            "field"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "comments"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "avg",
+                                    "sum"
+                                ]
+                            },
+                            "field": {
+                                "type": "string",
+                                "enum": [
+                                    "rating"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/CommentFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type",
+                            "field"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "StageAggregateComments"
+            },
+            "StageAggregateShows": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "shows"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "count",
+                                    "exists"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ShowFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "shows"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "min",
+                                    "max"
+                                ]
+                            },
+                            "field": {
+                                "type": "string",
+                                "enum": [
+                                    "id",
+                                    "title",
+                                    "summary",
+                                    "price",
+                                    "seats",
+                                    "starts_on",
+                                    "starts_at",
+                                    "status",
+                                    "level"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ShowFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type",
+                            "field"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "relation": {
+                                "type": "string",
+                                "const": "shows"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "avg",
+                                    "sum"
+                                ]
+                            },
+                            "field": {
+                                "type": "string",
+                                "enum": [
+                                    "price",
+                                    "seats"
+                                ]
+                            },
+                            "alias": {
+                                "type": "string",
+                                "description": "The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                "maxLength": 255
+                            },
+                            "filters": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ShowFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "required": [
+                            "relation",
+                            "type",
+                            "field"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "StageAggregateShows"
             },
             "StageDetails": {
                 "type": "object",
@@ -7104,10 +8387,6 @@
                                                 "null"
                                             ],
                                             "description": "The text set with confirm(), for clients to show before they run the action; null without one"
-                                        },
-                                        "authorized": {
-                                            "type": "boolean",
-                                            "description": "True when the user passes the abilities that the action route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -7117,8 +8396,7 @@
                                         "fields",
                                         "meta",
                                         "destructive",
-                                        "confirm",
-                                        "authorized"
+                                        "confirm"
                                     ]
                                 }
                             },
@@ -7158,10 +8436,6 @@
                                         },
                                         "meta": {
                                             "type": "object"
-                                        },
-                                        "authorized": {
-                                            "type": "boolean",
-                                            "description": "True when the user passes the abilities that the metric route checks before it reads the request"
                                         }
                                     },
                                     "required": [
@@ -7169,8 +8443,7 @@
                                         "uriKey",
                                         "type",
                                         "ranges",
-                                        "meta",
-                                        "authorized"
+                                        "meta"
                                     ]
                                 }
                             },
@@ -7836,28 +9109,6 @@
                                         "forceDelete"
                                     ]
                                 }
-                            },
-                            "authorizations": {
-                                "type": "object",
-                                "description": "The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
-                                "additionalProperties": {
-                                    "type": "object",
-                                    "properties": {
-                                        "allowed": {
-                                            "type": "boolean"
-                                        },
-                                        "message": {
-                                            "type": [
-                                                "string",
-                                                "null"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "allowed",
-                                        "message"
-                                    ]
-                                }
                             }
                         },
                         "required": [
@@ -7870,8 +9121,7 @@
                             "relations",
                             "rules",
                             "text",
-                            "gates",
-                            "authorizations"
+                            "gates"
                         ]
                     }
                 },
@@ -8126,6 +9376,196 @@
                 ],
                 "title": "StageFilterName"
             },
+            "StageInclude": {
+                "description": "Related rows to add to each row. Includes nest at most 3 deep: each `includes` inside an include is one more level.",
+                "discriminator": {
+                    "propertyName": "relation",
+                    "mapping": {
+                        "shows": "#/components/schemas/StageIncludeShows",
+                        "comments": "#/components/schemas/StageIncludeComments"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/StageIncludeShows"
+                    },
+                    {
+                        "$ref": "#/components/schemas/StageIncludeComments"
+                    }
+                ],
+                "title": "StageInclude"
+            },
+            "StageIncludeComments": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "comments"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                        "maxLength": 255
+                    },
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "sorts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentSort"
+                        },
+                        "maxItems": 20
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "aggregates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentAggregate"
+                        },
+                        "maxItems": 20
+                    },
+                    "includes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentInclude"
+                        },
+                        "maxItems": 20
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ]
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "StageIncludeComments"
+            },
+            "StageIncludeShows": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "shows"
+                    },
+                    "alias": {
+                        "type": "string",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                        "maxLength": 255
+                    },
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete",
+                                "feature"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowScope"
+                        },
+                        "maxItems": 10
+                    },
+                    "sorts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowSort"
+                        },
+                        "maxItems": 20
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "aggregates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowAggregate"
+                        },
+                        "maxItems": 20
+                    },
+                    "includes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowInclude"
+                        },
+                        "maxItems": 20
+                    },
+                    "instructions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowInstruction"
+                        },
+                        "maxItems": 10
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ]
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "StageIncludeShows"
+            },
             "StagePaginated": {
                 "type": "object",
                 "description": "A page of rows",
@@ -8287,6 +9727,118 @@
                     "meta"
                 ],
                 "title": "StageRows"
+            },
+            "StageSearch": {
+                "type": "object",
+                "properties": {
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row, and for `create` under `gates` in `meta`",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "create",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "sorts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageSort"
+                        },
+                        "maxItems": 20
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "aggregates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageAggregate"
+                        },
+                        "maxItems": 20
+                    },
+                    "includes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageInclude"
+                        },
+                        "maxItems": 20
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ]
+                    },
+                    "page": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                },
+                "additionalProperties": false,
+                "title": "StageSearch"
+            },
+            "StageSelect": {
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "code",
+                            "name"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "StageSelect"
+            },
+            "StageSort": {
+                "type": "object",
+                "description": "The key of an aggregate of the same search is accepted as `field` too, and is not listed.",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "code",
+                            "name"
+                        ]
+                    },
+                    "direction": {
+                        "type": "string",
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ]
+                    }
+                },
+                "required": [
+                    "field"
+                ],
+                "additionalProperties": false,
+                "title": "StageSort"
             },
             "StageWithType": {
                 "allOf": [

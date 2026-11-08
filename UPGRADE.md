@@ -1019,7 +1019,7 @@ Query builder:
 
 Scramble:
 
-- The search body documents `text` only on the resources with a text search: `value` and the `mode`s of the strategy. The `fields` key of `text`, which the package never read, is removed.
+- The search body documents `text` only on the resources with a text search: `value`, a string or `null` of at most the `max_length` of the strategy, and the `mode`s of the strategy. The `fields` key of `text`, which the package never read, is removed.
 - `trashed` is documented on the resources whose model uses `SoftDeletes`, and the sort `field` lists `@relevance` when the strategy orders by relevance.
 
 ### Search engines
@@ -1676,7 +1676,7 @@ Include aliases:
 
 Scramble:
 
-- The search body documents the sortable fields under `sorts` and the selectable fields under `selects`, with the values of `SortDirection` and `AggregateFunction`.
+- The search body documents the sortable fields and the fields of the to-one relations (`author.last_name`) under `sorts`, the selectable fields under `selects`, the values of `SortDirection`, and under `aggregates` the functions of `AggregateFunction` with the fields that each one takes.
 
 ### Filters
 
@@ -2103,6 +2103,11 @@ Search requests:
 - The `filters` of a search are `{Resource}Filter`: `oneOf` a condition on a field (`{Resource}FieldFilter`), a condition on related rows (`{Resource}RelationFilter`) and a group of filters (`{Resource}FilterGroup`, with `nested` and `type`). The description of the group gives the nesting depth of `limits.depths.filters`.
 - `{Resource}FieldFilter` has one schema per filterable field, `{Resource}Filter{Field}`, with a `discriminator` on `field`. It lists the operators of the field, grouped by the value that they take: the type of the field for `=`, `!=`, `>`, `>=`, `<` and `<=`; a string of at most `limits.lengths.patterns` characters for `like`, `not like`, `ilike` and `not ilike`; a list of 1 to `limits.sizes.values` values for `in` and `not in`; two values for `between` and `not between`; no `value` for `is null` and `is not null`. Without `operator`, the condition is `=`. The filterable pivot fields are listed as `{relation}.pivot.{field}`, such as `tags.pivot.weight`. The other dotted paths, such as `author.last_name`, are accepted and are not listed: filter the related rows instead.
 - `{Resource}RelationFilter` has one schema per relation, `{Resource}RelationFilter{Relation}`, with a `discriminator` on `relation`: `exists`, `type`, and `nested`, the filters of the related resource. A `MorphTo` relation adds `types`, the filters of each morph type, and has no `nested` when it has several types.
+- The body of a search is `{Resource}Search`: `text` and `trashed` where the resource supports them, `filters`, `gates`, `scopes`, `sorts`, `selects`, `aggregates`, `includes`, `instructions`, `limit` (the page sizes of the resource) and `page` (from 1). A list holds at most its `limits.sizes` entries, and a key that the resource cannot use is left out. Each object of the search lists its keys and refuses the others (`"additionalProperties": false`), as the endpoint does.
+- `{Resource}Sort` lists the sortable fields and the fields of the to-one relations (`author.last_name`). The key of an aggregate of the same search is accepted too and is not listed. `{Resource}Select` lists the selectable fields. `gates` lists the abilities of the resource; an include does not list `create`.
+- `{Resource}Include` has one schema per relation, `{Resource}Include{Relation}`, with a `discriminator` on `relation`: `relation`, `alias`, and the search of the related resource. An include of a `BelongsTo` relation has no `limit` and no `sorts`, and a `MorphTo` include has `types`, the search of each morph type. The description gives the nesting depth of `limits.depths.includes`. Dotted relation paths are accepted and are not listed: use the `includes` of an include.
+- `{Resource}Aggregate` has one schema per relation but `MorphTo`, `{Resource}Aggregate{Relation}`: `count` and `exists` take no `field`, `min` and `max` take the fields that they can order, `avg` and `sum` the `Number` and `Integer` fields.
+- `{Resource}Scope` and `{Resource}Instruction` have one schema per scope and per instruction, with a `discriminator` on `name`. A scope lists its `parameters` in order, with their type; the parameters without a default are required. An instruction lists its `fields` as `{"name", "value"}` entries, typed by each field.
 - Each search operation has a request example that filters on one field: the first filterable field that declares `examples()`, else the first filterable field, with its first example or a value of its type (`1`, `a`, `true`, `2026-01-01`, the first value of an enum). The example leaves out `operator`, as `=` is the default.
 
 Error responses:
