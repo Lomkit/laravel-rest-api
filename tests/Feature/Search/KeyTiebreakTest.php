@@ -137,8 +137,8 @@ class KeyTiebreakTest extends PackageTestCase
     /** @return array<string, array{array<string, mixed>, string, list<int>}> */
     public static function includes(): array
     {
-        $selected = 'select * from (select tickets.id, tickets.status, tickets.team_id, row_number() over (partition by tickets.team_id order by tickets.status asc, tickets.id desc) as laravel_row from tickets where tickets.team_id in (1, 2)) as laravel_table where laravel_row <= 2 order by laravel_row';
-        $every = 'select * from (select tickets.id, tickets.team_id, tickets.title, tickets.status, row_number() over (partition by tickets.team_id order by tickets.status asc, tickets.id desc) as laravel_row from tickets where tickets.team_id in (1, 2)) as laravel_table where laravel_row <= 2 order by laravel_row';
+        $selected = 'select * from (select tickets.id, tickets.status, tickets.team_id, row_number() over (partition by tickets.team_id order by tickets.status asc, tickets.id desc) as laravel_row from tickets where tickets.team_id in (1, 2)) as laravel_table where laravel_row <= 3 order by laravel_row';
+        $every = 'select * from (select tickets.id, tickets.team_id, tickets.title, tickets.status, row_number() over (partition by tickets.team_id order by tickets.status asc, tickets.id desc) as laravel_row from tickets where tickets.team_id in (1, 2)) as laravel_table where laravel_row <= 3 order by laravel_row';
 
         return [
             'an include with a sort' => [['relation' => 'tickets', 'sorts' => [['field' => 'status']], 'selects' => [['field' => 'id']]], $selected, [7, 1, 10, 4]],

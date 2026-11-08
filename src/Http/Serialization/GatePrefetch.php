@@ -3,13 +3,9 @@
 namespace Lomkit\Rest\Http\Serialization;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 use Lomkit\Rest\Authorization\Check;
-use Lomkit\Rest\Query\Clauses\Clause;
 use Lomkit\Rest\Search\GateAbility;
-use Lomkit\Rest\Search\Plan\AliasedIncludeClause;
-use Lomkit\Rest\Search\Plan\IncludeClause;
-use Lomkit\Rest\Search\Plan\MorphToIncludeClause;
+use Lomkit\Rest\Search\Plan\IncludeLevels;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 
 final readonly class GatePrefetch
@@ -43,7 +39,7 @@ final readonly class GatePrefetch
         }
 
         foreach ($plan->includes as $include) {
-            foreach (self::levels($include, $models) as [$level, $rows]) {
+            foreach (IncludeLevels::of($include, $models) as [$level, $rows]) {
                 $checks = [...$checks, ...self::rows($level, $rows, GateReach::everyRow())];
             }
         }
@@ -66,61 +62,5 @@ final readonly class GatePrefetch
             $plan->gates ?? [],
             static fn (GateAbility $gate): bool => $gate->isClassLevel() === $classLevel && $abilities->seconds($gate->name()) !== null,
         ));
-    }
-
-    /**
-     * @param  list<Model>  $models
-     * @return list<array{QueryPlan, list<Model>}>
-     */
-    private static function levels(Clause $include, array $models): array
-    {
-        return match (true) {
-            $include instanceof AliasedIncludeClause => [[$include->plan, self::related($models, $include->alias)]],
-            $include instanceof IncludeClause => [[$include->plan, self::related($models, $include->relation)]],
-            $include instanceof MorphToIncludeClause => self::branches($include, self::related($models, $include->name())),
-            default => [],
-        };
-    }
-
-    /**
-     * @param  list<Model>  $rows
-     * @return list<array{QueryPlan, list<Model>}>
-     */
-    private static function branches(MorphToIncludeClause $include, array $rows): array
-    {
-        $types = [];
-
-        foreach ($rows as $row) {
-            $types[$row->getMorphClass()][] = $row;
-        }
-
-        $levels = [];
-
-        foreach (array_intersect_key($types, $include->branches) as $type => $typed) {
-            $levels[] = [$include->branches[$type], $typed];
-        }
-
-        return $levels;
-    }
-
-    /**
-     * @param  list<Model>  $models
-     * @return list<Model>
-     */
-    private static function related(array $models, string $name): array
-    {
-        $rows = [];
-
-        foreach ($models as $model) {
-            $value = $model->relationLoaded($name) ? $model->getRelation($name) : null;
-
-            if ($value instanceof Model) {
-                $rows[] = $value;
-            } elseif ($value instanceof Collection) {
-                $rows = [...$rows, ...array_values($value->ensure(Model::class)->all())];
-            }
-        }
-
-        return $rows;
     }
 }

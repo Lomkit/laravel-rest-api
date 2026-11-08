@@ -43,7 +43,7 @@ class ResponseBlockLimitTest extends PackageTestCase
         ]]);
 
         $marks = array_map(fn (int $number): array => ['text' => 'Shelf mark '.$number], range(11, 2));
-        $response->assertOk()->assertJsonPath('records', [['title' => 'Persuasion', 'labels' => $marks]]);
+        $response->assertOk()->assertJsonPath('records', [['title' => 'Persuasion', 'labels' => $marks, '@more' => ['labels']]]);
     }
 
     #[Test]

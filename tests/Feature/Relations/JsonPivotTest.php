@@ -92,6 +92,7 @@ class JsonPivotTest extends PackageTestCase
             'specs' => null,
             'calibration' => null,
             'sensors' => [['id' => $this->probe->id, 'name' => 'Probe', 'pivot' => ['wiring' => ['pins' => [3]]]]],
+            '@more' => [],
         ]]);
     }
 

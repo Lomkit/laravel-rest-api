@@ -10,6 +10,7 @@ final readonly class LimitPolicy
     private function __construct(
         private ?int $limit,
         private ?int $page,
+        private bool $perParent = false,
     ) {}
 
     public static function paged(int $perPage, int $page): self
@@ -20,6 +21,11 @@ final readonly class LimitPolicy
     public static function explicit(?int $limit): self
     {
         return new self($limit, null);
+    }
+
+    public static function perParent(int $limit): self
+    {
+        return new self($limit, null, true);
     }
 
     public static function none(): self
@@ -33,7 +39,12 @@ final readonly class LimitPolicy
             return;
         }
 
-        $query->limit($this->limit);
+        $query->limit($this->perParent ? $this->limit + 1 : $this->limit);
+    }
+
+    public function parentLimit(): ?int
+    {
+        return $this->perParent ? $this->limit : null;
     }
 
     public function perPage(): int

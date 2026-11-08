@@ -16,6 +16,11 @@ final class InvalidResourceException extends LogicException
         return new self("The resource [{$resource}] declares the field [{$field}], which is the key of the gates of its rows. Rename the field, or set rest.gates.key to another name.");
     }
 
+    public static function moreKeyField(string $resource, string $field): self
+    {
+        return new self("The resource [{$resource}] declares the field [{$field}], which is the key that lists the includes of a row with more rows. Rename the field, or set rest.search.more_key to another name.");
+    }
+
     /** @param list<int> $allowed */
     public static function limitNotAllowed(string $resource, string $property, int $limit, array $allowed): self
     {

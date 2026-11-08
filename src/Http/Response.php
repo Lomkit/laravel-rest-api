@@ -14,6 +14,7 @@ use Lomkit\Rest\Http\Serialization\PageEnvelope;
 use Lomkit\Rest\Http\Serialization\PlainEnvelope;
 use Lomkit\Rest\Http\Serialization\RowSerializer;
 use Lomkit\Rest\Search\Plan\Columns\StrictColumns;
+use Lomkit\Rest\Search\Plan\IncludeOverflow;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 
 class Response implements Responsable
@@ -23,9 +24,18 @@ class Response implements Responsable
     /** @var LengthAwarePaginator<int, Model>|Collection<int, Model>|Model */
     private LengthAwarePaginator|Collection|Model $responsable;
 
+    private ?IncludeOverflow $overflow = null;
+
     public function plan(QueryPlan $plan): static
     {
         $this->plan = $plan;
+
+        return $this;
+    }
+
+    public function overflow(IncludeOverflow $overflow): static
+    {
+        $this->overflow = $overflow;
 
         return $this;
     }
@@ -43,7 +53,7 @@ class Response implements Responsable
     {
         $models = $this->models();
         $reach = GateReach::of($this->plan, $models);
-        $rows = RowSerializer::of($this->plan, reach: $reach);
+        $rows = RowSerializer::of($this->plan, reach: $reach, overflow: $this->overflow);
         $envelope = $this->responsable instanceof LengthAwarePaginator
             ? new PageEnvelope($this->responsable)
             : new PlainEnvelope($this->responsable);
@@ -63,7 +73,7 @@ class Response implements Responsable
     public function rows(array $models): array
     {
         $reach = GateReach::of($this->plan, array_values($models));
-        $rows = RowSerializer::of($this->plan, reach: $reach);
+        $rows = RowSerializer::of($this->plan, reach: $reach, overflow: $this->overflow);
 
         return $this->authorizer()->batch(
             GatePrefetch::rows($this->plan, array_values($models), $reach),

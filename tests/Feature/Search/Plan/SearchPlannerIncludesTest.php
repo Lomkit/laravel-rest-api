@@ -40,7 +40,7 @@ class SearchPlannerIncludesTest extends PackageTestCase
 
         $this->assertSame([[IncludeClause::class, 'posts', [PerimeterClause::class, DefaultOrderClause::class, KeyOrderClause::class], [$author]]], self::tree($dotted));
         $this->assertInstanceOf(IncludeClause::class, $dotted[0]);
-        $this->assertEquals(LimitPolicy::explicit(10), $dotted[0]->plan->limit);
+        $this->assertEquals(LimitPolicy::perParent(10), $dotted[0]->plan->limit);
         $this->assertSame($merged, self::tree($this->includes([$published, ['relation' => 'posts.author']])));
         $this->assertSame($merged, self::tree($this->includes([['relation' => 'posts.author'], $published])));
         $this->assertSame(

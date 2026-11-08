@@ -161,9 +161,11 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                                     ->names()
                             );
                         })->toArray(),
+                    '@more' => [],
                 ],
                 [
                     'morph_many_relation' => [],
+                    '@more' => [],
                 ],
             ]
         );
@@ -228,9 +230,11 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                                 });
                         })
                         ->toArray(),
+                    '@more' => [],
                 ],
                 [
                     'morph_to_many_relation' => [],
+                    '@more' => [],
                 ],
             ]
         );
@@ -295,9 +299,11 @@ class SearchIncludingMorphRelationshipsOperationsTest extends TestCase
                                 });
                         })
                         ->toArray(),
+                    '@more' => [],
                 ],
                 [
                     'morphed_by_many_relation' => [],
+                    '@more' => [],
                 ],
             ]
         );

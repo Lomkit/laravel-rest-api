@@ -10,6 +10,7 @@ use LogicException;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\Plan\AliasedIncludeClause;
 use Lomkit\Rest\Search\Plan\IncludeClause;
+use Lomkit\Rest\Search\Plan\IncludeOverflow;
 use Lomkit\Rest\Search\Plan\MorphToIncludeClause;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 
@@ -19,24 +20,28 @@ final readonly class RelationRenderer
     private function __construct(
         private PivotRenderer $pivot,
         private array $planned,
+        private ?string $moreKey,
+        private IncludeOverflow $overflow,
     ) {}
 
-    public static function of(QueryPlan $plan, ?Relation $through): self
+    public static function of(QueryPlan $plan, ?Relation $through, IncludeOverflow $overflow): self
     {
         $planned = [];
 
         foreach ($plan->includes as $include) {
             [$name, $key, $rows] = match (true) {
-                $include instanceof AliasedIncludeClause => [$include->alias, $include->alias, RowSerializer::of($include->plan, $plan->resource->definition()->relation($include->relation))],
-                $include instanceof IncludeClause => [$include->relation, Str::snake($include->relation), RowSerializer::of($include->plan, $plan->resource->definition()->relation($include->relation))],
-                $include instanceof MorphToIncludeClause => [$include->name(), $include->alias ?? Str::snake($include->relation), MorphToSerializer::of($include, $plan->resource)],
+                $include instanceof AliasedIncludeClause => [$include->alias, $include->alias, RowSerializer::of($include->plan, $plan->resource->definition()->relation($include->relation), overflow: $overflow)],
+                $include instanceof IncludeClause => [$include->relation, Str::snake($include->relation), RowSerializer::of($include->plan, $plan->resource->definition()->relation($include->relation), overflow: $overflow)],
+                $include instanceof MorphToIncludeClause => [$include->name(), $include->alias ?? Str::snake($include->relation), MorphToSerializer::of($include, $plan->resource, $overflow)],
                 default => throw new LogicException($include::class.' is not an include of a plan.'),
             };
 
             $planned[$name] = [$key, $rows];
         }
 
-        return new self(PivotRenderer::of($through), $planned);
+        $limited = array_filter($plan->includes, IncludeOverflow::limits(...)) !== [];
+
+        return new self(PivotRenderer::of($through), $planned, $limited ? $plan->resource->context()->config()->moreKey : null, $overflow);
     }
 
     /** @return array<string, mixed> */
@@ -52,6 +57,12 @@ final readonly class RelationRenderer
                 $rendered[Str::snake($name)] = $this->pivot->render($value);
             }
         }
+
+        if ($this->moreKey === null) {
+            return $rendered;
+        }
+
+        $rendered[$this->moreKey] = array_map(fn (string $name): string => $this->planned[$name][0], $this->overflow->of($model));
 
         return $rendered;
     }

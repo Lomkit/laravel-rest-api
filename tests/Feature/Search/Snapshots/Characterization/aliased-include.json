@@ -13,7 +13,8 @@
                 "last_name": null,
                 "settings": null,
                 "posts": [],
-                "drafted": []
+                "drafted": [],
+                "@more": []
             },
             {
                 "id": 2,
@@ -34,7 +35,8 @@
                         "metadata": null
                     }
                 ],
-                "drafted": []
+                "drafted": [],
+                "@more": []
             },
             {
                 "id": 1,
@@ -80,7 +82,8 @@
                         "published_at": null,
                         "metadata": null
                     }
-                ]
+                ],
+                "@more": []
             }
         ],
         "from": null,
@@ -99,7 +102,8 @@
                 "last_name": "Turing",
                 "settings": null,
                 "posts": [],
-                "drafted": []
+                "drafted": [],
+                "@more": []
             },
             {
                 "id": 2,
@@ -120,7 +124,8 @@
                         "metadata": null
                     }
                 ],
-                "drafted": []
+                "drafted": [],
+                "@more": []
             },
             {
                 "id": 1,
@@ -166,7 +171,8 @@
                         "published_at": null,
                         "metadata": null
                     }
-                ]
+                ],
+                "@more": []
             }
         ],
         "from": 1,
@@ -178,7 +184,7 @@
     },
     "raw_queries": [
         "select \"authors\".\"id\", \"authors\".\"first_name\", \"authors\".\"last_name\", \"authors\".\"settings\" from \"authors\" where \"authors\".\"deleted_at\" is null order by \"authors\".\"id\" desc limit 50 offset 0",
-        "select * from (select \"posts\".\"id\", \"posts\".\"title\", \"posts\".\"summary\", \"posts\".\"status\", \"posts\".\"featured\", \"posts\".\"views\", \"posts\".\"rating\", \"posts\".\"published_on\", \"posts\".\"published_at\", \"posts\".\"metadata\", \"posts\".\"author_id\", row_number() over (partition by \"posts\".\"author_id\" order by \"posts\".\"id\" desc) as \"laravel_row\" from \"posts\" where \"posts\".\"author_id\" in (1, 2, 3)) as \"laravel_table\" where \"laravel_row\" <= 10 order by \"laravel_row\"",
-        "select * from (select \"posts\".\"id\", \"posts\".\"title\", \"posts\".\"summary\", \"posts\".\"status\", \"posts\".\"featured\", \"posts\".\"views\", \"posts\".\"rating\", \"posts\".\"published_on\", \"posts\".\"published_at\", \"posts\".\"metadata\", \"posts\".\"author_id\", row_number() over (partition by \"posts\".\"author_id\" order by \"posts\".\"id\" desc) as \"laravel_row\" from \"posts\" where \"posts\".\"author_id\" in (1, 2, 3) and (\"posts\".\"status\" = 'draft')) as \"laravel_table\" where \"laravel_row\" <= 10 order by \"laravel_row\""
+        "select * from (select \"posts\".\"id\", \"posts\".\"title\", \"posts\".\"summary\", \"posts\".\"status\", \"posts\".\"featured\", \"posts\".\"views\", \"posts\".\"rating\", \"posts\".\"published_on\", \"posts\".\"published_at\", \"posts\".\"metadata\", \"posts\".\"author_id\", row_number() over (partition by \"posts\".\"author_id\" order by \"posts\".\"id\" desc) as \"laravel_row\" from \"posts\" where \"posts\".\"author_id\" in (1, 2, 3)) as \"laravel_table\" where \"laravel_row\" <= 11 order by \"laravel_row\"",
+        "select * from (select \"posts\".\"id\", \"posts\".\"title\", \"posts\".\"summary\", \"posts\".\"status\", \"posts\".\"featured\", \"posts\".\"views\", \"posts\".\"rating\", \"posts\".\"published_on\", \"posts\".\"published_at\", \"posts\".\"metadata\", \"posts\".\"author_id\", row_number() over (partition by \"posts\".\"author_id\" order by \"posts\".\"id\" desc) as \"laravel_row\" from \"posts\" where \"posts\".\"author_id\" in (1, 2, 3) and (\"posts\".\"status\" = 'draft')) as \"laravel_table\" where \"laravel_row\" <= 11 order by \"laravel_row\""
     ]
 }

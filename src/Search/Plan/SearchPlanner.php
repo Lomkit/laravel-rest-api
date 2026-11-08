@@ -26,11 +26,12 @@ final readonly class SearchPlanner
     public function __construct(
         private RowSource $rows,
         private ColumnSelection $columns,
+        private bool $rendered = false,
     ) {}
 
     public static function paged(Resource $resource, SearchNode $search, ResolvedText $text): QueryPlan
     {
-        return (new self(new SqlRows($text), ColumnSelection::of($resource)))->plan($resource, $search, LimitPolicy::paged($search->limit ?? self::limits($resource)->defaultLimit, $search->page ?? 1));
+        return (new self(new SqlRows($text), ColumnSelection::of($resource), true))->plan($resource, $search, LimitPolicy::paged($search->limit ?? self::limits($resource)->defaultLimit, $search->page ?? 1));
     }
 
     public static function all(Resource $resource, SearchNode $search, ResolvedText $text): QueryPlan
@@ -148,7 +149,7 @@ final readonly class SearchPlanner
 
             return $relation instanceof OwnerRelation
                 ? new QueryPlan($resource, [new PerimeterClause($resource)], $this->includes($resource, $children), [], LimitPolicy::none(), columns: $columns)
-                : new QueryPlan($resource, [new PerimeterClause($resource), new DefaultOrderClause($resource), new KeyOrderClause], $this->includes($resource, $children), [], self::includeLimit($resource, null), columns: $columns);
+                : new QueryPlan($resource, [new PerimeterClause($resource), new DefaultOrderClause($resource), new KeyOrderClause], $this->includes($resource, $children), [], $this->includeLimit($resource, null, $relation), columns: $columns);
         }
 
         return $this->explicit($parent, $level, $children);
@@ -159,7 +160,7 @@ final readonly class SearchPlanner
     {
         $owner = $include->relations[0] instanceof OwnerRelation;
 
-        return (new self(new SqlRows(null, ! $owner), $this->columns))->level($include->resource, $include->search, [...$children, ...$include->search->includes], $owner ? LimitPolicy::none() : self::includeLimit($include->resource, $include->search->limit), RelationKeys::between($parent::newModel(), $include->relations[0]->relation)->related());
+        return (new self(new SqlRows(null, ! $owner), $this->columns, $this->rendered))->level($include->resource, $include->search, [...$children, ...$include->search->includes], $owner ? LimitPolicy::none() : $this->includeLimit($include->resource, $include->search->limit, $include->relations[0]), RelationKeys::between($parent::newModel(), $include->relations[0]->relation)->related());
     }
 
     /**
@@ -171,9 +172,11 @@ final readonly class SearchPlanner
         return array_map(static fn (IncludeNode|MorphIncludeNode $include): string => Str::before($include->relation, '.'), $includes);
     }
 
-    private static function includeLimit(Resource $resource, ?int $limit): LimitPolicy
+    private function includeLimit(Resource $resource, ?int $limit, Relation $relation): LimitPolicy
     {
-        return LimitPolicy::explicit($limit ?? self::limits($resource)->includeLimit);
+        $limit ??= self::limits($resource)->includeLimit;
+
+        return $this->rendered && $relation->hasMultipleEntries() ? LimitPolicy::perParent($limit) : LimitPolicy::explicit($limit);
     }
 
     private static function limits(Resource $resource): ResourceLimits

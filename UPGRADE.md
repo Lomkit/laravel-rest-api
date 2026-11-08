@@ -53,6 +53,7 @@ The keys that change:
 | `morph.type_key` | Added. `@type` by default, see [Responses](#responses). |
 | `search.select_columns` | Added. `true` by default, see [Selects, sorts and aggregates](#selects-sorts-and-aggregates). |
 | `transactions.attempts` | Added. `1` by default, or the value of `REST_TRANSACTION_ATTEMPTS`: how many times a write runs on a deadlock, see [Writes](#writes). |
+| `search.more_key` | Added. `@more` by default, see [Search](#search). |
 | `gates.message.enabled` | Removed. Each answer of `gates` holds `allowed` and `message`, see [Responses](#responses). |
 
 `gates.key`, `gates.names` and `precognition.enabled` keep their name and their default. `gates.names` also renames the gates that a resource declares, by their default name, such as `'authorized_to_download' => 'can_download'`, see [Responses](#responses). The blocks are now in this order: `authorizations`, `gates`, `morph`, `search`, `transactions`, `limits`, `precognition`.
@@ -119,6 +120,8 @@ After, in 3.0:
 
 'search' => [
     'select_columns' => true,
+
+    'more_key' => '@more',
 ],
 
 'transactions' => [
@@ -185,7 +188,7 @@ Types:
   - `authorizations.strict`, `authorizations.cache.enabled`, `search.select_columns` and `precognition.enabled` take `true`, `false`, or the strings `"1"`, `"0"`, `"true"` and `"false"`. Anything else throws, `null` included: "The [rest.authorizations.strict] option must be a boolean."
   - Each value of `limits` takes an integer of 0 or more, or a string of digits, as `env()` gives it: "The [rest.limits.sizes.filters] option must be an integer of 0 or more."
   - `transactions.attempts` takes an integer of 1 or more, or a string of digits: "The [rest.transactions.attempts] option must be an integer of 1 or more."
-  - `gates.key` and `morph.type_key` take a string that is not empty: "The [rest.gates.key] option must be a non-empty string."
+  - `gates.key`, `morph.type_key` and `search.more_key` take a string that is not empty: "The [rest.gates.key] option must be a non-empty string."
   - `authorizations.cache.store` takes `null` or a string that is not empty: "The [rest.authorizations.cache.store] option must be null or a non-empty string."
   - `gates.names` takes a map of strings that holds the six names above: "The [rest.gates.names] option must be a map of strings." for another value, and "The [rest.gates.names.authorized_to_view] option must be a string." for a missing name or one that is not a string.
 - `precognition.enabled` is read when the routes are registered, `limits` when a request first reads the limits, and the other values together, the first time a request needs one of them.
@@ -869,6 +872,7 @@ Limits:
   public int $includeLimit = 25;
   ```
 
+- A row whose level includes a to-many relation (`HasMany`, `MorphMany`, `BelongsToMany`, `MorphToMany`, `MorphedByMany` or `HasManyThrough`) ends with `@more`, the keys of those includes that have more rows than they returned, `[]` when none: `{"id": 1, "name": "Billing", "tickets": [...], "@more": ["tickets"]}`. Read it to tell a client that a list is not complete. Each such include reads one more row for each parent and drops it before `searched()`, the gates and `map()`. `search.more_key` in `config/rest.php` renames the key: a resource that declares a field named like it throws `Lomkit\Rest\Exceptions\InvalidResourceException`, and an include or aggregate alias named like it gives a 422.
 - The relation that a dotted include goes through, such as `posts` in `posts.comments`, is limited the same way: each parent row keeps the first `$includeLimit` rows of the relation in the `defaultOrderBy()` of its resource, and the rows below come from those. Before, it loaded every row, in no set order. List `posts` as an include of its own, with its `limit` and `sorts`, to choose its rows.
 - `$defaultLimit` and `$includeLimit` must be values that `limits()` returns. When one is not, the first read of the limits of the resource in a request (a search, an action, the details) throws `Lomkit\Rest\Exceptions\InvalidResourceException`: `The resource [App\Rest\Resources\PostResource] sets $defaultLimit to 32, which is not one of its limits() [10, 25, 50]. Return 32 from limits(), or set $defaultLimit to one of them.` Before, a `$defaultLimit` outside `limits()` sized the page. The default `limits()`, `[10, 25, 50]`, holds both defaults; a resource that returns other values from `limits()` returns 10 there or sets its `$includeLimit`.
 - A `BelongsTo` or `MorphTo` include loads the one related row of each parent row, with no limit and no order. `limit` and `sorts` there give a 422 under each key: `The search.includes.0.limit field is prohibited: this relation loads at most one record per parent.` Before, the `limit` of a `BelongsTo` include applied to the query of all the parent rows, so some rows returned `null` instead of their related row, and its `sorts` changed nothing in the response. `BelongsTo` and `MorphTo` implement `Lomkit\Rest\Contracts\OwnerRelation`, and a relation class that extends them keeps it. In a `MorphTo` type block, `limit` and `sorts` give the same 422.

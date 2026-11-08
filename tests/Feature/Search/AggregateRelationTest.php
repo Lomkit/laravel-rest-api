@@ -55,7 +55,7 @@ class AggregateRelationTest extends PackageTestCase
             'a relation path in an include' => [
                 '/api/authors/search',
                 ['includes' => [['relation' => 'posts', 'selects' => [['field' => 'id']], 'aggregates' => [['relation' => 'author.tags', 'type' => 'count']]]], 'sorts' => [['field' => 'first_name']]],
-                [['id' => 1, 'posts' => [['id' => 2, 'author_tags_count' => 1], ['id' => 1, 'author_tags_count' => 1]]], ['id' => 2, 'posts' => []]],
+                [['id' => 1, 'posts' => [['id' => 2, 'author_tags_count' => 1], ['id' => 1, 'author_tags_count' => 1]], '@more' => []], ['id' => 2, 'posts' => [], '@more' => []]],
             ],
         ];
     }

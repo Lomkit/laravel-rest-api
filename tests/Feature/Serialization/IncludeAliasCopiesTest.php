@@ -33,7 +33,7 @@ class IncludeAliasCopiesTest extends PackageTestCase
         $this->assertAuthors([
             ['relation' => 'posts', 'alias' => 'popular', 'filters' => [['field' => 'views', 'operator' => '>', 'value' => 10]], 'limit' => 10, 'selects' => [['field' => 'id']]],
             ['relation' => 'posts', 'alias' => 'drafted', 'filters' => [['field' => 'status', 'value' => 'draft']], 'selects' => [['field' => 'id']]],
-        ], '[{"id":1,"popular":[{"id":1}],"drafted":[{"id":2}]},{"id":2,"popular":[],"drafted":[]}]', 3);
+        ], '[{"id":1,"popular":[{"id":1}],"drafted":[{"id":2}],"@more":[]},{"id":2,"popular":[],"drafted":[],"@more":[]}]', 3);
     }
 
     #[Test]
@@ -42,7 +42,7 @@ class IncludeAliasCopiesTest extends PackageTestCase
         $this->assertAuthors([
             ['relation' => 'posts', 'selects' => [['field' => 'id']]],
             ['relation' => 'posts', 'alias' => 'drafted', 'filters' => [['field' => 'status', 'value' => 'draft']], 'selects' => [['field' => 'id']]],
-        ], '[{"id":1,"posts":[{"id":2},{"id":1}],"drafted":[{"id":2}]},{"id":2,"posts":[],"drafted":[]}]', 3);
+        ], '[{"id":1,"posts":[{"id":2},{"id":1}],"drafted":[{"id":2}],"@more":[]},{"id":2,"posts":[],"drafted":[],"@more":[]}]', 3);
     }
 
     #[Test]
@@ -50,7 +50,7 @@ class IncludeAliasCopiesTest extends PackageTestCase
     {
         $this->assertAuthors([
             ['relation' => 'tags', 'alias' => 'topics', 'selects' => [['field' => 'name']]],
-        ], '[{"id":1,"topics":[{"name":"Mathematics","pivot":{}}]},{"id":2,"topics":[]}]', 2);
+        ], '[{"id":1,"topics":[{"name":"Mathematics","pivot":{}}],"@more":[]},{"id":2,"topics":[],"@more":[]}]', 2);
     }
 
     #[Test]
@@ -69,7 +69,7 @@ class IncludeAliasCopiesTest extends PackageTestCase
                     'includes' => [['relation' => 'posts', 'alias' => 'others', 'selects' => [['field' => 'id']], 'sorts' => [['field' => 'id']]]],
                 ]],
             ],
-        ], '[{"id":1,"drafted":[{"id":2,"writer":{"id":1,"others":[{"id":1},{"id":2}]}}]},{"id":2,"drafted":[]}]');
+        ], '[{"id":1,"drafted":[{"id":2,"writer":{"id":1,"others":[{"id":1},{"id":2}],"@more":[]}}],"@more":[]},{"id":2,"drafted":[],"@more":[]}]');
     }
 
     #[Test]

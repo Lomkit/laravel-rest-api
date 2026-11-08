@@ -169,10 +169,14 @@ final class ResourceDefinition
     private function declaredFields(): FieldSet
     {
         $fields = FieldSet::of($this->resource->fields(), $this->resource::class.'::fields()');
-        $gatesKey = $this->resource->context()->config()->gatesKey;
+        $config = $this->resource->context()->config();
 
-        if ($fields->has($gatesKey)) {
-            throw InvalidResourceException::gatesKeyField($this->resource::class, $gatesKey);
+        if ($fields->has($config->gatesKey)) {
+            throw InvalidResourceException::gatesKeyField($this->resource::class, $config->gatesKey);
+        }
+
+        if ($fields->has($config->moreKey)) {
+            throw InvalidResourceException::moreKeyField($this->resource::class, $config->moreKey);
         }
 
         if (! (new ReflectionClass($this->resource::modelClass()))->isInstantiable()) {

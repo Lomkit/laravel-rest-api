@@ -84,6 +84,33 @@ class IncludeLimitTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_leaves_out_the_more_key_on_rows_with_only_to_one_includes(): void
+    {
+        $response = $this->searchBooks([['relation' => 'latestLoan', 'selects' => self::ID], ['relation' => 'loan', 'selects' => self::ID]]);
+
+        $response->assertOk()->assertJsonPath('data', [
+            ['id' => 2, 'latest_loan' => ['id' => 24], 'loan' => ['id' => 24]],
+            ['id' => 1, 'latest_loan' => ['id' => 12], 'loan' => ['id' => 12]],
+        ]);
+    }
+
+    #[Test]
+    public function it_lists_a_limited_include_with_more_rows_on_the_rows_of_a_morph_to_target(): void
+    {
+        $response = $this->postJson('/api/labels/search', ['search' => [
+            'filters' => [['field' => 'id', 'operator' => 'in', 'value' => [12, 24]]],
+            'selects' => self::ID,
+            'includes' => [['relation' => 'labelable', 'types' => [Book::class => ['selects' => self::ID, 'includes' => [['relation' => 'shelves', 'selects' => self::ID]]]]]],
+        ]]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.*.labelable.id', [2, 1])
+            ->assertJsonPath('data.*.labelable.@more', [['shelves'], ['shelves']]);
+        $this->assertSame([range(12, 3), range(12, 3)], array_map(fn (array $label): array => array_column($label['labelable']['shelves'], 'id'), $response->json('data')));
+        $this->assertArrayNotHasKey('@more', $response->json('data.0'));
+    }
+
+    #[Test]
     public function it_limits_an_include_nested_under_an_owner(): void
     {
         $response = $this->postJson('/api/loans/search', ['search' => [
@@ -110,6 +137,7 @@ class IncludeLimitTest extends PackageTestCase
 
         $response->assertOk()->assertJsonCount(50, 'data');
         $this->assertSame(array_fill(0, 50, 10), array_map(fn (array $book): int => count($book['labels']), $response->json('data')));
+        $this->assertSame(array_fill(0, 50, ['labels']), array_column($response->json('data'), '@more'));
         $this->assertCount(3, DB::getQueryLog());
     }
 

@@ -67,7 +67,7 @@ class ResponseBlockTest extends PackageTestCase
             ],
         ]);
 
-        $dune = ['title' => 'Children of Dune', 'shelves_count' => 0, 'gates' => ['authorized_to_update' => self::GRANTED], 'labels' => [['text' => 'Classic']]];
+        $dune = ['title' => 'Children of Dune', 'shelves_count' => 0, 'gates' => ['authorized_to_update' => self::GRANTED], 'labels' => [['text' => 'Classic']], '@more' => []];
         $response
             ->assertOk()
             ->assertExactJson([
@@ -78,7 +78,7 @@ class ResponseBlockTest extends PackageTestCase
                 ],
                 'records' => [
                     $dune,
-                    ['title' => 'Ivanhoe', 'shelves_count' => 1, 'gates' => ['authorized_to_update' => self::GRANTED], 'labels' => []],
+                    ['title' => 'Ivanhoe', 'shelves_count' => 1, 'gates' => ['authorized_to_update' => self::GRANTED], 'labels' => [], '@more' => []],
                     $dune,
                 ],
             ]);
@@ -147,8 +147,8 @@ class ResponseBlockTest extends PackageTestCase
         $response
             ->assertOk()
             ->assertJsonPath('records', [
-                ['title' => 'Persuasion', 'labels' => $marks],
-                ['title' => 'Dune Messiah', 'labels' => [['text' => 'Classic']]],
+                ['title' => 'Persuasion', 'labels' => $marks, '@more' => ['labels']],
+                ['title' => 'Dune Messiah', 'labels' => [['text' => 'Classic']], '@more' => []],
             ]);
     }
 

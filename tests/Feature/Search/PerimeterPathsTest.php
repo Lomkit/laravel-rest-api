@@ -121,7 +121,7 @@ class PerimeterPathsTest extends PackageTestCase
         $this->postJson('/path-authors/search', ['search' => ['includes' => [['relation' => 'posts.author']]]])->assertOk();
 
         $this->assertSame([[
-            'select * from (select posts.id, posts.title, posts.summary, posts.status, posts.featured, posts.views, posts.rating, posts.published_on, posts.published_at, posts.metadata, posts.author_id, row_number() over (partition by posts.author_id order by posts.id desc) as laravel_row from posts where posts.author_id in (1, 3, 4) and (title != ?)) as laravel_table where laravel_row <= 1 order by laravel_row',
+            'select * from (select posts.id, posts.title, posts.summary, posts.status, posts.featured, posts.views, posts.rating, posts.published_on, posts.published_at, posts.metadata, posts.author_id, row_number() over (partition by posts.author_id order by posts.id desc) as laravel_row from posts where posts.author_id in (1, 3, 4) and (title != ?)) as laravel_table where laravel_row <= 2 order by laravel_row',
             ['Hidden'],
         ]], $this->readsOf('posts'));
     }
