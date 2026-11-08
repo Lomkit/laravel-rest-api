@@ -97,7 +97,10 @@ final readonly class InputSchema
 
     private function fields(Instruction $instruction, FieldSet $fields, Resource $resource): ObjectType
     {
-        $properties = ['name' => (new StringType)->const($instruction->uriKey())];
+        $properties = [
+            'name' => (new StringType)->const($instruction->uriKey()),
+            'alias' => SearchSchema::alias('The key of this entry among the instructions of the search, in place of the instruction name. It lets a search send one instruction several times.'),
+        ];
         $entries = [];
 
         foreach ($fields as $field) {

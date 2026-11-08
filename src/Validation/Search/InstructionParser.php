@@ -8,10 +8,11 @@ use Lomkit\Rest\Search\InstructionNode;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\InputSet;
 use Lomkit\Rest\Validation\ValidationContext;
+use Lomkit\Rest\Validation\Violation;
 
 final readonly class InstructionParser
 {
-    private const array KEYS = ['name' => true, 'fields' => true];
+    private const array KEYS = ['name' => true, 'alias' => true, 'fields' => true];
 
     /**
      * @param  list<Cursor>  $entries
@@ -29,10 +30,11 @@ final readonly class InstructionParser
             fn (Instruction $instruction): string => $instruction->uriKey(),
             $declared,
         )));
+        $keys = InstructionAlias::of($entries);
         $instructions = [];
 
         foreach ($entries as $entry) {
-            $instruction = $this->instruction($entry, $declared, $names, $context);
+            $instruction = $this->instruction($entry, $declared, $names, $keys, $context);
 
             if ($instruction !== null) {
                 $instructions[] = $instruction;
@@ -43,7 +45,7 @@ final readonly class InstructionParser
     }
 
     /** @param array<int, Instruction> $declared */
-    private function instruction(Cursor $entry, array $declared, OneOf $names, ValidationContext $context): ?InstructionNode
+    private function instruction(Cursor $entry, array $declared, OneOf $names, InstructionAlias $keys, ValidationContext $context): ?InstructionNode
     {
         if (! $context->reader->object($entry)) {
             return null;
@@ -52,10 +54,12 @@ final readonly class InstructionParser
         $context->reader->known($entry, self::KEYS);
 
         $name = $entry->at('name');
+        $alias = $entry->at('alias');
         $fields = $entry->at('fields');
         $instruction = self::find($declared, $name->value);
 
         $context->rules->add($name->path, [$names, 'required', 'string']);
+        $context->rules->addWhenPresent($alias, is_string($alias->value) ? ['string', 'max:255', 'regex:'.RowKeys::PATTERN, $keys] : ['string']);
         $context->rules->addWhenPresent($fields, ['array']);
         $context->reader->admit($fields, $context->limits->sizes->fields);
 
@@ -66,8 +70,21 @@ final readonly class InstructionParser
         }
 
         $inputs = new InputSet($context->resource->definition()->inputFields($instruction));
+        $values = $inputs->named($fields, $context, 'fields:'.$instruction->uriKey());
 
-        return new InstructionNode($instruction, $inputs->named($fields, $context, 'fields:'.$instruction->uriKey()));
+        if (! $alias->present && $keys->isShared($instruction->uriKey())) {
+            $context->rules->reject(Violation::takenKey($alias->path, $instruction->uriKey()));
+        }
+
+        $aliased = is_string($alias->value) ? $alias->value : null;
+
+        if ($alias->present && $aliased === null) {
+            $context->rules->partial();
+
+            return null;
+        }
+
+        return new InstructionNode($instruction, $values, $aliased);
     }
 
     /** @param array<int, Instruction> $declared */
