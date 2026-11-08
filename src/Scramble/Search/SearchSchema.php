@@ -46,7 +46,14 @@ final readonly class SearchSchema
             SearchShape::Aggregate => 'MetricSearch',
         };
 
-        return $this->components->schema($name, $resource::class, fn (): Type => $this->search($resource, array_keys($shape->keys())));
+        return $this->components->schema($name, $resource::class, fn (): Type => $this->search($resource, array_keys($shape->keys()), $shape === SearchShape::Page));
+    }
+
+    public static function rows(Resource $resource, string $roots): string
+    {
+        $rows = $resource->context()->limits()->sizes->rows;
+
+        return "A response renders at most {$rows} rows, included rows counted, from the limits of the request: {$roots}, and for each to-many include its limit for each parent row, nested includes multiplying. Over it, the request answers 422.";
     }
 
     /**
@@ -69,11 +76,16 @@ final readonly class SearchSchema
     }
 
     /** @param list<string> $keys */
-    private function search(Resource $resource, array $keys): Type
+    private function search(Resource $resource, array $keys, bool $paged): Type
     {
         $refused = array_fill_keys(array_intersect(['text', 'trashed'], $keys), new Nothing);
+        $search = Schemas::object(array_replace($refused, $this->properties($resource, $keys, true)));
 
-        return Schemas::object(array_replace($refused, $this->properties($resource, $keys, true)));
+        if ($paged) {
+            $search->setDescription(self::rows($resource, 'the page limit'));
+        }
+
+        return $search;
     }
 
     private function property(Resource $resource, string $key, bool $root): ?Type

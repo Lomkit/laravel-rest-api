@@ -68,16 +68,16 @@ final readonly class PendingSearch
             throw SearchRunException::invalidMax($max);
         }
 
-        return $this->run(null)->lazy($chunk, $max);
+        return $this->run(null, false)->lazy($chunk, $max);
     }
 
-    private function run(?int $page): SearchRun
+    private function run(?int $page, bool $paged = true): SearchRun
     {
         if ($this->user === null) {
             throw SearchRunException::missingUser($this->resource);
         }
 
-        return PayloadSearchRequest::of($this->container, $this->resource, $this->body($page), $this->user)->run();
+        return PayloadSearchRequest::of($this->container, $this->resource, $this->body($page), $this->user, $paged)->run();
     }
 
     /** @return array<string, mixed> */

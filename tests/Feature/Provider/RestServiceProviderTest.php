@@ -51,6 +51,7 @@ class RestServiceProviderTest extends PackageTestCase
                 'relation_entries' => 100,
                 'resources' => 1000,
                 'jobs' => 100,
+                'rows' => 10000,
             ],
             'depths' => ['filters' => 1, 'includes' => 3, 'mutations' => 3],
             'totals' => ['filters' => 500, 'entries' => 1000, 'relations' => 20, 'patterns' => 10],
@@ -67,7 +68,7 @@ class RestServiceProviderTest extends PackageTestCase
         $this->app->register(RestServiceProvider::class, force: true);
         $limits = $this->context()->limits();
 
-        $this->assertSame([50, 20, 1000], [$limits->sizes->filters, $limits->sizes->sorts, $limits->sizes->resources]);
+        $this->assertSame([50, 20, 1000, 10000], [$limits->sizes->filters, $limits->sizes->sorts, $limits->sizes->resources, $limits->sizes->rows]);
         $this->assertSame([2, 3, 3], [$limits->depths->filters, $limits->depths->includes, $limits->depths->mutations]);
         $this->assertSame([500, 1000, 20, 10], [$limits->totals->filters, $limits->totals->entries, $limits->totals->relations, $limits->totals->patterns]);
         $this->assertSame([255, 1000], [$limits->lengths->patterns, $limits->lengths->values]);

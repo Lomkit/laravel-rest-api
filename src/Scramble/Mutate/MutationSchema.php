@@ -82,7 +82,7 @@ final readonly class MutationSchema
         return $this->components->schema($this->records->name($resource).'MutationResponse', $resource::class, fn (): Type => Schemas::closed(
             (new SearchSchema($this->components))->properties($resource, self::RESPONSE_KEYS, false),
             [],
-            'The records to return after the mutation: one for each entry of `mutate`, at the same index, read and rendered as a search reads its rows.',
+            'The records to return after the mutation: one for each entry of `mutate`, at the same index, read and rendered as a search reads its rows. '.SearchSchema::rows($resource, 'the entries of `mutate`'),
         ));
     }
 }

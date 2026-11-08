@@ -6044,7 +6044,7 @@
             },
             "NoteMutationResponse": {
                 "type": "object",
-                "description": "The records to return after the mutation: one for each entry of `mutate`, at the same index, read and rendered as a search reads its rows.",
+                "description": "The records to return after the mutation: one for each entry of `mutate`, at the same index, read and rendered as a search reads its rows. A response renders at most 10000 rows, included rows counted, from the limits of the request: the entries of `mutate`, and for each to-many include its limit for each parent row, nested includes multiplying. Over it, the request answers 422.",
                 "properties": {
                     "selects": {
                         "type": "array",
@@ -6463,6 +6463,7 @@
             },
             "NoteSearch": {
                 "type": "object",
+                "description": "A response renders at most 10000 rows, included rows counted, from the limits of the request: the page limit, and for each to-many include its limit for each parent row, nested includes multiplying. Over it, the request answers 422.",
                 "properties": {
                     "text": false,
                     "trashed": false,
@@ -11834,7 +11835,7 @@
             },
             "ShowMutationResponse": {
                 "type": "object",
-                "description": "The records to return after the mutation: one for each entry of `mutate`, at the same index, read and rendered as a search reads its rows.",
+                "description": "The records to return after the mutation: one for each entry of `mutate`, at the same index, read and rendered as a search reads its rows. A response renders at most 10000 rows, included rows counted, from the limits of the request: the entries of `mutate`, and for each to-many include its limit for each parent row, nested includes multiplying. Over it, the request answers 422.",
                 "properties": {
                     "selects": {
                         "type": "array",
@@ -12832,6 +12833,7 @@
             },
             "ShowSearch": {
                 "type": "object",
+                "description": "A response renders at most 10000 rows, included rows counted, from the limits of the request: the page limit, and for each to-many include its limit for each parent row, nested includes multiplying. Over it, the request answers 422.",
                 "properties": {
                     "text": {
                         "type": "object",
@@ -16311,7 +16313,7 @@
             },
             "StageMutationResponse": {
                 "type": "object",
-                "description": "The records to return after the mutation: one for each entry of `mutate`, at the same index, read and rendered as a search reads its rows.",
+                "description": "The records to return after the mutation: one for each entry of `mutate`, at the same index, read and rendered as a search reads its rows. A response renders at most 10000 rows, included rows counted, from the limits of the request: the entries of `mutate`, and for each to-many include its limit for each parent row, nested includes multiplying. Over it, the request answers 422.",
                 "properties": {
                     "selects": {
                         "type": "array",
@@ -16693,6 +16695,7 @@
             },
             "StageSearch": {
                 "type": "object",
+                "description": "A response renders at most 10000 rows, included rows counted, from the limits of the request: the page limit, and for each to-many include its limit for each parent row, nested includes multiplying. Over it, the request answers 422.",
                 "properties": {
                     "text": false,
                     "trashed": false,
