@@ -91,7 +91,7 @@ class OperationsTest extends DocumentationTestCase
 
         $this->assertSame(
             ['description' => 'Success', 'content' => ['application/json' => ['schema' => ['type' => 'object']]]],
-            $document['paths']['/shows/actions/reschedule-shows']['post']['responses'][200],
+            $document['paths']['/shows/metrics/show-count']['post']['responses'][200],
         );
         $this->assertArrayNotHasKey('ValidationException', $document['components']['responses'] ?? []);
         $this->assertArrayNotHasKey('AuthenticationException', $document['components']['responses'] ?? []);

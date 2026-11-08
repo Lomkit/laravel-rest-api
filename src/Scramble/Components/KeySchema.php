@@ -14,10 +14,18 @@ final class KeySchema
 {
     public static function list(Resource $resource): ArrayType
     {
+        return self::capped($resource, $resource->context()->limits()->sizes->resources);
+    }
+
+    public static function capped(Resource $resource, ?int $max): ArrayType
+    {
         $keys = Schemas::list(FieldSchema::of(KeysGrammar::idOf($resource)));
         $keys->setMin(1);
-        $keys->setMax($resource->context()->limits()->sizes->resources);
         $keys->setUniqueItems(true);
+
+        if ($max !== null) {
+            $keys->setMax($max);
+        }
 
         return $keys;
     }

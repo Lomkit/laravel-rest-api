@@ -465,13 +465,100 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The action runs on the rows that `search` matches, every row without `search`",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowActionSearch"
+                                    },
+                                    "resources": false,
+                                    "fields": {
+                                        "type": "array",
+                                        "description": "The values of the fields of the action: one `{\"name\", \"value\"}` entry for each field that the request gives",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string",
+                                                            "const": "at"
+                                                        },
+                                                        "value": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ],
+                                                            "format": "date-time",
+                                                            "description": "Rules: nullable, date"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string",
+                                                            "const": "notify"
+                                                        },
+                                                        "value": {
+                                                            "type": "boolean",
+                                                            "description": "Rules: boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            ]
+                                        },
+                                        "maxItems": 100
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "search": {
+                                            "filters": [
+                                                {
+                                                    "field": "title",
+                                                    "value": "Opening night"
+                                                }
+                                            ]
+                                        },
+                                        "fields": [
+                                            {
+                                                "name": "at",
+                                                "value": "2026-01-01T00:00:00Z"
+                                            },
+                                            {
+                                                "name": "notify",
+                                                "value": true
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The number of rows that the action ran on and its result",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/RestActionResponse"
                                 }
                             }
                         }
@@ -498,13 +585,82 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The action runs on the rows of the keys in `resources`",
+                                "properties": {
+                                    "search": false,
+                                    "resources": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 2,
+                                        "uniqueItems": true
+                                    },
+                                    "fields": {
+                                        "type": "array",
+                                        "description": "The values of the fields of the action: one `{\"name\", \"value\"}` entry for each field that the request gives",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "const": "reason"
+                                                },
+                                                "value": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Rules: nullable, string",
+                                                    "examples": [
+                                                        "Rain"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "name"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "maxItems": 100
+                                    }
+                                },
+                                "required": [
+                                    "resources"
+                                ]
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "resources": [
+                                            1
+                                        ],
+                                        "fields": [
+                                            {
+                                                "name": "reason",
+                                                "value": "Rain"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The number of rows that the action ran on and its result",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/RestActionResponse"
                                 }
                             }
                         }
@@ -531,13 +687,33 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The action runs without rows",
+                                "properties": {
+                                    "search": false,
+                                    "resources": false,
+                                    "fields": false
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {}
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The number of rows that the action ran on and its result",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/RestActionResponse"
                                 }
                             }
                         }
@@ -564,13 +740,44 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The action runs on the rows that `search` matches, every row without `search`, at most 1000: a search that matches more answers 422",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowActionSearch"
+                                    },
+                                    "resources": false,
+                                    "fields": false
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "search": {
+                                            "filters": [
+                                                {
+                                                    "field": "title",
+                                                    "value": "Opening night"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The number of rows that the action ran on and its result",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/RestBatchableActionResponse"
                                 }
                             }
                         }
@@ -931,7 +1138,10 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "archive-shows"
+                            ]
                         }
                     },
                     {
@@ -945,11 +1155,11 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The progress of the batch",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/RestBatchProgress"
                                 }
                             }
                         }
@@ -5707,6 +5917,303 @@
                 "additionalProperties": false,
                 "title": "NoteUpdate"
             },
+            "RestActionResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "impacted": {
+                                "type": "integer",
+                                "description": "The number of rows that the action ran on",
+                                "minimum": 0
+                            },
+                            "result": {
+                                "anyOf": [
+                                    {
+                                        "$ref": "#/components/schemas/RestActionResult"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ]
+                            }
+                        },
+                        "required": [
+                            "impacted",
+                            "result"
+                        ]
+                    }
+                },
+                "required": [
+                    "data"
+                ],
+                "title": "RestActionResponse"
+            },
+            "RestActionResult": {
+                "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                        "message": "#/components/schemas/RestActionResultMessage",
+                        "danger": "#/components/schemas/RestActionResultDanger",
+                        "download": "#/components/schemas/RestActionResultDownload",
+                        "redirect": "#/components/schemas/RestActionResultRedirect",
+                        "created": "#/components/schemas/RestActionResultCreated",
+                        "data": "#/components/schemas/RestActionResultData"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/RestActionResultMessage"
+                    },
+                    {
+                        "$ref": "#/components/schemas/RestActionResultDanger"
+                    },
+                    {
+                        "$ref": "#/components/schemas/RestActionResultDownload"
+                    },
+                    {
+                        "$ref": "#/components/schemas/RestActionResultRedirect"
+                    },
+                    {
+                        "$ref": "#/components/schemas/RestActionResultCreated"
+                    },
+                    {
+                        "$ref": "#/components/schemas/RestActionResultData"
+                    }
+                ],
+                "title": "RestActionResult"
+            },
+            "RestActionResultCreated": {
+                "type": "object",
+                "description": "The keys of the rows that the action created",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "const": "created"
+                    },
+                    "keys": {
+                        "type": "array",
+                        "description": "In the order that the action gives the rows",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "Present when the action adds data to its result with `withData()`"
+                    }
+                },
+                "required": [
+                    "type",
+                    "keys"
+                ],
+                "title": "RestActionResultCreated"
+            },
+            "RestActionResultDanger": {
+                "type": "object",
+                "description": "A warning for the user",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "const": "danger"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "Present when the action adds data to its result with `withData()`"
+                    }
+                },
+                "required": [
+                    "type",
+                    "message"
+                ],
+                "title": "RestActionResultDanger"
+            },
+            "RestActionResultData": {
+                "type": "object",
+                "description": "Data for the client",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "const": "data"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "The data of the action"
+                    }
+                },
+                "required": [
+                    "type",
+                    "data"
+                ],
+                "title": "RestActionResultData"
+            },
+            "RestActionResultDownload": {
+                "type": "object",
+                "description": "A file for the client to download",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "const": "download"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the file"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "Present when the action adds data to its result with `withData()`"
+                    }
+                },
+                "required": [
+                    "type",
+                    "url",
+                    "name"
+                ],
+                "title": "RestActionResultDownload"
+            },
+            "RestActionResultMessage": {
+                "type": "object",
+                "description": "A message for the user",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "const": "message"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "Present when the action adds data to its result with `withData()`"
+                    }
+                },
+                "required": [
+                    "type",
+                    "message"
+                ],
+                "title": "RestActionResultMessage"
+            },
+            "RestActionResultRedirect": {
+                "type": "object",
+                "description": "A URL for the client to open",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "const": "redirect"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "Present when the action adds data to its result with `withData()`"
+                    }
+                },
+                "required": [
+                    "type",
+                    "url"
+                ],
+                "title": "RestActionResultRedirect"
+            },
+            "RestBatchProgress": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "total_jobs": {
+                                "type": "integer"
+                            },
+                            "pending_jobs": {
+                                "type": "integer"
+                            },
+                            "failed_jobs": {
+                                "type": "integer"
+                            },
+                            "progress": {
+                                "type": "integer",
+                                "description": "The share of the jobs that ran, in percent",
+                                "minimum": 0,
+                                "maximum": 100
+                            },
+                            "finished": {
+                                "type": "boolean"
+                            },
+                            "cancelled": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "total_jobs",
+                            "pending_jobs",
+                            "failed_jobs",
+                            "progress",
+                            "finished",
+                            "cancelled"
+                        ]
+                    }
+                },
+                "required": [
+                    "data"
+                ],
+                "title": "RestBatchProgress"
+            },
+            "RestBatchableActionResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "impacted": {
+                                "type": "integer",
+                                "description": "The number of rows that the action ran on",
+                                "minimum": 0
+                            },
+                            "batch": {
+                                "type": "string",
+                                "description": "The id of the batch of the queued jobs of the action"
+                            },
+                            "result": {
+                                "anyOf": [
+                                    {
+                                        "$ref": "#/components/schemas/RestActionResult"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ]
+                            }
+                        },
+                        "required": [
+                            "impacted",
+                            "batch",
+                            "result"
+                        ]
+                    }
+                },
+                "required": [
+                    "data"
+                ],
+                "title": "RestBatchableActionResponse"
+            },
             "RestGateAnswer": {
                 "type": "object",
                 "properties": {
@@ -5996,6 +6503,114 @@
                     }
                 },
                 "title": "Show"
+            },
+            "ShowActionSearch": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "object",
+                        "description": "Text to search in the searchable fields",
+                        "properties": {
+                            "value": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            },
+                            "mode": {
+                                "type": "string",
+                                "enum": [
+                                    "words",
+                                    "phrase"
+                                ]
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "trashed": {
+                        "type": "string",
+                        "enum": [
+                            "with",
+                            "only"
+                        ]
+                    },
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row, and for `create` under `gates` in `meta`",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "create",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete",
+                                "feature"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowScope"
+                        },
+                        "maxItems": 10
+                    },
+                    "sorts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowSort"
+                        },
+                        "maxItems": 20
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "aggregates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowAggregate"
+                        },
+                        "maxItems": 20
+                    },
+                    "includes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowInclude"
+                        },
+                        "maxItems": 20
+                    },
+                    "instructions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowInstruction"
+                        },
+                        "maxItems": 10
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ]
+                    }
+                },
+                "title": "ShowActionSearch"
             },
             "ShowAggregate": {
                 "description": "A value computed over the related rows of each row.",
