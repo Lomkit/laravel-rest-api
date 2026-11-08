@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Metrics;
 
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Exceptions\InvalidMetricException;
@@ -19,6 +20,12 @@ abstract class Trend extends Metric
     /** @param Builder<Model> $query */
     #[\Override]
     abstract public function calculate(Builder $query): TrendResult;
+
+    #[\Override]
+    public function schema(): ?Type
+    {
+        return ResultSchemas::trend();
+    }
 
     #[\Override]
     public function ensureValid(): static

@@ -804,13 +804,72 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The metric runs on the rows that `search` matches, every row without `search`",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowMetricSearch"
+                                    },
+                                    "range": {
+                                        "type": "integer",
+                                        "description": "The range of the metric: `30` when the request sends none",
+                                        "enum": [
+                                            30,
+                                            90
+                                        ]
+                                    },
+                                    "timezone": {
+                                        "type": "string",
+                                        "description": "The time zone of the periods of the metric, such as `Europe/Paris`; the time zone of the application when the request sends none"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "range": 30,
+                                        "timezone": "UTC"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The result of the metric",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "type": {
+                                                            "type": "string",
+                                                            "const": "value"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "type"
+                                                    ]
+                                                },
+                                                {
+                                                    "$ref": "#/components/schemas/RestValueResult"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -837,13 +896,72 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The metric runs on the rows that `search` matches, every row without `search`",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowMetricSearch"
+                                    },
+                                    "range": {
+                                        "type": "integer",
+                                        "description": "The range of the metric: `3` when the request sends none",
+                                        "enum": [
+                                            3,
+                                            12
+                                        ]
+                                    },
+                                    "timezone": {
+                                        "type": "string",
+                                        "description": "The time zone of the periods of the metric, such as `Europe/Paris`; the time zone of the application when the request sends none"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "range": 3,
+                                        "timezone": "UTC"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The result of the metric",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "type": {
+                                                            "type": "string",
+                                                            "const": "trend"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "type"
+                                                    ]
+                                                },
+                                                {
+                                                    "$ref": "#/components/schemas/RestTrendResult"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -870,13 +988,64 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The metric runs on the rows that `search` matches, every row without `search`",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowMetricSearch"
+                                    },
+                                    "range": false,
+                                    "timezone": {
+                                        "type": "string",
+                                        "description": "The time zone of the periods of the metric, such as `Europe/Paris`; the time zone of the application when the request sends none"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "timezone": "UTC"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The result of the metric",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "type": {
+                                                            "type": "string",
+                                                            "const": "partition"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "type"
+                                                    ]
+                                                },
+                                                {
+                                                    "$ref": "#/components/schemas/RestPartitionResult"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -901,13 +1070,64 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The metric runs on the rows that `search` matches, every row without `search`",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowMetricSearch"
+                                    },
+                                    "range": false,
+                                    "timezone": {
+                                        "type": "string",
+                                        "description": "The time zone of the periods of the metric, such as `Europe/Paris`; the time zone of the application when the request sends none"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "timezone": "UTC"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The result of the metric",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "type": {
+                                                            "type": "string",
+                                                            "const": "table"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "type"
+                                                    ]
+                                                },
+                                                {
+                                                    "$ref": "#/components/schemas/RestTableResult"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -934,13 +1154,64 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The metric runs on the rows that `search` matches, every row without `search`",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowMetricSearch"
+                                    },
+                                    "range": false,
+                                    "timezone": {
+                                        "type": "string",
+                                        "description": "The time zone of the periods of the metric, such as `Europe/Paris`; the time zone of the application when the request sends none"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "timezone": "UTC"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The result of the metric",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "type": {
+                                                            "type": "string",
+                                                            "const": "progress"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "type"
+                                                    ]
+                                                },
+                                                {
+                                                    "$ref": "#/components/schemas/RestProgressResult"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -967,13 +1238,76 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The metric runs on the rows that `search` matches, every row without `search`",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowMetricSearch"
+                                    },
+                                    "range": false,
+                                    "timezone": {
+                                        "type": "string",
+                                        "description": "The time zone of the periods of the metric, such as `Europe/Paris`; the time zone of the application when the request sends none"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "timezone": "UTC"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "The result of the metric",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "type": {
+                                                            "type": "string",
+                                                            "const": "occupancy"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "type"
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "seats": {
+                                                            "type": "integer"
+                                                        },
+                                                        "capacity": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "seats",
+                                                        "capacity"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -6314,6 +6648,311 @@
                 ],
                 "title": "RestMutateOperation"
             },
+            "RestPartitionResult": {
+                "type": "object",
+                "properties": {
+                    "parts": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": [
+                                        "integer",
+                                        "string",
+                                        "boolean",
+                                        "null"
+                                    ]
+                                },
+                                "label": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "value": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "key",
+                                "label",
+                                "value"
+                            ]
+                        }
+                    },
+                    "other": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "The parts that the limit folds",
+                        "properties": {
+                            "label": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "value": {
+                                "type": [
+                                    "number",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "label",
+                            "value"
+                        ]
+                    }
+                },
+                "required": [
+                    "parts",
+                    "other"
+                ],
+                "title": "RestPartitionResult"
+            },
+            "RestProgressResult": {
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "type": [
+                            "number",
+                            "null"
+                        ]
+                    },
+                    "target": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "value",
+                    "target"
+                ],
+                "title": "RestProgressResult"
+            },
+            "RestTableResult": {
+                "type": "object",
+                "properties": {
+                    "columns": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "aggregate": {
+                                    "type": "string",
+                                    "enum": [
+                                        "count",
+                                        "sum",
+                                        "average",
+                                        "min",
+                                        "max"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "name",
+                                "label",
+                                "aggregate"
+                            ]
+                        }
+                    },
+                    "rows": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": [
+                                        "integer",
+                                        "string",
+                                        "boolean",
+                                        "null"
+                                    ]
+                                },
+                                "label": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "values": {
+                                    "type": "object",
+                                    "description": "One value for each column, under the `name` of the column",
+                                    "additionalProperties": {
+                                        "type": [
+                                            "number",
+                                            "null"
+                                        ]
+                                    }
+                                }
+                            },
+                            "required": [
+                                "key",
+                                "label",
+                                "values"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "columns",
+                    "rows"
+                ],
+                "title": "RestTableResult"
+            },
+            "RestTrendResult": {
+                "type": "object",
+                "properties": {
+                    "series": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "label": {
+                                    "type": "string"
+                                },
+                                "value": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "label",
+                                "value"
+                            ]
+                        }
+                    },
+                    "splits": {
+                        "type": "array",
+                        "description": "One series for each value of the split column, present when the trend is split",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": [
+                                        "integer",
+                                        "string",
+                                        "boolean",
+                                        "null"
+                                    ]
+                                },
+                                "label": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "series": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "label": {
+                                                "type": "string"
+                                            },
+                                            "value": {
+                                                "type": [
+                                                    "number",
+                                                    "null"
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "label",
+                                            "value"
+                                        ]
+                                    }
+                                }
+                            },
+                            "required": [
+                                "key",
+                                "label",
+                                "series"
+                            ]
+                        }
+                    },
+                    "other": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "The splits that the limit folds, present with `splits`",
+                        "properties": {
+                            "label": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "series": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "label": {
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "type": [
+                                                "number",
+                                                "null"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "label",
+                                        "value"
+                                    ]
+                                }
+                            }
+                        },
+                        "required": [
+                            "label",
+                            "series"
+                        ]
+                    }
+                },
+                "required": [
+                    "series"
+                ],
+                "title": "RestTrendResult"
+            },
+            "RestValueResult": {
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "type": [
+                            "number",
+                            "null"
+                        ]
+                    },
+                    "previous": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "The value of the period before the range"
+                    }
+                },
+                "required": [
+                    "value",
+                    "previous"
+                ],
+                "title": "RestValueResult"
+            },
             "Show": {
                 "type": "object",
                 "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
@@ -10593,6 +11232,61 @@
                 ],
                 "additionalProperties": false,
                 "title": "ShowInstructionOnlyFeatured"
+            },
+            "ShowMetricSearch": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "object",
+                        "description": "Text to search in the searchable fields",
+                        "properties": {
+                            "value": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            },
+                            "mode": {
+                                "type": "string",
+                                "enum": [
+                                    "words",
+                                    "phrase"
+                                ]
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "trashed": {
+                        "type": "string",
+                        "enum": [
+                            "with",
+                            "only"
+                        ]
+                    },
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowScope"
+                        },
+                        "maxItems": 10
+                    },
+                    "instructions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowInstruction"
+                        },
+                        "maxItems": 10
+                    }
+                },
+                "title": "ShowMetricSearch"
             },
             "ShowMutateResult": {
                 "type": "object",

@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Metrics;
 
 use Carbon\CarbonInterface;
 use DateTimeZone;
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
@@ -57,6 +58,11 @@ abstract class Metric implements JsonSerializable
     public function ranges(): array
     {
         return [];
+    }
+
+    public function schema(): ?Type
+    {
+        return null;
     }
 
     public function range(): ?MetricRange

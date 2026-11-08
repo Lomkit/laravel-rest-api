@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Metrics;
 
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
@@ -23,6 +24,12 @@ abstract class Table extends Metric
     /** @param Builder<Model> $query */
     #[\Override]
     abstract public function calculate(Builder $query): TableResult;
+
+    #[\Override]
+    public function schema(): ?Type
+    {
+        return ResultSchemas::table();
+    }
 
     public function limit(int $limit): static
     {

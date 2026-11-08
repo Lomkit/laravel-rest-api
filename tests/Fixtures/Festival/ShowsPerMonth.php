@@ -8,10 +8,12 @@ use Lomkit\Rest\Metrics\TrendResult;
 
 class ShowsPerMonth extends Trend
 {
+    public ?int $limit = 1;
+
     #[\Override]
     public function calculate(Builder $query): TrendResult
     {
-        return $this->countByMonths($query, 'starts_at');
+        return $this->countByMonths($query, 'starts_at', 'status');
     }
 
     #[\Override]

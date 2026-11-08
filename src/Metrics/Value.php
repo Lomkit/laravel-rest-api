@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Metrics;
 
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,6 +17,12 @@ abstract class Value extends Metric
     /** @param Builder<Model> $query */
     #[\Override]
     abstract public function calculate(Builder $query): ValueResult;
+
+    #[\Override]
+    public function schema(): ?Type
+    {
+        return ResultSchemas::value();
+    }
 
     /** @param Builder<Model> $query */
     public function count(Builder $query, string $dateColumn = 'created_at'): ValueResult

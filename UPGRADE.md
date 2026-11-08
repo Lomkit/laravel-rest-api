@@ -779,6 +779,25 @@ class TotalRevenue extends Value
 - A metric declares its ranges in `ranges()`, and the request picks one with `range`: the first one when it sends none. A key that the metric does not declare is a `422`, and so is `range` for a metric without ranges. The details entry of a metric lists them in `ranges`.
 - The floats of a metric response keep their fraction: `52.0`, not `52`.
 - `->cacheFor(600)` keeps the result of a metric between requests for 600 seconds; it also takes a `DateInterval` or an instant, `->cacheFor(now()->addMinutes(10))`. Each user gets their own result. `->cacheScope('global')` shares one result between the users whose `perimeterQuery()` compiles to the same SQL and bindings: the users of one team share it, and another team gets its own. The key holds the SQL of `perimeterQuery()` only: a perimeter that also depends on something else, such as a global scope of the model or one that it removes for some users, adds that to `authorizationCacheContext()`. With several tenants, add the tenant to it: with a database per tenant, `perimeterQuery()` compiles to the same SQL in every tenant, and the global scope of a single database is not part of the key, so without it the tenants share one global result, see "Cache" in [Authorization](#authorization). A metric class can declare `public ?int $cacheFor = 600;` and `public CacheScope $cacheScope = CacheScope::Global;` (`Lomkit\Rest\Metrics\CacheScope`) instead. The results go to the store of `authorizations.cache.store`, under the stamps of the decisions: `Rest::forgetAuthorizationsFor($user)` drops the results of a user, `Rest::forgetAuthorizations()` drops every result, and with `authorizations.cache.enabled` set to `false` no result is kept. See "Cache" in [Authorization](#authorization).
+- A metric describes its result for the OpenAPI document with `schema()`, which returns a Scramble type (`Dedoc\Scramble\Support\Generator\Types\Type`) or `null`, the default. The built-in types return the schema of their result, built by `Lomkit\Rest\Metrics\ResultSchemas` (`value()`, `trend()`, `partition()`, `table()` and `progress()`). A metric of your own type documents only its `type` until it declares `schema()`, and a metric that extends a built-in type and changes its result declares it too, for example from `ResultSchemas::trend()`. Declare the return type `?Type`, as `Metric` does: another return type, such as `ObjectType`, stops the class from loading when Scramble is not installed. The package reads it only when Scramble builds the document:
+
+  ```php
+  use Dedoc\Scramble\Support\Generator\Types\IntegerType;
+  use Dedoc\Scramble\Support\Generator\Types\ObjectType;
+  use Dedoc\Scramble\Support\Generator\Types\Type;
+
+  // TicketBacklog
+  public function schema(): ?Type
+  {
+      $schema = new ObjectType;
+      $schema->addProperty('value', new IntegerType);
+      $schema->addProperty('max', new IntegerType);
+      $schema->setRequired(['value', 'max']);
+
+      return $schema;
+  }
+  ```
+
 - `php artisan rest:metric` writes a metric of each built-in type, or of a type of your own: see [Generators](#generators).
 
 ### Native types
@@ -2134,6 +2153,12 @@ Actions:
 - An action answers `RestActionResponse`: `data`, with `impacted`, the number of rows that the action ran on, and `result`, `null` or a `RestActionResult`. An action that implements `BatchableAction` answers `RestBatchableActionResponse`, which adds `batch`, the id of its batch, before `result`.
 - `RestActionResult` is `oneOf` one schema for each type of `ActionResponse`, with a `discriminator` on `type`: `RestActionResultMessage` and `RestActionResultDanger` (`message`), `RestActionResultDownload` (`url` and `name`), `RestActionResultRedirect` (`url`), `RestActionResultCreated` (`keys`, each an integer or a string) and `RestActionResultData` (`data`). Each type documents the optional `data` object that `withData()` adds; the `data` type requires it.
 - The batch progress operation lists the batchable actions of the resource in its `action` path parameter and answers `RestBatchProgress`: `data`, with `id`, `total_jobs`, `pending_jobs`, `failed_jobs`, `progress` (from 0 to 100), `finished` and `cancelled`.
+
+Metrics:
+
+- Each metric has one operation, with the name of the metric as its summary. Its body takes `search`, `{Resource}MetricSearch` (`text`, `trashed`, `filters`, `scopes` and `instructions`), `range`, an enum of the ranges of the metric whose description gives the first one, and `timezone`, a string. A metric without ranges documents `range` as `false`, as the endpoint answers 422 when the request sends it. The body accepts other keys, which the endpoint ignores.
+- Each metric operation has a request example: the first range of the metric as `range`, left out on a metric without ranges, and `UTC` as `timezone`.
+- A metric answers `data`: `allOf` an object with its `type` and the schema of its result. The built-in types share their schema: `RestValueResult` (`value`, `previous`), `RestTrendResult` (`series`, and `splits` and `other` for a split trend), `RestPartitionResult` (`parts`, `other`), `RestTableResult` (`columns`, `rows`, whose `values` hold one number for each column) and `RestProgressResult` (`value`, `target`). A metric whose `schema()` gives another schema has it in its operation, and a metric without `schema()` documents its `type` alone. See [Metrics](#metrics).
 
 Error responses:
 
