@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Metrics;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Date;
 
 abstract class Value extends Metric
 {
@@ -58,9 +57,7 @@ abstract class Value extends Metric
             return new ValueResult($aggregate->total($query));
         }
 
-        $now = Date::now()->toImmutable();
-        $split = $now->subDays($range->value);
-        [$current, $previous] = $aggregate->periods($query, MetricColumn::date($this, $query, $function->value, $dateColumn), $split->subDays($range->value), $split, $now);
+        [$current, $previous] = $aggregate->periods($query, MetricColumn::date($this, $query, $function->value, $dateColumn), RangePeriods::of($range));
 
         return new ValueResult($current, $previous);
     }

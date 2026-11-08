@@ -8,24 +8,35 @@ use Lomkit\Rest\Metrics\PartitionResult;
 
 class OrderPartition extends Partition
 {
-    /** @param array<int|string, string> $labels */
+    /**
+     * @param  array<int|string, string>  $labels
+     * @param  array<mixed>  $declaredRanges
+     */
     public function __construct(
         private string $helper = 'count',
         private string $groupBy = 'status',
         private string $column = 'price',
         private array $labels = [],
         private ?string $other = null,
+        private ?string $dateColumn = null,
+        private array $declaredRanges = [],
     ) {}
+
+    #[\Override]
+    public function ranges(): array
+    {
+        return $this->declaredRanges;
+    }
 
     #[\Override]
     public function calculate(Builder $query): PartitionResult
     {
         $result = match ($this->helper) {
-            'count' => $this->count($query, $this->groupBy),
-            'sum' => $this->sum($query, $this->column, $this->groupBy),
-            'average' => $this->average($query, $this->column, $this->groupBy),
-            'min' => $this->min($query, $this->column, $this->groupBy),
-            'max' => $this->max($query, $this->column, $this->groupBy),
+            'count' => $this->count($query, $this->groupBy, dateColumn: $this->dateColumn),
+            'sum' => $this->sum($query, $this->column, $this->groupBy, dateColumn: $this->dateColumn),
+            'average' => $this->average($query, $this->column, $this->groupBy, dateColumn: $this->dateColumn),
+            'min' => $this->min($query, $this->column, $this->groupBy, dateColumn: $this->dateColumn),
+            'max' => $this->max($query, $this->column, $this->groupBy, dateColumn: $this->dateColumn),
         };
 
         return $this->labels === [] && $this->other === null ? $result : $result->labels($this->labels, $this->other);
