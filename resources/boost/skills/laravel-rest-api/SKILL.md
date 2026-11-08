@@ -818,6 +818,124 @@ The client sends the same body again with `"confirmation": "<token>"` (a string;
 
 **Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models, at most `rest.limits.sizes.jobs` jobs per run (default `100`, at least `1`): with more rows, each job takes the rows divided by that limit, rounded up (250 rows, `$chunkCount` 2: 84 jobs of 3 rows). Combine with `Lomkit\Rest\Contracts\BatchableAction` and use `withBatch(ActionFields $fields, PendingBatch $batch): void` to register `then`/`catch`/`finally` callbacks. Route the jobs with Laravel's queue attributes on the action (`#[Queue('exports')]`, `#[Connection('redis')]`, `#[Tries(3)]`, `#[Timeout]`, `#[Backoff]`, `#[Delay]`, `#[MaxExceptions]`, `#[FailOnTimeout]`) or `Queue::route(ExportOrders::class, 'exports')`; an action has no `$queue`/`$connection` properties and no `dispatch()`. The job (`Lomkit\Rest\Actions\QueuedAction`) holds the resource and action classes, the action key, the input values as sent, the row keys and a reference to the user; the worker rebuilds the context for that user (`$this->request()->user()`, policies and `perimeterQuery()` see them; `auth()->user()` does not), casts the input values again, and reloads the rows by key through `perimeterQuery()` (not for an engine text search) with the global scopes and `search.trashed`, without the search's includes. Rows gone or out of the perimeter are skipped; a missing user or a removed action fails the job with `QueuedActionException`. The worker reads the database connections current when the job runs: with several tenants, initialise the tenant in the worker before the job (stancl/tenancy's `QueueTenancyBootstrapper` does it from the payload), or the job fails on the central connection (database per tenant) or loads its rows by key across tenants (single database). `release()`, `attempts()` and `batch()` work in `handle()`. A `BatchableAction` answers `"batch": "<id>"`; its jobs skip once the batch is cancelled (`SkipIfBatchCancelled`). `Rest::resource(...)->withBatchProgress()` adds `GET /{resource}/actions/{action}/batches/{batch}` (`{name}.batch`): the progress (`id`, `total_jobs`, `pending_jobs`, `failed_jobs`, `progress`, `finished`, `cancelled`) for the user who started the batch, `404` for anyone else and for a guest's batch.
 
+## Recipe: exporting rows
+
+The package has no export endpoint: a queued, batched action covers it. The client sends the columns it wants and the search of its list, each job writes one chunk of rows to a CSV part, and the batch joins the parts into one file. A small export can stream in the request instead, with `lazy()` (see "Searching outside HTTP").
+
+```php
+<?php
+
+namespace App\Rest\Actions;
+
+use App\Models\Ticket;
+use Illuminate\Bus\PendingBatch;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionFields;
+use Lomkit\Rest\Actions\ActionResponse;
+use Lomkit\Rest\Contracts\BatchableAction;
+use Lomkit\Rest\Fields\Json;
+
+class ExportTickets extends Action implements BatchableAction, ShouldQueue
+{
+    public const array COLUMNS = ['id', 'title', 'status'];
+
+    public int $chunkCount = 500;
+
+    public ?int $maxResources = 50000;
+
+    private string $export = '';
+
+    #[\Override]
+    public function fields(): array
+    {
+        return [Json::make('columns')->rules(['required', 'list', Rule::in(self::COLUMNS)])];
+    }
+
+    #[\Override]
+    public function withBatch(ActionFields $fields, PendingBatch $batch): void
+    {
+        $export = $this->export = (string) Str::uuid();
+        $columns = $fields->columns;
+
+        $batch->withOption('export', $export)->then(static function () use ($export, $columns): void {
+            $disk = Storage::disk('exports');
+            $csv = fopen('php://temp', 'w+');
+            fputcsv($csv, $columns, escape: '');
+            $parts = $disk->files($export);
+            sort($parts, SORT_NATURAL);
+
+            foreach ($parts as $part) {
+                stream_copy_to_stream($disk->readStream($part), $csv);
+            }
+
+            rewind($csv);
+            $disk->writeStream("{$export}.csv", $csv);
+            $disk->deleteDirectory($export);
+        });
+    }
+
+    /** @param Collection<int, Ticket> $models */
+    #[\Override]
+    public function handle(ActionFields $fields, Collection $models): void
+    {
+        $csv = fopen('php://temp', 'w+');
+
+        foreach ($models as $ticket) {
+            fputcsv($csv, $ticket->only($fields->columns), escape: '');
+        }
+
+        rewind($csv);
+        Storage::disk('exports')->writeStream($this->batch()?->options['export'].'/'.$models->first()?->getKey().'.csv', $csv);
+    }
+
+    #[\Override]
+    public function respond(ActionFields $fields, int $impacted): ActionResponse
+    {
+        if ($impacted === 0) {
+            return ActionResponse::message('No rows to export.');
+        }
+
+        return ActionResponse::download(Storage::disk('exports')->temporaryUrl("{$this->export}.csv", now()->addDay()), 'tickets.csv');
+    }
+}
+```
+
+Declare it in the resource's `actions()` (`ExportTickets::make()`) and add the progress route: `Rest::resource('tickets', TicketsController::class)->withBatchProgress()`.
+
+```
+POST /api/tickets/actions/export-tickets
+{
+  "fields": [{"name": "columns", "value": ["title", "id"]}],
+  "search": {"filters": [{"field": "status", "value": "open"}]}
+}
+```
+
+```json
+{"data": {"impacted": 5, "batch": "9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f", "result": {"type": "download", "url": "https://files.example.com/3e1f6a2b-7c4d-4e5f-9a0b-1c2d3e4f5a6b.csv?expires=1796205600&signature=…", "name": "tickets.csv"}}}
+```
+
+```csv
+title,id
+"Printer jam, floor 2",8
+"Password reset",9
+"Monitor flicker",12
+"Badge reader",13
+"Desk phone",14
+```
+
+- **Rows.** `handle()` receives each chunk of the rows that the search matches inside the resource's `perimeterQuery()`: the worker loads them again by key, for the user who sent the request. A chunk holds `$chunkCount` rows, or more when the rows need more than `rest.limits.sizes.jobs` jobs (`100`). `$maxResources` caps the rows of one export (more is a `422`).
+- **Columns.** `columns` is a `Json` field: `list` and `Rule::in()` accept only a list of the allowed names, anything else is a `422` under `fields.columns`. `only()` returns the values in the order the client gave.
+- **Parts.** The jobs of a batch can run at the same time, so each job writes its own part, named after the first key of its chunk, and the batch's `then()` callback joins the parts in that order under a header row, once every job succeeded. Without `sorts`, chunks follow the key, so the file lists the rows by key.
+- **Download.** `respond()` runs once the jobs are sent, before they run: the URL works once the batch is finished, which the client reads at `GET /api/tickets/actions/export-tickets/batches/{batch}`. A search that matches no row sends no job and writes no file, so the action answers a message.
+- **Disk.** `exports` is a disk of `config/filesystems.php` that every worker reaches and that builds temporary URLs (`s3`, or `local` with `'serve' => true`).
+- **Labels.** To name the columns from the resource's field labels, build the header in `withBatch()` with `$this->resource->definition()->fields()->get($column)->getLabel() ?? $column` for each column.
+- **XLSX.** Keep the CSV parts and write the joined file in `then()` with any spreadsheet writer library; the rest stays the same.
+
 ## Metrics
 
 A metric computes one result over the rows of a search: a count, a total, a breakdown. Declare it in `metrics()` on the resource (no request parameter; read it with `$this->request()`); each metric gets `POST /{resource}/metrics/{uriKey}`.
