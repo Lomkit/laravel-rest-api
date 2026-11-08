@@ -19,7 +19,7 @@ class CreationChecksTest extends HelpdeskTestCase
             'mutate.1.attributes' => ['The priority key of the mutate.1.attributes field is not writable on create.'],
         ]);
 
-        $this->assertSame([['create'], ['create']], [$this->tickets->calls, $this->teams->calls]);
+        $this->assertSame([['viewAny', 'create'], ['create']], [$this->tickets->calls, $this->teams->calls]);
     }
 
     #[Test]
@@ -41,7 +41,7 @@ class CreationChecksTest extends HelpdeskTestCase
         ]);
 
         $this->assertNoQueries();
-        $this->assertSame([['create'], ['create']], [$this->tickets->calls, $this->teams->calls]);
+        $this->assertSame([['viewAny', 'create'], ['create']], [$this->tickets->calls, $this->teams->calls]);
     }
 
     #[Test]
@@ -54,7 +54,7 @@ class CreationChecksTest extends HelpdeskTestCase
 
         $this->assertSame(['Billing', 'Support'], Team::query()->orderBy('name')->pluck('name')->all());
         $this->assertSame(['Password reset', 'Printer jam'], Ticket::query()->orderBy('title')->pluck('title')->all());
-        $this->assertSame([['create', 'create', 'create'], ['create', 'create', 'create']], [$this->tickets->calls, $this->teams->calls]);
+        $this->assertSame([['viewAny', 'create', 'create', 'create'], ['create', 'create', 'create']], [$this->tickets->calls, $this->teams->calls]);
     }
 
     #[Test]

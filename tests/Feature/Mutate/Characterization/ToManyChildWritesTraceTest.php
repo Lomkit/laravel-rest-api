@@ -36,6 +36,7 @@ class ToManyChildWritesTraceTest extends WriteTraceTestCase
                 ],
             ],
         ], [
+            'policy viewAny',
             'policy create',
             'sql select * from books where books.id in (102)',
             'sql select * from labels where labels.id in (101, 102)',
@@ -92,6 +93,7 @@ class ToManyChildWritesTraceTest extends WriteTraceTestCase
                 ],
             ],
         ], [
+            'policy viewAny',
             'policy create',
             'sql select * from teams where teams.id in (101)',
             'sql select * from tickets where tickets.id in (101, 102)',

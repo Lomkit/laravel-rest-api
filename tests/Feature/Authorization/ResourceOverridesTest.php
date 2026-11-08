@@ -19,7 +19,7 @@ class ResourceOverridesTest extends HelpdeskTestCase
             ->assertJsonPath('message', 'Tickets are archived, not deleted.');
 
         $this->assertDatabaseHas('tickets', ['id' => $jam->id]);
-        $this->assertSame([], $this->tickets->calls);
+        $this->assertSame(['viewAny'], $this->tickets->calls);
     }
 
     #[Test]
@@ -32,7 +32,7 @@ class ResourceOverridesTest extends HelpdeskTestCase
             ->assertOk();
 
         $this->assertDatabaseMissing('tickets', ['id' => $jam->id]);
-        $this->assertSame($this->calls('delete', $jam), $this->tickets->calls);
+        $this->assertSame(['viewAny', ...$this->calls('delete', $jam)], $this->tickets->calls);
     }
 
     #[Test]
@@ -42,6 +42,6 @@ class ResourceOverridesTest extends HelpdeskTestCase
             ->assertForbidden()
             ->assertExactJson(['message' => 'Tickets are archived, not created.']);
 
-        $this->assertSame([], $this->tickets->calls);
+        $this->assertSame(['viewAny'], $this->tickets->calls);
     }
 }

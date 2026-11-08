@@ -73,6 +73,7 @@ class DeclaredAbilitiesTest extends HelpdeskTestCase
         }
 
         $this->assertSame([
+            'viewAny',
             'update '.$jam->id,
             'attachTag '.$jam->id.' '.$hardware->id,
             'update '.$jam->id,

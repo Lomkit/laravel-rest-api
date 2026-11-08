@@ -47,6 +47,7 @@ class CustomRelationOperationsTest extends WriteTraceTestCase
         ]], [
             ['operation' => 'update', 'key' => 102, 'relations' => ['tickets' => [['operation' => $operation, 'key' => [101]]]]],
         ], [
+            'policy viewAny',
             'sql select * from teams where teams.id in (102)',
             'sql select * from tickets where tickets.id in (101)',
             'policy update Team(Ops)',
@@ -69,6 +70,7 @@ class CustomRelationOperationsTest extends WriteTraceTestCase
         ]], [
             ['operation' => 'update', 'key' => 102, 'relations' => ['labelable' => ['operation' => $operation, 'type' => Shelf::class, 'key' => 101]]],
         ], [
+            'policy viewAny',
             'sql select * from labels where labels.id in (102)',
             'sql select * from shelves where shelves.id in (101)',
             'policy update Label(loose)',

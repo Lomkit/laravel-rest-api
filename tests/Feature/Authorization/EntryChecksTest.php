@@ -10,6 +10,8 @@ use Lomkit\Rest\Tests\Feature\Authorization\Stubs\HookedTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\LeadTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\SharedTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\TrashableLeadTicketController;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagController;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -81,16 +83,89 @@ class EntryChecksTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_checks_no_listing_for_a_mutation(): void
+    public function it_checks_listing_before_a_mutation(): void
     {
         $jam = $this->seedTickets()['Printer jam'];
-        $this->tickets->answers['viewAny'] = Response::deny('Tickets are not listed.');
 
         $this->postJson('/api/tickets/mutate', ['mutate' => [['operation' => 'update', 'key' => $jam->id, 'attributes' => ['title' => 'Paper jam']]]])
             ->assertOk()
             ->assertExactJson(['operations' => [['operation' => 'update', 'key' => $jam->id]]]);
 
-        $this->assertSame($this->calls('update', $jam), $this->tickets->calls);
+        $this->assertSame(['viewAny', ...$this->calls('update', $jam)], $this->tickets->calls);
+    }
+
+    /** @return array<string, array{string, string, array<string, mixed>, bool, string}> */
+    public static function allowedWrites(): array
+    {
+        return [
+            'mutate' => ['POST', '/trashable-tags/mutate', ['mutate' => [['operation' => 'update', 'key' => 1, 'attributes' => ['name' => 'Billing']]]], false, 'update 1'],
+            'destroy' => ['DELETE', '/trashable-tags', ['resources' => [1]], false, 'delete 1'],
+            'restore' => ['POST', '/trashable-tags/restore', ['resources' => [1]], true, 'restore 1'],
+            'force destroy' => ['DELETE', '/trashable-tags/force', ['resources' => [1]], true, 'forceDelete 1'],
+        ];
+    }
+
+    /** @param array<string, mixed> $payload */
+    #[Test]
+    #[DataProvider('allowedWrites')]
+    public function it_checks_listing_before_the_rows_of_a_write(string $method, string $uri, array $payload, bool $trashed, string $call): void
+    {
+        Rest::resource('trashable-tags', TagController::class)->withSoftDeletes()->register();
+        $tag = Tag::create(['id' => 1, 'name' => 'Urgent']);
+
+        if ($trashed) {
+            $tag->delete();
+        }
+
+        $this->json($method, $uri, $payload)->assertOk();
+
+        $this->assertSame(['viewAny', $call], $this->tags->calls);
+    }
+
+    /** @return array<string, array{string, string, array<string, mixed>}> */
+    public static function invalidWrites(): array
+    {
+        return [
+            'mutate' => ['POST', '/trashable-tags/mutate', ['mutate' => [['operation' => 'update', 'key' => 4, 'attributes' => ['nope' => 1], 'relations' => ['nothing' => []]]]]],
+            'destroy' => ['DELETE', '/trashable-tags', ['resources' => ['abc', 4]]],
+            'restore' => ['POST', '/trashable-tags/restore', ['resources' => ['abc', 4]]],
+            'force destroy' => ['DELETE', '/trashable-tags/force', ['resources' => ['abc', 4]]],
+        ];
+    }
+
+    /** @param array<string, mixed> $payload */
+    #[Test]
+    #[DataProvider('invalidWrites')]
+    public function it_refuses_an_invalid_write_of_a_user_who_cannot_list_before_validating_it(string $method, string $uri, array $payload): void
+    {
+        Rest::resource('trashable-tags', TagController::class)->withSoftDeletes()->register();
+        $this->tags->answers['viewAny'] = Response::deny('Tags are not listed.');
+        $this->logQueries();
+
+        $this->json($method, $uri, $payload)
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'Tags are not listed.']);
+
+        $this->assertNoQueries();
+        $this->assertSame(['viewAny'], $this->tags->calls);
+    }
+
+    /** @param array<string, mixed> $payload */
+    #[Test]
+    #[DataProvider('invalidWrites')]
+    #[WithConfig('rest.precognition.enabled', true)]
+    public function it_refuses_a_precognitive_write_of_a_user_who_cannot_list(string $method, string $uri, array $payload): void
+    {
+        Rest::resource('trashable-tags', TagController::class)->withSoftDeletes()->register();
+        $this->tags->answers['viewAny'] = Response::deny('Tags are not listed.');
+        $this->logQueries();
+
+        $this->json($method, $uri, $payload, ['Precognition' => 'true'])
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'Tags are not listed.']);
+
+        $this->assertNoQueries();
+        $this->assertSame(['viewAny'], $this->tags->calls);
     }
 
     /** @return array<string, array{string, string, string, list<string>}> */

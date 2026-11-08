@@ -976,7 +976,7 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 
 | Policy method | Triggered by |
 | --- | --- |
-| `viewAny` | `search`, `details`, `operate` and `metric` (unless the action's or the metric's `abilities()` returns `[]`), and every resource reached by an include, an aggregate or a relation filter (each level, pivot columns included), a relation group or a relation sort, and the `response` block of `mutate` (its resource and every resource it reaches) |
+| `viewAny` | `search`, `details`, `mutate`, `destroy`, `restore`, `forceDestroy`, `operate` and `metric` (unless the action's or the metric's `abilities()` returns `[]`), and every resource reached by an include, an aggregate or a relation filter (each level, pivot columns included), a relation group or a relation sort, and the `response` block of `mutate` (its resource and every resource it reaches) |
 | `view` | per-row visibility, includes |
 | `create` | `mutate` create: once per created resource class with the model class, then per created row with its draft (`create($user, ?Model $draft = null)`); `details`, with the model class, answered in `authorizations` |
 | `update` | `mutate` update, with a `\Lomkit\Rest\Authorization\Changes` third argument (`has()`, `get()`, `keys()`); a child moved under a has-one/has-many relation |
@@ -988,14 +988,14 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 
 **Define a policy for every model you expose.** A relation that needs its own link check declares its abilities; a declared ability with no policy method is denied. `php artisan rest:policy PostPolicy --model=Post` writes a starting point that allows every ability: edit it before production.
 
-**Class-level checks run before validation and before any query.** The request checks its endpoint abilities (`viewAny` for `search` and `details`, none for `mutate`, `destroy`, `restore` and `forceDestroy`, for `operate` `viewAny` followed by the resource's `Endpoint::Operate` abilities and the action's `abilities()`, and the same for `metric` with `Endpoint::Metric` and the metric's `abilities()`), then `viewAny` on every resource the payload reaches and `create` for every created resource. A denied check answers `403` (or the status of the policy's response) even for an invalid payload or a Precognition request. The request's own `authorize()` runs first, and both must pass. Row checks of `mutate` run in one batch inside the transaction, before the first write; those of `destroy`, `restore` and `forceDestroy` before their transaction.
+**Class-level checks run before validation and before any query.** The request checks its endpoint abilities (`viewAny` for `search`, `details`, `mutate`, `destroy`, `restore` and `forceDestroy`, for `operate` `viewAny` followed by the resource's `Endpoint::Operate` abilities and the action's `abilities()`, and the same for `metric` with `Endpoint::Metric` and the metric's `abilities()`), then `viewAny` on every resource the payload reaches and `create` for every created resource. A denied check answers `403` (or the status of the policy's response) even for an invalid payload or a Precognition request. The request's own `authorize()` runs first, and both must pass. Row checks of `mutate` run in one batch inside the transaction, before the first write; those of `destroy`, `restore` and `forceDestroy` before their transaction.
 
 To change the endpoint abilities of one resource, override `abilities()` on it:
 
 ```php
 public function abilities(\Lomkit\Rest\Http\Routing\Endpoint $endpoint): array
 {
-    return $endpoint === \Lomkit\Rest\Http\Routing\Endpoint::Destroy ? ['deleteAny'] : parent::abilities($endpoint);
+    return $endpoint === \Lomkit\Rest\Http\Routing\Endpoint::Destroy ? ['viewAny', 'deleteAny'] : parent::abilities($endpoint);
 }
 ```
 

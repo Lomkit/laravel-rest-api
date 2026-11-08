@@ -42,6 +42,7 @@ class PivotWritesTraceTest extends WriteTraceTestCase
                 ],
             ],
         ], [
+            'policy viewAny',
             'policy create',
             'sql select * from books where books.id in (102)',
             'sql select * from shelves where shelves.id in (101)',
@@ -98,6 +99,7 @@ class PivotWritesTraceTest extends WriteTraceTestCase
                 ],
             ],
         ], [
+            'policy viewAny',
             'sql select * from tickets where tickets.id in (101)',
             'sql select * from tags where tags.id in (102, 101) and tags.deleted_at is null',
             'sql select tags.*, tag_ticket.ticket_id as pivot_ticket_id, tag_ticket.tag_id as pivot_tag_id, tag_ticket.position as pivot_position, tag_ticket.weight as pivot_weight, tag_ticket.added_by as pivot_added_by, tag_ticket.note as pivot_note, tag_ticket.created_at as pivot_created_at from tags inner join tag_ticket on tags.id = tag_ticket.tag_id where tag_ticket.ticket_id = ? and tags.deleted_at is null',
@@ -148,6 +150,7 @@ class PivotWritesTraceTest extends WriteTraceTestCase
                 ],
             ],
         ], [
+            'policy viewAny',
             'sql select * from tags where tags.id in (102) and tags.deleted_at is null',
             'sql select * from tickets where tickets.id in (101, 102)',
             'policy update Tag(Network)',
@@ -190,6 +193,7 @@ class PivotWritesTraceTest extends WriteTraceTestCase
                 ],
             ],
         ], [
+            'policy viewAny',
             'sql select * from tickets where tickets.id in (101)',
             'sql select * from tags where tags.id in (101, 102) and tags.deleted_at is null',
             'policy update Ticket(Printer jam)',

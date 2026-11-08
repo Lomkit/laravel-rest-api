@@ -69,7 +69,7 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
             'errors' => ['mutate.0.relations.team' => ['The mutate.0.relations.team field is prohibited.']],
         ]);
 
-        $this->assertSame([[], ['create']], [$this->tickets->calls, $this->teams->calls]);
+        $this->assertSame([['viewAny'], ['create']], [$this->tickets->calls, $this->teams->calls]);
     }
 
     #[Test]
@@ -92,7 +92,7 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
                 'errors' => ['mutate.0.relations.replies' => ['The mutate.0.relations.replies field is prohibited.']],
             ]);
 
-        $this->assertSame([['create'], ['create']], [$this->teams->calls, $this->replies->calls]);
+        $this->assertSame([['viewAny', 'create'], ['create']], [$this->teams->calls, $this->replies->calls]);
     }
 
     /**

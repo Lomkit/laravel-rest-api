@@ -18,7 +18,7 @@ class WriteFreshnessTest extends HelpdeskTestCase
             ->assertStatus(423)
             ->assertJsonPath('message', 'Closed tickets are read-only.');
 
-        $this->assertSame($this->calls('update', $jam, $jam), $this->tickets->calls);
+        $this->assertSame(['viewAny', ...$this->calls('update', $jam, $jam)], $this->tickets->calls);
         $this->assertDatabaseHas('tickets', ['id' => $jam->id, 'title' => 'Printer jam', 'status' => 'open']);
     }
 
@@ -31,7 +31,7 @@ class WriteFreshnessTest extends HelpdeskTestCase
             ->assertStatus(423)
             ->assertJsonPath('message', 'Closed tickets are read-only.');
 
-        $this->assertSame($this->calls('update', $jam, $jam), $this->tickets->calls);
+        $this->assertSame(['viewAny', ...$this->calls('update', $jam, $jam)], $this->tickets->calls);
     }
 
     #[Test]
@@ -54,7 +54,7 @@ class WriteFreshnessTest extends HelpdeskTestCase
             'operations' => [['operation' => 'create', 'key' => $stale->id]],
             'records' => [['status' => 'closed', 'gates' => ['authorized_to_update' => ['allowed' => false, 'message' => 'Closed tickets are read-only.']]]],
         ]);
-        $this->assertSame(['create', 'viewAny', 'create', 'update '.$stale->id], $this->tickets->calls);
+        $this->assertSame(['viewAny', 'create', 'create', 'update '.$stale->id], $this->tickets->calls);
     }
 
     #[Test]

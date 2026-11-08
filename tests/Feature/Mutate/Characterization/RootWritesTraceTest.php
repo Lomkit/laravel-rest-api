@@ -15,6 +15,7 @@ class RootWritesTraceTest extends WriteTraceTestCase
                 ['operation' => 'update', 'key' => 102, 'attributes' => ['title' => 'Emma Woodhouse']],
             ],
         ], [['operation' => 'create', 'key' => 'Book(Solaris)'], ['operation' => 'update', 'key' => 102]], [
+            'policy viewAny',
             'policy create',
             'sql select * from books where books.id in (102)',
             'policy create',
@@ -63,6 +64,7 @@ class RootWritesTraceTest extends WriteTraceTestCase
                 ],
             ],
         ], [
+            'policy viewAny',
             'policy create',
             'policy create',
             'policy create',

@@ -92,8 +92,8 @@ enum Endpoint: string
     public function abilities(): array
     {
         return match ($this) {
-            self::Details, self::Search => ['viewAny'],
-            self::Mutate, self::Operate, self::Metric, self::Destroy, self::Restore, self::ForceDestroy, self::Batch => [],
+            self::Details, self::Search, self::Mutate, self::Destroy, self::Restore, self::ForceDestroy => ['viewAny'],
+            self::Operate, self::Metric, self::Batch => [],
         };
     }
 

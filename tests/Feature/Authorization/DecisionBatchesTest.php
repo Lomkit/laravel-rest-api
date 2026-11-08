@@ -171,13 +171,13 @@ class DecisionBatchesTest extends HelpdeskTestCase
         ]]];
 
         $this->postJson('/api/cached-tickets/mutate', $links('attach'))->assertOk();
-        $this->assertSame([['stamps', 3], [[300, 3]], 4], $this->traffic());
+        $this->assertSame([['stamps', 1, 3], [[300, 1], [300, 3]], 6], $this->traffic());
         $this->postJson('/api/cached-tickets/mutate', $links('detach'))->assertOk();
-        $this->assertSame([[], [], 0], $this->traffic());
+        $this->assertSame([['stamps', 1], [], 2], $this->traffic());
         $this->tickets->calls = [];
         $this->postJson('/api/cached-tickets/mutate', $links('attach'))->assertOk();
 
-        $this->assertSame([['stamps', 3], [], 2], $this->traffic());
+        $this->assertSame([['stamps', 1, 3], [], 3], $this->traffic());
         $this->assertSame(['update '.$jam->id], $this->tickets->calls);
     }
 
@@ -191,8 +191,8 @@ class DecisionBatchesTest extends HelpdeskTestCase
             ->deleteJson('/api/cached-tickets', ['resources' => [$laptop->id, $toner->id, $reset->id]])
             ->assertOk();
 
-        $this->assertSame([['stamps', 3], [[300, 3]], 5], $this->traffic());
-        $this->assertSame($this->calls('delete', $laptop, $toner, $reset), $this->tickets->calls);
+        $this->assertSame([['stamps', 1, 3], [[300, 1], [300, 3]], 7], $this->traffic());
+        $this->assertSame(['viewAny', ...$this->calls('delete', $laptop, $toner, $reset)], $this->tickets->calls);
     }
 
     #[Test]
@@ -205,13 +205,13 @@ class DecisionBatchesTest extends HelpdeskTestCase
         $rows = ['resources' => [$laptop->id, $toner->id, $reset->id]];
 
         $this->deleteJson('/api/cached-tickets', $rows)->assertForbidden();
-        $this->assertSame([['stamps', 3], [[300, 3]], 5], $this->traffic());
+        $this->assertSame([['stamps', 1, 3], [[300, 1], [300, 3]], 7], $this->traffic());
         $this->deleteJson('/api/cached-tickets', $rows)
             ->assertForbidden()
             ->assertExactJson(['message' => 'This action is unauthorized.']);
 
-        $this->assertSame([['stamps', 3], [], 2], $this->traffic());
-        $this->assertSame($this->calls('delete', $laptop, $toner), $this->tickets->calls);
+        $this->assertSame([['stamps', 1, 3], [], 3], $this->traffic());
+        $this->assertSame(['viewAny', ...$this->calls('delete', $laptop, $toner)], $this->tickets->calls);
         $this->assertDatabaseCount('tickets', 4);
     }
 
