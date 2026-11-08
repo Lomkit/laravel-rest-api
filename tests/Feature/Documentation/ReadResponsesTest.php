@@ -222,7 +222,7 @@ class ReadResponsesTest extends DocumentationTestCase
         return [
             'delete with an integer key' => ['/shows', 'delete', $integers],
             'restore' => ['/shows/restore', 'post', $integers],
-            'force delete' => ['/shows/force', 'delete', $integers],
+            'force delete with a confirmation' => ['/shows/force', 'delete', str_replace('"uniqueItems":true}}', '"uniqueItems":true},"confirmation":{"type":"string","description":"The token of the 428 answer of this endpoint, sent back with the same body to write"}}', $integers)],
             'delete with a string key and its example' => ['/stages', 'delete', '{"required":true,"content":{"application\/json":{"schema":{"type":"object","properties":{"resources":{"type":"array","items":{"type":"string","examples":["main"]},"minItems":1,"maxItems":1000,"uniqueItems":true}},"required":["resources"]},"examples":{"default":{"value":{"resources":["main"]}}}}}}'],
         ];
     }

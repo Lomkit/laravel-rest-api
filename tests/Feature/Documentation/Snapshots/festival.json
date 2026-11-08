@@ -11,7 +11,7 @@
                     {
                         "name": "with",
                         "in": "query",
-                        "description": "The sections and parts to add to the fields, limits and meta of the response, separated by commas. A part adds its section. Accepted values: fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, authorizations.",
+                        "description": "The sections and parts to add to the fields, limits and meta of the response, separated by commas. A part adds its section. Accepted values: fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, confirmations, authorizations.",
                         "schema": {
                             "type": "string"
                         },
@@ -255,7 +255,7 @@
                     {
                         "name": "with",
                         "in": "query",
-                        "description": "The sections and parts to add to the fields, limits and meta of the response, separated by commas. A part adds its section. Accepted values: fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, authorizations.",
+                        "description": "The sections and parts to add to the fields, limits and meta of the response, separated by commas. A part adds its section. Accepted values: fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, confirmations, authorizations.",
                         "schema": {
                             "type": "string"
                         },
@@ -437,6 +437,10 @@
                                     },
                                     "response": {
                                         "$ref": "#/components/schemas/ShowMutationResponse"
+                                    },
+                                    "confirmation": {
+                                        "type": "string",
+                                        "description": "The token of the 428 answer of this endpoint, sent back with the same body to write"
                                     }
                                 },
                                 "required": [
@@ -495,6 +499,9 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/RestValidationFailed"
+                    },
+                    "428": {
+                        "$ref": "#/components/responses/RestConfirmationRequired"
                     }
                 }
             }
@@ -1857,6 +1864,10 @@
                                         "minItems": 1,
                                         "maxItems": 1000,
                                         "uniqueItems": true
+                                    },
+                                    "confirmation": {
+                                        "type": "string",
+                                        "description": "The token of the 428 answer of this endpoint, sent back with the same body to write"
                                     }
                                 },
                                 "required": [
@@ -1897,6 +1908,9 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/RestValidationFailed"
+                    },
+                    "428": {
+                        "$ref": "#/components/responses/RestConfirmationRequired"
                     }
                 }
             }
@@ -1963,7 +1977,7 @@
                     {
                         "name": "with",
                         "in": "query",
-                        "description": "The sections and parts to add to the fields, limits and meta of the response, separated by commas. A part adds its section. Accepted values: fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, authorizations.",
+                        "description": "The sections and parts to add to the fields, limits and meta of the response, separated by commas. A part adds its section. Accepted values: fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, confirmations, authorizations.",
                         "schema": {
                             "type": "string"
                         },
@@ -5900,6 +5914,23 @@
                                     ]
                                 }
                             },
+                            "confirmations": {
+                                "type": "object",
+                                "description": "With confirmations: true for each write whose hook the resource declares (mutateConfirmation(), destroyConfirmation(), and restoreConfirmation() and forceDestroyConfirmation() when the model uses SoftDeletes): the endpoint can answer 428 with a signed token, and writes when the same body comes back with that token",
+                                "properties": {
+                                    "mutate": {
+                                        "type": "boolean"
+                                    },
+                                    "destroy": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "mutate",
+                                    "destroy"
+                                ],
+                                "additionalProperties": false
+                            },
                             "authorizations": {
                                 "type": "object",
                                 "description": "With authorizations: the answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
@@ -9349,6 +9380,31 @@
                                         "feature"
                                     ]
                                 }
+                            },
+                            "confirmations": {
+                                "type": "object",
+                                "description": "With confirmations: true for each write whose hook the resource declares (mutateConfirmation(), destroyConfirmation(), and restoreConfirmation() and forceDestroyConfirmation() when the model uses SoftDeletes): the endpoint can answer 428 with a signed token, and writes when the same body comes back with that token",
+                                "properties": {
+                                    "mutate": {
+                                        "type": "boolean"
+                                    },
+                                    "destroy": {
+                                        "type": "boolean"
+                                    },
+                                    "restore": {
+                                        "type": "boolean"
+                                    },
+                                    "forceDestroy": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "mutate",
+                                    "destroy",
+                                    "restore",
+                                    "forceDestroy"
+                                ],
+                                "additionalProperties": false
                             },
                             "authorizations": {
                                 "type": "object",
@@ -14868,6 +14924,23 @@
                                     ]
                                 }
                             },
+                            "confirmations": {
+                                "type": "object",
+                                "description": "With confirmations: true for each write whose hook the resource declares (mutateConfirmation(), destroyConfirmation(), and restoreConfirmation() and forceDestroyConfirmation() when the model uses SoftDeletes): the endpoint can answer 428 with a signed token, and writes when the same body comes back with that token",
+                                "properties": {
+                                    "mutate": {
+                                        "type": "boolean"
+                                    },
+                                    "destroy": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "mutate",
+                                    "destroy"
+                                ],
+                                "additionalProperties": false
+                            },
                             "authorizations": {
                                 "type": "object",
                                 "description": "With authorizations: the answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
@@ -17535,7 +17608,7 @@
                                     "properties": {
                                         "token": {
                                             "type": "string",
-                                            "description": "A signed token, valid for this user, this action, this body and this number of rows until expires_at"
+                                            "description": "A signed token, valid for this user, this endpoint and this body (and for an action, this number of rows) until expires_at"
                                         },
                                         "expires_at": {
                                             "type": "string",
@@ -17543,7 +17616,7 @@
                                         },
                                         "data": {
                                             "type": "object",
-                                            "description": "The data that the action gives to its confirmation"
+                                            "description": "The data that the action or the resource gives to its confirmation"
                                         }
                                     },
                                     "required": [

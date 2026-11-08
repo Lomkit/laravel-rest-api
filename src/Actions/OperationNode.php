@@ -13,7 +13,6 @@ final readonly class OperationNode
         public Action $action,
         public InputValues $fields,
         public SearchNode|KeyList|null $target,
-        public ?string $confirmation = null,
     ) {}
 
     public function keys(): KeyList

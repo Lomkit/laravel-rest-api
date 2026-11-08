@@ -41,15 +41,24 @@ final readonly class ErrorResponses
             $operation->addResponse($this->shared('RestValidationFailed', 422, 'Validation error', self::validation()));
         }
 
-        $action = $context->declaration();
-
-        if ($action instanceof Action && $action->requiresConfirmation()) {
-            $operation->addResponse($this->shared('RestConfirmationRequired', 428, 'Confirmation required: send the same body again with the token in confirmation', self::confirmation()));
+        if (self::confirms($context)) {
+            $operation->addResponse($this->shared('RestConfirmationRequired', 428, 'Confirmation required: send the same body again with the token in confirmation', ConfirmationSchema::answer()));
         }
 
         if (! $authenticated) {
             $operation->security = [];
         }
+    }
+
+    private static function confirms(DocumentationContext $context): bool
+    {
+        $action = $context->declaration();
+
+        if ($action instanceof Action) {
+            return $action->requiresConfirmation();
+        }
+
+        return $context->resource->confirms($context->endpoint);
     }
 
     private function shared(string $name, int $status, string $description, ObjectType $body): Reference
@@ -104,18 +113,6 @@ final readonly class ErrorResponses
         $errors->additionalProperties(Schemas::list(new StringType));
 
         return Schemas::required(['message' => new StringType, 'errors' => $errors]);
-    }
-
-    private static function confirmation(): ObjectType
-    {
-        return Schemas::required([
-            'message' => new StringType,
-            'confirmation' => Schemas::closed([
-                'token' => (new StringType)->setDescription('A signed token, valid for this user, this action, this body and this number of rows until expires_at'),
-                'expires_at' => (new StringType)->format('date-time'),
-                'data' => (new ObjectType)->setDescription('The data that the action gives to its confirmation'),
-            ], ['token', 'expires_at', 'data']),
-        ]);
     }
 
     private static function key(): Type

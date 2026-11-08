@@ -5,8 +5,8 @@ namespace Lomkit\Rest\Tests\Feature\Actions\Stubs;
 use Illuminate\Bus\PendingBatch;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
-use Lomkit\Rest\Actions\ActionConfirmation;
 use Lomkit\Rest\Actions\ActionFields;
+use Lomkit\Rest\Confirmation\Confirmation;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Fixtures\Archive\Document;
 
@@ -47,7 +47,7 @@ class ShredDocuments extends Action
     }
 
     #[\Override]
-    public function confirmation(ActionFields $fields, int $rows): ?ActionConfirmation
+    public function confirmation(ActionFields $fields, int $rows): ?Confirmation
     {
         self::$asked[] = $rows;
 
@@ -55,7 +55,7 @@ class ShredDocuments extends Action
             return null;
         }
 
-        return ActionConfirmation::make("Shred {$rows} documents?")
+        return Confirmation::make("Shred {$rows} documents?")
             ->data(['rows' => $rows])
             ->expiresIn(self::$seconds);
     }

@@ -4,10 +4,10 @@ namespace Lomkit\Rest\Tests\Fixtures\Festival;
 
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
-use Lomkit\Rest\Actions\ActionConfirmation;
 use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Actions\ActionResponse;
 use Lomkit\Rest\Actions\ActionTarget;
+use Lomkit\Rest\Confirmation\Confirmation;
 use Lomkit\Rest\Fields\Text;
 
 class CancelShows extends Action
@@ -34,13 +34,13 @@ class CancelShows extends Action
     }
 
     #[\Override]
-    public function confirmation(ActionFields $fields, int $rows): ?ActionConfirmation
+    public function confirmation(ActionFields $fields, int $rows): ?Confirmation
     {
         if ($rows < 2) {
             return null;
         }
 
-        return ActionConfirmation::make("Cancel {$rows} shows?")->data(['rows' => $rows]);
+        return Confirmation::make("Cancel {$rows} shows?")->data(['rows' => $rows]);
     }
 
     #[\Override]

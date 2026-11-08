@@ -9,9 +9,11 @@ use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Fields\WriteOperation;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\KeySchema;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
+use Lomkit\Rest\Scramble\ConfirmationSchema;
 use Lomkit\Rest\Scramble\FieldSchema;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\Search\SearchSchema;
@@ -40,7 +42,7 @@ final readonly class MutationSchema
         $mutate->setMin(1);
         $mutate->setMax($resource->context()->limits()->sizes->mutate);
 
-        return Schemas::required(['mutate' => $mutate, 'response' => $this->response($resource)], ['response']);
+        return Schemas::required(['mutate' => $mutate, 'response' => $this->response($resource), ...ConfirmationSchema::token($resource, Endpoint::Mutate)], ['response', 'confirmation']);
     }
 
     public function reference(Resource $resource): Reference

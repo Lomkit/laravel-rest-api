@@ -1,10 +1,10 @@
 <?php
 
-namespace Lomkit\Rest\Actions;
+namespace Lomkit\Rest\Confirmation;
 
-use Lomkit\Rest\Exceptions\InvalidActionException;
+use Lomkit\Rest\Exceptions\InvalidConfirmationException;
 
-final readonly class ActionConfirmation
+final readonly class Confirmation
 {
     /** @param array<mixed> $data */
     private function __construct(
@@ -13,11 +13,11 @@ final readonly class ActionConfirmation
         public int $seconds,
     ) {
         if ($data !== [] && array_is_list($data)) {
-            throw InvalidActionException::confirmationDataList();
+            throw InvalidConfirmationException::dataList();
         }
 
         if ($seconds < 1) {
-            throw InvalidActionException::confirmationExpiry($seconds);
+            throw InvalidConfirmationException::expiry($seconds);
         }
     }
 

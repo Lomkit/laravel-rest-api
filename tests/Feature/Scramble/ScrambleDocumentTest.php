@@ -51,7 +51,7 @@ class ScrambleDocumentTest extends ScrambleTestCase
     {
         $details = $this->detailsSchema('/posts')['properties']['data'];
 
-        $this->assertSame(['actions', 'metrics', 'instructions', 'fields', 'limits', 'scopes', 'relations', 'rules', 'text', 'gates', 'authorizations', 'meta'], array_keys($details['properties']));
+        $this->assertSame(['actions', 'metrics', 'instructions', 'fields', 'limits', 'scopes', 'relations', 'rules', 'text', 'gates', 'confirmations', 'authorizations', 'meta'], array_keys($details['properties']));
         $this->assertSame(['fields', 'limits', 'meta'], $details['required']);
     }
 

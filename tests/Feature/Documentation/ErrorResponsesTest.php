@@ -52,9 +52,9 @@ class ErrorResponsesTest extends DocumentationTestCase
                 'confirmation' => [
                     'type' => 'object',
                     'properties' => [
-                        'token' => ['type' => 'string', 'description' => 'A signed token, valid for this user, this action, this body and this number of rows until expires_at'],
+                        'token' => ['type' => 'string', 'description' => 'A signed token, valid for this user, this endpoint and this body (and for an action, this number of rows) until expires_at'],
                         'expires_at' => ['type' => 'string', 'format' => 'date-time'],
-                        'data' => ['type' => 'object', 'description' => 'The data that the action gives to its confirmation'],
+                        'data' => ['type' => 'object', 'description' => 'The data that the action or the resource gives to its confirmation'],
                     ],
                     'required' => ['token', 'expires_at', 'data'],
                     'additionalProperties' => false,
@@ -83,10 +83,11 @@ class ErrorResponsesTest extends DocumentationTestCase
             'an action that asks for a confirmation' => ['/shows/actions/cancel-shows', 'post', [200, 401, 403, 404, 422, 428], true],
             'a metric without the auth of its resource' => ['/shows/metrics/shows-by-status', 'post', [200, 403, 404, 422], false],
             'batch progress' => ['/shows/actions/{action}/batches/{batch}', 'get', [200, 401, 403, 404], true],
-            'force delete' => ['/shows/force', 'delete', [200, 401, 403, 404, 422], true],
+            'force delete that asks for a confirmation' => ['/shows/force', 'delete', [200, 401, 403, 404, 422, 428], true],
+            'delete without a confirmation' => ['/shows', 'delete', [200, 401, 403, 404, 422], true],
             'details of a resource registered after one behind auth' => ['/notes', 'get', [200, 403, 404, 422], false],
             'mutate of a resource registered after one behind auth' => ['/notes/mutate', 'post', [200, 403, 404, 409, 422], false],
-            'mutate of a versioned resource' => ['/shows/mutate', 'post', [200, 401, 403, 404, 409, 422], true],
+            'mutate of a versioned resource that asks for a confirmation' => ['/shows/mutate', 'post', [200, 401, 403, 404, 409, 422, 428], true],
             'restore' => ['/shows/restore', 'post', [200, 401, 403, 404, 422], true],
         ];
     }

@@ -60,6 +60,8 @@ class VersionedWritesTest extends PackageTestCase
         $this->travelTo('2026-03-01 10:00:00');
         Interruptions::reset([]);
         VersionedDocumentResource::$whileWriting = null;
+        VersionedDocumentResource::$confirms = false;
+        VersionedDocumentResource::$asked = 0;
         SecondaryDocument::query()->create(['title' => 'Annual report', 'updated_at' => '2026-01-01 08:00:00']);
 
         Event::listen([TransactionBeginning::class, TransactionCommitted::class, TransactionRolledBack::class], function (object $event): void {
@@ -85,6 +87,24 @@ class VersionedWritesTest extends PackageTestCase
         $this->assertSame(['mutatedAll', 'mutatedAll'], Interruptions::$runs);
         $this->assertSame(['begin secondary', 'rollback secondary', 'begin secondary', 'commit secondary'], $this->transactions);
         $this->assertSame(['Final report', '2026-03-01 10:00:00'], [$this->document()->title, $this->document()->updated_at?->format('Y-m-d H:i:s')]);
+    }
+
+    #[Test]
+    #[WithConfig('app.key', 'base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=')]
+    public function it_asks_for_the_confirmation_once_when_it_runs_a_deadlocked_transaction_again(): void
+    {
+        config(['rest.transactions.attempts' => 2]);
+        VersionedDocumentResource::$confirms = true;
+        $token = $this->postJson('/versioned-documents/mutate', self::MUTATE)
+            ->assertStatus(428)
+            ->json('confirmation.token');
+        Interruptions::reset([Interruptions::deadlock()]);
+
+        $response = $this->postJson('/versioned-documents/mutate', [...self::MUTATE, 'confirmation' => $token]);
+
+        $response->assertOk();
+        $this->assertSame([2, ['mutatedAll', 'mutatedAll']], [VersionedDocumentResource::$asked, Interruptions::$runs]);
+        $this->assertSame('Final report', $this->document()->title);
     }
 
     #[Test]
