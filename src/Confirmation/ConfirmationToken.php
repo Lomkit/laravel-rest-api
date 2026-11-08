@@ -1,6 +1,6 @@
 <?php
 
-namespace Lomkit\Rest\Actions;
+namespace Lomkit\Rest\Confirmation;
 
 final readonly class ConfirmationToken
 {

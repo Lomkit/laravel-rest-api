@@ -48,9 +48,10 @@ final class DetailsResponseType
             'rules' => self::rules(),
             'text' => self::text(),
             'gates' => Schemas::list((new StringType)->enum($resource->isGatingEnabled() ? $definition->gates()->names() : []), 'With gates: the abilities that search.gates accepts, the built-in ones first, then those that the resource declares; empty when the resource turns its gates off'),
+            'confirmations' => self::confirmations($resource),
             'authorizations' => self::authorizations(),
             'meta' => self::meta($resource),
-        ], ['actions', 'metrics', 'instructions', 'scopes', 'relations', 'rules', 'text', 'gates', 'authorizations']);
+        ], ['actions', 'metrics', 'instructions', 'scopes', 'relations', 'rules', 'text', 'gates', 'confirmations', 'authorizations']);
     }
 
     private static function meta(Resource $resource): ObjectType
@@ -64,6 +65,13 @@ final class DetailsResponseType
         $meta->setDescription('The keys that detailsMeta() of the resource returns for the user of the request');
 
         return $meta;
+    }
+
+    private static function confirmations(Resource $resource): ObjectType
+    {
+        $writes = array_map(fn (): BooleanType => new BooleanType, $resource->confirmations());
+
+        return Schemas::closed($writes, array_keys($writes), 'With confirmations: true for each write whose hook the resource declares (mutateConfirmation(), destroyConfirmation(), and restoreConfirmation() and forceDestroyConfirmation() when the model uses SoftDeletes): the endpoint can answer 428 with a signed token, and writes when the same body comes back with that token');
     }
 
     private static function authorizations(): ObjectType

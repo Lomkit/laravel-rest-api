@@ -48,6 +48,7 @@ final readonly class ResourceDetails
             'rules' => fn (): array => ResourceRuleDetails::of($this->resource)->jsonSerialize(),
             'text' => fn (): mixed => $this->resource->context()->text($this->resource)->capabilities?->jsonSerialize(),
             'gates' => fn (): array => $this->resource->isGatingEnabled() ? $this->definition->gates()->names() : [],
+            'confirmations' => fn (): array => $this->resource->confirmations(),
             'authorizations' => fn (): array => $this->authorizations->jsonSerialize(),
             'meta' => fn (): object => (object) $this->resource->detailsMeta(),
         ];

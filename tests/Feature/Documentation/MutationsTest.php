@@ -21,7 +21,7 @@ class MutationsTest extends DocumentationTestCase
         $schemas = $document['components']['schemas'];
 
         $this->assertSame(
-            '{"type":"object","properties":{"mutate":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowMutation"},"minItems":1,"maxItems":100},"response":{"$ref":"#\\/components\\/schemas\\/ShowMutationResponse"}},"required":["mutate"]}',
+            '{"type":"object","properties":{"mutate":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowMutation"},"minItems":1,"maxItems":100},"response":{"$ref":"#\\/components\\/schemas\\/ShowMutationResponse"},"confirmation":{"type":"string","description":"The token of the 428 answer of this endpoint, sent back with the same body to write"}},"required":["mutate"]}',
             json_encode($document['paths']['/shows/mutate']['post']['requestBody']['content']['application/json']['schema']),
         );
         $this->assertSame(

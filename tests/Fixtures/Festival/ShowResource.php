@@ -3,6 +3,8 @@
 namespace Lomkit\Rest\Tests\Fixtures\Festival;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Lomkit\Rest\Confirmation\Confirmation;
 use Lomkit\Rest\Fields\Boolean;
 use Lomkit\Rest\Fields\Date;
 use Lomkit\Rest\Fields\DateTime;
@@ -10,9 +12,12 @@ use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Mutations\MutationNode;
+use Lomkit\Rest\Mutations\PendingMutation;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
@@ -64,6 +69,21 @@ class ShowResource extends Resource
     public function versioned(): bool
     {
         return true;
+    }
+
+    #[\Override]
+    public function mutateConfirmation(PendingMutation $mutation): ?Confirmation
+    {
+        $onSale = array_filter($mutation->entries, fn (MutationNode $entry): bool => $entry->operation === MutationOperation::Update && ($entry->attributes['status'] ?? null) === ShowStatus::OnSale->value);
+
+        return $onSale === [] ? null : Confirmation::make('Open the sale of '.count($onSale).' shows?')->data(['shows' => count($onSale)]);
+    }
+
+    /** @param Collection<int, Show> $models */
+    #[\Override]
+    public function forceDestroyConfirmation(Collection $models): ?Confirmation
+    {
+        return $models->count() < 2 ? null : Confirmation::make("Delete {$models->count()} shows for good?")->data(['rows' => $models->count()]);
     }
 
     #[\Override]

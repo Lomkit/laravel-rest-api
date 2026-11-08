@@ -30,6 +30,7 @@ class RestoreRequest extends RestRequest
         return [
             ...$this->resourceKeyRules($resource, $this->context()->limits()->sizes->resources),
             'search' => ['bail', 'prohibited', 'array'],
+            'confirmation' => ['string'],
         ];
     }
 

@@ -18,6 +18,7 @@ final readonly class DetailsSelection
         'rules' => [],
         'text' => [],
         'gates' => [],
+        'confirmations' => [],
         'authorizations' => [],
     ];
 

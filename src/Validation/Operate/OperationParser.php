@@ -30,10 +30,9 @@ final readonly class OperationParser
     public function parse(Cursor $root, Action $action, ValidationContext $context): OperationNode
     {
         $target = $this->target($root, $action, $context);
-        $confirmation = $root->at('confirmation');
-        $context->rules->addWhenPresent($confirmation, ['string']);
+        $context->rules->addWhenPresent($root->at('confirmation'), ['string']);
 
-        return new OperationNode($action, $this->fields($root->at('fields'), $action, $context), $target, is_string($confirmation->value) ? $confirmation->value : null);
+        return new OperationNode($action, $this->fields($root->at('fields'), $action, $context), $target);
     }
 
     private function target(Cursor $root, Action $action, ValidationContext $context): SearchNode|KeyList|null

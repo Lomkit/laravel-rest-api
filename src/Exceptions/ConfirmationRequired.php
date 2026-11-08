@@ -5,12 +5,12 @@ namespace Lomkit\Rest\Exceptions;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
-use Lomkit\Rest\Actions\ActionConfirmation;
+use Lomkit\Rest\Confirmation\Confirmation;
 
 final class ConfirmationRequired extends HttpResponseException
 {
     public function __construct(
-        public readonly ActionConfirmation $confirmation,
+        public readonly Confirmation $confirmation,
         public readonly string $token,
         public readonly CarbonImmutable $expiresAt,
     ) {

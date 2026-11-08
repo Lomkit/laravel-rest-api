@@ -288,7 +288,7 @@ Rest::resource('posts', PostsController::class)
 
 | Method | URI | Endpoint | Purpose |
 | --- | --- | --- | --- |
-| `GET` | `/users` | `details` | Schema for the resource: fields, limits and meta, the rest (relations, scopes, actions, metrics, instructions, rules, text search, gates, authorizations) with `?with=` |
+| `GET` | `/users` | `details` | Schema for the resource: fields, limits and meta, the rest (relations, scopes, actions, metrics, instructions, rules, text search, gates, confirmations, authorizations) with `?with=` |
 | `POST` | `/users/search` | `search` | Filterable/sortable/paginated read |
 | `POST` | `/users/mutate` | `mutate` | Batch create/update + relation operations |
 | `POST` | `/users/actions/{uriKey}` | `operate` | Run a custom action: one route per action, named `{name}.operate.{uriKey}`, with the action's own middleware |
@@ -345,6 +345,7 @@ The query parameter `with` adds the rest, as a comma-separated list of sections 
 | `rules` | the rules of the resource |
 | `text` | the text search (`null` without one) |
 | `gates` | the names that `search.gates` accepts |
+| `confirmations` | `mutate`, `destroy`, `restore`, `forceDestroy` (these two when the model uses `SoftDeletes`): `true` when the resource declares the confirmation hook of that write |
 | `authorizations` | the class-level abilities, for the user of the request (policy calls) |
 
 Ask for what the screen shows:
@@ -390,6 +391,7 @@ The first one serves a list screen (sortable and filterable columns, scopes, bul
   "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
   "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null},
   "gates": ["view", "create", "update", "delete"],
+  "confirmations": {"mutate": false, "destroy": false},
   "authorizations": {"viewAny": {"allowed": true, "message": null}, "create": {"allowed": true, "message": null}},
   "meta": {}
 }}
@@ -714,8 +716,8 @@ class SendWelcomeNotificationAction extends \Lomkit\Rest\Actions\Action
 
     // Optional. A confirmation that the endpoint checks: return one and the first request answers 428
     // with a signed token; the same body sent again with that token runs the action. null runs at once.
-    // public function confirmation(\Lomkit\Rest\Actions\ActionFields $fields, int $rows): ?\Lomkit\Rest\Actions\ActionConfirmation
-    // { return $rows < 50 ? null : \Lomkit\Rest\Actions\ActionConfirmation::make("Notify {$rows} users?")->data(['rows' => $rows]); }
+    // public function confirmation(\Lomkit\Rest\Actions\ActionFields $fields, int $rows): ?\Lomkit\Rest\Confirmation\Confirmation
+    // { return $rows < 50 ? null : \Lomkit\Rest\Confirmation\Confirmation::make("Notify {$rows} users?")->data(['rows' => $rows]); }
 
     // Optional. A policy ability checked on every row before the action runs (403 on a refused row).
     // public function authorizeEach(): ?string { return 'update'; }
@@ -819,13 +821,13 @@ smaller, raise it, or set it to `null` to remove the cap on every target.
 
 **Row checks.** `authorizeEach(): ?string` (null by default) names a policy ability checked on every row of the `Search` or `Resources` target, through the resource's `authorizedTo()` (memo, `authorizationCache()`: one store read and one write per chunk). By default all chunks are read and checked before any `handle()`, job or batch, then read again to run: a refused row is a `403` (status and message of the first refusal; `AuthorizationDenied` holds every refusal, at most 50, under `resources.{index}` or `search`). With `->skipUnauthorized()` (or `public bool $skipUnauthorized = true`) each chunk is filtered just before it is handed and `impacted` counts the allowed rows. The worker of a queued action does not check again. `skipUnauthorized()` without an ability, or an ability on the `None` target, throws `InvalidActionException` when the actions are read. `rest:check` reports an action on the `Search` or `Resources` target without an ability (return `'view'` for an action that only reads).
 
-**Confirmation.** `confirmation(ActionFields $fields, int $rows): ?ActionConfirmation` (`null` by default) makes the endpoint check that the user confirmed the run. `$rows` is the number of rows the action would run on: the rows the search matches in the perimeter, capped by `$maxResources`, the keys of the `Resources` target, `0` for the `None` target, counted before `skipUnauthorized()` filters (`impacted` can end lower). Return `null` to run at once (below a threshold, for example), or `ActionConfirmation::make('Close 37 tickets?')->data(['rows' => 37])` (string keys, `{}` when empty; a list throws `InvalidActionException`), `->expiresIn(600)` (seconds, 300 by default). The request then answers `428` after validation (`422`) and the entry and row checks (`403`), and runs nothing: no `operating()`, no `handle()`, no job, no batch, no event:
+**Confirmation.** `confirmation(ActionFields $fields, int $rows): ?Confirmation` (`Lomkit\Rest\Confirmation\Confirmation`, `null` by default) makes the endpoint check that the user confirmed the run. `$rows` is the number of rows the action would run on: the rows the search matches in the perimeter, capped by `$maxResources`, the keys of the `Resources` target, `0` for the `None` target, counted before `skipUnauthorized()` filters (`impacted` can end lower). Return `null` to run at once (below a threshold, for example), or `Confirmation::make('Close 37 tickets?')->data(['rows' => 37])` (string keys, `{}` when empty; a list throws `InvalidConfirmationException`), `->expiresIn(600)` (seconds, 300 by default). The request then answers `428` after validation (`422`) and the entry and row checks (`403`), and runs nothing: no `operating()`, no `handle()`, no job, no batch, no event:
 
 ```json
 {"message": "Close 37 tickets?", "confirmation": {"token": "1796119500.9c2f…", "expires_at": "2026-12-01T10:05:00Z", "data": {"rows": 37}}}
 ```
 
-The client sends the same body again with `"confirmation": "<token>"` (a string; another type is a `422`) and the action runs. The token is signed with `app.key` (an empty key throws `InvalidConfigException` once a confirmation is due) and holds no state: it is valid for the same user and guard, resource, action, `search`, `resources` and `fields` (key order and unknown first-level keys do not count) and number of rows, until it expires, and can be used again until then. Any other token, or a count that changed, answers a new `428` with a fresh token. Precognition stops before the confirmation. `confirm()` and `destructive()` stay hints for clients.
+The client sends the same body again with `"confirmation": "<token>"` (a string; another type is a `422`) and the action runs. The token is signed with `app.key` (an empty key throws `InvalidConfigException` once a confirmation is due) and holds no state: it is valid for the same user and guard, resource, action, `search`, `resources` and `fields` (key order and unknown first-level keys do not count) and number of rows, until it expires, and can be used again until then. Any other token, or a count that changed, answers a new `428` with a fresh token. Precognition stops before the confirmation. `confirm()` and `destructive()` stay hints for clients. The writes of a resource ask the same way, see [Confirmed writes](#confirmed-writes).
 
 **Queuing**: implement `Illuminate\Contracts\Queue\ShouldQueue` to dispatch one job per chunk of `$chunkCount` models, at most `rest.limits.sizes.jobs` jobs per run (default `100`, at least `1`): with more rows, each job takes the rows divided by that limit, rounded up (250 rows, `$chunkCount` 2: 84 jobs of 3 rows). Combine with `Lomkit\Rest\Contracts\BatchableAction` and use `withBatch(ActionFields $fields, PendingBatch $batch): void` to register `then`/`catch`/`finally` callbacks. Route the jobs with Laravel's queue attributes on the action (`#[Queue('exports')]`, `#[Connection('redis')]`, `#[Tries(3)]`, `#[Timeout]`, `#[Backoff]`, `#[Delay]`, `#[MaxExceptions]`, `#[FailOnTimeout]`) or `Queue::route(ExportOrders::class, 'exports')`; an action has no `$queue`/`$connection` properties and no `dispatch()`. The job (`Lomkit\Rest\Actions\QueuedAction`) holds the resource and action classes, the action key, the input values as sent, the row keys and a reference to the user; the worker rebuilds the context for that user (`$this->request()->user()`, policies and `perimeterQuery()` see them; `auth()->user()` does not), casts the input values again, and reloads the rows by key through `perimeterQuery()` (not for an engine text search) with the global scopes and `search.trashed`, without the search's includes. Rows gone or out of the perimeter are skipped; a missing user or a removed action fails the job with `QueuedActionException`. The worker reads the database connections current when the job runs: with several tenants, initialise the tenant in the worker before the job (stancl/tenancy's `QueueTenancyBootstrapper` does it from the payload), or the job fails on the central connection (database per tenant) or loads its rows by key across tenants (single database). `release()`, `attempts()` and `batch()` work in `handle()`. A `BatchableAction` answers `"batch": "<id>"`; its jobs skip once the batch is cancelled (`SkipIfBatchCancelled`). `Rest::resource(...)->withBatchProgress()` adds `GET /{resource}/actions/{action}/batches/{batch}` (`{name}.batch`): the progress (`id`, `total_jobs`, `pending_jobs`, `failed_jobs`, `progress`, `finished`, `cancelled`) for the user who started the batch, `404` for anyone else and for a guest's batch.
 
@@ -1242,6 +1244,39 @@ DELETE /api/users/force    body: {"resources": [5, 6]}      // requires withSoft
 
 All three return the affected records with the selectable fields of their resource: `{"data": [{...}], "meta": {}}`. They take no `search`: an empty array is accepted, and any other `search` (`null` and blank strings included) is a `422` under `search`, so their rows carry no `selects`, gates or aggregates. Each entry of `resources` is a key typed like the resource's `ID` field (an integer for integer keys; a string, UUID or ULID otherwise), so a list or an object in `resources` is a `422` under `resources.{index}`. `resources` must be a list (an object is a `422`, `The resources field must be a list.`) of at most `rest.limits.sizes.resources` keys (default `1000`), and a repeated key is a `422` on every copy (UUID and ULID keys compare without case). During validation, the keys are checked through the resource's `perimeterQuery()`, with the global scopes (trashed rows included on restore and force), with one query per 1,000 keys: a key that it does not return, a trashed key on destroy included, is a `422`, `The selected resources.0 is invalid.` That query also loads the models, with the keys typed by the `ID` field whatever the model's `$keyType`, so `perimeterQuery()` runs once and the models are read before any event of the endpoint. Then every row is checked (`delete`, `restore` or `forceDelete`, through the resource's `authorizedTo()`) before any row is written: a denied row is a `403` whose `AuthorizationDenied` holds every denied row (at most 50, under `resources.{index}`), with the message of the first one in the order of `resources`. The rows are written in one database transaction on the connection of the resource's model, in the order of `resources`: the hooks and `perform*()` of each row run inside it, `destroyingAll()` and `destroyedAll()` (and their twins) inside it, before the first row and after the last, and a failure on any row rolls the others back.
 
+## Confirmed writes
+
+A resource can make `mutate`, `destroy`, `restore` and `forceDestroy` check that the user confirmed the write, as an action does with `confirmation()`. One hook per write, each returning `?Lomkit\Rest\Confirmation\Confirmation`, `null` by default:
+
+```php
+use Illuminate\Database\Eloquent\Collection;
+use Lomkit\Rest\Confirmation\Confirmation;
+use Lomkit\Rest\Mutations\MutationNode;
+use Lomkit\Rest\Mutations\PendingMutation;
+
+public function mutateConfirmation(PendingMutation $mutation): ?Confirmation
+{
+    $closed = array_filter($mutation->entries, fn (MutationNode $entry): bool => ($entry->attributes['status'] ?? null) === 'closed');
+
+    return $closed === [] ? null : Confirmation::make('Close '.count($closed).' tickets?')->data(['rows' => count($closed)]);
+}
+
+public function destroyConfirmation(Collection $models): ?Confirmation
+{
+    return $models->count() < 10 ? null : Confirmation::make("Delete {$models->count()} tickets?");
+}
+
+// restoreConfirmation(Collection $models) and forceDestroyConfirmation(Collection $models) work the same way
+```
+
+`$mutation->entries` holds the root `MutationNode` entries, with their `relations`; `$mutation->row($this, $entry->key)` returns the stored row of an entry with a key, as the checks read it (`null` for a `create`). The models of `destroy`, `restore` and `forceDestroy` are the rows of `resources`, in their order. Only the hook of the endpoint's resource runs, not those of related resources. It runs after validation (`422`), the row checks (`403`) and, on a mutation, the version check (`409`), before the first write, once per request (not again on a deadlock retry). A confirmation answers `428` with the shape of an action confirmation and writes nothing: no `mutatingAll()`, `destroyingAll()`, `restoringAll()` or `forceDestroyingAll()`, no row hook, no event:
+
+```json
+{"message": "Delete 12 tickets?", "confirmation": {"token": "1796119500.4b1e…", "expires_at": "2026-12-01T10:05:00Z", "data": {}}}
+```
+
+The client sends the same body again with `"confirmation": "<token>"` and the write runs. The token is signed with `app.key` and valid for the same user and guard, resource, write and body (`mutate` and `response`, or `resources`; key order and unknown first-level keys do not count) until it expires, and can be used again until then; any other token answers a new `428` with a fresh token. Put the warnings of the application in `data` (string keys, `{}` when empty): the package gives no codes, and the message is translated on the server. The four bodies read `confirmation` as a string, also on a resource without the hook: another type is a `422`. Precognition stops before the confirmation. `details` with `with=confirmations` gives `"confirmations": {"mutate": false, "destroy": true, "restore": false, "forceDestroy": false}`: `true` for each hook that the resource declares; `restore` and `forceDestroy` only when the model uses `SoftDeletes`.
+
 ## Authorization model
 
 Two layers, configured in `config/rest.php`:
@@ -1322,7 +1357,7 @@ composer require dedoc/scramble:^0.13.48
 
 The package registers its documentation itself: `config/scramble.php` needs no change. The document is the same for every reader: the package reads the declarations of each resource as a guest, without a user. It documents one operation for each route of an action or a metric, and leaves out the routes `{resource}/actions/{action}` and `{resource}/metrics/{metric}` that only answer an unknown name. The package writes the responses of its operations; Scramble keeps inferring the responses of the other routes of the application.
 
-Each operation of the package lists the shared error responses of `components.responses`: `RestUnauthenticated` (`401`) when its route runs the `auth` middleware, `RestForbidden` (`403`) and `RestNotFound` (`404`) on every operation, `RestConflict` (`409`) on a mutate operation that writes a `versioned()` resource at its root or under its relations, and `RestValidationFailed` (`422`) on every operation but batch progress (details validates its `with` parameter), and `RestConfirmationRequired` (`428`, `{"message", "confirmation": {"token", "expires_at", "data"}}`) on the action operations whose action declares `confirmation()`, whose body also documents `confirmation` (a string). An operation whose route does not run `auth` has `"security": []`. The application declares its security scheme:
+Each operation of the package lists the shared error responses of `components.responses`: `RestUnauthenticated` (`401`) when its route runs the `auth` middleware, `RestForbidden` (`403`) and `RestNotFound` (`404`) on every operation, `RestConflict` (`409`) on a mutate operation that writes a `versioned()` resource at its root or under its relations, and `RestValidationFailed` (`422`) on every operation but batch progress (details validates its `with` parameter), and `RestConfirmationRequired` (`428`, `{"message", "confirmation": {"token", "expires_at", "data"}}`) on the action operations whose action declares `confirmation()` and on the `mutate`, `destroy`, `restore` and `forceDestroy` operations of a resource that declares the matching hook (`mutateConfirmation()`, ...), whose body also documents `confirmation` (a string). An operation whose route does not run `auth` has `"security": []`. The application declares its security scheme:
 
 ```php
 Scramble::configure()->withDocumentTransformers(function (OpenApi $openApi): void {
@@ -1387,6 +1422,7 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Writes — `src/Mutations/Mutator.php` (writes the entries of `payload()` in the transaction of `MutateResponse`, reads each row from the `RowSet` that the key check of validation loaded (`src/Mutations/RowSet.php`, one instance per row) and collects the entries of the response in an `OperationLog` of `OperationEntry` objects) and `src/Mutations/RelationWrites.php` (the writes of each Eloquent relation class: `OwnerWrites`, `ChildWrites`, `PivotWrites` with `PivotSet`, `NoWrites`), checked before the first write by `src/Mutations/WriteChecks.php`
 - Text search — `src/Text/*` (`TextSearch`; the SQL strategies `Contains` and `FullText` implement `QueryTextSearch`, with the database dialects in `src/Text/Dialects/`; `ScoutEngine` implements `EngineTextSearch`; `ResolvedText`, the text search of a resource for one request, read through `$request->context()->text($resource)`; `TextQuery`, `TextMode`, `TextCapabilities`), applied by `TextClause`, `RelevanceClause` and `TrashedClause` in `src/Query/Clauses/`
 - Search engines — `src/Text/Engine/*` (`EngineQuery`, `IndexAttributes`, `EnginePage`, `ScoutModel`) and one profile per Scout engine in `src/Text/Engine/Profiles/`; engine filters and sorts are validated by `src/Text/Engine/{EngineSearchGrammar,EngineFilterParser}.php`, and actions read their keys through `src/Actions/{EngineTargets,EngineTargetKeys}.php`; `EngineCriteria` and `EngineInstruction` build the engine query from the nodes of `payload()`
+- Confirmations — `src/Confirmation/` (`Confirmation`, the answer of a hook; `ConfirmationGate`, the check of one request, which signs a `ConfirmationToken`), `src/Concerns/Resource/ConfirmsWrites.php` (the hooks of the writes), `src/Mutations/PendingMutation.php`, `src/Exceptions/ConfirmationRequired.php` (the `428`)
 - Actions / Instructions / Scopes — `src/Actions/{Action,ActionTarget,ActionFields,ActionResponse,RowChecks,Actionable}.php` (`RowChecks`: the `authorizeEach()` checks of an action), `src/Actions/Rows/*` (`ChunkedRows`, `KeyChunks`, `NoRows`: the rows of each target; `RowCap`: `$maxResources`), `src/Actions/BatchOwner.php`, `src/Instructions/{Instruction,InstructionFields,Instructionable,AppliesToEngine}.php`, `src/Scopes/Scope.php`
 - Typed fields and input values — `src/Fields/*` (`Field`, `Concerns/ConfiguresMessages`, `FieldSet`, `FieldPath`, `InputValues`, `CastValues`, `FieldValues`, `MutationOperation`, `WriteRules`, `Details/FieldDetails`, `Details/ResourceRuleDetails`, `Details/InputFieldDetails`), filter operators and conditions in `src/Fields/Filtering/`, clauses in `src/Query/Clauses/`, built from the nodes of `payload()` with `of()` (filters: `FilterGroupClause`, `FieldConditionClause`, `RelationConditionClause`, `RelationGroupClause`)
 - Relations — `src/Relations/*.php` (the relation classes follow the Eloquent hierarchy: `MorphTo` extends `BelongsTo`, `MorphToMany` and `MorphedByMany` extend `BelongsToMany`, `HasOne`, `HasMany`, `MorphOne` and `MorphMany` extend `HasOneOrMany`, the through relations extend `HasOneOrManyThrough`) (`MorphColumns`, the columns of a `MorphTo` in the details); `src/Contracts/PolymorphicRelation.php` and `src/Relations/MorphTargets.php` (the targets of a `MorphTo`, by morph type); `src/Contracts/OwnerRelation.php` (`BelongsTo` and `MorphTo`: one row per parent, no include limit); pivot fields in `src/Concerns/Relations/HasPivotFields.php` (`src/Contracts/PivotRelation.php`), validated by `src/Validation/Mutate/EntryRules.php`

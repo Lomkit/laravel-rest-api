@@ -13,6 +13,7 @@ use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Concerns\HasRouteMiddleware;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Resourcable;
+use Lomkit\Rest\Confirmation\Confirmation;
 use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Http\Details\DetailsSelection;
@@ -139,7 +140,7 @@ class Action
         return null;
     }
 
-    public function confirmation(ActionFields $fields, int $rows): ?ActionConfirmation
+    public function confirmation(ActionFields $fields, int $rows): ?Confirmation
     {
         return null;
     }

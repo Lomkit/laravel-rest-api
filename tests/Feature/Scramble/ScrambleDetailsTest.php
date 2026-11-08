@@ -34,7 +34,7 @@ class ScrambleDetailsTest extends ScrambleTestCase
     #[Test]
     public function it_documents_the_with_parameter(): void
     {
-        $values = 'fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, authorizations';
+        $values = 'fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, confirmations, authorizations';
 
         $this->assertSame([[
             'name' => 'with',

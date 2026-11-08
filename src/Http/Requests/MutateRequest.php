@@ -48,6 +48,7 @@ class MutateRequest extends RestRequest
             $this->mutations = MutationParser::of($this, $this->parsedRules(), $this->budget(), $this->rows, $links, $this->versions)
                 ->parse($input->at('mutate'), $resource);
             $this->responseBlock = (new ResponseBlockParser($this->parsedRules(), $this->budget()))->parse($input->at('response'), $resource, self::entries($input->at('mutate')));
+            $this->parsedRules()->addWhenPresent($input->at('confirmation'), ['string']);
 
             if (! $this->parsedRules()->isPartial()) {
                 $links->plan($resource, $this->mutations);

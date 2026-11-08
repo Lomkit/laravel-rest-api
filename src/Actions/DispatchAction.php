@@ -10,10 +10,13 @@ use Lomkit\Rest\Actions\Rows\ChunkSize;
 use Lomkit\Rest\Actions\Rows\KeyChunks;
 use Lomkit\Rest\Actions\Rows\NoRows;
 use Lomkit\Rest\Actions\Rows\RowCap;
+use Lomkit\Rest\Confirmation\Confirmation;
+use Lomkit\Rest\Confirmation\ConfirmationGate;
 use Lomkit\Rest\Events\ActionOperated;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
+use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 use Lomkit\Rest\Search\SearchContext;
 use Lomkit\Rest\Search\SearchNode;
@@ -21,6 +24,8 @@ use Lomkit\Rest\Validation\KeysGrammar;
 
 final readonly class DispatchAction
 {
+    private const array BODY = ['search', 'resources', 'fields'];
+
     public function __construct(
         private OperateRequest $request,
         private Action $action,
@@ -41,7 +46,7 @@ final readonly class DispatchAction
         $checks = RowChecks::of($this->request, $this->action);
 
         $checks?->verify($rows->each(...));
-        (new ConfirmationGate($this->request, $this->action, $this->fields))->pass($rows);
+        $this->confirm($rows);
 
         $runner = ActionRunner::for($this->request, $this->action, $this->fields, ! $rows instanceof EngineTargets, $checks);
         $impacted = $runner->through($rows);
@@ -50,6 +55,18 @@ final readonly class DispatchAction
         $this->request->context()->events()->dispatch(ActionOperated::of($this->request->resource, $this->action, $this->fields, $impacted, $batch));
 
         return new OperateResponse($impacted, null, $batch);
+    }
+
+    private function confirm(ActionRows $rows): void
+    {
+        if (! $this->action->requiresConfirmation()) {
+            return;
+        }
+
+        $count = $rows->count();
+
+        ConfirmationGate::of($this->request, [Endpoint::Operate->value, $this->action->uriKey(), $count], self::BODY)
+            ->pass(fn (): ?Confirmation => $this->action->confirmation($this->fields, $count));
     }
 
     private function rows(): ActionRows

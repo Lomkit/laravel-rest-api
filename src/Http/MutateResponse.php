@@ -4,10 +4,14 @@ namespace Lomkit\Rest\Http;
 
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
+use Lomkit\Rest\Confirmation\Confirmation;
+use Lomkit\Rest\Confirmation\ConfirmationGate;
 use Lomkit\Rest\Events\ResourceMutated;
 use Lomkit\Rest\Http\Requests\MutateRequest;
+use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Mutations\Mutator;
 use Lomkit\Rest\Mutations\OperationEntry;
+use Lomkit\Rest\Mutations\PendingMutation;
 use Lomkit\Rest\Mutations\WriteChecks;
 
 final readonly class MutateResponse implements Responsable
@@ -23,9 +27,10 @@ final readonly class MutateResponse implements Responsable
 
     public static function of(MutateRequest $request, Resource $resource): self
     {
+        $gate = ConfirmationGate::of($request, [Endpoint::Mutate->value], ['mutate', 'response']);
         $operations = WriteTransaction::of($resource)
             ->over($request->rows()->loaded())
-            ->run(fn (): array => self::write($request, $resource));
+            ->run(fn (): array => self::write($request, $resource, $gate));
         $resource->context()->events()->dispatch(ResourceMutated::of($resource, $operations));
         $block = $request->responseBlock();
 
@@ -33,13 +38,14 @@ final readonly class MutateResponse implements Responsable
     }
 
     /** @return list<OperationEntry> */
-    private static function write(MutateRequest $request, Resource $resource): array
+    private static function write(MutateRequest $request, Resource $resource, ConfirmationGate $gate): array
     {
         $nodes = $request->payload();
         $checks = new WriteChecks($request->rows());
 
         $checks->authorize($resource, $nodes);
         $request->versions()->verify();
+        $gate->pass(fn (): ?Confirmation => $resource->mutateConfirmation(new PendingMutation($nodes, $request->rows())));
 
         $resource->mutatingAll($nodes);
 

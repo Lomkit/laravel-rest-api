@@ -35,7 +35,7 @@ class DetailsPartsTest extends PackageTestCase
 
     private const string ALLOWED = '{"allowed":true,"message":null}';
 
-    private const string ACCEPTED = 'fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, authorizations';
+    private const string ACCEPTED = 'fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, confirmations, authorizations';
 
     #[\Override]
     protected function setUp(): void

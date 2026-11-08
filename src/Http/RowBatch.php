@@ -5,9 +5,13 @@ namespace Lomkit\Rest\Http;
 use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Confirmation\Confirmation;
+use Lomkit\Rest\Confirmation\ConfirmationGate;
 use Lomkit\Rest\Events\ResourceDestroyed;
 use Lomkit\Rest\Events\ResourceForceDestroyed;
 use Lomkit\Rest\Events\ResourceRestored;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Routing\Endpoint;
 
 final readonly class RowBatch
 {
@@ -25,6 +29,14 @@ final readonly class RowBatch
             ->authorizeEach($resource, $ability, $rows, 'resources');
 
         return new self($resource, $rows);
+    }
+
+    /** @param Closure(Collection<int, Model>): ?Confirmation $ask */
+    public function confirm(RestRequest $request, Endpoint $endpoint, Closure $ask): self
+    {
+        ConfirmationGate::of($request, [$endpoint->value], ['resources'])->pass(fn (): ?Confirmation => $ask($this->rows));
+
+        return $this;
     }
 
     /**

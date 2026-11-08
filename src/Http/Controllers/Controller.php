@@ -26,6 +26,7 @@ use Lomkit\Rest\Http\Requests\RestoreRequest;
 use Lomkit\Rest\Http\Requests\SearchRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Response;
+use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Http\RowBatch;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Search\Run\SearchRun;
@@ -112,15 +113,17 @@ abstract class Controller
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'delete')->write($resource->destroyingAll(...), function (Model $model) use ($request, $resource): void {
-            $resource->destroying($model);
+        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'delete')
+            ->confirm($request, Endpoint::Destroy, $resource->destroyConfirmation(...))
+            ->write($resource->destroyingAll(...), function (Model $model) use ($request, $resource): void {
+                $resource->destroying($model);
 
-            $resource->performDelete($model);
+                $resource->performDelete($model);
 
-            $request->context()->authorizer()->forget($model);
+                $request->context()->authorizer()->forget($model);
 
-            $resource->destroyed($model);
-        }, $resource->destroyedAll(...), ResourceDestroyed::class);
+                $resource->destroyed($model);
+            }, $resource->destroyedAll(...), ResourceDestroyed::class);
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }
@@ -129,15 +132,17 @@ abstract class Controller
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'restore')->write($resource->restoringAll(...), function (Model $model) use ($request, $resource): void {
-            $resource->restoring($model);
+        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'restore')
+            ->confirm($request, Endpoint::Restore, $resource->restoreConfirmation(...))
+            ->write($resource->restoringAll(...), function (Model $model) use ($request, $resource): void {
+                $resource->restoring($model);
 
-            $resource->performRestore($model);
+                $resource->performRestore($model);
 
-            $request->context()->authorizer()->forget($model);
+                $request->context()->authorizer()->forget($model);
 
-            $resource->restored($model);
-        }, $resource->restoredAll(...), ResourceRestored::class);
+                $resource->restored($model);
+            }, $resource->restoredAll(...), ResourceRestored::class);
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }
@@ -146,15 +151,17 @@ abstract class Controller
     {
         $request->resource($resource = $request->context()->resource(static::resourceClass()));
 
-        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'forceDelete')->write($resource->forceDestroyingAll(...), function (Model $model) use ($request, $resource): void {
-            $resource->forceDestroying($model);
+        $models = RowBatch::authorize($resource, $request->payload()->rows(), 'forceDelete')
+            ->confirm($request, Endpoint::ForceDestroy, $resource->forceDestroyConfirmation(...))
+            ->write($resource->forceDestroyingAll(...), function (Model $model) use ($request, $resource): void {
+                $resource->forceDestroying($model);
 
-            $resource->performForceDelete($model);
+                $resource->performForceDelete($model);
 
-            $request->context()->authorizer()->forget($model);
+                $request->context()->authorizer()->forget($model);
 
-            $resource->forceDestroyed($model);
-        }, $resource->forceDestroyedAll(...), ResourceForceDestroyed::class);
+                $resource->forceDestroyed($model);
+            }, $resource->forceDestroyedAll(...), ResourceForceDestroyed::class);
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }

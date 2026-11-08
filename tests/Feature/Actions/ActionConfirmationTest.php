@@ -7,12 +7,12 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
-use Lomkit\Rest\Actions\ActionConfirmation;
 use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Actions\QueuedAction;
+use Lomkit\Rest\Confirmation\Confirmation;
 use Lomkit\Rest\Events\ActionOperated;
-use Lomkit\Rest\Exceptions\InvalidActionException;
 use Lomkit\Rest\Exceptions\InvalidConfigException;
+use Lomkit\Rest\Exceptions\InvalidConfirmationException;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\ArchiveUser;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\ConfirmedDocumentController;
@@ -34,7 +34,7 @@ class ActionConfirmationTest extends PackageTestCase
 {
     private const string SHRED = '/confirmed-documents/actions/shred-documents';
 
-    private const string TOKEN = '1794132300.d6a7d61a5d8a93a91900763e30dbec59ce10b7840f08a7fca952f64d9f1fda07';
+    private const string TOKEN = '1794132300.f70157796d502916907407d48c8d213b83d718f1c91d9723258bf7760aac3331';
 
     private ArchiveUser $grace;
 
@@ -379,8 +379,8 @@ class ActionConfirmationTest extends PackageTestCase
     #[Test]
     public function it_refuses_a_confirmation_with_a_list_of_data_or_no_lifetime(): void
     {
-        $this->assertEquals(InvalidActionException::confirmationDataList(), $this->thrown(fn () => ActionConfirmation::make('Shred?')->data([4, 9])));
-        $this->assertEquals(InvalidActionException::confirmationExpiry(0), $this->thrown(fn () => ActionConfirmation::make('Shred?')->expiresIn(0)));
+        $this->assertEquals(InvalidConfirmationException::dataList(), $this->thrown(fn () => Confirmation::make('Shred?')->data([4, 9])));
+        $this->assertEquals(InvalidConfirmationException::expiry(0), $this->thrown(fn () => Confirmation::make('Shred?')->expiresIn(0)));
     }
 
     private function tokenOf(TestResponse $response, int $rows = 4): string

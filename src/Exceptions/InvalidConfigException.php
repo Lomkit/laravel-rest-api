@@ -13,7 +13,7 @@ final class InvalidConfigException extends InvalidArgumentException
 
     public static function missingAppKey(): self
     {
-        return new self('An action asks for a confirmation, but the [app.key] option is empty: the confirmation token is signed with the application key. Set APP_KEY, for example with php artisan key:generate.');
+        return new self('A confirmation is due, but the [app.key] option is empty: the confirmation token is signed with the application key. Set APP_KEY, for example with php artisan key:generate.');
     }
 
     public static function unknown(string $key): self

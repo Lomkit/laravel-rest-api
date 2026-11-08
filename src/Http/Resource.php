@@ -8,6 +8,7 @@ use Lomkit\Rest\Actions\Actionable;
 use Lomkit\Rest\Concerns\Authorizable;
 use Lomkit\Rest\Concerns\PerformsModelOperations;
 use Lomkit\Rest\Concerns\PerformsQueries;
+use Lomkit\Rest\Concerns\Resource\ConfirmsWrites;
 use Lomkit\Rest\Concerns\Resource\Contextual;
 use Lomkit\Rest\Concerns\Resource\DeclaresFields;
 use Lomkit\Rest\Concerns\Resource\DeclaresScopes;
@@ -28,6 +29,7 @@ class Resource implements \JsonSerializable
 {
     use Actionable;
     use Authorizable;
+    use ConfirmsWrites;
     use Contextual;
     use DeclaresFields;
     use DeclaresScopes;
