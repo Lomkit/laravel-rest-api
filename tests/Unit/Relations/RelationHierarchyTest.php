@@ -45,7 +45,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class RelationHierarchyTest extends PackageTestCase
 {
-    private const array DETAILS = ['resource', 'relation', 'constraints', 'name'];
+    private const array DETAILS = ['resource', 'relation', 'constraints', 'operations', 'name'];
 
     private const array WRITES = [
         BelongsTo::class => OwnerWrites::class,
@@ -201,12 +201,28 @@ class RelationHierarchyTest extends PackageTestCase
         $relation = $this->declared($resource, $name);
         [$details, $reserved] = match (true) {
             $base === BelongsToMany::class => [[...self::DETAILS, 'pivot_fields'], ['pivot']],
-            $class === MorphTo::class => [['relation', 'constraints', 'name', 'types', 'morph'], ['@type']],
+            $class === MorphTo::class => [['relation', 'constraints', 'operations', 'name', 'types', 'morph'], ['@type']],
             default => [self::DETAILS, []],
         };
 
         $this->assertSame($details, array_keys($relation->toDetails()));
         $this->assertSame($reserved, $relation->reservedKeys());
+    }
+
+    /**
+     * @param  class-string<Relation>  $class
+     * @param  class-string<Relation>  $parent
+     * @param  class-string<Relation>  $base
+     * @param  class-string<Resource>  $resource
+     */
+    #[Test]
+    #[DataProvider('relations')]
+    public function it_details_the_accepted_operations_of_the_relation(string $class, string $parent, string $base, string $resource, string $name): void
+    {
+        $relation = $this->declared($resource, $name);
+        $operations = $base === HasOneOrManyThrough::class ? [] : array_column($relation->acceptedOperations(), 'value');
+
+        $this->assertSame($operations, $relation->toDetails()['operations']);
     }
 
     /** @param class-string<Resource> $resource */

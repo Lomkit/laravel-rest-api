@@ -10,6 +10,7 @@ use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Metrics\Metric;
@@ -98,6 +99,7 @@ final class DetailsResponseType
             'resource' => (new StringType)->setDescription('The related resource class; absent on a MorphTo relation with several types'),
             'relation' => (new StringType)->enum($names),
             'constraints' => $constraints,
+            'operations' => Schemas::list((new StringType)->enum(array_column(MutationOperation::cases(), 'value')), 'The operations that the entries of the relation accept in mutate; empty when the relation takes no entry'),
             'name' => new StringType,
             'pivot_fields' => Schemas::list(DetailsEntryTypes::pivotField(), 'Many-to-many relations only: the pivot fields of the relation'),
             'types' => $types,

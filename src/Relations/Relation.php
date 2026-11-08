@@ -145,6 +145,7 @@ class Relation implements \JsonSerializable
                 'required_on_update' => $this->isRequiredOnUpdate(),
                 'prohibited_on_update' => $this->isProhibitedOnUpdate(),
             ],
+            'operations' => array_column($this->acceptedOperations(), 'value'),
             'name' => $this->name(),
         ];
 

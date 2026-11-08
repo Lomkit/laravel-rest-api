@@ -4862,6 +4862,22 @@
                                                 "prohibited_on_update"
                                             ]
                                         },
+                                        "operations": {
+                                            "type": "array",
+                                            "description": "The operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "create",
+                                                    "update",
+                                                    "attach",
+                                                    "detach",
+                                                    "sync",
+                                                    "toggle",
+                                                    "delete"
+                                                ]
+                                            }
+                                        },
                                         "name": {
                                             "type": "string"
                                         },
@@ -5016,6 +5032,7 @@
                                     "required": [
                                         "relation",
                                         "constraints",
+                                        "operations",
                                         "name"
                                     ]
                                 }
@@ -8262,6 +8279,22 @@
                                                 "prohibited_on_update"
                                             ]
                                         },
+                                        "operations": {
+                                            "type": "array",
+                                            "description": "The operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "create",
+                                                    "update",
+                                                    "attach",
+                                                    "detach",
+                                                    "sync",
+                                                    "toggle",
+                                                    "delete"
+                                                ]
+                                            }
+                                        },
                                         "name": {
                                             "type": "string"
                                         },
@@ -8416,6 +8449,7 @@
                                     "required": [
                                         "relation",
                                         "constraints",
+                                        "operations",
                                         "name"
                                     ]
                                 }
@@ -13532,6 +13566,22 @@
                                                 "prohibited_on_update"
                                             ]
                                         },
+                                        "operations": {
+                                            "type": "array",
+                                            "description": "The operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "create",
+                                                    "update",
+                                                    "attach",
+                                                    "detach",
+                                                    "sync",
+                                                    "toggle",
+                                                    "delete"
+                                                ]
+                                            }
+                                        },
                                         "name": {
                                             "type": "string"
                                         },
@@ -13686,6 +13736,7 @@
                                     "required": [
                                         "relation",
                                         "constraints",
+                                        "operations",
                                         "name"
                                     ]
                                 }

@@ -12,4 +12,11 @@ abstract class HasOneOrManyThrough extends Relation
     {
         return [$prefix => 'prohibited'];
     }
+
+    /** @return array<string, mixed> */
+    #[\Override]
+    public function toDetails(): array
+    {
+        return [...parent::toDetails(), 'operations' => []];
+    }
 }
