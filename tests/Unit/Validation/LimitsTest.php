@@ -31,7 +31,7 @@ class LimitsTest extends TestCase
         $this->assertSame(1000, $limits->sizes->resources);
         $this->assertSame(100, $limits->sizes->jobs);
         $this->assertSame(['filters' => 1, 'includes' => 3, 'mutations' => 3], get_object_vars($limits->depths));
-        $this->assertSame(['filters' => 500, 'entries' => 1000, 'relations' => 20], get_object_vars($limits->totals));
+        $this->assertSame(['filters' => 500, 'entries' => 1000, 'relations' => 20, 'patterns' => 10], get_object_vars($limits->totals));
         $this->assertSame(['patterns' => 255], get_object_vars($limits->lengths));
     }
 
@@ -91,7 +91,7 @@ class LimitsTest extends TestCase
     }
 
     #[Test]
-    #[DataProvider('invalidRelationTotals')]
+    #[DataProvider('invalidPositiveTotals')]
     public function it_refuses_a_relation_filter_total_that_is_not_an_integer_of_one_or_more(bool $present, mixed $value): void
     {
         $config = $present ? $this->withLimit('totals', 'relations', $value) : $this->withoutLimit('totals', 'relations');
@@ -109,12 +109,30 @@ class LimitsTest extends TestCase
     }
 
     #[Test]
-    #[DataProvider('invalidRelationTotals')]
+    #[DataProvider('invalidPositiveTotals')]
     public function it_refuses_a_job_limit_that_is_not_an_integer_of_one_or_more(bool $present, mixed $value): void
     {
         $config = $present ? $this->withLimit('sizes', 'jobs', $value) : $this->withoutLimit('sizes', 'jobs');
 
         $this->expectExceptionObject(new InvalidArgumentException('The [rest.limits.sizes.jobs] option must be an integer of 1 or more.'));
+
+        Limits::fromConfig($config);
+    }
+
+    #[Test]
+    public function it_reads_the_pattern_filter_total(): void
+    {
+        $this->assertSame(42, Limits::fromConfig($this->withLimit('totals', 'patterns', '42'))->totals->patterns);
+        $this->assertSame(1, Limits::fromConfig($this->withLimit('totals', 'patterns', 1))->totals->patterns);
+    }
+
+    #[Test]
+    #[DataProvider('invalidPositiveTotals')]
+    public function it_refuses_a_pattern_filter_total_that_is_not_an_integer_of_one_or_more(bool $present, mixed $value): void
+    {
+        $config = $present ? $this->withLimit('totals', 'patterns', $value) : $this->withoutLimit('totals', 'patterns');
+
+        $this->expectExceptionObject(new InvalidArgumentException('The [rest.limits.totals.patterns] option must be an integer of 1 or more.'));
 
         Limits::fromConfig($config);
     }
@@ -223,7 +241,7 @@ class LimitsTest extends TestCase
     }
 
     /** @return array<string, array{bool, mixed}> */
-    public static function invalidRelationTotals(): array
+    public static function invalidPositiveTotals(): array
     {
         return [...self::invalidLimits(), 'zero' => [true, 0], 'zero as a string' => [true, '0']];
     }

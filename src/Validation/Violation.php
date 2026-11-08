@@ -38,6 +38,11 @@ final readonly class Violation
         return new self($key, 'The :attribute field goes over the limit of :max relation filters in one search.', ['max' => (string) $max]);
     }
 
+    public static function tooManyPatternFilters(string $key, int $max): self
+    {
+        return new self($key, 'The :attribute field goes over the limit of :max pattern filters in one search.', ['max' => (string) $max]);
+    }
+
     public static function tooManyEntries(string $key, int $max): self
     {
         return new self($key, 'The :attribute field goes over the limit of :max list entries in one request.', ['max' => (string) $max]);

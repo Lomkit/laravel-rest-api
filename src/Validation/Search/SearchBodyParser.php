@@ -171,7 +171,7 @@ final readonly class SearchBodyParser
     {
         $context->rules->addWhenPresent($list, ['array']);
 
-        return $context->reader->entries($list, $context->limits->sizes->filters, true, $context->grammar->relationFilters($list, $context));
+        return $context->reader->entries($list, $context->limits->sizes->filters, true, $context->grammar->filterCounts($list, $context));
     }
 
     /** @return list<Cursor>|null */

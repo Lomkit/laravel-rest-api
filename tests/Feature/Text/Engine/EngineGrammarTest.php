@@ -164,6 +164,23 @@ class EngineGrammarTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_counts_no_pattern_filter_in_an_engine_search(): void
+    {
+        config(['rest.limits.totals.patterns' => 1]);
+
+        $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [
+            ['field' => 'code', 'operator' => 'like', 'value' => 'V-%'],
+            ['field' => 'code', 'operator' => 'ilike', 'value' => 'v-%'],
+        ]]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', [
+            'search.filters.0.operator' => ['The selected search.filters.0.operator is invalid.'],
+            'search.filters.1.operator' => ['The selected search.filters.1.operator is invalid.'],
+        ]);
+        $this->assertSame([], $this->engine->searches);
+    }
+
+    #[Test]
     public function it_refuses_a_number_the_engine_cannot_compare(): void
     {
         $response = $this->call('POST', '/api/vouchers/search', server: ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'], content: '{"search":{"text":{"value":"report"},"filters":[{"field":"price","value":1e400}]}}');

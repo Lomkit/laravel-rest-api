@@ -12,11 +12,10 @@ final class NodeBudget
 
     private int $relationsLeft;
 
-    private bool $entriesReported = false;
+    private int $patternsLeft;
 
-    private bool $filtersReported = false;
-
-    private bool $relationsReported = false;
+    /** @var array<string, true> */
+    private array $reported = [];
 
     private readonly Violations $violations;
 
@@ -27,47 +26,45 @@ final class NodeBudget
         private readonly int $entries = PHP_INT_MAX,
         private readonly int $filters = PHP_INT_MAX,
         private readonly int $relations = PHP_INT_MAX,
+        private readonly int $patterns = PHP_INT_MAX,
     ) {
         $this->entriesLeft = $entries;
         $this->filtersLeft = $filters;
         $this->relationsLeft = $relations;
+        $this->patternsLeft = $patterns;
         $this->violations = new Violations;
     }
 
     public static function of(Limits $limits): self
     {
-        return new self($limits->totals->entries, $limits->totals->filters, $limits->totals->relations);
+        return new self($limits->totals->entries, $limits->totals->filters, $limits->totals->relations, $limits->totals->patterns);
     }
 
-    public function admit(string $key, int $count, int $max, bool $filters, int $relations = 0): bool
+    public function admit(string $key, int $count, int $max, bool $filters, FilterCounts $counts = new FilterCounts): bool
     {
         if ($count > $max) {
             return $this->refuse($key, Violation::tooMany($key, $max));
         }
 
         if ($filters && $count > $this->filtersLeft) {
-            $reported = $this->filtersReported;
-            $this->filtersReported = true;
-
-            return $this->refuse($key, $reported ? null : Violation::tooManyFilters($key, $this->filters));
+            return $this->overTotal($key, Violation::tooManyFilters($key, $this->filters));
         }
 
-        if ($relations > $this->relationsLeft) {
-            $reported = $this->relationsReported;
-            $this->relationsReported = true;
+        if ($counts->relations > $this->relationsLeft) {
+            return $this->overTotal($key, Violation::tooManyRelationFilters($key, $this->relations));
+        }
 
-            return $this->refuse($key, $reported ? null : Violation::tooManyRelationFilters($key, $this->relations));
+        if ($counts->patterns > $this->patternsLeft) {
+            return $this->overTotal($key, Violation::tooManyPatternFilters($key, $this->patterns));
         }
 
         if ($count > $this->entriesLeft) {
-            $reported = $this->entriesReported;
-            $this->entriesReported = true;
-
-            return $this->refuse($key, $reported ? null : Violation::tooManyEntries($key, $this->entries));
+            return $this->overTotal($key, Violation::tooManyEntries($key, $this->entries));
         }
 
         $this->entriesLeft -= $count;
-        $this->relationsLeft -= $relations;
+        $this->relationsLeft -= $counts->relations;
+        $this->patternsLeft -= $counts->patterns;
 
         if ($filters) {
             $this->filtersLeft -= $count;
@@ -104,6 +101,14 @@ final class NodeBudget
     public function applyTo(array $rules): array
     {
         return $this->violations->applyTo($rules);
+    }
+
+    private function overTotal(string $key, Violation $violation): bool
+    {
+        $reported = isset($this->reported[$violation->message]);
+        $this->reported[$violation->message] = true;
+
+        return $this->refuse($key, $reported ? null : $violation);
     }
 
     private function refuse(string $key, ?Violation $violation): bool
