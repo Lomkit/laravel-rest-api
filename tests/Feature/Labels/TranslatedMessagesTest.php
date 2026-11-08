@@ -41,24 +41,24 @@ class TranslatedMessagesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_translates_the_not_writable_text_through_its_json_line(): void
+    public function it_translates_the_not_writable_text_with_the_package_line(): void
     {
         $response = $this->postJson('/labelled-products/mutate', ['mutate' => [
             ['operation' => 'create', 'attributes' => ['id' => 3, 'name' => 'Floor lamp', 'price' => 10]],
         ]]);
 
         $this->assertExactErrors($response, [
-            'mutate.0.attributes' => ["La clé id du champ mutate.0.attributes n'est pas modifiable en create."],
+            'mutate.0.attributes' => ["La clé id du champ mutate.0.attributes n'est pas modifiable par l'opération create."],
         ]);
     }
 
     #[Test]
-    public function it_translates_the_relation_text_through_its_json_line(): void
+    public function it_translates_the_relation_text_with_the_package_line(): void
     {
         $response = $this->postJson('/api/products/search', ['search' => ['includes' => [['relation' => 'suppliers']]]]);
 
         $this->assertExactErrors($response, [
-            'search.includes.0.relation' => ["Le champ search.includes.0.relation n'est pas une relation valide ou autorisée de cette ressource."],
+            'search.includes.0.relation' => ["Le champ search.includes.0.relation n'est pas une relation valide ou permise pour cette ressource."],
         ]);
     }
 }

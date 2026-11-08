@@ -15,6 +15,6 @@ final readonly class DetailsParts implements ValidationRule
             return;
         }
 
-        $fail('The :attribute field accepts these values, separated by commas: :values.')->translate(['values' => implode(', ', DetailsSelection::values())]);
+        $fail('rest::validation.details_parts')->translate(['values' => implode(', ', DetailsSelection::values())]);
     }
 }

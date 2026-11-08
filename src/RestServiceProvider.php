@@ -35,6 +35,7 @@ class RestServiceProvider extends ServiceProvider
     {
         $this->registerCommands();
         $this->registerPublishing();
+        $this->loadTranslationsFrom(__DIR__.'/../lang', 'rest');
 
         $this->registerStubs();
         $this->registerDocumentation();
@@ -91,6 +92,10 @@ class RestServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../config/rest.php' => config_path('rest.php'),
             ], 'rest-config');
+
+            $this->publishes([
+                __DIR__.'/../lang' => $this->app->langPath('vendor/rest'),
+            ], 'rest-lang');
         }
     }
 }

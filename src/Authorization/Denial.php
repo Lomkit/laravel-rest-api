@@ -4,13 +4,12 @@ namespace Lomkit\Rest\Authorization;
 
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Support\Translation;
 
 use function Illuminate\Support\enum_value;
 
 final readonly class Denial
 {
-    private const string DEFAULT_MESSAGE = 'This action is unauthorized.';
-
     /** @param class-string<Resource> $resource */
     public function __construct(
         public string $path,
@@ -27,7 +26,7 @@ final readonly class Denial
 
     public function message(): string
     {
-        return $this->decision->message ?? self::DEFAULT_MESSAGE;
+        return $this->decision->message ?? Translation::line('rest::errors.unauthorized');
     }
 
     /** @return array{path: string, ability: string, key?: int|string, message: string} */

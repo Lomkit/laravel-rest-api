@@ -9,10 +9,10 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\Channel;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\ChannelResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
+use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
-class DenialTest extends TestCase
+class DenialTest extends PackageTestCase
 {
     #[Test]
     public function it_names_the_path_the_ability_the_key_and_the_message_of_a_row(): void

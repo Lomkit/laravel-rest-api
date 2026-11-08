@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Actions\Rows;
 
 use Illuminate\Validation\ValidationException;
+use Lomkit\Rest\Support\Translation;
 
 final readonly class RowCap
 {
@@ -27,6 +28,6 @@ final readonly class RowCap
 
     public static function refusal(int $max): ValidationException
     {
-        return ValidationException::withMessages(['search' => ["This action can be run on at most {$max} resources; narrow the search."]]);
+        return ValidationException::withMessages(['search' => [Translation::line('rest::actions.row_cap', ['max' => (string) $max])]]);
     }
 }

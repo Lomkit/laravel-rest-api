@@ -22,7 +22,7 @@ final readonly class IncludeAlias implements ValidationRule
     private function conflict(mixed $value): ?string
     {
         if (str_contains($this->relation, '.')) {
-            return 'The :attribute is not allowed on a nested relation, use a nested include instead.';
+            return 'rest::validation.alias_on_nested_relation';
         }
 
         if (! is_string($value)) {
@@ -30,11 +30,11 @@ final readonly class IncludeAlias implements ValidationRule
         }
 
         return match (true) {
-            $this->keys->isReserved($value) => 'The :attribute is reserved.',
-            $this->keys->isField($value) => 'The :attribute conflicts with a field of this resource.',
-            $this->keys->isRelation($value) => 'The :attribute conflicts with a relation of this resource.',
-            $this->keys->includeUses($value) > 1 => 'The :attribute is already used by another include.',
-            $this->keys->aggregateUses($value) > 0 => 'The :attribute is already used by an aggregate.',
+            $this->keys->isReserved($value) => 'rest::validation.alias_reserved',
+            $this->keys->isField($value) => 'rest::validation.alias_taken_by_field',
+            $this->keys->isRelation($value) => 'rest::validation.alias_taken_by_relation',
+            $this->keys->includeUses($value) > 1 => 'rest::validation.alias_taken_by_another_include',
+            $this->keys->aggregateUses($value) > 0 => 'rest::validation.alias_taken_by_aggregate',
             default => null,
         };
     }

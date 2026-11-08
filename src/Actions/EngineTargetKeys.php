@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Actions;
 
 use Illuminate\Validation\ValidationException;
 use Lomkit\Rest\Actions\Rows\RowCap;
+use Lomkit\Rest\Support\Translation;
 use Lomkit\Rest\Text\Engine\EnginePage;
 use Lomkit\Rest\Text\Engine\EngineQuery;
 
@@ -53,10 +54,10 @@ final readonly class EngineTargetKeys
     private function ensureReachable(int $total): void
     {
         $reachable = $this->query->reachable()
-            ?? throw self::refusal('The search engine does not report how many results this search can reach; give the search a limit.');
+            ?? throw self::refusal('rest::actions.engine_unreported');
 
         if ($total >= $reachable) {
-            throw self::refusal("The search engine returns at most {$reachable} results for this search; narrow the search.");
+            throw self::refusal('rest::actions.engine_window', ['max' => (string) $reachable]);
         }
     }
 
@@ -69,7 +70,7 @@ final readonly class EngineTargetKeys
 
         for ($page = 2; count($keys) < $wanted && count($last->keys) === $perPage; $page++) {
             if ($window !== null && $perPage * $page > $window) {
-                throw self::refusal("The search engine returns at most {$window} results for this search; narrow the search.");
+                throw self::refusal('rest::actions.engine_window', ['max' => (string) $window]);
             }
 
             $last = $this->query->page($perPage, $page);
@@ -86,14 +87,15 @@ final readonly class EngineTargetKeys
     private static function distinct(array $keys, int $count): array
     {
         if (count($keys) !== $count || count(array_unique($keys)) !== $count) {
-            throw self::refusal('The search results changed while the action was resolving them; run the action again.');
+            throw self::refusal('rest::actions.engine_results_changed');
         }
 
         return $keys;
     }
 
-    private static function refusal(string $message): ValidationException
+    /** @param array<string, string> $replace */
+    private static function refusal(string $key, array $replace = []): ValidationException
     {
-        return ValidationException::withMessages(['search' => [$message]]);
+        return ValidationException::withMessages(['search' => [Translation::line($key, $replace)]]);
     }
 }
