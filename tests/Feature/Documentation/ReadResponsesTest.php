@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Documentation\Stubs\CappedStageController;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\KeyedStageController;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\KeyedStageResource;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\OtherStageController;
@@ -28,9 +29,50 @@ class ReadResponsesTest extends DocumentationTestCase
     public function it_documents_the_selectable_fields_the_gates_and_the_relations_of_a_record(): void
     {
         $this->assertSame(
-            ['id', 'title', 'summary', 'price', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'settings', 'gates', 'stage', 'artists', 'comments', 'labels'],
+            ['id', 'title', 'summary', 'price', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'settings', 'gates', 'stage', 'artists', 'comments', 'labels', '@more'],
             array_keys($this->document()['components']['schemas']['Show']['properties']),
         );
+    }
+
+    #[Test]
+    public function it_documents_the_includes_of_a_row_that_have_more_rows_by_their_to_many_relations(): void
+    {
+        $schemas = $this->document()['components']['schemas'];
+
+        $this->assertSame(
+            '{"type":"array","description":"Present when the search includes a to-many relation: the includes of the row that have more rows than their limit, by relation or alias","items":{"anyOf":[{"type":"string","enum":["shows","comments"]},{"type":"string","description":"The alias of an include"}]}}',
+            json_encode($schemas['Stage']['properties']['@more']),
+        );
+        $this->assertSame(['artists', 'comments', 'labels'], $schemas['Show']['properties']['@more']['items']['anyOf'][0]['enum']);
+        $this->assertArrayNotHasKey('@more', $schemas['Comment']['properties']);
+        $this->assertArrayNotHasKey('@more', $schemas['Note']['properties']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.search.more_key', 'more_rows')]
+    public function it_names_the_includes_of_a_row_that_have_more_rows_after_the_configuration(): void
+    {
+        $properties = $this->document()['components']['schemas']['Stage']['properties'];
+
+        $this->assertSame(['code', 'name', 'gates', 'shows', 'comments', 'more_rows'], array_keys($properties));
+    }
+
+    #[Test]
+    public function it_documents_whether_the_total_of_a_resource_with_a_maximum_total_stopped(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('capped-stages', CappedStageController::class));
+
+        $schemas = $this->document()['components']['schemas'];
+
+        $this->assertSame(
+            '{"type":"boolean","description":"True when more rows match than the resource counts: total is then a lower bound"}',
+            json_encode($schemas['CappedStagePaginated']['properties']['total_capped']),
+        );
+        $this->assertSame(
+            ['current_page', 'data', 'from', 'last_page', 'per_page', 'to', 'total', 'total_capped', 'meta'],
+            $schemas['CappedStagePaginated']['required'],
+        );
+        $this->assertArrayNotHasKey('total_capped', $schemas['StagePaginated']['properties']);
     }
 
     #[Test]

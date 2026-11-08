@@ -3,8 +3,10 @@
 namespace Lomkit\Rest\Scramble\Components;
 
 use Dedoc\Scramble\Support\Generator\Combined\AllOf;
+use Dedoc\Scramble\Support\Generator\Combined\AnyOf;
 use Dedoc\Scramble\Support\Generator\Discriminator;
 use Dedoc\Scramble\Support\Generator\Reference;
+use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
@@ -80,7 +82,31 @@ final readonly class RecordSchema
             $record->addProperty(Str::snake($relation->relation), $this->relation($relation)->setDescription('Present when the search includes the relation'));
         }
 
+        $more = self::more($definition->relations());
+
+        if ($more !== null) {
+            $record->addProperty($resource->context()->config()->moreKey, $more);
+        }
+
         return $record;
+    }
+
+    /** @param array<int, Relation> $relations */
+    private static function more(array $relations): ?ArrayType
+    {
+        $many = array_filter($relations, static fn (Relation $relation): bool => $relation->hasMultipleEntries());
+
+        if ($many === []) {
+            return null;
+        }
+
+        $keys = new AnyOf;
+        $keys->setItems([
+            (new StringType)->enum(array_values(array_map(static fn (Relation $relation): string => Str::snake($relation->relation), $many))),
+            (new StringType)->setDescription('The alias of an include'),
+        ]);
+
+        return Schemas::list($keys, 'Present when the search includes a to-many relation: the includes of the row that have more rows than their limit, by relation or alias');
     }
 
     private function relation(Relation $relation): Type
