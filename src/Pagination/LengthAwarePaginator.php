@@ -19,6 +19,7 @@ class LengthAwarePaginator extends BaseLengthAwarePaginator
         int $currentPage,
         array $options = [],
         private readonly array $meta = [],
+        private readonly ?bool $totalCapped = null,
     ) {
         parent::__construct($items, $total, $perPage, $currentPage, $options);
     }
@@ -41,6 +42,7 @@ class LengthAwarePaginator extends BaseLengthAwarePaginator
             'per_page' => $this->perPage(),
             'to' => $this->lastItem(),
             'total' => $this->total(),
+            ...($this->totalCapped === null ? [] : ['total_capped' => $this->totalCapped]),
             'meta' => $this->meta(),
         ];
     }

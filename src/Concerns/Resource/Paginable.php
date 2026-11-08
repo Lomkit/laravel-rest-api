@@ -25,6 +25,10 @@ trait Paginable
      */
     public function paginate(Builder $query, int $perPage, int $page): LengthAwarePaginator
     {
-        return (new PageQuery($query))->paginate($perPage, $page);
+        $maxTotal = $this->definition()
+            ->limits()
+            ->maxTotal;
+
+        return (new PageQuery($query, $maxTotal))->paginate($perPage, $page);
     }
 }

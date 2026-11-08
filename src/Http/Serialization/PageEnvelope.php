@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Http\Serialization;
 use Closure;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Pagination\CappedPaginator;
 use Lomkit\Rest\Pagination\LengthAwarePaginator as RestLengthAwarePaginator;
 
 final readonly class PageEnvelope implements Envelope
@@ -22,6 +23,7 @@ final readonly class PageEnvelope implements Envelope
             $this->page->currentPage(),
             [],
             $meta,
+            $this->page instanceof CappedPaginator ? $this->page->totalCapped : null,
         );
 
         return $page->toArray();

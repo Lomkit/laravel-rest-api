@@ -11,6 +11,7 @@ final readonly class ResourceLimits
         public array $allowed,
         public int $defaultLimit,
         public int $includeLimit,
+        public ?int $maxTotal,
     ) {}
 
     /** @param list<int> $allowed */
@@ -22,6 +23,12 @@ final readonly class ResourceLimits
             }
         }
 
-        return new self($allowed, $resource->defaultLimit, $resource->includeLimit);
+        $floor = max([1, ...$allowed]);
+
+        if ($resource->maxTotal !== null && $resource->maxTotal < $floor) {
+            throw InvalidResourceException::maxTotalTooLow($resource::class, $resource->maxTotal, $floor);
+        }
+
+        return new self($allowed, $resource->defaultLimit, $resource->includeLimit, $resource->maxTotal);
     }
 }
