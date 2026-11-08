@@ -13,6 +13,7 @@ return [
     'pattern_filters_total' => 'The :attribute field goes over the limit of :max pattern filters in one search.',
     'entries_total' => 'The :attribute field goes over the limit of :max list entries in one request.',
     'relation_entries_total' => 'The :attribute field goes over the limit of :max entries, each deleted key counting as one entry.',
+    'response_rows' => 'The :attribute field takes the response over the limit of :max rows: it can render up to :rows rows.',
     'owner_include' => 'The :attribute field is prohibited: this relation loads at most one record per parent.',
     'gates_off' => 'The :attribute field is prohibited: the included resource turns its gates off.',
     'several_types' => 'The :attribute field is prohibited: this relation has several types. Set it for each type, under types.',

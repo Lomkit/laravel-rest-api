@@ -48,6 +48,16 @@ class FrenchMessagesTest extends HelpdeskTestCase
     }
 
     #[Test]
+    public function it_answers_the_response_rows_limit_in_french(): void
+    {
+        config(['rest.limits.sizes.rows' => 9]);
+
+        $response = $this->postJson('/api/products/search', ['search' => ['limit' => 10]]);
+
+        $this->assertExactErrors($response, ['search.limit' => ['Le champ search.limit fait dépasser à la réponse la limite de 9 lignes : elle peut en rendre jusqu\'à 10.']]);
+    }
+
+    #[Test]
     public function it_answers_the_pattern_filter_limit_in_french(): void
     {
         config(['rest.limits.totals.patterns' => 1]);
@@ -98,7 +108,7 @@ class FrenchMessagesTest extends HelpdeskTestCase
             Ticket::create(['id' => $id, 'team_id' => 1, 'title' => 'Ticket '.$id, 'status' => 'open']);
         }
 
-        $response = $this->postJson('/chunked-tickets/actions/capped-close-open-tickets', []);
+        $response = $this->postJson('/chunked-tickets/actions/capped-close-open-tickets', ['search' => []]);
 
         $this->assertExactErrors($response, ['search' => ['Cette action porte sur 5 ressources au plus : affinez la recherche.']]);
     }
