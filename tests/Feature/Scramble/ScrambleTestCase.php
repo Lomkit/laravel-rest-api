@@ -52,4 +52,20 @@ abstract class ScrambleTestCase extends PackageTestCase
     {
         return $this->body($this->operation($path.'/mutate', 'post'))['properties']['mutate']['items']['properties'];
     }
+
+    /** @return array<string, array<string, mixed>> */
+    protected function schemas(): array
+    {
+        return app(Generator::class)()['components']['schemas'];
+    }
+
+    /** @return array<string, mixed> */
+    protected function search(string $path): array
+    {
+        $document = app(Generator::class)();
+        $search = $document['paths'][$path]['post']['requestBody']['content']['application/json']['schema']['properties']['search'];
+        $reference = $search['$ref'] ?? null;
+
+        return (is_string($reference) ? $document['components']['schemas'][substr($reference, strlen('#/components/schemas/'))] : $search)['properties'];
+    }
 }

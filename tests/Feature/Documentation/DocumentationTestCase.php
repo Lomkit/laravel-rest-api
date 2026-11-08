@@ -34,4 +34,16 @@ abstract class DocumentationTestCase extends PackageTestCase
     {
         return $this->document()['paths'][$path][$method];
     }
+
+    /**
+     * @param  array<string, mixed>  $document
+     * @return array<string, mixed>
+     */
+    protected function search(array $document, string $path): array
+    {
+        $search = $document['paths'][$path]['post']['requestBody']['content']['application/json']['schema']['properties']['search'];
+        $reference = $search['$ref'] ?? null;
+
+        return (is_string($reference) ? $document['components']['schemas'][substr($reference, strlen('#/components/schemas/'))] : $search)['properties'];
+    }
 }

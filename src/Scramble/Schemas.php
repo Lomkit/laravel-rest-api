@@ -12,6 +12,7 @@ use Dedoc\Scramble\Support\Generator\Schema;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
+use Lomkit\Rest\Scramble\Types\Nothing;
 
 final class Schemas
 {
@@ -36,6 +37,20 @@ final class Schemas
         $type = self::object($properties);
         $type->setRequired(array_values(array_diff(array_keys($properties), $optional)));
         $type->setDescription($description);
+
+        return $type;
+    }
+
+    /**
+     * @param  array<string, Type>  $properties
+     * @param  list<string>  $required
+     */
+    public static function closed(array $properties, array $required = [], string $description = ''): ObjectType
+    {
+        $type = self::object($properties);
+        $type->setRequired($required);
+        $type->setDescription($description);
+        $type->additionalProperties(new Nothing);
 
         return $type;
     }

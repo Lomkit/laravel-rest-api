@@ -90,4 +90,22 @@ class ComponentRegistryTest extends TestCase
         $this->assertSame('#/components/schemas/App.Rest.Admin.Stage', $other->getUri());
         $this->assertSame('#/components/schemas/App.Rest.Admin.Stage', $again->getUri());
     }
+
+    #[Test]
+    public function it_maps_each_value_of_a_discriminated_one_of_to_its_component(): void
+    {
+        $components = new Components;
+        $registry = new ComponentRegistry($components);
+
+        $oneOf = $registry->discriminated('field', 'App\Rest\StageResource', [
+            ['code', 'StageFilterCode', fn (): Type => (new ObjectType)->addProperty('field', (new StringType)->const('code'))],
+            ['name', 'StageFilterName', fn (): Type => (new ObjectType)->addProperty('field', (new StringType)->const('name'))],
+        ]);
+
+        $this->assertSame(['StageFilterCode', 'StageFilterName'], array_keys($components->schemas));
+        $this->assertSame(
+            '{"discriminator":{"propertyName":"field","mapping":{"code":"#\/components\/schemas\/StageFilterCode","name":"#\/components\/schemas\/StageFilterName"}},"oneOf":[{"$ref":"#\/components\/schemas\/StageFilterCode"},{"$ref":"#\/components\/schemas\/StageFilterName"}]}',
+            json_encode($oneOf->serializeAs31()),
+        );
+    }
 }

@@ -21,19 +21,16 @@ class ScrambleDocumentTest extends ScrambleTestCase
         $this->assertSame('Search Product', $operation['summary']);
         $this->assertSame(
             ['id', 'category_id', 'name', 'price'],
-            $this->body($operation)['properties']['search']['properties']['filters']['items']['properties']['field']['enum'],
+            array_keys((array) $this->schemas()['ProductFieldFilter']['discriminator']['mapping']),
         );
     }
 
     #[Test]
     public function it_documents_the_filterable_sortable_and_selectable_fields_of_the_search_body(): void
     {
-        $search = $this->body($this->operation('/authors/search', 'post'))['properties']['search']['properties'];
+        $search = $this->search('/authors/search');
 
-        $this->assertSame(
-            ['id', 'first_name', 'last_name', 'full_name'],
-            $search['filters']['items']['properties']['field']['enum'],
-        );
+        $this->assertSame(['id', 'first_name', 'last_name', 'full_name'], array_keys((array) $this->schemas()['AuthorFieldFilter']['discriminator']['mapping']));
         $this->assertSame(['first_name', 'last_name', 'full_name'], $search['sorts']['items']['properties']['field']['enum']);
         $this->assertSame(['asc', 'desc'], $search['sorts']['items']['properties']['direction']['enum']);
         $this->assertSame(['id', 'first_name', 'last_name', 'settings'], $search['selects']['items']['properties']['field']['enum']);
@@ -43,15 +40,12 @@ class ScrambleDocumentTest extends ScrambleTestCase
     #[Test]
     public function it_documents_the_parameters_and_the_filter_operators_of_the_search_body(): void
     {
-        $search = $this->body($this->operation('/products/search', 'post'))['properties']['search']['properties'];
-        $filter = $search['filters']['items']['properties'];
+        $search = $this->search('/products/search');
+        $price = $this->schemas()['ProductFilterPrice']['oneOf'];
 
         $this->assertSame(['filters', 'sorts', 'selects', 'includes', 'scopes', 'aggregates', 'instructions', 'gates', 'page', 'limit'], array_keys($search));
-        $this->assertSame(
-            ['=', '!=', '>', '>=', '<', '<=', 'like', 'not like', 'ilike', 'not ilike', 'in', 'not in', 'between', 'not between', 'is null', 'is not null'],
-            $filter['operator']['enum'],
-        );
-        $this->assertArrayNotHasKey('type', (array) $filter['value']);
+        $this->assertSame([['=', '!=', '>', '>=', '<', '<='], ['between', 'not between'], ['in', 'not in']], array_map(fn (array $branch): array => $branch['properties']['operator']['enum'], $price));
+        $this->assertSame(['type' => 'integer'], $price[0]['properties']['value']);
     }
 
     #[Test]

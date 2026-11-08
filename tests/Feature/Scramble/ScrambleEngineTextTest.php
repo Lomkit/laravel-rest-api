@@ -45,8 +45,8 @@ class ScrambleEngineTextTest extends ScrambleTestCase
     {
         $search = $this->search('/vouchers/search');
 
-        $this->assertSame(['id', 'code', 'number', 'team', 'title', 'price', 'active'], $search['filters']['items']['properties']['field']['enum']);
-        $this->assertSame(['and', 'or'], $search['filters']['items']['properties']['type']['enum']);
+        $this->assertSame(['id', 'code', 'number', 'team', 'title', 'price', 'active'], array_keys((array) $this->schemas()['VoucherFieldFilter']['discriminator']['mapping']));
+        $this->assertSame(['$ref' => '#/components/schemas/VoucherFilter'], $search['filters']['items']);
         $this->assertSame(['id', 'code', 'number', 'team', 'title', 'price', 'active', '@relevance'], $search['sorts']['items']['properties']['field']['enum']);
     }
 
@@ -71,11 +71,5 @@ class ScrambleEngineTextTest extends ScrambleTestCase
                 'enum' => ['with', 'only'],
             ]],
         ];
-    }
-
-    /** @return array<string, mixed> */
-    private function search(string $path): array
-    {
-        return $this->body($this->operation($path, 'post'))['properties']['search']['properties'];
     }
 }

@@ -109,54 +109,9 @@
                                             "filters": {
                                                 "type": "array",
                                                 "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "field": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "id",
-                                                                "body"
-                                                            ]
-                                                        },
-                                                        "operator": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "=",
-                                                                "!=",
-                                                                ">",
-                                                                ">=",
-                                                                "<",
-                                                                "<=",
-                                                                "like",
-                                                                "not like",
-                                                                "ilike",
-                                                                "not ilike",
-                                                                "in",
-                                                                "not in",
-                                                                "between",
-                                                                "not between",
-                                                                "is null",
-                                                                "is not null"
-                                                            ]
-                                                        },
-                                                        "value": {
-                                                            "description": "Accepts string, integer, boolean, or array"
-                                                        },
-                                                        "type": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "and",
-                                                                "or"
-                                                            ]
-                                                        },
-                                                        "nested": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
+                                                    "$ref": "#/components/schemas/NoteFilter"
+                                                },
+                                                "maxItems": 100
                                             },
                                             "sorts": {
                                                 "type": "array",
@@ -313,6 +268,20 @@
                                             "limit": {
                                                 "type": "integer"
                                             }
+                                        }
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "search": {
+                                            "filters": [
+                                                {
+                                                    "field": "id",
+                                                    "value": 1
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -563,62 +532,9 @@
                                             "filters": {
                                                 "type": "array",
                                                 "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "field": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "id",
-                                                                "title",
-                                                                "summary",
-                                                                "price",
-                                                                "seats",
-                                                                "featured",
-                                                                "starts_on",
-                                                                "starts_at",
-                                                                "status",
-                                                                "level"
-                                                            ]
-                                                        },
-                                                        "operator": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "=",
-                                                                "!=",
-                                                                ">",
-                                                                ">=",
-                                                                "<",
-                                                                "<=",
-                                                                "like",
-                                                                "not like",
-                                                                "ilike",
-                                                                "not ilike",
-                                                                "in",
-                                                                "not in",
-                                                                "between",
-                                                                "not between",
-                                                                "is null",
-                                                                "is not null"
-                                                            ]
-                                                        },
-                                                        "value": {
-                                                            "description": "Accepts string, integer, boolean, or array"
-                                                        },
-                                                        "type": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "and",
-                                                                "or"
-                                                            ]
-                                                        },
-                                                        "nested": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
+                                                    "$ref": "#/components/schemas/ShowFilter"
+                                                },
+                                                "maxItems": 100
                                             },
                                             "sorts": {
                                                 "type": "array",
@@ -818,6 +734,20 @@
                                             "limit": {
                                                 "type": "integer"
                                             }
+                                        }
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "search": {
+                                            "filters": [
+                                                {
+                                                    "field": "title",
+                                                    "value": "Opening night"
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -1720,54 +1650,9 @@
                                             "filters": {
                                                 "type": "array",
                                                 "items": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "field": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "code",
-                                                                "name"
-                                                            ]
-                                                        },
-                                                        "operator": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "=",
-                                                                "!=",
-                                                                ">",
-                                                                ">=",
-                                                                "<",
-                                                                "<=",
-                                                                "like",
-                                                                "not like",
-                                                                "ilike",
-                                                                "not ilike",
-                                                                "in",
-                                                                "not in",
-                                                                "between",
-                                                                "not between",
-                                                                "is null",
-                                                                "is not null"
-                                                            ]
-                                                        },
-                                                        "value": {
-                                                            "description": "Accepts string, integer, boolean, or array"
-                                                        },
-                                                        "type": {
-                                                            "type": "string",
-                                                            "enum": [
-                                                                "and",
-                                                                "or"
-                                                            ]
-                                                        },
-                                                        "nested": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    }
-                                                }
+                                                    "$ref": "#/components/schemas/StageFilter"
+                                                },
+                                                "maxItems": 100
                                             },
                                             "sorts": {
                                                 "type": "array",
@@ -1925,6 +1810,20 @@
                                             "limit": {
                                                 "type": "integer"
                                             }
+                                        }
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "search": {
+                                            "filters": [
+                                                {
+                                                    "field": "code",
+                                                    "value": "main"
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -2119,6 +2018,243 @@
                 },
                 "title": "Artist"
             },
+            "ArtistFieldFilter": {
+                "description": "A condition on a field. Without `operator`, the condition is `=`. A dotted path to a field of a related resource is accepted too and is not listed: a condition on related rows covers it.",
+                "discriminator": {
+                    "propertyName": "field",
+                    "mapping": {
+                        "id": "#/components/schemas/ArtistFilterId",
+                        "name": "#/components/schemas/ArtistFilterName"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ArtistFilterId"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ArtistFilterName"
+                    }
+                ],
+                "title": "ArtistFieldFilter"
+            },
+            "ArtistFilter": {
+                "description": "A condition on a field, a condition on related rows, or a group of filters. `type` joins it to the previous filter: `and`, the default, or `or`.",
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ArtistFieldFilter"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ArtistFilterGroup"
+                    }
+                ],
+                "title": "ArtistFilter"
+            },
+            "ArtistFilterGroup": {
+                "type": "object",
+                "description": "Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most 1 deep.",
+                "properties": {
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ArtistFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    }
+                },
+                "required": [
+                    "nested"
+                ],
+                "additionalProperties": false,
+                "title": "ArtistFilterGroup"
+            },
+            "ArtistFilterId": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ArtistFilterId"
+            },
+            "ArtistFilterName": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "name"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "name"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "like",
+                                    "not like",
+                                    "ilike",
+                                    "not ilike"
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "name"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ArtistFilterName"
+            },
             "Comment": {
                 "type": "object",
                 "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
@@ -2167,6 +2303,410 @@
                 },
                 "title": "Comment"
             },
+            "CommentFieldFilter": {
+                "description": "A condition on a field. Without `operator`, the condition is `=`. A dotted path to a field of a related resource is accepted too and is not listed: a condition on related rows covers it.",
+                "discriminator": {
+                    "propertyName": "field",
+                    "mapping": {
+                        "id": "#/components/schemas/CommentFilterId",
+                        "rating": "#/components/schemas/CommentFilterRating",
+                        "body": "#/components/schemas/CommentFilterBody"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/CommentFilterId"
+                    },
+                    {
+                        "$ref": "#/components/schemas/CommentFilterRating"
+                    },
+                    {
+                        "$ref": "#/components/schemas/CommentFilterBody"
+                    }
+                ],
+                "title": "CommentFieldFilter"
+            },
+            "CommentFilter": {
+                "description": "A condition on a field, a condition on related rows, or a group of filters. `type` joins it to the previous filter: `and`, the default, or `or`.",
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/CommentFieldFilter"
+                    },
+                    {
+                        "$ref": "#/components/schemas/CommentRelationFilter"
+                    },
+                    {
+                        "$ref": "#/components/schemas/CommentFilterGroup"
+                    }
+                ],
+                "title": "CommentFilter"
+            },
+            "CommentFilterBody": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "body"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "body"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "like",
+                                    "not like",
+                                    "ilike",
+                                    "not ilike"
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "body"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "CommentFilterBody"
+            },
+            "CommentFilterGroup": {
+                "type": "object",
+                "description": "Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most 1 deep.",
+                "properties": {
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    }
+                },
+                "required": [
+                    "nested"
+                ],
+                "additionalProperties": false,
+                "title": "CommentFilterGroup"
+            },
+            "CommentFilterId": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "CommentFilterId"
+            },
+            "CommentFilterRating": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "rating"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "rating"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "rating"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "CommentFilterRating"
+            },
+            "CommentRelationFilter": {
+                "description": "The rows that have a related row matching `nested`, or that have none when `exists` is false.",
+                "discriminator": {
+                    "propertyName": "relation",
+                    "mapping": {
+                        "show": "#/components/schemas/CommentRelationFilterShow"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/CommentRelationFilterShow"
+                    }
+                ],
+                "title": "CommentRelationFilter"
+            },
+            "CommentRelationFilterShow": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "show"
+                    },
+                    "exists": {
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    },
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowFilter"
+                        },
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "CommentRelationFilterShow"
+            },
             "Label": {
                 "type": "object",
                 "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
@@ -2200,6 +2740,243 @@
                     }
                 },
                 "title": "Label"
+            },
+            "LabelFieldFilter": {
+                "description": "A condition on a field. Without `operator`, the condition is `=`. A dotted path to a field of a related resource is accepted too and is not listed: a condition on related rows covers it.",
+                "discriminator": {
+                    "propertyName": "field",
+                    "mapping": {
+                        "id": "#/components/schemas/LabelFilterId",
+                        "name": "#/components/schemas/LabelFilterName"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/LabelFilterId"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LabelFilterName"
+                    }
+                ],
+                "title": "LabelFieldFilter"
+            },
+            "LabelFilter": {
+                "description": "A condition on a field, a condition on related rows, or a group of filters. `type` joins it to the previous filter: `and`, the default, or `or`.",
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/LabelFieldFilter"
+                    },
+                    {
+                        "$ref": "#/components/schemas/LabelFilterGroup"
+                    }
+                ],
+                "title": "LabelFilter"
+            },
+            "LabelFilterGroup": {
+                "type": "object",
+                "description": "Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most 1 deep.",
+                "properties": {
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LabelFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    }
+                },
+                "required": [
+                    "nested"
+                ],
+                "additionalProperties": false,
+                "title": "LabelFilterGroup"
+            },
+            "LabelFilterId": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "LabelFilterId"
+            },
+            "LabelFilterName": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "name"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "name"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "like",
+                                    "not like",
+                                    "ilike",
+                                    "not ilike"
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "name"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "LabelFilterName"
             },
             "Note": {
                 "type": "object",
@@ -3121,6 +3898,246 @@
                 ],
                 "title": "NoteDetails"
             },
+            "NoteFieldFilter": {
+                "description": "A condition on a field. Without `operator`, the condition is `=`. A dotted path to a field of a related resource is accepted too and is not listed: a condition on related rows covers it.",
+                "discriminator": {
+                    "propertyName": "field",
+                    "mapping": {
+                        "id": "#/components/schemas/NoteFilterId",
+                        "body": "#/components/schemas/NoteFilterBody"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/NoteFilterId"
+                    },
+                    {
+                        "$ref": "#/components/schemas/NoteFilterBody"
+                    }
+                ],
+                "title": "NoteFieldFilter"
+            },
+            "NoteFilter": {
+                "description": "A condition on a field, a condition on related rows, or a group of filters. `type` joins it to the previous filter: `and`, the default, or `or`.",
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/NoteFieldFilter"
+                    },
+                    {
+                        "$ref": "#/components/schemas/NoteRelationFilter"
+                    },
+                    {
+                        "$ref": "#/components/schemas/NoteFilterGroup"
+                    }
+                ],
+                "title": "NoteFilter"
+            },
+            "NoteFilterBody": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "body"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "body"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "like",
+                                    "not like",
+                                    "ilike",
+                                    "not ilike"
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "body"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "NoteFilterBody"
+            },
+            "NoteFilterGroup": {
+                "type": "object",
+                "description": "Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most 1 deep.",
+                "properties": {
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NoteFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    }
+                },
+                "required": [
+                    "nested"
+                ],
+                "additionalProperties": false,
+                "title": "NoteFilterGroup"
+            },
+            "NoteFilterId": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "NoteFilterId"
+            },
             "NotePaginated": {
                 "type": "object",
                 "description": "A page of rows",
@@ -3181,6 +4198,66 @@
                     "meta"
                 ],
                 "title": "NotePaginated"
+            },
+            "NoteRelationFilter": {
+                "description": "The rows that have a related row matching `nested`, or that have none when `exists` is false.",
+                "discriminator": {
+                    "propertyName": "relation",
+                    "mapping": {
+                        "notable": "#/components/schemas/NoteRelationFilterNotable"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/NoteRelationFilterNotable"
+                    }
+                ],
+                "title": "NoteRelationFilter"
+            },
+            "NoteRelationFilterNotable": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "notable"
+                    },
+                    "exists": {
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    },
+                    "types": {
+                        "type": "object",
+                        "description": "The filters of each type of related row, keyed by morph type",
+                        "properties": {
+                            "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Show": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ShowFilter"
+                                },
+                                "maxItems": 100
+                            },
+                            "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Stage": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/StageFilter"
+                                },
+                                "maxItems": 100
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "NoteRelationFilterNotable"
             },
             "NoteRows": {
                 "type": "object",
@@ -4287,6 +5364,1357 @@
                 ],
                 "title": "ShowDetails"
             },
+            "ShowFieldFilter": {
+                "description": "A condition on a field. Without `operator`, the condition is `=`. A dotted path to a field of a related resource is accepted too and is not listed: a condition on related rows covers it.",
+                "discriminator": {
+                    "propertyName": "field",
+                    "mapping": {
+                        "id": "#/components/schemas/ShowFilterId",
+                        "title": "#/components/schemas/ShowFilterTitle",
+                        "summary": "#/components/schemas/ShowFilterSummary",
+                        "price": "#/components/schemas/ShowFilterPrice",
+                        "seats": "#/components/schemas/ShowFilterSeats",
+                        "featured": "#/components/schemas/ShowFilterFeatured",
+                        "starts_on": "#/components/schemas/ShowFilterStartsOn",
+                        "starts_at": "#/components/schemas/ShowFilterStartsAt",
+                        "status": "#/components/schemas/ShowFilterStatus",
+                        "level": "#/components/schemas/ShowFilterLevel",
+                        "artists.pivot.role": "#/components/schemas/ShowFilterArtistsPivotRole",
+                        "labels.pivot.position": "#/components/schemas/ShowFilterLabelsPivotPosition"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ShowFilterId"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterTitle"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterSummary"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterPrice"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterSeats"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterFeatured"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterStartsOn"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterStartsAt"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterStatus"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterLevel"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterArtistsPivotRole"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterLabelsPivotPosition"
+                    }
+                ],
+                "title": "ShowFieldFilter"
+            },
+            "ShowFilter": {
+                "description": "A condition on a field, a condition on related rows, or a group of filters. `type` joins it to the previous filter: `and`, the default, or `or`.",
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ShowFieldFilter"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowRelationFilter"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterGroup"
+                    }
+                ],
+                "title": "ShowFilter"
+            },
+            "ShowFilterArtistsPivotRole": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "artists.pivot.role"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "artists.pivot.role"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "like",
+                                    "not like",
+                                    "ilike",
+                                    "not ilike"
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "artists.pivot.role"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "artists.pivot.role"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "is null",
+                                    "is not null"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterArtistsPivotRole"
+            },
+            "ShowFilterFeatured": {
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "const": "featured"
+                    },
+                    "operator": {
+                        "type": "string",
+                        "enum": [
+                            "=",
+                            "!="
+                        ]
+                    },
+                    "value": {
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    }
+                },
+                "required": [
+                    "field",
+                    "value"
+                ],
+                "additionalProperties": false,
+                "title": "ShowFilterFeatured"
+            },
+            "ShowFilterGroup": {
+                "type": "object",
+                "description": "Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most 1 deep.",
+                "properties": {
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    }
+                },
+                "required": [
+                    "nested"
+                ],
+                "additionalProperties": false,
+                "title": "ShowFilterGroup"
+            },
+            "ShowFilterId": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterId"
+            },
+            "ShowFilterLabelsPivotPosition": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "labels.pivot.position"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "labels.pivot.position"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "labels.pivot.position"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "labels.pivot.position"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "is null",
+                                    "is not null"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterLabelsPivotPosition"
+            },
+            "ShowFilterLevel": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "level"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer",
+                                "enum": [
+                                    1,
+                                    2,
+                                    3
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "level"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer",
+                                    "enum": [
+                                        1,
+                                        2,
+                                        3
+                                    ]
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterLevel"
+            },
+            "ShowFilterPrice": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "price"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "number",
+                                "examples": [
+                                    12.5
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "price"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "number",
+                                    "examples": [
+                                        12.5
+                                    ]
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "price"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "number",
+                                    "examples": [
+                                        12.5
+                                    ]
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "price"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "is null",
+                                    "is not null"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterPrice"
+            },
+            "ShowFilterSeats": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "seats"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "seats"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "seats"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterSeats"
+            },
+            "ShowFilterStartsAt": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "starts_at"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "starts_at"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "starts_at"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "is null",
+                                    "is not null"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterStartsAt"
+            },
+            "ShowFilterStartsOn": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "starts_on"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "starts_on"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterStartsOn"
+            },
+            "ShowFilterStatus": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "status"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "enum": [
+                                    "planned",
+                                    "on_sale",
+                                    "sold_out"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "status"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "enum": [
+                                        "planned",
+                                        "on_sale",
+                                        "sold_out"
+                                    ]
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterStatus"
+            },
+            "ShowFilterSummary": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "summary"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "summary"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "like",
+                                    "not like",
+                                    "ilike",
+                                    "not ilike"
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "summary"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "summary"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "is null",
+                                    "is not null"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterSummary"
+            },
+            "ShowFilterTitle": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "title"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "examples": [
+                                    "Opening night",
+                                    "Closing night"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "title"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "like",
+                                    "not like",
+                                    "ilike",
+                                    "not ilike"
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "title"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "examples": [
+                                        "Opening night",
+                                        "Closing night"
+                                    ]
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterTitle"
+            },
             "ShowPaginated": {
                 "type": "object",
                 "description": "A page of rows",
@@ -4347,6 +6775,157 @@
                     "meta"
                 ],
                 "title": "ShowPaginated"
+            },
+            "ShowRelationFilter": {
+                "description": "The rows that have a related row matching `nested`, or that have none when `exists` is false.",
+                "discriminator": {
+                    "propertyName": "relation",
+                    "mapping": {
+                        "stage": "#/components/schemas/ShowRelationFilterStage",
+                        "artists": "#/components/schemas/ShowRelationFilterArtists",
+                        "comments": "#/components/schemas/ShowRelationFilterComments",
+                        "labels": "#/components/schemas/ShowRelationFilterLabels"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ShowRelationFilterStage"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowRelationFilterArtists"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowRelationFilterComments"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowRelationFilterLabels"
+                    }
+                ],
+                "title": "ShowRelationFilter"
+            },
+            "ShowRelationFilterArtists": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "artists"
+                    },
+                    "exists": {
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    },
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ArtistFilter"
+                        },
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "ShowRelationFilterArtists"
+            },
+            "ShowRelationFilterComments": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "comments"
+                    },
+                    "exists": {
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    },
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentFilter"
+                        },
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "ShowRelationFilterComments"
+            },
+            "ShowRelationFilterLabels": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "labels"
+                    },
+                    "exists": {
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    },
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LabelFilter"
+                        },
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "ShowRelationFilterLabels"
+            },
+            "ShowRelationFilterStage": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "stage"
+                    },
+                    "exists": {
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    },
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageFilter"
+                        },
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "ShowRelationFilterStage"
             },
             "ShowRows": {
                 "type": "object",
@@ -5301,6 +7880,252 @@
                 ],
                 "title": "StageDetails"
             },
+            "StageFieldFilter": {
+                "description": "A condition on a field. Without `operator`, the condition is `=`. A dotted path to a field of a related resource is accepted too and is not listed: a condition on related rows covers it.",
+                "discriminator": {
+                    "propertyName": "field",
+                    "mapping": {
+                        "code": "#/components/schemas/StageFilterCode",
+                        "name": "#/components/schemas/StageFilterName"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/StageFilterCode"
+                    },
+                    {
+                        "$ref": "#/components/schemas/StageFilterName"
+                    }
+                ],
+                "title": "StageFieldFilter"
+            },
+            "StageFilter": {
+                "description": "A condition on a field, a condition on related rows, or a group of filters. `type` joins it to the previous filter: `and`, the default, or `or`.",
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/StageFieldFilter"
+                    },
+                    {
+                        "$ref": "#/components/schemas/StageRelationFilter"
+                    },
+                    {
+                        "$ref": "#/components/schemas/StageFilterGroup"
+                    }
+                ],
+                "title": "StageFilter"
+            },
+            "StageFilterCode": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "code"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "examples": [
+                                    "main"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "code"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "examples": [
+                                        "main"
+                                    ]
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "StageFilterCode"
+            },
+            "StageFilterGroup": {
+                "type": "object",
+                "description": "Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most 1 deep.",
+                "properties": {
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    }
+                },
+                "required": [
+                    "nested"
+                ],
+                "additionalProperties": false,
+                "title": "StageFilterGroup"
+            },
+            "StageFilterName": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "name"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "name"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "like",
+                                    "not like",
+                                    "ilike",
+                                    "not ilike"
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "name"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "StageFilterName"
+            },
             "StagePaginated": {
                 "type": "object",
                 "description": "A page of rows",
@@ -5361,6 +8186,87 @@
                     "meta"
                 ],
                 "title": "StagePaginated"
+            },
+            "StageRelationFilter": {
+                "description": "The rows that have a related row matching `nested`, or that have none when `exists` is false.",
+                "discriminator": {
+                    "propertyName": "relation",
+                    "mapping": {
+                        "shows": "#/components/schemas/StageRelationFilterShows",
+                        "comments": "#/components/schemas/StageRelationFilterComments"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/StageRelationFilterShows"
+                    },
+                    {
+                        "$ref": "#/components/schemas/StageRelationFilterComments"
+                    }
+                ],
+                "title": "StageRelationFilter"
+            },
+            "StageRelationFilterComments": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "comments"
+                    },
+                    "exists": {
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    },
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommentFilter"
+                        },
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "StageRelationFilterComments"
+            },
+            "StageRelationFilterShows": {
+                "type": "object",
+                "properties": {
+                    "relation": {
+                        "type": "string",
+                        "const": "shows"
+                    },
+                    "exists": {
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "and",
+                            "or"
+                        ]
+                    },
+                    "nested": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowFilter"
+                        },
+                        "maxItems": 100
+                    }
+                },
+                "required": [
+                    "relation"
+                ],
+                "additionalProperties": false,
+                "title": "StageRelationFilterShows"
             },
             "StageRows": {
                 "type": "object",

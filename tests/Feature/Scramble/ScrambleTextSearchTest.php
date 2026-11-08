@@ -60,10 +60,4 @@ class ScrambleTextSearchTest extends ScrambleTestCase
         $this->assertSame(['type' => 'string', 'enum' => ['with', 'only']], $search['trashed']);
         $this->assertArrayNotHasKey('text', $search);
     }
-
-    /** @return array<string, mixed> */
-    private function search(string $path): array
-    {
-        return $this->body($this->operation($path, 'post'))['properties']['search']['properties'];
-    }
 }

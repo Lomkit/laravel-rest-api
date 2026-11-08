@@ -59,6 +59,18 @@ class FieldSchemaTest extends TestCase
     }
 
     #[Test]
+    public function it_documents_the_value_of_a_field_without_null_and_meta(): void
+    {
+        $field = Number::make('price')
+            ->nullable()
+            ->meta(['unit' => 'EUR'])
+            ->examples(12.5);
+
+        $this->assertSame('{"type":"number","examples":[12.5]}', json_encode(FieldSchema::value($field)->serializeAs31(), JSON_THROW_ON_ERROR));
+        $this->assertSame('{"type":["number","null"],"examples":[12.5],"x-lomkit-meta":{"unit":"EUR"}}', json_encode(FieldSchema::of($field)->serializeAs31(), JSON_THROW_ON_ERROR));
+    }
+
+    #[Test]
     public function it_replaces_the_examples_of_a_field_on_each_call(): void
     {
         $field = Text::make('title')

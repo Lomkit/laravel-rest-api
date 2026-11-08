@@ -1771,7 +1771,7 @@ Query builder and custom relations:
 
 Scramble:
 
-- The `filters` of the search body list the filterable fields of the resource under `field`, without the dotted paths, and the operators of `FilterOperator` under `operator`.
+- The `filters` of the search body document one condition per filterable field, with the operators of that field and the value that each operator takes, see [OpenAPI documentation](#openapi-documentation).
 
 ### Writes
 
@@ -2097,6 +2097,13 @@ Records and read responses:
 - The body of `destroy`, `restore` and `forceDestroy` requires `resources`: from 1 to `limits.sizes.resources` distinct keys, typed by the `ID` field of the resource. Its request example holds one key: the first value of `examples()` on the `ID` field, else `1` for an integer key, `a` for a string key, `00000000-0000-0000-0000-000000000000` for a UUID key and `00000000000000000000000000` for a ULID key.
 - A resource that has the name of another documented resource, such as a second `TagResource` in another namespace, names its records with its namespace: `App.Rest.Admin.Tag`, `App.Rest.Admin.TagPaginated`.
 - A `Date` field is documented with `format: date`, and the `date` cast of Laravel renders a date and a time (`2026-07-01T00:00:00.000000Z`). Cast the attribute with `date:Y-m-d` so that the response holds the date alone, as the document says. A `DateTime` field is documented with `format: date-time`, which the `datetime` cast renders. A `Json` field is documented as an object: a value that is a list does not match it.
+
+Search requests:
+
+- The `filters` of a search are `{Resource}Filter`: `oneOf` a condition on a field (`{Resource}FieldFilter`), a condition on related rows (`{Resource}RelationFilter`) and a group of filters (`{Resource}FilterGroup`, with `nested` and `type`). The description of the group gives the nesting depth of `limits.depths.filters`.
+- `{Resource}FieldFilter` has one schema per filterable field, `{Resource}Filter{Field}`, with a `discriminator` on `field`. It lists the operators of the field, grouped by the value that they take: the type of the field for `=`, `!=`, `>`, `>=`, `<` and `<=`; a string of at most `limits.lengths.patterns` characters for `like`, `not like`, `ilike` and `not ilike`; a list of 1 to `limits.sizes.values` values for `in` and `not in`; two values for `between` and `not between`; no `value` for `is null` and `is not null`. Without `operator`, the condition is `=`. The filterable pivot fields are listed as `{relation}.pivot.{field}`, such as `tags.pivot.weight`. The other dotted paths, such as `author.last_name`, are accepted and are not listed: filter the related rows instead.
+- `{Resource}RelationFilter` has one schema per relation, `{Resource}RelationFilter{Relation}`, with a `discriminator` on `relation`: `exists`, `type`, and `nested`, the filters of the related resource. A `MorphTo` relation adds `types`, the filters of each morph type, and has no `nested` when it has several types.
+- Each search operation has a request example that filters on one field: the first filterable field that declares `examples()`, else the first filterable field, with its first example or a value of its type (`1`, `a`, `true`, `2026-01-01`, the first value of an enum). The example leaves out `operator`, as `=` is the default.
 
 Error responses:
 

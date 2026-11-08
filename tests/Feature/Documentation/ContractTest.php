@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Lomkit\Rest\Tests\Fixtures\Festival\Show;
 use Lomkit\Rest\Tests\Fixtures\Festival\Stage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
 class ContractTest extends DocumentationTestCase
@@ -88,7 +89,67 @@ class ContractTest extends DocumentationTestCase
             }
         }
 
-        $this->assertSame(['DELETE /notes default', 'DELETE /shows default', 'POST /shows/restore default', 'DELETE /shows/force default', 'DELETE /stages default'], $checked);
+        $this->assertSame(['DELETE /notes default', 'POST /notes/search default', 'DELETE /shows default', 'POST /shows/search default', 'POST /shows/restore default', 'DELETE /shows/force default', 'DELETE /stages default', 'POST /stages/search default'], $checked);
+    }
+
+    /** @param array<string, mixed> $search */
+    #[Test]
+    #[DataProvider('acceptedSearches')]
+    public function it_answers_a_search_that_the_document_describes(string $path, array $search): void
+    {
+        $this->seedFestival();
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+        $validator = new OpenApiValidator;
+
+        $this->assertSame([], $validator->requestErrors($document, $path, 'post', ['search' => $search]));
+
+        $response = $this->postJson('api'.$path, ['search' => $search]);
+
+        $response->assertOk();
+        $this->assertSame([], $validator->responseErrors($document, $path, 'post', 200, (string) $response->getContent()));
+    }
+
+    /** @return array<string, array{string, array<string, mixed>}> */
+    public static function acceptedSearches(): array
+    {
+        return [
+            'a field with its default operator' => ['/shows/search', ['filters' => [['field' => 'title', 'value' => 'Opening night']]]],
+            'a pattern' => ['/shows/search', ['filters' => [['field' => 'title', 'operator' => 'like', 'value' => 'Open%']]]],
+            'a list of values' => ['/shows/search', ['filters' => [['field' => 'seats', 'operator' => 'in', 'value' => [0, 300]]]]],
+            'a range' => ['/shows/search', ['filters' => [['field' => 'starts_on', 'operator' => 'between', 'value' => ['2026-07-01', '2026-07-03']]]]],
+            'a null check' => ['/shows/search', ['filters' => [['field' => 'summary', 'operator' => 'is null']]]],
+            'a pivot field' => ['/shows/search', ['filters' => [['field' => 'artists.pivot.role', 'value' => 'lead']]]],
+            'related rows' => ['/shows/search', ['filters' => [['relation' => 'comments', 'exists' => false, 'nested' => [['field' => 'rating', 'operator' => '>=', 'value' => 4]]]]]],
+            'related rows of each type' => ['/notes/search', ['filters' => [['relation' => 'notable', 'types' => [Show::class => [['field' => 'featured', 'value' => true]], Stage::class => [['field' => 'code', 'value' => 'main']]]]]]],
+            'a group joined with or' => ['/shows/search', ['filters' => [['field' => 'featured', 'value' => true], ['type' => 'or', 'nested' => [['field' => 'seats', 'operator' => '>', 'value' => 100]]]]]],
+            'a string key' => ['/stages/search', ['filters' => [['field' => 'code', 'operator' => 'in', 'value' => ['main', 'side']]]]],
+        ];
+    }
+
+    /** @param array<string, mixed> $search */
+    #[Test]
+    #[DataProvider('refusedSearches')]
+    public function it_refuses_a_search_that_the_document_does_not_describe(string $path, array $search): void
+    {
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+
+        $this->assertNotSame([], (new OpenApiValidator)->requestErrors($this->document(), $path, 'post', ['search' => $search]));
+        $this->postJson('api'.$path, ['search' => $search])->assertUnprocessable();
+    }
+
+    /** @return array<string, array{string, array<string, mixed>}> */
+    public static function refusedSearches(): array
+    {
+        return [
+            'a list for an equality' => ['/shows/search', ['filters' => [['field' => 'seats', 'value' => [1]]]]],
+            'a value for a null check' => ['/shows/search', ['filters' => [['field' => 'summary', 'operator' => 'is null', 'value' => 'a']]]],
+            'a pattern over the length' => ['/shows/search', ['filters' => [['field' => 'title', 'operator' => 'like', 'value' => str_repeat('a', 256)]]]],
+            'an operator of another type' => ['/shows/search', ['filters' => [['field' => 'featured', 'operator' => '>', 'value' => true]]]],
+            'one value for a range' => ['/shows/search', ['filters' => [['field' => 'seats', 'operator' => 'between', 'value' => [1]]]]],
+            'a field that cannot be filtered' => ['/shows/search', ['filters' => [['field' => 'settings', 'value' => 'a']]]],
+            'nested filters on related rows of two types' => ['/notes/search', ['filters' => [['relation' => 'notable', 'nested' => [['field' => 'id', 'value' => 1]]]]]],
+        ];
     }
 
     #[Test]

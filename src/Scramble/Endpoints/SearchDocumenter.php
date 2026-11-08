@@ -5,16 +5,16 @@ namespace Lomkit\Rest\Scramble\Endpoints;
 use Dedoc\Scramble\Support\Generator\Operation;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
-use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Lomkit\Rest\Fields\AggregateFunction;
-use Lomkit\Rest\Fields\Filtering\FilterOperator;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scramble\Components\PageSchema;
 use Lomkit\Rest\Scramble\DocumentationContext;
 use Lomkit\Rest\Scramble\Schemas;
+use Lomkit\Rest\Scramble\Search\FilterSchema;
+use Lomkit\Rest\Scramble\Search\SearchExample;
 use Lomkit\Rest\Scramble\Search\TextSearchType;
 
 final readonly class SearchDocumenter implements EndpointDocumenter
@@ -26,15 +26,11 @@ final readonly class SearchDocumenter implements EndpointDocumenter
 
         $fields = $context->resource->definition()->fields();
         $text = TextSearchType::of($context->resource);
+        $filters = (new FilterSchema($context->components))->list($context->resource);
+        $example = SearchExample::of($context->resource);
 
         $search = Schemas::object([
-            'filters' => Schemas::list(Schemas::object([
-                'field' => (new StringType)->enum($fields->filterable()->names()),
-                'operator' => (new StringType)->enum(array_column(FilterOperator::cases(), 'value')),
-                'value' => (new MixedType)->setDescription('Accepts string, integer, boolean, or array'),
-                'type' => (new StringType)->enum(['and', 'or']),
-                'nested' => new ArrayType,
-            ])),
+            ...($filters === null ? [] : ['filters' => $filters]),
             'sorts' => Schemas::list(Schemas::object([
                 'field' => (new StringType)->enum($text->sortNames($fields->sortable()->names())),
                 'direction' => (new StringType)->enum(array_column(SortDirection::cases(), 'value')),
@@ -60,7 +56,7 @@ final readonly class SearchDocumenter implements EndpointDocumenter
         $search->addProperty('page', new IntegerType);
         $search->addProperty('limit', new IntegerType);
 
-        Schemas::requestBody($operation, Schemas::object(['search' => $search]));
+        Schemas::requestBody($operation, Schemas::object(['search' => $search]), $example === null ? [] : ['default' => $example]);
 
         $operation->addResponse(Schemas::response(200, 'A page of rows', (new PageSchema($context->components))->paginated($context->resource)));
     }
