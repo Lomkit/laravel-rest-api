@@ -52,9 +52,10 @@ The keys that change:
 | `documentation` | Removed with the documentation generator. |
 | `morph.type_key` | Added. `@type` by default, see [Responses](#responses). |
 | `search.select_columns` | Added. `true` by default, see [Selects, sorts and aggregates](#selects-sorts-and-aggregates). |
+| `transactions.attempts` | Added. `1` by default, or the value of `REST_TRANSACTION_ATTEMPTS`: how many times a write runs on a deadlock, see [Writes](#writes). |
 | `gates.message.enabled` | Removed. Each answer of `gates` holds `allowed` and `message`, see [Responses](#responses). |
 
-`gates.key`, `gates.names` and `precognition.enabled` keep their name and their default. `gates.names` also renames the gates that a resource declares, by their default name, such as `'authorized_to_download' => 'can_download'`, see [Responses](#responses). The blocks are now in this order: `authorizations`, `gates`, `morph`, `search`, `limits`, `precognition`.
+`gates.key`, `gates.names` and `precognition.enabled` keep their name and their default. `gates.names` also renames the gates that a resource declares, by their default name, such as `'authorized_to_download' => 'can_download'`, see [Responses](#responses). The blocks are now in this order: `authorizations`, `gates`, `morph`, `search`, `transactions`, `limits`, `precognition`.
 
 Before, in the file that 2.x published, without its comments and its `documentation` block:
 
@@ -120,6 +121,10 @@ After, in 3.0:
     'select_columns' => true,
 ],
 
+'transactions' => [
+    'attempts' => env('REST_TRANSACTION_ATTEMPTS', 1),
+],
+
 'limits' => [
     'sizes' => [
         'filters' => 100,
@@ -179,6 +184,7 @@ Types:
 - Each request reads the values once, and checks their type. A value of the wrong type throws an exception that names the key. Before, the values were cast without a check: the string `"false"` turned strict mode, the cache and Precognition on.
   - `authorizations.strict`, `authorizations.cache.enabled`, `search.select_columns` and `precognition.enabled` take `true`, `false`, or the strings `"1"`, `"0"`, `"true"` and `"false"`. Anything else throws, `null` included: "The [rest.authorizations.strict] option must be a boolean."
   - Each value of `limits` takes an integer of 0 or more, or a string of digits, as `env()` gives it: "The [rest.limits.sizes.filters] option must be an integer of 0 or more."
+  - `transactions.attempts` takes an integer of 1 or more, or a string of digits: "The [rest.transactions.attempts] option must be an integer of 1 or more."
   - `gates.key` and `morph.type_key` take a string that is not empty: "The [rest.gates.key] option must be a non-empty string."
   - `authorizations.cache.store` takes `null` or a string that is not empty: "The [rest.authorizations.cache.store] option must be null or a non-empty string."
   - `gates.names` takes a map of strings that holds the six names above: "The [rest.gates.names] option must be a map of strings." for another value, and "The [rest.gates.names.authorized_to_view] option must be a string." for a missing name or one that is not a string.
@@ -1849,6 +1855,7 @@ Response:
 - `Lomkit\Rest\Http\MutateResponse` runs the mutation in one transaction, on the connection of the model of the endpoint's resource (before, on the default connection; rows of models on another connection are written outside it), and renders `operations`, and `records` when the request sends `response`. `mutatingAll()` and `mutatedAll()` run inside the transaction, see [Events](#events).
 - `destroy`, `restore` and `forceDestroy` write their rows in one database transaction, on the connection of the model of the resource. For each row, in the order of `resources`, the hook before the write (`destroying()`, `restoring()` or `forceDestroying()`), `performDelete()`, `performRestore()` or `performForceDelete()`, and the hook after the write run inside it. `destroyingAll()` runs inside it before the first row and `destroyedAll()` after the last row; the same holds for `restoringAll()`, `restoredAll()`, `forceDestroyingAll()` and `forceDestroyedAll()`, and a throw in one of them rolls the rows back. A failure on any row, in a hook, in a `perform` method or in the database, rolls back the rows written before it, and the request answers with the error. An observer or a listener that runs after commit runs only when the transaction commits. Before, each row was written on its own, and the rows written before a failure stayed written. A `perform` method that writes on another connection writes outside the transaction.
 - `Lomkit\Rest\Http\RowBatch::write()` takes three closures: `write(Closure $before, Closure $write, Closure $after)`. The first receives the rows before the first row is written, the last after the last row, both inside the transaction.
+- `transactions.attempts` in `config/rest.php` (`1` by default, `REST_TRANSACTION_ATTEMPTS`) runs a transaction of the package again when the database reports a deadlock or a lock timeout: the transaction of a mutation, of `destroy`, `restore` and `forceDestroy`, and of each chunk or whole run of an action, in the request or in the worker. Each attempt rolls the previous one back, gives the rows read before the transaction their attributes as read, and runs everything inside the transaction again, at once: the row checks, the hooks, the events and `handle()`. Send mails, HTTP calls and jobs after the commit, with `afterCommit()` or `ShouldDispatchAfterCommit`, so that they run once. Laravel runs only the outermost transaction again: inside a transaction of your application, a deadlock throws `Illuminate\Database\DeadlockException` at once.
 - The package collects the entries of the response in a `Lomkit\Rest\Mutations\OperationLog` that each mutation creates: `RestContext::operations()` and `OperationLog::start()` are removed, and `OperationLog::begin()` and `OperationEntry::of()` take a `Lomkit\Rest\Mutations\MutationNode`.
 
 Response block:

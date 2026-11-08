@@ -24,6 +24,7 @@ final readonly class RestConfig
         public array $gateNames,
         public string $morphTypeKey,
         public bool $selectColumns,
+        public int $transactionAttempts,
     ) {}
 
     public static function from(Repository $config): self
@@ -36,6 +37,7 @@ final readonly class RestConfig
             gateNames: ConfigValue::of($config, 'rest.gates.names')->strings(self::GATE_NAMES),
             morphTypeKey: ConfigValue::of($config, 'rest.morph.type_key')->string(),
             selectColumns: ConfigValue::of($config, 'rest.search.select_columns')->boolean(),
+            transactionAttempts: ConfigValue::of($config, 'rest.transactions.attempts')->integer(1),
         );
     }
 }

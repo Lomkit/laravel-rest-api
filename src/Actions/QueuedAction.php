@@ -15,6 +15,7 @@ use Lomkit\Rest\Exceptions\QueuedActionException;
 use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\WriteTransaction;
 
 final class QueuedAction implements ShouldQueue
 {
@@ -101,7 +102,7 @@ final class QueuedAction implements ShouldQueue
         $inputs = InputValues::fromGiven($resource->definition()->inputFields($action), $this->fields);
         $fields = ActionFields::of($action, $inputs, $this->user->guard, $user);
 
-        $action->transaction->aroundChunk($resource::newModel()->getConnection(), fn () => $action->handle($fields, $models));
+        $action->transaction->aroundChunk(WriteTransaction::of($resource)->over($models), fn () => $action->handle($fields, $models));
     }
 
     private function declared(Resource $resource): Action

@@ -32,9 +32,9 @@ final readonly class RowBatch
      */
     public function write(Closure $before, Closure $write, Closure $after): Collection
     {
-        $this->resource::newModel()
-            ->getConnection()
-            ->transaction(function () use ($before, $write, $after): void {
+        WriteTransaction::of($this->resource)
+            ->over($this->rows)
+            ->run(function () use ($before, $write, $after): void {
                 $before($this->rows);
 
                 foreach ($this->rows as $row) {
