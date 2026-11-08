@@ -67,6 +67,23 @@ class DecisionBatchesTest extends HelpdeskTestCase
     }
 
     #[Test]
+    public function it_reads_the_class_level_decisions_of_the_details_once_after_the_entry(): void
+    {
+        $this->travel(1)->seconds();
+
+        $cold = $this->getJson('/api/cached-tickets')->assertOk();
+        $this->assertSame([['stamps', 1, 1], [[300, 1], [300, 1]], 6], $this->traffic());
+        $this->assertSame(['viewAny', 'create'], $this->tickets->calls);
+        $this->tickets->calls = [];
+        $warm = $this->getJson('/api/cached-tickets')->assertOk();
+
+        $this->assertSame([['stamps', 1, 1], [], 3], $this->traffic());
+        $this->assertSame([], $this->tickets->calls);
+        $this->assertSame(['viewAny' => self::ALLOWED, 'create' => self::ALLOWED], $warm->json('data.authorizations'));
+        $this->assertSame($cold->json(), $warm->json());
+    }
+
+    #[Test]
     public function it_reads_the_gates_of_a_page_once_and_writes_them_once_per_duration(): void
     {
         ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();

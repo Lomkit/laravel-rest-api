@@ -42,13 +42,11 @@ class MetricRequest extends RestRequest
             throw new HttpException(404);
         }
 
-        $abilities = $metric->abilities();
-
-        if ($abilities !== []) {
+        if ($metric->abilities() !== []) {
             $authorizer->plan([Check::onClass($resource, 'viewAny')]);
         }
 
-        $authorizer->enter($resource, self::checksOn($resource, $abilities === [] ? [] : ['viewAny', ...$resource->abilities(Endpoint::Metric), ...$abilities]));
+        $authorizer->enter($resource, self::checksOn($resource, $metric->entryAbilities()));
     }
 
     /** @return array<string, mixed> */

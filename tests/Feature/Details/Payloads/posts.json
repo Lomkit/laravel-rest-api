@@ -4,22 +4,22 @@
      "fields": [
        {"name": "at", "label": null, "type": "datetime", "nullable": true, "default": null, "rules": ["nullable", "date"], "meta": {}},
        {"name": "notify", "label": null, "type": "boolean", "nullable": false, "default": true, "rules": ["boolean"], "meta": {}}],
-     "meta": {"color": "#FFFFFF"}, "destructive": false, "confirm": null},
+     "meta": {"color": "#FFFFFF"}, "destructive": false, "confirm": null, "authorized": true},
     {"name": "Queued Publish Posts", "uriKey": "queued-publish-posts", "target": "search",
      "fields": [
        {"name": "at", "label": null, "type": "datetime", "nullable": true, "default": null, "rules": ["nullable", "date"], "meta": {}},
        {"name": "notify", "label": null, "type": "boolean", "nullable": false, "default": true, "rules": ["boolean"], "meta": {}}],
-     "meta": {}, "destructive": false, "confirm": null},
+     "meta": {}, "destructive": false, "confirm": null, "authorized": true},
     {"name": "Batched Publish Posts", "uriKey": "batched-publish-posts", "target": "search",
      "fields": [
        {"name": "at", "label": null, "type": "datetime", "nullable": true, "default": null, "rules": ["nullable", "date"], "meta": {}},
        {"name": "notify", "label": null, "type": "boolean", "nullable": false, "default": true, "rules": ["boolean"], "meta": {}}],
-     "meta": {}, "destructive": false, "confirm": null},
+     "meta": {}, "destructive": false, "confirm": null, "authorized": true},
     {"name": "Change Status", "uriKey": "change-status", "target": "search",
      "fields": [
        {"name": "status", "label": null, "type": "enum", "nullable": false, "default": null, "rules": ["enum", "required"], "meta": {}, "values": ["draft", "review", "published"]},
        {"name": "at", "label": null, "type": "datetime", "nullable": false, "default": null, "rules": ["date", "required_if:status,published"], "meta": {}}],
-     "meta": {}, "destructive": false, "confirm": null}],
+     "meta": {}, "destructive": false, "confirm": null, "authorized": true}],
   "metrics": [],
   "instructions": [
     {"name": "Highlight Posts", "uriKey": "highlight-posts",
@@ -59,5 +59,6 @@
      "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsTo"}],
   "rules": {"all": {}, "create": {}, "update": {}},
   "text": null,
-  "gates": ["view", "create", "update", "delete", "restore", "forceDelete"]
+  "gates": ["view", "create", "update", "delete", "restore", "forceDelete"],
+  "authorizations": {"viewAny": {"allowed": true, "message": null}, "create": {"allowed": true, "message": null}}
 }}

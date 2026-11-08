@@ -22,5 +22,6 @@
      "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsTo"}],
   "rules": {"all": {}, "create": {}, "update": {}},
   "text": null,
-  "gates": ["view", "create", "update", "delete", "restore", "forceDelete"]
+  "gates": ["view", "create", "update", "delete", "restore", "forceDelete"],
+  "authorizations": {"viewAny": {"allowed": true, "message": null}, "create": {"allowed": true, "message": null}}
 }}

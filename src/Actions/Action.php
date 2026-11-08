@@ -21,6 +21,7 @@ use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Routing\Endpoint;
 
 /** @phpstan-consistent-constructor */
 class Action implements JsonSerializable
@@ -110,6 +111,14 @@ class Action implements JsonSerializable
     public function abilities(): array
     {
         return ['viewAny'];
+    }
+
+    /** @return list<string> */
+    final public function entryAbilities(): array
+    {
+        $abilities = $this->abilities();
+
+        return $abilities === [] ? [] : array_values(array_unique(['viewAny', ...$this->resource->abilities(Endpoint::Operate), ...$abilities]));
     }
 
     public function authorizeEach(): ?string

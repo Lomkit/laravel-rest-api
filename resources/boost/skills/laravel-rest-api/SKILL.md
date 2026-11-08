@@ -291,14 +291,14 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
 
 ## `details` endpoint
 
-`GET /api/artworks` describes the resource. It lists what the declarations of the resource (`fields()`, `relations()`, `scopes()`, `actions()`, `metrics()`, `instructions()`, the rules methods, `text()` and `gates()`) return for the current request, which can depend on `$this->request()->user()`. It checks `viewAny` only and applies no policy to the entries. With a `collector` morph-map alias:
+`GET /api/artworks` describes the resource. It lists what the declarations of the resource (`fields()`, `relations()`, `scopes()`, `actions()`, `metrics()`, `instructions()`, the rules methods, `text()` and `gates()`) return for the current request, which can depend on `$this->request()->user()`. It checks `viewAny`, then answers for the user of the request: `authorizations`, and `authorized` on each action and metric. With a `collector` morph-map alias:
 
 ```json
 {"data": {
   "actions": [{"name": "Retire Artworks", "uriKey": "retire-artworks", "target": "search",
     "fields": [{"name": "notify", "label": null, "type": "boolean", "nullable": false, "default": false, "rules": ["boolean"], "meta": {}}],
-    "meta": {}, "destructive": false, "confirm": null}],
-  "metrics": [{"name": "Artworks By Medium", "uriKey": "artworks-by-medium", "type": "partition", "ranges": [], "meta": {}}],
+    "meta": {}, "destructive": false, "confirm": null, "authorized": true}],
+  "metrics": [{"name": "Artworks By Medium", "uriKey": "artworks-by-medium", "type": "partition", "ranges": [], "meta": {}, "authorized": true}],
   "instructions": [{"name": "By Medium", "uriKey": "by-medium",
     "fields": [{"name": "medium", "label": null, "type": "enum", "nullable": false, "default": null, "rules": ["enum", "required"], "meta": {}, "values": ["oil", "ink", "watercolor"]}],
     "meta": {}, "text": true}],
@@ -325,7 +325,8 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
      "morph": {"type_column": "owner_type", "key_column": "owner_id"}}],
   "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
   "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null},
-  "gates": ["view", "create", "update", "delete", "restore", "forceDelete"]
+  "gates": ["view", "create", "update", "delete", "restore", "forceDelete"],
+  "authorizations": {"viewAny": {"allowed": true, "message": null}, "create": {"allowed": true, "message": null}}
 }}
 ```
 
@@ -334,6 +335,7 @@ Every route carries the `EnforceExpectsJson` middleware, which adds `application
 - `relations`: `resource` is the class name of the related resource (absent on a `MorphTo` with several targets), and `name` is the short class name of the relation (or its `$name`). Many-to-many relations (every `PivotRelation`) add `pivot_fields`: `create` means `create` and `attach`, `update` means `update`, `sync` and `toggle`, `select` means returned in the `pivot` of an included row, `filter.operators` applies to `<relation>.pivot.<field>` filters, and `sort` is always `false`. When the model method is not an Eloquent many-to-many relation, `select` is `false` and `filter.operators` is `[]`. `MorphTo` adds `types` (each morph type, the morph-map alias or the model class, mapped to its resource class) and `morph` (`type_column`, `key_column`). Detect `pivot_fields`, `types` and `morph` by their presence, not by `name`.
 - `text` is `null` without `text()`. Otherwise: `fields` (the searchable fields, `[]` on `ScoutEngine`), `modes`, `relevance` (`@relevance` accepted with a text), `trashed` (`search.trashed` accepted with a text), `max_length`, and `engine`, `null` on `Contains` and `FullText`. On `ScoutEngine`, `engine` holds `filters` (the `filterable()` attributes with `name`, `type`, `operators`, and `values` for an `Enum`; never the perimeter attributes), `sorts`, `max_sorts`, `max_page_size` and `window` (`null` when unbounded). With a filled text on `ScoutEngine`, `text.engine` replaces the `sort` and `filter` of the field entries, within the grammar of [Search engines](#search-engines).
 - `gates` lists the abilities that `search.gates` accepts: `view`, `create`, `update`, `delete`, `restore`, `forceDelete`, then the names that `gates()` declares. It is `[]` when `isGatingEnabled()` returns `false`.
+- `authorizations` maps each class-level ability that the routes check to `{"allowed", "message"}`: `viewAny`, `create`, the abilities of `abilities(Endpoint)` for each endpoint, then those of the actions and metrics (`entryAbilities()`), each once. Each action and metric entry ends with `authorized`: whether the user passes the abilities that its route checks before reading the request. A refused one is listed with `false`; its route answers `403`. Row abilities stay in the `gates` of a search. With `isAuthorizingEnabled()` false, everything is allowed.
 - `actions`, `instructions` and `relations` are lists, also when a declaration method returns a keyed array. Maps are objects, also when empty (`"meta": {}`, `"all": {}`). Ignore unknown keys: later releases can add keys.
 - A declaration error also throws on `details`: `InvalidTextSearchException` for the text search, `InvalidResourceException` for a `MorphTo` whose model method is not a `MorphTo` of that name or whose targets are not a list of distinct resources, or an invalid name in `gates()`, `InvalidFieldException` for an `Enum` field without an enum class or cast, `BadMethodCallException` for a many-to-many relation or a `MorphTo` without its model method.
 
@@ -652,7 +654,7 @@ smaller, raise it, or set it to `null` to remove the cap on every target.
 { "resources": [1, 5, 9], "fields": [{ "name": "reason", "value": "spam" }] }
 ```
 
-`details` gives each action's target as `"target": "search"`, `"resources"` or `"none"`, and `destructive` and `confirm` (set with `->destructive()` and `->confirm('...')` when declaring, or as properties; `false` and `null` by default; hints for clients only).
+`details` gives each action's target as `"target": "search"`, `"resources"` or `"none"`, and `destructive` and `confirm` (set with `->destructive()` and `->confirm('...')` when declaring, or as properties; `false` and `null` by default; hints for clients only), and `authorized` (whether the user passes the abilities of its route).
 
 **Fields are typed `Lomkit\Rest\Fields\*` objects.** Each field is validated with its type rules, `nullable()` and `rules()` as a normal Laravel validation: presence and cross-field rules (`required`, `required_if:status,published`, `present`, …) fire even when a field is absent from the `fields` array. Validation errors are keyed by field name — `fields.{name}` (e.g. `fields.expires_at`) — while an unknown or missing field name is reported positionally as `fields.{index}.name`. An `Enum` field must name its enum class (`Enum::make('status', PostStatus::class)`), because action fields are not bound to a model. Field names must not be numeric: `Integer::make('2')` throws `InvalidFieldException`. The request's `messages()` and `attributes()` apply to the `fields.{name}` keys, and so do translation lines keyed by the full key (`validation.custom.fields.{name}.{rule}`); `validation.attributes.{name}` still names the field, unless the field declares `label()`.
 
@@ -705,7 +707,7 @@ class TicketBacklog extends Metric
 - The search runs the resource's `searching()` event first, as a search does. A metric that must skip it declares `TicketBacklog::make()->withoutSearching()` in `metrics()`, or `public bool $withoutSearching = true;` in its class. The perimeter, `viewAny` and the validation still apply.
 - Abilities: `viewAny`, then the resource's `abilities(Endpoint::Metric)`, then the metric's `abilities()` (`['viewAny']` by default). `[]` runs without these checks, for example for guests with `->withoutMiddleware('auth')`. Relation filters still need `viewAny` on the related resource.
 - Routes: named `{name}.metric.{uriKey}`; `POST /{resource}/metrics/{metric}` comes last and answers unknown keys (`403` without `viewAny`, else `404`). `->middleware('throttle:reports')` and `->withoutMiddleware('auth:sanctum')` (or the `$middleware` and `$withoutMiddleware` properties) work as for actions. `Rest::resource()` reads `metrics()` when it registers the routes: keep it the same for every user and free of queries; two metrics with one `uriKey()` throw.
-- Details: `metrics` lists `{"name", "uriKey", "type", "ranges", "meta"}` for each metric. `$resource->definition()->metrics()` and `metric($key)` read them.
+- Details: `metrics` lists `{"name", "uriKey", "type", "ranges", "meta", "authorized"}` for each metric. `$resource->definition()->metrics()` and `metric($key)` read them.
 
 ### Value, Partition and Progress
 
@@ -976,7 +978,7 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 | --- | --- |
 | `viewAny` | `search`, `details`, `operate` and `metric` (unless the action's or the metric's `abilities()` returns `[]`), and every resource reached by an include, an aggregate or a relation filter (each level, pivot columns included), a relation group or a relation sort, and the `response` block of `mutate` (its resource and every resource it reaches) |
 | `view` | per-row visibility, includes |
-| `create` | `mutate` create: once per created resource class with the model class, then per created row with its draft (`create($user, ?Model $draft = null)`) |
+| `create` | `mutate` create: once per created resource class with the model class, then per created row with its draft (`create($user, ?Model $draft = null)`); `details`, with the model class, answered in `authorizations` |
 | `update` | `mutate` update, with a `\Lomkit\Rest\Authorization\Changes` third argument (`has()`, `get()`, `keys()`); a child moved under a has-one/has-many relation |
 | `replicate` | `mutate` create when duplicating from existing data |
 | `delete` | `destroy` |

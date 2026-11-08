@@ -470,7 +470,7 @@ A queued or batched action no longer serializes its resource, its rows and its i
 
   The status stays 200. The package does not send the file or follow the URL: the client acts on the result. `created()` takes the models, in a collection or an array, and gives their keys in that order; read the rows with a search. `data()`, and `withData()` on every type, take an array with string keys and give it as a JSON object, `{}` when empty; a list throws `Lomkit\Rest\Exceptions\InvalidActionException`.
 - Clients that compare the whole response body of `operate` now also receive `result`.
-- `->destructive()` and `->confirm('Extend the selected subscriptions?')` mark an action for clients, when the resource declares it or as the `$destructive` and `$confirm` properties of the action. The details response gives both in each action entry, after `meta`: `"destructive": false` and `"confirm": null` by default. Scramble documents both. The endpoint runs the action the same way.
+- `->destructive()` and `->confirm('Extend the selected subscriptions?')` mark an action for clients, when the resource declares it or as the `$destructive` and `$confirm` properties of the action. The details response gives both in each action entry, after `meta`: `"destructive": false` and `"confirm": null` by default. Scramble documents both. The endpoint runs the action the same way. Each entry also gives `authorized`, see [Details](#details).
 - `Action::handleRequest()` returns `Lomkit\Rest\Http\OperateResponse`, which holds `impacted` and `result`, instead of the count, and the `operate()` method of the controller returns that `OperateResponse`. A class that overrides one of them declares the new return type: PHP refuses to load an override that keeps `int` or `Illuminate\Http\Response`, and names the method.
 - An action can check a policy ability on each row it runs on. Return the ability from `authorizeEach()`:
 
@@ -690,7 +690,7 @@ public function metrics(): array
 
 - The resource now declares `metrics()`. A resource method named `metrics()` with another signature no longer loads: rename it.
 - Every resource gets `POST {name}/metrics/{metric}`, named `{name}.metric`, also without metrics. It answers the keys of no metric: `403` to a user that `viewAny` refuses, `404` to the others. `except('metric')` removes the metric routes. `php artisan route:list` and `rest:check` count one more route for each resource.
-- The details response has a new `metrics` key, after `actions`: `[]` for a resource without metrics.
+- The details response has a new `metrics` key, after `actions`: `[]` for a resource without metrics. Each entry ends with `authorized`, see [Details](#details).
 - `Lomkit\Rest\Http\Routing\Endpoint` has a `Metric` case, after `Operate`. A `match` on `Endpoint` without a default arm handles it.
 
 Three built-in types compute the usual results in one query: `Value`, `Partition` and `Progress`. They read the fields that the resource declares.
@@ -1352,6 +1352,7 @@ Actions:
 - A known action checks, before validation and in this order: `viewAny` on the resource, the abilities that the resource's `abilities()` returns for `Endpoint::Operate` (none by default), then the abilities that the action's `abilities()` returns. These abilities add to `viewAny` and never replace it.
 - `Action::abilities(): array` returns `['viewAny']` by default, for every action, whatever its target. An action that returns `['export']` checks `viewAny`, then `export`; listing `viewAny` as well, as in `['viewAny', 'export']`, checks the same abilities. An action that already defines a method named `abilities()` must give it this signature.
 - An action whose `abilities()` returns `[]` runs without any of these checks: neither `viewAny` nor the resource's abilities for `Endpoint::Operate`, and the search of its models does not check `viewAny` on the resource either. Use it for an action that any user may run, guests included. The resources that its `search` reaches through includes, aggregates and filters on relations still need `viewAny`.
+- `Action::entryAbilities()` returns the abilities that the route of the action checks: `[]` when `abilities()` returns `[]`, otherwise `viewAny`, the resource's abilities for `Endpoint::Operate`, then `abilities()`, each once. `Metric::entryAbilities()` does the same with `Endpoint::Metric`. Both are final: override `abilities()`. The details answer `authorized` from them.
 - After these checks, an action that returns an ability from `authorizeEach()` checks it on each row, see [Actions](#actions).
 
 Denials:
@@ -1901,7 +1902,7 @@ Scramble:
 
 ### Details
 
-The details endpoint, `GET /{resource}`, describes the resource with typed entries. Its keys are `actions`, `metrics`, `instructions`, `fields`, `limits`, `scopes`, `relations`, `rules`, `text` and `gates`. An excerpt:
+The details endpoint, `GET /{resource}`, describes the resource with typed entries. Its keys are `actions`, `metrics`, `instructions`, `fields`, `limits`, `scopes`, `relations`, `rules`, `text`, `gates` and `authorizations`. An excerpt:
 
 ```json
 {"data": {
@@ -1918,7 +1919,8 @@ The details endpoint, `GET /{resource}`, describes the resource with typed entri
      "types": {"App\\Models\\Collector": "App\\Rest\\Resources\\CollectorResource"},
      "morph": {"type_column": "owner_type", "key_column": "owner_id"}}],
   "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
-  "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null}
+  "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null},
+  "authorizations": {"viewAny": {"allowed": true, "message": null}, "create": {"allowed": false, "message": "Only curators add artworks."}}
 }}
 ```
 
@@ -1969,6 +1971,14 @@ Gates:
 
 - `gates` is a new key. It lists the abilities that `search.gates` accepts on the resource: `view`, `create`, `update`, `delete`, `restore` and `forceDelete`, then the gates that `gates()` declares, see [Responses](#responses). It is `[]` when `isGatingEnabled()` returns `false`.
 
+Authorizations:
+
+- `authorizations` is a new key. It answers, for the user of the request, each class-level ability that the routes of the resource check: `viewAny`, `create`, the abilities that `abilities()` returns for each endpoint, then those of the actions and the metrics. Each ability is a key, listed once, and its answer holds `allowed` and `message`, as a gate does.
+- Each action entry and each metric entry ends with `authorized`: `true` when the user passes every ability that its route checks before it reads the request, `true` when its `abilities()` returns `[]`. A refused action or metric stays in the list with `"authorized": false`, and its route answers `403`. Validation and the row checks of `authorizeEach()` still apply.
+- Row abilities are not in the details: list them in the `gates` of a search.
+- A resource whose `isAuthorizingEnabled()` returns `false` answers `"allowed": true` to every ability.
+- The answers go through the decisions of the request: an ability that `authorizationCache()` declares is read from the cache and written to it, as on the other endpoints.
+
 Behaviour:
 
 - Empty maps are `{}`: the `meta` of every entry, input entries, actions, instructions and scopes included, and the maps of `rules`. Lists stay `[]`.
@@ -1977,12 +1987,12 @@ Behaviour:
   - `Lomkit\Rest\Exceptions\InvalidResourceException` for a `MorphTo` whose model method does not return a `MorphTo` relation of the same name, whose targets are not a list of resources, declare a model twice or a morph type with `*` or a trailing backslash, or for an invalid name in `gates()`;
   - `Lomkit\Rest\Exceptions\InvalidFieldException` for an `Enum` field or pivot field with no enum class and no enum cast;
   - `BadMethodCallException` for a many-to-many relation or a `MorphTo` whose model method is missing.
-- Details checks `viewAny` only and applies no policy to the entries. It lists what the declarations of the resource return for the current request, which can depend on `$this->request()->user()`.
+- Details checks `viewAny` first. Then, after `describing()`, it asks the policy for each ability of `authorizations`; a `create` policy method whose second parameter has no default fails there, as on `mutate`. It lists what the declarations of the resource return for the current request, which can depend on `$this->request()->user()`.
 - Clients ignore the keys they do not know. Later releases can add keys.
 
 Scramble:
 
-- Scramble documents the details response: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, and the input entries of actions, instructions and scopes. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
+- Scramble documents the details response: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
 
 ### Framework integration
 

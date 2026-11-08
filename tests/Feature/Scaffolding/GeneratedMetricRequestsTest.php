@@ -72,13 +72,13 @@ class GeneratedMetricRequestsTest extends ScaffoldingTestCase
             'value' => [
                 'ServedOrderCount',
                 ['--type' => 'value'],
-                ['name' => 'Served Order Count', 'uriKey' => 'served-order-count', 'type' => 'value', 'ranges' => [], 'meta' => []],
+                ['name' => 'Served Order Count', 'uriKey' => 'served-order-count', 'type' => 'value', 'ranges' => [], 'meta' => [], 'authorized' => true],
                 ['type' => 'value', 'value' => 5, 'previous' => null],
             ],
             'trend' => [
                 'ServedOrdersPerDay',
                 ['--type' => 'trend'],
-                ['name' => 'Served Orders Per Day', 'uriKey' => 'served-orders-per-day', 'type' => 'trend', 'ranges' => [['value' => 7, 'label' => '7 days'], ['value' => 30, 'label' => '30 days'], ['value' => 90, 'label' => '90 days']], 'meta' => []],
+                ['name' => 'Served Orders Per Day', 'uriKey' => 'served-orders-per-day', 'type' => 'trend', 'ranges' => [['value' => 7, 'label' => '7 days'], ['value' => 30, 'label' => '30 days'], ['value' => 90, 'label' => '90 days']], 'meta' => [], 'authorized' => true],
                 ['type' => 'trend', 'series' => [
                     ['label' => '2026-11-01', 'value' => 1],
                     ['label' => '2026-11-02', 'value' => 0],
@@ -92,7 +92,7 @@ class GeneratedMetricRequestsTest extends ScaffoldingTestCase
             'partition' => [
                 'ServedOrdersByStatus',
                 ['--type' => 'partition', '--group-by' => 'status'],
-                ['name' => 'Served Orders By Status', 'uriKey' => 'served-orders-by-status', 'type' => 'partition', 'ranges' => [], 'meta' => []],
+                ['name' => 'Served Orders By Status', 'uriKey' => 'served-orders-by-status', 'type' => 'partition', 'ranges' => [], 'meta' => [], 'authorized' => true],
                 ['type' => 'partition', 'parts' => [
                     ['key' => 'paid', 'label' => 'Paid', 'value' => 2],
                     ['key' => 'pending', 'label' => 'Pending', 'value' => 2],
@@ -102,13 +102,13 @@ class GeneratedMetricRequestsTest extends ScaffoldingTestCase
             'progress' => [
                 'ServedOrderGoal',
                 ['--type' => 'progress'],
-                ['name' => 'Served Order Goal', 'uriKey' => 'served-order-goal', 'type' => 'progress', 'ranges' => [], 'meta' => []],
+                ['name' => 'Served Order Goal', 'uriKey' => 'served-order-goal', 'type' => 'progress', 'ranges' => [], 'meta' => [], 'authorized' => true],
                 ['type' => 'progress', 'value' => 5, 'target' => 100],
             ],
             'table' => [
                 'ServedTopChannels',
                 ['--type' => 'table', '--group-by' => 'channel'],
-                ['name' => 'Served Top Channels', 'uriKey' => 'served-top-channels', 'type' => 'table', 'ranges' => [], 'meta' => []],
+                ['name' => 'Served Top Channels', 'uriKey' => 'served-top-channels', 'type' => 'table', 'ranges' => [], 'meta' => [], 'authorized' => true],
                 ['type' => 'table', 'columns' => [
                     ['name' => 'count', 'label' => 'Count', 'aggregate' => 'count'],
                 ], 'rows' => [
@@ -120,7 +120,7 @@ class GeneratedMetricRequestsTest extends ScaffoldingTestCase
             'custom' => [
                 'ServedOrderBacklog',
                 ['--type' => 'custom'],
-                ['name' => 'Served Order Backlog', 'uriKey' => 'served-order-backlog', 'type' => 'served-order-backlog', 'ranges' => [], 'meta' => []],
+                ['name' => 'Served Order Backlog', 'uriKey' => 'served-order-backlog', 'type' => 'served-order-backlog', 'ranges' => [], 'meta' => [], 'authorized' => true],
                 ['type' => 'served-order-backlog', 'value' => 5, 'previous' => null],
             ],
         ];

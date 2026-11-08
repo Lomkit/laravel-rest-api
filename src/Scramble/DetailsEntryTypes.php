@@ -88,6 +88,7 @@ final class DetailsEntryTypes
             'meta' => new ObjectType,
             'destructive' => (new BooleanType)->setDescription('True when the action is declared with destructive(); a hint for clients, the endpoint runs the action the same way'),
             'confirm' => (new StringType)->nullable(true)->setDescription('The text set with confirm(), for clients to show before they run the action; null without one'),
+            'authorized' => (new BooleanType)->setDescription('True when the user passes the abilities that the action route checks before it reads the request'),
         ]);
     }
 
@@ -99,6 +100,7 @@ final class DetailsEntryTypes
             'type' => (new StringType)->setDescription('The type of the result, given again as data.type in the response of the metric'),
             'ranges' => self::listOf(self::objectOf(['value' => new IntegerType, 'label' => new StringType]), 'The values that the range key of the request accepts; the first one applies when the request sends none'),
             'meta' => new ObjectType,
+            'authorized' => (new BooleanType)->setDescription('True when the user passes the abilities that the metric route checks before it reads the request'),
         ]);
     }
 
