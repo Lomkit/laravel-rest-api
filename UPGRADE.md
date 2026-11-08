@@ -2014,7 +2014,7 @@ Behaviour:
 
 Scramble:
 
-- Scramble documents the details response: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
+- Scramble documents the details response of each resource in its own schema, `{Resource}Details`, which lists the names of the resource as enums: the `name` of the fields, the `relation` of the relations, the `name` of the scopes, the `uriKey` of the instructions, actions and metrics, and the gates. It holds the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
 
 ### OpenAPI documentation
 
@@ -2037,6 +2037,7 @@ Records and read responses:
 
 - `components.schemas` holds the record of each resource that a documented operation reaches, named like the tag (`Post`). It lists the selectable fields with their type, the gates of a row under the gates key, and each relation under its key in the response: the record of its resource or `null` for a to-one relation, a list of records for a to-many relation, with the `pivot` and its selectable pivot fields for a many-to-many relation. A `MorphTo` relation is `oneOf` the `{Resource}WithType` record of each target, which adds the type key (`@type`) with the morph type, with a `discriminator` on that key. The record requires no key, since the `selects` of a search decide which keys a row holds, and the aggregates and include aliases of a search add keys that it does not name.
 - `RestGateAnswer` is the answer to one gate: `allowed` and `message`.
+- The details answer `{Resource}Details`, see [Details](#details).
 - A search answers `{Resource}Paginated`: `current_page`, `data`, `from`, `last_page`, `per_page`, `to`, `total` and `meta`, whose gates key holds the `create` answer. `destroy`, `restore` and `forceDestroy` answer `{Resource}Rows`: `data` and `meta`.
 - The body of `destroy`, `restore` and `forceDestroy` requires `resources`: from 1 to `limits.sizes.resources` distinct keys, typed by the `ID` field of the resource. Its request example holds one key: the first value of `examples()` on the `ID` field, else `1` for an integer key, `a` for a string key, `00000000-0000-0000-0000-000000000000` for a UUID key and `00000000000000000000000000` for a ULID key.
 - A resource that has the name of another documented resource, such as a second `TagResource` in another namespace, names its records with its namespace: `App.Rest.Admin.Tag`, `App.Rest.Admin.TagPaginated`.

@@ -10,7 +10,7 @@ class ScrambleDetailsTest extends ScrambleTestCase
 {
     private const string OPERATORS = '["=","!=",">",">=","<","<=","like","not like","ilike","not ilike","in","not in","between","not between","is null","is not null"]';
 
-    private const string FIELD = '{"type":"object","properties":{"name":{"type":"string"},"label":{"type":["string","null"],"description":"The name of the field in validation messages, set with label(); null without one"},"type":{"type":"string"},"nullable":{"type":"boolean"},"select":{"type":"boolean","description":"Accepted in search.selects and returned"},"sort":{"type":"boolean","description":"Accepted in search.sorts"},"filter":{"type":"object","properties":{"operators":{"type":"array","description":"Accepted by search.filters on this field; empty when it is not filterable","items":{"type":"string","enum":'.self::OPERATORS.'}}},"required":["operators"]},"create":{"type":"boolean","description":"Writable on create"},"update":{"type":"boolean","description":"Writable on update"},"rules":{"type":"object","description":"Validation rules as strings: all on every write, create and update on that operation only","properties":{"all":{"type":"array","items":{"type":"string"}},"create":{"type":"array","items":{"type":"string"}},"update":{"type":"array","items":{"type":"string"}}},"required":["all","create","update"]},"meta":{"type":"object"},"values":{"type":"array","description":"Enum fields only: the backing values","items":{}}},"required":["name","label","type","nullable","select","sort","filter","create","update","rules","meta"]}';
+    private const string FIELD = '{"type":"object","properties":{"name":{"type":"string","enum":["id","title","summary","status","featured","views","rating","published_on","published_at","metadata"]},"label":{"type":["string","null"],"description":"The name of the field in validation messages, set with label(); null without one"},"type":{"type":"string"},"nullable":{"type":"boolean"},"select":{"type":"boolean","description":"Accepted in search.selects and returned"},"sort":{"type":"boolean","description":"Accepted in search.sorts"},"filter":{"type":"object","properties":{"operators":{"type":"array","description":"Accepted by search.filters on this field; empty when it is not filterable","items":{"type":"string","enum":'.self::OPERATORS.'}}},"required":["operators"]},"create":{"type":"boolean","description":"Writable on create"},"update":{"type":"boolean","description":"Writable on update"},"rules":{"type":"object","description":"Validation rules as strings: all on every write, create and update on that operation only","properties":{"all":{"type":"array","items":{"type":"string"}},"create":{"type":"array","items":{"type":"string"}},"update":{"type":"array","items":{"type":"string"}}},"required":["all","create","update"]},"meta":{"type":"object"},"values":{"type":"array","description":"Enum fields only: the backing values","items":{}}},"required":["name","label","type","nullable","select","sort","filter","create","update","rules","meta"]}';
 
     private const string PIVOT_FIELD = '{"type":"object","properties":{"name":{"type":"string"},"label":{"type":["string","null"],"description":"The name of the field in validation messages, set with label(); null without one"},"type":{"type":"string"},"nullable":{"type":"boolean"},"select":{"type":"boolean","description":"Returned in the pivot of an included row; false when the model method is not a many-to-many relation"},"sort":{"type":"boolean","description":"Always false: no endpoint sorts on a pivot column"},"filter":{"type":"object","properties":{"operators":{"type":"array","description":"Accepted by <relation>.pivot.<field> filters; empty when it is not filterable","items":{"type":"string","enum":'.self::OPERATORS.'}}},"required":["operators"]},"create":{"type":"boolean","description":"Writable on create and attach"},"update":{"type":"boolean","description":"Writable on update, sync and toggle"},"rules":{"type":"object","description":"Validation rules as strings: all on every write, create and update on that operation only","properties":{"all":{"type":"array","items":{"type":"string"}},"create":{"type":"array","items":{"type":"string"}},"update":{"type":"array","items":{"type":"string"}}},"required":["all","create","update"]},"meta":{"type":"object"},"values":{"type":"array","description":"Enum fields only: the backing values","items":{}}},"required":["name","label","type","nullable","select","sort","filter","create","update","rules","meta"]}';
 
@@ -27,7 +27,8 @@ class ScrambleDetailsTest extends ScrambleTestCase
 
         $this->assertSame('Get Post details', $operation['summary']);
         $this->assertSame('The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource', $operation['responses'][200]['description']);
-        $this->assertSame(['data'], $operation['responses'][200]['content']['application/json']['schema']['required']);
+        $this->assertSame('{"$ref":"#\/components\/schemas\/PostDetails"}', json_encode($operation['responses'][200]['content']['application/json']['schema']));
+        $this->assertSame(['data'], $this->detailsSchema('/posts')['required']);
     }
 
     #[Test]
@@ -45,7 +46,7 @@ class ScrambleDetailsTest extends ScrambleTestCase
         $morph = '{"type":"object","description":"MorphTo only: the columns of the relation","properties":{"type_column":{"type":"string"},"key_column":{"type":"string"}},"required":["type_column","key_column"]}';
 
         $this->assertSame(
-            '{"type":"object","properties":{"resource":{"type":"string","description":"The related resource class; absent on a MorphTo relation with several types"},"relation":{"type":"string"},"constraints":'.$constraints.',"name":{"type":"string"},"pivot_fields":'.$pivotFields.',"types":'.$types.',"morph":'.$morph.'},"required":["relation","constraints","name"]}',
+            '{"type":"object","properties":{"resource":{"type":"string","description":"The related resource class; absent on a MorphTo relation with several types"},"relation":{"type":"string","enum":["author"]},"constraints":'.$constraints.',"name":{"type":"string"},"pivot_fields":'.$pivotFields.',"types":'.$types.',"morph":'.$morph.'},"required":["relation","constraints","name"]}',
             json_encode($this->details()['relations']['items']),
         );
     }
@@ -65,7 +66,7 @@ class ScrambleDetailsTest extends ScrambleTestCase
     #[Test]
     public function it_documents_the_gates_of_the_resource(): void
     {
-        $this->assertSame('{"type":"array","description":"The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off","items":{"type":"string"}}', json_encode($this->details()['gates']));
+        $this->assertSame('{"type":"array","description":"The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off","items":{"type":"string","enum":["view","create","update","delete","restore","forceDelete"]}}', json_encode($this->details()['gates']));
     }
 
     #[Test]
@@ -87,10 +88,10 @@ class ScrambleDetailsTest extends ScrambleTestCase
         $fields = '"fields":{"type":"array","items":'.self::INPUT.'},"meta":{"type":"object"}';
 
         return [
-            'actions' => ['actions', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string"},"target":{"type":"string","enum":["search","resources","none"]},'.$fields.',"destructive":{"type":"boolean","description":"True when the action is declared with destructive(); a hint for clients, the endpoint runs the action the same way"},"confirm":{"type":["string","null"],"description":"The text set with confirm(), for clients to show before they run the action; null without one"},"authorized":{"type":"boolean","description":"True when the user passes the abilities that the action route checks before it reads the request"}},"required":["name","uriKey","target","fields","meta","destructive","confirm","authorized"]}'],
+            'actions' => ['actions', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string","enum":["publish-posts","queued-publish-posts","batched-publish-posts","change-status"]},"target":{"type":"string","enum":["search","resources","none"]},'.$fields.',"destructive":{"type":"boolean","description":"True when the action is declared with destructive(); a hint for clients, the endpoint runs the action the same way"},"confirm":{"type":["string","null"],"description":"The text set with confirm(), for clients to show before they run the action; null without one"},"authorized":{"type":"boolean","description":"True when the user passes the abilities that the action route checks before it reads the request"}},"required":["name","uriKey","target","fields","meta","destructive","confirm","authorized"]}'],
             'metrics' => ['metrics', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string"},"type":{"type":"string","description":"The type of the result, given again as data.type in the response of the metric"},"ranges":{"type":"array","description":"The values that the range key of the request accepts; the first one applies when the request sends none","items":{"type":"object","properties":{"value":{"type":"integer"},"label":{"type":"string"}},"required":["value","label"]}},"meta":{"type":"object"},"authorized":{"type":"boolean","description":"True when the user passes the abilities that the metric route checks before it reads the request"}},"required":["name","uriKey","type","ranges","meta","authorized"]}'],
-            'instructions' => ['instructions', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string"},'.$fields.',"text":{"type":"boolean","description":"Can be sent with search.text on this resource"}},"required":["name","uriKey","fields","meta","text"]}'],
-            'scopes' => ['scopes', '{"type":"object","properties":{"name":{"type":"string"},'.$fields.'},"required":["name","fields","meta"]}'],
+            'instructions' => ['instructions', '{"type":"object","properties":{"name":{"type":"string"},"uriKey":{"type":"string","enum":["highlight-posts","in-status"]},'.$fields.',"text":{"type":"boolean","description":"Can be sent with search.text on this resource"}},"required":["name","uriKey","fields","meta","text"]}'],
+            'scopes' => ['scopes', '{"type":"object","properties":{"name":{"type":"string","enum":["publishedSince","popular","viewedBetween","featured","reaching"]},'.$fields.'},"required":["name","fields","meta"]}'],
         ];
     }
 
@@ -104,16 +105,16 @@ class ScrambleDetailsTest extends ScrambleTestCase
     }
 
     #[Test]
-    public function it_adds_no_schema_component_for_the_details_response(): void
+    public function it_documents_the_details_of_each_resource_in_its_own_component(): void
     {
         $schemas = app(Generator::class)()['components']['schemas'] ?? [];
 
-        $this->assertSame([], array_values(array_filter(array_keys($schemas), fn (string $name): bool => str_ends_with($name, 'Details'))));
+        $this->assertSame(['AuthorDetails', 'CategoryDetails', 'PostDetails', 'ProductDetails', 'StaffProductDetails'], array_values(array_filter(array_keys($schemas), fn (string $name): bool => str_ends_with($name, 'Details'))));
     }
 
     /** @return array<string, mixed> */
     private function details(): array
     {
-        return $this->operation('/posts', 'get')['responses'][200]['content']['application/json']['schema']['properties']['data']['properties'];
+        return $this->detailsSchema('/posts')['properties']['data']['properties'];
     }
 }

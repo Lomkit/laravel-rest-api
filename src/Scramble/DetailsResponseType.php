@@ -3,51 +3,47 @@
 namespace Lomkit\Rest\Scramble;
 
 use Dedoc\Scramble\Support\Generator\Operation;
-use Dedoc\Scramble\Support\Generator\Reference;
-use Dedoc\Scramble\Support\Generator\Response;
-use Dedoc\Scramble\Support\Generator\Schema;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
+use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Instructions\Instruction;
+use Lomkit\Rest\Metrics\Metric;
+use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Scopes\Scope;
+use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Text\TextMode;
 
 final class DetailsResponseType
 {
-    public static function document(Operation $operation, string $resourceName): void
+    public static function document(Operation $operation, DocumentationContext $context): void
     {
-        $operation->summary("Get {$resourceName} details");
+        $operation->summary("Get {$context->name} details");
 
-        $schema = new Schema;
-        $schema->type = Schemas::required(['data' => self::data()]);
+        $resource = $context->resource;
+        $details = $context->components->schema((new RecordSchema($context->components))->name($resource).'Details', $resource::class, fn (): Type => Schemas::required(['data' => self::data($resource)]));
 
-        $response = new Response(200);
-        $response->setDescription('The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource');
-        $response->setContent('application/json', $schema);
-
-        $operation->responses = [
-            ...array_filter(
-                $operation->responses ?? [],
-                fn (Response|Reference $existing): bool => ! $existing instanceof Response || (string) $existing->code !== '200',
-            ),
-            $response,
-        ];
+        $operation->addResponse(Schemas::response(200, 'The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource', $details));
     }
 
-    private static function data(): ObjectType
+    private static function data(Resource $resource): ObjectType
     {
+        $definition = $resource->definition();
+
         return Schemas::required([
-            'actions' => Schemas::list(DetailsEntryTypes::action()),
-            'metrics' => Schemas::list(DetailsEntryTypes::metric()),
-            'instructions' => Schemas::list(DetailsEntryTypes::instruction()),
-            'fields' => Schemas::list(DetailsEntryTypes::field()),
+            'actions' => Schemas::list(DetailsEntryTypes::action(array_values(array_map(fn (Action $action): string => $action->uriKey(), $definition->actions())))),
+            'metrics' => Schemas::list(DetailsEntryTypes::metric(array_values(array_map(fn (Metric $metric): string => $metric->uriKey(), $definition->metrics())))),
+            'instructions' => Schemas::list(DetailsEntryTypes::instruction(array_values(array_map(fn (Instruction $instruction): string => $instruction->uriKey(), $definition->instructions())))),
+            'fields' => Schemas::list(DetailsEntryTypes::field($definition->fields()->names())),
             'limits' => Schemas::list(new IntegerType),
-            'scopes' => Schemas::list(DetailsEntryTypes::scope()),
-            'relations' => Schemas::list(self::relation()),
+            'scopes' => Schemas::list(DetailsEntryTypes::scope(array_map(fn (Scope $scope): string => $scope->name, $definition->scopes()))),
+            'relations' => Schemas::list(self::relation(array_values(array_map(fn (Relation $relation): string => $relation->relation, $definition->relations())))),
             'rules' => self::rules(),
             'text' => self::text(),
-            'gates' => Schemas::list(new StringType, 'The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off'),
+            'gates' => Schemas::list((new StringType)->enum($resource->isGatingEnabled() ? $definition->gates()->names() : []), 'The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off'),
             'authorizations' => self::authorizations(),
         ]);
     }
@@ -63,7 +59,8 @@ final class DetailsResponseType
         return $authorizations;
     }
 
-    private static function relation(): ObjectType
+    /** @param list<string> $names */
+    private static function relation(array $names): ObjectType
     {
         $constraints = Schemas::required([
             'required_on_creation' => new BooleanType,
@@ -83,7 +80,7 @@ final class DetailsResponseType
 
         return Schemas::required([
             'resource' => (new StringType)->setDescription('The related resource class; absent on a MorphTo relation with several types'),
-            'relation' => new StringType,
+            'relation' => (new StringType)->enum($names),
             'constraints' => $constraints,
             'name' => new StringType,
             'pivot_fields' => Schemas::list(DetailsEntryTypes::pivotField(), 'Many-to-many relations only: the pivot fields of the relation'),

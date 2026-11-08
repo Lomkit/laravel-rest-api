@@ -19,7 +19,7 @@ class ReadResponsesTest extends DocumentationTestCase
     public function it_documents_a_record_a_page_and_changed_rows_for_each_resource(): void
     {
         $this->assertSame(
-            ['Artist', 'Comment', 'Label', 'Note', 'NotePaginated', 'NoteRows', 'RestGateAnswer', 'Show', 'ShowPaginated', 'ShowRows', 'ShowWithType', 'Stage', 'StagePaginated', 'StageRows', 'StageWithType'],
+            ['Artist', 'Comment', 'Label', 'Note', 'NoteDetails', 'NotePaginated', 'NoteRows', 'RestGateAnswer', 'Show', 'ShowDetails', 'ShowPaginated', 'ShowRows', 'ShowWithType', 'Stage', 'StageDetails', 'StagePaginated', 'StageRows', 'StageWithType'],
             array_keys($this->document()['components']['schemas']),
         );
     }

@@ -57,7 +57,7 @@ class ScrambleDocumentTest extends ScrambleTestCase
     #[Test]
     public function it_documents_the_keys_of_the_details_response(): void
     {
-        $details = $this->operation('/posts', 'get')['responses'][200]['content']['application/json']['schema']['properties']['data'];
+        $details = $this->detailsSchema('/posts')['properties']['data'];
 
         $this->assertSame(['actions', 'metrics', 'instructions', 'fields', 'limits', 'scopes', 'relations', 'rules', 'text', 'gates', 'authorizations'], array_keys($details['properties']));
         $this->assertSame(['actions', 'metrics', 'instructions', 'fields', 'limits', 'scopes', 'relations', 'rules', 'text', 'gates', 'authorizations'], $details['required']);
