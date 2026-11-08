@@ -6,7 +6,7 @@ use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Grammar;
 use Illuminate\Database\Query\Grammars\PostgresGrammar;
 
-final readonly class UuidColumn implements Expression
+final readonly class TextColumn implements Expression
 {
     public function __construct(private string $column) {}
 

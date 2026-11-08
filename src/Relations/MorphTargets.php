@@ -95,6 +95,13 @@ final readonly class MorphTargets implements IteratorAggregate
         return $this->targets[$model->getMorphClass()] ?? null;
     }
 
+    public function mixesKeyTypes(): bool
+    {
+        $integers = array_map(static fn (string $resource): bool => in_array($resource::newModel()->getKeyType(), ['int', 'integer'], true), $this->resources());
+
+        return count(array_unique($integers)) > 1;
+    }
+
     public function isPolymorphic(): bool
     {
         return count($this->targets) > 1;

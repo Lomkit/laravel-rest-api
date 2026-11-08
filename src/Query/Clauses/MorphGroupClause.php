@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
+use Lomkit\Rest\Query\MorphHas;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\MorphFilterGroup;
 
@@ -52,7 +53,7 @@ final readonly class MorphGroupClause implements Clause
             $models[] = $target->resource::modelClass();
         }
 
-        $query->hasMorph($this->relation->relation, $models, '>=', 1, $boolean, $this->constrain(...));
+        (new MorphHas($this->relation->relation, $models, $this->relation->targets()->mixesKeyTypes()))->apply($query, $boolean, $this->constrain(...));
     }
 
     /** @param EloquentBuilder<Model> $query */

@@ -16,7 +16,7 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\Expressions\AggregateColumn;
 use Lomkit\Rest\Query\Expressions\ExistsQuery;
-use Lomkit\Rest\Query\Expressions\UuidColumn;
+use Lomkit\Rest\Query\Expressions\TextColumn;
 
 final readonly class RelationAggregate implements AggregateQuery
 {
@@ -95,7 +95,7 @@ final readonly class RelationAggregate implements AggregateQuery
 
         $column = $this->qualifiedColumn($query, $this->field->name);
 
-        return $uuid ? new UuidColumn($column) : $column;
+        return $uuid ? new TextColumn($column) : $column;
     }
 
     /** @param EloquentBuilder<Model> $query */
