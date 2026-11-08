@@ -4766,6 +4766,11 @@
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
                                                         "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
+                                                        "items": {}
                                                     }
                                                 },
                                                 "required": [
@@ -4913,6 +4918,11 @@
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
                                                         "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
+                                                        "items": {}
                                                     }
                                                 },
                                                 "required": [
@@ -5052,6 +5062,11 @@
                                             "type": "array",
                                             "description": "Enum fields only: the backing values",
                                             "items": {}
+                                        },
+                                        "offered": {
+                                            "type": "array",
+                                            "description": "Enum fields that offer only some cases: the backing values that writes accept",
+                                            "items": {}
                                         }
                                     },
                                     "required": [
@@ -5112,6 +5127,11 @@
                                                     "values": {
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
+                                                        "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
                                                         "items": {}
                                                     }
                                                 },
@@ -5301,6 +5321,11 @@
                                                     "values": {
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
+                                                        "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
                                                         "items": {}
                                                     }
                                                 },
@@ -8057,8 +8082,7 @@
                         "description": "Rules: enum, required",
                         "enum": [
                             "planned",
-                            "on_sale",
-                            "sold_out"
+                            "on_sale"
                         ]
                     },
                     "level": {
@@ -8155,6 +8179,11 @@
                                                     "values": {
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
+                                                        "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
                                                         "items": {}
                                                     }
                                                 },
@@ -8316,6 +8345,11 @@
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
                                                         "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
+                                                        "items": {}
                                                     }
                                                 },
                                                 "required": [
@@ -8467,6 +8501,11 @@
                                             "type": "array",
                                             "description": "Enum fields only: the backing values",
                                             "items": {}
+                                        },
+                                        "offered": {
+                                            "type": "array",
+                                            "description": "Enum fields that offer only some cases: the backing values that writes accept",
+                                            "items": {}
                                         }
                                     },
                                     "required": [
@@ -8530,6 +8569,11 @@
                                                     "values": {
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
+                                                        "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
                                                         "items": {}
                                                     }
                                                 },
@@ -8722,6 +8766,11 @@
                                                     "values": {
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
+                                                        "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
                                                         "items": {}
                                                     }
                                                 },
@@ -13094,8 +13143,7 @@
                         "description": "Rules: enum",
                         "enum": [
                             "planned",
-                            "on_sale",
-                            "sold_out"
+                            "on_sale"
                         ]
                     },
                     "level": {
@@ -13569,6 +13617,11 @@
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
                                                         "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
+                                                        "items": {}
                                                     }
                                                 },
                                                 "required": [
@@ -13716,6 +13769,11 @@
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
                                                         "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
+                                                        "items": {}
                                                     }
                                                 },
                                                 "required": [
@@ -13855,6 +13913,11 @@
                                             "type": "array",
                                             "description": "Enum fields only: the backing values",
                                             "items": {}
+                                        },
+                                        "offered": {
+                                            "type": "array",
+                                            "description": "Enum fields that offer only some cases: the backing values that writes accept",
+                                            "items": {}
                                         }
                                     },
                                     "required": [
@@ -13915,6 +13978,11 @@
                                                     "values": {
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
+                                                        "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
                                                         "items": {}
                                                     }
                                                 },
@@ -14105,6 +14173,11 @@
                                                     "values": {
                                                         "type": "array",
                                                         "description": "Enum fields only: the backing values",
+                                                        "items": {}
+                                                    },
+                                                    "offered": {
+                                                        "type": "array",
+                                                        "description": "Enum fields that offer only some cases: the backing values that writes accept",
                                                         "items": {}
                                                     }
                                                 },

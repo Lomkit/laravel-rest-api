@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Scramble;
 
+use Closure;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\ID;
@@ -11,13 +12,12 @@ final class FieldExample
 {
     public static function of(Field $field): mixed
     {
-        $examples = $field->getExamples();
+        return self::from($field, $field->toSchema(...));
+    }
 
-        if ($examples !== []) {
-            return $examples[0];
-        }
-
-        return $field instanceof ID ? self::key($field) : self::typed($field->toSchema());
+    public static function written(Field $field): mixed
+    {
+        return self::from($field, $field->toWriteSchema(...));
     }
 
     public static function key(ID $id): int|string
@@ -28,6 +28,18 @@ final class FieldExample
             'uuid' => '00000000-0000-0000-0000-000000000000',
             'ulid' => '00000000000000000000000000',
         };
+    }
+
+    /** @param Closure(): Type $schema */
+    private static function from(Field $field, Closure $schema): mixed
+    {
+        $examples = $field->getExamples();
+
+        if ($examples !== []) {
+            return $examples[0];
+        }
+
+        return $field instanceof ID ? self::key($field) : self::typed($schema());
     }
 
     private static function typed(Type $type): mixed

@@ -9,8 +9,21 @@ final class FieldSchema
 {
     public static function of(Field $field): Type
     {
-        $type = self::value($field);
+        return self::described($field, self::value($field));
+    }
 
+    public static function written(Field $field): Type
+    {
+        return self::described($field, self::withExamples($field, $field->toWriteSchema()));
+    }
+
+    public static function value(Field $field): Type
+    {
+        return self::withExamples($field, $field->toSchema());
+    }
+
+    private static function described(Field $field, Type $type): Type
+    {
         if ($field->isNullable()) {
             $type->nullable(true);
         }
@@ -22,10 +35,8 @@ final class FieldSchema
         return $type;
     }
 
-    public static function value(Field $field): Type
+    private static function withExamples(Field $field, Type $type): Type
     {
-        $type = $field->toSchema();
-
         if ($field->getExamples() !== []) {
             $type->examples($field->getExamples());
         }

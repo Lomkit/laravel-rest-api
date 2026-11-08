@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Exceptions;
 
 use LogicException;
+use UnitEnum;
 
 final class InvalidFieldException extends LogicException
 {
@@ -127,5 +128,17 @@ final class InvalidFieldException extends LogicException
     public static function missingEnumClass(string $field): self
     {
         return new self("The enum field [{$field}] has no enum class. Pass it to Enum::make() or cast the attribute to an enum on the model.");
+    }
+
+    public static function foreignOfferedCase(string $field, string $enum, mixed $case): self
+    {
+        $given = $case instanceof UnitEnum ? $case::class.'::'.$case->name : get_debug_type($case);
+
+        return new self("The enum field [{$field}] offers [{$given}], which is not a case of [{$enum}]. Pass cases of {$enum} to offered().");
+    }
+
+    public static function noOfferedCase(string $field): self
+    {
+        return new self("The enum field [{$field}] offers no case. Offer at least one case, or declare the field readonly().");
     }
 }

@@ -61,6 +61,11 @@ abstract class Field
         return new StringType;
     }
 
+    public function toWriteSchema(): Type
+    {
+        return $this->toSchema();
+    }
+
     public function bind(Model $model): void {}
 
     public function boundTo(Model $model): static
@@ -101,6 +106,12 @@ abstract class Field
         }
 
         return array_values(array_unique($operators, SORT_REGULAR));
+    }
+
+    /** @return list<mixed> */
+    protected function writeBaseRules(): array
+    {
+        return $this->baseRules();
     }
 
     protected function castValue(mixed $value): mixed

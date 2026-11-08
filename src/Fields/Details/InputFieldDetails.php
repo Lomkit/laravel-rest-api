@@ -16,7 +16,7 @@ final readonly class InputFieldDetails
         return array_map(fn (Field $field): array => (new self($field))->toArray(), iterator_to_array($fields, false));
     }
 
-    /** @return array{name: string, label: string|null, type: string, nullable: bool, default: mixed, rules: list<string>, meta: \stdClass, values?: list<int|string>} */
+    /** @return array{name: string, label: string|null, type: string, nullable: bool, default: mixed, rules: list<string>, meta: \stdClass, values?: list<int|string>, offered?: list<int|string>} */
     public function toArray(): array
     {
         $details = [
@@ -33,6 +33,6 @@ final readonly class InputFieldDetails
             return $details;
         }
 
-        return [...$details, 'values' => $this->field->values()];
+        return [...$details, ...(new EnumCases($this->field))->toArray()];
     }
 }

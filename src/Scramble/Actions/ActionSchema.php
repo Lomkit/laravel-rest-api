@@ -51,7 +51,7 @@ final readonly class ActionSchema
         $entries = [];
 
         foreach ($fields as $field) {
-            $entries[] = Schemas::closed(['name' => (new StringType)->const($field->name), 'value' => self::value($field->getRules()->shared(), FieldSchema::of($field))], ['name']);
+            $entries[] = Schemas::closed(['name' => (new StringType)->const($field->name), 'value' => self::value($field->getRules()->shared(), FieldSchema::written($field))], ['name']);
         }
 
         $list = Schemas::list(count($entries) === 1 ? $entries[0] : new OneOf($entries), 'The values of the fields of the action: one `{"name", "value"}` entry for each field that the request gives');

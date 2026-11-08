@@ -70,7 +70,7 @@ final readonly class FieldDetails implements JsonSerializable
             return $details;
         }
 
-        return [...$details, 'values' => $this->field->values()];
+        return [...$details, ...(new EnumCases($this->field))->toArray()];
     }
 
     /** @return array<string, array{string, Closure(): mixed}> */
