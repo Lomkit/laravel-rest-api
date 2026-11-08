@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Unit\Validation;
 
+use Lomkit\Rest\Validation\FilterCounts;
 use Lomkit\Rest\Validation\NodeBudget;
 use Lomkit\Rest\Validation\Rejected;
 use Lomkit\Rest\Validation\Violation;
@@ -93,11 +94,11 @@ class NodeBudgetTest extends TestCase
     {
         $budget = new NodeBudget(10, 10, 2);
 
-        $this->assertTrue($budget->admit('a', 3, 10, true, 1));
-        $this->assertFalse($budget->admit('b', 1, 10, true, 2));
-        $this->assertFalse($budget->admit('c', 1, 10, true, 2));
-        $this->assertTrue($budget->admit('d', 1, 10, true, 1));
-        $this->assertFalse($budget->admit('e', 1, 10, true, 1));
+        $this->assertTrue($budget->admit('a', 3, 10, true, new FilterCounts(relations: 1)));
+        $this->assertFalse($budget->admit('b', 1, 10, true, new FilterCounts(relations: 2)));
+        $this->assertFalse($budget->admit('c', 1, 10, true, new FilterCounts(relations: 2)));
+        $this->assertTrue($budget->admit('d', 1, 10, true, new FilterCounts(relations: 1)));
+        $this->assertFalse($budget->admit('e', 1, 10, true, new FilterCounts(relations: 1)));
 
         $rules = $budget->applyTo(['a' => ['array'], 'b' => ['array'], 'c' => ['array'], 'd' => ['array'], 'e' => ['array']]);
 
@@ -110,9 +111,43 @@ class NodeBudgetTest extends TestCase
     {
         $budget = new NodeBudget(10, 10, 1);
 
-        $this->assertTrue($budget->admit('a', 1, 10, true, 1));
+        $this->assertTrue($budget->admit('a', 1, 10, true, new FilterCounts(relations: 1)));
         $this->assertTrue($budget->admit('b', 2, 10, true));
         $this->assertSame(['a' => ['array'], 'b' => ['array']], $budget->applyTo(['a' => ['array'], 'b' => ['array']]));
+    }
+
+    #[Test]
+    public function it_counts_pattern_filters_toward_their_own_total(): void
+    {
+        $budget = new NodeBudget(10, 10, 10, 2);
+
+        $this->assertTrue($budget->admit('a', 3, 10, true, new FilterCounts(patterns: 1)));
+        $this->assertFalse($budget->admit('b', 1, 10, true, new FilterCounts(patterns: 2)));
+        $this->assertFalse($budget->admit('c', 1, 10, true, new FilterCounts(patterns: 2)));
+        $this->assertTrue($budget->admit('d', 1, 10, true, new FilterCounts(patterns: 1)));
+        $this->assertFalse($budget->admit('e', 1, 10, true, new FilterCounts(patterns: 1)));
+
+        $rules = $budget->applyTo(['a' => ['array'], 'b' => ['array'], 'c' => ['array'], 'd' => ['array'], 'e' => ['array']]);
+
+        $this->assertRejected(Violation::tooManyPatternFilters('b', 2), $rules['b'][0]);
+        $this->assertSame([['array'], ['array'], ['array'], ['array']], [$rules['a'], $rules['c'], $rules['d'], $rules['e']]);
+    }
+
+    #[Test]
+    public function it_reports_the_relation_and_pattern_totals_each_once(): void
+    {
+        $budget = new NodeBudget(10, 10, 1, 1);
+
+        $this->assertFalse($budget->admit('a', 2, 10, true, new FilterCounts(relations: 2, patterns: 2)));
+        $this->assertFalse($budget->admit('b', 2, 10, true, new FilterCounts(patterns: 2)));
+        $this->assertFalse($budget->admit('c', 2, 10, true, new FilterCounts(relations: 2, patterns: 2)));
+        $this->assertTrue($budget->admit('d', 2, 10, true, new FilterCounts(relations: 1, patterns: 1)));
+
+        $rules = $budget->applyTo(['a' => ['array'], 'b' => ['array'], 'c' => ['array'], 'd' => ['array']]);
+
+        $this->assertRejected(Violation::tooManyRelationFilters('a', 1), $rules['a'][0]);
+        $this->assertRejected(Violation::tooManyPatternFilters('b', 1), $rules['b'][0]);
+        $this->assertSame([['array'], ['array']], [$rules['c'], $rules['d']]);
     }
 
     #[Test]

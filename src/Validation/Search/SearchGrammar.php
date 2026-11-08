@@ -13,6 +13,7 @@ use Lomkit\Rest\Search\SortNode;
 use Lomkit\Rest\Text\TextBackend;
 use Lomkit\Rest\Text\TextQuery;
 use Lomkit\Rest\Validation\Cursor;
+use Lomkit\Rest\Validation\FilterCounts;
 use Lomkit\Rest\Validation\Limits;
 use Lomkit\Rest\Validation\ValidationContext;
 
@@ -24,7 +25,7 @@ interface SearchGrammar
     /** @param list<Cursor> $entries */
     public function filters(array $entries, ValidationContext $context): FilterGroup;
 
-    public function relationFilters(Cursor $filters, ValidationContext $context): int;
+    public function filterCounts(Cursor $filters, ValidationContext $context): FilterCounts;
 
     /** @return list<string> */
     public function scopeRules(): array;

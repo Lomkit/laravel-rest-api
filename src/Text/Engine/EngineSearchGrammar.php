@@ -16,6 +16,7 @@ use Lomkit\Rest\Text\TextBackend;
 use Lomkit\Rest\Text\TextCapabilities;
 use Lomkit\Rest\Text\TextQuery;
 use Lomkit\Rest\Validation\Cursor;
+use Lomkit\Rest\Validation\FilterCounts;
 use Lomkit\Rest\Validation\Limits;
 use Lomkit\Rest\Validation\Search\SearchGrammar;
 use Lomkit\Rest\Validation\Search\SqlSearchGrammar;
@@ -43,9 +44,9 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     }
 
     #[\Override]
-    public function relationFilters(Cursor $filters, ValidationContext $context): int
+    public function filterCounts(Cursor $filters, ValidationContext $context): FilterCounts
     {
-        return 0;
+        return new FilterCounts;
     }
 
     #[\Override]

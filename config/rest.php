@@ -157,6 +157,9 @@ return [
     | the most relation filters in one search, at least 1: each filter
     | on a dotted field path and each "relation" group, at every level
     | and in its includes and aggregates. Each one runs a subquery.
+    | "patterns" is the most "like", "not like", "ilike" and "not ilike"
+    | filters in one search, at least 1, at every level and in its
+    | includes and aggregates.
     |
     | "lengths" is the most characters of one value. "patterns" covers the
     | value of a "like", "not like", "ilike" or "not ilike" filter, at
@@ -191,6 +194,7 @@ return [
             'filters' => 500,
             'entries' => 1000,
             'relations' => 20,
+            'patterns' => 10,
         ],
 
         'lengths' => [
