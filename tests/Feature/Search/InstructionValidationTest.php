@@ -43,14 +43,8 @@ class InstructionValidationTest extends PackageTestCase
             'an explicit null on a field that is not nullable' => ['highlight-posts', [['name' => 'featured', 'value' => null]], [
                 'search.instructions.0.fields.featured' => ['The featured field must be true or false.'],
             ]],
-            'an unknown field name' => ['highlight-posts', [['name' => 'pinned', 'value' => true]], [
-                'search.instructions.0.fields.0.name' => ['The selected search.instructions.0.fields.0.name is invalid.'],
-            ]],
             'a field name that is not a string' => ['highlight-posts', [['name' => ['featured'], 'value' => true]], [
-                'search.instructions.0.fields.0.name' => [
-                    'The search.instructions.0.fields.0.name field must be a string.',
-                    'The selected search.instructions.0.fields.0.name is invalid.',
-                ],
+                'search.instructions.0.fields.0.name' => ['The search.instructions.0.fields.0.name field must be a string.'],
             ]],
             'an entry without a name' => ['highlight-posts', [['value' => true]], [
                 'search.instructions.0.fields.0.name' => ['The search.instructions.0.fields.0.name field is required.'],

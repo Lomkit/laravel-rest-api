@@ -74,14 +74,11 @@ final readonly class MorphIncludeParser
             return null;
         }
 
-        $context->reader->known($types, array_fill_keys($targets->types(), true));
         $blocks = [];
 
-        foreach (is_array($types->value) ? array_keys($types->value) : [] as $type) {
-            $block = $types->at($type);
-
+        foreach ($context->reader->among($types, $targets->types()) as $type => $block) {
             if ($context->reader->object($block)) {
-                $blocks[(string) $type] = $block;
+                $blocks[$type] = $block;
             }
         }
 
@@ -94,7 +91,7 @@ final readonly class MorphIncludeParser
             return SearchBodyParser::keys($block, $context, LevelBounds::Owner)->node(null, null);
         }
 
-        $context->reader->known($block, [...array_fill_keys(self::SEARCH_KEYS, true), 'limit' => true, 'sorts' => true]);
+        $context->reader->refuse($block, ['relation', 'alias', 'types', 'page', 'text', 'trashed']);
 
         foreach (['limit', 'sorts'] as $key) {
             if ($block->at($key)->present) {

@@ -36,7 +36,7 @@ final readonly class EngineFilterParser
             return null;
         }
 
-        $context->reader->known($entry, FilterParser::KEYS);
+        $context->reader->refuse($entry, FilterParser::GROUP_KEYS);
 
         $rules = $context->rules;
         $field = $entry->at('field');

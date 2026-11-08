@@ -47,7 +47,7 @@ final readonly class EntryRules
         $writable = $fields->writableOn($write);
 
         foreach (array_keys($values->value) as $key) {
-            if (! $writable->has((string) $key)) {
+            if ($fields->has((string) $key) && ! $writable->has((string) $key)) {
                 $this->rules->reject(Violation::notWritable($values->path, (string) $key, $write));
             }
         }
@@ -73,7 +73,7 @@ final readonly class EntryRules
 
     private function emit(Cursor $values, WriteRules $rules, MutationContext $mutation): void
     {
-        $given = is_array($values->value) ? $values->value : [];
+        $given = is_array($values->value) ? $rules->fields()->only($values->value) : [];
         $paths = [];
 
         foreach ($rules->names() as $name) {

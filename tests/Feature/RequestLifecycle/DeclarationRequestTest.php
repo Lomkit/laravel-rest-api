@@ -46,17 +46,17 @@ class DeclarationRequestTest extends PackageTestCase
     public function it_reads_the_user_of_the_request_in_the_fields_of_an_action(): void
     {
         Rest::resource('staff-noted-posts', StaffNotedPostController::class)->register();
-        $payload = ['fields' => [['name' => 'note', 'value' => 'Checked']]];
+        $payload = ['fields' => [['name' => 'note', 'value' => 5]]];
 
         $staffResponse = $this->actingAs(User::factory()->staff()->create())
             ->postJson('/staff-noted-posts/actions/staff-noted-publish-posts', $payload);
         $customerResponse = $this->actingAs(User::factory()->create())
             ->postJson('/staff-noted-posts/actions/staff-noted-publish-posts', $payload);
 
-        $staffResponse->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
-        $customerResponse->assertUnprocessable()->assertExactJson([
-            'message' => 'The selected fields.0.name is invalid.',
-            'errors' => ['fields.0.name' => ['The selected fields.0.name is invalid.']],
+        $staffResponse->assertUnprocessable()->assertExactJson([
+            'message' => 'The note field must be a string.',
+            'errors' => ['fields.note' => ['The note field must be a string.']],
         ]);
+        $customerResponse->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
     }
 }

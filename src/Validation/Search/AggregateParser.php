@@ -18,8 +18,6 @@ use Lomkit\Rest\Validation\Violation;
 
 final readonly class AggregateParser
 {
-    private const array KEYS = ['relation' => true, 'type' => true, 'field' => true, 'alias' => true, 'filters' => true];
-
     /**
      * @param  list<Cursor>  $entries
      * @return list<AggregateNode>
@@ -44,8 +42,6 @@ final readonly class AggregateParser
         if (! $context->reader->object($entry)) {
             return null;
         }
-
-        $context->reader->known($entry, self::KEYS);
 
         $rules = $context->rules;
         $relation = $entry->at('relation');

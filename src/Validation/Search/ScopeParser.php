@@ -11,8 +11,6 @@ use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class ScopeParser
 {
-    private const array KEYS = ['name' => true, 'parameters' => true];
-
     /**
      * @param  list<Cursor>  $entries
      * @return list<ScopeNode>
@@ -46,8 +44,6 @@ final readonly class ScopeParser
         if (! $context->reader->object($entry)) {
             return null;
         }
-
-        $context->reader->known($entry, self::KEYS);
 
         $resource = $context->resource;
         $name = $entry->at('name');

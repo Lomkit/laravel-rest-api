@@ -21,7 +21,7 @@ final readonly class SearchParser
             return SearchNode::empty();
         }
 
-        $context->reader->known($search, $this->shape->keys());
+        $context->reader->refuse($search, $this->shape->refused());
 
         $body = $this->shape->body($search, $context);
         $text = $this->text($search->at('text'), $context);

@@ -91,10 +91,18 @@ class GeneratedResourceRequestsTest extends ScaffoldingTestCase
             'a duplicate unique value' => ['UniqueArticle', [...self::ARTICLE, 'slug' => 'taken'], [
                 'mutate.0.attributes.slug' => ['The mutate.0.attributes.slug has already been taken.'],
             ]],
-            'a column left out' => ['LeftOutArticle', [...self::ARTICLE, 'internal_token' => 'secret'], [
-                'mutate.0.attributes' => ['The internal_token key of the mutate.0.attributes field is not writable on create.'],
-            ]],
         ];
+    }
+
+    #[Test]
+    public function it_never_writes_a_column_left_out_of_the_generated_fields(): void
+    {
+        $this->serve('LeftOutArticle', Article::class, 'left-out-articles');
+
+        $response = $this->mutate('left-out-articles', [...self::ARTICLE, 'internal_token' => 'secret']);
+
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => 1]]]);
+        $this->assertSame([['Spring launch', null]], Article::query()->get()->map(fn (Article $article): array => [$article->title, $article->internal_token])->all());
     }
 
     #[Test]

@@ -11,8 +11,6 @@ use Lomkit\Rest\Rules\Distinct;
 
 final readonly class InputSet
 {
-    private const array ENTRY_KEYS = ['name' => true, 'value' => true];
-
     public function __construct(private FieldSet $fields) {}
 
     public function positional(Cursor $parameters, ValidationContext $context): InputValues
@@ -40,17 +38,17 @@ final readonly class InputSet
         return InputValues::fromPositional($this->fields, $given);
     }
 
-    public function named(Cursor $fields, ValidationContext $context, string $list): InputValues
+    public function named(Cursor $fields, ValidationContext $context): InputValues
     {
-        return $this->read($fields, $context, $list, false);
+        return $this->read($fields, $context, false);
     }
 
-    public function inputsFirst(Cursor $fields, ValidationContext $context, string $list): InputValues
+    public function inputsFirst(Cursor $fields, ValidationContext $context): InputValues
     {
-        return $this->read($fields, $context, $list, true);
+        return $this->read($fields, $context, true);
     }
 
-    private function read(Cursor $fields, ValidationContext $context, string $list, bool $inputsFirst): InputValues
+    private function read(Cursor $fields, ValidationContext $context, bool $inputsFirst): InputValues
     {
         $value = $fields->value ?? [];
 
@@ -66,25 +64,29 @@ final readonly class InputSet
 
         if ($inputsFirst) {
             $entries = $this->inputs($fields, $value, $context);
-            $this->names($fields, $value, $list, $context);
+            $this->names($fields, $value, $context);
 
             return InputValues::fromNamed($this->fields, $entries);
         }
 
-        $this->names($fields, $value, $list, $context);
+        $this->names($fields, $value, $context);
 
         return InputValues::fromNamed($this->fields, $this->inputs($fields, $value, $context));
     }
 
     /** @param list<mixed> $value */
-    private function names(Cursor $fields, array $value, string $list, ValidationContext $context): void
+    private function names(Cursor $fields, array $value, ValidationContext $context): void
     {
-        $reader = $context->reader;
-        $names = $context->vocabulary->of($context->resource, $context->grammar, $list, fn (): array => $this->fields->names());
+        $distinct = Distinct::among($value, 'name');
 
-        foreach ($reader->items($fields) as $entry) {
-            $reader->known($entry, self::ENTRY_KEYS);
-            $context->rules->add($entry->at('name')->path, ['required', 'string', Distinct::among($value, 'name'), $names]);
+        foreach ($context->reader->items($fields) as $entry) {
+            $name = $entry->at('name');
+
+            if (is_string($name->value) && ! $this->fields->has($name->value)) {
+                continue;
+            }
+
+            $context->rules->add($name->path, ['required', 'string', $distinct]);
         }
     }
 
@@ -102,13 +104,13 @@ final readonly class InputSet
         }
 
         foreach ($value as $entry) {
-            if (! is_array($entry) || ! is_string($entry['name'] ?? null) || ! isset($paths[$entry['name']])) {
+            if (! is_array($entry) || ! is_string($entry['name'] ?? null)) {
                 $context->rules->partial();
 
                 continue;
             }
 
-            if (array_key_exists('value', $entry)) {
+            if (isset($paths[$entry['name']]) && array_key_exists('value', $entry)) {
                 $context->rules->project($paths[$entry['name']], $entry['value']);
                 $entries[] = ['name' => $entry['name'], 'value' => $entry['value']];
             }

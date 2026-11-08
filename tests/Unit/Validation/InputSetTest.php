@@ -17,10 +17,8 @@ use Lomkit\Rest\Validation\Limits;
 use Lomkit\Rest\Validation\NodeBudget;
 use Lomkit\Rest\Validation\ParsedRules;
 use Lomkit\Rest\Validation\PayloadReader;
-use Lomkit\Rest\Validation\Rejected;
 use Lomkit\Rest\Validation\Search\SqlSearchGrammar;
 use Lomkit\Rest\Validation\ValidationContext;
-use Lomkit\Rest\Validation\Violation;
 use Lomkit\Rest\Validation\Vocabulary;
 use Orchestra\Testbench\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -142,11 +140,20 @@ class InputSetTest extends TestCase
     }
 
     #[Test]
-    public function it_rejects_an_unknown_entry_key(): void
+    public function it_ignores_an_unknown_entry_key_and_an_unknown_name(): void
     {
-        $this->read(['fields' => [['name' => 'status', 'value' => 'draft', 'default' => 'x']]]);
+        $values = $this->read(['fields' => [
+            ['name' => 'status', 'value' => 'draft', 'default' => 'x'],
+            ['name' => 'unknown', 'value' => 1],
+            ['name' => 'unknown', 'value' => 2],
+        ]]);
 
-        $this->assertEquals([new Rejected(Violation::unknown('fields.0.default'))], $this->rules->rules()['fields.0.default']);
+        $this->assertSame(['fields.0.name', ...array_keys(self::INPUT_RULES)], array_keys($this->rules->rules()));
+        $this->assertSame(['required', 'string'], array_slice($this->rules->rules()['fields.0.name'], 0, 2));
+        $this->assertSame(['fields.status' => 'draft'], $this->rules->projections());
+        $this->assertSame(['status' => 'draft'], $values->toArray());
+        $this->assertTrue($this->rules->violations()->isEmpty());
+        $this->assertFalse($this->rules->isPartial());
     }
 
     #[Test]
@@ -183,7 +190,7 @@ class InputSetTest extends TestCase
         $cursor = Cursor::of($payload, $rules->violations())->at('fields');
         $inputs = new InputSet($fields ?? $this->fields());
 
-        return $inputsFirst ? $inputs->inputsFirst($cursor, $context, 'action-fields:report') : $inputs->named($cursor, $context, 'action-fields:report');
+        return $inputsFirst ? $inputs->inputsFirst($cursor, $context) : $inputs->named($cursor, $context);
     }
 
     private function fields(): FieldSet

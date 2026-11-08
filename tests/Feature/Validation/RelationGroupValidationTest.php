@@ -73,13 +73,11 @@ class RelationGroupValidationTest extends PackageTestCase
                 'search.filters.0.nested' => ['The search.filters.0.nested field must be an array.'],
             ]],
             'errors in the order of the group keys' => [[['nested' => 'draft', 'type' => 'xor', 'exists' => 'no', 'relation' => 'posts', 'typ' => 1]], [
-                'search.filters.0.typ' => ['The search.filters.0.typ field is prohibited.'],
                 ...$notBoolean,
                 'search.filters.0.type' => ['The selected search.filters.0.type is invalid.'],
                 'search.filters.0.nested' => ['The search.filters.0.nested field must be an array.'],
             ]],
-            'an unknown key before a wrong relation' => [[['exists' => 'no', 'relation' => 'comments', 'typ' => 1]], [
-                'search.filters.0.typ' => ['The search.filters.0.typ field is prohibited.'],
+            'an unknown key next to a wrong relation' => [[['exists' => 'no', 'relation' => 'comments', 'typ' => 1]], [
                 ...$unknownRelation,
                 ...$notBoolean,
             ]],
@@ -91,9 +89,6 @@ class RelationGroupValidationTest extends PackageTestCase
             ]],
             'a value of the wrong type' => [[['relation' => 'posts', 'nested' => [['field' => 'views', 'value' => 'many']]]], [
                 'search.filters.0.nested.0.value' => ['The search.filters.0.nested.0.value field must be an integer.'],
-            ]],
-            'an unknown key in the related filters' => [[['relation' => 'posts', 'nested' => [[...self::VIEWS, 'typ' => 'or']]]], [
-                'search.filters.0.nested.0.typ' => ['The search.filters.0.nested.0.typ field is prohibited.'],
             ]],
         ];
     }

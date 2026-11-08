@@ -58,7 +58,7 @@ class PivotWritesTest extends WeightedPivotTestCase
 
     #[Test]
     #[DataProvider('writingOperations')]
-    public function it_refuses_a_readonly_and_an_undeclared_pivot_key_on_every_writing_operation(string $relation, string $operation): void
+    public function it_refuses_a_readonly_pivot_key_and_ignores_an_undeclared_one_on_every_writing_operation(string $relation, string $operation): void
     {
         $write = in_array($operation, ['attach', 'create'], true) ? 'create' : 'update';
 
@@ -67,10 +67,19 @@ class PivotWritesTest extends WeightedPivotTestCase
         $response->assertUnprocessable()->assertJsonPath('errors', [
             'mutate.0.relations.'.$relation.'.0.pivot' => [
                 'The created_at key of the mutate.0.relations.'.$relation.'.0.pivot field is not writable on '.$write.'.',
-                'The colour key of the mutate.0.relations.'.$relation.'.0.pivot field is not writable on '.$write.'.',
             ],
         ]);
         $this->assertSame([], $this->pivotRows($relation));
+    }
+
+    #[Test]
+    #[DataProvider('writingOperations')]
+    public function it_writes_a_pivot_without_its_undeclared_keys_on_every_writing_operation(string $relation, string $operation): void
+    {
+        $response = $this->mutate($relation, $this->entry($relation, $operation, ['weight' => 2, 'colour' => 'red', 'tag_id' => 99]));
+
+        $response->assertOk()->assertExactJson($this->mutated($relation, $operation));
+        $this->assertSame([['position' => null, 'weight' => 2, 'added_by' => null, 'note' => null, 'created_at' => self::NOW]], $this->pivotRows($relation));
     }
 
     #[Test]

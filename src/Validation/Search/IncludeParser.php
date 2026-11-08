@@ -14,22 +14,6 @@ use Lomkit\Rest\Validation\Violation;
 
 final readonly class IncludeParser
 {
-    private const array KEYS = [
-        'relation' => true,
-        'alias' => true,
-        'limit' => true,
-        'filters' => true,
-        'gates' => true,
-        'scopes' => true,
-        'sorts' => true,
-        'selects' => true,
-        'aggregates' => true,
-        'includes' => true,
-        'instructions' => true,
-        'text' => true,
-        'trashed' => true,
-    ];
-
     /**
      * @param  list<Cursor>  $entries
      * @return list<IncludeNode|MorphIncludeNode>
@@ -62,7 +46,7 @@ final readonly class IncludeParser
         $relations = $name === null ? null : $context->reachRelation($name, $entry->path);
         $through = $relations === null ? null : $relations[array_key_last($relations)];
 
-        $context->reader->known($entry, $through instanceof PolymorphicRelation ? [...self::KEYS, 'types' => true] : self::KEYS);
+        $context->reader->refuse($entry, $through instanceof PolymorphicRelation ? ['page'] : ['page', 'types']);
 
         $levels = $name === null || $relations === null ? null : $this->levels($entry, $name, $relations, $context);
         $body = $levels === null || $through === null || $through instanceof PolymorphicRelation ? null : self::body($entry, $through, $levels);

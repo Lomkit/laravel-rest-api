@@ -11,8 +11,6 @@ use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class InstructionParser
 {
-    private const array KEYS = ['name' => true, 'fields' => true];
-
     /**
      * @param  list<Cursor>  $entries
      * @return list<InstructionNode>
@@ -49,8 +47,6 @@ final readonly class InstructionParser
             return null;
         }
 
-        $context->reader->known($entry, self::KEYS);
-
         $name = $entry->at('name');
         $fields = $entry->at('fields');
         $instruction = self::find($declared, $name->value);
@@ -67,7 +63,7 @@ final readonly class InstructionParser
 
         $inputs = new InputSet($context->resource->definition()->inputFields($instruction));
 
-        return new InstructionNode($instruction, $inputs->named($fields, $context, 'fields:'.$instruction->uriKey()));
+        return new InstructionNode($instruction, $inputs->named($fields, $context));
     }
 
     /** @param array<int, Instruction> $declared */

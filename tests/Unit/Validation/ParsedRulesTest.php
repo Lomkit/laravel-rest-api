@@ -36,7 +36,7 @@ class ParsedRulesTest extends TestCase
     {
         $parsed = new ParsedRules;
         $parsed->add('search.flag', []);
-        $parsed->reject(Violation::unknown('search.flag'));
+        $parsed->reject(Violation::misplaced('search.flag'));
 
         $merged = $parsed->merge(['search.flag' => ['boolean']]);
 

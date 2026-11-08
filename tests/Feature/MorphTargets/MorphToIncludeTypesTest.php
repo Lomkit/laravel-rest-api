@@ -53,6 +53,26 @@ class MorphToIncludeTypesTest extends MorphTargetsTestCase
         $this->assertCount(2, self::loggedQueries());
     }
 
+    #[Test]
+    public function it_ignores_a_type_that_the_relation_does_not_declare_and_an_unknown_key_of_a_block(): void
+    {
+        DB::enableQueryLog();
+
+        $response = $this->search([['relation' => 'labelable', 'types' => ['comment' => [], Book::class => [], 'shelf' => ['selects' => [['field' => 'name']], 'select' => []]]]]);
+
+        $response->assertOk()->assertJsonPath('data', [
+            ['id' => 1, 'labelable' => null],
+            ['id' => 2, 'labelable' => ['@type' => 'shelf', 'name' => 'Classics']],
+            ['id' => 3, 'labelable' => null],
+            ['id' => 4, 'labelable' => null],
+            ['id' => 5, 'labelable' => null],
+        ]);
+        $this->assertSame([
+            'select labels.id, labels.labelable_type, labels.labelable_id from labels order by labels.id asc limit 50 offset 0',
+            'select shelves.name, shelves.id from shelves where shelves.id in (1)',
+        ], self::loggedQueries());
+    }
+
     /** @param array<string, mixed> $include */
     #[Test]
     #[DataProvider('closedTypes')]
@@ -144,8 +164,8 @@ class MorphToIncludeTypesTest extends MorphTargetsTestCase
         return [
             'selects next to types' => [['relation' => 'labelable', 'selects' => self::ID, 'types' => ['book' => []]], ['search.includes.0.selects' => ['The search.includes.0.selects '.$several]]],
             'filters without types' => [['relation' => 'labelable', 'filters' => [['field' => 'id', 'value' => 1]]], ['search.includes.0.filters' => ['The search.includes.0.filters '.$several]]],
-            'a type that the relation does not declare' => [['relation' => 'labelable', 'types' => ['comment' => []]], ['search.includes.0.types.comment' => ['The search.includes.0.types.comment field is prohibited.']]],
-            'the class of a mapped model' => [['relation' => 'labelable', 'types' => [Book::class => []]], ['search.includes.0.types.'.Book::class => ['The search.includes.0.types.'.Book::class.' field is prohibited.']]],
+            'only types that the relation does not declare' => [['relation' => 'labelable', 'types' => ['comment' => [], Book::class => []]], ['search.includes.0.types' => ['The search.includes.0.types field must have at least 1 items.']]],
+            'a known include key in a block' => [['relation' => 'labelable', 'types' => ['book' => ['relation' => 'loan', 'page' => 2, 'select' => []]]], ['search.includes.0.types.book.relation' => ['The search.includes.0.types.book.relation field is prohibited.'], 'search.includes.0.types.book.page' => ['The search.includes.0.types.book.page field is prohibited.']]],
             'no type' => [['relation' => 'labelable', 'types' => []], ['search.includes.0.types' => ['The search.includes.0.types field must have at least 1 items.']]],
             'a limit and sorts in a block' => [['relation' => 'labelable', 'types' => ['book' => ['limit' => 10, 'sorts' => [['field' => 'id']]]]], ['search.includes.0.types.book.limit' => ['The search.includes.0.types.book.limit '.$owner], 'search.includes.0.types.book.sorts' => ['The search.includes.0.types.book.sorts '.$owner]]],
             'a field of another type' => [['relation' => 'labelable', 'types' => ['book' => ['selects' => [['field' => 'name']]]]], ['search.includes.0.types.book.selects.0.field' => ['The selected search.includes.0.types.book.selects.0.field is invalid.']]],

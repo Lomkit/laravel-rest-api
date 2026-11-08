@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Mutate;
 
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\ConstrainedCategoryController;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\PricedCategoryController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
@@ -24,6 +25,7 @@ class MutateErrorOrderTest extends PackageTestCase
         parent::setUp();
 
         Rest::resource('constrained-categories', ConstrainedCategoryController::class)->register();
+        Rest::resource('priced-categories', PricedCategoryController::class)->register();
         Category::factory()->create(['id' => 1, 'name' => 'Lighting']);
         Product::factory()->create(['id' => 1, 'category_id' => 1, 'name' => 'Desk lamp', 'price' => 39]);
     }
@@ -34,13 +36,13 @@ class MutateErrorOrderTest extends PackageTestCase
         $response = $this->postJson('/api/categories/mutate', ['mutate' => [[
             'operation' => 'create',
             'key' => 1,
-            'attributes' => ['name' => 5, 'slug' => 'lighting'],
+            'attributes' => ['name' => 5, 'slug' => 'lighting', 'id' => 2],
             'without_detaching' => true,
         ]]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
             'mutate.0.attributes.name' => ['The mutate.0.attributes.name field must be a string.'],
-            'mutate.0.attributes' => ['The slug key of the mutate.0.attributes field is not writable on create.'],
+            'mutate.0.attributes' => ['The id key of the mutate.0.attributes field is not writable on create.'],
             'mutate.0.key' => ['The mutate.0.key field is prohibited when mutate.0.operation is create.'],
             'mutate.0.without_detaching' => ['The mutate.0.without_detaching field is prohibited unless mutate.0.operation is in sync.'],
         ]);
@@ -49,14 +51,14 @@ class MutateErrorOrderTest extends PackageTestCase
     #[Test]
     public function it_reports_the_pivot_of_an_entry_after_its_relations(): void
     {
-        $response = $this->postJson('/api/categories/mutate', ['mutate' => [[
+        $response = $this->postJson('/priced-categories/mutate', ['mutate' => [[
             'operation' => 'update',
             'key' => 1,
             'relations' => ['featuredProducts' => [[
                 'operation' => 'attach',
                 'key' => 1,
                 'attributes' => ['name' => 'Desk lamp'],
-                'pivot' => ['rank' => 1],
+                'pivot' => ['price' => 'free', 'rank' => 1],
                 'relations' => ['category' => ['operation' => 'detach']],
             ]]],
         ]]]);
@@ -64,7 +66,7 @@ class MutateErrorOrderTest extends PackageTestCase
         $response->assertUnprocessable()->assertJsonPath('errors', [
             'mutate.0.relations.featuredProducts.0.attributes' => ['The mutate.0.relations.featuredProducts.0.attributes field is prohibited when mutate.0.relations.featuredProducts.0.operation is attach.'],
             'mutate.0.relations.featuredProducts.0.relations.category.key' => ['The mutate.0.relations.featuredProducts.0.relations.category.key field must be present when mutate.0.relations.featuredProducts.0.relations.category.operation is detach.'],
-            'mutate.0.relations.featuredProducts.0.pivot' => ['The rank key of the mutate.0.relations.featuredProducts.0.pivot field is not writable on create.'],
+            'mutate.0.relations.featuredProducts.0.pivot.price' => ['The mutate.0.relations.featuredProducts.0.pivot.price field must be an integer.'],
         ]);
     }
 

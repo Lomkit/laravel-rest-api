@@ -34,7 +34,7 @@ class WritableFieldsTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_refuses_the_key_a_readonly_field_and_an_undeclared_key_on_create(): void
+    public function it_refuses_the_key_and_a_readonly_field_and_ignores_an_undeclared_key_on_create(): void
     {
         $response = $this->mutate([
             'operation' => 'create',
@@ -42,13 +42,13 @@ class WritableFieldsTest extends PackageTestCase
         ]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.attributes' => ['The id key of the mutate.0.attributes field is not writable on create.', 'The created_at key of the mutate.0.attributes field is not writable on create.', 'The nickname key of the mutate.0.attributes field is not writable on create.'],
+            'mutate.0.attributes' => ['The id key of the mutate.0.attributes field is not writable on create.', 'The created_at key of the mutate.0.attributes field is not writable on create.'],
         ]);
         $this->assertSame(0, Author::query()->count());
     }
 
     #[Test]
-    public function it_refuses_the_key_a_readonly_field_and_an_undeclared_key_on_update(): void
+    public function it_refuses_the_key_and_a_readonly_field_and_ignores_an_undeclared_key_on_update(): void
     {
         $ada = Author::factory()->create(['created_at' => '2026-01-01 09:00:00']);
 
@@ -59,7 +59,7 @@ class WritableFieldsTest extends PackageTestCase
         ]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.0.attributes' => ['The id key of the mutate.0.attributes field is not writable on update.', 'The created_at key of the mutate.0.attributes field is not writable on update.', 'The nickname key of the mutate.0.attributes field is not writable on update.'],
+            'mutate.0.attributes' => ['The id key of the mutate.0.attributes field is not writable on update.', 'The created_at key of the mutate.0.attributes field is not writable on update.'],
         ]);
         $this->assertSame([[$ada->id, 'Ada', '2026-01-01 09:00:00']], Author::query()->get()->map(fn (Author $author): array => [$author->id, $author->first_name, $author->created_at?->toDateTimeString()])->all());
     }

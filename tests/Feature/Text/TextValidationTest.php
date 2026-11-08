@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Text;
 
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -57,9 +58,6 @@ class TextValidationTest extends TextSearchTestCase
             'a text that is not an object' => ['contains-posts', ['text' => 'lamp'], [
                 'search.text' => ['The search.text field must be an array.'],
             ]],
-            'an unknown key in the text' => ['contains-posts', ['text' => ['value' => 'lamp', 'fuzzy' => true]], [
-                'search.text.fuzzy' => ['The search.text.fuzzy field is prohibited.'],
-            ]],
         ];
     }
 
@@ -96,5 +94,24 @@ class TextValidationTest extends TextSearchTestCase
                 'search.includes.0.trashed' => ['The search.includes.0.trashed field is prohibited.'],
             ]],
         ];
+    }
+
+    #[Test]
+    public function it_runs_a_text_search_that_holds_an_unknown_key_as_the_text_alone(): void
+    {
+        $this->createPost('Desk lamp');
+        $this->createPost('Floor lamp', 'A tall lamp');
+        $this->createPost('Armchair');
+        DB::enableQueryLog();
+
+        $expected = $this->search('contains-posts', ['text' => ['value' => 'lamp'], 'sorts' => [['field' => 'id']]])->assertOk();
+        $queries = DB::getQueryLog();
+        DB::flushQueryLog();
+        $response = $this->search('contains-posts', ['text' => ['value' => 'lamp', 'fuzzy' => true], 'sorts' => [['field' => 'id']]]);
+
+        $response->assertOk()->assertExactJson($expected->json());
+        $this->assertSame(['Desk lamp', 'Floor lamp'], $response->json('data.*.title'));
+        $this->assertSame(array_column($queries, 'query'), array_column(DB::getQueryLog(), 'query'));
+        $this->assertSame(array_column($queries, 'bindings'), array_column(DB::getQueryLog(), 'bindings'));
     }
 }

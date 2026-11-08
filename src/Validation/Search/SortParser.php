@@ -11,8 +11,6 @@ use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class SortParser
 {
-    private const array KEYS = ['field' => true, 'direction' => true];
-
     /**
      * @param  list<Cursor>  $entries
      * @return list<SortNode>
@@ -42,8 +40,6 @@ final readonly class SortParser
         if (! $context->reader->object($entry)) {
             return null;
         }
-
-        $context->reader->known($entry, self::KEYS);
 
         $field = $entry->at('field');
         $direction = $entry->at('direction');

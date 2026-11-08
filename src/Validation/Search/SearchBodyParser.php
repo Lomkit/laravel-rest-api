@@ -12,8 +12,6 @@ use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class SearchBodyParser
 {
-    private const array SELECT_KEYS = ['field' => true];
-
     /**
      * @param  array<string, list<Cursor>|null>  $lists
      * @param  list<GateAbility>|null  $gates
@@ -138,7 +136,6 @@ final readonly class SearchBodyParser
                 continue;
             }
 
-            $context->reader->known($entry, self::SELECT_KEYS);
             $field = $entry->at('field');
             $context->rules->add($field->path, [$fields, 'required', 'string']);
 
