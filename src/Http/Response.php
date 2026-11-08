@@ -13,6 +13,7 @@ use Lomkit\Rest\Http\Serialization\GateReach;
 use Lomkit\Rest\Http\Serialization\PageEnvelope;
 use Lomkit\Rest\Http\Serialization\PlainEnvelope;
 use Lomkit\Rest\Http\Serialization\RowSerializer;
+use Lomkit\Rest\Search\Plan\Columns\StrictColumns;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 
 class Response implements Responsable
@@ -49,7 +50,7 @@ class Response implements Responsable
 
         return $this->authorizer()->batch(
             GatePrefetch::page($this->plan, $models, $reach),
-            fn (): JsonResponse => new JsonResponse($envelope->wrap(fn (Model $model): array => $this->map($model, $rows->row($model)), $rows->meta())),
+            fn (): JsonResponse => new JsonResponse($envelope->wrap(fn (Model $model): array => $this->render($model, $rows), $rows->meta())),
         );
     }
 
@@ -66,7 +67,7 @@ class Response implements Responsable
 
         return $this->authorizer()->batch(
             GatePrefetch::rows($this->plan, array_values($models), $reach),
-            fn (): array => array_map(fn (Model $model): array => $this->map($model, $rows->row($model)), $models),
+            fn (): array => array_map(fn (Model $model): array => $this->render($model, $rows), $models),
         );
     }
 
@@ -77,6 +78,14 @@ class Response implements Responsable
     protected function map(Model $model, array $responseModel): array
     {
         return $responseModel;
+    }
+
+    /** @return array<string, mixed> */
+    private function render(Model $model, RowSerializer $rows): array
+    {
+        $row = $rows->row($model);
+
+        return StrictColumns::of($this->plan)->run(fn (): array => $this->map($model, $row));
     }
 
     private function authorizer(): Authorizer
