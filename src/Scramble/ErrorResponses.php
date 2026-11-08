@@ -8,11 +8,13 @@ use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\Response;
 use Dedoc\Scramble\Support\Generator\Schema;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
+use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Scramble\Mutate\VersionReach;
 
 final readonly class ErrorResponses
 {
@@ -30,6 +32,10 @@ final readonly class ErrorResponses
 
         $operation->addResponse($this->shared('RestForbidden', 403, 'Forbidden', self::forbidden()));
         $operation->addResponse($this->shared('RestNotFound', 404, 'Not found', self::message()));
+
+        if ($context->endpoint === Endpoint::Mutate && VersionReach::of($context->resource)) {
+            $operation->addResponse($this->shared('RestConflict', 409, 'Conflict', self::conflict()));
+        }
 
         if ($context->endpoint !== Endpoint::Batch) {
             $operation->addResponse($this->shared('RestValidationFailed', 422, 'Validation error', self::validation()));
@@ -76,6 +82,20 @@ final readonly class ErrorResponses
             'message' => new StringType,
             'denials' => Schemas::list($denial, 'Present when the application renders the denials with Lomkit\Rest\Exceptions\DenialsRenderer'),
         ], ['denials']);
+    }
+
+    private static function conflict(): ObjectType
+    {
+        $conflict = Schemas::required([
+            'path' => new StringType,
+            'key' => self::key(),
+            'version' => (new MixedType)->setDescription('The version of the row as the request found it, written as the search returns it; null when the row is gone'),
+        ]);
+
+        return Schemas::required([
+            'message' => new StringType,
+            'conflicts' => Schemas::list($conflict, 'The update entries whose `version` is not the version of their row: nothing was written'),
+        ]);
     }
 
     private static function validation(): ObjectType

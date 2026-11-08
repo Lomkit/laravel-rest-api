@@ -13,6 +13,7 @@ use Lomkit\Rest\Mutations\LinkReplay;
 use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Mutations\RowSet;
+use Lomkit\Rest\Mutations\VersionClaims;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\Limits;
@@ -32,9 +33,10 @@ final readonly class MutationParser
         private EntryRules $entryRules,
         private RelationMutationParser $relations,
         private LinkReplay $links,
+        private VersionClaims $versions,
     ) {}
 
-    public static function of(MutateRequest $request, ParsedRules $rules, NodeBudget $budget, RowSet $rows, LinkReplay $links): self
+    public static function of(MutateRequest $request, ParsedRules $rules, NodeBudget $budget, RowSet $rows, LinkReplay $links, VersionClaims $versions): self
     {
         $reader = new PayloadReader($rules, $budget);
         $limits = $request->context()->limits();
@@ -48,6 +50,7 @@ final readonly class MutationParser
             $entryRules,
             new RelationMutationParser($rules, $reader, $limits, $entryRules),
             $links,
+            $versions,
         );
     }
 
@@ -88,7 +91,7 @@ final readonly class MutationParser
             return null;
         }
 
-        $this->relations->known($entry, $relation);
+        $this->relations->known($entry, $relation, $resource->definition()->version() !== null);
         $this->relations->constraints($entry, $resource, $operation);
         $this->rules->gate($entry, $entry->at('operation'));
 
@@ -106,6 +109,7 @@ final readonly class MutationParser
 
         $operations = $relation?->acceptedOperations() ?? [MutationOperation::Create, MutationOperation::Update];
         $key = $this->ownKeys($entry, $resource, $operation, $operations, $listed);
+        $this->version($entry, $resource, $operation, $key);
         $relations = $this->relations->relations($entry, $resource, $depth, $this);
         $pivot = $this->relations->pivot($entry, $relation, $operation, $mutation);
         $attributes = $this->values($entry->at('attributes'));
@@ -167,6 +171,23 @@ final readonly class MutationParser
         $this->rules->add($entry->at('without_detaching')->path, ['boolean', 'prohibited_unless:'.$entry->at('operation')->path.','.MutationOperation::Sync->value]);
 
         return $key;
+    }
+
+    /** @param int|string|list<int|string>|null $key */
+    private function version(Cursor $entry, Resource $resource, ?MutationOperation $operation, int|string|array|null $key): void
+    {
+        $version = $resource->definition()->version();
+
+        if ($version === null) {
+            return;
+        }
+
+        $value = $entry->at('version');
+        $this->rules->add($value->path, ['string', ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => $candidate !== MutationOperation::Update)]);
+
+        if ($operation === MutationOperation::Update && $key !== null && is_string($value->value)) {
+            $this->versions->claim($resource, $version, $entry->path, $key, $value->value);
+        }
     }
 
     /** @return array<array-key, mixed>|null */

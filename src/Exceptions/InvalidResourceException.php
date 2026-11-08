@@ -11,6 +11,16 @@ final class InvalidResourceException extends LogicException
         return new self("The resource [{$resource}] does not declare its model. Add public static string \$model = YourModel::class; to it.");
     }
 
+    public static function versionWithoutTimestamps(string $resource): self
+    {
+        return new self("The resource [{$resource}] returns true from versioned(), but its model does not use timestamps. The version of a row is its updated_at column: turn the timestamps of the model on, or return false from versioned().");
+    }
+
+    public static function versionNotAField(string $resource, string $column): self
+    {
+        return new self("The resource [{$resource}] returns true from versioned(), but does not declare the field [{$column}]. The version of a row is this column as the field returns it: declare it, for example DateTime::make('{$column}')->readonly().");
+    }
+
     public static function gatesKeyField(string $resource, string $field): self
     {
         return new self("The resource [{$resource}] declares the field [{$field}], which is the key of the gates of its rows. Rename the field, or set rest.gates.key to another name.");

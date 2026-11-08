@@ -52,7 +52,14 @@ class ShowResource extends Resource
                 ->writeOnly()
                 ->nullable(),
             Text::make('headline')->virtual(),
+            DateTime::make('updated_at')->readonly(),
         ];
+    }
+
+    #[\Override]
+    public function versioned(): bool
+    {
+        return true;
     }
 
     #[\Override]

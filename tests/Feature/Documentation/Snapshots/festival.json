@@ -227,6 +227,9 @@
                     "404": {
                         "$ref": "#/components/responses/RestNotFound"
                     },
+                    "409": {
+                        "$ref": "#/components/responses/RestConflict"
+                    },
                     "422": {
                         "$ref": "#/components/responses/RestValidationFailed"
                     }
@@ -479,6 +482,9 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/RestConflict"
                     },
                     "422": {
                         "$ref": "#/components/responses/RestValidationFailed"
@@ -1776,6 +1782,9 @@
                     "404": {
                         "$ref": "#/components/responses/RestNotFound"
                     },
+                    "409": {
+                        "$ref": "#/components/responses/RestConflict"
+                    },
                     "422": {
                         "$ref": "#/components/responses/RestValidationFailed"
                     }
@@ -2247,7 +2256,8 @@
                                     "starts_on",
                                     "starts_at",
                                     "status",
-                                    "level"
+                                    "level",
+                                    "updated_at"
                                 ]
                             },
                             "alias": {
@@ -2349,7 +2359,8 @@
                         "show.starts_on": "#/components/schemas/CommentFilterShow_StartsOn",
                         "show.starts_at": "#/components/schemas/CommentFilterShow_StartsAt",
                         "show.status": "#/components/schemas/CommentFilterShow_Status",
-                        "show.level": "#/components/schemas/CommentFilterShow_Level"
+                        "show.level": "#/components/schemas/CommentFilterShow_Level",
+                        "show.updated_at": "#/components/schemas/CommentFilterShow_UpdatedAt"
                     }
                 },
                 "oneOf": [
@@ -2391,6 +2402,9 @@
                     },
                     {
                         "$ref": "#/components/schemas/CommentFilterShow_Level"
+                    },
+                    {
+                        "$ref": "#/components/schemas/CommentFilterShow_UpdatedAt"
                     }
                 ],
                 "title": "CommentFieldFilter"
@@ -3704,6 +3718,85 @@
                 ],
                 "title": "CommentFilterShow_Title"
             },
+            "CommentFilterShow_UpdatedAt": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "show.updated_at"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "show.updated_at"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "CommentFilterShow_UpdatedAt"
+            },
             "CommentInclude": {
                 "description": "Related rows to add to each row. Includes nest at most 3 deep: each `includes` inside an include is one more level.",
                 "discriminator": {
@@ -3878,6 +3971,11 @@
                             "key": {
                                 "type": "integer"
                             },
+                            "version": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "The version of the row that the client read: its `updated_at` as the search returns it. When a row has another version, the request answers 409 and writes nothing"
+                            },
                             "attributes": {
                                 "$ref": "#/components/schemas/ShowUpdate"
                             },
@@ -3965,6 +4063,7 @@
                             "show.starts_at",
                             "show.status",
                             "show.level",
+                            "show.updated_at",
                             "show_count",
                             "show_min_id",
                             "show_min_title",
@@ -3975,6 +4074,7 @@
                             "show_min_starts_at",
                             "show_min_status",
                             "show_min_level",
+                            "show_min_updated_at",
                             "show_max_id",
                             "show_max_title",
                             "show_max_summary",
@@ -3984,6 +4084,7 @@
                             "show_max_starts_at",
                             "show_max_status",
                             "show_max_level",
+                            "show_max_updated_at",
                             "show_avg_price",
                             "show_avg_seats",
                             "show_sum_price",
@@ -6014,6 +6115,11 @@
                             "key": {
                                 "type": "integer"
                             },
+                            "version": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "The version of the row that the client read: its `updated_at` as the search returns it. When a row has another version, the request answers 409 and writes nothing"
+                            },
                             "attributes": {
                                 "$ref": "#/components/schemas/ShowUpdate"
                             },
@@ -7090,6 +7196,10 @@
                             "null"
                         ]
                     },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
                     "gates": {
                         "type": "object",
                         "description": "Present when the search lists gates: the answer to each gate that it lists",
@@ -8074,7 +8184,8 @@
                                                 "level",
                                                 "settings",
                                                 "secret",
-                                                "headline"
+                                                "headline",
+                                                "updated_at"
                                             ]
                                         },
                                         "label": {
@@ -8724,6 +8835,7 @@
                         "starts_at": "#/components/schemas/ShowFilterStartsAt",
                         "status": "#/components/schemas/ShowFilterStatus",
                         "level": "#/components/schemas/ShowFilterLevel",
+                        "updated_at": "#/components/schemas/ShowFilterUpdatedAt",
                         "stage.code": "#/components/schemas/ShowFilterStage_Code",
                         "stage.name": "#/components/schemas/ShowFilterStage_Name",
                         "artists.id": "#/components/schemas/ShowFilterArtists_Id",
@@ -8767,6 +8879,9 @@
                     },
                     {
                         "$ref": "#/components/schemas/ShowFilterLevel"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterUpdatedAt"
                     },
                     {
                         "$ref": "#/components/schemas/ShowFilterStage_Code"
@@ -10946,6 +11061,85 @@
                 ],
                 "title": "ShowFilterTitle"
             },
+            "ShowFilterUpdatedAt": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "updated_at"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "updated_at"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterUpdatedAt"
+            },
             "ShowInclude": {
                 "description": "Related rows to add to each row. Includes nest at most 3 deep: each `includes` inside an include is one more level.",
                 "discriminator": {
@@ -11498,6 +11692,11 @@
                     },
                     "key": {
                         "type": "integer"
+                    },
+                    "version": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The version of the row that the client read: its `updated_at` as the search returns it. When a row has another version, the request answers 409 and writes nothing"
                     },
                     "attributes": {
                         "$ref": "#/components/schemas/ShowUpdate"
@@ -12566,7 +12765,8 @@
                             "starts_at",
                             "status",
                             "level",
-                            "settings"
+                            "settings",
+                            "updated_at"
                         ]
                     }
                 },
@@ -12593,6 +12793,7 @@
                             "starts_at",
                             "status",
                             "level",
+                            "updated_at",
                             "stage.code",
                             "stage.name",
                             "stage_count",
@@ -13024,7 +13225,8 @@
                                     "starts_on",
                                     "starts_at",
                                     "status",
-                                    "level"
+                                    "level",
+                                    "updated_at"
                                 ]
                             },
                             "alias": {
@@ -14008,6 +14210,7 @@
                         "shows.starts_at": "#/components/schemas/StageFilterShows_StartsAt",
                         "shows.status": "#/components/schemas/StageFilterShows_Status",
                         "shows.level": "#/components/schemas/StageFilterShows_Level",
+                        "shows.updated_at": "#/components/schemas/StageFilterShows_UpdatedAt",
                         "comments.id": "#/components/schemas/StageFilterComments_Id",
                         "comments.rating": "#/components/schemas/StageFilterComments_Rating",
                         "comments.body": "#/components/schemas/StageFilterComments_Body"
@@ -14049,6 +14252,9 @@
                     },
                     {
                         "$ref": "#/components/schemas/StageFilterShows_Level"
+                    },
+                    {
+                        "$ref": "#/components/schemas/StageFilterShows_UpdatedAt"
                     },
                     {
                         "$ref": "#/components/schemas/StageFilterComments_Id"
@@ -15564,6 +15770,85 @@
                 ],
                 "title": "StageFilterShows_Title"
             },
+            "StageFilterShows_UpdatedAt": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "shows.updated_at"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "shows.updated_at"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "StageFilterShows_UpdatedAt"
+            },
             "StageInclude": {
                 "description": "Related rows to add to each row. Includes nest at most 3 deep: each `includes` inside an include is one more level.",
                 "discriminator": {
@@ -16085,6 +16370,11 @@
                                     }
                                 ]
                             },
+                            "version": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "The version of the row that the client read: its `updated_at` as the search returns it. When a row has another version, the request answers 409 and writes nothing"
+                            },
                             "attributes": {
                                 "$ref": "#/components/schemas/ShowUpdate"
                             },
@@ -16323,6 +16613,7 @@
                             "shows_min_starts_at",
                             "shows_min_status",
                             "shows_min_level",
+                            "shows_min_updated_at",
                             "shows_max_id",
                             "shows_max_title",
                             "shows_max_summary",
@@ -16332,6 +16623,7 @@
                             "shows_max_starts_at",
                             "shows_max_status",
                             "shows_max_level",
+                            "shows_max_updated_at",
                             "shows_avg_price",
                             "shows_avg_seats",
                             "shows_sum_price",
@@ -16437,6 +16729,51 @@
                             "required": [
                                 "message",
                                 "confirmation"
+                            ]
+                        }
+                    }
+                }
+            },
+            "RestConflict": {
+                "description": "Conflict",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "conflicts": {
+                                    "type": "array",
+                                    "description": "The update entries whose `version` is not the version of their row: nothing was written",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "path": {
+                                                "type": "string"
+                                            },
+                                            "key": {
+                                                "type": [
+                                                    "integer",
+                                                    "string"
+                                                ]
+                                            },
+                                            "version": {
+                                                "description": "The version of the row as the request found it, written as the search returns it; null when the row is gone"
+                                            }
+                                        },
+                                        "required": [
+                                            "path",
+                                            "key",
+                                            "version"
+                                        ]
+                                    }
+                                }
+                            },
+                            "required": [
+                                "message",
+                                "conflicts"
                             ]
                         }
                     }

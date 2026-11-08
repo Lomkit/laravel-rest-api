@@ -12,6 +12,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\KeySchema;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
+use Lomkit\Rest\Scramble\FieldSchema;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\Search\SearchSchema;
 
@@ -57,11 +58,23 @@ final readonly class MutationSchema
         $properties = array_filter([
             'operation' => (new StringType)->const($operation->value),
             'key' => $operation->requiresKey() ? KeySchema::value($resource) : null,
+            'version' => self::version($resource, $operation),
             'attributes' => $this->writable->attributes($resource, $write),
             'relations' => $this->relations->relations($resource, $operation),
         ]);
 
         return Schemas::closed($properties, array_values(array_intersect(['operation', 'key'], array_keys($properties))));
+    }
+
+    public static function version(Resource $resource, MutationOperation $operation): ?Type
+    {
+        $version = $resource->definition()->version();
+
+        if ($version === null || $operation !== MutationOperation::Update) {
+            return null;
+        }
+
+        return FieldSchema::value($version->field)->setDescription("The version of the row that the client read: its `{$version->column}` as the search returns it. When a row has another version, the request answers 409 and writes nothing");
     }
 
     private function response(Resource $resource): Reference

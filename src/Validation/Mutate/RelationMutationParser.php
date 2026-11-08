@@ -25,13 +25,17 @@ final readonly class RelationMutationParser
         private EntryRules $entryRules,
     ) {}
 
-    public function known(Cursor $entry, ?Relation $relation): void
+    public function known(Cursor $entry, ?Relation $relation, bool $versioned): void
     {
         $keys = match (true) {
             $relation instanceof PivotRelation => [...MutationParser::KEYS, 'pivot'],
             $relation === null => MutationParser::KEYS,
             default => [...MutationParser::KEYS, ...$relation->entryRule()->keys()],
         };
+
+        if ($versioned) {
+            $keys[] = 'version';
+        }
 
         $this->reader->known($entry, array_fill_keys($keys, true));
     }

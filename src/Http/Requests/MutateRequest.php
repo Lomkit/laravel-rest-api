@@ -10,6 +10,7 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Mutations\LinkReplay;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Mutations\RowSet;
+use Lomkit\Rest\Mutations\VersionClaims;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Search\SearchNode;
 use Lomkit\Rest\Validation\Cursor;
@@ -24,6 +25,8 @@ class MutateRequest extends RestRequest
     private ?SearchNode $responseBlock = null;
 
     private RowSet $rows;
+
+    private VersionClaims $versions;
 
     #[\Override]
     public function endpoint(): Endpoint
@@ -40,8 +43,9 @@ class MutateRequest extends RestRequest
         if ($this->mutations === null) {
             $input = Cursor::of($this->all(), $this->parsedRules()->violations());
             $this->rows = new RowSet;
+            $this->versions = new VersionClaims;
             $links = new LinkReplay($this->rows);
-            $this->mutations = MutationParser::of($this, $this->parsedRules(), $this->budget(), $this->rows, $links)
+            $this->mutations = MutationParser::of($this, $this->parsedRules(), $this->budget(), $this->rows, $links, $this->versions)
                 ->parse($input->at('mutate'), $resource);
             $this->responseBlock = (new ResponseBlockParser($this->parsedRules(), $this->budget()))->parse($input->at('response'), $resource);
 
@@ -77,6 +81,13 @@ class MutateRequest extends RestRequest
         $this->payload();
 
         return $this->rows;
+    }
+
+    public function versions(): VersionClaims
+    {
+        $this->payload();
+
+        return $this->versions;
     }
 
     /** @return EloquentBuilder<Model> */

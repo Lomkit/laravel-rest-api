@@ -353,6 +353,8 @@ class ContractTest extends DocumentationTestCase
         return [
             'a created row' => ['/stages/mutate', [['operation' => 'create', 'attributes' => ['code' => 'jazz', 'name' => 'Jazz tent']]]],
             'an updated row with a null value' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Late show', 'summary' => null]]]],
+            'an updated row with its version' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'version' => '2026-01-01T00:00:00.000000Z', 'attributes' => ['title' => 'Late show']]]],
+            'a related row with its version' => ['/stages/mutate', [['operation' => 'update', 'key' => 'main', 'relations' => ['shows' => [['operation' => 'update', 'key' => 1, 'version' => '2026-01-01T00:00:00.000000Z', 'attributes' => ['seats' => 250]]]]]]],
             'a string key' => ['/stages/mutate', [['operation' => 'update', 'key' => 'side', 'attributes' => ['name' => 'Side tent']]]],
             'a row attached to a relation to one' => ['/shows/mutate', [['operation' => 'update', 'key' => 2, 'relations' => ['stage' => ['operation' => 'attach', 'key' => 'side']]]]],
             'a row created under a relation to many' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['comments' => [['operation' => 'create', 'attributes' => ['rating' => 4, 'body' => 'Great']]]]]]],
@@ -414,11 +416,35 @@ class ContractTest extends DocumentationTestCase
             'a relation through another relation' => ['/stages/mutate', [['operation' => 'update', 'key' => 'main', 'relations' => ['comments' => [['operation' => 'attach', 'key' => 1]]]]]],
             'a morph relation without its type' => ['/notes/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['notable' => ['operation' => 'attach', 'key' => 2]]]]],
             'an unknown key in an entry' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'comment' => 'Late']]],
+            'a version of a resource that is not versioned' => ['/stages/mutate', [['operation' => 'update', 'key' => 'side', 'version' => '2026-01-01T00:00:00.000000Z', 'attributes' => ['name' => 'Side tent']]]],
+            'a version on an attach' => ['/stages/mutate', [['operation' => 'update', 'key' => 'main', 'relations' => ['shows' => [['operation' => 'attach', 'key' => 2, 'version' => '2026-01-01T00:00:00.000000Z']]]]]],
             'an attribute that the resource does not declare' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['nickname' => 'Ada']]]],
             'a relation that the resource does not declare' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['sponsors' => []]]]],
             'the create gate in the records' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Late show']]], ['gates' => ['create']]],
             'a filter in the records' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Late show']]], ['filters' => [['field' => 'title', 'value' => 'Late show']]]],
         ];
+    }
+
+    #[Test]
+    public function it_answers_a_conflict_as_the_document_describes(): void
+    {
+        $this->seedFestival();
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+        $validator = new OpenApiValidator;
+        $body = ['mutate' => [['operation' => 'update', 'key' => 2, 'relations' => ['stage' => ['operation' => 'attach', 'key' => 'side']]], ['operation' => 'update', 'key' => 1, 'version' => '2025-12-31T00:00:00.000000Z', 'attributes' => ['title' => 'Late show']]]];
+
+        $this->assertSame([], $validator->requestErrors($document, '/shows/mutate', 'post', $body));
+
+        $response = $this->postJson('api/shows/mutate', $body);
+
+        $response->assertConflict()->assertExactJson([
+            'message' => 'The record was changed by another request.',
+            'conflicts' => [['path' => 'mutate.1', 'key' => 1, 'version' => '2026-01-01T00:00:00.000000Z']],
+        ]);
+        $this->assertSame(['$ref' => '#/components/responses/RestConflict'], $document['paths']['/shows/mutate']['post']['responses'][409]);
+        $this->assertSame([], $validator->schemaErrors($document, '#/components/responses/RestConflict/content/application~1json/schema', $response->json()));
+        $this->assertNull(Show::query()->findOrFail(2)->stage_code);
     }
 
     #[Test]

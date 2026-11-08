@@ -111,6 +111,11 @@ class Resource implements \JsonSerializable
         return [];
     }
 
+    public function versioned(): bool
+    {
+        return false;
+    }
+
     /** @return array<string, mixed> */
     #[\Override]
     public function jsonSerialize(): mixed

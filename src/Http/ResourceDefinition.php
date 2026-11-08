@@ -11,6 +11,7 @@ use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Metrics\Metric;
+use Lomkit\Rest\Mutations\RowVersion;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Search\GateVocabulary;
@@ -21,6 +22,8 @@ use WeakMap;
 final class ResourceDefinition
 {
     private ?FieldSet $fields = null;
+
+    private ?RowVersion $version = null;
 
     /** @var list<Scope>|null */
     private ?array $scopes = null;
@@ -58,6 +61,13 @@ final class ResourceDefinition
     public function fields(): FieldSet
     {
         return $this->fields ??= $this->declaredFields();
+    }
+
+    public function version(): ?RowVersion
+    {
+        $this->fields();
+
+        return $this->version;
     }
 
     /** @return list<Scope> */
@@ -183,7 +193,14 @@ final class ResourceDefinition
             return $fields;
         }
 
-        return $fields->bindTo($this->resource::newModel());
+        $model = $this->resource::newModel();
+        $bound = $fields->bindTo($model);
+
+        if ($this->resource->versioned()) {
+            $this->version = RowVersion::of($this->resource, $model, $bound);
+        }
+
+        return $bound;
     }
 
     /**
