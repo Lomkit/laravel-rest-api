@@ -153,6 +153,7 @@ After, in 3.0:
     'totals' => [
         'filters' => 500,
         'entries' => 1000,
+        'relations' => 20,
     ],
 
     'lengths' => [
@@ -172,7 +173,7 @@ Authorizations:
 
 Limits:
 
-- The `limits` block sets the most entries of each list of a request, how deep filters, includes and relations nest, two totals, and the most characters of a pattern. See "Limits" in [Validation engine](#validation-engine) for what each key covers.
+- The `limits` block sets the most entries of each list of a request, how deep filters, includes and relations nest, three totals, and the most characters of a pattern. See "Limits" in [Validation engine](#validation-engine) for what each key covers.
 - `search.max_nesting_depth` moved to `limits.depths.filters`, with the same default of 1 and the same meaning. Move its value to the new key, and remove `max_nesting_depth` from the `search` block, which now holds `select_columns`.
 - `limits.sizes` has no `gates` key: a `gates` list takes each ability once, see [Responses](#responses). Remove `limits.sizes.gates` from your file if it lists it.
 
@@ -1291,7 +1292,7 @@ Mutate payload:
 
 Limits:
 
-- Each list of a request accepts a limited number of entries, filters, includes and relation operations nest up to a set depth, and two totals bound one request. The values are in the new `limits` block of `config/rest.php`, in four groups, `sizes`, `depths`, `totals` and `lengths`. See [Configuration](#configuration) for the block, its defaults and the values it accepts.
+- Each list of a request accepts a limited number of entries, filters, includes and relation operations nest up to a set depth, and three totals bound one request. The values are in the new `limits` block of `config/rest.php`, in four groups, `sizes`, `depths`, `totals` and `lengths`. See [Configuration](#configuration) for the block, its defaults and the values it accepts.
 - Each key of `sizes` applies to these lists, at every level of a search, including the search of an include and of an action:
   - `filters`: `search.filters`, each `nested` group, and the `filters` of includes and aggregates;
   - `sorts`, `selects`, `scopes`, `aggregates`, `includes` and `instructions`: the list of that name;
@@ -1301,15 +1302,16 @@ Limits:
   - `relation_entries`: the entries of each to-many relation in `mutate`;
   - `resources`: the keys of `destroy`, `restore` and `forceDestroy`. An action with the `Resources` target uses its `$maxResources` property instead.
 - `depths` sets how deep filters, includes and relation operations nest: `filters`, `includes` and `mutations`. `includes` also bounds the relations of a dotted filter field.
-- `totals` sets two totals:
+- `totals` sets three totals:
   - `filters`: the filters of one search, at every depth and in its includes and aggregates;
   - `entries`: the entries of every list in `sizes` and of every `gates` list in one request, except `resources`.
+  - `relations`: the relation filters of one search, 20 by default and at least 1: each filter on a dotted field path and each relation group, at every depth and in its includes and aggregates. Each one runs a subquery. The filter list of the search, include or aggregate that goes over it gets a 422: "The search.filters field goes over the limit of 20 relation filters in one search." Raise `totals.relations` if your clients send more.
 - `lengths.patterns` sets the most characters of the value of a `like`, `not like`, `ilike` or `not ilike` filter, 255 by default, wherever a search takes filters. A longer value gets a 422 on the value: "The search.filters.0.value field must not be greater than 255 characters." Raise `lengths.patterns` if your clients send longer patterns.
 - The `parameters` of a scope keep their limit: one value per field of the scope.
 - A list over its limit gets a 422 on its own key, such as `search.filters`: "The search.filters field must not have more than 100 items." This message comes first on the key, and the package does not validate the entries of the list. A wildcard rule of the request with more than one `*` can still meet them, see "Requests" above.
 - Includes nest up to `depths.includes` levels, 3 by default. A fourth level gives a 422: "The search.includes.0.includes.0.includes.0.includes field is prohibited." Each relation of a dotted include counts toward `depths.includes`: `team.tickets.tags` takes three levels. An include that goes deeper gives a 422 on its relation, "The search.includes.0.relation field goes deeper than the limit of 3 include levels.", and `includes` below a dotted include is prohibited sooner. Before, a dotted include counted as one level. Relations in `mutate` nest up to `depths.mutations` levels, 3 by default: "The mutate.0.relations.products.0.relations.category.relations.products.0.relations field is prohibited." An empty list passes at that depth.
 - A dotted filter field goes through at most `depths.includes` relations, 3 by default, wherever a search takes filters; a `pivot` segment does not count. `team.tickets.team.tickets.title` gives a 422 on its field: "The search.filters.0.field field goes through more relations than the limit of 3." Before, a path had no limit. Raise `depths.includes` if your clients filter through longer paths.
-- The two totals give a 422 on the list that goes over them: "The search.includes.0.filters field goes over the limit of 500 filters in one search." for `totals.filters`, and "The search.selects field goes over the limit of 1000 list entries in one request." for `totals.entries`. A later list that does not fit is refused without a second message.
+- `totals.filters` and `totals.entries` give a 422 on the list that goes over them: "The search.includes.0.filters field goes over the limit of 500 filters in one search." for `totals.filters`, and "The search.selects field goes over the limit of 1000 list entries in one request." for `totals.entries`. A later list that does not fit is refused without a second message.
 - Filters nest up to `depths.filters` levels, 1 by default, which replaces `search.max_nesting_depth`, see [Configuration](#configuration). Each `nested` key counts as one level, so 1 allows a single group of filters. The `nested` of a relation group counts the same way. With 1, it holds filters and relation paths, and a group or a relation group inside it gives a 422 on its own `nested` key. A relation group without `nested`, or with an empty list, fits at every depth. A text search run by a search engine never nests filters. Each `nested` list takes the `sizes.filters` limit and counts in `totals.filters`. Nothing below a group refused at that depth is validated: the request only gets the error on its `nested` key.
 - On a search engine, `search.sorts` accepts the smaller of `sizes.sorts` and the number of sorts the engine runs, with the same message.
 - `search.aggregates.*.filters` must be an array: "The search.aggregates.0.filters field must be an array." Before, it was not validated.

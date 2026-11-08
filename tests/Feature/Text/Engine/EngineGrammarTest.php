@@ -147,6 +147,23 @@ class EngineGrammarTest extends EngineSearchTestCase
     }
 
     #[Test]
+    public function it_counts_no_relation_filter_in_an_engine_search(): void
+    {
+        config(['rest.limits.totals.relations' => 1]);
+
+        $response = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [
+            ['field' => 'lines.label', 'value' => 'l1a'],
+            ['field' => 'lines.label', 'value' => 'l1b'],
+        ]]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', [
+            'search.filters.0.field' => ['The selected search.filters.0.field is invalid.'],
+            'search.filters.1.field' => ['The selected search.filters.1.field is invalid.'],
+        ]);
+        $this->assertSame([], $this->engine->searches);
+    }
+
+    #[Test]
     public function it_refuses_a_number_the_engine_cannot_compare(): void
     {
         $response = $this->call('POST', '/api/vouchers/search', server: ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'], content: '{"search":{"text":{"value":"report"},"filters":[{"field":"price","value":1e400}]}}');

@@ -10,9 +10,13 @@ final class NodeBudget
 
     private int $filtersLeft;
 
+    private int $relationsLeft;
+
     private bool $entriesReported = false;
 
     private bool $filtersReported = false;
+
+    private bool $relationsReported = false;
 
     private readonly Violations $violations;
 
@@ -22,18 +26,20 @@ final class NodeBudget
     public function __construct(
         private readonly int $entries = PHP_INT_MAX,
         private readonly int $filters = PHP_INT_MAX,
+        private readonly int $relations = PHP_INT_MAX,
     ) {
         $this->entriesLeft = $entries;
         $this->filtersLeft = $filters;
+        $this->relationsLeft = $relations;
         $this->violations = new Violations;
     }
 
     public static function of(Limits $limits): self
     {
-        return new self($limits->totals->entries, $limits->totals->filters);
+        return new self($limits->totals->entries, $limits->totals->filters, $limits->totals->relations);
     }
 
-    public function admit(string $key, int $count, int $max, bool $filters): bool
+    public function admit(string $key, int $count, int $max, bool $filters, int $relations = 0): bool
     {
         if ($count > $max) {
             return $this->refuse($key, Violation::tooMany($key, $max));
@@ -46,6 +52,13 @@ final class NodeBudget
             return $this->refuse($key, $reported ? null : Violation::tooManyFilters($key, $this->filters));
         }
 
+        if ($relations > $this->relationsLeft) {
+            $reported = $this->relationsReported;
+            $this->relationsReported = true;
+
+            return $this->refuse($key, $reported ? null : Violation::tooManyRelationFilters($key, $this->relations));
+        }
+
         if ($count > $this->entriesLeft) {
             $reported = $this->entriesReported;
             $this->entriesReported = true;
@@ -54,6 +67,7 @@ final class NodeBudget
         }
 
         $this->entriesLeft -= $count;
+        $this->relationsLeft -= $relations;
 
         if ($filters) {
             $this->filtersLeft -= $count;

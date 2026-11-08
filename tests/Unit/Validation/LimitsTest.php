@@ -30,7 +30,7 @@ class LimitsTest extends TestCase
         $this->assertSame(100, $limits->sizes->relationEntries);
         $this->assertSame(1000, $limits->sizes->resources);
         $this->assertSame(['filters' => 1, 'includes' => 3, 'mutations' => 3], get_object_vars($limits->depths));
-        $this->assertSame(['filters' => 500, 'entries' => 1000], get_object_vars($limits->totals));
+        $this->assertSame(['filters' => 500, 'entries' => 1000, 'relations' => 20], get_object_vars($limits->totals));
         $this->assertSame(['patterns' => 255], get_object_vars($limits->lengths));
     }
 
@@ -78,6 +78,24 @@ class LimitsTest extends TestCase
         $config = $present ? $this->withLimit('totals', 'entries', $value) : $this->withoutLimit('totals', 'entries');
 
         $this->expectExceptionObject(new InvalidArgumentException('The [rest.limits.totals.entries] option must be an integer of 0 or more.'));
+
+        Limits::fromConfig($config);
+    }
+
+    #[Test]
+    public function it_reads_the_relation_filter_total(): void
+    {
+        $this->assertSame(42, Limits::fromConfig($this->withLimit('totals', 'relations', '42'))->totals->relations);
+        $this->assertSame(1, Limits::fromConfig($this->withLimit('totals', 'relations', 1))->totals->relations);
+    }
+
+    #[Test]
+    #[DataProvider('invalidRelationTotals')]
+    public function it_refuses_a_relation_filter_total_that_is_not_an_integer_of_one_or_more(bool $present, mixed $value): void
+    {
+        $config = $present ? $this->withLimit('totals', 'relations', $value) : $this->withoutLimit('totals', 'relations');
+
+        $this->expectExceptionObject(new InvalidArgumentException('The [rest.limits.totals.relations] option must be an integer of 1 or more.'));
 
         Limits::fromConfig($config);
     }
@@ -183,6 +201,12 @@ class LimitsTest extends TestCase
             'an empty string' => [true, ''],
             'a missing key' => [false, null],
         ];
+    }
+
+    /** @return array<string, array{bool, mixed}> */
+    public static function invalidRelationTotals(): array
+    {
+        return [...self::invalidLimits(), 'zero' => [true, 0], 'zero as a string' => [true, '0']];
     }
 
     /** @return array<string, array{string, bool, string}> */

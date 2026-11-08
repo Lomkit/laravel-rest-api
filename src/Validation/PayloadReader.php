@@ -29,13 +29,13 @@ final readonly class PayloadReader
     }
 
     /** @return list<Cursor>|null */
-    public function entries(Cursor $list, int $max, bool $filters = false): ?array
+    public function entries(Cursor $list, int $max, bool $filters = false, int $relations = 0): ?array
     {
         if (! $list->present) {
             return null;
         }
 
-        $entries = $this->admitted($list, $max, $filters);
+        $entries = $this->admitted($list, $max, $filters, $relations);
 
         if ($entries === null) {
             $this->rules->partial();
@@ -121,10 +121,10 @@ final readonly class PayloadReader
     }
 
     /** @return list<Cursor>|null */
-    private function admitted(Cursor $list, int $max, bool $filters): ?array
+    private function admitted(Cursor $list, int $max, bool $filters, int $relations): ?array
     {
         if (is_array($list->value) && array_is_list($list->value)) {
-            return $this->budget->admit($list->path, count($list->value), $max, $filters) ? $list->items(PHP_INT_MAX) : null;
+            return $this->budget->admit($list->path, count($list->value), $max, $filters, $relations) ? $list->items(PHP_INT_MAX) : null;
         }
 
         if (is_array($list->value)) {

@@ -45,6 +45,12 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     }
 
     #[\Override]
+    public function relationFilters(Cursor $filters, ValidationContext $context): int
+    {
+        return (new RelationFilterCount($context->limits->depths->filters))->of($filters->value);
+    }
+
+    #[\Override]
     public function scopeRules(): array
     {
         return [];

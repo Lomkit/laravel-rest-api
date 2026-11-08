@@ -24,6 +24,8 @@ interface SearchGrammar
     /** @param list<Cursor> $entries */
     public function filters(array $entries, ValidationContext $context): FilterGroup;
 
+    public function relationFilters(Cursor $filters, ValidationContext $context): int;
+
     /** @return list<string> */
     public function scopeRules(): array;
 
