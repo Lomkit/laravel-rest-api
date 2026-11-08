@@ -20,6 +20,8 @@ class Festival implements Fixture
         Route::prefix('api')->group(function (): void {
             Rest::resource('notes', NoteController::class);
             Rest::resource('stages', StageController::class);
+            Rest::resource('shows', ShowController::class);
+            Rest::resource('tags', TagController::class);
         });
     }
 }

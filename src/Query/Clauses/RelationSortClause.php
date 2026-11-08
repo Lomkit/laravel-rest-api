@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Fields\AggregateFunction;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\SortDirection;
+use Lomkit\Rest\Query\ModelRelation;
 use Lomkit\Rest\Query\RelationAggregate;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\RelationSort;
@@ -28,7 +29,7 @@ final readonly class RelationSortClause implements Clause
     #[\Override]
     public function apply(Builder $query): void
     {
-        (new RelationAggregate($this->relation->relation, AggregateFunction::Max, $this->field))->order($query, $this->perimeter(...), $this->direction);
+        (new RelationAggregate(ModelRelation::of($this->relation), AggregateFunction::Max, $this->field))->order($query, $this->perimeter(...), $this->direction);
     }
 
     /** @param EloquentBuilder<Model> $query */

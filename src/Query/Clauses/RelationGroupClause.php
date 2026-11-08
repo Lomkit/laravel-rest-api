@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Query\Clauses;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Query\ModelRelation;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Search\RelationFilterGroup;
 
@@ -25,7 +26,7 @@ final readonly class RelationGroupClause implements Clause
     #[\Override]
     public function apply(Builder $query): void
     {
-        $query->has($this->relation->relation, $this->exists ? '>=' : '<', 1, $this->boolean, $this->constrain(...));
+        ModelRelation::of($this->relation)->has($query, $this->exists ? '>=' : '<', $this->boolean, $this->constrain(...));
     }
 
     /** @param EloquentBuilder<Model> $query */

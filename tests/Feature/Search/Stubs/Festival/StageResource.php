@@ -6,6 +6,7 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\MorphMany;
+use Lomkit\Rest\Relations\MorphToMany;
 
 class StageResource extends Resource
 {
@@ -20,6 +21,6 @@ class StageResource extends Resource
     #[\Override]
     public function relations(): array
     {
-        return [MorphMany::make('notes', NoteResource::class)];
+        return [MorphMany::make('notes', NoteResource::class), MorphToMany::make('tags', TagResource::class)];
     }
 }

@@ -19,5 +19,6 @@ final readonly class AggregateNode
         public AggregateKey $key,
         public FilterGroup $filters,
         public array $through = [],
+        public ?Relation $last = null,
     ) {}
 }

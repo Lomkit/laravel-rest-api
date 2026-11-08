@@ -112,7 +112,7 @@ final readonly class AggregateParser
             return null;
         }
 
-        return new AggregateNode($relation->value, $related, $function, $field, $name, $key, $group, array_slice($relations, 0, -1));
+        return new AggregateNode($relation->value, $related, $function, $field, $name, $key, $group, array_slice($relations, 0, -1), $relations[array_key_last($relations)]);
     }
 
     private function field(Cursor $entry, ?AggregateFunction $function, Resource $related, ValidationContext $context): ?Field

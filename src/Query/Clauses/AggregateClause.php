@@ -6,6 +6,7 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\AggregateQuery;
+use Lomkit\Rest\Query\ModelRelation;
 use Lomkit\Rest\Query\NestedAggregate;
 use Lomkit\Rest\Query\RelationAggregate;
 use Lomkit\Rest\Search\AggregateKey;
@@ -24,9 +25,10 @@ final readonly class AggregateClause implements Clause
 
     public static function of(AggregateNode $node, Clause $constraint, int $position): self
     {
+        $relation = $node->last === null ? new ModelRelation(Str::afterLast($node->relation, '.')) : ModelRelation::of($node->last);
         $aggregate = $node->through === []
-            ? new RelationAggregate($node->relation, $node->function, $node->field)
-            : new NestedAggregate($node->through, Str::afterLast($node->relation, '.'), $node->resource::newModel(), $node->function, $node->field);
+            ? new RelationAggregate($relation, $node->function, $node->field)
+            : new NestedAggregate($node->through, $relation, $node->resource::newModel(), $node->function, $node->field);
 
         return new self($aggregate, $node->key, self::LABEL.$position, $constraint);
     }
