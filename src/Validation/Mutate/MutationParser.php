@@ -90,6 +90,11 @@ final readonly class MutationParser
 
         $this->relations->known($entry, $relation);
         $this->relations->constraints($entry, $resource, $operation);
+        $this->rules->gate($entry, $entry->at('operation'));
+
+        if ($operation?->requiresKey() === true) {
+            $this->rules->gate($entry, $entry->at('key'));
+        }
 
         $contextKey = $operation?->requiresKey() === true ? $this->keys->scalar($entry->at('key'), $resource) : null;
         $mutation = $operation === null ? null : new MutationContext($operation, $contextKey, $depth);

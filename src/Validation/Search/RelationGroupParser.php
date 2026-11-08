@@ -66,6 +66,7 @@ final readonly class RelationGroupParser
             $resource->definition()->relations(),
         )));
 
+        $context->rules->gate($entry, $name);
         $context->rules->add($name->path, ['required', 'string', $names]);
 
         if (! is_string($name->value) || ! $names->accepts($name->value)) {

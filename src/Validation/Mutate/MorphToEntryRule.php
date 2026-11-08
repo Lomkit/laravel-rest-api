@@ -24,6 +24,7 @@ final readonly class MorphToEntryRule implements EntryRule
         $targets = $this->relation->targets();
         $type = $entry->at('type');
         $typeRules = ['string', new OneOf($targets->types())];
+        $rules->gate($entry, $type);
 
         if ($targets->isPolymorphic()) {
             $rules->add($type->path, ['required', ...$typeRules]);

@@ -78,13 +78,71 @@ class PrecognitionValidateOnlyTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_accepts_a_name_below_a_list_over_its_limit(): void
+    public function it_reports_a_list_over_its_limit_to_a_name_below_it(): void
     {
         config(['rest.limits.sizes.filters' => 2]);
+        $message = 'The search.filters field must not have more than 2 items.';
 
         $response = $this->precognitiveSearch(['filters' => $this->threeStockFilters()], 'search.filters.0.field');
 
-        $response->assertNoContent()->assertHeader('Precognition-Success', 'true');
+        $response->assertUnprocessable()->assertExactJson(['message' => $message, 'errors' => ['search.filters' => [$message]]]);
+    }
+
+    #[Test]
+    public function it_reports_a_filter_that_is_not_an_object_to_a_name_under_it(): void
+    {
+        $response = $this->precognitiveSearch(['filters' => ['stock']], 'search.filters.0.field');
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The search.filters.0 field must be an array.',
+            'errors' => ['search.filters.0' => ['The search.filters.0 field must be an array.']],
+        ]);
+    }
+
+    #[Test]
+    public function it_reports_the_field_of_a_filter_to_its_value(): void
+    {
+        $response = $this->precognitiveSearch(['filters' => [['field' => 'stock', 'value' => 3]]], 'search.filters.0.value');
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The selected search.filters.0.field is invalid.',
+            'errors' => ['search.filters.0.field' => ['The selected search.filters.0.field is invalid.']],
+        ]);
+    }
+
+    #[Test]
+    public function it_reports_an_unknown_include_relation_to_a_name_under_it(): void
+    {
+        $message = 'The search.includes.0.relation field is not a valid or allowed relation for this resource.';
+
+        $response = $this->precognitiveSearch(['includes' => [['relation' => 'supplier', 'filters' => [['field' => 'name', 'value' => 'Acme']]]]], 'search.includes.0.filters.0.field');
+
+        $response->assertUnprocessable()->assertExactJson(['message' => $message, 'errors' => ['search.includes.0.relation' => [$message]]]);
+    }
+
+    #[Test]
+    public function it_reports_an_unknown_instruction_to_a_name_under_it(): void
+    {
+        $response = $this->precognitiveSearch(['instructions' => [['name' => 'priced-under', 'fields' => [['name' => 'price', 'value' => 'cheap']]]]], 'search.instructions.0.fields.price');
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The selected search.instructions.0.name is invalid.',
+            'errors' => ['search.instructions.0.name' => ['The selected search.instructions.0.name is invalid.']],
+        ]);
+    }
+
+    #[Test]
+    public function it_leaves_out_the_errors_beside_the_ancestors_of_a_name(): void
+    {
+        $response = $this->precognitiveSearch([
+            'limit' => 7,
+            'filters' => [['field' => 'price', 'value' => 'cheap'], ['field' => 'stock', 'value' => 3]],
+        ], 'search.filters.0.value');
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The search.filters.0.value field must be an integer.',
+            'errors' => ['search.filters.0.value' => ['The search.filters.0.value field must be an integer.']],
+        ]);
     }
 
     #[Test]

@@ -58,6 +58,7 @@ final readonly class AggregateParser
         $rules->add($alias->path, is_string($alias->value)
             ? ['string', 'max:255', 'regex:'.RowKeys::PATTERN, new AggregateAlias($keys)]
             : ['string']);
+        $rules->gate($entry, $relation, $type);
         $rules->add($relation->path, ['required', new KnownRelation($context->resource)]);
         $rules->add($type->path, ['required', Rule::enum(AggregateFunction::class)]);
 

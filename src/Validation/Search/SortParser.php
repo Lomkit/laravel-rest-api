@@ -48,6 +48,7 @@ final readonly class SortParser
         $field = $entry->at('field');
         $direction = $entry->at('direction');
 
+        $context->rules->gate($entry, $field);
         $context->rules->add($field->path, [$fields, 'required', 'string']);
         $context->rules->addWhenPresent($direction, [$context->grammar->sortDirection($field->value)]);
 

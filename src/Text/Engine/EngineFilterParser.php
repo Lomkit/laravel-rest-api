@@ -47,6 +47,7 @@ final readonly class EngineFilterParser
         $name = is_string($field->value) ? $field->value : null;
         $declared = $name === null ? null : ($this->engine->filters[$name] ?? null);
 
+        $rules->gate($entry, $field, $operator);
         $rules->add($field->path, ['required', 'string', $context->vocabulary->of($context->resource, $context->grammar, 'filters', fn (): array => array_keys($this->engine->filters))]);
         $rules->add($nested->path, ['prohibited']);
         $rules->addWhenPresent($type, [Rule::in(['and'])]);

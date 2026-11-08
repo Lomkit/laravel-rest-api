@@ -58,6 +58,7 @@ final readonly class InstructionParser
         $fields = $entry->at('fields');
         $instruction = self::find($declared, $name->value);
 
+        $context->rules->gate($entry, $name);
         $context->rules->add($name->path, [$names, 'required', 'string']);
         $context->rules->addWhenPresent($alias, is_string($alias->value) ? ['string', 'max:255', 'regex:'.RowKeys::PATTERN, $keys] : ['string']);
         $context->rules->addWhenPresent($fields, ['array']);

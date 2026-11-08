@@ -18,6 +18,7 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Validation\CompiledRules;
 use Lomkit\Rest\Validation\NodeBudget;
 use Lomkit\Rest\Validation\ParsedRules;
+use Lomkit\Rest\Validation\ValidateOnly;
 
 class RestRequest extends FormRequest
 {
@@ -31,6 +32,8 @@ class RestRequest extends FormRequest
     private ?NodeBudget $budget = null;
 
     private ?ParsedRules $parsedRules = null;
+
+    private ?ValidateOnly $validateOnly = null;
 
     private bool $passed = false;
 
@@ -131,13 +134,9 @@ class RestRequest extends FormRequest
     #[\Override]
     protected function shouldValidatePrecognitiveAttribute($attribute, $validateOnly): bool
     {
-        foreach ($validateOnly as $name) {
-            if (preg_match('/^'.str_replace('\*', '[^.]+', preg_quote($name, '/')).'(\..+)?$/', $attribute) === 1) {
-                return true;
-            }
-        }
+        $this->validateOnly ??= ValidateOnly::of($validateOnly, $this->parsedRules());
 
-        return false;
+        return $this->validateOnly->covers($attribute);
     }
 
     /** @return class-string<Resource> */

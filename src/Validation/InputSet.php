@@ -83,8 +83,14 @@ final readonly class InputSet
         $names = $context->vocabulary->of($context->resource, $context->grammar, $list, fn (): array => $this->fields->names());
 
         foreach ($reader->items($fields) as $entry) {
+            $name = $entry->at('name');
             $reader->known($entry, self::ENTRY_KEYS);
-            $context->rules->add($entry->at('name')->path, ['required', 'string', Distinct::among($value, 'name'), $names]);
+
+            if (is_string($name->value)) {
+                $context->rules->gate($fields->at($name->value), $name);
+            }
+
+            $context->rules->add($name->path, ['required', 'string', Distinct::among($value, 'name'), $names]);
         }
     }
 

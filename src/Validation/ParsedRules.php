@@ -19,6 +19,9 @@ final class ParsedRules
     /** @var array<string, mixed> */
     private array $projections = [];
 
+    /** @var array<string, list<string>> */
+    private array $gates = [];
+
     private bool $partial = false;
 
     private readonly Violations $violations;
@@ -69,6 +72,19 @@ final class ParsedRules
     public function reach(Check $check): void
     {
         $this->checks[$check->path."\0".$check->key()] ??= $check;
+    }
+
+    public function gate(Cursor $scope, Cursor ...$keys): void
+    {
+        foreach ($keys as $key) {
+            $this->gates[$key->path][] = $scope->path;
+        }
+    }
+
+    /** @return array<string, list<string>> */
+    public function gates(): array
+    {
+        return $this->gates;
     }
 
     public function project(string $key, mixed $value): void
