@@ -1304,7 +1304,7 @@ Payloads:
 - The lists of a search must be JSON lists: `filters`, each `nested` group, `sorts`, `selects`, `scopes`, `aggregates`, `includes`, `instructions`, `gates`, and the `filters` of includes and aggregates. An object gives a 422 on the list, `The search.filters field must be a list.`, and its entries are not validated. Before, an object was read entry by entry, and a `*` entry key gave `The * key is not valid for the search.filters field.`
 - A list entry that is not an object, such as `"includes": ["category"]` or `"mutate": ["create"]`, gives a 422 on that entry: `The search.includes.0 field must be an array.` A to-one relation given a list or `null` in `mutate` also gives a 422. Some of these payloads gave a 500 before.
 - Under a to-many relation in `mutate`, the errors are listed entry by entry.
-- `sync` and `toggle` are accepted on many-to-many relations only: `BelongsToMany`, `MorphToMany` and `MorphedByMany`. On another relation they give a 422 under the `operation` key of the entry, such as `The selected mutate.0.relations.author.operation is invalid.` Send `attach` there instead. A relation lists the operations it accepts in `mutationOperations()`.
+- `sync` and `toggle` are accepted on many-to-many relations only: `BelongsToMany`, `MorphToMany` and `MorphedByMany`. On another relation they give a 422 under the `operation` key of the entry, such as `The selected mutate.0.relations.author.operation is invalid.` Send `attach` there instead. A relation lists the operations it accepts in `mutationOperations()`. A relation that returns `[]` takes no entry: `mutate` refuses it as a whole, such as `The mutate.0.relations.replies field is prohibited.`, as on `HasOneThrough` and `HasManyThrough`.
 
 Search payload:
 
@@ -2026,7 +2026,7 @@ Reads:
 
 Scramble:
 
-- The relations are read from the relation objects that `relations()` returns. A field declared in `pivotFields()` is no longer documented as a relation. A custom relation is documented with the operations of its `mutationOperations()`, as a list when it has many entries, and with its pivot when it implements `PivotRelation`.
+- The relations are read from the relation objects that `relations()` returns. A field declared in `pivotFields()` is no longer documented as a relation. A custom relation is documented with the operations of its `mutationOperations()`, as a list when it has many entries, and with its pivot when it implements `PivotRelation`. A relation whose `mutationOperations()` returns `[]` is left out.
 - The `pivot` of a relation entry lists the pivot fields that the operation of the entry writes, with their type and rules: the creatable ones on `create` and `attach`, the updatable ones on `update`, `sync` and `toggle`.
 
 ### Details
@@ -2040,11 +2040,11 @@ The details endpoint, `GET /{resource}`, describes the resource with typed entri
     {"name": "medium", "label": null, "type": "enum", "nullable": false, "select": true, "sort": true, "filter": {"operators": ["=", "!=", "in", "not in"]}, "create": true, "update": true, "rules": {"all": ["enum"], "create": [], "update": []}, "meta": {}, "values": ["oil", "ink", "watercolor"]}],
   "relations": [
     {"resource": "App\\Rest\\Resources\\ExhibitionResource", "relation": "exhibitions",
-     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsToMany",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "operations": ["create", "update", "attach", "detach", "sync", "toggle"], "name": "BelongsToMany",
      "pivot_fields": [
        {"name": "wall", "label": null, "type": "text", "nullable": false, "select": true, "sort": false, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": false, "rules": {"all": ["string"], "create": [], "update": []}, "meta": {}}]},
     {"resource": "App\\Rest\\Resources\\CollectorResource", "relation": "owner",
-     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "MorphTo",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "operations": ["create", "update", "attach", "detach"], "name": "MorphTo",
      "types": {"App\\Models\\Collector": "App\\Rest\\Resources\\CollectorResource"},
      "morph": {"type_column": "owner_type", "key_column": "owner_id"}}],
   "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
@@ -2078,6 +2078,7 @@ Inputs:
 Relations:
 
 - `resource` is the class name of the related resource.
+- `operations` is a new key in each relation entry. It lists the operations that the entries of the relation accept in `mutate`, as `Relation::acceptedOperations()` returns them: `create`, `update`, `attach` and `detach`, plus `sync` and `toggle` on many-to-many relations, and `delete` last on a `deletable()` relation. It is `[]` on `HasOneThrough` and `HasManyThrough`. Read the accepted operations from `operations`, not from `name`: `delete` depends on `deletable()`.
 - `BelongsToMany`, `MorphToMany`, `MorphedByMany` and the relations that implement `PivotRelation` add `pivot_fields`, one entry per pivot field. The list is `[]` without `pivotFields()`. Other relations have no `pivot_fields` key.
 - In a pivot field entry, `create` means written by `create` and `attach`, and `update` means written by `update`, `sync` and `toggle`. `select` means returned in the `pivot` of an included row. `filter.operators` lists the operators of the `<relation>.pivot.<field>` filters. `sort` is always `false`.
 - When the model method of the relation does not return a many-to-many relation, the pivot field entries have `select` set to `false` and `filter.operators` set to `[]`.
@@ -2127,7 +2128,7 @@ Behaviour:
 
 Scramble:
 
-- Scramble documents the details response of each resource in its own schema, `{Resource}Details`, which lists the names of the resource as enums: the `name` of the fields, the `relation` of the relations, the `name` of the scopes, the `uriKey` of the instructions, actions and metrics, and the gates. It holds the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, `meta`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. `meta` accepts no key, unless the resource overrides `detailsMeta()`: it then accepts any key. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
+- Scramble documents the details response of each resource in its own schema, `{Resource}Details`, which lists the names of the resource as enums: the `name` of the fields, the `relation` of the relations, the `name` of the scopes, the `uriKey` of the instructions, actions and metrics, and the gates. It holds the field entries, the relations with `operations`, `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, `meta`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. `meta` accepts no key, unless the resource overrides `detailsMeta()`: it then accepts any key. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
 
 ### OpenAPI documentation
 

@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Details;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Details\Stubs\DeletableTicketsTeamController;
 use Lomkit\Rest\Tests\Feature\Details\Stubs\TeamPivotTicketController;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Helpdesk;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
@@ -78,6 +79,34 @@ class RelationDetailsTest extends PackageTestCase
             '[{"name":"position","label":null,"type":"integer","nullable":true,"select":false,"sort":false,"filter":{"operators":[]},"create":true,"update":true,"rules":{"all":["nullable","integer"],"create":[],"update":[]},"meta":{}}]',
             json_encode($relations[0]->pivot_fields),
         );
+    }
+
+    #[Test]
+    public function it_lists_the_operations_that_each_relation_accepts(): void
+    {
+        $four = ['create', 'update', 'attach', 'detach'];
+
+        $this->assertSame(
+            ['loan' => $four, 'latestLoan' => $four, 'label' => $four, 'latestLabel' => $four, 'labels' => $four, 'shelves' => [...$four, 'sync', 'toggle']],
+            $this->operations('/api/books'),
+        );
+        $this->assertSame(['team' => $four, 'tags' => [...$four, 'sync', 'toggle'], 'labels' => [...$four, 'sync', 'toggle']], $this->operations('/api/tickets'));
+        $this->assertSame(['labelable' => $four], $this->operations('/api/labels'));
+        $this->assertSame(['tickets' => $four, 'replies' => []], $this->operations('/api/teams'));
+    }
+
+    #[Test]
+    public function it_lists_delete_on_a_deletable_relation(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('deletable-tickets-teams', DeletableTicketsTeamController::class)->register());
+
+        $this->assertSame(['tickets' => ['create', 'update', 'attach', 'detach', 'delete'], 'replies' => []], $this->operations('/api/deletable-tickets-teams'));
+    }
+
+    /** @return array<string, list<string>> */
+    private function operations(string $uri): array
+    {
+        return array_column($this->relations($uri), 'operations', 'relation');
     }
 
     /** @return list<object> */

@@ -6,6 +6,7 @@ use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\LockedTeamTicketController;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ReadOnlyTicketsTeamController;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Illustrated\LeadDeskController;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Helpdesk;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Newsroom;
@@ -29,6 +30,7 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
 
         Rest::resource('locked-team-tickets', LockedTeamTicketController::class)->register();
         Rest::resource('lead-desks', LeadDeskController::class)->register();
+        Rest::resource('read-only-tickets-teams', ReadOnlyTicketsTeamController::class)->register();
     }
 
     #[Test]
@@ -100,8 +102,8 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
      * @param  array<array-key, mixed>  $entry
      */
     #[Test]
-    #[DataProvider('throughEntries')]
-    public function it_refuses_every_operation_on_a_through_relation(string $uri, array $attributes, string $relation, array $entry): void
+    #[DataProvider('entriesWithoutOperations')]
+    public function it_refuses_every_operation_on_a_relation_that_accepts_none(string $uri, array $attributes, string $relation, array $entry): void
     {
         DB::table('desks')->insert(['id' => 101, 'name' => 'Day desk']);
         DB::table('stories')->insert(['id' => 101, 'desk_id' => 101, 'headline' => 'Flood warning']);
@@ -118,7 +120,7 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
     }
 
     /** @return array<string, array{string, array<string, mixed>, string, array<array-key, mixed>}> */
-    public static function throughEntries(): array
+    public static function entriesWithoutOperations(): array
     {
         $desk = ['name' => 'Night desk'];
         $team = ['name' => 'Billing'];
@@ -129,6 +131,10 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
             'has one through update' => ['/lead-desks/mutate', $desk, 'leadSummary', ['operation' => 'update', 'key' => 101, 'attributes' => ['body' => 'Late shift']]],
             'has many through attach' => ['/api/teams/mutate', $team, 'replies', [['operation' => 'attach', 'key' => [101]]]],
             'has many through update' => ['/api/teams/mutate', $team, 'replies', [['operation' => 'update', 'key' => 101, 'attributes' => ['body' => 'On it.']]]],
+            'has many through sync' => ['/api/teams/mutate', $team, 'replies', [['operation' => 'sync', 'key' => [101]]]],
+            'has many through delete' => ['/api/teams/mutate', $team, 'replies', [['operation' => 'delete', 'key' => [101]]]],
+            'relation without operations create' => ['/read-only-tickets-teams/mutate', $team, 'tickets', [['operation' => 'create', 'attributes' => ['title' => 'Printer jam', 'status' => 'open']]]],
+            'relation without operations detach' => ['/read-only-tickets-teams/mutate', $team, 'tickets', [['operation' => 'detach', 'key' => [101]]]],
         ];
     }
 

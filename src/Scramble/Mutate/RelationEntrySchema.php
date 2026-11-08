@@ -12,7 +12,6 @@ use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Relations\HasOneOrManyThrough;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\KeySchema;
@@ -36,7 +35,7 @@ final readonly class RelationEntrySchema
 
     public function relations(Resource $resource, ?MutationOperation $operation): ?Reference
     {
-        $relations = array_values(array_filter($resource->definition()->relations(), fn (Relation $relation): bool => ! $relation instanceof HasOneOrManyThrough));
+        $relations = array_values(array_filter($resource->definition()->relations(), fn (Relation $relation): bool => $relation->acceptedOperations() !== []));
         $constrained = $operation === MutationOperation::Create || $operation === MutationOperation::Update ? $operation : null;
 
         if ($relations === []) {

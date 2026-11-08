@@ -17,14 +17,14 @@
   "scopes": [{"name": "pricedUnder", "fields": [{"name": "max", "label": null, "type": "number", "nullable": false, "default": null, "rules": ["numeric"], "meta": {}}], "meta": {}}],
   "relations": [
     {"resource": "Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\ArtistResource", "relation": "artist",
-     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsTo"},
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "operations": ["create", "update", "attach", "detach"], "name": "BelongsTo"},
     {"resource": "Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\ExhibitionResource", "relation": "exhibitions",
-     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "BelongsToMany",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "operations": ["create", "update", "attach", "detach", "sync", "toggle"], "name": "BelongsToMany",
      "pivot_fields": [
        {"name": "position", "label": null, "type": "integer", "nullable": true, "select": true, "sort": false, "filter": {"operators": ["=", "!=", ">", ">=", "<", "<=", "between", "not between", "in", "not in", "is null", "is not null"]}, "create": true, "update": true, "rules": {"all": ["nullable", "integer"], "create": [], "update": []}, "meta": {}},
        {"name": "wall", "label": null, "type": "text", "nullable": false, "select": true, "sort": false, "filter": {"operators": ["=", "!=", "like", "not like", "ilike", "not ilike", "in", "not in"]}, "create": true, "update": false, "rules": {"all": ["string"], "create": [], "update": []}, "meta": {}}]},
     {"resource": "Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\CollectorResource", "relation": "owner",
-     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "name": "MorphTo",
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "operations": ["create", "update", "attach", "detach"], "name": "MorphTo",
      "types": {"Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\Collector": "Lomkit\\Rest\\Tests\\Fixtures\\Gallery\\CollectorResource"},
      "morph": {"type_column": "owner_type", "key_column": "owner_id"}}],
   "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
