@@ -152,7 +152,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
     {
         $this->seedRows($closed);
 
-        $response = $this->postJson("/reviewed-tickets/actions/{$action}");
+        $response = $this->postJson("/reviewed-tickets/actions/{$action}", ['search' => []]);
 
         $response->assertStatus($status);
         $this->assertSame($runs, ReviewTickets::$runs);
