@@ -22,6 +22,7 @@ use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use ReflectionMethod;
 
 /** @phpstan-consistent-constructor */
 class Action implements JsonSerializable
@@ -133,6 +134,16 @@ class Action implements JsonSerializable
         return null;
     }
 
+    public function confirmation(ActionFields $fields, int $rows): ?ActionConfirmation
+    {
+        return null;
+    }
+
+    final public function requiresConfirmation(): bool
+    {
+        return (new ReflectionMethod($this, 'confirmation'))->getDeclaringClass()->getName() !== self::class;
+    }
+
     public function ensureValid(): static
     {
         $ability = $this->authorizeEach();
@@ -152,7 +163,7 @@ class Action implements JsonSerializable
         return $this;
     }
 
-    /** @return array{name: string, uriKey: string, target: value-of<ActionTarget>, fields: list<array<string, mixed>>, meta: \stdClass, destructive: bool, confirm: ?string} */
+    /** @return array{name: string, uriKey: string, target: value-of<ActionTarget>, fields: list<array<string, mixed>>, meta: \stdClass, destructive: bool, confirm: ?string, confirmation: bool} */
     #[\Override]
     public function jsonSerialize(): array
     {
@@ -164,6 +175,7 @@ class Action implements JsonSerializable
             'meta' => (object) $this->getMeta(),
             'destructive' => $this->destructive,
             'confirm' => $this->confirm,
+            'confirmation' => $this->requiresConfirmation(),
         ];
     }
 

@@ -40,6 +40,7 @@ final readonly class DispatchAction
         $checks = RowChecks::of($this->request, $this->action);
 
         $checks?->verify($rows->each(...));
+        (new ConfirmationGate($this->request, $this->action, $this->fields))->pass($rows);
 
         $runner = ActionRunner::for($this->request, $this->action, $this->fields, ! $rows instanceof EngineTargets, $checks);
         $impacted = $runner->through($rows);

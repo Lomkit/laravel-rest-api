@@ -33,11 +33,17 @@ final readonly class ActionSchema
             ->inputFields($action);
         $target = $action->target;
 
-        return Schemas::required([
+        $properties = [
             'search' => $target === ActionTarget::Search ? (new SearchSchema($this->components))->reference($resource, SearchShape::Rows) : new Nothing,
             'resources' => $target === ActionTarget::Resources ? KeySchema::capped($resource, $action->maxResources) : new Nothing,
             'fields' => count($fields) === 0 ? new Nothing : self::fields($fields, $resource->context()->limits()->sizes->fields),
-        ], $target === ActionTarget::Resources ? ['search', 'fields'] : ['search', 'resources', 'fields'], self::description($action));
+        ];
+
+        if ($action->requiresConfirmation()) {
+            $properties['confirmation'] = (new StringType)->setDescription('The token of the 428 answer of this action, sent back with the same body to run the action');
+        }
+
+        return Schemas::required($properties, $target === ActionTarget::Resources ? ['search', 'fields', 'confirmation'] : ['search', 'resources', 'fields', 'confirmation'], self::description($action));
     }
 
     private static function fields(FieldSet $fields, int $max): ArrayType

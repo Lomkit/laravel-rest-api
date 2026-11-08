@@ -105,11 +105,32 @@ class ActionContractTest extends DocumentationTestCase
             'a search and the fields of the action' => ['/shows/actions/reschedule-shows', ['search' => ['filters' => [['field' => 'featured', 'value' => true]]], 'fields' => [['name' => 'at', 'value' => null], ['name' => 'notify', 'value' => false]]]],
             'every row without a search' => ['/shows/actions/reschedule-shows', new stdClass],
             'a search with sorts and a limit' => ['/shows/actions/reschedule-shows', ['search' => ['sorts' => [['field' => 'title']], 'limit' => 10]]],
-            'keys of rows' => ['/shows/actions/cancel-shows', ['resources' => [1, 2]]],
             'a field set to null' => ['/shows/actions/cancel-shows', ['resources' => [2], 'fields' => [['name' => 'reason', 'value' => null]]]],
             'an action without rows' => ['/shows/actions/import-shows', new stdClass],
             'a batchable action' => ['/shows/actions/archive-shows', ['search' => ['filters' => [['field' => 'title', 'value' => 'Closing night']]]]],
         ];
+    }
+
+    #[Test]
+    #[WithConfig('app.key', 'base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=')]
+    public function it_answers_the_confirmation_of_an_action_as_the_document_describes(): void
+    {
+        $document = $this->document();
+        $validator = new OpenApiValidator;
+        $body = ['resources' => [1, 2], 'fields' => [['name' => 'reason', 'value' => 'Rain']]];
+
+        $asked = $this->postJson('api/shows/actions/cancel-shows', $body);
+
+        $asked->assertStatus(428)->assertJsonPath('confirmation.data', ['rows' => 2]);
+        $this->assertSame(['$ref' => '#/components/responses/RestConfirmationRequired'], $document['paths']['/shows/actions/cancel-shows']['post']['responses'][428]);
+        $this->assertSame([], $validator->schemaErrors($document, '#/components/responses/RestConfirmationRequired/content/application~1json/schema', json_decode((string) $asked->getContent(), flags: JSON_THROW_ON_ERROR)));
+        $body['confirmation'] = $asked->json('confirmation.token');
+        $this->assertSame([], $validator->requestErrors($document, '/shows/actions/cancel-shows', 'post', $body));
+
+        $response = $this->postJson('api/shows/actions/cancel-shows', $body);
+
+        $response->assertOk()->assertJsonPath('data.impacted', 2);
+        $this->assertSame([], $validator->responseErrors($document, '/shows/actions/cancel-shows', 'post', 200, (string) $response->getContent()));
     }
 
     /** @param array<string, mixed> $body */

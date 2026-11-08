@@ -11,6 +11,7 @@ use Dedoc\Scramble\Support\Generator\Types\IntegerType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
+use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Http\Routing\Endpoint;
 
 final readonly class ErrorResponses
@@ -32,6 +33,12 @@ final readonly class ErrorResponses
 
         if (! in_array($context->endpoint, [Endpoint::Details, Endpoint::Batch], true)) {
             $operation->addResponse($this->shared('RestValidationFailed', 422, 'Validation error', self::validation()));
+        }
+
+        $action = $context->declaration();
+
+        if ($action instanceof Action && $action->requiresConfirmation()) {
+            $operation->addResponse($this->shared('RestConfirmationRequired', 428, 'Confirmation required: send the same body again with the token in confirmation', self::confirmation()));
         }
 
         if (! $authenticated) {
@@ -77,6 +84,18 @@ final readonly class ErrorResponses
         $errors->additionalProperties(Schemas::list(new StringType));
 
         return Schemas::required(['message' => new StringType, 'errors' => $errors]);
+    }
+
+    private static function confirmation(): ObjectType
+    {
+        return Schemas::required([
+            'message' => new StringType,
+            'confirmation' => Schemas::closed([
+                'token' => (new StringType)->setDescription('A signed token, valid for this user, this action, this body and this number of rows until expires_at'),
+                'expires_at' => (new StringType)->format('date-time'),
+                'data' => (new ObjectType)->setDescription('The data that the action gives to its confirmation'),
+            ], ['token', 'expires_at', 'data']),
+        ]);
     }
 
     private static function key(): Type

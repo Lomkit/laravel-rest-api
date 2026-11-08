@@ -1,7 +1,7 @@
 {"data": {
   "actions": [{"name": "Retire Artworks", "uriKey": "retire-artworks", "target": "search",
     "fields": [{"name": "notify", "label": null, "type": "boolean", "nullable": false, "default": false, "rules": ["boolean"], "meta": {}}],
-    "meta": {}, "destructive": false, "confirm": null, "authorized": true}],
+    "meta": {}, "destructive": false, "confirm": null, "confirmation": false, "authorized": true}],
   "metrics": [],
   "instructions": [{"name": "By Medium", "uriKey": "by-medium",
     "fields": [{"name": "medium", "label": null, "type": "enum", "nullable": false, "default": null, "rules": ["enum", "required"], "meta": {}, "values": ["oil", "ink", "watercolor"]}],

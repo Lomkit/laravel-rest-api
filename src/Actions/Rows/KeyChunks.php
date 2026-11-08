@@ -71,6 +71,12 @@ final readonly class KeyChunks implements ActionRows
         return $impacted;
     }
 
+    #[\Override]
+    public function count(): int
+    {
+        return count($this->keys);
+    }
+
     /**
      * @param  list<int|string>  $keys
      * @return Collection<int, Model>

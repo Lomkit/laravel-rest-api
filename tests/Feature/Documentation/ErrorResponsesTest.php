@@ -29,8 +29,26 @@ class ErrorResponsesTest extends DocumentationTestCase
             'properties' => ['message' => ['type' => 'string'], 'errors' => ['type' => 'object', 'additionalProperties' => ['type' => 'array', 'items' => ['type' => 'string']]]],
             'required' => ['message', 'errors'],
         ];
+        $confirmation = [
+            'type' => 'object',
+            'properties' => [
+                'message' => ['type' => 'string'],
+                'confirmation' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'token' => ['type' => 'string', 'description' => 'A signed token, valid for this user, this action, this body and this number of rows until expires_at'],
+                        'expires_at' => ['type' => 'string', 'format' => 'date-time'],
+                        'data' => ['type' => 'object', 'description' => 'The data that the action gives to its confirmation'],
+                    ],
+                    'required' => ['token', 'expires_at', 'data'],
+                    'additionalProperties' => false,
+                ],
+            ],
+            'required' => ['message', 'confirmation'],
+        ];
 
         $this->assertSame([
+            'RestConfirmationRequired' => ['description' => 'Confirmation required: send the same body again with the token in confirmation', 'content' => ['application/json' => ['schema' => $confirmation]]],
             'RestForbidden' => ['description' => 'Forbidden', 'content' => ['application/json' => ['schema' => $forbidden]]],
             'RestNotFound' => ['description' => 'Not found', 'content' => ['application/json' => ['schema' => $message]]],
             'RestUnauthenticated' => ['description' => 'Unauthenticated', 'content' => ['application/json' => ['schema' => $message]]],
@@ -44,7 +62,8 @@ class ErrorResponsesTest extends DocumentationTestCase
         return [
             'details behind auth' => ['/shows', 'get', [200, 401, 403, 404], true],
             'search behind auth' => ['/shows/search', 'post', [200, 401, 403, 404, 422], true],
-            'an action behind auth' => ['/shows/actions/cancel-shows', 'post', [200, 401, 403, 404, 422], true],
+            'an action behind auth' => ['/shows/actions/reschedule-shows', 'post', [200, 401, 403, 404, 422], true],
+            'an action that asks for a confirmation' => ['/shows/actions/cancel-shows', 'post', [200, 401, 403, 404, 422, 428], true],
             'a metric without the auth of its resource' => ['/shows/metrics/shows-by-status', 'post', [200, 403, 404, 422], false],
             'batch progress' => ['/shows/actions/{action}/batches/{batch}', 'get', [200, 401, 403, 404], true],
             'force delete' => ['/shows/force', 'delete', [200, 401, 403, 404, 422], true],
@@ -60,7 +79,7 @@ class ErrorResponsesTest extends DocumentationTestCase
     public function it_lists_the_error_responses_of_each_operation(string $path, string $method, array $statuses, bool $authenticated): void
     {
         $operation = $this->operation($path, $method);
-        $names = [401 => 'RestUnauthenticated', 403 => 'RestForbidden', 404 => 'RestNotFound', 422 => 'RestValidationFailed'];
+        $names = [401 => 'RestUnauthenticated', 403 => 'RestForbidden', 404 => 'RestNotFound', 422 => 'RestValidationFailed', 428 => 'RestConfirmationRequired'];
 
         $this->assertSame($statuses, array_keys($operation['responses']));
 

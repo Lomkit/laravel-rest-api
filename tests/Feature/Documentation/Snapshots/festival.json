@@ -630,6 +630,10 @@
                                             "additionalProperties": false
                                         },
                                         "maxItems": 100
+                                    },
+                                    "confirmation": {
+                                        "type": "string",
+                                        "description": "The token of the 428 answer of this action, sent back with the same body to run the action"
                                     }
                                 },
                                 "required": [
@@ -676,6 +680,9 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/RestValidationFailed"
+                    },
+                    "428": {
+                        "$ref": "#/components/responses/RestConfirmationRequired"
                     }
                 }
             }
@@ -4467,6 +4474,10 @@
                                             ],
                                             "description": "The text set with confirm(), for clients to show before they run the action; null without one"
                                         },
+                                        "confirmation": {
+                                            "type": "boolean",
+                                            "description": "True when the action declares confirmation(): the endpoint can answer 428 with a signed token, and runs the action when the same body comes back with that token"
+                                        },
                                         "authorized": {
                                             "type": "boolean",
                                             "description": "True when the user passes the abilities that the action route checks before it reads the request"
@@ -4480,6 +4491,7 @@
                                         "meta",
                                         "destructive",
                                         "confirm",
+                                        "confirmation",
                                         "authorized"
                                     ]
                                 }
@@ -7833,6 +7845,10 @@
                                             ],
                                             "description": "The text set with confirm(), for clients to show before they run the action; null without one"
                                         },
+                                        "confirmation": {
+                                            "type": "boolean",
+                                            "description": "True when the action declares confirmation(): the endpoint can answer 428 with a signed token, and runs the action when the same body comes back with that token"
+                                        },
                                         "authorized": {
                                             "type": "boolean",
                                             "description": "True when the user passes the abilities that the action route checks before it reads the request"
@@ -7846,6 +7862,7 @@
                                         "meta",
                                         "destructive",
                                         "confirm",
+                                        "confirmation",
                                         "authorized"
                                     ]
                                 }
@@ -13125,6 +13142,10 @@
                                             ],
                                             "description": "The text set with confirm(), for clients to show before they run the action; null without one"
                                         },
+                                        "confirmation": {
+                                            "type": "boolean",
+                                            "description": "True when the action declares confirmation(): the endpoint can answer 428 with a signed token, and runs the action when the same body comes back with that token"
+                                        },
                                         "authorized": {
                                             "type": "boolean",
                                             "description": "True when the user passes the abilities that the action route checks before it reads the request"
@@ -13138,6 +13159,7 @@
                                         "meta",
                                         "destructive",
                                         "confirm",
+                                        "confirmation",
                                         "authorized"
                                     ]
                                 }
@@ -16282,6 +16304,48 @@
             }
         },
         "responses": {
+            "RestConfirmationRequired": {
+                "description": "Confirmation required: send the same body again with the token in confirmation",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "confirmation": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "description": "A signed token, valid for this user, this action, this body and this number of rows until expires_at"
+                                        },
+                                        "expires_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "description": "The data that the action gives to its confirmation"
+                                        }
+                                    },
+                                    "required": [
+                                        "token",
+                                        "expires_at",
+                                        "data"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "required": [
+                                "message",
+                                "confirmation"
+                            ]
+                        }
+                    }
+                }
+            },
             "RestForbidden": {
                 "description": "Forbidden",
                 "content": {

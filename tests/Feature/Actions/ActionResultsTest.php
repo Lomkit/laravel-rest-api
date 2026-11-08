@@ -205,9 +205,9 @@ class ActionResultsTest extends PackageTestCase
 
         $response->assertOk();
         $this->assertSame([
-            ['name' => 'Touch Documents', 'uriKey' => 'touch-documents', 'target' => 'search', 'fields' => [self::noteEntry()], 'meta' => [], 'destructive' => false, 'confirm' => null, 'authorized' => true],
-            ['name' => 'Queued Touch Documents', 'uriKey' => 'queued-touch-documents', 'target' => 'search', 'fields' => [self::noteEntry()], 'meta' => [], 'destructive' => true, 'confirm' => 'Touch every document?', 'authorized' => true],
-            ['name' => 'Batched Touch Documents', 'uriKey' => 'batched-touch-documents', 'target' => 'search', 'fields' => [self::noteEntry()], 'meta' => [], 'destructive' => true, 'confirm' => 'Touch every document in a batch?', 'authorized' => true],
+            ['name' => 'Touch Documents', 'uriKey' => 'touch-documents', 'target' => 'search', 'fields' => [self::noteEntry()], 'meta' => [], 'destructive' => false, 'confirm' => null, 'confirmation' => false, 'authorized' => true],
+            ['name' => 'Queued Touch Documents', 'uriKey' => 'queued-touch-documents', 'target' => 'search', 'fields' => [self::noteEntry()], 'meta' => [], 'destructive' => true, 'confirm' => 'Touch every document?', 'confirmation' => false, 'authorized' => true],
+            ['name' => 'Batched Touch Documents', 'uriKey' => 'batched-touch-documents', 'target' => 'search', 'fields' => [self::noteEntry()], 'meta' => [], 'destructive' => true, 'confirm' => 'Touch every document in a batch?', 'confirmation' => false, 'authorized' => true],
         ], $response->json('data.actions'));
     }
 

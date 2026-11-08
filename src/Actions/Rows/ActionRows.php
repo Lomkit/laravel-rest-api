@@ -10,4 +10,6 @@ interface ActionRows
 {
     /** @param Closure(Collection<int, Model>): int $each */
     public function each(Closure $each): int;
+
+    public function count(): int;
 }
