@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Scramble;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\ID;
+use stdClass;
 
 final class FieldExample
 {
@@ -38,6 +39,7 @@ final class FieldExample
         return match ($type->type) {
             'integer', 'number' => 1,
             'boolean' => true,
+            'object' => new stdClass,
             default => match ($type->format) {
                 'date' => '2026-01-01',
                 'date-time' => '2026-01-01T00:00:00Z',

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Scramble\Components;
 
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Scramble\FieldExample;
 use Lomkit\Rest\Scramble\FieldSchema;
@@ -19,6 +20,11 @@ final class KeySchema
         $keys->setUniqueItems(true);
 
         return $keys;
+    }
+
+    public static function value(Resource $resource): Type
+    {
+        return FieldSchema::value(KeysGrammar::idOf($resource));
     }
 
     public static function example(Resource $resource): int|string
