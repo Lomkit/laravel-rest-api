@@ -114,7 +114,7 @@ class ActionFieldsTest extends PackageTestCase
     #[Test]
     public function it_describes_the_action_fields_in_the_details(): void
     {
-        $response = $this->getJson('/api/posts');
+        $response = $this->getJson('/api/posts?with=actions.fields,actions.meta,actions.authorized');
 
         $response->assertOk()->assertJsonPath('data.actions.0', [
             'name' => 'Publish Posts',

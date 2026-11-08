@@ -147,7 +147,7 @@ class VirtualFieldTest extends PackageTestCase
     #[Test]
     public function it_lists_a_virtual_field_with_a_resolver_as_selectable_in_the_details(): void
     {
-        $response = $this->getJson('/api/resolved-authors');
+        $response = $this->getJson('/api/resolved-authors?with=fields.capabilities');
 
         $response
             ->assertOk()

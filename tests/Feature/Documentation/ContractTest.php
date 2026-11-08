@@ -29,7 +29,8 @@ class ContractTest extends DocumentationTestCase
     ];
 
     #[Test]
-    public function it_answers_each_details_operation_as_the_document_describes(): void
+    #[DataProvider('detailsParts')]
+    public function it_answers_each_details_operation_as_the_document_describes(string $with): void
     {
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
         $document = $this->document();
@@ -41,7 +42,7 @@ class ContractTest extends DocumentationTestCase
                 continue;
             }
 
-            $response = $this->getJson('api'.$path);
+            $response = $this->getJson('api'.$path.$with);
 
             $response->assertOk();
             $this->assertSame([], $validator->responseErrors($document, $path, 'get', 200, (string) $response->getContent()), $path);
@@ -49,6 +50,29 @@ class ContractTest extends DocumentationTestCase
         }
 
         $this->assertSame(['/notes', '/shows', '/stages'], $checked);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function detailsParts(): array
+    {
+        return [
+            'without with' => [''],
+            'with every section' => ['?with=relations,actions,metrics,instructions,scopes,rules,text,gates,authorizations'],
+            'with every part' => ['?with=fields.capabilities,fields.filter,fields.rules,fields.meta,relations.constraints,relations.operations,relations.pivot_fields,actions.fields,actions.authorized,actions.meta,metrics.authorized,metrics.meta,instructions.fields,instructions.meta,scopes.fields,scopes.meta,rules,text,gates,authorizations'],
+        ];
+    }
+
+    #[Test]
+    public function it_answers_an_unknown_details_part_as_the_document_describes(): void
+    {
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+
+        $response = $this->getJson('api/shows?with=everything');
+
+        $response->assertUnprocessable();
+        $this->assertSame(['$ref' => '#/components/responses/RestValidationFailed'], $document['paths']['/shows']['get']['responses'][422]);
+        $this->assertSame([], (new OpenApiValidator)->schemaErrors($document, '#/components/responses/RestValidationFailed/content/application~1json/schema', $response->json()));
     }
 
     #[Test]

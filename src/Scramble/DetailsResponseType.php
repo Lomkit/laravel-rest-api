@@ -29,7 +29,8 @@ final class DetailsResponseType
         $resource = $context->resource;
         $details = $context->components->schema((new RecordSchema($context->components))->name($resource).'Details', $resource::class, fn (): Type => Schemas::required(['data' => self::data($resource)]));
 
-        $operation->addResponse(Schemas::response(200, 'The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource', $details));
+        $operation->addParameters([DetailsParameter::make()]);
+        $operation->addResponse(Schemas::response(200, 'The fields, limits and meta of the resource, then the sections and parts that the with parameter asks for', $details));
     }
 
     private static function data(Resource $resource): ObjectType
@@ -37,19 +38,19 @@ final class DetailsResponseType
         $definition = $resource->definition();
 
         return Schemas::required([
-            'actions' => Schemas::list(DetailsEntryTypes::action(array_values(array_map(fn (Action $action): string => $action->uriKey(), $definition->actions())))),
-            'metrics' => Schemas::list(DetailsEntryTypes::metric(array_values(array_map(fn (Metric $metric): string => $metric->uriKey(), $definition->metrics())))),
-            'instructions' => Schemas::list(DetailsEntryTypes::instruction(array_values(array_map(fn (Instruction $instruction): string => $instruction->uriKey(), $definition->instructions())))),
+            'actions' => Schemas::list(DetailsEntryTypes::action(array_values(array_map(fn (Action $action): string => $action->uriKey(), $definition->actions()))), 'With actions or one of its parts'),
+            'metrics' => Schemas::list(DetailsEntryTypes::metric(array_values(array_map(fn (Metric $metric): string => $metric->uriKey(), $definition->metrics()))), 'With metrics or one of its parts'),
+            'instructions' => Schemas::list(DetailsEntryTypes::instruction(array_values(array_map(fn (Instruction $instruction): string => $instruction->uriKey(), $definition->instructions()))), 'With instructions or one of its parts'),
             'fields' => Schemas::list(DetailsEntryTypes::field($definition->fields()->names())),
             'limits' => Schemas::list(new IntegerType),
-            'scopes' => Schemas::list(DetailsEntryTypes::scope(array_map(fn (Scope $scope): string => $scope->name, $definition->scopes()))),
-            'relations' => Schemas::list(self::relation(array_values(array_map(fn (Relation $relation): string => $relation->relation, $definition->relations())))),
+            'scopes' => Schemas::list(DetailsEntryTypes::scope(array_map(fn (Scope $scope): string => $scope->name, $definition->scopes())), 'With scopes or one of its parts'),
+            'relations' => Schemas::list(self::relation(array_values(array_map(fn (Relation $relation): string => $relation->relation, $definition->relations()))), 'With relations or one of its parts'),
             'rules' => self::rules(),
             'text' => self::text(),
-            'gates' => Schemas::list((new StringType)->enum($resource->isGatingEnabled() ? $definition->gates()->names() : []), 'The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off'),
+            'gates' => Schemas::list((new StringType)->enum($resource->isGatingEnabled() ? $definition->gates()->names() : []), 'With gates: the abilities that search.gates accepts, the built-in ones first, then those that the resource declares; empty when the resource turns its gates off'),
             'authorizations' => self::authorizations(),
             'meta' => self::meta($resource),
-        ]);
+        ], ['actions', 'metrics', 'instructions', 'scopes', 'relations', 'rules', 'text', 'gates', 'authorizations']);
     }
 
     private static function meta(Resource $resource): ObjectType
@@ -71,7 +72,7 @@ final class DetailsResponseType
 
         $authorizations = new ObjectType;
         $authorizations->additionalProperties($answer);
-        $authorizations->setDescription('The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics');
+        $authorizations->setDescription('With authorizations: the answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics');
 
         return $authorizations;
     }
@@ -84,7 +85,7 @@ final class DetailsResponseType
             'prohibited_on_creation' => new BooleanType,
             'required_on_update' => new BooleanType,
             'prohibited_on_update' => new BooleanType,
-        ]);
+        ], description: 'With relations.constraints');
 
         $types = new ObjectType;
         $types->additionalProperties(new StringType);
@@ -99,12 +100,12 @@ final class DetailsResponseType
             'resource' => (new StringType)->setDescription('The related resource class; absent on a MorphTo relation with several types'),
             'relation' => (new StringType)->enum($names),
             'constraints' => $constraints,
-            'operations' => Schemas::list((new StringType)->enum(array_column(MutationOperation::cases(), 'value')), 'The operations that the entries of the relation accept in mutate; empty when the relation takes no entry'),
+            'operations' => Schemas::list((new StringType)->enum(array_column(MutationOperation::cases(), 'value')), 'With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry'),
             'name' => new StringType,
-            'pivot_fields' => Schemas::list(DetailsEntryTypes::pivotField(), 'Many-to-many relations only: the pivot fields of the relation'),
+            'pivot_fields' => Schemas::list(DetailsEntryTypes::pivotField(), 'With relations.pivot_fields, on many-to-many relations only: the pivot fields of the relation'),
             'types' => $types,
             'morph' => $morph,
-        ], ['resource', 'pivot_fields', 'types', 'morph']);
+        ], ['resource', 'constraints', 'operations', 'pivot_fields', 'types', 'morph']);
     }
 
     private static function rules(): ObjectType
@@ -117,7 +118,7 @@ final class DetailsResponseType
             $properties[$operation] = $byAttribute;
         }
 
-        return Schemas::required($properties, description: 'The rules of the resource, keyed by attribute, as strings');
+        return Schemas::required($properties, description: 'With rules: the rules of the resource, keyed by attribute, as strings');
     }
 
     private static function text(): Type
@@ -129,7 +130,7 @@ final class DetailsResponseType
             'trashed' => (new BooleanType)->setDescription('search.trashed can be sent with a text'),
             'max_length' => new IntegerType,
             'engine' => self::engine(),
-        ], description: 'The text search of the resource; null without one');
+        ], description: 'With text: the text search of the resource; null without one');
 
         return $text->nullable(true);
     }

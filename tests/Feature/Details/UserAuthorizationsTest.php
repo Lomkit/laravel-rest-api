@@ -49,7 +49,7 @@ class UserAuthorizationsTest extends HelpdeskTestCase
     {
         $this->decideFor($agent);
 
-        $this->getJson('/metric-tickets')
+        $this->getJson('/metric-tickets?with=authorizations,actions.authorized,metrics.authorized')
             ->assertOk()
             ->assertJsonPath('data.authorizations', $authorizations)
             ->assertJsonPath('data.actions.*.authorized', $actions)
@@ -83,6 +83,52 @@ class UserAuthorizationsTest extends HelpdeskTestCase
     }
 
     /**
+     * @param  list<string>  $calls
+     * @param  list<string>  $evaluated
+     * @param  list<string>  $keys
+     */
+    #[Test]
+    #[DataProvider('parts')]
+    public function it_calls_only_the_policies_that_the_requested_parts_need(string $with, array $calls, array $evaluated, array $keys): void
+    {
+        $this->decideFor(false);
+
+        $data = $this->getJson("/metric-tickets{$with}")
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame($calls, $this->tickets->calls);
+        $this->assertSame($evaluated, $this->evaluated);
+        $this->assertSame($keys, array_keys($data));
+    }
+
+    /** @return array<string, array{string, list<string>, list<string>, list<string>}> */
+    public static function parts(): array
+    {
+        $static = 'fields.capabilities,fields.filter,fields.rules,fields.meta,relations.constraints,relations.operations,relations.pivot_fields,actions.fields,actions.meta,metrics.meta,instructions.fields,instructions.meta,scopes.fields,scopes.meta,rules,text,gates';
+
+        return [
+            'no part' => ['', ['viewAny'], ['viewAny'], ['fields', 'limits', 'meta']],
+            'every part without a policy' => ["?with={$static}", ['viewAny'], ['viewAny'], ['actions', 'metrics', 'instructions', 'fields', 'limits', 'scopes', 'relations', 'rules', 'text', 'gates', 'meta']],
+            'the flags of the actions' => ['?with=actions.authorized', ['viewAny', 'create'], ['viewAny', 'create'], ['actions', 'fields', 'limits', 'meta']],
+            'the flags of the metrics' => ['?with=metrics.authorized', ['viewAny'], ['viewAny', 'viewReports'], ['metrics', 'fields', 'limits', 'meta']],
+            'the authorizations' => ['?with=authorizations', ['viewAny', 'create'], ['viewAny', 'create', 'viewReports'], ['fields', 'limits', 'authorizations', 'meta']],
+        ];
+    }
+
+    #[Test]
+    public function it_flags_the_actions_without_the_authorizations(): void
+    {
+        $this->decideFor(false);
+
+        $this->getJson('/metric-tickets?with=actions.authorized')
+            ->assertOk()
+            ->assertJsonPath('data.actions.*.authorized', [true, true, false, true, true])
+            ->assertJsonMissingPath('data.authorizations')
+            ->assertJsonMissingPath('data.metrics');
+    }
+
+    /**
      * @param  array<string, int>  $actions
      * @param  array<string, int>  $metrics
      */
@@ -92,7 +138,7 @@ class UserAuthorizationsTest extends HelpdeskTestCase
     {
         $this->seedTickets();
         $this->decideFor($agent);
-        $details = $this->getJson('/metric-tickets')->assertOk();
+        $details = $this->getJson('/metric-tickets?with=authorizations,actions.authorized,metrics.authorized')->assertOk();
 
         foreach ($actions as $key => $status) {
             $this->assertSame($status, $this->postJson("/metric-tickets/actions/{$key}")->status());
@@ -124,7 +170,7 @@ class UserAuthorizationsTest extends HelpdeskTestCase
         Rest::resource('lead-tickets', LeadTicketController::class)->register();
         $this->tickets->answers['runActions'] = Response::deny('Actions are for the helpdesk lead.');
 
-        $this->getJson('/lead-tickets')
+        $this->getJson('/lead-tickets?with=authorizations,actions.authorized,metrics.authorized')
             ->assertOk()
             ->assertJsonPath('data.authorizations', [
                 'viewAny' => self::ALLOWED,
@@ -145,7 +191,7 @@ class UserAuthorizationsTest extends HelpdeskTestCase
     {
         $this->tickets->answers['create'] = Response::deny('Only agents create tickets.');
 
-        $this->getJson('/api/public-tickets')
+        $this->getJson('/api/public-tickets?with=authorizations,actions.authorized,metrics.authorized')
             ->assertOk()
             ->assertJsonPath('data.authorizations', ['viewAny' => self::ALLOWED, 'create' => self::ALLOWED])
             ->assertJsonPath('data.actions.*.authorized', [true, true, true, true, true]);

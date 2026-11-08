@@ -109,7 +109,7 @@ class ActionTargetsTest extends PackageTestCase
     {
         TargetNoteResource::$queued = ActionTarget::None;
 
-        $response = $this->getJson('/target-notes');
+        $response = $this->getJson('/target-notes?with=actions.fields,actions.meta,actions.authorized');
 
         $response->assertOk()->assertJsonPath('data.actions', [
             ['name' => 'Record Notes', 'uriKey' => 'record-notes', 'target' => 'search', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null, 'confirmation' => false, 'authorized' => true],

@@ -2059,7 +2059,37 @@ Scramble:
 
 ### Details
 
-The details endpoint, `GET /{resource}`, describes the resource with typed entries. Its keys are `actions`, `metrics`, `instructions`, `fields`, `limits`, `scopes`, `relations`, `rules`, `text`, `gates`, `authorizations` and `meta`. An excerpt:
+The details endpoint, `GET /{resource}`, describes the resource with typed entries. It answers a base: `fields`, each with `name`, `label`, `type` and `nullable` (plus `values` for an `Enum`), `limits` and `meta`. Ask for the rest with the `with` query parameter, a comma-separated list of sections and parts: `GET /api/artworks?with=fields.capabilities,actions.authorized`. A part adds its section. A value outside the table below is a `422` on `with`.
+
+| Key of the details | `with` value that brings it back |
+| --- | --- |
+| `select`, `sort`, `create`, `update` of a field | `fields.capabilities` |
+| `filter` of a field | `fields.filter` |
+| `rules` of a field | `fields.rules` |
+| `meta` of a field | `fields.meta` |
+| `relations` (`resource`, `relation`, `name`, and `types` and `morph` of a `MorphTo`) | `relations` |
+| `constraints` of a relation | `relations.constraints` |
+| `operations` of a relation | `relations.operations` |
+| `pivot_fields` of a relation | `relations.pivot_fields` |
+| `actions` (`name`, `uriKey`, `target`, `destructive`, `confirm`, `confirmation`) | `actions` |
+| `fields` of an action | `actions.fields` |
+| `authorized` of an action | `actions.authorized` |
+| `meta` of an action | `actions.meta` |
+| `metrics` (`name`, `uriKey`, `type`, `ranges`) | `metrics` |
+| `authorized` of a metric | `metrics.authorized` |
+| `meta` of a metric | `metrics.meta` |
+| `instructions` (`name`, `uriKey`, `text`) | `instructions` |
+| `fields` of an instruction | `instructions.fields` |
+| `meta` of an instruction | `instructions.meta` |
+| `scopes` (`name`) | `scopes` |
+| `fields` of a scope | `scopes.fields` |
+| `meta` of a scope | `scopes.meta` |
+| `rules` | `rules` |
+| `text` | `text` |
+| `gates` | `gates` |
+| `authorizations` | `authorizations` |
+
+The whole response that this section describes comes back with every value: `?with=fields.capabilities,fields.filter,fields.rules,fields.meta,relations.constraints,relations.operations,relations.pivot_fields,actions.fields,actions.authorized,actions.meta,metrics.authorized,metrics.meta,instructions.fields,instructions.meta,scopes.fields,scopes.meta,rules,text,gates,authorizations`. Ask each screen for what it shows instead: what is not asked for is not computed, and without `authorizations`, `actions.authorized` and `metrics.authorized` details calls no policy but `viewAny`. An excerpt with every value:
 
 ```json
 {"data": {
@@ -2141,22 +2171,23 @@ Authorizations:
 Meta:
 
 - `meta` is a new key, after `authorizations`. It holds what the new `detailsMeta(): array` method of the resource returns, and is `{}` when the resource does not override it. The method runs on each details request, for the user of the request: read it with `$this->request()->user()`.
-- `described()` receives the details with `meta`. It cannot change them.
+- `described()` receives the details as the request asked for them, with `meta`. It cannot change them.
 
 Behaviour:
 
 - Empty maps are `{}`: the `meta` of every entry, input entries, actions, instructions and scopes included, and the maps of `rules`. Lists stay `[]`.
-- Details builds every field entry, the pivot fields and the text search, so it now throws where it listed names:
-  - `Lomkit\Rest\Exceptions\InvalidTextSearchException` for a text search declaration error, as on the first search;
-  - `Lomkit\Rest\Exceptions\InvalidResourceException` for a `MorphTo` whose model method does not return a `MorphTo` relation of the same name, whose targets are not a list of resources, declare a model twice or a morph type with `*` or a trailing backslash, or for an invalid name in `gates()`;
+- Details builds the entries that the request asks for, so it now throws where it listed names, when it reads the declaration:
+  - `Lomkit\Rest\Exceptions\InvalidTextSearchException` for a text search declaration error, as on the first search (`text`);
+  - `Lomkit\Rest\Exceptions\InvalidResourceException` for a `MorphTo` whose model method does not return a `MorphTo` relation of the same name, whose targets are not a list of resources, declare a model twice or a morph type with `*` or a trailing backslash, (`relations`), or for an invalid name in `gates()` (`gates`);
   - `Lomkit\Rest\Exceptions\InvalidFieldException` for an `Enum` field or pivot field with no enum class and no enum cast;
-  - `BadMethodCallException` for a many-to-many relation or a `MorphTo` whose model method is missing.
-- Details checks `viewAny` first. Then, after `describing()`, it asks the policy for each ability of `authorizations`; a `create` policy method whose second parameter has no default fails there, as on `mutate`. It lists what the declarations of the resource return for the current request, which can depend on `$this->request()->user()`.
+  - `BadMethodCallException` for a many-to-many relation or a `MorphTo` whose model method is missing (`relations`).
+- Details checks `viewAny` first. Then, after `describing()`, it asks the policy for each ability of `authorizations` when the request asks for it, or for the abilities of the actions or the metrics with `actions.authorized` or `metrics.authorized`; a `create` policy method whose second parameter has no default fails there, as on `mutate`. It lists what the declarations of the resource return for the current request, which can depend on `$this->request()->user()`.
+- `Action`, `Metric`, `Instruction`, `Scope` and `Relation` no longer implement `JsonSerializable`: their entry comes from `toDetails(Lomkit\Rest\Http\Details\DetailsSelection $selection): array`. A class that overrides `jsonSerialize()` to change its entry overrides `toDetails()` instead, and reads the requested parts with `$selection->has('actions.meta')`. `Resource::jsonSerialize()` returns the base.
 - Clients ignore the keys they do not know. Later releases can add keys.
 
 Scramble:
 
-- Scramble documents the details response of each resource in its own schema, `{Resource}Details`, which lists the names of the resource as enums: the `name` of the fields, the `relation` of the relations, the `name` of the scopes, the `uriKey` of the instructions, actions and metrics, and the gates. It holds the field entries, the relations with `operations`, `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, `meta`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. `meta` accepts no key, unless the resource overrides `detailsMeta()`: it then accepts any key. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
+- Scramble documents the `with` query parameter of the details, with the accepted values in its description, and the details response of each resource in its own schema, `{Resource}Details`, where the base keys are required and the sections and parts optional. It lists the names of the resource as enums: the `name` of the fields, the `relation` of the relations, the `name` of the scopes, the `uriKey` of the instructions, actions and metrics, and the gates. It holds the field entries, the relations with `operations`, `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, `meta`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. `meta` accepts no key, unless the resource overrides `detailsMeta()`: it then accepts any key. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
 
 ### OpenAPI documentation
 
@@ -2228,7 +2259,7 @@ Error responses:
 
 - `components.responses` holds the shared responses: `RestUnauthenticated` (`401`, `{"message"}`), `RestForbidden` (`403`, `{"message"}`, plus the `denials` list when the application registers `DenialsRenderer`, see [Authorization](#authorization)), `RestNotFound` (`404`, `{"message"}`), `RestValidationFailed` (`422`, `{"message", "errors"}`) and `RestConfirmationRequired` (`428`, `{"message", "confirmation"}`), listed only on the operations of actions that declare `confirmation()`, see [Actions](#actions).
 - `401` is listed when the route of the operation runs `auth` or `auth:<guard>` and does not exclude it: a metric declared with `->withoutMiddleware('auth')` on a resource behind `auth` has no `401`. Before, Scramble listed `401` on resources without `auth` too.
-- `403` and `404` are listed on every operation of the package, `422` on every operation that reads a body: all but details and batch progress. Before, `422` was listed on details and batch progress, and `403` and `404` nowhere.
+- `403` and `404` are listed on every operation of the package, `422` on every operation but batch progress: details validates its `with` parameter. Before, `422` was listed on batch progress, and `403` and `404` nowhere.
 - An operation whose route does not run `auth` has `"security": []`, so a security scheme that the application declares for the whole document does not apply to it. The package declares no scheme: declare yours with `$openApi->secure(...)` in a document transformer.
 - Two different components under one name, for example a response named `RestNotFound` that the application defines, throw `Lomkit\Rest\Exceptions\InvalidDocumentationException` when the document is generated: "The OpenAPI response component [RestNotFound] of [Lomkit\Rest\Scramble\ErrorResponses] is already defined differently by [the application]. Give one of them another name."
 

@@ -10,7 +10,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use JsonSerializable;
 use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Concerns\HasRouteMiddleware;
 use Lomkit\Rest\Concerns\Makeable;
@@ -18,6 +17,7 @@ use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Exceptions\InvalidActionException;
 use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
+use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -25,7 +25,7 @@ use Lomkit\Rest\Http\Routing\Endpoint;
 use ReflectionMethod;
 
 /** @phpstan-consistent-constructor */
-class Action implements JsonSerializable
+class Action
 {
     use Batchable;
     use HasInputFields;
@@ -163,16 +163,15 @@ class Action implements JsonSerializable
         return $this;
     }
 
-    /** @return array{name: string, uriKey: string, target: value-of<ActionTarget>, fields: list<array<string, mixed>>, meta: \stdClass, destructive: bool, confirm: ?string, confirmation: bool} */
-    #[\Override]
-    public function jsonSerialize(): array
+    /** @return array<string, mixed> */
+    public function toDetails(DetailsSelection $selection): array
     {
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
             'target' => $this->target->value,
-            'fields' => InputFieldDetails::forFields($this->resource->definition()->inputFields($this)),
-            'meta' => (object) $this->getMeta(),
+            ...$selection->part('actions.fields', fn (): array => ['fields' => InputFieldDetails::forFields($this->resource->definition()->inputFields($this))]),
+            ...$selection->part('actions.meta', fn (): array => ['meta' => (object) $this->getMeta()]),
             'destructive' => $this->destructive,
             'confirm' => $this->confirm,
             'confirmation' => $this->requiresConfirmation(),

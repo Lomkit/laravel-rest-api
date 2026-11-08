@@ -334,7 +334,7 @@ class ActionConfirmationTest extends PackageTestCase
     #[Test]
     public function it_says_which_actions_ask_for_a_confirmation_in_the_details(): void
     {
-        $response = $this->getJson('/confirmed-documents');
+        $response = $this->getJson('/confirmed-documents?with=actions');
 
         $response->assertOk();
         $this->assertSame(

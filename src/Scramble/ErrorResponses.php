@@ -31,7 +31,7 @@ final readonly class ErrorResponses
         $operation->addResponse($this->shared('RestForbidden', 403, 'Forbidden', self::forbidden()));
         $operation->addResponse($this->shared('RestNotFound', 404, 'Not found', self::message()));
 
-        if (! in_array($context->endpoint, [Endpoint::Details, Endpoint::Batch], true)) {
+        if ($context->endpoint !== Endpoint::Batch) {
             $operation->addResponse($this->shared('RestValidationFailed', 422, 'Validation error', self::validation()));
         }
 

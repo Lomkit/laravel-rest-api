@@ -57,7 +57,7 @@ class GeneratedMetricRequestsTest extends ScaffoldingTestCase
         GeneratedMetricResource::$declared = [$metric];
         Rest::resource('generated-orders', GeneratedMetricController::class)->register();
 
-        $this->getJson('/generated-orders')
+        $this->getJson('/generated-orders?with=metrics.meta,metrics.authorized')
             ->assertOk()
             ->assertJsonPath('data.metrics', [$entry]);
         $this->postJson("/generated-orders/metrics/{$entry['uriKey']}")

@@ -44,7 +44,7 @@ class GateDeclarationTest extends HelpdeskTestCase
     public static function readers(): array
     {
         return [
-            'the details' => ['GET', '/misdeclared-gate-tickets', []],
+            'the details' => ['GET', '/misdeclared-gate-tickets?with=gates', []],
             'a search with gates' => ['POST', '/misdeclared-gate-tickets/search', ['search' => ['gates' => ['update']]]],
         ];
     }

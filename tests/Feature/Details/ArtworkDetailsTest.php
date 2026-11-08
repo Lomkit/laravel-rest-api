@@ -45,7 +45,7 @@ class ArtworkDetailsTest extends PackageTestCase
     #[Test]
     public function it_describes_every_part_of_a_resource(): void
     {
-        $this->assertDetailsPayload('artworks', $this->getJson('/api/artworks'));
+        $this->assertDetailsPayload('artworks', $this->getJson('/api/artworks?with='.self::EVERY_PART));
     }
 
     #[Test]
@@ -53,7 +53,7 @@ class ArtworkDetailsTest extends PackageTestCase
     {
         Relation::morphMap(['collector' => Collector::class], false);
 
-        $this->getJson('/api/artworks')
+        $this->getJson('/api/artworks?with=relations')
             ->assertOk()
             ->assertJsonPath('data.relations.2.types', ['collector' => CollectorResource::class])
             ->assertJsonPath('data.relations.2.resource', CollectorResource::class);
@@ -64,7 +64,7 @@ class ArtworkDetailsTest extends PackageTestCase
     {
         Relation::morphMap([1 => Artist::class, 0 => Collector::class], false);
 
-        $content = $this->getJson('/api/artworks')
+        $content = $this->getJson('/api/artworks?with=relations')
             ->assertOk()
             ->getContent();
 
@@ -76,7 +76,7 @@ class ArtworkDetailsTest extends PackageTestCase
     {
         Route::prefix('api')->group(fn () => Rest::resource('keyed-artworks', KeyedArtworkController::class)->register());
 
-        $data = $this->getJson('/api/keyed-artworks')
+        $data = $this->getJson('/api/keyed-artworks?with=actions,instructions,relations')
             ->assertOk()
             ->json('data');
 
@@ -97,6 +97,6 @@ class ArtworkDetailsTest extends PackageTestCase
 
         $this->expectExceptionObject(InvalidResourceException::notAMorphTo(MisdeclaredMorphArtworkResource::class, 'artist'));
 
-        $this->getJson('/api/misdeclared-artworks');
+        $this->getJson('/api/misdeclared-artworks?with=relations');
     }
 }

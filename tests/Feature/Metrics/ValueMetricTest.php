@@ -199,7 +199,7 @@ class ValueMetricTest extends SalesTestCase
     {
         $this->serve(TotalRevenue::make(), OrderValue::make('count', 'price', 'placed_at', []));
 
-        $this->getJson('/metric-orders')
+        $this->getJson('/metric-orders?with=metrics.meta,metrics.authorized')
             ->assertOk()
             ->assertJsonPath('data.metrics', [
                 ['name' => 'Total Revenue', 'uriKey' => 'total-revenue', 'type' => 'value', 'ranges' => [['value' => 30, 'label' => '30 days'], ['value' => 90, 'label' => '90 days']], 'meta' => [], 'authorized' => true],

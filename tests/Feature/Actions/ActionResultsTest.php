@@ -201,7 +201,7 @@ class ActionResultsTest extends PackageTestCase
     #[Test]
     public function it_gives_the_destructive_flag_and_the_confirmation_of_each_action_in_the_details(): void
     {
-        $response = $this->getJson('/touch-documents');
+        $response = $this->getJson('/touch-documents?with=actions.fields,actions.meta,actions.authorized');
 
         $response->assertOk();
         $this->assertSame([

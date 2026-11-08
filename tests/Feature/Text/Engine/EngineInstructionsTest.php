@@ -116,7 +116,7 @@ class EngineInstructionsTest extends EngineSearchTestCase
     #[DataProvider('details')]
     public function it_describes_the_instructions_that_apply_to_a_text_search(string $resource, array $flags): void
     {
-        $response = $this->getJson("/api/{$resource}");
+        $response = $this->getJson("/api/{$resource}?with=instructions");
 
         $response->assertOk()
             ->assertJsonPath('data.instructions.*.uriKey', ['priced-up-to', 'numbered-from', 'with-lines'])

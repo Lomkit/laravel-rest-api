@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo as EloquentMorphTo;
 use LogicException;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
+use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\Mutate\EntryRule;
 use Lomkit\Rest\Validation\Mutate\MorphToEntryRule;
@@ -126,10 +127,10 @@ class MorphTo extends BelongsTo implements PolymorphicRelation
 
     /** @return array<string, mixed> */
     #[\Override]
-    public function toDetails(): array
+    public function toDetails(DetailsSelection $selection): array
     {
         $details = [
-            ...parent::toDetails(),
+            ...parent::toDetails($selection),
             'types' => (object) $this->targets()->byType(),
             'morph' => $this->columns(),
         ];

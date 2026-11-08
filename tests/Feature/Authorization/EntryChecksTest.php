@@ -66,7 +66,7 @@ class EntryChecksTest extends HelpdeskTestCase
     {
         Rest::resource('hooked-tickets', HookedTicketController::class)->register();
 
-        $this->getJson('/hooked-tickets')->assertOk();
+        $this->getJson('/hooked-tickets?with=authorizations')->assertOk();
 
         $this->assertSame(['viewAny', 'describing', 'create'], $this->tickets->calls);
     }

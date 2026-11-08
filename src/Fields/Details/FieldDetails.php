@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Fields\Details;
 
+use Closure;
 use JsonSerializable;
 use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\Field;
@@ -12,15 +13,20 @@ use stdClass;
 
 final readonly class FieldDetails implements JsonSerializable
 {
+    public const array PARTS = ['capabilities', 'filter', 'rules', 'meta'];
+
+    /** @param list<string> $parts */
     private function __construct(
         private Field $field,
+        private array $parts = self::PARTS,
         private bool $sortable = true,
         private bool $queryable = true,
     ) {}
 
-    public static function of(Field $field): self
+    /** @param list<string> $parts */
+    public static function of(Field $field, array $parts = self::PARTS): self
     {
-        return new self($field);
+        return new self($field, $parts);
     }
 
     public static function ofPivot(Field $field, bool $queryable): self
@@ -28,10 +34,13 @@ final readonly class FieldDetails implements JsonSerializable
         return new self($field, sortable: false, queryable: $queryable);
     }
 
-    /** @return list<self> */
-    public static function forFields(FieldSet $fields): array
+    /**
+     * @param  list<string>  $parts
+     * @return list<self>
+     */
+    public static function forFields(FieldSet $fields, array $parts = self::PARTS): array
     {
-        return array_map(fn (Field $field): self => self::of($field), iterator_to_array($fields, false));
+        return array_map(fn (Field $field): self => self::of($field, $parts), iterator_to_array($fields, false));
     }
 
     /** @return list<self> */
@@ -40,7 +49,7 @@ final readonly class FieldDetails implements JsonSerializable
         return array_map(fn (Field $field): self => self::ofPivot($field, $queryable), iterator_to_array($fields, false));
     }
 
-    /** @return array{name: string, label: string|null, type: string, nullable: bool, select: bool, sort: bool, filter: array{operators: list<string>}, create: bool, update: bool, rules: array{all: list<string>, create: list<string>, update: list<string>}, meta: stdClass, values?: list<int|string>} */
+    /** @return array<string, mixed> */
     #[\Override]
     public function jsonSerialize(): array
     {
@@ -49,20 +58,33 @@ final readonly class FieldDetails implements JsonSerializable
             'label' => $this->field->getLabel(),
             'type' => $this->field->type(),
             'nullable' => $this->field->isNullable(),
-            'select' => $this->queryable && $this->field->isSelectable(),
-            'sort' => $this->sortable && $this->field->isSortable(),
-            'filter' => ['operators' => $this->operators()],
-            'create' => $this->field->isWritableOn(WriteOperation::Create),
-            'update' => $this->field->isWritableOn(WriteOperation::Update),
-            'rules' => $this->rules(),
-            'meta' => (object) $this->field->getMeta(),
         ];
+
+        foreach ($this->parts() as $key => [$part, $value]) {
+            if (in_array($part, $this->parts, true)) {
+                $details[$key] = $value();
+            }
+        }
 
         if (! $this->field instanceof Enum) {
             return $details;
         }
 
         return [...$details, 'values' => $this->field->values()];
+    }
+
+    /** @return array<string, array{string, Closure(): mixed}> */
+    private function parts(): array
+    {
+        return [
+            'select' => ['capabilities', fn (): bool => $this->queryable && $this->field->isSelectable()],
+            'sort' => ['capabilities', fn (): bool => $this->sortable && $this->field->isSortable()],
+            'filter' => ['filter', fn (): array => ['operators' => $this->operators()]],
+            'create' => ['capabilities', fn (): bool => $this->field->isWritableOn(WriteOperation::Create)],
+            'update' => ['capabilities', fn (): bool => $this->field->isWritableOn(WriteOperation::Update)],
+            'rules' => ['rules', $this->rules(...)],
+            'meta' => ['meta', fn (): stdClass => (object) $this->field->getMeta()],
+        ];
     }
 
     /** @return list<string> */

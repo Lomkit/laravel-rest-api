@@ -15,7 +15,12 @@ final readonly class ClassAuthorizations implements JsonSerializable
 
     public static function of(Resource $resource): self
     {
-        $abilities = self::abilities($resource);
+        return self::on($resource, self::abilities($resource));
+    }
+
+    /** @param list<string> $abilities */
+    public static function on(Resource $resource, array $abilities): self
+    {
         $checks = array_map(fn (string $ability): Check => Check::onClass($resource, $ability), $abilities);
 
         return new self(array_combine($abilities, $resource->context()->authorizer()->inspectAll($checks)));
