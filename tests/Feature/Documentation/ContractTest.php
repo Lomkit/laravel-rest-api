@@ -83,6 +83,10 @@ class ContractTest extends DocumentationTestCase
 
         foreach ($document['paths'] as $path => $operations) {
             foreach ($operations as $method => $operation) {
+                if (str_ends_with($operation['operationId'], '.mutate')) {
+                    continue;
+                }
+
                 foreach ($operation['requestBody']['content']['application/json']['examples'] ?? [] as $name => $example) {
                     $response = $this->json($method, 'api'.$path, $example['value']);
 
@@ -203,6 +207,121 @@ class ContractTest extends DocumentationTestCase
     }
 
     #[Test]
+    public function it_documents_mutation_examples_that_the_request_schema_accepts(): void
+    {
+        $document = $this->document();
+        $validator = new OpenApiValidator;
+        $checked = [];
+
+        foreach ($this->mutationExamples($document) as $path => $example) {
+            $this->assertSame([], $validator->requestErrors($document, $path, 'post', $example), $path);
+            $checked[] = $path;
+        }
+
+        $this->assertSame(['/notes/mutate', '/shows/mutate', '/stages/mutate'], $checked);
+    }
+
+    #[Test]
+    public function it_sends_each_mutation_example_built_from_the_examples_of_its_fields(): void
+    {
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+        $validator = new OpenApiValidator;
+        $sent = [];
+
+        foreach ($this->mutationExamples($document) as $path => $example) {
+            if (! $this->declared($document, $path, $example)) {
+                continue;
+            }
+
+            $response = $this->postJson('api'.$path, $example);
+
+            $response->assertOk();
+            $this->assertSame([], $validator->responseErrors($document, $path, 'post', 200, (string) $response->getContent()), $path);
+            $sent[] = $path;
+        }
+
+        $this->assertSame(['/stages/mutate'], $sent);
+    }
+
+    /** @param list<array<string, mixed>> $mutate */
+    #[Test]
+    #[DataProvider('acceptedMutations')]
+    public function it_answers_a_mutation_that_the_document_describes(string $path, array $mutate): void
+    {
+        $this->seedFestival();
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+        $validator = new OpenApiValidator;
+
+        $this->assertSame([], $validator->requestErrors($document, $path, 'post', ['mutate' => $mutate]));
+
+        $response = $this->postJson('api'.$path, ['mutate' => $mutate]);
+
+        $response->assertOk();
+        $this->assertSame([], $validator->responseErrors($document, $path, 'post', 200, (string) $response->getContent()));
+    }
+
+    /** @return array<string, array{string, list<array<string, mixed>>}> */
+    public static function acceptedMutations(): array
+    {
+        return [
+            'a created row' => ['/stages/mutate', [['operation' => 'create', 'attributes' => ['code' => 'jazz', 'name' => 'Jazz tent']]]],
+            'an updated row with a null value' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Late show', 'summary' => null]]]],
+            'a string key' => ['/stages/mutate', [['operation' => 'update', 'key' => 'side', 'attributes' => ['name' => 'Side tent']]]],
+            'a row attached to a relation to one' => ['/shows/mutate', [['operation' => 'update', 'key' => 2, 'relations' => ['stage' => ['operation' => 'attach', 'key' => 'side']]]]],
+            'a row created under a relation to many' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['comments' => [['operation' => 'create', 'attributes' => ['rating' => 4, 'body' => 'Great']]]]]]],
+            'a list of keys' => ['/stages/mutate', [['operation' => 'update', 'key' => 'side', 'relations' => ['shows' => [['operation' => 'attach', 'key' => [1, 2]]]]]]],
+            'pivot fields and a sync that keeps the other rows' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['artists' => [['operation' => 'sync', 'key' => [1], 'pivot' => ['role' => 'guest'], 'without_detaching' => true]]]]]],
+            'a morph-to-many relation' => ['/shows/mutate', [['operation' => 'update', 'key' => 2, 'relations' => ['labels' => [['operation' => 'attach', 'key' => 1, 'pivot' => ['position' => 1]]]]]]],
+            'a row of each type of a morph relation' => ['/notes/mutate', [
+                ['operation' => 'update', 'key' => 1, 'relations' => ['notable' => ['operation' => 'attach', 'type' => Show::class, 'key' => 2]]],
+                ['operation' => 'update', 'key' => 2, 'relations' => ['notable' => ['operation' => 'attach', 'type' => Stage::class, 'key' => 'side']]],
+            ]],
+            'nested relations' => ['/stages/mutate', [['operation' => 'create', 'attributes' => ['code' => 'jazz', 'name' => 'Jazz tent'], 'relations' => ['shows' => [
+                ['operation' => 'attach', 'key' => 2, 'relations' => ['artists' => [['operation' => 'attach', 'key' => 1, 'pivot' => ['role' => 'guest']]]]],
+            ]]]]],
+        ];
+    }
+
+    /** @param list<array<string, mixed>> $mutate */
+    #[Test]
+    #[DataProvider('refusedMutations')]
+    public function it_refuses_a_mutation_that_the_document_does_not_describe(string $path, array $mutate): void
+    {
+        $this->seedFestival();
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+
+        $this->assertNotSame([], (new OpenApiValidator)->requestErrors($this->document(), $path, 'post', ['mutate' => $mutate]));
+        $this->postJson('api'.$path, ['mutate' => $mutate])->assertUnprocessable();
+    }
+
+    /** @return array<string, array{string, list<array<string, mixed>>}> */
+    public static function refusedMutations(): array
+    {
+        return [
+            'no entry' => ['/shows/mutate', []],
+            'an operation of a relation at the root' => ['/shows/mutate', [['operation' => 'attach', 'key' => 1]]],
+            'a key on a created row' => ['/stages/mutate', [['operation' => 'create', 'key' => 'jazz', 'attributes' => ['name' => 'Jazz tent']]]],
+            'an updated row without its key' => ['/shows/mutate', [['operation' => 'update', 'attributes' => ['title' => 'Late show']]]],
+            'a field that the operation cannot write' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['id' => 3]]]],
+            'a value of another type' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['seats' => 'many']]]],
+            'a value outside the cases of an enum' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['status' => 'cancelled']]]],
+            'null for a field that is not nullable' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['title' => null]]]],
+            'attributes on an attach' => ['/shows/mutate', [['operation' => 'update', 'key' => 2, 'relations' => ['stage' => ['operation' => 'attach', 'key' => 'side', 'attributes' => ['name' => 'Side tent']]]]]],
+            'a list of keys on a relation to one' => ['/shows/mutate', [['operation' => 'update', 'key' => 2, 'relations' => ['stage' => ['operation' => 'attach', 'key' => ['side']]]]]],
+            'an operation that the relation does not take' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['comments' => [['operation' => 'sync', 'key' => [1]]]]]]],
+            'the sync option on an attach' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['artists' => [['operation' => 'attach', 'key' => 1, 'without_detaching' => true]]]]]],
+            'a pivot on a detach' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['artists' => [['operation' => 'detach', 'key' => 1, 'pivot' => ['role' => 'lead']]]]]]],
+            'a relation through another relation' => ['/stages/mutate', [['operation' => 'update', 'key' => 'main', 'relations' => ['comments' => [['operation' => 'attach', 'key' => 1]]]]]],
+            'a morph relation without its type' => ['/notes/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['notable' => ['operation' => 'attach', 'key' => 2]]]]],
+            'an unknown key in an entry' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'comment' => 'Late']]],
+            'an attribute that the resource does not declare' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'attributes' => ['nickname' => 'Ada']]]],
+            'a relation that the resource does not declare' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['sponsors' => []]]]],
+        ];
+    }
+
+    #[Test]
     public function it_documents_field_examples_that_their_schema_accepts(): void
     {
         $document = $this->document();
@@ -218,7 +337,23 @@ class ContractTest extends DocumentationTestCase
             }
         }
 
-        $this->assertSame(['Show.title', 'Show.title', 'Show.price', 'Stage.code'], $checked);
+        $this->assertSame([
+            'Show.title',
+            'Show.title',
+            'Show.price',
+            'ShowCreate.title',
+            'ShowCreate.title',
+            'ShowCreate.price',
+            'ShowUpdate.title',
+            'ShowUpdate.title',
+            'ShowUpdate.price',
+            'Stage.code',
+            'Stage.name',
+            'StageCreate.code',
+            'StageCreate.name',
+            'StageMutationUpdate.key',
+            'StageUpdate.name',
+        ], $checked);
     }
 
     #[Test]
@@ -237,6 +372,43 @@ class ContractTest extends DocumentationTestCase
         $this->assertSame(['/'], array_keys($errors));
     }
 
+    /**
+     * @param  array<string, mixed>  $document
+     * @return array<string, mixed>
+     */
+    private function mutationExamples(array $document): array
+    {
+        $examples = [];
+
+        foreach ($document['paths'] as $path => $operations) {
+            if (str_ends_with($operations['post']['operationId'] ?? '', '.mutate')) {
+                $examples[$path] = $operations['post']['requestBody']['content']['application/json']['examples']['default']['value'];
+            }
+        }
+
+        return $examples;
+    }
+
+    /**
+     * @param  array<string, mixed>  $document
+     * @param  array{mutate: list<array{attributes?: array<string, mixed>}>}  $example
+     */
+    private function declared(array $document, string $path, array $example): bool
+    {
+        $schemas = $document['components']['schemas'];
+        $mutation = $document['paths'][$path]['post']['requestBody']['content']['application/json']['schema']['properties']['mutate']['items']['$ref'];
+        $create = $schemas[basename(((array) $schemas[basename($mutation)]['discriminator']['mapping'])['create'])];
+        $fields = $schemas[basename($create['properties']['attributes']['$ref'])]['properties'];
+
+        foreach ($example['mutate'][0]['attributes'] ?? [] as $name => $value) {
+            if (($fields[$name]['examples'][0] ?? $fields[$name]['enum'][0] ?? null) !== $value) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private function seedFestival(): void
     {
         DB::table('stages')->insert([['code' => 'main', 'name' => 'Main stage'], ['code' => 'side', 'name' => 'Side stage']]);
@@ -245,13 +417,13 @@ class ContractTest extends DocumentationTestCase
             ['id' => 2, 'stage_code' => null, 'title' => 'Closing night', 'summary' => null, 'price' => null, 'seats' => 0, 'featured' => false, 'starts_on' => '2026-07-03', 'starts_at' => null, 'status' => 'planned', 'level' => 1, 'settings' => null, 'secret' => null, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00'],
         ]);
         DB::table('artists')->insert([['id' => 1, 'name' => 'Ada']]);
-        DB::table('artist_show')->insert([['id' => 1, 'artist_id' => 1, 'show_id' => 1, 'role' => 'lead']]);
-        DB::table('comments')->insert([['id' => 1, 'show_id' => 1, 'rating' => 5, 'body' => 'Loud']]);
+        DB::table('artist_show')->insert([['artist_id' => 1, 'show_id' => 1, 'role' => 'lead']]);
+        DB::table('comments')->insert([['show_id' => 1, 'rating' => 5, 'body' => 'Loud']]);
         DB::table('notes')->insert([
             ['id' => 1, 'notable_type' => Show::class, 'notable_id' => '1', 'body' => 'Sound check at six'],
             ['id' => 2, 'notable_type' => Stage::class, 'notable_id' => 'main', 'body' => 'Covered'],
         ]);
         DB::table('labels')->insert([['id' => 1, 'name' => 'Rock']]);
-        DB::table('labelables')->insert([['id' => 1, 'label_id' => 1, 'labelable_type' => Show::class, 'labelable_id' => 1, 'position' => 2]]);
+        DB::table('labelables')->insert([['label_id' => 1, 'labelable_type' => Show::class, 'labelable_id' => 1, 'position' => 2]]);
     }
 }

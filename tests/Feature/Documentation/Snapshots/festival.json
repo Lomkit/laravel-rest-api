@@ -157,6 +157,7 @@
                     "Note"
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
@@ -165,66 +166,27 @@
                                     "mutate": {
                                         "type": "array",
                                         "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "operation": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "create",
-                                                        "update"
-                                                    ]
-                                                },
-                                                "key": {
-                                                    "type": "integer",
-                                                    "description": "Required for update"
-                                                },
+                                            "$ref": "#/components/schemas/NoteMutation"
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 100
+                                    }
+                                },
+                                "required": [
+                                    "mutate"
+                                ]
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "mutate": [
+                                            {
+                                                "operation": "create",
                                                 "attributes": {
-                                                    "type": "object",
-                                                    "description": "Writable on create: body. Writable on update: body.",
-                                                    "properties": {
-                                                        "body": {
-                                                            "type": "string",
-                                                            "description": "create: string | update: string"
-                                                        }
-                                                    }
-                                                },
-                                                "relations": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "notable": {
-                                                            "type": "object",
-                                                            "description": "Type: MorphTo",
-                                                            "properties": {
-                                                                "operation": {
-                                                                    "type": "string",
-                                                                    "enum": [
-                                                                        "create",
-                                                                        "update",
-                                                                        "attach",
-                                                                        "detach"
-                                                                    ]
-                                                                },
-                                                                "key": {
-                                                                    "description": "Integer for single operations; array of integers for bulk operations"
-                                                                },
-                                                                "attributes": {
-                                                                    "type": "object",
-                                                                    "description": "Fields of the related resource"
-                                                                },
-                                                                "type": {
-                                                                    "type": "string",
-                                                                    "description": "The morph type of the related record; required when the relation has several types",
-                                                                    "enum": [
-                                                                        "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Show",
-                                                                        "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Stage"
-                                                                    ]
-                                                                }
-                                                            }
-                                                        }
-                                                    }
+                                                    "body": "a"
                                                 }
                                             }
-                                        }
+                                        ]
                                     }
                                 }
                             }
@@ -418,6 +380,7 @@
                     "Show"
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
@@ -426,207 +389,37 @@
                                     "mutate": {
                                         "type": "array",
                                         "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "operation": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "create",
-                                                        "update"
-                                                    ]
-                                                },
-                                                "key": {
-                                                    "type": "integer",
-                                                    "description": "Required for update"
-                                                },
+                                            "$ref": "#/components/schemas/ShowMutation"
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 100
+                                    }
+                                },
+                                "required": [
+                                    "mutate"
+                                ]
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "mutate": [
+                                            {
+                                                "operation": "create",
                                                 "attributes": {
-                                                    "type": "object",
-                                                    "description": "Writable on create: title, summary, price, seats, featured, starts_on, starts_at, status, level, settings, secret. Writable on update: title, summary, price, seats, featured, starts_on, starts_at, status, level, settings, secret.",
-                                                    "properties": {
-                                                        "title": {
-                                                            "type": "string",
-                                                            "description": "create: string, max:80, required | update: string, max:80"
-                                                        },
-                                                        "summary": {
-                                                            "type": "string",
-                                                            "description": "create: nullable, string | update: nullable, string"
-                                                        },
-                                                        "price": {
-                                                            "type": "number",
-                                                            "description": "create: nullable, numeric | update: nullable, numeric"
-                                                        },
-                                                        "seats": {
-                                                            "type": "integer",
-                                                            "description": "create: integer, min:0 | update: integer, min:0"
-                                                        },
-                                                        "featured": {
-                                                            "type": "boolean",
-                                                            "description": "create: boolean | update: boolean"
-                                                        },
-                                                        "starts_on": {
-                                                            "type": "string",
-                                                            "description": "create: date, required | update: date"
-                                                        },
-                                                        "starts_at": {
-                                                            "type": "string",
-                                                            "description": "create: nullable, date | update: nullable, date"
-                                                        },
-                                                        "status": {
-                                                            "type": "string",
-                                                            "description": "create: required"
-                                                        },
-                                                        "level": {
-                                                            "type": "string"
-                                                        },
-                                                        "settings": {
-                                                            "type": "array",
-                                                            "description": "create: nullable, array | update: nullable, array",
-                                                            "items": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "secret": {
-                                                            "type": "string",
-                                                            "description": "create: nullable, string | update: nullable, string"
-                                                        }
-                                                    }
-                                                },
-                                                "relations": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "stage": {
-                                                            "type": "object",
-                                                            "description": "Type: BelongsTo",
-                                                            "properties": {
-                                                                "operation": {
-                                                                    "type": "string",
-                                                                    "enum": [
-                                                                        "create",
-                                                                        "update",
-                                                                        "attach",
-                                                                        "detach"
-                                                                    ]
-                                                                },
-                                                                "key": {
-                                                                    "description": "Integer for single operations; array of integers for bulk operations"
-                                                                },
-                                                                "attributes": {
-                                                                    "type": "object",
-                                                                    "description": "Fields of the related resource"
-                                                                }
-                                                            }
-                                                        },
-                                                        "artists": {
-                                                            "type": "array",
-                                                            "description": "Type: BelongsToMany",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "operation": {
-                                                                        "type": "string",
-                                                                        "enum": [
-                                                                            "create",
-                                                                            "update",
-                                                                            "attach",
-                                                                            "detach",
-                                                                            "sync",
-                                                                            "toggle"
-                                                                        ]
-                                                                    },
-                                                                    "key": {
-                                                                        "description": "Integer for single operations; array of integers for bulk operations"
-                                                                    },
-                                                                    "attributes": {
-                                                                        "type": "object",
-                                                                        "description": "Fields of the related resource"
-                                                                    },
-                                                                    "pivot": {
-                                                                        "type": "object",
-                                                                        "description": "Writable on create and attach: role. Writable on update, sync and toggle: role. Writable on detach: none.",
-                                                                        "properties": {
-                                                                            "role": {
-                                                                                "type": "string",
-                                                                                "description": "create and attach: nullable, string | update, sync and toggle: nullable, string"
-                                                                            }
-                                                                        }
-                                                                    },
-                                                                    "without_detaching": {
-                                                                        "type": "boolean",
-                                                                        "description": "When true, existing relations are kept during sync"
-                                                                    }
-                                                                }
-                                                            }
-                                                        },
-                                                        "comments": {
-                                                            "type": "array",
-                                                            "description": "Type: HasMany",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "operation": {
-                                                                        "type": "string",
-                                                                        "enum": [
-                                                                            "create",
-                                                                            "update",
-                                                                            "attach",
-                                                                            "detach"
-                                                                        ]
-                                                                    },
-                                                                    "key": {
-                                                                        "description": "Integer for single operations; array of integers for bulk operations"
-                                                                    },
-                                                                    "attributes": {
-                                                                        "type": "object",
-                                                                        "description": "Fields of the related resource"
-                                                                    }
-                                                                }
-                                                            }
-                                                        },
-                                                        "labels": {
-                                                            "type": "array",
-                                                            "description": "Type: MorphToMany",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "operation": {
-                                                                        "type": "string",
-                                                                        "enum": [
-                                                                            "create",
-                                                                            "update",
-                                                                            "attach",
-                                                                            "detach",
-                                                                            "sync",
-                                                                            "toggle"
-                                                                        ]
-                                                                    },
-                                                                    "key": {
-                                                                        "description": "Integer for single operations; array of integers for bulk operations"
-                                                                    },
-                                                                    "attributes": {
-                                                                        "type": "object",
-                                                                        "description": "Fields of the related resource"
-                                                                    },
-                                                                    "pivot": {
-                                                                        "type": "object",
-                                                                        "description": "Writable on create and attach: position. Writable on update, sync and toggle: position. Writable on detach: none.",
-                                                                        "properties": {
-                                                                            "position": {
-                                                                                "type": "integer",
-                                                                                "description": "create and attach: nullable, integer | update, sync and toggle: nullable, integer"
-                                                                            }
-                                                                        }
-                                                                    },
-                                                                    "without_detaching": {
-                                                                        "type": "boolean",
-                                                                        "description": "When true, existing relations are kept during sync"
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
+                                                    "title": "Opening night",
+                                                    "summary": "a",
+                                                    "price": 12.5,
+                                                    "seats": 1,
+                                                    "featured": true,
+                                                    "starts_on": "2026-01-01",
+                                                    "starts_at": "2026-01-01T00:00:00Z",
+                                                    "status": "planned",
+                                                    "level": 1,
+                                                    "settings": {},
+                                                    "secret": "a"
                                                 }
                                             }
-                                        }
+                                        ]
                                     }
                                 }
                             }
@@ -1327,6 +1120,7 @@
                     "Stage"
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
@@ -1335,86 +1129,28 @@
                                     "mutate": {
                                         "type": "array",
                                         "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "operation": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "create",
-                                                        "update"
-                                                    ]
-                                                },
-                                                "key": {
-                                                    "type": "integer",
-                                                    "description": "Required for update"
-                                                },
+                                            "$ref": "#/components/schemas/StageMutation"
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 100
+                                    }
+                                },
+                                "required": [
+                                    "mutate"
+                                ]
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "mutate": [
+                                            {
+                                                "operation": "create",
                                                 "attributes": {
-                                                    "type": "object",
-                                                    "description": "Writable on create: name. Writable on update: name.",
-                                                    "properties": {
-                                                        "name": {
-                                                            "type": "string",
-                                                            "description": "create: string | update: string"
-                                                        }
-                                                    }
-                                                },
-                                                "relations": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "shows": {
-                                                            "type": "array",
-                                                            "description": "Type: HasMany",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "operation": {
-                                                                        "type": "string",
-                                                                        "enum": [
-                                                                            "create",
-                                                                            "update",
-                                                                            "attach",
-                                                                            "detach"
-                                                                        ]
-                                                                    },
-                                                                    "key": {
-                                                                        "description": "Integer for single operations; array of integers for bulk operations"
-                                                                    },
-                                                                    "attributes": {
-                                                                        "type": "object",
-                                                                        "description": "Fields of the related resource"
-                                                                    }
-                                                                }
-                                                            }
-                                                        },
-                                                        "comments": {
-                                                            "type": "array",
-                                                            "description": "Type: HasManyThrough",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "operation": {
-                                                                        "type": "string",
-                                                                        "enum": [
-                                                                            "create",
-                                                                            "update",
-                                                                            "attach",
-                                                                            "detach"
-                                                                        ]
-                                                                    },
-                                                                    "key": {
-                                                                        "description": "Integer for single operations; array of integers for bulk operations"
-                                                                    },
-                                                                    "attributes": {
-                                                                        "type": "object",
-                                                                        "description": "Fields of the related resource"
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
+                                                    "code": "main",
+                                                    "name": "Main stage"
                                                 }
                                             }
-                                        }
+                                        ]
                                     }
                                 }
                             }
@@ -1481,6 +1217,18 @@
                     }
                 },
                 "title": "Artist"
+            },
+            "ArtistCreate": {
+                "type": "object",
+                "description": "The fields that `create` writes",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Rules: string"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "ArtistCreate"
             },
             "ArtistFieldFilter": {
                 "description": "A condition on a field. Without `operator`, the condition is `=`. The fields of each related resource are listed one level deep, such as `stage.name`; deeper dotted paths are accepted too and are not listed.",
@@ -1761,6 +1509,18 @@
                 "additionalProperties": false,
                 "title": "ArtistSort"
             },
+            "ArtistUpdate": {
+                "type": "object",
+                "description": "The fields that `update`, `sync` and `toggle` write",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Rules: string"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "ArtistUpdate"
+            },
             "Comment": {
                 "type": "object",
                 "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
@@ -1953,6 +1713,22 @@
                     }
                 ],
                 "title": "CommentAggregateShow"
+            },
+            "CommentCreate": {
+                "type": "object",
+                "description": "The fields that `create` writes",
+                "properties": {
+                    "rating": {
+                        "type": "integer",
+                        "description": "Rules: integer, between:1,5"
+                    },
+                    "body": {
+                        "type": "string",
+                        "description": "Rules: string"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "CommentCreate"
             },
             "CommentFieldFilter": {
                 "description": "A condition on a field. Without `operator`, the condition is `=`. The fields of each related resource are listed one level deep, such as `stage.name`; deeper dotted paths are accepted too and are not listed.",
@@ -3465,6 +3241,91 @@
                 "additionalProperties": false,
                 "title": "CommentRelationFilterShow"
             },
+            "CommentRelationMutationShow": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "create"
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/ShowCreate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/ShowRelations"
+                            }
+                        },
+                        "required": [
+                            "operation"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "update"
+                                ]
+                            },
+                            "key": {
+                                "type": "integer"
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/ShowUpdate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/ShowRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "attach",
+                                    "detach"
+                                ]
+                            },
+                            "key": {
+                                "type": "integer"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/ShowRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "CommentRelationMutationShow"
+            },
+            "CommentRelations": {
+                "type": "object",
+                "description": "The operations on the related rows, by relation. Relations nest at most 3 deep: each `relations` inside an entry is one more level.",
+                "properties": {
+                    "show": {
+                        "$ref": "#/components/schemas/CommentRelationMutationShow"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "CommentRelations"
+            },
             "CommentSelect": {
                 "type": "object",
                 "properties": {
@@ -3542,6 +3403,22 @@
                 "additionalProperties": false,
                 "title": "CommentSort"
             },
+            "CommentUpdate": {
+                "type": "object",
+                "description": "The fields that `update`, `sync` and `toggle` write",
+                "properties": {
+                    "rating": {
+                        "type": "integer",
+                        "description": "Rules: integer, between:1,5"
+                    },
+                    "body": {
+                        "type": "string",
+                        "description": "Rules: string"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "CommentUpdate"
+            },
             "Label": {
                 "type": "object",
                 "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
@@ -3575,6 +3452,18 @@
                     }
                 },
                 "title": "Label"
+            },
+            "LabelCreate": {
+                "type": "object",
+                "description": "The fields that `create` writes",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Rules: string"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "LabelCreate"
             },
             "LabelFieldFilter": {
                 "description": "A condition on a field. Without `operator`, the condition is `=`. The fields of each related resource are listed one level deep, such as `stage.name`; deeper dotted paths are accepted too and are not listed.",
@@ -3855,6 +3744,18 @@
                 "additionalProperties": false,
                 "title": "LabelSort"
             },
+            "LabelUpdate": {
+                "type": "object",
+                "description": "The fields that `update`, `sync` and `toggle` write",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Rules: string"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "LabelUpdate"
+            },
             "Note": {
                 "type": "object",
                 "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
@@ -3913,6 +3814,18 @@
                     }
                 },
                 "title": "Note"
+            },
+            "NoteCreate": {
+                "type": "object",
+                "description": "The fields that `create` writes",
+                "properties": {
+                    "body": {
+                        "type": "string",
+                        "description": "Rules: string"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "NoteCreate"
             },
             "NoteDetails": {
                 "type": "object",
@@ -5170,6 +5083,69 @@
                 "additionalProperties": false,
                 "title": "NoteIncludeNotable"
             },
+            "NoteMutation": {
+                "description": "An entry of `mutate`: `create` writes a new row, `update` changes the row of `key`.",
+                "discriminator": {
+                    "propertyName": "operation",
+                    "mapping": {
+                        "create": "#/components/schemas/NoteMutationCreate",
+                        "update": "#/components/schemas/NoteMutationUpdate"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/NoteMutationCreate"
+                    },
+                    {
+                        "$ref": "#/components/schemas/NoteMutationUpdate"
+                    }
+                ],
+                "title": "NoteMutation"
+            },
+            "NoteMutationCreate": {
+                "type": "object",
+                "properties": {
+                    "operation": {
+                        "type": "string",
+                        "const": "create"
+                    },
+                    "attributes": {
+                        "$ref": "#/components/schemas/NoteCreate"
+                    },
+                    "relations": {
+                        "$ref": "#/components/schemas/NoteRelations"
+                    }
+                },
+                "required": [
+                    "operation"
+                ],
+                "additionalProperties": false,
+                "title": "NoteMutationCreate"
+            },
+            "NoteMutationUpdate": {
+                "type": "object",
+                "properties": {
+                    "operation": {
+                        "type": "string",
+                        "const": "update"
+                    },
+                    "key": {
+                        "type": "integer"
+                    },
+                    "attributes": {
+                        "$ref": "#/components/schemas/NoteUpdate"
+                    },
+                    "relations": {
+                        "$ref": "#/components/schemas/NoteRelations"
+                    }
+                },
+                "required": [
+                    "operation",
+                    "key"
+                ],
+                "additionalProperties": false,
+                "title": "NoteMutationUpdate"
+            },
             "NotePaginated": {
                 "type": "object",
                 "description": "A page of rows",
@@ -5290,6 +5266,219 @@
                 ],
                 "additionalProperties": false,
                 "title": "NoteRelationFilterNotable"
+            },
+            "NoteRelationMutationNotable": {
+                "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                        "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Show": "#/components/schemas/NoteRelationMutationNotableShow",
+                        "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Stage": "#/components/schemas/NoteRelationMutationNotableStage"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/NoteRelationMutationNotableShow"
+                    },
+                    {
+                        "$ref": "#/components/schemas/NoteRelationMutationNotableStage"
+                    }
+                ],
+                "title": "NoteRelationMutationNotable"
+            },
+            "NoteRelationMutationNotableShow": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "create"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "const": "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Show"
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/ShowCreate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/ShowRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "type"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "update"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "const": "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Show"
+                            },
+                            "key": {
+                                "type": "integer"
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/ShowUpdate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/ShowRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "type",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "attach",
+                                    "detach"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "const": "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Show"
+                            },
+                            "key": {
+                                "type": "integer"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/ShowRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "type",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "NoteRelationMutationNotableShow"
+            },
+            "NoteRelationMutationNotableStage": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "create"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "const": "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Stage"
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/StageCreate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/StageRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "type"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "update"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "const": "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Stage"
+                            },
+                            "key": {
+                                "type": "string",
+                                "examples": [
+                                    "main"
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/StageUpdate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/StageRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "type",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "attach",
+                                    "detach"
+                                ]
+                            },
+                            "type": {
+                                "type": "string",
+                                "const": "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Stage"
+                            },
+                            "key": {
+                                "type": "string",
+                                "examples": [
+                                    "main"
+                                ]
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/StageRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "type",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "NoteRelationMutationNotableStage"
+            },
+            "NoteRelations": {
+                "type": "object",
+                "description": "The operations on the related rows, by relation. Relations nest at most 3 deep: each `relations` inside an entry is one more level.",
+                "properties": {
+                    "notable": {
+                        "$ref": "#/components/schemas/NoteRelationMutationNotable"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "NoteRelations"
             },
             "NoteRows": {
                 "type": "object",
@@ -5428,6 +5617,18 @@
                 ],
                 "additionalProperties": false,
                 "title": "NoteSort"
+            },
+            "NoteUpdate": {
+                "type": "object",
+                "description": "The fields that `update`, `sync` and `toggle` write",
+                "properties": {
+                    "body": {
+                        "type": "string",
+                        "description": "Rules: string"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "NoteUpdate"
             },
             "RestGateAnswer": {
                 "type": "object",
@@ -6010,6 +6211,95 @@
                     }
                 ],
                 "title": "ShowAggregateStage"
+            },
+            "ShowCreate": {
+                "type": "object",
+                "description": "The fields that `create` writes",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Rules: string, max:80, required",
+                        "examples": [
+                            "Opening night",
+                            "Closing night"
+                        ]
+                    },
+                    "summary": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Rules: nullable, string"
+                    },
+                    "price": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Rules: nullable, numeric",
+                        "examples": [
+                            12.5
+                        ],
+                        "x-lomkit-meta": {
+                            "unit": "EUR"
+                        }
+                    },
+                    "seats": {
+                        "type": "integer",
+                        "description": "Rules: integer, min:0"
+                    },
+                    "featured": {
+                        "type": "boolean",
+                        "description": "Rules: boolean"
+                    },
+                    "starts_on": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Rules: date, required"
+                    },
+                    "starts_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "Rules: nullable, date"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Rules: enum, required",
+                        "enum": [
+                            "planned",
+                            "on_sale",
+                            "sold_out"
+                        ]
+                    },
+                    "level": {
+                        "type": "integer",
+                        "description": "Rules: enum",
+                        "enum": [
+                            1,
+                            2,
+                            3
+                        ]
+                    },
+                    "settings": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Rules: nullable, array, max_depth:64"
+                    },
+                    "secret": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Rules: nullable, string"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "ShowCreate"
             },
             "ShowDetails": {
                 "type": "object",
@@ -8526,7 +8816,10 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "examples": [
+                                    "Main stage"
+                                ]
                             },
                             "type": {
                                 "type": "string",
@@ -8594,7 +8887,10 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "examples": [
+                                        "Main stage"
+                                    ]
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -9505,6 +9801,69 @@
                 "additionalProperties": false,
                 "title": "ShowInstructionOnlyFeatured"
             },
+            "ShowMutation": {
+                "description": "An entry of `mutate`: `create` writes a new row, `update` changes the row of `key`.",
+                "discriminator": {
+                    "propertyName": "operation",
+                    "mapping": {
+                        "create": "#/components/schemas/ShowMutationCreate",
+                        "update": "#/components/schemas/ShowMutationUpdate"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ShowMutationCreate"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowMutationUpdate"
+                    }
+                ],
+                "title": "ShowMutation"
+            },
+            "ShowMutationCreate": {
+                "type": "object",
+                "properties": {
+                    "operation": {
+                        "type": "string",
+                        "const": "create"
+                    },
+                    "attributes": {
+                        "$ref": "#/components/schemas/ShowCreate"
+                    },
+                    "relations": {
+                        "$ref": "#/components/schemas/ShowRelations"
+                    }
+                },
+                "required": [
+                    "operation"
+                ],
+                "additionalProperties": false,
+                "title": "ShowMutationCreate"
+            },
+            "ShowMutationUpdate": {
+                "type": "object",
+                "properties": {
+                    "operation": {
+                        "type": "string",
+                        "const": "update"
+                    },
+                    "key": {
+                        "type": "integer"
+                    },
+                    "attributes": {
+                        "$ref": "#/components/schemas/ShowUpdate"
+                    },
+                    "relations": {
+                        "$ref": "#/components/schemas/ShowRelations"
+                    }
+                },
+                "required": [
+                    "operation",
+                    "key"
+                ],
+                "additionalProperties": false,
+                "title": "ShowMutationUpdate"
+            },
             "ShowPaginated": {
                 "type": "object",
                 "description": "A page of rows",
@@ -9716,6 +10075,644 @@
                 ],
                 "additionalProperties": false,
                 "title": "ShowRelationFilterStage"
+            },
+            "ShowRelationMutationArtists": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "create"
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/ArtistCreate"
+                            },
+                            "pivot": {
+                                "type": "object",
+                                "description": "The pivot fields that the operation writes",
+                                "properties": {
+                                    "role": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "description": "Rules: nullable, string"
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "required": [
+                            "operation"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "update",
+                                    "toggle"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/ArtistUpdate"
+                            },
+                            "pivot": {
+                                "type": "object",
+                                "description": "The pivot fields that the operation writes",
+                                "properties": {
+                                    "role": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "description": "Rules: nullable, string"
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "attach"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            },
+                            "pivot": {
+                                "type": "object",
+                                "description": "The pivot fields that the operation writes",
+                                "properties": {
+                                    "role": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "description": "Rules: nullable, string"
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "detach"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "sync"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/ArtistUpdate"
+                            },
+                            "pivot": {
+                                "type": "object",
+                                "description": "The pivot fields that the operation writes",
+                                "properties": {
+                                    "role": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "description": "Rules: nullable, string"
+                                    }
+                                },
+                                "additionalProperties": false
+                            },
+                            "without_detaching": {
+                                "type": "boolean",
+                                "description": "When true, the rows that `key` does not list stay attached"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowRelationMutationArtists"
+            },
+            "ShowRelationMutationComments": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "create"
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/CommentCreate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/CommentRelations"
+                            }
+                        },
+                        "required": [
+                            "operation"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "update"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/CommentUpdate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/CommentRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "attach",
+                                    "detach"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/CommentRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowRelationMutationComments"
+            },
+            "ShowRelationMutationLabels": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "create"
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/LabelCreate"
+                            },
+                            "pivot": {
+                                "type": "object",
+                                "description": "The pivot fields that the operation writes",
+                                "properties": {
+                                    "position": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ],
+                                        "description": "Rules: nullable, integer"
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "required": [
+                            "operation"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "update",
+                                    "toggle"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/LabelUpdate"
+                            },
+                            "pivot": {
+                                "type": "object",
+                                "description": "The pivot fields that the operation writes",
+                                "properties": {
+                                    "position": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ],
+                                        "description": "Rules: nullable, integer"
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "attach"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            },
+                            "pivot": {
+                                "type": "object",
+                                "description": "The pivot fields that the operation writes",
+                                "properties": {
+                                    "position": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ],
+                                        "description": "Rules: nullable, integer"
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "detach"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "sync"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/LabelUpdate"
+                            },
+                            "pivot": {
+                                "type": "object",
+                                "description": "The pivot fields that the operation writes",
+                                "properties": {
+                                    "position": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ],
+                                        "description": "Rules: nullable, integer"
+                                    }
+                                },
+                                "additionalProperties": false
+                            },
+                            "without_detaching": {
+                                "type": "boolean",
+                                "description": "When true, the rows that `key` does not list stay attached"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowRelationMutationLabels"
+            },
+            "ShowRelationMutationStage": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "create"
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/StageCreate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/StageRelations"
+                            }
+                        },
+                        "required": [
+                            "operation"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "update"
+                                ]
+                            },
+                            "key": {
+                                "type": "string",
+                                "examples": [
+                                    "main"
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/StageUpdate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/StageRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "attach",
+                                    "detach"
+                                ]
+                            },
+                            "key": {
+                                "type": "string",
+                                "examples": [
+                                    "main"
+                                ]
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/StageRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowRelationMutationStage"
+            },
+            "ShowRelations": {
+                "type": "object",
+                "description": "The operations on the related rows, by relation. Relations nest at most 3 deep: each `relations` inside an entry is one more level.",
+                "properties": {
+                    "stage": {
+                        "$ref": "#/components/schemas/ShowRelationMutationStage"
+                    },
+                    "artists": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowRelationMutationArtists"
+                        },
+                        "maxItems": 100
+                    },
+                    "comments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowRelationMutationComments"
+                        },
+                        "maxItems": 100
+                    },
+                    "labels": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowRelationMutationLabels"
+                        },
+                        "maxItems": 100
+                    }
+                },
+                "additionalProperties": false,
+                "title": "ShowRelations"
             },
             "ShowRows": {
                 "type": "object",
@@ -9982,6 +10979,95 @@
                 "additionalProperties": false,
                 "title": "ShowSort"
             },
+            "ShowUpdate": {
+                "type": "object",
+                "description": "The fields that `update`, `sync` and `toggle` write",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Rules: string, max:80",
+                        "examples": [
+                            "Opening night",
+                            "Closing night"
+                        ]
+                    },
+                    "summary": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Rules: nullable, string"
+                    },
+                    "price": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Rules: nullable, numeric",
+                        "examples": [
+                            12.5
+                        ],
+                        "x-lomkit-meta": {
+                            "unit": "EUR"
+                        }
+                    },
+                    "seats": {
+                        "type": "integer",
+                        "description": "Rules: integer, min:0"
+                    },
+                    "featured": {
+                        "type": "boolean",
+                        "description": "Rules: boolean"
+                    },
+                    "starts_on": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Rules: date"
+                    },
+                    "starts_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "Rules: nullable, date"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Rules: enum",
+                        "enum": [
+                            "planned",
+                            "on_sale",
+                            "sold_out"
+                        ]
+                    },
+                    "level": {
+                        "type": "integer",
+                        "description": "Rules: enum",
+                        "enum": [
+                            1,
+                            2,
+                            3
+                        ]
+                    },
+                    "settings": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Rules: nullable, array, max_depth:64"
+                    },
+                    "secret": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Rules: nullable, string"
+                    }
+                },
+                "additionalProperties": false,
+                "title": "ShowUpdate"
+            },
             "ShowWithType": {
                 "allOf": [
                     {
@@ -10013,7 +11099,10 @@
                         ]
                     },
                     "name": {
-                        "type": "string"
+                        "type": "string",
+                        "examples": [
+                            "Main stage"
+                        ]
                     },
                     "gates": {
                         "type": "object",
@@ -10324,6 +11413,28 @@
                     }
                 ],
                 "title": "StageAggregateShows"
+            },
+            "StageCreate": {
+                "type": "object",
+                "description": "The fields that `create` writes",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "Rules: string",
+                        "examples": [
+                            "main"
+                        ]
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Rules: string",
+                        "examples": [
+                            "Main stage"
+                        ]
+                    }
+                },
+                "additionalProperties": false,
+                "title": "StageCreate"
             },
             "StageDetails": {
                 "type": "object",
@@ -11689,7 +12800,10 @@
                                 ]
                             },
                             "value": {
-                                "type": "string"
+                                "type": "string",
+                                "examples": [
+                                    "Main stage"
+                                ]
                             },
                             "type": {
                                 "type": "string",
@@ -11757,7 +12871,10 @@
                             "value": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "examples": [
+                                        "Main stage"
+                                    ]
                                 },
                                 "minItems": 1,
                                 "maxItems": 100
@@ -12944,6 +14061,72 @@
                 "additionalProperties": false,
                 "title": "StageIncludeShows"
             },
+            "StageMutation": {
+                "description": "An entry of `mutate`: `create` writes a new row, `update` changes the row of `key`.",
+                "discriminator": {
+                    "propertyName": "operation",
+                    "mapping": {
+                        "create": "#/components/schemas/StageMutationCreate",
+                        "update": "#/components/schemas/StageMutationUpdate"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/StageMutationCreate"
+                    },
+                    {
+                        "$ref": "#/components/schemas/StageMutationUpdate"
+                    }
+                ],
+                "title": "StageMutation"
+            },
+            "StageMutationCreate": {
+                "type": "object",
+                "properties": {
+                    "operation": {
+                        "type": "string",
+                        "const": "create"
+                    },
+                    "attributes": {
+                        "$ref": "#/components/schemas/StageCreate"
+                    },
+                    "relations": {
+                        "$ref": "#/components/schemas/StageRelations"
+                    }
+                },
+                "required": [
+                    "operation"
+                ],
+                "additionalProperties": false,
+                "title": "StageMutationCreate"
+            },
+            "StageMutationUpdate": {
+                "type": "object",
+                "properties": {
+                    "operation": {
+                        "type": "string",
+                        "const": "update"
+                    },
+                    "key": {
+                        "type": "string",
+                        "examples": [
+                            "main"
+                        ]
+                    },
+                    "attributes": {
+                        "$ref": "#/components/schemas/StageUpdate"
+                    },
+                    "relations": {
+                        "$ref": "#/components/schemas/StageRelations"
+                    }
+                },
+                "required": [
+                    "operation",
+                    "key"
+                ],
+                "additionalProperties": false,
+                "title": "StageMutationUpdate"
+            },
             "StagePaginated": {
                 "type": "object",
                 "description": "A page of rows",
@@ -13085,6 +14268,119 @@
                 ],
                 "additionalProperties": false,
                 "title": "StageRelationFilterShows"
+            },
+            "StageRelationMutationShows": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "create"
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/ShowCreate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/ShowRelations"
+                            }
+                        },
+                        "required": [
+                            "operation"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "update"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            },
+                            "attributes": {
+                                "$ref": "#/components/schemas/ShowUpdate"
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/ShowRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "attach",
+                                    "detach"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            },
+                            "relations": {
+                                "$ref": "#/components/schemas/ShowRelations"
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "StageRelationMutationShows"
+            },
+            "StageRelations": {
+                "type": "object",
+                "description": "The operations on the related rows, by relation. Relations nest at most 3 deep: each `relations` inside an entry is one more level.",
+                "properties": {
+                    "shows": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StageRelationMutationShows"
+                        },
+                        "maxItems": 100
+                    }
+                },
+                "additionalProperties": false,
+                "title": "StageRelations"
             },
             "StageRows": {
                 "type": "object",
@@ -13264,6 +14560,21 @@
                 ],
                 "additionalProperties": false,
                 "title": "StageSort"
+            },
+            "StageUpdate": {
+                "type": "object",
+                "description": "The fields that `update`, `sync` and `toggle` write",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Rules: string",
+                        "examples": [
+                            "Main stage"
+                        ]
+                    }
+                },
+                "additionalProperties": false,
+                "title": "StageUpdate"
             },
             "StageWithType": {
                 "allOf": [

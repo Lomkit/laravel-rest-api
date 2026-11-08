@@ -47,12 +47,6 @@ abstract class ScrambleTestCase extends PackageTestCase
         return $operation['requestBody']['content']['application/json']['schema'];
     }
 
-    /** @return array<string, mixed> */
-    protected function mutateEntry(string $path): array
-    {
-        return $this->body($this->operation($path.'/mutate', 'post'))['properties']['mutate']['items']['properties'];
-    }
-
     /** @return array<string, array<string, mixed>> */
     protected function schemas(): array
     {

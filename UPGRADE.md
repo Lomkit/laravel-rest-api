@@ -1927,7 +1927,7 @@ Custom relations and query builders:
 
 Scramble:
 
-- The `attributes` of the mutate body list the writable fields only, with their field rules and the resource rules for `create` and `update`. The description of `attributes` names the fields writable on each operation.
+- The `mutate` body documents each entry by operation, with the fields that the operation writes and their type, and each relation by its operations, see [OpenAPI documentation](#openapi-documentation).
 
 ### Pivot fields
 
@@ -1974,8 +1974,8 @@ Reads:
 
 Scramble:
 
-- The relations are read from the relation objects that `relations()` returns. A field declared in `pivotFields()` is no longer documented as a relation. A custom relation is documented with its class name, the operations of its `mutationOperations()`, as a list when it has many entries, and with its pivot when it implements `PivotRelation`.
-- The `pivot` of a relation entry lists the writable pivot fields with their rules. Its description names the fields writable on each operation: `create` and `attach`, then `update`, `sync` and `toggle`.
+- The relations are read from the relation objects that `relations()` returns. A field declared in `pivotFields()` is no longer documented as a relation. A custom relation is documented with the operations of its `mutationOperations()`, as a list when it has many entries, and with its pivot when it implements `PivotRelation`.
+- The `pivot` of a relation entry lists the pivot fields that the operation of the entry writes, with their type and rules: the creatable ones on `create` and `attach`, the updatable ones on `update`, `sync` and `toggle`.
 
 ### Details
 
@@ -2109,6 +2109,14 @@ Search requests:
 - `{Resource}Aggregate` has one schema per relation but `MorphTo`, `{Resource}Aggregate{Relation}`: `count` and `exists` take no `field`, `min` and `max` take the fields that they can order, `avg` and `sum` the `Number` and `Integer` fields.
 - `{Resource}Scope` and `{Resource}Instruction` have one schema per scope and per instruction, with a `discriminator` on `name`. A scope lists its `parameters` in order, with their type; the parameters without a default are required. An instruction lists its `fields` as `{"name", "value"}` entries, typed by each field.
 - Each search operation has a request example that filters on one field: the first filterable field that declares `examples()`, else the first filterable field, with its first example or a value of its type (`1`, `a`, `true`, `2026-01-01`, the first value of an enum). The example leaves out `operator`, as `=` is the default.
+
+Mutations:
+
+- The body of `mutate` requires `mutate`: from 1 to `limits.sizes.mutate` entries of `{Resource}Mutation`, `oneOf` `{Resource}MutationCreate` and `{Resource}MutationUpdate` with a `discriminator` on `operation`. An update requires `key`, typed by the `ID` field, and a create has no `key`. The body accepts other keys at its first level, which the endpoint ignores; each object inside `mutate` lists its keys and refuses the others (`"additionalProperties": false`), as the endpoint does.
+- `attributes` is `{Resource}Create` on a create and `{Resource}Update` on an update: the fields that the operation writes, with their type, their `examples()`, and in the description the rules that validate them, such as `Rules: string, max:80, required`. No field is marked as required: the document does not read the rules. A `Json` value takes at most 64 levels, given by `max_depth:64` in its rules, as JSON Schema has no keyword for a depth. A writable morph type column of a `MorphTo` relation lists the morph types of the relation.
+- `relations` is `{Resource}Relations`: one key for each relation but `HasOneThrough` and `HasManyThrough`, one entry for a relation to one and a list of at most `limits.sizes.relation_entries` entries for a relation to many. On a resource with a relation declared `requiredOnCreation()` or `prohibitedOnCreation()`, a create takes `{Resource}CreateRelations`, which requires the first and leaves out the second, and the same goes for an update with `{Resource}UpdateRelations`. The description gives the nesting depth of `limits.depths.mutations`.
+- The entry of each relation is `{Resource}RelationMutation{Relation}`: the operations of its `mutationOperations()`, grouped by the keys that they take. `create` takes `attributes`, `update`, `sync` and `toggle` take `key` and `attributes`, `attach` and `detach` take `key`. A many-to-many relation adds `pivot`, with the pivot fields that the operation writes, but on `detach`, and `without_detaching` on `sync`. Under a relation to many, `key` is one key or a list of at most `limits.sizes.values` keys. A `MorphTo` relation with several types has one entry per type, `{Resource}RelationMutation{Relation}{Target}`, with a `discriminator` on `type`. With one type, `type` is optional.
+- Each mutate operation has a request example that creates one row with every field that `create` writes: the first value of its `examples()`, else the first morph type of a morph type column, else a value of its type (`1`, `a`, `true`, `2026-01-01`, `{}`, the first value of an enum). Declare `examples()` on the writable fields so that the example passes the rules of the resource.
 
 Error responses:
 

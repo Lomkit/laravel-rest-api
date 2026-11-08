@@ -6,9 +6,11 @@ use Dedoc\Scramble\Generator;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\ConstrainedCategoryController;
 use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\UndeclaredResourceController;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\ImmutableTagController;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\TagController;
+use Lomkit\Rest\Tests\Feature\Validation\Stubs\CuratedCategoryController;
 use PHPUnit\Framework\Attributes\Test;
 
 class ScrambleDocumentTest extends ScrambleTestCase
@@ -67,21 +69,19 @@ class ScrambleDocumentTest extends ScrambleTestCase
         $operation = $this->operation('/products/mutate', 'post');
 
         $this->assertSame('Mutate Product', $operation['summary']);
-        $this->assertSame(
-            ['create', 'update'],
-            $this->body($operation)['properties']['mutate']['items']['properties']['operation']['enum'],
-        );
+        $this->assertSame(['$ref' => '#/components/schemas/ProductMutation'], $this->body($operation)['properties']['mutate']['items']);
+        $this->assertSame(['create', 'update'], array_keys((array) $this->schemas()['ProductMutation']['discriminator']['mapping']));
     }
 
     #[Test]
     public function it_documents_sync_and_toggle_on_many_to_many_relations_only(): void
     {
-        $products = $this->body($this->operation('/products/mutate', 'post'))['properties']['mutate']['items']['properties']['relations']['properties'];
-        $categories = $this->body($this->operation('/categories/mutate', 'post'))['properties']['mutate']['items']['properties']['relations']['properties'];
+        $schemas = $this->schemas();
+        $operations = fn (string $name): array => array_map(fn (array $branch): array => $branch['properties']['operation']['enum'], $schemas[$name]['oneOf']);
 
-        $this->assertSame(['create', 'update', 'attach', 'detach'], $products['category']['properties']['operation']['enum']);
-        $this->assertSame(['create', 'update', 'attach', 'detach'], $categories['products']['items']['properties']['operation']['enum']);
-        $this->assertSame(['create', 'update', 'attach', 'detach', 'sync', 'toggle'], $categories['featuredProducts']['items']['properties']['operation']['enum']);
+        $this->assertSame([['create'], ['update'], ['attach', 'detach']], $operations('ProductRelationMutationCategory'));
+        $this->assertSame([['create'], ['update'], ['attach', 'detach']], $operations('CategoryRelationMutationProducts'));
+        $this->assertSame([['create'], ['update', 'toggle'], ['attach', 'detach'], ['sync']], $operations('CategoryRelationMutationFeaturedProducts'));
     }
 
     #[Test]
@@ -93,26 +93,12 @@ class ScrambleDocumentTest extends ScrambleTestCase
     }
 
     #[Test]
-    public function it_documents_the_rules_of_the_writable_fields_in_the_mutate_body(): void
+    public function it_documents_the_type_and_the_rules_of_the_writable_fields_in_the_mutate_body(): void
     {
-        $attributes = $this->body($this->operation('/posts/mutate', 'post'))['properties']['mutate']['items']['properties']['attributes'];
-
-        $writable = 'title, summary, status, featured, views, rating, published_on, published_at, metadata';
-        $this->assertSame([
-            'type' => 'object',
-            'description' => 'Writable on create: '.$writable.'. Writable on update: '.$writable.'.',
-            'properties' => [
-                'title' => ['type' => 'string', 'description' => 'create: string, max:60, required | update: string, max:60, filled'],
-                'summary' => ['type' => 'string', 'description' => 'create: nullable, string | update: nullable, string'],
-                'status' => ['type' => 'string', 'description' => 'create: required'],
-                'featured' => ['type' => 'boolean', 'description' => 'create: boolean | update: boolean'],
-                'views' => ['type' => 'integer', 'description' => 'create: integer, min:0 | update: integer, min:0'],
-                'rating' => ['type' => 'number', 'description' => 'create: nullable, numeric | update: nullable, numeric'],
-                'published_on' => ['type' => 'string', 'description' => 'create: date, required | update: date'],
-                'published_at' => ['type' => 'string', 'description' => 'create: nullable, date, after_or_equal:published_on | update: nullable, date, after_or_equal:published_on'],
-                'metadata' => ['type' => 'array', 'description' => 'create: nullable, array | update: nullable, array', 'items' => ['type' => 'string']],
-            ],
-        ], $attributes);
+        $this->assertSame(
+            '{"type":"object","description":"The fields that `create` writes","properties":{"title":{"type":"string","description":"Rules: string, max:60, required"},"summary":{"type":["string","null"],"description":"Rules: nullable, string"},"status":{"type":"string","description":"Rules: enum, required","enum":["draft","review","published"]},"featured":{"type":"boolean","description":"Rules: boolean"},"views":{"type":"integer","description":"Rules: integer, min:0"},"rating":{"type":["number","null"],"description":"Rules: nullable, numeric"},"published_on":{"type":"string","format":"date","description":"Rules: date, required"},"published_at":{"type":["string","null"],"format":"date-time","description":"Rules: nullable, date, after_or_equal:published_on"},"metadata":{"type":["object","null"],"description":"Rules: nullable, array, max_depth:64"}},"additionalProperties":false,"title":"PostCreate"}',
+            json_encode($this->schemas()['PostCreate']),
+        );
     }
 
     #[Test]
@@ -120,14 +106,13 @@ class ScrambleDocumentTest extends ScrambleTestCase
     {
         Route::prefix('api')->group(fn () => Rest::resource('tags', TagController::class)->register());
 
-        $authors = $this->body($this->operation('/authors/mutate', 'post'))['properties']['mutate']['items']['properties']['attributes'];
-        $tags = $this->body($this->operation('/tags/mutate', 'post'))['properties']['mutate']['items']['properties']['attributes'];
+        $schemas = $this->schemas();
 
-        $this->assertSame(['first_name', 'last_name', 'full_name', 'api_token', 'settings'], array_keys($authors['properties']));
-        $this->assertSame(['name', 'slug', 'archived_at'], array_keys($tags['properties']));
-        $this->assertSame('Writable on create: name, slug. Writable on update: name, archived_at.', $tags['description']);
-        $this->assertSame(['type' => 'string', 'description' => 'create: string'], $tags['properties']['slug']);
-        $this->assertSame(['type' => 'string', 'description' => 'update: nullable, date'], $tags['properties']['archived_at']);
+        $this->assertSame(['first_name', 'last_name', 'full_name', 'api_token', 'settings'], array_keys($schemas['AuthorCreate']['properties']));
+        $this->assertSame(['name', 'slug'], array_keys($schemas['TagCreate']['properties']));
+        $this->assertSame(['name', 'archived_at'], array_keys($schemas['TagUpdate']['properties']));
+        $this->assertSame(['type' => 'string', 'description' => 'Rules: string'], $schemas['TagCreate']['properties']['slug']);
+        $this->assertSame(['type' => ['string', 'null'], 'format' => 'date-time', 'description' => 'Rules: nullable, date'], $schemas['TagUpdate']['properties']['archived_at']);
     }
 
     #[Test]
@@ -135,10 +120,29 @@ class ScrambleDocumentTest extends ScrambleTestCase
     {
         Route::prefix('api')->group(fn () => Rest::resource('immutable-tags', ImmutableTagController::class)->register());
 
-        $tags = $this->body($this->operation('/immutable-tags/mutate', 'post'))['properties']['mutate']['items']['properties']['attributes'];
+        $schemas = $this->schemas();
 
-        $this->assertSame(['name'], array_keys($tags['properties']));
-        $this->assertSame('Writable on create: name. Writable on update: none.', $tags['description']);
+        $this->assertSame(['name'], array_keys($schemas['ImmutableTagCreate']['properties']));
+        $this->assertArrayNotHasKey('ImmutableTagUpdate', $schemas);
+        $this->assertSame(['operation', 'key'], array_keys($schemas['ImmutableTagMutationUpdate']['properties']));
+    }
+
+    #[Test]
+    public function it_requires_or_leaves_out_the_relations_that_a_resource_constrains(): void
+    {
+        Route::prefix('api')->group(function (): void {
+            Rest::resource('constrained-categories', ConstrainedCategoryController::class)->register();
+            Rest::resource('curated-categories', CuratedCategoryController::class)->register();
+        });
+
+        $schemas = $this->schemas();
+
+        $this->assertSame(['$ref' => '#/components/schemas/ConstrainedCategoryCreateRelations'], $schemas['ConstrainedCategoryMutationCreate']['properties']['relations']);
+        $this->assertSame(['products', 'featuredProducts'], $schemas['ConstrainedCategoryCreateRelations']['required']);
+        $this->assertSame(['$ref' => '#/components/schemas/ConstrainedCategoryRelations'], $schemas['ConstrainedCategoryMutationUpdate']['properties']['relations']);
+        $this->assertArrayNotHasKey('required', $schemas['ConstrainedCategoryRelations']);
+        $this->assertSame(['products'], array_keys($schemas['CuratedCategoryCreateRelations']['properties']));
+        $this->assertSame(['products', 'featuredProducts'], array_keys($schemas['CuratedCategoryRelations']['properties']));
     }
 
     #[Test]

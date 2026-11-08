@@ -45,7 +45,7 @@ final readonly class RelationMutationParser
         $relations = $entry->at('relations');
 
         foreach ($resource->definition()->relations() as $relation) {
-            $constraint = $this->constraint($relation, $operation);
+            $constraint = self::constraint($relation, $operation);
 
             if ($constraint !== null) {
                 $this->rules->add($relations->at($relation->relation)->path, [$constraint]);
@@ -171,7 +171,7 @@ final readonly class RelationMutationParser
         }
     }
 
-    private function constraint(Relation $relation, MutationOperation $operation): ?string
+    public static function constraint(Relation $relation, MutationOperation $operation): ?string
     {
         $creation = $operation === MutationOperation::Create;
         $prohibited = $creation ? $relation->isProhibitedOnCreation() : $relation->isProhibitedOnUpdate();

@@ -9,6 +9,7 @@ use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Scramble\FieldExample;
@@ -20,6 +21,7 @@ use Lomkit\Rest\Tests\Unit\Scramble\Stubs\Points;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class FieldExampleTest extends TestCase
 {
@@ -50,5 +52,11 @@ class FieldExampleTest extends TestCase
             'a field with examples' => [Number::make('price')->examples(12.5, 20), 12.5],
             'a key with examples' => [ID::make('code')->boundTo(new Stage)->examples('main'), 'main'],
         ];
+    }
+
+    #[Test]
+    public function it_gives_a_json_field_an_empty_object(): void
+    {
+        $this->assertEquals(new stdClass, FieldExample::of(Json::make('settings')));
     }
 }

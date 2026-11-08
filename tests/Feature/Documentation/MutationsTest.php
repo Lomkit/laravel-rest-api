@@ -1,0 +1,150 @@
+<?php
+
+namespace Lomkit\Rest\Tests\Feature\Documentation;
+
+use Lomkit\Rest\Tests\Fixtures\Festival\Show;
+use Lomkit\Rest\Tests\Fixtures\Festival\Stage;
+use Orchestra\Testbench\Attributes\WithConfig;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
+use stdClass;
+
+class MutationsTest extends DocumentationTestCase
+{
+    #[Test]
+    public function it_documents_each_entry_of_a_mutation_by_operation(): void
+    {
+        $document = $this->document();
+        $schemas = $document['components']['schemas'];
+
+        $this->assertSame(
+            '{"type":"object","properties":{"mutate":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowMutation"},"minItems":1,"maxItems":100}},"required":["mutate"]}',
+            json_encode($document['paths']['/shows/mutate']['post']['requestBody']['content']['application/json']['schema']),
+        );
+        $this->assertSame(
+            '{"description":"An entry of `mutate`: `create` writes a new row, `update` changes the row of `key`.","discriminator":{"propertyName":"operation","mapping":{"create":"#\\/components\\/schemas\\/ShowMutationCreate","update":"#\\/components\\/schemas\\/ShowMutationUpdate"}},"oneOf":[{"$ref":"#\\/components\\/schemas\\/ShowMutationCreate"},{"$ref":"#\\/components\\/schemas\\/ShowMutationUpdate"}],"title":"ShowMutation"}',
+            json_encode($schemas['ShowMutation']),
+        );
+        $this->assertSame(
+            '{"type":"object","properties":{"operation":{"type":"string","const":"create"},"attributes":{"$ref":"#\\/components\\/schemas\\/ShowCreate"},"relations":{"$ref":"#\\/components\\/schemas\\/ShowRelations"}},"required":["operation"],"additionalProperties":false,"title":"ShowMutationCreate"}',
+            json_encode($schemas['ShowMutationCreate']),
+        );
+        $this->assertSame(
+            '{"type":"object","properties":{"operation":{"type":"string","const":"update"},"key":{"type":"integer"},"attributes":{"$ref":"#\\/components\\/schemas\\/ShowUpdate"},"relations":{"$ref":"#\\/components\\/schemas\\/ShowRelations"}},"required":["operation","key"],"additionalProperties":false,"title":"ShowMutationUpdate"}',
+            json_encode($schemas['ShowMutationUpdate']),
+        );
+        $this->assertSame('{"type":"string","examples":["main"]}', json_encode($schemas['StageMutationUpdate']['properties']['key']));
+    }
+
+    #[Test]
+    public function it_documents_the_fields_that_each_operation_writes_with_their_type_and_rules(): void
+    {
+        $schemas = $this->document()['components']['schemas'];
+
+        $this->assertSame(
+            '{"type":"object","description":"The fields that `create` writes","properties":{"title":{"type":"string","description":"Rules: string, max:80, required","examples":["Opening night","Closing night"]},"summary":{"type":["string","null"],"description":"Rules: nullable, string"},"price":{"type":["number","null"],"description":"Rules: nullable, numeric","examples":[12.5],"x-lomkit-meta":{"unit":"EUR"}},"seats":{"type":"integer","description":"Rules: integer, min:0"},"featured":{"type":"boolean","description":"Rules: boolean"},"starts_on":{"type":"string","format":"date","description":"Rules: date, required"},"starts_at":{"type":["string","null"],"format":"date-time","description":"Rules: nullable, date"},"status":{"type":"string","description":"Rules: enum, required","enum":["planned","on_sale","sold_out"]},"level":{"type":"integer","description":"Rules: enum","enum":[1,2,3]},"settings":{"type":["object","null"],"description":"Rules: nullable, array, max_depth:64"},"secret":{"type":["string","null"],"description":"Rules: nullable, string"}},"additionalProperties":false,"title":"ShowCreate"}',
+            json_encode($schemas['ShowCreate']),
+        );
+        $this->assertSame(array_keys($schemas['ShowCreate']['properties']), array_keys($schemas['ShowUpdate']['properties']));
+        $this->assertSame('The fields that `update`, `sync` and `toggle` write', $schemas['ShowUpdate']['description']);
+        $this->assertSame('Rules: string, max:80', $schemas['ShowUpdate']['properties']['title']['description']);
+        $this->assertSame(['code', 'name'], array_keys($schemas['StageCreate']['properties']));
+        $this->assertSame(['name'], array_keys($schemas['StageUpdate']['properties']));
+    }
+
+    #[Test]
+    #[DataProvider('relations')]
+    public function it_documents_the_operations_of_each_relation_by_the_keys_that_they_take(string $component, string $schema): void
+    {
+        $this->assertSame($schema, json_encode($this->document()['components']['schemas'][$component]));
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function relations(): array
+    {
+        return [
+            'a relation to one' => ['ShowRelationMutationStage', '{"oneOf":[{"type":"object","properties":{"operation":{"type":"string","enum":["create"]},"attributes":{"$ref":"#\\/components\\/schemas\\/StageCreate"},"relations":{"$ref":"#\\/components\\/schemas\\/StageRelations"}},"required":["operation"],"additionalProperties":false},{"type":"object","properties":{"operation":{"type":"string","enum":["update"]},"key":{"type":"string","examples":["main"]},"attributes":{"$ref":"#\\/components\\/schemas\\/StageUpdate"},"relations":{"$ref":"#\\/components\\/schemas\\/StageRelations"}},"required":["operation","key"],"additionalProperties":false},{"type":"object","properties":{"operation":{"type":"string","enum":["attach","detach"]},"key":{"type":"string","examples":["main"]},"relations":{"$ref":"#\\/components\\/schemas\\/StageRelations"}},"required":["operation","key"],"additionalProperties":false}],"title":"ShowRelationMutationStage"}'],
+            'a relation to many' => ['StageRelationMutationShows', '{"oneOf":[{"type":"object","properties":{"operation":{"type":"string","enum":["create"]},"attributes":{"$ref":"#\\/components\\/schemas\\/ShowCreate"},"relations":{"$ref":"#\\/components\\/schemas\\/ShowRelations"}},"required":["operation"],"additionalProperties":false},{"type":"object","properties":{"operation":{"type":"string","enum":["update"]},"key":{"description":"A key, or a list of keys: the operation applies to each of them","oneOf":[{"type":"integer"},{"type":"array","items":{"type":"integer"},"maxItems":100}]},"attributes":{"$ref":"#\\/components\\/schemas\\/ShowUpdate"},"relations":{"$ref":"#\\/components\\/schemas\\/ShowRelations"}},"required":["operation","key"],"additionalProperties":false},{"type":"object","properties":{"operation":{"type":"string","enum":["attach","detach"]},"key":{"description":"A key, or a list of keys: the operation applies to each of them","oneOf":[{"type":"integer"},{"type":"array","items":{"type":"integer"},"maxItems":100}]},"relations":{"$ref":"#\\/components\\/schemas\\/ShowRelations"}},"required":["operation","key"],"additionalProperties":false}],"title":"StageRelationMutationShows"}'],
+            'a relation to many with pivot fields' => ['ShowRelationMutationArtists', '{"oneOf":[{"type":"object","properties":{"operation":{"type":"string","enum":["create"]},"attributes":{"$ref":"#\\/components\\/schemas\\/ArtistCreate"},"pivot":{"type":"object","description":"The pivot fields that the operation writes","properties":{"role":{"type":["string","null"],"description":"Rules: nullable, string"}},"additionalProperties":false}},"required":["operation"],"additionalProperties":false},{"type":"object","properties":{"operation":{"type":"string","enum":["update","toggle"]},"key":{"description":"A key, or a list of keys: the operation applies to each of them","oneOf":[{"type":"integer"},{"type":"array","items":{"type":"integer"},"maxItems":100}]},"attributes":{"$ref":"#\\/components\\/schemas\\/ArtistUpdate"},"pivot":{"type":"object","description":"The pivot fields that the operation writes","properties":{"role":{"type":["string","null"],"description":"Rules: nullable, string"}},"additionalProperties":false}},"required":["operation","key"],"additionalProperties":false},{"type":"object","properties":{"operation":{"type":"string","enum":["attach"]},"key":{"description":"A key, or a list of keys: the operation applies to each of them","oneOf":[{"type":"integer"},{"type":"array","items":{"type":"integer"},"maxItems":100}]},"pivot":{"type":"object","description":"The pivot fields that the operation writes","properties":{"role":{"type":["string","null"],"description":"Rules: nullable, string"}},"additionalProperties":false}},"required":["operation","key"],"additionalProperties":false},{"type":"object","properties":{"operation":{"type":"string","enum":["detach"]},"key":{"description":"A key, or a list of keys: the operation applies to each of them","oneOf":[{"type":"integer"},{"type":"array","items":{"type":"integer"},"maxItems":100}]}},"required":["operation","key"],"additionalProperties":false},{"type":"object","properties":{"operation":{"type":"string","enum":["sync"]},"key":{"description":"A key, or a list of keys: the operation applies to each of them","oneOf":[{"type":"integer"},{"type":"array","items":{"type":"integer"},"maxItems":100}]},"attributes":{"$ref":"#\\/components\\/schemas\\/ArtistUpdate"},"pivot":{"type":"object","description":"The pivot fields that the operation writes","properties":{"role":{"type":["string","null"],"description":"Rules: nullable, string"}},"additionalProperties":false},"without_detaching":{"type":"boolean","description":"When true, the rows that `key` does not list stay attached"}},"required":["operation","key"],"additionalProperties":false}],"title":"ShowRelationMutationArtists"}'],
+        ];
+    }
+
+    #[Test]
+    public function it_documents_an_entry_for_each_type_of_a_morph_to_relation(): void
+    {
+        $schemas = $this->document()['components']['schemas'];
+        $show = $schemas['NoteRelationMutationNotableShow']['oneOf'];
+
+        $this->assertSame('type', $schemas['NoteRelationMutationNotable']['discriminator']['propertyName']);
+        $this->assertSame(
+            [Show::class => '#/components/schemas/NoteRelationMutationNotableShow', Stage::class => '#/components/schemas/NoteRelationMutationNotableStage'],
+            (array) $schemas['NoteRelationMutationNotable']['discriminator']['mapping'],
+        );
+        $this->assertSame([['create'], ['update'], ['attach', 'detach']], array_map(fn (array $branch): array => $branch['properties']['operation']['enum'], $show));
+        $this->assertSame(['type' => 'string', 'const' => Show::class], $show[2]['properties']['type']);
+        $this->assertSame([['operation', 'type'], ['operation', 'type', 'key'], ['operation', 'type', 'key']], array_column($show, 'required'));
+        $this->assertSame(['type' => 'string', 'examples' => ['main']], $schemas['NoteRelationMutationNotableStage']['oneOf'][2]['properties']['key']);
+    }
+
+    #[Test]
+    public function it_lists_the_relations_that_take_entries(): void
+    {
+        $schemas = $this->document()['components']['schemas'];
+
+        $this->assertSame(['stage', 'artists', 'comments', 'labels'], array_keys($schemas['ShowRelations']['properties']));
+        $this->assertSame(['shows'], array_keys($schemas['StageRelations']['properties']));
+        $this->assertSame(['notable'], array_keys($schemas['NoteRelations']['properties']));
+        $this->assertSame(
+            '{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowRelationMutationArtists"},"maxItems":100}',
+            json_encode($schemas['ShowRelations']['properties']['artists']),
+        );
+        $this->assertSame(['$ref' => '#/components/schemas/ShowRelationMutationStage'], $schemas['ShowRelations']['properties']['stage']);
+        $this->assertSame('The operations on the related rows, by relation. Relations nest at most 3 deep: each `relations` inside an entry is one more level.', $schemas['ShowRelations']['description']);
+    }
+
+    #[Test]
+    #[WithConfig('rest.limits.sizes.mutate', 7)]
+    #[WithConfig('rest.limits.sizes.relation_entries', 5)]
+    #[WithConfig('rest.limits.sizes.values', 3)]
+    #[WithConfig('rest.limits.depths.mutations', 2)]
+    public function it_takes_the_list_sizes_and_the_depth_of_a_mutation_from_the_configuration(): void
+    {
+        $document = $this->document();
+        $schemas = $document['components']['schemas'];
+
+        $this->assertSame(7, $document['paths']['/shows/mutate']['post']['requestBody']['content']['application/json']['schema']['properties']['mutate']['maxItems']);
+        $this->assertSame(5, $schemas['ShowRelations']['properties']['artists']['maxItems']);
+        $this->assertSame(3, $schemas['ShowRelationMutationArtists']['oneOf'][1]['properties']['key']['oneOf'][1]['maxItems']);
+        $this->assertStringContainsString('Relations nest at most 2 deep', $schemas['ShowRelations']['description']);
+    }
+
+    /** @param array<string, mixed> $example */
+    #[Test]
+    #[DataProvider('examples')]
+    public function it_gives_each_mutation_a_request_example_that_creates_a_row(string $path, array $example): void
+    {
+        $this->assertEquals(['default' => ['value' => $example]], $this->operation($path, 'post')['requestBody']['content']['application/json']['examples']);
+    }
+
+    /** @return array<string, array{string, array<string, mixed>}> */
+    public static function examples(): array
+    {
+        return [
+            'a field without examples' => ['/notes/mutate', ['mutate' => [['operation' => 'create', 'attributes' => ['body' => 'a']]]]],
+            'every type of field' => ['/shows/mutate', ['mutate' => [['operation' => 'create', 'attributes' => [
+                'title' => 'Opening night',
+                'summary' => 'a',
+                'price' => 12.5,
+                'seats' => 1,
+                'featured' => true,
+                'starts_on' => '2026-01-01',
+                'starts_at' => '2026-01-01T00:00:00Z',
+                'status' => 'planned',
+                'level' => 1,
+                'settings' => new stdClass,
+                'secret' => 'a',
+            ]]]]],
+            'a key that the client sends' => ['/stages/mutate', ['mutate' => [['operation' => 'create', 'attributes' => ['code' => 'main', 'name' => 'Main stage']]]]],
+        ];
+    }
+}

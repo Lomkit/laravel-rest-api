@@ -15,7 +15,12 @@ class StageResource extends Resource
     #[\Override]
     public function fields(): array
     {
-        return [ID::make('code')->examples('main'), Text::make('name')];
+        return [
+            ID::make('code')
+                ->creatable()
+                ->examples('main'),
+            Text::make('name')->examples('Main stage'),
+        ];
     }
 
     #[\Override]
