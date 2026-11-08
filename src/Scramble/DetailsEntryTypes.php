@@ -33,11 +33,12 @@ final class DetailsEntryTypes
     {
         return self::fieldEntry(
             $names,
-            'Accepted in search.selects and returned',
-            'Accepted in search.sorts',
-            'Accepted by search.filters on this field; empty when it is not filterable',
-            'Writable on create',
-            'Writable on update',
+            'With fields.capabilities: accepted in search.selects and returned',
+            'With fields.capabilities: accepted in search.sorts',
+            'With fields.filter: accepted by search.filters on this field; empty when it is not filterable',
+            'With fields.capabilities: writable on create',
+            'With fields.capabilities: writable on update',
+            ['select', 'sort', 'filter', 'create', 'update', 'rules', 'meta'],
         );
     }
 
@@ -60,13 +61,13 @@ final class DetailsEntryTypes
             'name' => new StringType,
             'uriKey' => (new StringType)->enum($uriKeys),
             'target' => (new StringType)->enum(array_column(ActionTarget::cases(), 'value')),
-            'fields' => Schemas::list(self::input()),
-            'meta' => new ObjectType,
+            'fields' => Schemas::list(self::input(), 'With actions.fields'),
+            'meta' => self::meta('With actions.meta'),
             'destructive' => (new BooleanType)->setDescription('True when the action is declared with destructive(); a hint for clients, the endpoint runs the action the same way'),
             'confirm' => (new StringType)->nullable(true)->setDescription('The text set with confirm(), for clients to show before they run the action; null without one'),
             'confirmation' => (new BooleanType)->setDescription('True when the action declares confirmation(): the endpoint can answer 428 with a signed token, and runs the action when the same body comes back with that token'),
-            'authorized' => (new BooleanType)->setDescription('True when the user passes the abilities that the action route checks before it reads the request'),
-        ]);
+            'authorized' => (new BooleanType)->setDescription('With actions.authorized: true when the user passes the abilities that the action route checks before it reads the request'),
+        ], ['fields', 'meta', 'authorized']);
     }
 
     /** @param list<string> $uriKeys */
@@ -77,9 +78,9 @@ final class DetailsEntryTypes
             'uriKey' => (new StringType)->enum($uriKeys),
             'type' => (new StringType)->setDescription('The type of the result, given again as data.type in the response of the metric'),
             'ranges' => Schemas::list(Schemas::required(['value' => new IntegerType, 'label' => new StringType]), 'The values that the range key of the request accepts; the first one applies when the request sends none'),
-            'meta' => new ObjectType,
-            'authorized' => (new BooleanType)->setDescription('True when the user passes the abilities that the metric route checks before it reads the request'),
-        ]);
+            'meta' => self::meta('With metrics.meta'),
+            'authorized' => (new BooleanType)->setDescription('With metrics.authorized: true when the user passes the abilities that the metric route checks before it reads the request'),
+        ], ['meta', 'authorized']);
     }
 
     /** @param list<string> $uriKeys */
@@ -88,10 +89,10 @@ final class DetailsEntryTypes
         return Schemas::required([
             'name' => new StringType,
             'uriKey' => (new StringType)->enum($uriKeys),
-            'fields' => Schemas::list(self::input()),
-            'meta' => new ObjectType,
+            'fields' => Schemas::list(self::input(), 'With instructions.fields'),
+            'meta' => self::meta('With instructions.meta'),
             'text' => (new BooleanType)->setDescription('Can be sent with search.text on this resource'),
-        ]);
+        ], ['fields', 'meta']);
     }
 
     /** @param list<string> $names */
@@ -99,9 +100,9 @@ final class DetailsEntryTypes
     {
         return Schemas::required([
             'name' => (new StringType)->enum($names),
-            'fields' => Schemas::list(self::input()),
-            'meta' => new ObjectType,
-        ]);
+            'fields' => Schemas::list(self::input(), 'With scopes.fields'),
+            'meta' => self::meta('With scopes.meta'),
+        ], ['fields', 'meta']);
     }
 
     private static function input(): ObjectType
@@ -118,8 +119,11 @@ final class DetailsEntryTypes
         ], ['values']);
     }
 
-    /** @param list<string> $names */
-    private static function fieldEntry(array $names, string $select, string $sort, string $operators, string $create, string $update): ObjectType
+    /**
+     * @param  list<string>  $names
+     * @param  list<string>  $parts
+     */
+    private static function fieldEntry(array $names, string $select, string $sort, string $operators, string $create, string $update, array $parts = []): ObjectType
     {
         $rules = Schemas::required(
             ['all' => self::strings(), 'create' => self::strings(), 'update' => self::strings()],
@@ -139,6 +143,14 @@ final class DetailsEntryTypes
             'rules' => $rules,
             'meta' => new ObjectType,
             'values' => self::values('Enum fields only: the backing values'),
-        ], ['values']);
+        ], [...$parts, 'values']);
+    }
+
+    private static function meta(string $description): ObjectType
+    {
+        $meta = new ObjectType;
+        $meta->setDescription($description);
+
+        return $meta;
     }
 }

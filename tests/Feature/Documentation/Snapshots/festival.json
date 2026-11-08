@@ -7,9 +7,20 @@
                 "tags": [
                     "Note"
                 ],
+                "parameters": [
+                    {
+                        "name": "with",
+                        "in": "query",
+                        "description": "The sections and parts to add to the fields, limits and meta of the response, separated by commas. A part adds its section. Accepted values: fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, authorizations.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "fields.capabilities,fields.filter,scopes.fields,actions.authorized"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource",
+                        "description": "The fields, limits and meta of the resource, then the sections and parts that the with parameter asks for",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -23,6 +34,9 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 },
                 "security": []
@@ -227,9 +241,20 @@
                 "tags": [
                     "Show"
                 ],
+                "parameters": [
+                    {
+                        "name": "with",
+                        "in": "query",
+                        "description": "The sections and parts to add to the fields, limits and meta of the response, separated by commas. A part adds its section. Accepted values: fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, authorizations.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "fields.capabilities,fields.filter,scopes.fields,actions.authorized"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource",
+                        "description": "The fields, limits and meta of the resource, then the sections and parts that the with parameter asks for",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -246,6 +271,9 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 }
             },
@@ -1524,9 +1552,20 @@
                 "tags": [
                     "Stage"
                 ],
+                "parameters": [
+                    {
+                        "name": "with",
+                        "in": "query",
+                        "description": "The sections and parts to add to the fields, limits and meta of the response, separated by commas. A part adds its section. Accepted values: fields.capabilities, fields.filter, fields.rules, fields.meta, relations, relations.constraints, relations.operations, relations.pivot_fields, actions, actions.fields, actions.authorized, actions.meta, metrics, metrics.authorized, metrics.meta, instructions, instructions.fields, instructions.meta, scopes, scopes.fields, scopes.meta, rules, text, gates, authorizations.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "fields.capabilities,fields.filter,scopes.fields,actions.authorized"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "The fields, relations, scopes, actions, instructions, rules, text search and gates of the resource",
+                        "description": "The fields, limits and meta of the resource, then the sections and parts that the with parameter asks for",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1540,6 +1579,9 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/RestNotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/RestValidationFailed"
                     }
                 },
                 "security": []
@@ -4395,6 +4437,7 @@
                         "properties": {
                             "actions": {
                                 "type": "array",
+                                "description": "With actions or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -4414,6 +4457,7 @@
                                         },
                                         "fields": {
                                             "type": "array",
+                                            "description": "With actions.fields",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -4461,7 +4505,8 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With actions.meta"
                                         },
                                         "destructive": {
                                             "type": "boolean",
@@ -4480,24 +4525,22 @@
                                         },
                                         "authorized": {
                                             "type": "boolean",
-                                            "description": "True when the user passes the abilities that the action route checks before it reads the request"
+                                            "description": "With actions.authorized: true when the user passes the abilities that the action route checks before it reads the request"
                                         }
                                     },
                                     "required": [
                                         "name",
                                         "uriKey",
                                         "target",
-                                        "fields",
-                                        "meta",
                                         "destructive",
                                         "confirm",
-                                        "confirmation",
-                                        "authorized"
+                                        "confirmation"
                                     ]
                                 }
                             },
                             "metrics": {
                                 "type": "array",
+                                "description": "With metrics or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -4531,25 +4574,25 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With metrics.meta"
                                         },
                                         "authorized": {
                                             "type": "boolean",
-                                            "description": "True when the user passes the abilities that the metric route checks before it reads the request"
+                                            "description": "With metrics.authorized: true when the user passes the abilities that the metric route checks before it reads the request"
                                         }
                                     },
                                     "required": [
                                         "name",
                                         "uriKey",
                                         "type",
-                                        "ranges",
-                                        "meta",
-                                        "authorized"
+                                        "ranges"
                                     ]
                                 }
                             },
                             "instructions": {
                                 "type": "array",
+                                "description": "With instructions or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -4561,6 +4604,7 @@
                                         },
                                         "fields": {
                                             "type": "array",
+                                            "description": "With instructions.fields",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -4608,7 +4652,8 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With instructions.meta"
                                         },
                                         "text": {
                                             "type": "boolean",
@@ -4618,8 +4663,6 @@
                                     "required": [
                                         "name",
                                         "uriKey",
-                                        "fields",
-                                        "meta",
                                         "text"
                                     ]
                                 }
@@ -4651,18 +4694,18 @@
                                         },
                                         "select": {
                                             "type": "boolean",
-                                            "description": "Accepted in search.selects and returned"
+                                            "description": "With fields.capabilities: accepted in search.selects and returned"
                                         },
                                         "sort": {
                                             "type": "boolean",
-                                            "description": "Accepted in search.sorts"
+                                            "description": "With fields.capabilities: accepted in search.sorts"
                                         },
                                         "filter": {
                                             "type": "object",
                                             "properties": {
                                                 "operators": {
                                                     "type": "array",
-                                                    "description": "Accepted by search.filters on this field; empty when it is not filterable",
+                                                    "description": "With fields.filter: accepted by search.filters on this field; empty when it is not filterable",
                                                     "items": {
                                                         "type": "string",
                                                         "enum": [
@@ -4692,11 +4735,11 @@
                                         },
                                         "create": {
                                             "type": "boolean",
-                                            "description": "Writable on create"
+                                            "description": "With fields.capabilities: writable on create"
                                         },
                                         "update": {
                                             "type": "boolean",
-                                            "description": "Writable on update"
+                                            "description": "With fields.capabilities: writable on update"
                                         },
                                         "rules": {
                                             "type": "object",
@@ -4740,14 +4783,7 @@
                                         "name",
                                         "label",
                                         "type",
-                                        "nullable",
-                                        "select",
-                                        "sort",
-                                        "filter",
-                                        "create",
-                                        "update",
-                                        "rules",
-                                        "meta"
+                                        "nullable"
                                     ]
                                 }
                             },
@@ -4759,6 +4795,7 @@
                             },
                             "scopes": {
                                 "type": "array",
+                                "description": "With scopes or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -4767,6 +4804,7 @@
                                         },
                                         "fields": {
                                             "type": "array",
+                                            "description": "With scopes.fields",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -4814,18 +4852,18 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With scopes.meta"
                                         }
                                     },
                                     "required": [
-                                        "name",
-                                        "fields",
-                                        "meta"
+                                        "name"
                                     ]
                                 }
                             },
                             "relations": {
                                 "type": "array",
+                                "description": "With relations or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -4841,6 +4879,7 @@
                                         },
                                         "constraints": {
                                             "type": "object",
+                                            "description": "With relations.constraints",
                                             "properties": {
                                                 "required_on_creation": {
                                                     "type": "boolean"
@@ -4864,7 +4903,7 @@
                                         },
                                         "operations": {
                                             "type": "array",
-                                            "description": "The operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
+                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
                                             "items": {
                                                 "type": "string",
                                                 "enum": [
@@ -4883,7 +4922,7 @@
                                         },
                                         "pivot_fields": {
                                             "type": "array",
-                                            "description": "Many-to-many relations only: the pivot fields of the relation",
+                                            "description": "With relations.pivot_fields, on many-to-many relations only: the pivot fields of the relation",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -5031,15 +5070,13 @@
                                     },
                                     "required": [
                                         "relation",
-                                        "constraints",
-                                        "operations",
                                         "name"
                                     ]
                                 }
                             },
                             "rules": {
                                 "type": "object",
-                                "description": "The rules of the resource, keyed by attribute, as strings",
+                                "description": "With rules: the rules of the resource, keyed by attribute, as strings",
                                 "properties": {
                                     "all": {
                                         "type": "object",
@@ -5080,7 +5117,7 @@
                                     "object",
                                     "null"
                                 ],
-                                "description": "The text search of the resource; null without one",
+                                "description": "With text: the text search of the resource; null without one",
                                 "properties": {
                                     "fields": {
                                         "type": "array",
@@ -5214,7 +5251,7 @@
                             },
                             "gates": {
                                 "type": "array",
-                                "description": "The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off",
+                                "description": "With gates: the abilities that search.gates accepts, the built-in ones first, then those that the resource declares; empty when the resource turns its gates off",
                                 "items": {
                                     "type": "string",
                                     "enum": [
@@ -5229,7 +5266,7 @@
                             },
                             "authorizations": {
                                 "type": "object",
-                                "description": "The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
+                                "description": "With authorizations: the answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
                                 "additionalProperties": {
                                     "type": "object",
                                     "properties": {
@@ -5256,17 +5293,8 @@
                             }
                         },
                         "required": [
-                            "actions",
-                            "metrics",
-                            "instructions",
                             "fields",
                             "limits",
-                            "scopes",
-                            "relations",
-                            "rules",
-                            "text",
-                            "gates",
-                            "authorizations",
                             "meta"
                         ]
                     }
@@ -7778,6 +7806,7 @@
                         "properties": {
                             "actions": {
                                 "type": "array",
+                                "description": "With actions or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -7803,6 +7832,7 @@
                                         },
                                         "fields": {
                                             "type": "array",
+                                            "description": "With actions.fields",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -7850,7 +7880,8 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With actions.meta"
                                         },
                                         "destructive": {
                                             "type": "boolean",
@@ -7869,24 +7900,22 @@
                                         },
                                         "authorized": {
                                             "type": "boolean",
-                                            "description": "True when the user passes the abilities that the action route checks before it reads the request"
+                                            "description": "With actions.authorized: true when the user passes the abilities that the action route checks before it reads the request"
                                         }
                                     },
                                     "required": [
                                         "name",
                                         "uriKey",
                                         "target",
-                                        "fields",
-                                        "meta",
                                         "destructive",
                                         "confirm",
-                                        "confirmation",
-                                        "authorized"
+                                        "confirmation"
                                     ]
                                 }
                             },
                             "metrics": {
                                 "type": "array",
+                                "description": "With metrics or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -7928,25 +7957,25 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With metrics.meta"
                                         },
                                         "authorized": {
                                             "type": "boolean",
-                                            "description": "True when the user passes the abilities that the metric route checks before it reads the request"
+                                            "description": "With metrics.authorized: true when the user passes the abilities that the metric route checks before it reads the request"
                                         }
                                     },
                                     "required": [
                                         "name",
                                         "uriKey",
                                         "type",
-                                        "ranges",
-                                        "meta",
-                                        "authorized"
+                                        "ranges"
                                     ]
                                 }
                             },
                             "instructions": {
                                 "type": "array",
+                                "description": "With instructions or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -7961,6 +7990,7 @@
                                         },
                                         "fields": {
                                             "type": "array",
+                                            "description": "With instructions.fields",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -8008,7 +8038,8 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With instructions.meta"
                                         },
                                         "text": {
                                             "type": "boolean",
@@ -8018,8 +8049,6 @@
                                     "required": [
                                         "name",
                                         "uriKey",
-                                        "fields",
-                                        "meta",
                                         "text"
                                     ]
                                 }
@@ -8062,18 +8091,18 @@
                                         },
                                         "select": {
                                             "type": "boolean",
-                                            "description": "Accepted in search.selects and returned"
+                                            "description": "With fields.capabilities: accepted in search.selects and returned"
                                         },
                                         "sort": {
                                             "type": "boolean",
-                                            "description": "Accepted in search.sorts"
+                                            "description": "With fields.capabilities: accepted in search.sorts"
                                         },
                                         "filter": {
                                             "type": "object",
                                             "properties": {
                                                 "operators": {
                                                     "type": "array",
-                                                    "description": "Accepted by search.filters on this field; empty when it is not filterable",
+                                                    "description": "With fields.filter: accepted by search.filters on this field; empty when it is not filterable",
                                                     "items": {
                                                         "type": "string",
                                                         "enum": [
@@ -8103,11 +8132,11 @@
                                         },
                                         "create": {
                                             "type": "boolean",
-                                            "description": "Writable on create"
+                                            "description": "With fields.capabilities: writable on create"
                                         },
                                         "update": {
                                             "type": "boolean",
-                                            "description": "Writable on update"
+                                            "description": "With fields.capabilities: writable on update"
                                         },
                                         "rules": {
                                             "type": "object",
@@ -8151,14 +8180,7 @@
                                         "name",
                                         "label",
                                         "type",
-                                        "nullable",
-                                        "select",
-                                        "sort",
-                                        "filter",
-                                        "create",
-                                        "update",
-                                        "rules",
-                                        "meta"
+                                        "nullable"
                                     ]
                                 }
                             },
@@ -8170,6 +8192,7 @@
                             },
                             "scopes": {
                                 "type": "array",
+                                "description": "With scopes or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -8181,6 +8204,7 @@
                                         },
                                         "fields": {
                                             "type": "array",
+                                            "description": "With scopes.fields",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -8228,18 +8252,18 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With scopes.meta"
                                         }
                                     },
                                     "required": [
-                                        "name",
-                                        "fields",
-                                        "meta"
+                                        "name"
                                     ]
                                 }
                             },
                             "relations": {
                                 "type": "array",
+                                "description": "With relations or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -8258,6 +8282,7 @@
                                         },
                                         "constraints": {
                                             "type": "object",
+                                            "description": "With relations.constraints",
                                             "properties": {
                                                 "required_on_creation": {
                                                     "type": "boolean"
@@ -8281,7 +8306,7 @@
                                         },
                                         "operations": {
                                             "type": "array",
-                                            "description": "The operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
+                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
                                             "items": {
                                                 "type": "string",
                                                 "enum": [
@@ -8300,7 +8325,7 @@
                                         },
                                         "pivot_fields": {
                                             "type": "array",
-                                            "description": "Many-to-many relations only: the pivot fields of the relation",
+                                            "description": "With relations.pivot_fields, on many-to-many relations only: the pivot fields of the relation",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -8448,15 +8473,13 @@
                                     },
                                     "required": [
                                         "relation",
-                                        "constraints",
-                                        "operations",
                                         "name"
                                     ]
                                 }
                             },
                             "rules": {
                                 "type": "object",
-                                "description": "The rules of the resource, keyed by attribute, as strings",
+                                "description": "With rules: the rules of the resource, keyed by attribute, as strings",
                                 "properties": {
                                     "all": {
                                         "type": "object",
@@ -8497,7 +8520,7 @@
                                     "object",
                                     "null"
                                 ],
-                                "description": "The text search of the resource; null without one",
+                                "description": "With text: the text search of the resource; null without one",
                                 "properties": {
                                     "fields": {
                                         "type": "array",
@@ -8631,7 +8654,7 @@
                             },
                             "gates": {
                                 "type": "array",
-                                "description": "The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off",
+                                "description": "With gates: the abilities that search.gates accepts, the built-in ones first, then those that the resource declares; empty when the resource turns its gates off",
                                 "items": {
                                     "type": "string",
                                     "enum": [
@@ -8647,7 +8670,7 @@
                             },
                             "authorizations": {
                                 "type": "object",
-                                "description": "The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
+                                "description": "With authorizations: the answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
                                 "additionalProperties": {
                                     "type": "object",
                                     "properties": {
@@ -8674,17 +8697,8 @@
                             }
                         },
                         "required": [
-                            "actions",
-                            "metrics",
-                            "instructions",
                             "fields",
                             "limits",
-                            "scopes",
-                            "relations",
-                            "rules",
-                            "text",
-                            "gates",
-                            "authorizations",
                             "meta"
                         ]
                     }
@@ -13098,6 +13112,7 @@
                         "properties": {
                             "actions": {
                                 "type": "array",
+                                "description": "With actions or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -13117,6 +13132,7 @@
                                         },
                                         "fields": {
                                             "type": "array",
+                                            "description": "With actions.fields",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -13164,7 +13180,8 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With actions.meta"
                                         },
                                         "destructive": {
                                             "type": "boolean",
@@ -13183,24 +13200,22 @@
                                         },
                                         "authorized": {
                                             "type": "boolean",
-                                            "description": "True when the user passes the abilities that the action route checks before it reads the request"
+                                            "description": "With actions.authorized: true when the user passes the abilities that the action route checks before it reads the request"
                                         }
                                     },
                                     "required": [
                                         "name",
                                         "uriKey",
                                         "target",
-                                        "fields",
-                                        "meta",
                                         "destructive",
                                         "confirm",
-                                        "confirmation",
-                                        "authorized"
+                                        "confirmation"
                                     ]
                                 }
                             },
                             "metrics": {
                                 "type": "array",
+                                "description": "With metrics or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -13234,25 +13249,25 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With metrics.meta"
                                         },
                                         "authorized": {
                                             "type": "boolean",
-                                            "description": "True when the user passes the abilities that the metric route checks before it reads the request"
+                                            "description": "With metrics.authorized: true when the user passes the abilities that the metric route checks before it reads the request"
                                         }
                                     },
                                     "required": [
                                         "name",
                                         "uriKey",
                                         "type",
-                                        "ranges",
-                                        "meta",
-                                        "authorized"
+                                        "ranges"
                                     ]
                                 }
                             },
                             "instructions": {
                                 "type": "array",
+                                "description": "With instructions or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -13264,6 +13279,7 @@
                                         },
                                         "fields": {
                                             "type": "array",
+                                            "description": "With instructions.fields",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -13311,7 +13327,8 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With instructions.meta"
                                         },
                                         "text": {
                                             "type": "boolean",
@@ -13321,8 +13338,6 @@
                                     "required": [
                                         "name",
                                         "uriKey",
-                                        "fields",
-                                        "meta",
                                         "text"
                                     ]
                                 }
@@ -13354,18 +13369,18 @@
                                         },
                                         "select": {
                                             "type": "boolean",
-                                            "description": "Accepted in search.selects and returned"
+                                            "description": "With fields.capabilities: accepted in search.selects and returned"
                                         },
                                         "sort": {
                                             "type": "boolean",
-                                            "description": "Accepted in search.sorts"
+                                            "description": "With fields.capabilities: accepted in search.sorts"
                                         },
                                         "filter": {
                                             "type": "object",
                                             "properties": {
                                                 "operators": {
                                                     "type": "array",
-                                                    "description": "Accepted by search.filters on this field; empty when it is not filterable",
+                                                    "description": "With fields.filter: accepted by search.filters on this field; empty when it is not filterable",
                                                     "items": {
                                                         "type": "string",
                                                         "enum": [
@@ -13395,11 +13410,11 @@
                                         },
                                         "create": {
                                             "type": "boolean",
-                                            "description": "Writable on create"
+                                            "description": "With fields.capabilities: writable on create"
                                         },
                                         "update": {
                                             "type": "boolean",
-                                            "description": "Writable on update"
+                                            "description": "With fields.capabilities: writable on update"
                                         },
                                         "rules": {
                                             "type": "object",
@@ -13443,14 +13458,7 @@
                                         "name",
                                         "label",
                                         "type",
-                                        "nullable",
-                                        "select",
-                                        "sort",
-                                        "filter",
-                                        "create",
-                                        "update",
-                                        "rules",
-                                        "meta"
+                                        "nullable"
                                     ]
                                 }
                             },
@@ -13462,6 +13470,7 @@
                             },
                             "scopes": {
                                 "type": "array",
+                                "description": "With scopes or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -13470,6 +13479,7 @@
                                         },
                                         "fields": {
                                             "type": "array",
+                                            "description": "With scopes.fields",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -13517,18 +13527,18 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object"
+                                            "type": "object",
+                                            "description": "With scopes.meta"
                                         }
                                     },
                                     "required": [
-                                        "name",
-                                        "fields",
-                                        "meta"
+                                        "name"
                                     ]
                                 }
                             },
                             "relations": {
                                 "type": "array",
+                                "description": "With relations or one of its parts",
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -13545,6 +13555,7 @@
                                         },
                                         "constraints": {
                                             "type": "object",
+                                            "description": "With relations.constraints",
                                             "properties": {
                                                 "required_on_creation": {
                                                     "type": "boolean"
@@ -13568,7 +13579,7 @@
                                         },
                                         "operations": {
                                             "type": "array",
-                                            "description": "The operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
+                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
                                             "items": {
                                                 "type": "string",
                                                 "enum": [
@@ -13587,7 +13598,7 @@
                                         },
                                         "pivot_fields": {
                                             "type": "array",
-                                            "description": "Many-to-many relations only: the pivot fields of the relation",
+                                            "description": "With relations.pivot_fields, on many-to-many relations only: the pivot fields of the relation",
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
@@ -13735,15 +13746,13 @@
                                     },
                                     "required": [
                                         "relation",
-                                        "constraints",
-                                        "operations",
                                         "name"
                                     ]
                                 }
                             },
                             "rules": {
                                 "type": "object",
-                                "description": "The rules of the resource, keyed by attribute, as strings",
+                                "description": "With rules: the rules of the resource, keyed by attribute, as strings",
                                 "properties": {
                                     "all": {
                                         "type": "object",
@@ -13784,7 +13793,7 @@
                                     "object",
                                     "null"
                                 ],
-                                "description": "The text search of the resource; null without one",
+                                "description": "With text: the text search of the resource; null without one",
                                 "properties": {
                                     "fields": {
                                         "type": "array",
@@ -13918,7 +13927,7 @@
                             },
                             "gates": {
                                 "type": "array",
-                                "description": "The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off",
+                                "description": "With gates: the abilities that search.gates accepts, the built-in ones first, then those that the resource declares; empty when the resource turns its gates off",
                                 "items": {
                                     "type": "string",
                                     "enum": [
@@ -13933,7 +13942,7 @@
                             },
                             "authorizations": {
                                 "type": "object",
-                                "description": "The answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
+                                "description": "With authorizations: the answers to the class-level abilities that the routes of the resource check, for the user of the request, keyed by ability: viewAny, create, then those of the endpoints, the actions and the metrics",
                                 "additionalProperties": {
                                     "type": "object",
                                     "properties": {
@@ -13960,17 +13969,8 @@
                             }
                         },
                         "required": [
-                            "actions",
-                            "metrics",
-                            "instructions",
                             "fields",
                             "limits",
-                            "scopes",
-                            "relations",
-                            "rules",
-                            "text",
-                            "gates",
-                            "authorizations",
                             "meta"
                         ]
                     }

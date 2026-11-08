@@ -290,7 +290,7 @@ class ActionChunksTest extends HelpdeskTestCase
         $this->expectException(InvalidActionException::class);
         $this->expectExceptionMessage(QueuedAtomicCloseOpenTickets::class.' runs its chunks in one transaction (ActionTransaction::Whole), but it implements ShouldQueue: its chunks run in the worker, outside the request.');
 
-        $this->getJson('/chunked-tickets');
+        $this->getJson('/chunked-tickets?with=actions');
     }
 
     /** @return list<string> */

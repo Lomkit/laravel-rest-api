@@ -71,11 +71,11 @@ class DecisionBatchesTest extends HelpdeskTestCase
     {
         $this->travel(1)->seconds();
 
-        $cold = $this->getJson('/api/cached-tickets')->assertOk();
+        $cold = $this->getJson('/api/cached-tickets?with=authorizations')->assertOk();
         $this->assertSame([['stamps', 1, 1], [[300, 1], [300, 1]], 6], $this->traffic());
         $this->assertSame(['viewAny', 'create'], $this->tickets->calls);
         $this->tickets->calls = [];
-        $warm = $this->getJson('/api/cached-tickets')->assertOk();
+        $warm = $this->getJson('/api/cached-tickets?with=authorizations')->assertOk();
 
         $this->assertSame([['stamps', 1, 1], [], 3], $this->traffic());
         $this->assertSame([], $this->tickets->calls);

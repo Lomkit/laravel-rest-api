@@ -108,7 +108,7 @@ class InstructionsTest extends PackageTestCase
     #[Test]
     public function it_describes_the_instruction_fields_in_the_details(): void
     {
-        $response = $this->getJson('/api/posts');
+        $response = $this->getJson('/api/posts?with=instructions.fields,instructions.meta');
 
         $response->assertOk()->assertJsonPath('data.instructions', [
             [

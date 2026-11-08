@@ -48,7 +48,7 @@ class MorphToDeclarationTest extends MorphTargetsTestCase
 
         $this->expectExceptionObject(new InvalidResourceException($message));
 
-        $this->getJson('/declared-labels');
+        $this->getJson('/declared-labels?with=relations');
     }
 
     /** @return array<string, array{MorphTo, string}> */
@@ -121,7 +121,7 @@ class MorphToDeclarationTest extends MorphTargetsTestCase
         DeclaredLabelResource::$declare = fn (): array => [MorphTo::make('book', BookResource::class)];
 
         $response = $this->postJson('/declared-labels/search', ['search' => ['selects' => [['field' => 'id']], 'sorts' => [['field' => 'id']], 'includes' => [['relation' => 'book']]]]);
-        $details = $this->getJson('/declared-labels');
+        $details = $this->getJson('/declared-labels?with=relations');
 
         $response->assertOk()->assertJsonPath('data.*.book', [['@type' => 'book', 'id' => 1, 'title' => 'Dune'], null, ['@type' => 'book', 'id' => 2, 'title' => 'Emma'], null, null]);
         $details

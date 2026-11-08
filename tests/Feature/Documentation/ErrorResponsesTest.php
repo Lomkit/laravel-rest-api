@@ -60,14 +60,14 @@ class ErrorResponsesTest extends DocumentationTestCase
     public static function operations(): array
     {
         return [
-            'details behind auth' => ['/shows', 'get', [200, 401, 403, 404], true],
+            'details behind auth' => ['/shows', 'get', [200, 401, 403, 404, 422], true],
             'search behind auth' => ['/shows/search', 'post', [200, 401, 403, 404, 422], true],
             'an action behind auth' => ['/shows/actions/reschedule-shows', 'post', [200, 401, 403, 404, 422], true],
             'an action that asks for a confirmation' => ['/shows/actions/cancel-shows', 'post', [200, 401, 403, 404, 422, 428], true],
             'a metric without the auth of its resource' => ['/shows/metrics/shows-by-status', 'post', [200, 403, 404, 422], false],
             'batch progress' => ['/shows/actions/{action}/batches/{batch}', 'get', [200, 401, 403, 404], true],
             'force delete' => ['/shows/force', 'delete', [200, 401, 403, 404, 422], true],
-            'details of a resource registered after one behind auth' => ['/notes', 'get', [200, 403, 404], false],
+            'details of a resource registered after one behind auth' => ['/notes', 'get', [200, 403, 404, 422], false],
             'mutate of a resource registered after one behind auth' => ['/notes/mutate', 'post', [200, 403, 404, 422], false],
             'restore' => ['/shows/restore', 'post', [200, 401, 403, 404, 422], true],
         ];

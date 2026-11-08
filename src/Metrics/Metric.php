@@ -9,18 +9,18 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
-use JsonSerializable;
 use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Concerns\HasRouteMiddleware;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Exceptions\InvalidMetricException;
+use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Requests\MetricRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Routing\Endpoint;
 
 /** @phpstan-consistent-constructor */
-abstract class Metric implements JsonSerializable
+abstract class Metric
 {
     use HasCache;
     use HasMeta;
@@ -141,16 +141,15 @@ abstract class Metric implements JsonSerializable
         return Periods::last($query, $date, $unit, $count, $this->timezone(), $this->weekStartsOn);
     }
 
-    /** @return array{name: string, uriKey: string, type: string, ranges: list<MetricRange>, meta: \stdClass} */
-    #[\Override]
-    public function jsonSerialize(): array
+    /** @return array<string, mixed> */
+    public function toDetails(DetailsSelection $selection): array
     {
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
             'type' => $this->type(),
             'ranges' => MetricRange::listOf($this->ranges(), static::class),
-            'meta' => (object) $this->getMeta(),
+            ...$selection->part('metrics.meta', fn (): array => ['meta' => (object) $this->getMeta()]),
         ];
     }
 }

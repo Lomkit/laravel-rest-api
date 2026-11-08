@@ -2,14 +2,14 @@
 
 namespace Lomkit\Rest\Scopes;
 
-use JsonSerializable;
 use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Exceptions\InvalidScopeException;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Fields\Field;
 use Lomkit\Rest\Fields\FieldSet;
+use Lomkit\Rest\Http\Details\DetailsSelection;
 
-final class Scope implements JsonSerializable
+final class Scope
 {
     use HasMeta;
 
@@ -57,14 +57,13 @@ final class Scope implements JsonSerializable
         return $this->fields;
     }
 
-    /** @return array{name: string, fields: list<array<string, mixed>>, meta: \stdClass} */
-    #[\Override]
-    public function jsonSerialize(): array
+    /** @return array<string, mixed> */
+    public function toDetails(DetailsSelection $selection): array
     {
         return [
             'name' => $this->name,
-            'fields' => InputFieldDetails::forFields($this->fields),
-            'meta' => (object) $this->getMeta(),
+            ...$selection->part('scopes.fields', fn (): array => ['fields' => InputFieldDetails::forFields($this->fields)]),
+            ...$selection->part('scopes.meta', fn (): array => ['meta' => (object) $this->getMeta()]),
         ];
     }
 }

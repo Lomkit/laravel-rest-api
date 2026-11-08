@@ -160,7 +160,7 @@ class CustomGatesTest extends HelpdeskTestCase
     #[DataProvider('detailedGates')]
     public function it_lists_the_gates_of_a_resource_in_its_details(string $uri, array $gates): void
     {
-        $response = $this->getJson($uri);
+        $response = $this->getJson("{$uri}?with=gates");
 
         $response
             ->assertOk()

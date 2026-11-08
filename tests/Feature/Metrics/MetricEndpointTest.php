@@ -236,7 +236,7 @@ class MetricEndpointTest extends HelpdeskTestCase
     #[Test]
     public function it_describes_the_metrics_of_the_resource(): void
     {
-        $this->getJson('/metric-tickets')
+        $this->getJson('/metric-tickets?with=metrics.meta,metrics.authorized')
             ->assertOk()
             ->assertJsonPath('data.metrics', [
                 ['name' => 'Ticket Backlog', 'uriKey' => 'ticket-backlog', 'type' => 'gauge', 'ranges' => [], 'meta' => [], 'authorized' => true],

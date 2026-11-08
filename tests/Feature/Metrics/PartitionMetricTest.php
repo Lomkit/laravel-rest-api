@@ -154,7 +154,7 @@ class PartitionMetricTest extends SalesTestCase
     {
         $this->serve(OrdersByStatus::make()->limit(3));
 
-        $this->getJson('/metric-orders')
+        $this->getJson('/metric-orders?with=metrics.meta,metrics.authorized')
             ->assertOk()
             ->assertJsonPath('data.metrics', [['name' => 'Orders By Status', 'uriKey' => 'orders-by-status', 'type' => 'partition', 'ranges' => [], 'meta' => [], 'authorized' => true]]);
     }

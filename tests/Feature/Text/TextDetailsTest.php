@@ -24,7 +24,7 @@ class TextDetailsTest extends TextSearchTestCase
     #[Test]
     public function it_describes_a_contains_text_search(): void
     {
-        $this->assertTextDetails(self::CONTAINS, $this->getJson('/contains-posts'));
+        $this->assertTextDetails(self::CONTAINS, $this->getJson('/contains-posts?with=text'));
     }
 
     #[Test]
@@ -34,7 +34,7 @@ class TextDetailsTest extends TextSearchTestCase
             ? '{"fields":["title","summary"],"modes":["words","prefix","phrase","websearch"],"relevance":true,"trashed":false,"max_length":255,"engine":null}'
             : self::CONTAINS;
 
-        $this->assertTextDetails($expected, $this->getJson('/full-text-posts'));
+        $this->assertTextDetails($expected, $this->getJson('/full-text-posts?with=text'));
     }
 
     #[Test]
@@ -44,7 +44,7 @@ class TextDetailsTest extends TextSearchTestCase
 
         $this->expectExceptionObject(InvalidTextSearchException::noSearchableField(UnsearchableCategoryResource::class));
 
-        $this->getJson('/unsearchable-categories');
+        $this->getJson('/unsearchable-categories?with=text');
     }
 
     private function assertTextDetails(string $expected, TestResponse $response): void

@@ -11,6 +11,7 @@ use Lomkit\Rest\Events\ResourceForceDestroyed;
 use Lomkit\Rest\Events\ResourceRestored;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Http\BatchProgress;
+use Lomkit\Rest\Http\Details\ResourceDetails;
 use Lomkit\Rest\Http\MetricResponse;
 use Lomkit\Rest\Http\MutateResponse;
 use Lomkit\Rest\Http\OperateResponse;
@@ -53,7 +54,7 @@ abstract class Controller
 
         $resource->describing();
 
-        $details = $resource->jsonSerialize();
+        $details = (new ResourceDetails($resource, $request->selection()))->toArray();
 
         $resource->described($details);
 

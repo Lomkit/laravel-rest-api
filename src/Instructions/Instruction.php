@@ -10,6 +10,7 @@ use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
+use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
 /** @phpstan-consistent-constructor */
@@ -37,14 +38,14 @@ class Instruction
         return $this->resource->request();
     }
 
-    /** @return array{name: string, uriKey: string, fields: list<array<string, mixed>>, meta: \stdClass, text: bool} */
-    public function jsonSerialize(): array
+    /** @return array<string, mixed> */
+    public function toDetails(DetailsSelection $selection): array
     {
         return [
             'name' => $this->name(),
             'uriKey' => $this->uriKey(),
-            'fields' => InputFieldDetails::forFields($this->resource->definition()->inputFields($this)),
-            'meta' => (object) $this->getMeta(),
+            ...$selection->part('instructions.fields', fn (): array => ['fields' => InputFieldDetails::forFields($this->resource->definition()->inputFields($this))]),
+            ...$selection->part('instructions.meta', fn (): array => ['meta' => (object) $this->getMeta()]),
             'text' => InstructionSupport::of($this)->runsWithText($this->resource->context()->text($this->resource)->backend),
         ];
     }

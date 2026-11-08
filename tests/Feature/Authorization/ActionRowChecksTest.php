@@ -257,7 +257,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
         $this->expectException(InvalidActionException::class);
         $this->expectExceptionMessage($message);
 
-        $this->getJson('/reviewed-tickets');
+        $this->getJson('/reviewed-tickets?with=actions');
     }
 
     /** @return array<string, array{?string, ActionTarget, string}> */

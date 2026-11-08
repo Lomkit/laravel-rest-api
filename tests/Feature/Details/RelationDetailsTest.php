@@ -112,7 +112,7 @@ class RelationDetailsTest extends PackageTestCase
     /** @return list<object> */
     private function relations(string $uri): array
     {
-        $response = $this->getJson($uri)->assertOk();
+        $response = $this->getJson("{$uri}?with=relations.operations,relations.pivot_fields")->assertOk();
 
         return json_decode((string) $response->getContent(), flags: JSON_THROW_ON_ERROR)->data->relations;
     }

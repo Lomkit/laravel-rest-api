@@ -35,7 +35,7 @@ class EngineDetailsTest extends EngineTestCase
     {
         config(['scout.soft_delete' => $softDelete]);
 
-        $this->assertTextDetails($expected, $this->getJson('/api/vouchers'));
+        $this->assertTextDetails($expected, $this->getJson('/api/vouchers?with=text'));
     }
 
     /** @return array<string, array{bool, string}> */
@@ -50,7 +50,7 @@ class EngineDetailsTest extends EngineTestCase
     #[Test]
     public function it_leaves_the_perimeter_attributes_out_of_the_grammar(): void
     {
-        $response = $this->getJson('/api/team-vouchers');
+        $response = $this->getJson('/api/team-vouchers?with=text');
 
         $response->assertOk()->assertJsonPath('data.text.engine.filters.*.name', ['number', 'price', 'active', 'code']);
     }
@@ -60,7 +60,7 @@ class EngineDetailsTest extends EngineTestCase
     {
         $this->assertTextDetails(
             '{"fields":["title"],"modes":["words","phrase"],"relevance":false,"trashed":true,"max_length":255,"engine":null}',
-            $this->getJson('/api/contains-vouchers'),
+            $this->getJson('/api/contains-vouchers?with=text'),
         );
     }
 

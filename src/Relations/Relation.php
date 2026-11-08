@@ -9,13 +9,14 @@ use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Fields\Details\FieldDetails;
 use Lomkit\Rest\Fields\MutationOperation;
+use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Validation\Mutate\EntryRule;
 use Lomkit\Rest\Validation\Mutate\RelatedEntryRule;
 
 /** @phpstan-consistent-constructor */
-class Relation implements \JsonSerializable
+class Relation
 {
     use Constrained;
 
@@ -127,36 +128,32 @@ class Relation implements \JsonSerializable
         return [];
     }
 
-    #[\Override]
-    public function jsonSerialize(): mixed
-    {
-        return $this->toDetails();
-    }
-
     /** @return array<string, mixed> */
-    public function toDetails(): array
+    public function toDetails(DetailsSelection $selection): array
     {
-        $details = [
+        return [
             'resource' => $this->type,
             'relation' => $this->relation,
-            'constraints' => [
+            ...$selection->part('relations.constraints', fn (): array => ['constraints' => [
                 'required_on_creation' => $this->isRequiredOnCreation(),
                 'prohibited_on_creation' => $this->isProhibitedOnCreation(),
                 'required_on_update' => $this->isRequiredOnUpdate(),
                 'prohibited_on_update' => $this->isProhibitedOnUpdate(),
-            ],
-            'operations' => array_column($this->acceptedOperations(), 'value'),
+            ]]),
+            ...$selection->part('relations.operations', fn (): array => ['operations' => array_column($this->acceptedOperations(), 'value')]),
             'name' => $this->name(),
+            ...$selection->part('relations.pivot_fields', $this->pivotFieldDetails(...)),
         ];
+    }
 
+    /** @return array{pivot_fields?: list<FieldDetails>} */
+    private function pivotFieldDetails(): array
+    {
         if (! $this instanceof PivotRelation) {
-            return $details;
+            return [];
         }
 
-        return [
-            ...$details,
-            'pivot_fields' => FieldDetails::forPivotFields($this->getPivotFields(), $this->modelRelation() instanceof EloquentBelongsToMany),
-        ];
+        return ['pivot_fields' => FieldDetails::forPivotFields($this->getPivotFields(), $this->modelRelation() instanceof EloquentBelongsToMany)];
     }
 
     protected function constraintResource(): ?Resource

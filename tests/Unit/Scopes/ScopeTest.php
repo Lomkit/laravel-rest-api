@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Unit\Scopes;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\Date;
 use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Scopes\Scope;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -39,7 +40,7 @@ class ScopeTest extends TestCase
     }
 
     #[Test]
-    public function it_serializes_its_name_fields_and_meta(): void
+    public function it_details_its_name_fields_and_meta(): void
     {
         $scope = Scope::make('popular')
             ->fields([Integer::make('min_views')->default(100)->rules('min:0')])
@@ -47,7 +48,7 @@ class ScopeTest extends TestCase
 
         $this->assertSame(
             '{"name":"popular","fields":[{"name":"min_views","label":null,"type":"integer","nullable":false,"default":100,"rules":["integer","min:0"],"meta":{}}],"meta":{"label":"Popular"}}',
-            json_encode($scope),
+            json_encode($scope->toDetails(DetailsSelection::of(['scopes.fields', 'scopes.meta']))),
         );
     }
 

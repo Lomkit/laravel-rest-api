@@ -6,6 +6,7 @@ use Lomkit\Rest\Contracts\OwnerRelation;
 use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\MutationOperation;
+use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
@@ -206,7 +207,7 @@ class RelationHierarchyTest extends PackageTestCase
             default => [self::DETAILS, []],
         };
 
-        $this->assertSame($details, array_keys($relation->toDetails()));
+        $this->assertSame($details, array_keys($relation->toDetails(DetailsSelection::of(['relations.constraints', 'relations.operations', 'relations.pivot_fields']))));
         $this->assertSame($reserved, $relation->reservedKeys());
     }
 
@@ -222,7 +223,7 @@ class RelationHierarchyTest extends PackageTestCase
     {
         $relation = $this->declared($resource, $name);
 
-        $this->assertSame(array_column($relation->acceptedOperations(), 'value'), $relation->toDetails()['operations']);
+        $this->assertSame(array_column($relation->acceptedOperations(), 'value'), $relation->toDetails(DetailsSelection::of(['relations.constraints', 'relations.operations', 'relations.pivot_fields']))['operations']);
     }
 
     /** @param class-string<Resource> $resource */
