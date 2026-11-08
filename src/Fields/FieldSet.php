@@ -86,15 +86,6 @@ final readonly class FieldSet implements Countable, IteratorAggregate
         return array_map(fn (Field $field): string => $field->name, $this->fields);
     }
 
-    /**
-     * @param  array<array-key, mixed>  $values
-     * @return array<array-key, mixed>
-     */
-    public function only(array $values): array
-    {
-        return array_intersect_key($values, array_flip($this->names()));
-    }
-
     public function has(string $name): bool
     {
         return $this->find($name) !== null;

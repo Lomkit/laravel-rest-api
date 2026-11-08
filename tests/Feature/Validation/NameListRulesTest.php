@@ -63,15 +63,14 @@ class NameListRulesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_checks_instruction_names_against_a_one_of_rule_and_not_their_field_names(): void
+    public function it_checks_instruction_names_and_their_field_names_against_a_one_of_rule(): void
     {
         $rules = $this->searchRequest('/api/products/search', ['instructions' => [
             ['name' => 'priced-at', 'fields' => [['name' => 'price', 'value' => 39]]],
         ]])->rules();
 
         $this->assertSame(['priced-at'], $this->oneOf($rules['search.instructions.0.name'])->values());
-        $this->assertSame(['required', 'string'], array_slice($rules['search.instructions.0.fields.0.name'], 0, 2));
-        $this->assertSame([], array_filter($rules['search.instructions.0.fields.0.name'], fn (mixed $rule): bool => $rule instanceof OneOf));
+        $this->assertSame(['price'], $this->oneOf($rules['search.instructions.0.fields.0.name'])->values());
     }
 
     #[Test]
@@ -83,12 +82,11 @@ class NameListRulesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_checks_no_action_field_name_against_a_one_of_rule(): void
+    public function it_checks_action_field_names_against_a_one_of_rule(): void
     {
-        $rules = $this->operateRequest('/api/posts/actions/publish-posts', ['fields' => [['name' => 'at']]])->rules();
+        $request = $this->operateRequest('/api/posts/actions/publish-posts', ['fields' => [['name' => 'at']]]);
 
-        $this->assertSame(['required', 'string'], array_slice($rules['fields.0.name'], 0, 2));
-        $this->assertSame([], array_filter($rules['fields.0.name'], fn (mixed $rule): bool => $rule instanceof OneOf));
+        $this->assertSame(['at', 'notify'], $this->oneOf($request->rules()['fields.0.name'])->values());
     }
 
     #[Test]
@@ -96,14 +94,14 @@ class NameListRulesTest extends PackageTestCase
     {
         Rest::resource('highlighting-posts', HighlightingPostController::class)->register();
         $request = $this->operateRequest('/highlighting-posts/actions/highlight-posts', [
-            'search' => ['instructions' => [['name' => 'highlight-posts', 'fields' => [['name' => 'label']]]]],
-            'fields' => [['name' => 'featured']],
+            'search' => ['instructions' => [['name' => 'highlight-posts', 'fields' => [['name' => 'featured']]]]],
+            'fields' => [['name' => 'label']],
         ]);
 
         $rules = $request->rules();
 
-        $this->assertArrayNotHasKey('fields.0.name', $rules);
-        $this->assertArrayNotHasKey('search.instructions.0.fields.0.name', $rules);
+        $this->assertSame(['label'], $this->oneOf($rules['fields.0.name'])->values());
+        $this->assertSame(['featured', 'min_views'], $this->oneOf($rules['search.instructions.0.fields.0.name'])->values());
     }
 
     #[Test]

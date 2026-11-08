@@ -160,7 +160,7 @@ class MutationPayloadTest extends PackageTestCase
     {
         return [
             'an operation that did not parse' => [[['operation' => 'replace']]],
-            'a recorded violation' => [[['operation' => 'create', 'attributes' => ['name' => 'Seating'], 'pivot' => []]]],
+            'a recorded violation' => [[['operation' => 'create', 'attributes' => ['name' => 'Seating'], 'atributes' => []]]],
         ];
     }
 

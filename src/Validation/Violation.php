@@ -38,14 +38,14 @@ final readonly class Violation
         return new self($key, 'The :attribute field goes over the limit of :max list entries in one request.', ['max' => (string) $max]);
     }
 
-    public static function misplaced(string $key): self
+    public static function unknown(string $key): self
     {
         return new self($key, 'validation.prohibited');
     }
 
-    public static function tooFew(string $key, int $min): self
+    public static function unnamedKey(string $container, string $key): self
     {
-        return new self($key, 'validation.min.array', ['min' => (string) $min]);
+        return new self($container, 'The :key key is not valid for the :attribute field.', ['key' => $key]);
     }
 
     public static function notWritable(string $key, string $attribute, WriteOperation $operation): self

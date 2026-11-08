@@ -47,7 +47,6 @@ class MorphToGroupTypesTest extends MorphTargetsTestCase
 
         return [
             'one type' => [['types' => ['book' => $dune]], [1]],
-            'a type that the relation does not declare next to a declared one' => [['types' => ['comment' => [['field' => 'text', 'value' => 'x']], 'book' => $dune]], [1]],
             'two types' => [['types' => ['book' => $dune, 'shelf' => $classics]], [1, 2]],
             'a type with an empty list' => [['types' => ['book' => []]], [1, 3]],
             'any declared type' => [[], [1, 2, 3]],
@@ -119,7 +118,7 @@ class MorphToGroupTypesTest extends MorphTargetsTestCase
         return [
             'no type' => ['/api/labels/search', [['relation' => 'labelable', 'types' => []]], ['search.filters.0.types' => ['The search.filters.0.types field must have at least 1 items.']]],
             'nested with several types' => ['/api/labels/search', [['relation' => 'labelable', 'nested' => $dune]], ['search.filters.0.nested' => ['The search.filters.0.nested field is prohibited: this relation has several types. Set it for each type, under types.']]],
-            'only a type that the relation does not declare' => ['/api/labels/search', [['relation' => 'labelable', 'types' => ['comment' => []]]], ['search.filters.0.types' => ['The search.filters.0.types field must have at least 1 items.']]],
+            'a type that the relation does not declare' => ['/api/labels/search', [['relation' => 'labelable', 'types' => ['comment' => []]]], ['search.filters.0.types.comment' => ['The search.filters.0.types.comment field is prohibited.']]],
             'a field of another type' => ['/api/labels/search', [['relation' => 'labelable', 'types' => ['shelf' => $dune]]], ['search.filters.0.types.shelf.0.field' => ['The selected search.filters.0.types.shelf.0.field is invalid.']]],
             'a dotted field through several types' => ['/api/labels/search', [['field' => 'labelable.title', 'value' => 'Dune']], ['search.filters.0.field' => ['The selected search.filters.0.field is invalid.']]],
             'types next to nested with one target' => ['/book-labels/search', [['relation' => 'labelable', 'nested' => $dune, 'types' => ['book' => $dune]]], ['search.filters.0.types' => ['The search.filters.0.types field prohibits search.filters.0.nested from being present.']]],

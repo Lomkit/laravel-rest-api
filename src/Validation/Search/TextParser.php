@@ -11,6 +11,8 @@ use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class TextParser
 {
+    private const array KEYS = ['value' => true, 'mode' => true, 'trashed' => true];
+
     public function __construct(private TextCapabilities $text) {}
 
     public function parse(Cursor $text, ValidationContext $context): ?TextQuery
@@ -18,6 +20,7 @@ final readonly class TextParser
         $rules = $context->rules;
         $mode = $text->at('mode');
 
+        $context->reader->known($text, self::KEYS);
         $rules->add($text->at('value')->path, ['nullable', 'string', 'max:'.$this->text->maxLength]);
 
         if ($mode->present) {

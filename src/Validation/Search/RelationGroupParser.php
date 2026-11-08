@@ -15,7 +15,7 @@ use Lomkit\Rest\Validation\Violation;
 
 final readonly class RelationGroupParser
 {
-    private const array REFUSED = ['field', 'operator', 'value'];
+    private const array KEYS = ['relation' => true, 'exists' => true, 'type' => true, 'nested' => true];
 
     public function __construct(
         private FilterParser $filters,
@@ -26,7 +26,7 @@ final readonly class RelationGroupParser
         $name = $entry->at('relation')->value;
         $declared = is_string($name) && ! str_contains($name, '.') ? $context->resource->definition()->relation($name) : null;
 
-        $context->reader->refuse($entry, $declared instanceof PolymorphicRelation ? self::REFUSED : [...self::REFUSED, 'types']);
+        $context->reader->known($entry, $declared instanceof PolymorphicRelation ? [...self::KEYS, 'types' => true] : self::KEYS);
 
         $relation = $this->relation($entry, $context);
         $exists = $entry->at('exists');
@@ -92,7 +92,7 @@ final readonly class RelationGroupParser
 
         $lists = match (true) {
             ! $types->present => array_fill_keys($targets->types(), $targets->isPolymorphic() ? null : $nested),
-            $context->reader->object($types) => $context->reader->among($types, $targets->types()),
+            $context->reader->object($types) => $this->listed($types, $targets->types(), $context),
             default => null,
         };
 
@@ -116,6 +116,24 @@ final readonly class RelationGroupParser
         }
 
         return $groups;
+    }
+
+    /**
+     * @param  list<string>  $declared
+     * @return array<string, Cursor>
+     */
+    private function listed(Cursor $types, array $declared, ValidationContext $context): array
+    {
+        $context->reader->known($types, array_fill_keys($declared, true));
+        $lists = [];
+
+        foreach (is_array($types->value) ? array_keys($types->value) : [] as $type) {
+            if (in_array((string) $type, $declared, true)) {
+                $lists[(string) $type] = $types->at($type);
+            }
+        }
+
+        return $lists;
     }
 
     /** @return list<Cursor>|null */

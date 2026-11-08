@@ -14,9 +14,9 @@ class CreationChecksTest extends HelpdeskTestCase
     {
         $this->postJson('/api/tickets/mutate', ['mutate' => [
             $this->ticketWithTeam('Printer jam', 'Billing'),
-            $this->ticketWithTeam('Password reset', 'Support', ['status' => 5, 'priority' => 'high']),
+            $this->ticketWithTeam('Password reset', 'Support', ['priority' => 'high']),
         ]])->assertUnprocessable()->assertJsonPath('errors', [
-            'mutate.1.attributes.status' => ['The mutate.1.attributes.status field must be a string.'],
+            'mutate.1.attributes' => ['The priority key of the mutate.1.attributes field is not writable on create.'],
         ]);
 
         $this->assertSame([['viewAny', 'create'], ['create']], [$this->tickets->calls, $this->teams->calls]);

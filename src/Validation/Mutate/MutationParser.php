@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Authorization\Check;
-use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Http\Resource;
@@ -23,6 +22,8 @@ use Lomkit\Rest\Validation\PayloadReader;
 
 final readonly class MutationParser
 {
+    public const array KEYS = ['operation', 'attributes', 'key', 'without_detaching', 'relations'];
+
     private function __construct(
         private ParsedRules $rules,
         private PayloadReader $reader,
@@ -87,7 +88,7 @@ final readonly class MutationParser
             return null;
         }
 
-        $this->relations->refuse($entry, $relation);
+        $this->relations->known($entry, $relation);
         $this->relations->constraints($entry, $resource, $operation);
 
         $contextKey = $operation?->requiresKey() === true ? $this->keys->scalar($entry->at('key'), $resource) : null;
@@ -102,7 +103,7 @@ final readonly class MutationParser
         $key = $this->ownKeys($entry, $resource, $operation, $operations, $listed);
         $relations = $this->relations->relations($entry, $resource, $depth, $this);
         $pivot = $this->relations->pivot($entry, $relation, $operation, $mutation);
-        $attributes = $this->values($entry->at('attributes'), $resource->definition()->fields());
+        $attributes = $this->values($entry->at('attributes'));
         $withoutDetaching = $this->flag($entry->at('without_detaching'));
 
         if ($operation === null || ! in_array($operation, $operations, true)) {
@@ -159,10 +160,10 @@ final readonly class MutationParser
     }
 
     /** @return array<array-key, mixed>|null */
-    private function values(Cursor $value, FieldSet $fields): ?array
+    private function values(Cursor $value): ?array
     {
         if (is_array($value->value)) {
-            return $fields->only($value->value);
+            return $value->value;
         }
 
         if ($value->present) {

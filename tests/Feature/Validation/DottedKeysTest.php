@@ -57,17 +57,29 @@ class DottedKeysTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_ignores_an_unknown_key_that_holds_a_dot_a_wildcard_or_a_final_backslash(): void
+    public function it_names_an_unknown_key_that_holds_a_dot(): void
     {
-        $lighting = Category::factory()->create(['name' => 'Lighting']);
-        Product::factory()->create(['category_id' => $lighting->id, 'name' => 'Desk lamp', 'price' => 39]);
-        Product::factory()->create(['category_id' => $lighting->id, 'name' => 'Floor lamp', 'price' => 129]);
-
-        $response = $this->postJson('/api/products/search', ['search' => ['selects' => [['field' => 'name']], 'filters' => [
-            ['field' => 'name', 'value' => 'Desk lamp', 'a.b' => 1, '*' => 1, 'value.0' => 'Floor lamp', 'field\\' => 'price'],
+        $response = $this->postJson('/api/products/search', ['search' => ['filters' => [
+            ['field' => 'name', 'value' => 'Desk lamp', 'a.b' => 1],
         ]]]);
 
-        $response->assertOk()->assertJsonPath('data', [['name' => 'Desk lamp']]);
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The search.filters.0.a.b field is prohibited.',
+            'errors' => ['search.filters.0.a.b' => ['The search.filters.0.a.b field is prohibited.']],
+        ]);
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_key_that_holds_a_wildcard_on_its_object(): void
+    {
+        $response = $this->postJson('/api/products/search', ['search' => ['filters' => [
+            ['field' => 'name', 'value' => 'Desk lamp', '*' => 1],
+        ]]]);
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The * key is not valid for the search.filters.0 field.',
+            'errors' => ['search.filters.0' => ['The * key is not valid for the search.filters.0 field.']],
+        ]);
     }
 
     #[Test]

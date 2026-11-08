@@ -41,6 +41,9 @@ class MutatePayloadValidationTest extends PackageTestCase
             'relations given as a string' => [['operation' => 'create', 'attributes' => ['name' => 'Desk lamp', 'price' => 39], 'relations' => 'category'], [
                 'mutate.0.relations' => ['The mutate.0.relations field must be an array.'],
             ]],
+            'an undeclared attribute' => [['operation' => 'create', 'attributes' => ['name' => 'Desk lamp', 'stock' => 3]], [
+                'mutate.0.attributes' => ['The stock key of the mutate.0.attributes field is not writable on create.'],
+            ]],
         ];
     }
 

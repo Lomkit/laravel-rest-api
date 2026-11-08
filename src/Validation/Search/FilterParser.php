@@ -15,7 +15,7 @@ use Lomkit\Rest\Validation\ValidationContext;
 
 final readonly class FilterParser
 {
-    public const array GROUP_KEYS = ['relation', 'exists', 'types'];
+    public const array KEYS = ['field' => true, 'operator' => true, 'value' => true, 'type' => true, 'nested' => true];
 
     /** @param list<Cursor> $entries */
     public function group(array $entries, ValidationContext $context, string $boolean = 'and'): FilterGroup
@@ -43,7 +43,7 @@ final readonly class FilterParser
             return (new RelationGroupParser($this))->parse($entry, $context);
         }
 
-        $context->reader->refuse($entry, self::GROUP_KEYS);
+        $context->reader->known($entry, self::KEYS);
 
         $rules = $context->rules;
         $field = $entry->at('field');

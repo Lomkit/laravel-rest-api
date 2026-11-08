@@ -76,20 +76,16 @@ class AddedMutateRulesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_applies_an_application_rule_to_an_entry_key_that_the_package_does_not_read(): void
+    public function it_keeps_the_rejection_of_an_unknown_entry_key_that_an_application_rule_names(): void
     {
         RuledMutateRequest::$added = ['mutate.*.flag' => ['boolean']];
 
-        $refused = $this->postJson('/api/categories/mutate', ['mutate' => [
-            ['operation' => 'create', 'attributes' => ['name' => 'Desks'], 'flag' => 'maybe'],
-        ]]);
-        $accepted = $this->postJson('/api/categories/mutate', ['mutate' => [
+        $response = $this->postJson('/api/categories/mutate', ['mutate' => [
             ['operation' => 'create', 'attributes' => ['name' => 'Desks'], 'flag' => true],
         ]]);
 
-        $this->assertExactErrors($refused, ['mutate.0.flag' => ['The mutate.0.flag field must be true or false.']]);
-        $accepted->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => 1]]]);
-        $this->assertSame(['Desks'], Category::query()->pluck('name')->all());
+        $this->assertExactErrors($response, ['mutate.0.flag' => ['The mutate.0.flag field is prohibited.']]);
+        $this->assertSame(0, Category::query()->count());
     }
 
     #[Test]

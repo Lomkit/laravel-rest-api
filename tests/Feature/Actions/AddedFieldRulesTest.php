@@ -39,13 +39,13 @@ class AddedFieldRulesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_applies_an_application_rule_to_an_entry_key_that_the_package_does_not_read(): void
+    public function it_keeps_the_rejection_of_an_unknown_entry_key_that_an_application_rule_names(): void
     {
         RuledOperateRequest::$added = ['fields.*.default' => ['boolean']];
 
-        $response = $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 'notify', 'value' => true, 'default' => 'later']]]);
+        $response = $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 'notify', 'value' => true, 'default' => false]]]);
 
-        $this->assertExactErrors($response, ['fields.0.default' => ['The fields.0.default field must be true or false.']]);
+        $this->assertExactErrors($response, ['fields.0.default' => ['The fields.0.default field is prohibited.']]);
     }
 
     #[Test]
@@ -72,9 +72,9 @@ class AddedFieldRulesTest extends PackageTestCase
     public function it_reports_the_entry_names_before_a_key_that_an_application_rule_adds(): void
     {
         RuledOperateRequest::$added = ['extra' => ['required']];
-        $errors = ['fields.0.name' => ['The fields.0.name field must be a string.'], 'extra' => ['The extra field is required.']];
+        $errors = ['fields.0.name' => ['The selected fields.0.name is invalid.'], 'extra' => ['The extra field is required.']];
 
-        $response = $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 5, 'value' => 1]]]);
+        $response = $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 'bogus', 'value' => 1]]]);
 
         $this->assertExactErrors($response, $errors);
         $response->assertJsonPath('errors', $errors);

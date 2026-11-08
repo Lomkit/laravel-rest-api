@@ -145,8 +145,8 @@ class OperationPayloadTest extends PackageTestCase
     public static function failedOperations(): array
     {
         return [
-            'a partial parse' => ['/api/posts/actions/publish-posts', ['fields' => [['name' => 5, 'value' => true]]]],
-            'a recorded violation' => ['/api/posts/actions/publish-posts', ['search' => ['page' => 2]]],
+            'a partial parse' => ['/api/posts/actions/publish-posts', ['fields' => [['name' => 'pinned', 'value' => true]]]],
+            'a recorded violation' => ['/api/posts/actions/publish-posts', ['fields' => [['name' => 'notify', 'value' => true, 'default' => false]]]],
             'fields that are not an array' => ['/api/posts/actions/publish-posts', ['fields' => null]],
             'keys that did not parse' => ['/api/team-notes/actions/pin-named-notes', ['resources' => ['one']]],
         ];

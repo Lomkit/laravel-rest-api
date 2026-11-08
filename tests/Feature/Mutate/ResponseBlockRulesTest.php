@@ -60,12 +60,12 @@ class ResponseBlockRulesTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_reads_a_response_block_that_holds_an_unknown_key_as_the_block_alone(): void
+    public function it_reads_a_response_block_as_if_its_unknown_keys_were_absent(): void
     {
         $mutate = [['operation' => 'update', 'key' => $this->emma->id, 'attributes' => ['title' => 'Persuasion']]];
 
         $expected = $this->postJson('/api/books/mutate', ['mutate' => $mutate, 'response' => ['selects' => [['field' => 'title']]]])->assertOk();
-        $response = $this->postJson('/api/books/mutate', ['mutate' => $mutate, 'response' => ['selects' => [['field' => 'title', 'as' => 'name']], 'select' => [['field' => 'id']]]]);
+        $response = $this->postJson('/api/books/mutate', ['mutate' => $mutate, 'response' => ['selects' => [['field' => 'title']], 'select' => [['field' => 'id']], 'filtres' => [], '*' => 1]]);
 
         $response->assertOk()->assertExactJson($expected->json());
         $this->assertSame([['title' => 'Persuasion']], $response->json('records'));

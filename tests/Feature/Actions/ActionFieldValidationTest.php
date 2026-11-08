@@ -44,8 +44,11 @@ class ActionFieldValidationTest extends PackageTestCase
             'an explicit null on a field that is not nullable' => ['publish-posts', ['fields' => [['name' => 'notify', 'value' => null]]], [
                 'fields.notify' => ['The notify field must be true or false.'],
             ]],
+            'an unknown field name' => ['publish-posts', ['fields' => [['name' => 'pinned', 'value' => true]]], [
+                'fields.0.name' => ['The selected fields.0.name is invalid.'],
+            ]],
             'a field name that is not a string' => ['publish-posts', ['fields' => [['name' => ['at'], 'value' => '2026-03-01']]], [
-                'fields.0.name' => ['The fields.0.name field must be a string.'],
+                'fields.0.name' => ['The fields.0.name field must be a string.', 'The selected fields.0.name is invalid.'],
             ]],
             'a missing required field' => ['change-status', ['fields' => []], [
                 'fields.status' => ['The status field is required.'],
@@ -55,6 +58,7 @@ class ActionFieldValidationTest extends PackageTestCase
             ]],
             'an unknown field name next to a missing required field' => ['change-status', ['fields' => [['name' => 'bogus', 'value' => 1]]], [
                 'fields.status' => ['The status field is required.'],
+                'fields.0.name' => ['The selected fields.0.name is invalid.'],
             ]],
             'an entry without a name' => ['publish-posts', ['fields' => [['value' => true]]], [
                 'fields.0.name' => ['The fields.0.name field is required.'],
@@ -75,6 +79,12 @@ class ActionFieldValidationTest extends PackageTestCase
             'a search that is not an array' => ['publish-posts', ['search' => 'drafts'], [
                 'search' => ['The search field must be an array.'],
             ]],
+            'an unknown key in an entry' => ['publish-posts', ['fields' => [['name' => 'notify', 'value' => true, 'default' => false]]], [
+                'fields.0.default' => ['The fields.0.default field is prohibited.'],
+            ]],
+            'a key that holds * in an entry' => ['publish-posts', ['fields' => [['name' => 'notify', 'value' => true, '*' => 1]]], [
+                'fields.0' => ['The * key is not valid for the fields.0 field.'],
+            ]],
             'names under fields given as an object' => ['publish-posts', ['fields' => ['first' => ['name' => 'pinned', 'value' => true]]], [
                 'fields' => ['The fields field must be a list.'],
             ]],
@@ -87,34 +97,22 @@ class ActionFieldValidationTest extends PackageTestCase
         ];
     }
 
-    /** @param array<string, mixed> $payload */
     #[Test]
-    #[DataProvider('unknownKeys')]
-    public function it_runs_an_action_as_if_its_unknown_keys_were_absent(array $payload): void
+    public function it_runs_an_action_as_if_an_unknown_key_of_the_body_or_of_the_search_were_absent(): void
     {
         $received = $this->app->instance(ReceivedFields::class, new ReceivedFields);
         $draft = Post::factory()->create(['id' => 1, 'views' => 10]);
         $other = Post::factory()->create(['id' => 2, 'views' => 1]);
 
-        $response = $this->postJson('/api/posts/actions/publish-posts', $payload);
+        $response = $this->postJson('/api/posts/actions/publish-posts', [
+            'search' => ['filter' => [['field' => 'views', 'value' => 1]], 'filters' => [['field' => 'views', 'operator' => '>', 'value' => 5]]],
+            'fields' => [['name' => 'notify', 'value' => false]],
+            'options' => ['dry_run' => true],
+        ]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
         $this->assertSame([['handle', ['notify' => false]]], $received->calls());
         $this->assertSame([PostStatus::Published, PostStatus::Draft], [$draft->fresh()?->status, $other->fresh()?->status]);
-    }
-
-    /** @return array<string, array{array<string, mixed>}> */
-    public static function unknownKeys(): array
-    {
-        $search = ['filters' => [['field' => 'views', 'operator' => '>', 'value' => 5]]];
-        $notify = ['name' => 'notify', 'value' => false];
-
-        return [
-            'in the search and at the root' => [['search' => [...$search, 'filter' => [['field' => 'views', 'value' => 1]]], 'fields' => [$notify], 'options' => ['dry_run' => true]]],
-            'in a field entry' => [['search' => $search, 'fields' => [[...$notify, 'default' => true]]]],
-            'holding a wildcard, a dot or a final backslash in a field entry' => [['search' => $search, 'fields' => [[...$notify, '*' => 1, 'a.b' => 2, 'a\\' => 3]]]],
-            'a field that is not declared' => [['search' => $search, 'fields' => [['name' => 'pinned', 'value' => true], $notify, ['name' => 'pinned'], ['name' => 'a.b', 'value' => 1]]]],
-        ];
     }
 
     #[Test]

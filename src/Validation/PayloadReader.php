@@ -93,30 +93,31 @@ final readonly class PayloadReader
 
         foreach (array_keys($object->value) as $key) {
             if (in_array($key, $keys, true)) {
-                $this->rules->reject(Violation::misplaced($object->at($key)->path));
+                $this->rules->reject(Violation::unknown($object->at($key)->path));
             }
         }
     }
 
-    /**
-     * @param  list<string>  $names
-     * @return array<string, Cursor>
-     */
-    public function among(Cursor $map, array $names): array
+    /** @param array<string, true> $keys */
+    public function known(Cursor $object, array $keys): void
     {
-        $found = [];
+        if (! is_array($object->value)) {
+            return;
+        }
 
-        foreach (is_array($map->value) ? array_keys($map->value) : [] as $key) {
-            if (in_array((string) $key, $names, true)) {
-                $found[(string) $key] = $map->at($key);
+        foreach (array_keys($object->value) as $key) {
+            if (isset($keys[$key])) {
+                continue;
             }
-        }
 
-        if ($found === [] && is_array($map->value) && $map->value !== []) {
-            $this->rules->reject(Violation::tooFew($map->path, 1));
-        }
+            if (! KeyPath::canName($key)) {
+                $this->rules->reject(Violation::unnamedKey($object->path, (string) $key));
 
-        return $found;
+                continue;
+            }
+
+            $this->rules->reject(Violation::unknown($object->at($key)->path));
+        }
     }
 
     /** @return list<Cursor>|null */

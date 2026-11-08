@@ -10,9 +10,11 @@ use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Mutations\MutationNode;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Validation\Cursor;
+use Lomkit\Rest\Validation\KeyPath;
 use Lomkit\Rest\Validation\Limits;
 use Lomkit\Rest\Validation\ParsedRules;
 use Lomkit\Rest\Validation\PayloadReader;
+use Lomkit\Rest\Validation\Violation;
 
 final readonly class RelationMutationParser
 {
@@ -23,15 +25,15 @@ final readonly class RelationMutationParser
         private EntryRules $entryRules,
     ) {}
 
-    public function refuse(Cursor $entry, ?Relation $relation): void
+    public function known(Cursor $entry, ?Relation $relation): void
     {
-        $allowed = match (true) {
-            $relation instanceof PivotRelation => ['pivot'],
-            $relation === null => [],
-            default => $relation->entryRule()->keys(),
+        $keys = match (true) {
+            $relation instanceof PivotRelation => [...MutationParser::KEYS, 'pivot'],
+            $relation === null => MutationParser::KEYS,
+            default => [...MutationParser::KEYS, ...$relation->entryRule()->keys()],
         };
 
-        $this->reader->refuse($entry, array_values(array_diff(['pivot', 'type'], $allowed)));
+        $this->reader->known($entry, array_fill_keys($keys, true));
     }
 
     public function constraints(Cursor $entry, Resource $resource, ?MutationOperation $operation): void
@@ -84,6 +86,8 @@ final readonly class RelationMutationParser
 
         foreach (array_keys($relations->value) as $name) {
             if (! isset($declared[$name])) {
+                $this->undeclared($relations, $name);
+
                 continue;
             }
 
@@ -107,7 +111,7 @@ final readonly class RelationMutationParser
         $this->entryRules->pivot($entry, $relation, $operation?->pivotWriteOperation(), $mutation);
         $pivot = $entry->at('pivot')->value;
 
-        return is_array($pivot) ? $relation->getPivotFields()->only($pivot) : null;
+        return is_array($pivot) ? $pivot : null;
     }
 
     /** @return MutationNode|list<MutationNode>|null */
@@ -145,6 +149,19 @@ final readonly class RelationMutationParser
         }
 
         return $nodes;
+    }
+
+    private function undeclared(Cursor $relations, int|string $name): void
+    {
+        $this->rules->reject(Violation::unnamedKey($relations->path, (string) $name));
+
+        if (! KeyPath::canName($name)) {
+            return;
+        }
+
+        $value = $relations->at($name);
+
+        $this->reader->object($value);
     }
 
     private function relationRules(Cursor $value, Relation $relation, Resource $resource): void

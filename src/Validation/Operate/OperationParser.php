@@ -93,6 +93,6 @@ final readonly class OperationParser
             return InputValues::fromNamed($set, []);
         }
 
-        return (new InputSet($set))->inputsFirst($fields, $context);
+        return (new InputSet($set))->inputsFirst($fields, $context, 'action-fields:'.$action->uriKey());
     }
 }

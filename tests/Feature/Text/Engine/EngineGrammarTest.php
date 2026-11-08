@@ -122,24 +122,13 @@ class EngineGrammarTest extends EngineSearchTestCase
             'an aggregate without relation' => ['vouchers', ['aggregates' => [['type' => 'count']]], [
                 'search.aggregates.0.relation' => ['The search.aggregates.0.relation field is required.'],
             ]],
+            'an unknown key in a filter' => ['vouchers', ['filters' => [['field' => 'number', 'value' => 3, 'operater' => '!=']]], [
+                'search.filters.0.operater' => ['The search.filters.0.operater field is prohibited.'],
+            ]],
             'filters given as an object' => ['vouchers', ['filters' => ['first' => ['field' => 'number', 'value' => 3]]], [
                 'search.filters' => ['The search.filters field must be a list.'],
             ]],
         ];
-    }
-
-    #[Test]
-    public function it_runs_an_engine_filter_that_holds_an_unknown_key_as_the_filter_alone(): void
-    {
-        $filter = ['field' => 'number', 'value' => 3];
-
-        $expected = $this->search('vouchers', ['text' => ['value' => 'report'], 'filters' => [$filter]])->assertOk();
-        $searches = $this->engine->searches;
-        $response = $this->search('vouchers', ['text' => ['value' => 'report', 'fuzzy' => true], 'filters' => [[...$filter, 'operater' => '!=']]]);
-
-        $response->assertOk()->assertExactJson($expected->json());
-        $this->assertCount(1, $searches);
-        $this->assertEquals([...$searches, ...$searches], $this->engine->searches);
     }
 
     #[Test]

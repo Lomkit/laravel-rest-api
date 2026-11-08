@@ -128,9 +128,8 @@ class PayloadReaderTest extends TestCase
         $rules = $this->rules->rules();
 
         $this->assertSame(['o.x', 'o.y'], array_keys($rules));
-        $this->assertRejected(Violation::misplaced('o.x'), $rules['o.x']);
-        $this->assertRejected(Violation::misplaced('o.y'), $rules['o.y']);
-        $this->assertSame([], $this->rules->book()->attributeNames([], []));
+        $this->assertRejected(Violation::unknown('o.x'), $rules['o.x']);
+        $this->assertRejected(Violation::unknown('o.y'), $rules['o.y']);
     }
 
     #[Test]
@@ -144,31 +143,34 @@ class PayloadReaderTest extends TestCase
     }
 
     #[Test]
-    public function it_reads_the_listed_names_of_a_map_in_payload_order(): void
+    public function it_rejects_unknown_keys_in_payload_order(): void
     {
-        $found = $this->reader()->among($this->object(['shelf' => [], 'comment' => [], 'book' => ['a' => 1]]), ['book', 'shelf']);
+        $this->reader()->known($this->object(['b' => 1, 'x' => 2, 'a' => 3, 'y' => 4]), ['a' => true, 'b' => true]);
 
-        $this->assertSame(['shelf', 'book'], array_keys($found));
-        $this->assertSame(['o.shelf', 'o.book'], array_map(fn (Cursor $cursor): string => $cursor->path, array_values($found)));
-        $this->assertSame([], $this->rules->rules());
+        $rules = $this->rules->rules();
+
+        $this->assertSame(['o.x', 'o.y'], array_keys($rules));
+        $this->assertRejected(Violation::unknown('o.x'), $rules['o.x']);
+        $this->assertRejected(Violation::unknown('o.y'), $rules['o.y']);
+        $this->assertSame([], $this->rules->book()->attributeNames([], []));
     }
 
     #[Test]
-    public function it_refuses_a_map_that_lists_no_known_name(): void
+    public function it_names_no_key_itself(): void
     {
-        $this->assertSame([], $this->reader()->among($this->object(['comment' => [], '*' => []]), ['book']));
+        $this->reader()->known($this->object(['sort_by' => 1]), ['field' => true]);
+
+        $this->assertSame([], $this->rules->book()->attributeNames([], []));
+        $this->assertRejected(Violation::unknown('o.sort_by'), $this->rules->rules()['o.sort_by']);
+    }
+
+    #[Test]
+    public function it_rejects_a_key_that_cannot_be_named_on_its_object(): void
+    {
+        $this->reader()->known($this->object(['field' => 'name', '*' => 1]), ['field' => true]);
 
         $this->assertSame(['o'], array_keys($this->rules->rules()));
-        $this->assertRejected(Violation::tooFew('o', 1), $this->rules->rules()['o']);
-    }
-
-    #[Test]
-    public function it_leaves_an_empty_map_to_its_rules(): void
-    {
-        $this->assertSame([], $this->reader()->among($this->object([]), ['book']));
-        $this->assertSame([], $this->reader()->among($this->cursor('x'), ['book']));
-
-        $this->assertSame([], $this->rules->rules());
+        $this->assertRejected(new Violation('o', 'The :key key is not valid for the :attribute field.', ['key' => '*']), $this->rules->rules()['o']);
     }
 
     private function reader(): PayloadReader
