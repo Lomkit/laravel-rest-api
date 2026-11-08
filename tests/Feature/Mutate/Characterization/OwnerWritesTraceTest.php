@@ -143,7 +143,7 @@ class OwnerWritesTraceTest extends WriteTraceTestCase
             'saved Label(loose)',
             'sql insert into books (title, updated_at, created_at) values (?, ?, ?)',
             'saved Book(Ubik)',
-            'sql insert into labels (labelable_id, labelable_type, text, updated_at, created_at) values (?, ?, ?, ?, ?)',
+            'sql insert into labels (labelable_type, labelable_id, text, updated_at, created_at) values (?, ?, ?, ?, ?)',
             'saved Label(fresh)',
             'sql update labels set labelable_type = ?, labelable_id = ?, updated_at = ? where id = ?',
             'saved Label(classic)',

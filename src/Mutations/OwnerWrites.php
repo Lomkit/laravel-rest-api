@@ -18,16 +18,15 @@ final readonly class OwnerWrites extends RelationWrites
         foreach ($this->nodes() as $node) {
             $resource = $this->resource($node);
             $related = $mutator->one($resource, $node, $log);
-            $owner = $this->owner($parent);
             $mutator->checks->linkNow($this->relation, $node, $parent, $related, $node->operation === MutationOperation::Detach);
 
             if ($node->operation === MutationOperation::Detach) {
-                $owner->dissociate();
+                $this->owner($parent)->dissociate();
 
                 continue;
             }
 
-            $owner->associate($related);
+            $this->ownerFor($parent, $related)->associate($related);
         }
     }
 
@@ -44,7 +43,7 @@ final readonly class OwnerWrites extends RelationWrites
                 continue;
             }
 
-            $value = $related->owner($owner->getOwnerKeyName(), $owner instanceof EloquentMorphTo ? $related->model->getMorphClass() : null);
+            $value = $related->owner($this->ownerKey($parent->model, $related->model), $owner instanceof EloquentMorphTo ? $related->model->getMorphClass() : null);
             $detach = $node->operation === MutationOperation::Detach;
 
             $replay->add(new LinkStep($node->path.'.key', $column, $parent->identity, $parent->link($column), $value, $detach, $detach ? LinkCheck::Current : LinkCheck::None));
@@ -79,7 +78,7 @@ final readonly class OwnerWrites extends RelationWrites
                 continue;
             }
 
-            $keys[$owner->getForeignKeyName()] = $related?->getAttribute($owner->getOwnerKeyName());
+            $keys[$owner->getForeignKeyName()] = $related === null ? null : $related->getAttribute($this->ownerKey($parent, $related));
 
             if ($owner instanceof EloquentMorphTo) {
                 $keys[$owner->getMorphType()] = $related?->getMorphClass();
@@ -124,5 +123,24 @@ final readonly class OwnerWrites extends RelationWrites
         }
 
         return $owner;
+    }
+
+    /** @return EloquentBelongsTo<Model, Model> */
+    private function ownerFor(Model $parent, Model $related): EloquentBelongsTo
+    {
+        $owner = $this->owner($parent);
+
+        if (! $owner instanceof EloquentMorphTo) {
+            return $owner;
+        }
+
+        $parent->setAttribute($owner->getMorphType(), $related->getMorphClass());
+
+        return $this->owner($parent);
+    }
+
+    private function ownerKey(Model $parent, Model $related): string
+    {
+        return $this->ownerFor($parent->newInstance(), $related)->getOwnerKeyName();
     }
 }
