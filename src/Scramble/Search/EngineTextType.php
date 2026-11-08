@@ -14,10 +14,10 @@ final readonly class EngineTextType
 
     public function text(): ObjectType
     {
-        return Schemas::shape([
+        return Schemas::closed([
             'value' => TextSearchType::value($this->capabilities),
             'mode' => (new StringType)->enum($this->capabilities->modeNames()),
-        ], [], 'Words to search in the search index of the resource; the index decides which attributes they match', ['trashed']);
+        ], [], 'Words to search in the search index of the resource; the index decides which attributes they match');
     }
 
     public function trashed(): StringType

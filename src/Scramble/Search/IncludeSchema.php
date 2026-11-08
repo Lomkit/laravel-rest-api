@@ -14,7 +14,6 @@ use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Scramble\Schemas;
-use Lomkit\Rest\Validation\Search\MorphIncludeParser;
 
 final readonly class IncludeSchema
 {
@@ -60,17 +59,13 @@ final readonly class IncludeSchema
             'alias' => SearchSchema::alias('The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.'),
         ];
 
-        $prohibited = ['text', 'trashed', ...($relation instanceof OwnerRelation ? ['limit', 'sorts'] : [])];
-
         if (! $relation instanceof PolymorphicRelation) {
-            return Schemas::shape([...$properties, ...$this->search($relation->resource(), $relation instanceof OwnerRelation ? self::OWNER_KEYS : self::KEYS)], ['relation'], '', $prohibited);
+            return Schemas::closed([...$properties, ...$this->search($relation->resource(), $relation instanceof OwnerRelation ? self::OWNER_KEYS : self::KEYS)], ['relation']);
         }
 
-        if ($relation->targets()->isPolymorphic()) {
-            return Schemas::shape([...$properties, 'types' => $this->types($relation)], ['relation'], '', [...$prohibited, ...MorphIncludeParser::SEARCH_KEYS]);
-        }
+        $single = $relation->targets()->isPolymorphic() ? [] : $this->search($relation->resource(), self::OWNER_KEYS);
 
-        return Schemas::shape([...$properties, ...$this->search($relation->resource(), self::OWNER_KEYS), 'types' => $this->types($relation)], ['relation'], '', $prohibited);
+        return Schemas::closed([...$properties, ...$single, 'types' => $this->types($relation)], ['relation']);
     }
 
     private function types(Relation&PolymorphicRelation $relation): ObjectType
@@ -78,10 +73,10 @@ final readonly class IncludeSchema
         $types = [];
 
         foreach ($relation->targets() as $target) {
-            $types[$target->type] = Schemas::shape($this->search($relation->resourceOf($target), self::OWNER_KEYS), [], '', ['limit', 'sorts']);
+            $types[$target->type] = Schemas::closed($this->search($relation->resourceOf($target), self::OWNER_KEYS));
         }
 
-        return Schemas::shape($types, [], 'The search of each type of related row, keyed by morph type');
+        return Schemas::closed($types, [], 'The search of each type of related row, keyed by morph type');
     }
 
     /**

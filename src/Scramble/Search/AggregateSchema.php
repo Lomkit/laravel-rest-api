@@ -113,7 +113,7 @@ final readonly class AggregateSchema
             $properties['filters'] = $filters;
         }
 
-        return $fields === [] ? Schemas::shape($properties, ['relation', 'type'], '', ['field']) : Schemas::shape($properties, ['relation', 'type', 'field']);
+        return Schemas::closed($properties, ['relation', 'type', ...($fields === [] ? [] : ['field'])]);
     }
 
     /** @return list<Relation> */

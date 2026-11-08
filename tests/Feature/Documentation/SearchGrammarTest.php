@@ -33,8 +33,10 @@ class SearchGrammarTest extends DocumentationTestCase
         $this->assertSame(['text', 'trashed', 'filters', 'gates', 'scopes', 'sorts', 'selects', 'aggregates', 'includes', 'instructions', 'limit', 'page'], array_keys($schemas['ShowSearch']['properties']));
         $this->assertSame(['filters', 'gates', 'sorts', 'selects', 'aggregates', 'includes', 'limit', 'page'], array_keys($schemas['StageSearch']['properties']));
         $this->assertSame(['filters', 'gates', 'sorts', 'selects', 'includes', 'limit', 'page'], array_keys($schemas['NoteSearch']['properties']));
+        $this->assertArrayNotHasKey('additionalProperties', $schemas['ShowSearch']);
         $this->assertArrayNotHasKey('not', $schemas['ShowSearch']);
         $this->assertSame(['anyOf' => [['required' => ['text']], ['required' => ['trashed']]]], $schemas['StageSearch']['not']);
+        $this->assertFalse($schemas['ShowSort']['additionalProperties']);
     }
 
     #[Test]
@@ -44,10 +46,10 @@ class SearchGrammarTest extends DocumentationTestCase
         $search = $schemas['ShowSearch']['properties'];
 
         $this->assertSame(
-            '{"type":"object","description":"`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.","properties":{"field":{"type":"string","enum":["id","title","summary","price","seats","featured","starts_on","starts_at","status","level","stage.code","stage.name","stage_count","stage_min_code","stage_min_name","stage_max_code","stage_max_name","stage_exists","artists_count","artists_min_id","artists_min_name","artists_max_id","artists_max_name","artists_exists","comments_count","comments_min_id","comments_min_rating","comments_min_body","comments_max_id","comments_max_rating","comments_max_body","comments_avg_rating","comments_sum_rating","comments_exists","labels_count","labels_min_id","labels_min_name","labels_max_id","labels_max_name","labels_exists"]},"direction":{"type":"string","enum":["asc","desc"]}},"required":["field"],"title":"ShowSort"}',
+            '{"type":"object","description":"`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.","properties":{"field":{"type":"string","enum":["id","title","summary","price","seats","featured","starts_on","starts_at","status","level","stage.code","stage.name","stage_count","stage_min_code","stage_min_name","stage_max_code","stage_max_name","stage_exists","artists_count","artists_min_id","artists_min_name","artists_max_id","artists_max_name","artists_exists","comments_count","comments_min_id","comments_min_rating","comments_min_body","comments_max_id","comments_max_rating","comments_max_body","comments_avg_rating","comments_sum_rating","comments_exists","labels_count","labels_min_id","labels_min_name","labels_max_id","labels_max_name","labels_exists"]},"direction":{"type":"string","enum":["asc","desc"]}},"required":["field"],"additionalProperties":false,"title":"ShowSort"}',
             json_encode($schemas['ShowSort']),
         );
-        $this->assertSame('{"type":"object","properties":{"field":{"type":"string","enum":["id","title","summary","price","seats","featured","starts_on","starts_at","status","level","settings"]}},"required":["field"],"title":"ShowSelect"}', json_encode($schemas['ShowSelect']));
+        $this->assertSame('{"type":"object","properties":{"field":{"type":"string","enum":["id","title","summary","price","seats","featured","starts_on","starts_at","status","level","settings"]}},"required":["field"],"additionalProperties":false,"title":"ShowSelect"}', json_encode($schemas['ShowSelect']));
         $this->assertSame('{"type":"array","description":"The abilities to answer for each row, under `gates` in the row, and for `create` under `gates` in `meta`","items":{"type":"string","enum":["view","create","update","delete","restore","forceDelete","feature"]},"uniqueItems":true}', json_encode($search['gates']));
         $this->assertSame('{"type":"integer","enum":[10,25,50]}', json_encode($search['limit']));
         $this->assertSame('{"type":"integer","minimum":1}', json_encode($search['page']));
@@ -83,9 +85,9 @@ class SearchGrammarTest extends DocumentationTestCase
     }
 
     #[Test]
-    public function it_accepts_the_keys_that_a_search_does_not_list(): void
+    public function it_accepts_the_keys_that_the_root_of_a_search_does_not_list(): void
     {
-        $search = ['filters' => [['field' => 'title', 'value' => 'Opening night', 'note' => 'a']], 'sorts' => [['field' => 'title', 'note' => 'a']], 'note' => 'a'];
+        $search = ['filters' => [['field' => 'title', 'value' => 'Opening night']], 'note' => 'a'];
 
         $this->assertSame([], (new OpenApiValidator)->requestErrors($this->document(), '/shows/search', 'post', ['search' => $search]));
     }
@@ -106,7 +108,7 @@ class SearchGrammarTest extends DocumentationTestCase
         $notable = $schemas['NoteIncludeNotable']['properties'];
 
         $this->assertSame(
-            '{"type":"object","properties":{"relation":{"type":"string","const":"stage"},"alias":{"type":"string","description":"The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",'.self::ALIAS.',"filters":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageFilter"},"maxItems":100},"gates":{"type":"array","description":"The abilities to answer for each row, under `gates` in the row","items":{"type":"string","enum":["view","update","delete","restore","forceDelete"]},"uniqueItems":true},"selects":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageSelect"},"maxItems":100},"aggregates":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageAggregate"},"maxItems":20},"includes":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageInclude"},"maxItems":20}},"required":["relation"],"not":{"anyOf":[{"required":["text"]},{"required":["trashed"]},{"required":["limit"]},{"required":["sorts"]}]},"title":"ShowIncludeStage"}',
+            '{"type":"object","properties":{"relation":{"type":"string","const":"stage"},"alias":{"type":"string","description":"The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",'.self::ALIAS.',"filters":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageFilter"},"maxItems":100},"gates":{"type":"array","description":"The abilities to answer for each row, under `gates` in the row","items":{"type":"string","enum":["view","update","delete","restore","forceDelete"]},"uniqueItems":true},"selects":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageSelect"},"maxItems":100},"aggregates":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageAggregate"},"maxItems":20},"includes":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageInclude"},"maxItems":20}},"required":["relation"],"additionalProperties":false,"title":"ShowIncludeStage"}',
             json_encode($schemas['ShowIncludeStage']),
         );
         $this->assertSame(['relation', 'alias', 'filters', 'gates', 'sorts', 'selects', 'aggregates', 'includes', 'limit'], array_keys($schemas['ShowIncludeComments']['properties']));
@@ -114,14 +116,14 @@ class SearchGrammarTest extends DocumentationTestCase
         $this->assertSame(['relation', 'alias', 'types'], array_keys($notable));
         $this->assertSame([Show::class, Stage::class], array_keys($notable['types']['properties']));
         $this->assertSame(['filters', 'gates', 'scopes', 'selects', 'aggregates', 'includes', 'instructions'], array_keys($notable['types']['properties'][Show::class]['properties']));
-        $this->assertSame(['anyOf' => [['required' => ['limit']], ['required' => ['sorts']]]], $notable['types']['properties'][Show::class]['not']);
+        $this->assertFalse($notable['types']['properties'][Show::class]['additionalProperties']);
     }
 
     #[Test]
     public function it_documents_the_aggregates_of_each_relation_by_function(): void
     {
         $schemas = $this->document()['components']['schemas'];
-        $branch = fn (string $types, string $field): string => '{"type":"object","properties":{"relation":{"type":"string","const":"comments"},"type":{"type":"string","enum":['.$types.']},'.$field.'"alias":{"type":"string","description":"The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",'.self::ALIAS.',"filters":{"type":"array","items":{"$ref":"#\/components\/schemas\/CommentFilter"},"maxItems":100}},"required":["relation","type"'.($field === '' ? '],"not":{"required":["field"]}}' : ',"field"]}');
+        $branch = fn (string $types, string $field): string => '{"type":"object","properties":{"relation":{"type":"string","const":"comments"},"type":{"type":"string","enum":['.$types.']},'.$field.'"alias":{"type":"string","description":"The key of the value in each row; by default the relation, the type and the field in snake case, such as `comments_max_rating`.",'.self::ALIAS.',"filters":{"type":"array","items":{"$ref":"#\/components\/schemas\/CommentFilter"},"maxItems":100}},"required":["relation","type"'.($field === '' ? '' : ',"field"').'],"additionalProperties":false}';
 
         $this->assertSame(['stage', 'artists', 'comments', 'labels'], array_keys((array) $schemas['ShowAggregate']['discriminator']['mapping']));
         $this->assertSame(
@@ -142,8 +144,8 @@ class SearchGrammarTest extends DocumentationTestCase
     {
         return [
             'the scopes' => ['ShowScope', '{"discriminator":{"propertyName":"name","mapping":{"startingFrom":"#\/components\/schemas\/ShowScopeStartingFrom"}},"oneOf":[{"$ref":"#\/components\/schemas\/ShowScopeStartingFrom"}],"title":"ShowScope"}'],
-            'a scope with a required and a default parameter' => ['ShowScopeStartingFrom', '{"type":"object","properties":{"name":{"type":"string","const":"startingFrom"},"parameters":{"type":"array","description":"In this order: from, min_seats","prefixItems":[{"type":"string","format":"date"},{"type":"integer"}],"minItems":1,"maxItems":2}},"required":["name","parameters"],"title":"ShowScopeStartingFrom"}'],
-            'an instruction with a default and a nullable field' => ['ShowInstructionOnlyFeatured', '{"type":"object","properties":{"name":{"type":"string","const":"only-featured"},"fields":{"type":"array","items":{"oneOf":[{"type":"object","properties":{"name":{"type":"string","const":"featured"},"value":{"type":"boolean"}},"required":["name"]},{"type":"object","properties":{"name":{"type":"string","const":"min_seats"},"value":{"type":["integer","null"]}},"required":["name"]}]},"maxItems":100}},"required":["name"],"title":"ShowInstructionOnlyFeatured"}'],
+            'a scope with a required and a default parameter' => ['ShowScopeStartingFrom', '{"type":"object","properties":{"name":{"type":"string","const":"startingFrom"},"parameters":{"type":"array","description":"In this order: from, min_seats","prefixItems":[{"type":"string","format":"date"},{"type":"integer"}],"minItems":1,"maxItems":2}},"required":["name","parameters"],"additionalProperties":false,"title":"ShowScopeStartingFrom"}'],
+            'an instruction with a default and a nullable field' => ['ShowInstructionOnlyFeatured', '{"type":"object","properties":{"name":{"type":"string","const":"only-featured"},"fields":{"type":"array","items":{"oneOf":[{"type":"object","properties":{"name":{"type":"string","const":"featured"},"value":{"type":"boolean"}},"required":["name"],"additionalProperties":false},{"type":"object","properties":{"name":{"type":"string","const":"min_seats"},"value":{"type":["integer","null"]}},"required":["name"],"additionalProperties":false}]},"maxItems":100}},"required":["name"],"additionalProperties":false,"title":"ShowInstructionOnlyFeatured"}'],
         ];
     }
 

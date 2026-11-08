@@ -34,7 +34,7 @@ class ScrambleTextSearchTest extends ScrambleTestCase
                 'value' => ['type' => ['string', 'null'], 'maxLength' => 255],
                 'mode' => ['type' => 'string', 'enum' => ['words', 'phrase']],
             ],
-            'not' => ['required' => ['trashed']],
+            'additionalProperties' => false,
         ], $search['text']);
         $this->assertSame(['$ref' => '#/components/schemas/ContainsPostSort'], $search['sorts']['items']);
         $this->assertNotContains('@relevance', $this->schemas()['ContainsPostSort']['properties']['field']['enum']);

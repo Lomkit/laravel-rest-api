@@ -1535,30 +1535,7 @@
                 "required": [
                     "nested"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "field"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "operator"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "value"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "relation"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "ArtistFilterGroup"
             },
             "ArtistFilterId": {
@@ -1592,20 +1569,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -1642,20 +1606,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ArtistFilterId"
@@ -1691,20 +1642,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -1739,20 +1677,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -1789,20 +1714,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ArtistFilterName"
@@ -1821,6 +1733,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "ArtistSelect"
             },
             "ArtistSort": {
@@ -1845,6 +1758,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "ArtistSort"
             },
             "Comment": {
@@ -1944,11 +1858,7 @@
                             "relation",
                             "type"
                         ],
-                        "not": {
-                            "required": [
-                                "field"
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -1996,7 +1906,8 @@
                             "relation",
                             "type",
                             "field"
-                        ]
+                        ],
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -2037,7 +1948,8 @@
                             "relation",
                             "type",
                             "field"
-                        ]
+                        ],
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentAggregateShow"
@@ -2151,20 +2063,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -2199,20 +2098,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -2249,20 +2135,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterBody"
@@ -2289,30 +2162,7 @@
                 "required": [
                     "nested"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "field"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "operator"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "value"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "relation"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "CommentFilterGroup"
             },
             "CommentFilterId": {
@@ -2346,20 +2196,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -2396,20 +2233,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterId"
@@ -2449,20 +2273,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -2499,20 +2310,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -2549,20 +2347,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterRating"
@@ -2596,20 +2381,7 @@
                     "field",
                     "value"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "nested"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "relation"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "CommentFilterShow_Featured"
             },
             "CommentFilterShow_Id": {
@@ -2643,20 +2415,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -2693,20 +2452,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterShow_Id"
@@ -2747,20 +2493,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -2802,20 +2535,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterShow_Level"
@@ -2858,20 +2578,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -2911,20 +2618,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -2964,20 +2658,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3005,25 +2686,7 @@
                             "field",
                             "operator"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "value"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterShow_Price"
@@ -3063,20 +2726,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3113,20 +2763,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3163,20 +2800,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterShow_Seats"
@@ -3217,20 +2841,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3268,20 +2879,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3309,25 +2907,7 @@
                             "field",
                             "operator"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "value"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterShow_StartsAt"
@@ -3368,20 +2948,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3419,20 +2986,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterShow_StartsOn"
@@ -3473,20 +3027,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3528,20 +3069,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterShow_Status"
@@ -3577,20 +3105,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3625,20 +3140,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3675,20 +3177,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3716,25 +3205,7 @@
                             "field",
                             "operator"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "value"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterShow_Summary"
@@ -3774,20 +3245,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3822,20 +3280,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -3876,20 +3321,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "CommentFilterShow_Title"
@@ -3984,30 +3416,7 @@
                 "required": [
                     "relation"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "text"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "trashed"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "limit"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "sorts"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "CommentIncludeShow"
             },
             "CommentRelationFilter": {
@@ -4053,6 +3462,7 @@
                 "required": [
                     "relation"
                 ],
+                "additionalProperties": false,
                 "title": "CommentRelationFilterShow"
             },
             "CommentSelect": {
@@ -4070,6 +3480,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "CommentSelect"
             },
             "CommentSort": {
@@ -4128,6 +3539,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "CommentSort"
             },
             "Label": {
@@ -4217,30 +3629,7 @@
                 "required": [
                     "nested"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "field"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "operator"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "value"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "relation"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "LabelFilterGroup"
             },
             "LabelFilterId": {
@@ -4274,20 +3663,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -4324,20 +3700,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "LabelFilterId"
@@ -4373,20 +3736,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -4421,20 +3771,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -4471,20 +3808,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "LabelFilterName"
@@ -4503,6 +3827,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "LabelSelect"
             },
             "LabelSort": {
@@ -4527,6 +3852,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "LabelSort"
             },
             "Note": {
@@ -5514,20 +4840,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -5562,20 +4875,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -5612,20 +4912,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "NoteFilterBody"
@@ -5652,30 +4939,7 @@
                 "required": [
                     "nested"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "field"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "operator"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "value"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "relation"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "NoteFilterGroup"
             },
             "NoteFilterId": {
@@ -5709,20 +4973,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -5759,20 +5010,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "NoteFilterId"
@@ -5871,20 +5109,7 @@
                                         "maxItems": 10
                                     }
                                 },
-                                "not": {
-                                    "anyOf": [
-                                        {
-                                            "required": [
-                                                "limit"
-                                            ]
-                                        },
-                                        {
-                                            "required": [
-                                                "sorts"
-                                            ]
-                                        }
-                                    ]
-                                }
+                                "additionalProperties": false
                             },
                             "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Stage": {
                                 "type": "object",
@@ -5933,86 +5158,16 @@
                                         "maxItems": 20
                                     }
                                 },
-                                "not": {
-                                    "anyOf": [
-                                        {
-                                            "required": [
-                                                "limit"
-                                            ]
-                                        },
-                                        {
-                                            "required": [
-                                                "sorts"
-                                            ]
-                                        }
-                                    ]
-                                }
+                                "additionalProperties": false
                             }
-                        }
+                        },
+                        "additionalProperties": false
                     }
                 },
                 "required": [
                     "relation"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "text"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "trashed"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "limit"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "sorts"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "selects"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "filters"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "scopes"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "includes"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "aggregates"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "instructions"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "gates"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "NoteIncludeNotable"
             },
             "NotePaginated": {
@@ -6126,17 +5281,14 @@
                                 },
                                 "maxItems": 100
                             }
-                        }
+                        },
+                        "additionalProperties": false
                     }
                 },
                 "required": [
                     "relation"
                 ],
-                "not": {
-                    "required": [
-                        "nested"
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "NoteRelationFilterNotable"
             },
             "NoteRows": {
@@ -6249,6 +5401,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "NoteSelect"
             },
             "NoteSort": {
@@ -6273,6 +5426,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "NoteSort"
             },
             "RestGateAnswer": {
@@ -6525,11 +5679,7 @@
                             "relation",
                             "type"
                         ],
-                        "not": {
-                            "required": [
-                                "field"
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -6570,7 +5720,8 @@
                             "relation",
                             "type",
                             "field"
-                        ]
+                        ],
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowAggregateArtists"
@@ -6609,11 +5760,7 @@
                             "relation",
                             "type"
                         ],
-                        "not": {
-                            "required": [
-                                "field"
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -6655,7 +5802,8 @@
                             "relation",
                             "type",
                             "field"
-                        ]
+                        ],
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -6695,7 +5843,8 @@
                             "relation",
                             "type",
                             "field"
-                        ]
+                        ],
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowAggregateComments"
@@ -6734,11 +5883,7 @@
                             "relation",
                             "type"
                         ],
-                        "not": {
-                            "required": [
-                                "field"
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -6779,7 +5924,8 @@
                             "relation",
                             "type",
                             "field"
-                        ]
+                        ],
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowAggregateLabels"
@@ -6818,11 +5964,7 @@
                             "relation",
                             "type"
                         ],
-                        "not": {
-                            "required": [
-                                "field"
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -6863,7 +6005,8 @@
                             "relation",
                             "type",
                             "field"
-                        ]
+                        ],
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowAggregateStage"
@@ -7905,20 +7048,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -7955,20 +7085,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterArtists_Id"
@@ -8004,20 +7121,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8052,20 +7156,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8102,20 +7193,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterArtists_Name"
@@ -8151,20 +7229,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8199,20 +7264,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8249,20 +7301,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8290,25 +7329,7 @@
                             "field",
                             "operator"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "value"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterArtists_Pivot_Role"
@@ -8344,20 +7365,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8392,20 +7400,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8442,20 +7437,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterComments_Body"
@@ -8491,20 +7473,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8541,20 +7510,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterComments_Id"
@@ -8594,20 +7550,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8644,20 +7587,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8694,20 +7624,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterComments_Rating"
@@ -8741,20 +7658,7 @@
                     "field",
                     "value"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "nested"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "relation"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "ShowFilterFeatured"
             },
             "ShowFilterGroup": {
@@ -8779,30 +7683,7 @@
                 "required": [
                     "nested"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "field"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "operator"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "value"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "relation"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "ShowFilterGroup"
             },
             "ShowFilterId": {
@@ -8836,20 +7717,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8886,20 +7754,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterId"
@@ -8935,20 +7790,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -8985,20 +7827,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterLabels_Id"
@@ -9034,20 +7863,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9082,20 +7898,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9132,20 +7935,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterLabels_Name"
@@ -9185,20 +7975,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9235,20 +8012,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9285,20 +8049,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9326,25 +8077,7 @@
                             "field",
                             "operator"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "value"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterLabels_Pivot_Position"
@@ -9385,20 +8118,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9440,20 +8160,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterLevel"
@@ -9496,20 +8203,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9549,20 +8243,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9602,20 +8283,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9643,25 +8311,7 @@
                             "field",
                             "operator"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "value"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterPrice"
@@ -9701,20 +8351,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9751,20 +8388,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9801,20 +8425,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterSeats"
@@ -9853,20 +8464,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -9906,20 +8504,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterStage_Code"
@@ -9955,20 +8540,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -10003,20 +8575,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -10053,20 +8612,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterStage_Name"
@@ -10107,20 +8653,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -10158,20 +8691,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -10199,25 +8719,7 @@
                             "field",
                             "operator"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "value"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterStartsAt"
@@ -10258,20 +8760,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -10309,20 +8798,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterStartsOn"
@@ -10363,20 +8839,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -10418,20 +8881,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterStatus"
@@ -10467,20 +8917,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -10515,20 +8952,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -10565,20 +8989,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -10606,25 +9017,7 @@
                             "field",
                             "operator"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "value"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterSummary"
@@ -10664,20 +9057,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -10712,20 +9092,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -10766,20 +9133,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "ShowFilterTitle"
@@ -10872,20 +9226,7 @@
                 "required": [
                     "relation"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "text"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "trashed"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "ShowIncludeArtists"
             },
             "ShowIncludeComments": {
@@ -10963,20 +9304,7 @@
                 "required": [
                     "relation"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "text"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "trashed"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "ShowIncludeComments"
             },
             "ShowIncludeLabels": {
@@ -11040,20 +9368,7 @@
                 "required": [
                     "relation"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "text"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "trashed"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "ShowIncludeLabels"
             },
             "ShowIncludeStage": {
@@ -11116,30 +9431,7 @@
                 "required": [
                     "relation"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "text"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "trashed"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "limit"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "sorts"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "ShowIncludeStage"
             },
             "ShowInstruction": {
@@ -11180,7 +9472,8 @@
                                     },
                                     "required": [
                                         "name"
-                                    ]
+                                    ],
+                                    "additionalProperties": false
                                 },
                                 {
                                     "type": "object",
@@ -11198,7 +9491,8 @@
                                     },
                                     "required": [
                                         "name"
-                                    ]
+                                    ],
+                                    "additionalProperties": false
                                 }
                             ]
                         },
@@ -11208,6 +9502,7 @@
                 "required": [
                     "name"
                 ],
+                "additionalProperties": false,
                 "title": "ShowInstructionOnlyFeatured"
             },
             "ShowPaginated": {
@@ -11326,6 +9621,7 @@
                 "required": [
                     "relation"
                 ],
+                "additionalProperties": false,
                 "title": "ShowRelationFilterArtists"
             },
             "ShowRelationFilterComments": {
@@ -11356,6 +9652,7 @@
                 "required": [
                     "relation"
                 ],
+                "additionalProperties": false,
                 "title": "ShowRelationFilterComments"
             },
             "ShowRelationFilterLabels": {
@@ -11386,6 +9683,7 @@
                 "required": [
                     "relation"
                 ],
+                "additionalProperties": false,
                 "title": "ShowRelationFilterLabels"
             },
             "ShowRelationFilterStage": {
@@ -11416,6 +9714,7 @@
                 "required": [
                     "relation"
                 ],
+                "additionalProperties": false,
                 "title": "ShowRelationFilterStage"
             },
             "ShowRows": {
@@ -11479,6 +9778,7 @@
                     "name",
                     "parameters"
                 ],
+                "additionalProperties": false,
                 "title": "ShowScopeStartingFrom"
             },
             "ShowSearch": {
@@ -11503,11 +9803,7 @@
                                 ]
                             }
                         },
-                        "not": {
-                            "required": [
-                                "trashed"
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     "trashed": {
                         "type": "string",
@@ -11620,6 +9916,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "ShowSelect"
             },
             "ShowSort": {
@@ -11682,6 +9979,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "ShowSort"
             },
             "ShowWithType": {
@@ -11808,11 +10106,7 @@
                             "relation",
                             "type"
                         ],
-                        "not": {
-                            "required": [
-                                "field"
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -11854,7 +10148,8 @@
                             "relation",
                             "type",
                             "field"
-                        ]
+                        ],
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -11894,7 +10189,8 @@
                             "relation",
                             "type",
                             "field"
-                        ]
+                        ],
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageAggregateComments"
@@ -11933,11 +10229,7 @@
                             "relation",
                             "type"
                         ],
-                        "not": {
-                            "required": [
-                                "field"
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -11985,7 +10277,8 @@
                             "relation",
                             "type",
                             "field"
-                        ]
+                        ],
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -12026,7 +10319,8 @@
                             "relation",
                             "type",
                             "field"
-                        ]
+                        ],
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageAggregateShows"
@@ -13013,20 +11307,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -13066,20 +11347,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterCode"
@@ -13115,20 +11383,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -13163,20 +11418,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -13213,20 +11455,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterComments_Body"
@@ -13262,20 +11491,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -13312,20 +11528,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterComments_Id"
@@ -13365,20 +11568,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -13415,20 +11605,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -13465,20 +11642,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterComments_Rating"
@@ -13505,30 +11669,7 @@
                 "required": [
                     "nested"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "field"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "operator"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "value"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "relation"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "StageFilterGroup"
             },
             "StageFilterName": {
@@ -13562,20 +11703,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -13610,20 +11738,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -13660,20 +11775,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterName"
@@ -13707,20 +11809,7 @@
                     "field",
                     "value"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "nested"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "relation"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "StageFilterShows_Featured"
             },
             "StageFilterShows_Id": {
@@ -13754,20 +11843,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -13804,20 +11880,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterShows_Id"
@@ -13858,20 +11921,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -13913,20 +11963,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterShows_Level"
@@ -13969,20 +12006,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14022,20 +12046,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14075,20 +12086,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14116,25 +12114,7 @@
                             "field",
                             "operator"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "value"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterShows_Price"
@@ -14174,20 +12154,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14224,20 +12191,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14274,20 +12228,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterShows_Seats"
@@ -14328,20 +12269,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14379,20 +12307,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14420,25 +12335,7 @@
                             "field",
                             "operator"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "value"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterShows_StartsAt"
@@ -14479,20 +12376,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14530,20 +12414,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterShows_StartsOn"
@@ -14584,20 +12455,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14639,20 +12497,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterShows_Status"
@@ -14688,20 +12533,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14736,20 +12568,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14786,20 +12605,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14827,25 +12633,7 @@
                             "field",
                             "operator"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "value"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterShows_Summary"
@@ -14885,20 +12673,7 @@
                             "field",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14933,20 +12708,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     },
                     {
                         "type": "object",
@@ -14987,20 +12749,7 @@
                             "operator",
                             "value"
                         ],
-                        "not": {
-                            "anyOf": [
-                                {
-                                    "required": [
-                                        "nested"
-                                    ]
-                                },
-                                {
-                                    "required": [
-                                        "relation"
-                                    ]
-                                }
-                            ]
-                        }
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageFilterShows_Title"
@@ -15099,20 +12848,7 @@
                 "required": [
                     "relation"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "text"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "trashed"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "StageIncludeComments"
             },
             "StageIncludeShows": {
@@ -15205,20 +12941,7 @@
                 "required": [
                     "relation"
                 ],
-                "not": {
-                    "anyOf": [
-                        {
-                            "required": [
-                                "text"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "trashed"
-                            ]
-                        }
-                    ]
-                },
+                "additionalProperties": false,
                 "title": "StageIncludeShows"
             },
             "StagePaginated": {
@@ -15329,6 +13052,7 @@
                 "required": [
                     "relation"
                 ],
+                "additionalProperties": false,
                 "title": "StageRelationFilterComments"
             },
             "StageRelationFilterShows": {
@@ -15359,6 +13083,7 @@
                 "required": [
                     "relation"
                 ],
+                "additionalProperties": false,
                 "title": "StageRelationFilterShows"
             },
             "StageRows": {
@@ -15478,6 +13203,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "StageSelect"
             },
             "StageSort": {
@@ -15536,6 +13262,7 @@
                 "required": [
                     "field"
                 ],
+                "additionalProperties": false,
                 "title": "StageSort"
             },
             "StageWithType": {

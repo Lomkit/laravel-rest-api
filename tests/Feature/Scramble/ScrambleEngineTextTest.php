@@ -37,7 +37,7 @@ class ScrambleEngineTextTest extends ScrambleTestCase
                 'value' => ['type' => ['string', 'null'], 'maxLength' => 255],
                 'mode' => ['type' => 'string', 'enum' => ['words']],
             ],
-            'not' => ['required' => ['trashed']],
+            'additionalProperties' => false,
         ], $search['text']);
     }
 

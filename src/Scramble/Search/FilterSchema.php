@@ -108,8 +108,7 @@ final readonly class FilterSchema
             'exists' => new BooleanType,
             'type' => FieldFilterSchema::joint(),
         ];
-        $several = $relation instanceof PolymorphicRelation && $relation->targets()->isPolymorphic();
-        $nested = $several ? null : $this->list($relation->resource());
+        $nested = $relation instanceof PolymorphicRelation && $relation->targets()->isPolymorphic() ? null : $this->list($relation->resource());
 
         if ($nested !== null) {
             $properties['nested'] = $nested;
@@ -119,7 +118,7 @@ final readonly class FilterSchema
             $properties['types'] = $this->types($relation);
         }
 
-        return Schemas::shape($properties, ['relation'], '', $several ? ['nested'] : []);
+        return Schemas::closed($properties, ['relation']);
     }
 
     private function types(Relation&PolymorphicRelation $relation): ObjectType
@@ -134,18 +133,17 @@ final readonly class FilterSchema
             }
         }
 
-        return Schemas::shape($types, [], 'The filters of each type of related row, keyed by morph type');
+        return Schemas::closed($types, [], 'The filters of each type of related row, keyed by morph type');
     }
 
     private function group(Resource $resource): ObjectType
     {
         $depth = $resource->context()->limits()->depths->filters;
 
-        return Schemas::shape(
+        return Schemas::closed(
             ['nested' => $this->list($resource) ?? new ArrayType, 'type' => FieldFilterSchema::joint()],
             ['nested'],
             "Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most {$depth} deep.",
-            ['field', 'operator', 'value', 'relation'],
         );
     }
 }

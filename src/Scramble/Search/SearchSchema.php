@@ -73,7 +73,7 @@ final readonly class SearchSchema
         $properties = $this->properties($resource, $keys, true);
         $prohibited = array_values(array_diff(array_intersect(['text', 'trashed'], $keys), array_keys($properties)));
 
-        return Schemas::shape($properties, [], '', $prohibited);
+        return Schemas::open($properties, $prohibited);
     }
 
     private function property(Resource $resource, string $key, bool $root): ?Type
@@ -125,7 +125,7 @@ final readonly class SearchSchema
             return null;
         }
 
-        $sort = fn (): Type => Schemas::shape([
+        $sort = fn (): Type => Schemas::closed([
             'field' => (new StringType)->enum($ranked),
             'direction' => (new StringType)->enum(array_column(SortDirection::cases(), 'value')),
         ], ['field'], '`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.');
@@ -145,7 +145,7 @@ final readonly class SearchSchema
             return null;
         }
 
-        return $this->components->schema($this->records->name($resource).'Select', $resource::class, fn (): Type => Schemas::shape(['field' => (new StringType)->enum($names)], ['field']));
+        return $this->components->schema($this->records->name($resource).'Select', $resource::class, fn (): Type => Schemas::closed(['field' => (new StringType)->enum($names)], ['field']));
     }
 
     /** @return list<string> */

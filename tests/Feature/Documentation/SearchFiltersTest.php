@@ -22,7 +22,7 @@ class SearchFiltersTest extends DocumentationTestCase
             json_encode($schemas['ShowFilter']),
         );
         $this->assertSame(
-            '{"type":"object","description":"Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most 1 deep.","properties":{"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowFilter"},"maxItems":100},'.self::JOINT.'},"required":["nested"],"not":{"anyOf":[{"required":["field"]},{"required":["operator"]},{"required":["value"]},{"required":["relation"]}]},"title":"ShowFilterGroup"}',
+            '{"type":"object","description":"Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most 1 deep.","properties":{"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowFilter"},"maxItems":100},'.self::JOINT.'},"required":["nested"],"additionalProperties":false,"title":"ShowFilterGroup"}',
             json_encode($schemas['ShowFilterGroup']),
         );
     }
@@ -38,7 +38,7 @@ class SearchFiltersTest extends DocumentationTestCase
     public static function fields(): array
     {
         return [
-            'a boolean' => ['ShowFilterFeatured', '{"type":"object","properties":{"field":{"type":"string","const":"featured"},"operator":{"type":"string","enum":["=","!="]},"value":{"type":"boolean"},'.self::JOINT.'},"required":["field","value"],"not":{"anyOf":[{"required":["nested"]},{"required":["relation"]}]},"title":"ShowFilterFeatured"}'],
+            'a boolean' => ['ShowFilterFeatured', '{"type":"object","properties":{"field":{"type":"string","const":"featured"},"operator":{"type":"string","enum":["=","!="]},"value":{"type":"boolean"},'.self::JOINT.'},"required":["field","value"],"additionalProperties":false,"title":"ShowFilterFeatured"}'],
             'an integer' => ['ShowFilterSeats', '{"oneOf":['.self::branch('seats', '"=","!=",">",">=","<","<="', '{"type":"integer"}', false).','.self::branch('seats', '"between","not between"', '{"type":"array","items":{"type":"integer"},"minItems":2,"maxItems":2}').','.self::branch('seats', '"in","not in"', '{"type":"array","items":{"type":"integer"},"minItems":1,"maxItems":100}').'],"title":"ShowFilterSeats"}'],
             'a nullable text' => ['ShowFilterSummary', '{"oneOf":['.self::branch('summary', '"=","!="', '{"type":"string"}', false).','.self::branch('summary', '"like","not like","ilike","not ilike"', '{"type":"string","maxLength":255}').','.self::branch('summary', '"in","not in"', '{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":100}').','.self::nullity('summary').'],"title":"ShowFilterSummary"}'],
             'a text with examples' => ['ShowFilterTitle', '{"oneOf":['.self::branch('title', '"=","!="', '{"type":"string","examples":["Opening night","Closing night"]}', false).','.self::branch('title', '"like","not like","ilike","not ilike"', '{"type":"string","maxLength":255}').','.self::branch('title', '"in","not in"', '{"type":"array","items":{"type":"string","examples":["Opening night","Closing night"]},"minItems":1,"maxItems":100}').'],"title":"ShowFilterTitle"}'],
@@ -100,9 +100,9 @@ class SearchFiltersTest extends DocumentationTestCase
         $head = fn (string $relation): string => '{"type":"object","properties":{"relation":{"type":"string","const":"'.$relation.'"},"exists":{"type":"boolean"},'.self::JOINT;
 
         return [
-            'a relation to one' => ['ShowRelationFilterStage', $head('stage').',"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageFilter"},"maxItems":100}},"required":["relation"],"title":"ShowRelationFilterStage"}'],
-            'a relation through another' => ['StageRelationFilterComments', $head('comments').',"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/CommentFilter"},"maxItems":100}},"required":["relation"],"title":"StageRelationFilterComments"}'],
-            'a morph to relation of two types' => ['NoteRelationFilterNotable', $head('notable').',"types":{"type":"object","description":"The filters of each type of related row, keyed by morph type","properties":{"Lomkit\\\\Rest\\\\Tests\\\\Fixtures\\\\Festival\\\\Show":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowFilter"},"maxItems":100},"Lomkit\\\\Rest\\\\Tests\\\\Fixtures\\\\Festival\\\\Stage":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageFilter"},"maxItems":100}}}},"required":["relation"],"not":{"required":["nested"]},"title":"NoteRelationFilterNotable"}'],
+            'a relation to one' => ['ShowRelationFilterStage', $head('stage').',"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageFilter"},"maxItems":100}},"required":["relation"],"additionalProperties":false,"title":"ShowRelationFilterStage"}'],
+            'a relation through another' => ['StageRelationFilterComments', $head('comments').',"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/CommentFilter"},"maxItems":100}},"required":["relation"],"additionalProperties":false,"title":"StageRelationFilterComments"}'],
+            'a morph to relation of two types' => ['NoteRelationFilterNotable', $head('notable').',"types":{"type":"object","description":"The filters of each type of related row, keyed by morph type","properties":{"Lomkit\\\\Rest\\\\Tests\\\\Fixtures\\\\Festival\\\\Show":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowFilter"},"maxItems":100},"Lomkit\\\\Rest\\\\Tests\\\\Fixtures\\\\Festival\\\\Stage":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageFilter"},"maxItems":100}},"additionalProperties":false}},"required":["relation"],"additionalProperties":false,"title":"NoteRelationFilterNotable"}'],
         ];
     }
 
@@ -142,11 +142,11 @@ class SearchFiltersTest extends DocumentationTestCase
 
     private static function branch(string $field, string $operators, string $value, bool $operator = true): string
     {
-        return '{"type":"object","properties":{"field":{"type":"string","const":"'.$field.'"},"operator":{"type":"string","enum":['.$operators.']},"value":'.$value.','.self::JOINT.'},"required":["field",'.($operator ? '"operator",' : '').'"value"],"not":{"anyOf":[{"required":["nested"]},{"required":["relation"]}]}}';
+        return '{"type":"object","properties":{"field":{"type":"string","const":"'.$field.'"},"operator":{"type":"string","enum":['.$operators.']},"value":'.$value.','.self::JOINT.'},"required":["field",'.($operator ? '"operator",' : '').'"value"],"additionalProperties":false}';
     }
 
     private static function nullity(string $field): string
     {
-        return '{"type":"object","properties":{"field":{"type":"string","const":"'.$field.'"},"operator":{"type":"string","enum":["is null","is not null"]},'.self::JOINT.'},"required":["field","operator"],"not":{"anyOf":[{"required":["value"]},{"required":["nested"]},{"required":["relation"]}]}}';
+        return '{"type":"object","properties":{"field":{"type":"string","const":"'.$field.'"},"operator":{"type":"string","enum":["is null","is not null"]},'.self::JOINT.'},"required":["field","operator"],"additionalProperties":false}';
     }
 }

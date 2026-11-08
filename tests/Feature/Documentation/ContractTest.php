@@ -154,7 +154,6 @@ class ContractTest extends DocumentationTestCase
             'a scope with its parameters' => ['/shows/search', ['scopes' => [['name' => 'startingFrom', 'parameters' => ['2026-07-01']]]]],
             'an instruction with its fields' => ['/shows/search', ['instructions' => [['name' => 'only-featured', 'fields' => [['name' => 'featured', 'value' => true], ['name' => 'min_seats', 'value' => null]]]]]],
             'the gates of a resource that turns its gates off' => ['/notes/search', ['gates' => ['view']], [NoteResource::class => UngatedNoteResource::class]],
-            'the gates of an include whose resource turns its gates off' => ['/shows/search', ['includes' => [['relation' => 'labels', 'gates' => ['view']]]], [LabelResource::class => UngatedLabelResource::class]],
         ];
     }
 
@@ -186,7 +185,21 @@ class ContractTest extends DocumentationTestCase
             'a field that an average does not take' => ['/shows/search', ['aggregates' => [['relation' => 'comments', 'type' => 'avg', 'field' => 'body']]]],
             'a scope without its first parameter' => ['/shows/search', ['scopes' => [['name' => 'startingFrom']]]],
             'a text on a resource without a text search' => ['/stages/search', ['text' => ['value' => 'main']]],
+            'an unknown key in a filter' => ['/shows/search', ['filters' => [['field' => 'title', 'value' => 'Opening night', 'note' => 'a']]]],
+            'an unknown key in an include' => ['/shows/search', ['includes' => [['relation' => 'comments', 'note' => 'a']]]],
         ];
+    }
+
+    #[Test]
+    public function it_answers_the_gates_of_an_include_whose_resource_turns_its_gates_off(): void
+    {
+        $this->app->bind(LabelResource::class, UngatedLabelResource::class);
+        $this->seedFestival();
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $search = ['includes' => [['relation' => 'labels', 'gates' => ['view']]]];
+
+        $this->assertSame(['/search/includes/0/relation', '/search/includes/0'], array_keys((new OpenApiValidator)->requestErrors($this->document(), '/shows/search', 'post', ['search' => $search])));
+        $this->postJson('api/shows/search', ['search' => $search])->assertOk();
     }
 
     #[Test]

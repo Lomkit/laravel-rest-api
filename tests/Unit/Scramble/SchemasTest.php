@@ -10,24 +10,25 @@ use PHPUnit\Framework\TestCase;
 class SchemasTest extends TestCase
 {
     #[Test]
-    public function it_lists_the_keys_of_an_object_and_accepts_the_others(): void
+    public function it_closes_an_object_to_the_keys_that_it_lists(): void
     {
         $this->assertSame(
-            '{"type":"object","description":"A filter","properties":{"field":{"type":"string"}},"required":["field"]}',
-            json_encode(Schemas::shape(['field' => new StringType], ['field'], 'A filter')->serializeAs31()),
+            '{"type":"object","description":"A filter","properties":{"field":{"type":"string"}},"required":["field"],"additionalProperties":false}',
+            json_encode(Schemas::closed(['field' => new StringType], ['field'], 'A filter')->serializeAs31()),
         );
     }
 
     #[Test]
-    public function it_refuses_the_keys_that_an_object_prohibits(): void
+    public function it_leaves_an_object_open_and_refuses_the_keys_that_it_prohibits(): void
     {
+        $this->assertSame('{"type":"object","properties":{"field":{"type":"string"}}}', json_encode(Schemas::open(['field' => new StringType])->serializeAs31()));
         $this->assertSame(
-            '{"type":"object","properties":{"field":{"type":"string"}},"not":{"required":["nested"]}}',
-            json_encode(Schemas::shape(['field' => new StringType], [], '', ['nested'])->serializeAs31()),
+            '{"type":"object","properties":{"field":{"type":"string"}},"not":{"required":["text"]}}',
+            json_encode(Schemas::open(['field' => new StringType], ['text'])->serializeAs31()),
         );
         $this->assertSame(
-            '{"type":"object","properties":{"nested":{"type":"string"}},"not":{"anyOf":[{"required":["field"]},{"required":["relation"]}]}}',
-            json_encode(Schemas::shape(['nested' => new StringType], [], '', ['field', 'relation'])->serializeAs32()),
+            '{"type":"object","not":{"anyOf":[{"required":["text"]},{"required":["trashed"]}]}}',
+            json_encode(Schemas::open([], ['text', 'trashed'])->serializeAs32()),
         );
     }
 }
