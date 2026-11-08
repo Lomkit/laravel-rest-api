@@ -52,8 +52,7 @@ interface SearchGrammar
     /** @return list<string> */
     public function limitRules(): array;
 
-    /** @return list<string> */
-    public function pageRules(mixed $limit, int $defaultLimit): array;
+    public function maxPage(mixed $limit, int $defaultLimit): ?int;
 
     public function text(Cursor $text, ValidationContext $context): ?TextQuery;
 

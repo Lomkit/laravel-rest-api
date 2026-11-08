@@ -139,9 +139,9 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     }
 
     #[\Override]
-    public function pageRules(mixed $limit, int $defaultLimit): array
+    public function maxPage(mixed $limit, int $defaultLimit): ?int
     {
-        return [];
+        return null;
     }
 
     #[\Override]

@@ -88,7 +88,7 @@ class SearchGrammarTest extends EngineTestCase
 
         $this->assertSame([2, 20], [$bounded->sortLimit($context->limits), $open->sortLimit($context->limits)]);
         $this->assertSame([['max:100'], []], [$bounded->limitRules(), $open->limitRules()]);
-        $this->assertSame([['max:40'], ['max:20'], []], [$bounded->pageRules(25, 50), $bounded->pageRules('many', 50), $open->pageRules(25, 50)]);
+        $this->assertSame([40, 20, null], [$bounded->maxPage(25, 50), $bounded->maxPage('many', 50), $open->maxPage(25, 50)]);
         $this->assertSame(['prohibited'], $bounded->scopeRules());
         $this->assertFalse($bounded->trashed($context->resource));
     }
@@ -99,7 +99,7 @@ class SearchGrammarTest extends EngineTestCase
         $context = $this->validationContext([]);
 
         $this->assertSame(20, $context->grammar->sortLimit($context->limits));
-        $this->assertSame([[], [], []], [$context->grammar->limitRules(), $context->grammar->pageRules(25, 50), $context->grammar->scopeRules()]);
+        $this->assertSame([[], null, []], [$context->grammar->limitRules(), $context->grammar->maxPage(25, 50), $context->grammar->scopeRules()]);
         $this->assertTrue($context->grammar->trashed($context->resource));
     }
 

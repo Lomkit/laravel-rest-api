@@ -92,7 +92,7 @@ final readonly class SearchSchema
             'includes' => self::capped((new IncludeSchema($this->components))->reference($resource), $sizes->includes),
             'instructions' => self::capped((new InputSchema($this->components))->instruction($resource), $sizes->instructions),
             'limit' => (new IntegerType)->enum($resource->definition()->limits()->allowed),
-            'page' => self::page(),
+            'page' => self::page($resource),
             default => null,
         };
     }
@@ -183,10 +183,11 @@ final readonly class SearchSchema
         return $list;
     }
 
-    private static function page(): IntegerType
+    private static function page(Resource $resource): IntegerType
     {
         $page = new IntegerType;
         $page->setMin(1);
+        $page->setMax($resource->definition()->limits()->maxPage);
 
         return $page;
     }

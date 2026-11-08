@@ -12,6 +12,7 @@ final readonly class ResourceLimits
         public int $defaultLimit,
         public int $includeLimit,
         public ?int $maxTotal,
+        public int $maxPage,
     ) {}
 
     /** @param list<int> $allowed */
@@ -23,12 +24,14 @@ final readonly class ResourceLimits
             }
         }
 
-        $floor = max([1, ...$allowed]);
+        $largest = max([1, ...$allowed]);
 
-        if ($resource->maxTotal !== null && $resource->maxTotal < $floor) {
-            throw InvalidResourceException::maxTotalTooLow($resource::class, $resource->maxTotal, $floor);
+        if ($resource->maxTotal !== null && $resource->maxTotal < $largest) {
+            throw InvalidResourceException::maxTotalTooLow($resource::class, $resource->maxTotal, $largest);
         }
 
-        return new self($allowed, $resource->defaultLimit, $resource->includeLimit, $resource->maxTotal);
+        $maxPage = $largest === 1 ? PHP_INT_MAX : intdiv(PHP_INT_MAX, $largest) + 1;
+
+        return new self($allowed, $resource->defaultLimit, $resource->includeLimit, $resource->maxTotal, $maxPage);
     }
 }

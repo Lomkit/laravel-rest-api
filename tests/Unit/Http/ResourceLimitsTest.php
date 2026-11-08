@@ -45,6 +45,32 @@ class ResourceLimitsTest extends TestCase
         $this->assertSame([null, 50], [ResourceLimits::of(new BookResource, [10, 25, 50])->maxTotal, ResourceLimits::of($resource, [10, 25, 50])->maxTotal]);
     }
 
+    /** @param list<int> $allowed */
+    #[Test]
+    #[DataProvider('largestPages')]
+    public function it_bounds_the_page_so_that_its_offset_stays_an_integer(array $allowed, int $maxPage): void
+    {
+        $resource = new class extends BookResource
+        {
+            public int $defaultLimit = 1;
+
+            public int $includeLimit = 1;
+        };
+
+        $this->assertSame($maxPage, ResourceLimits::of($resource, $allowed)->maxPage);
+    }
+
+    /** @return array<string, array{list<int>, int}> */
+    public static function largestPages(): array
+    {
+        return [
+            'the default limits' => [[1, 10, 25, 50], 184467440737095517],
+            'a larger limit' => [[1, 300], 30744573456182587],
+            'a limit that divides the largest integer' => [[1, 511], 18049651735527938],
+            'a single limit of one' => [[1], 9223372036854775807],
+        ];
+    }
+
     #[Test]
     #[DataProvider('maxTotalsBelowTheLargestLimit')]
     public function it_refuses_a_maximum_total_below_the_largest_limit(int $maxTotal): void

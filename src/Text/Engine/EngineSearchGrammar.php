@@ -109,15 +109,15 @@ final readonly class EngineSearchGrammar implements SearchGrammar
     }
 
     #[\Override]
-    public function pageRules(mixed $limit, int $defaultLimit): array
+    public function maxPage(mixed $limit, int $defaultLimit): ?int
     {
         if ($this->engine->window === null) {
-            return [];
+            return null;
         }
 
         $perPage = filter_var($limit, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 
-        return ['max:'.intdiv($this->engine->window, $perPage === false ? $defaultLimit : $perPage)];
+        return intdiv($this->engine->window, $perPage === false ? $defaultLimit : $perPage);
     }
 
     #[\Override]

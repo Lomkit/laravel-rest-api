@@ -52,7 +52,7 @@ class SearchGrammarTest extends DocumentationTestCase
         $this->assertSame('{"type":"object","properties":{"field":{"type":"string","enum":["id","title","summary","price","seats","featured","starts_on","starts_at","status","level","settings"]}},"required":["field"],"additionalProperties":false,"title":"ShowSelect"}', json_encode($schemas['ShowSelect']));
         $this->assertSame('{"type":"array","description":"The abilities to answer for each row, under `gates` in the row, and for `create` under `gates` in `meta`","items":{"type":"string","enum":["view","create","update","delete","restore","forceDelete","feature"]},"uniqueItems":true}', json_encode($search['gates']));
         $this->assertSame('{"type":"integer","enum":[10,25,50]}', json_encode($search['limit']));
-        $this->assertSame('{"type":"integer","minimum":1}', json_encode($search['page']));
+        $this->assertSame('{"type":"integer","minimum":1,"maximum":184467440737095517}', json_encode($search['page']));
         $this->assertSame(['scopes' => 10, 'sorts' => 20, 'selects' => 100, 'aggregates' => 20, 'includes' => 20, 'instructions' => 10], array_map(fn (array $list): int => $list['maxItems'], array_intersect_key($search, array_flip(['sorts', 'selects', 'scopes', 'aggregates', 'includes', 'instructions']))));
     }
 
