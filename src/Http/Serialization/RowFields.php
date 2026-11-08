@@ -45,7 +45,7 @@ final readonly class RowFields
     public function values(Model $model): array
     {
         $attributes = $this->attributes($model);
-        $stored = $this->fields->fromStorage($attributes);
+        $stored = $this->fields->render($attributes);
         $row = [];
 
         foreach (array_keys($model->getAttributes() + $attributes) as $name) {
@@ -59,7 +59,7 @@ final readonly class RowFields
         }
 
         foreach ($this->resolved as $field) {
-            $row[$field->name] = $field->resolve($model);
+            $row[$field->name] = $field->render($field->resolve($model));
         }
 
         return $row;

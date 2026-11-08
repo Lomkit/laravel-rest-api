@@ -115,6 +115,22 @@ class JsonColumnsTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_returns_an_empty_json_column_as_an_object_on_an_included_model_and_on_its_pivot(): void
+    {
+        DB::table('instruments')->insert(['id' => 1, 'name' => 'Scope', 'specs' => '[]', 'calibration' => '[]']);
+        DB::table('sensors')->insert(['id' => 1, 'name' => 'Probe']);
+        DB::table('instrument_sensor')->insert(['instrument_id' => 1, 'sensor_id' => 1, 'wiring' => '[]']);
+
+        $response = $this->postJson('/api/sensors/search', ['search' => ['includes' => [['relation' => 'instruments']]]]);
+
+        $response->assertOk();
+        $this->assertSame(
+            '[{"id":1,"name":"Probe","instruments":[{"id":1,"name":"Scope","specs":{},"calibration":{},"pivot":{"wiring":{}}}],"@more":[]}]',
+            json_encode(json_decode((string) $response->getContent(), flags: JSON_THROW_ON_ERROR)->data, JSON_THROW_ON_ERROR),
+        );
+    }
+
+    #[Test]
     public function it_refuses_an_aggregate_aliased_as_a_json_field(): void
     {
         $response = $this->postJson('/api/instruments/search', ['search' => [

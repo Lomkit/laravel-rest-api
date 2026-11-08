@@ -162,18 +162,19 @@ class FieldSetTest extends TestCase
     }
 
     #[Test]
-    public function it_maps_the_values_of_its_fields_to_storage_and_back_and_keeps_the_other_keys(): void
+    public function it_maps_the_values_of_its_fields_to_storage_and_to_a_response_and_keeps_the_other_keys(): void
     {
-        $set = FieldSet::of([Text::make('name'), Json::make('specs')])->bindTo(new Instrument);
+        $set = FieldSet::of([Text::make('name'), Json::make('specs'), Number::make('price')])->bindTo(new Instrument);
 
         $this->assertSame(
             ['name' => 'Scope', 'specs' => '{"ram":8}', 'specs_count' => 2],
             $set->toStorage(['name' => 'Scope', 'specs' => ['ram' => 8], 'specs_count' => 2]),
         );
         $this->assertSame(
-            ['name' => 'Scope', 'specs' => ['ram' => 8], 'specs_count' => '2'],
-            $set->fromStorage(['name' => 'Scope', 'specs' => '{"ram":8}', 'specs_count' => '2']),
+            ['name' => 'Scope', 'specs' => ['ram' => 8], 'price' => 12.5, 'specs_count' => '2'],
+            $set->render(['name' => 'Scope', 'specs' => '{"ram":8}', 'price' => '12.50', 'specs_count' => '2']),
         );
+        $this->assertSame('{"specs":{}}', json_encode($set->render(['specs' => '[]'])));
     }
 
     private function rejectionOf(callable $build): string

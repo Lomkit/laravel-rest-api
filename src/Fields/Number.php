@@ -30,4 +30,14 @@ class Number extends Field
     {
         return new NumberType;
     }
+
+    #[\Override]
+    public function render(mixed $value): mixed
+    {
+        if (! is_numeric($value)) {
+            return $value;
+        }
+
+        return $value + 0;
+    }
 }

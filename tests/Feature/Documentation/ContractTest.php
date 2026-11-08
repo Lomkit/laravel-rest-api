@@ -540,7 +540,7 @@ class ContractTest extends DocumentationTestCase
         DB::table('stages')->insert([['code' => 'main', 'name' => 'Main stage'], ['code' => 'side', 'name' => 'Side stage']]);
         DB::table('shows')->insert([
             ['id' => 1, 'stage_code' => 'main', 'title' => 'Opening night', 'summary' => 'First night', 'price' => 12.5, 'seats' => 300, 'featured' => true, 'starts_on' => '2026-07-01', 'starts_at' => '2026-07-01 20:00:00', 'status' => 'on_sale', 'level' => 3, 'settings' => '{"lights":"warm"}', 'secret' => 'backstage', 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00'],
-            ['id' => 2, 'stage_code' => null, 'title' => 'Closing night', 'summary' => null, 'price' => null, 'seats' => 0, 'featured' => false, 'starts_on' => '2026-07-03', 'starts_at' => null, 'status' => 'planned', 'level' => 1, 'settings' => null, 'secret' => null, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00'],
+            ['id' => 2, 'stage_code' => null, 'title' => 'Closing night', 'summary' => null, 'price' => null, 'seats' => 0, 'featured' => false, 'starts_on' => '2026-07-03', 'starts_at' => null, 'status' => 'planned', 'level' => 1, 'settings' => '[]', 'secret' => null, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00'],
         ]);
         DB::table('artists')->insert([['id' => 1, 'name' => 'Ada']]);
         DB::table('artist_show')->insert([['artist_id' => 1, 'show_id' => 1, 'role' => 'lead']]);
