@@ -200,12 +200,35 @@ class EndpointEventsTest extends HelpdeskTestCase
         ], EventLog::$lines);
     }
 
+    #[Test]
+    public function it_runs_an_action_without_transaction_outside_any_transaction(): void
+    {
+        $response = $this->postJson('/event-tickets/actions/transactionless-close-event-tickets', ['search' => self::OPEN]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, 'result' => null]]);
+        $this->assertSame([
+            'searching',
+            'sql select tickets',
+            'operating transactionless-close-event-tickets',
+            'sql select tickets',
+            "handle {$this->ids['Printer jam']}",
+            'sql update tickets',
+            'sql select tickets',
+            "handle {$this->ids['Printer toner']}",
+            'sql update tickets',
+            'sql select tickets',
+            'operated transactionless-close-event-tickets 2',
+            'respond 2',
+        ], EventLog::$lines);
+    }
+
     /** @return array<string, array{string, list<string>, int}> */
     public static function failedActions(): array
     {
         return [
             'atomic, every chunk rolled back' => ['atomic-close-event-tickets', ['sql select tickets', 'operated atomic-close-event-tickets 2', 'rollback level 1'], 2],
             'one transaction per chunk, the chunks stay written' => ['close-event-tickets', ['commit level 1', 'sql select tickets', 'operated close-event-tickets 2'], 0],
+            'without transaction, the chunks stay written' => ['transactionless-close-event-tickets', ['sql update tickets', 'sql select tickets', 'operated transactionless-close-event-tickets 2'], 0],
         ];
     }
 

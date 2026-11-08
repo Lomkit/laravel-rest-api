@@ -2,7 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Events\Stubs;
 
+use Lomkit\Rest\Actions\ActionTransaction;
+
 class AtomicCloseEventTickets extends CloseEventTickets
 {
-    public bool $atomic = true;
+    public ActionTransaction $transaction = ActionTransaction::Whole;
 }

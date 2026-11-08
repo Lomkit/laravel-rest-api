@@ -282,13 +282,13 @@ class ActionChunksTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_refuses_an_atomic_action_that_is_queued(): void
+    public function it_refuses_a_queued_action_with_one_transaction_for_the_whole_run(): void
     {
         ChunkedTicketResource::$queuedAtomic = true;
         $this->withoutExceptionHandling();
 
         $this->expectException(InvalidActionException::class);
-        $this->expectExceptionMessage(QueuedAtomicCloseOpenTickets::class.' runs its chunks in one transaction through atomic(), but it implements ShouldQueue: its chunks run in the worker, outside the request.');
+        $this->expectExceptionMessage(QueuedAtomicCloseOpenTickets::class.' runs its chunks in one transaction (ActionTransaction::Whole), but it implements ShouldQueue: its chunks run in the worker, outside the request.');
 
         $this->getJson('/chunked-tickets');
     }

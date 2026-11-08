@@ -9,6 +9,12 @@ class RenamedSecondaryDocumentResource extends SecondaryDocumentResource
     #[\Override]
     public function actions(): array
     {
-        return [RenameSecondaryDocuments::make(), AtomicRenameSecondaryDocuments::make()->atomic()];
+        return [
+            RenameSecondaryDocuments::make(),
+            AtomicRenameSecondaryDocuments::make()->atomic(),
+            TransactionlessRenameSecondaryDocuments::make()->withoutTransaction(),
+            QueuedRenameSecondaryDocuments::make(),
+            QueuedTransactionlessRenameSecondaryDocuments::make(),
+        ];
     }
 }

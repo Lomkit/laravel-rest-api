@@ -499,9 +499,17 @@ A queued or batched action no longer serializes its resource, its rows and its i
   ```
 
   `->maxResources(5000)` or `->maxResources(null)` sets it when the resource declares the action.
-- Each chunk of a synchronous action runs in a database transaction on the connection of the model of the resource. Before, it ran on the default connection, so the rows of a model on another connection were written outside it.
-- `->atomic()` when the resource declares the action, or `public bool $atomic = true` on the action, runs every chunk in one transaction: when `handle()` throws on a chunk, the rows of every chunk are rolled back. Without it, the chunks handled before the failure stay written and the request answers with the error. `respond()` runs after the commit. An action that implements `ShouldQueue` and is atomic throws `Lomkit\Rest\Exceptions\InvalidActionException` when the resource's actions are read: "App\Rest\Actions\ExportOrders runs its chunks in one transaction through atomic(), but it implements ShouldQueue: its chunks run in the worker, outside the request."
-- An action that already defines `atomic()` or an `$atomic` property gives them this signature and this meaning.
+- Each chunk of an action runs in a database transaction on the connection of the model of the resource, in the request or, for a queued action, around `handle()` in the worker. Before, a synchronous chunk ran on the default connection, so the rows of a model on another connection were written outside it, and a queued job ran without a transaction: when `handle()` throws on row 50 of a job, rows 1 to 49 of that job are now rolled back. Call `->withoutTransaction()` on a queued action that must keep them.
+- The `$transaction` property of the action chooses its transactions: `ActionTransaction::Chunk`, the default, gives each chunk its own; `ActionTransaction::Whole`, or `->atomic()` when the resource declares the action, runs every chunk in one, so that when `handle()` throws on a chunk, the rows of every chunk are rolled back; `ActionTransaction::None`, or `->withoutTransaction()`, opens none, so that each row is written when `handle()` writes it, for an action that calls an external service on each row or commits its own progress. Without `Whole`, the rows written before a failure stay written and the request answers with the error. `respond()` runs after the commit.
+
+  ```php
+  use Lomkit\Rest\Actions\ActionTransaction;
+
+  public ActionTransaction $transaction = ActionTransaction::None;
+  ```
+
+  An action that implements `ShouldQueue` and runs with `Whole` throws `Lomkit\Rest\Exceptions\InvalidActionException` when the resource's actions are read: "App\Rest\Actions\ExportOrders runs its chunks in one transaction (ActionTransaction::Whole), but it implements ShouldQueue: its chunks run in the worker, outside the request."
+- An action that already defines `atomic()`, `withoutTransaction()` or a `$transaction` property gives them this signature and this meaning.
 - A batched action (`BatchableAction`) gives the id of its batch in the response, between `impacted` and `result`:
 
   ```json
@@ -558,14 +566,14 @@ The controller hooks are removed. The resource has endpoint events instead: publ
 | `afterSearch()` | `searched(LengthAwarePaginator $page): void` | after the query and the includes are read, before the rows are rendered |
 | `beforeMutate()` | `mutatingAll(array $entries): void` | inside the transaction, after the row checks, before the first write |
 | `afterMutate()` | `mutatedAll(array $operations): void` | inside the transaction, after the last write; the `response` block is read after the commit |
-| `beforeOperate()` | `operating(Action $action, ActionFields $fields): void` | after the row checks of `authorizeEach()`, before the first chunk; inside the transaction of an `atomic()` action |
-| `afterOperate()` | `operated(Action $action, ActionFields $fields, int $impacted): void` | after the last chunk, before `respond()`; inside the transaction of an `atomic()` action |
+| `beforeOperate()` | `operating(Action $action, ActionFields $fields): void` | after the row checks of `authorizeEach()`, before the first chunk; inside the transaction of an action with `ActionTransaction::Whole` (`atomic()`) |
+| `afterOperate()` | `operated(Action $action, ActionFields $fields, int $impacted): void` | after the last chunk, before `respond()`; inside the transaction of an action with `ActionTransaction::Whole` (`atomic()`) |
 | `beforeDestroy()`, `beforeRestore()`, `beforeForceDestroy()` | `destroyingAll(Collection $models)`, `restoringAll()`, `forceDestroyingAll()` | inside the transaction, after the row checks, before the first row |
 | `afterDestroy()`, `afterRestore()`, `afterForceDestroy()` | `destroyedAll(Collection $models)`, `restoredAll()`, `forceDestroyedAll()` | inside the transaction, after the last row |
 
 - Move the code of each hook to its event on the resource, and delete the hook. PHP refuses to load a controller that marks a removed hook with `#[\Override]`, and names the method; a hook without the attribute is no longer called. The controller keeps `$resource` only.
 - The events run after the entry checks and the validation. The events of `mutate`, `operate`, `destroy`, `restore` and `forceDestroy` also run after the checks of each row: where `beforeMutate()` or `beforeDestroy()` ran before them, their events run after them, and a row that a policy refuses runs no event. `searching()` runs before any row is read.
-- An event that throws stops the endpoint. A `ValidationException` gives a 422 and an `AuthorizationException` a 403. Inside a transaction, the throw rolls it back: `mutatedAll()` and `destroyedAll()` can undo the write. Before, `afterMutate()` and `afterDestroy()` ran after the commit. An action that is not `atomic()` commits each chunk: a throw in `operated()` leaves the chunks written and skips `respond()`. Jobs of a queued action are pushed when their chunk is read; a throw in `operated()` does not recall them, and a batch is not dispatched.
+- An event that throws stops the endpoint. A `ValidationException` gives a 422 and an `AuthorizationException` a 403. Inside a transaction, the throw rolls it back: `mutatedAll()` and `destroyedAll()` can undo the write. Before, `afterMutate()` and `afterDestroy()` ran after the commit. An action without `ActionTransaction::Whole` commits each chunk, or writes each row at once with `ActionTransaction::None`: a throw in `operated()` leaves the rows written and skips `respond()`. Jobs of a queued action are pushed when their chunk is read; a throw in `operated()` does not recall them, and a batch is not dispatched.
 - `searched()` receives the page that the response renders. Before, `afterSearch()` ran before the query. `described()` is new: the controller had no hook after the details.
 - An event cannot change what the endpoint does: it returns nothing, and its payload is read-only. Do not change the rows, the page or the operations it receives. Read the request with `$this->request()`: it is the request of the endpoint. An edit of its input changes nothing.
 - `mutatingAll()` receives the entries of the mutation, each a `Lomkit\Rest\Mutations\MutationNode` with its `operation`, `key`, `attributes` and `relations`. `mutatedAll()` receives the operations that the response returns under `operations`.

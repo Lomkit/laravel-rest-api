@@ -50,11 +50,7 @@ final readonly class ActionRunner
 
     public function through(ActionRows $rows): int
     {
-        if (! $this->action->atomic) {
-            return $this->operate($rows);
-        }
-
-        return $this->connection->transaction(fn (): int => $this->operate($rows));
+        return $this->action->transaction->aroundRun($this->connection, fn (): int => $this->operate($rows));
     }
 
     /** @param Collection<array-key, Model> $models */
@@ -112,13 +108,7 @@ final readonly class ActionRunner
     /** @param Collection<array-key, Model> $models */
     private function handle(Collection $models): void
     {
-        if ($this->action->atomic) {
-            $this->action->handle($this->fields, $models);
-
-            return;
-        }
-
-        $this->connection->transaction(fn () => $this->action->handle($this->fields, $models));
+        $this->action->transaction->aroundChunk($this->connection, fn () => $this->action->handle($this->fields, $models));
     }
 
     private static function batch(Action $action, ActionFields $fields, UserReference $user): PendingBatch
