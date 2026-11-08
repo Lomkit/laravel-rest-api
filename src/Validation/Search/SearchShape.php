@@ -11,6 +11,38 @@ enum SearchShape
     case Rows;
     case Aggregate;
 
+    private const array ROW_KEYS = [
+        'text' => true,
+        'trashed' => true,
+        'filters' => true,
+        'gates' => true,
+        'scopes' => true,
+        'sorts' => true,
+        'selects' => true,
+        'aggregates' => true,
+        'includes' => true,
+        'instructions' => true,
+        'limit' => true,
+    ];
+
+    private const array SET_KEYS = [
+        'text' => true,
+        'trashed' => true,
+        'filters' => true,
+        'scopes' => true,
+        'instructions' => true,
+    ];
+
+    /** @return array<string, true> */
+    public function keys(): array
+    {
+        return match ($this) {
+            self::Page => [...self::ROW_KEYS, 'page' => true],
+            self::Rows => self::ROW_KEYS,
+            self::Aggregate => self::SET_KEYS,
+        };
+    }
+
     /** @return list<string> */
     public function refused(): array
     {
