@@ -62,7 +62,7 @@ class ResponseShapeTest extends PackageTestCase
                     'sorts' => [['field' => 'first_name']],
                 ],
                 '/api/authors/search',
-                '{"current_page":1,"data":[{"id":1,"first_name":"Ada","posts_count":2,"gates":{"authorized_to_view":{"allowed":true,"message":null}},"posts":[{"id":1,"title":"Engines"},{"id":2,"title":"Notes"}],"tags":[{"name":"Mathematics","pivot":[]}]},{"id":2,"first_name":"Grace","posts_count":0,"gates":{"authorized_to_view":{"allowed":true,"message":null}},"posts":[],"tags":[]}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{"gates":{"authorized_to_create":{"allowed":false,"message":null}}}}',
+                '{"current_page":1,"data":[{"id":1,"first_name":"Ada","posts_count":2,"gates":{"authorized_to_view":{"allowed":true,"message":null}},"posts":[{"id":1,"title":"Engines"},{"id":2,"title":"Notes"}],"tags":[{"name":"Mathematics","pivot":{}}]},{"id":2,"first_name":"Grace","posts_count":0,"gates":{"authorized_to_view":{"allowed":true,"message":null}},"posts":[],"tags":[]}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{"gates":{"authorized_to_create":{"allowed":false,"message":null}}}}',
             ],
             'a missing relation' => [
                 [
@@ -71,7 +71,7 @@ class ResponseShapeTest extends PackageTestCase
                     'sorts' => [['field' => 'id']],
                 ],
                 '/api/posts/search',
-                '{"current_page":1,"data":[{"id":1,"title":"Engines","author":{"last_name":"Lovelace"}},{"id":2,"title":"Notes","author":{"last_name":"Lovelace"}},{"id":3,"title":"Orphans","author":null}],"from":1,"last_page":1,"per_page":50,"to":3,"total":3,"meta":[]}',
+                '{"current_page":1,"data":[{"id":1,"title":"Engines","author":{"last_name":"Lovelace"}},{"id":2,"title":"Notes","author":{"last_name":"Lovelace"}},{"id":3,"title":"Orphans","author":null}],"from":1,"last_page":1,"per_page":50,"to":3,"total":3,"meta":{}}',
             ],
         ];
     }
@@ -83,7 +83,7 @@ class ResponseShapeTest extends PackageTestCase
 
         $response->assertOk();
         $this->assertSame(
-            '{"data":[{"id":3,"title":"Orphans","summary":null,"status":"published","featured":false,"views":20,"rating":null,"published_on":"2026-01-01T00:00:00.000000Z","published_at":null,"metadata":null}],"meta":[]}',
+            '{"data":[{"id":3,"title":"Orphans","summary":null,"status":"published","featured":false,"views":20,"rating":null,"published_on":"2026-01-01T00:00:00.000000Z","published_at":null,"metadata":null}],"meta":{}}',
             $response->getContent(),
         );
     }
@@ -101,7 +101,7 @@ class ResponseShapeTest extends PackageTestCase
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertSame(
-            '{"data":{"id":1,"title":"Engines","summary":null,"status":"published","featured":false,"views":150,"rating":null,"published_on":"2026-01-01T00:00:00.000000Z","published_at":null,"metadata":null},"meta":[]}',
+            '{"data":{"id":1,"title":"Engines","summary":null,"status":"published","featured":false,"views":150,"rating":null,"published_on":"2026-01-01T00:00:00.000000Z","published_at":null,"metadata":null},"meta":{}}',
             $response->getContent(),
         );
     }
@@ -120,7 +120,7 @@ class ResponseShapeTest extends PackageTestCase
             ->toResponse($context->request);
 
         $this->assertSame(
-            '{"data":{"id":1,"first_name":"Ada","last_name":"Lovelace","settings":null,"posts":[{"id":1,"title":"Engines","summary":null,"status":"published","featured":false,"views":150,"rating":null,"published_on":"2026-01-01T00:00:00.000000Z","published_at":null,"metadata":null}]},"meta":[]}',
+            '{"data":{"id":1,"first_name":"Ada","last_name":"Lovelace","settings":null,"posts":[{"id":1,"title":"Engines","summary":null,"status":"published","featured":false,"views":150,"rating":null,"published_on":"2026-01-01T00:00:00.000000Z","published_at":null,"metadata":null}]},"meta":{}}',
             $response->getContent(),
         );
     }

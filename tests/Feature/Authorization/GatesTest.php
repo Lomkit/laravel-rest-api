@@ -109,7 +109,7 @@ class GatesTest extends HelpdeskTestCase
     public static function rowsWithoutAnswers(): array
     {
         return [
-            'no gate' => [[], '[]'],
+            'no gate' => [[], '{}'],
             'the create gate only' => [['create'], '{"gates":{"authorized_to_create":{"allowed":true,"message":null}}}'],
         ];
     }

@@ -50,7 +50,7 @@ class IncludeAliasCopiesTest extends PackageTestCase
     {
         $this->assertAuthors([
             ['relation' => 'tags', 'alias' => 'topics', 'selects' => [['field' => 'name']]],
-        ], '[{"id":1,"topics":[{"name":"Mathematics","pivot":[]}]},{"id":2,"topics":[]}]', 2);
+        ], '[{"id":1,"topics":[{"name":"Mathematics","pivot":{}}]},{"id":2,"topics":[]}]', 2);
     }
 
     #[Test]
@@ -100,7 +100,7 @@ class IncludeAliasCopiesTest extends PackageTestCase
 
         $response->assertOk();
         $this->assertSame(
-            '{"current_page":1,"data":'.$data.',"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":[]}',
+            '{"current_page":1,"data":'.$data.',"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{}}',
             $response->getContent(),
         );
 

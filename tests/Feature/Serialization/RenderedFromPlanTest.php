@@ -40,7 +40,7 @@ class RenderedFromPlanTest extends PackageTestCase
 
         $response->assertOk();
         $this->assertSame(
-            '{"current_page":1,"data":[{"id":1,"posts":[{"title":"Notes"},{"title":"Engines"}]},{"id":2,"posts":[]}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":[]}',
+            '{"current_page":1,"data":[{"id":1,"posts":[{"title":"Notes"},{"title":"Engines"}]},{"id":2,"posts":[]}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{}}',
             $response->getContent(),
         );
     }
@@ -58,7 +58,7 @@ class RenderedFromPlanTest extends PackageTestCase
 
         $response->assertOk();
         $this->assertSame(
-            '{"current_page":1,"data":[{"id":1,"title":"Engines","author":{"first_name":"Ada"}},{"id":2,"title":"Notes","author":{"first_name":"Ada"}},{"id":3,"title":"Orphans","author":null}],"from":1,"last_page":1,"per_page":50,"to":3,"total":3,"meta":[]}',
+            '{"current_page":1,"data":[{"id":1,"title":"Engines","author":{"first_name":"Ada"}},{"id":2,"title":"Notes","author":{"first_name":"Ada"}},{"id":3,"title":"Orphans","author":null}],"from":1,"last_page":1,"per_page":50,"to":3,"total":3,"meta":{}}',
             $response->getContent(),
         );
     }
