@@ -753,7 +753,7 @@ public function actions(): array
 Call:
 
 ```
-POST /api/users/actions/send-welcome-notification-action
+POST /api/users/actions/send-welcome-notification
 {
   "fields": [{"name": "expires_at", "value": "2026-04-29"}],
   "search": {"filters": [{"field": "has_received_welcome", "value": false}]}
@@ -1061,7 +1061,7 @@ class PricedUpTo extends \Lomkit\Rest\Instructions\Instruction implements \Lomki
 Register in `Resource::instructions()`. Clients invoke them via the `instructions` key inside `search`:
 
 ```json
-"instructions": [{"name": "odd-even-id-instruction", "fields": [{"name": "type", "value": "odd"}]}]
+"instructions": [{"name": "odd-even-id", "fields": [{"name": "type", "value": "odd"}]}]
 ```
 
 To send one instruction twice, give one entry an `alias` (`{"name": "odd-even-id", "alias": "even_ids", ...}`): each entry of one `instructions` list needs its own key, see **Instruction `alias`** above.
