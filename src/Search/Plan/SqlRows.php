@@ -45,6 +45,7 @@ final readonly class SqlRows implements RowSource
             ...$this->order($resource, $search, $aggregates),
             ...array_map(ScopeClause::of(...), $search->scopes),
             ...array_map(InstructionClause::of(...), $search->instructions),
+            $this->ordered ? new KeyOrderClause : null,
         ]));
     }
 

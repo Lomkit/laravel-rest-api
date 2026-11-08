@@ -11,6 +11,7 @@ use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Search\Plan\AliasedIncludeClause;
 use Lomkit\Rest\Search\Plan\DefaultOrderClause;
 use Lomkit\Rest\Search\Plan\IncludeClause;
+use Lomkit\Rest\Search\Plan\KeyOrderClause;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 use Lomkit\Rest\Tests\Fixtures\Publishing\AuthorResource;
@@ -34,18 +35,18 @@ class SearchPlannerIncludesTest extends PackageTestCase
     {
         $published = ['relation' => 'posts', 'filters' => [['field' => 'status', 'value' => 'published']]];
         $author = [IncludeClause::class, 'author', [PerimeterClause::class], []];
-        $merged = [[IncludeClause::class, 'posts', [PerimeterClause::class, FilterGroupClause::class, DefaultOrderClause::class], [$author]]];
+        $merged = [[IncludeClause::class, 'posts', [PerimeterClause::class, FilterGroupClause::class, DefaultOrderClause::class, KeyOrderClause::class], [$author]]];
         $dotted = $this->includes([['relation' => 'posts.author']]);
 
-        $this->assertSame([[IncludeClause::class, 'posts', [PerimeterClause::class, DefaultOrderClause::class], [$author]]], self::tree($dotted));
+        $this->assertSame([[IncludeClause::class, 'posts', [PerimeterClause::class, DefaultOrderClause::class, KeyOrderClause::class], [$author]]], self::tree($dotted));
         $this->assertInstanceOf(IncludeClause::class, $dotted[0]);
         $this->assertEquals(LimitPolicy::explicit(10), $dotted[0]->plan->limit);
         $this->assertSame($merged, self::tree($this->includes([$published, ['relation' => 'posts.author']])));
         $this->assertSame($merged, self::tree($this->includes([['relation' => 'posts.author'], $published])));
         $this->assertSame(
             [
-                [AliasedIncludeClause::class, 'posts', [PerimeterClause::class, DefaultOrderClause::class], []],
-                [IncludeClause::class, 'posts', [PerimeterClause::class, DefaultOrderClause::class], [$author]],
+                [AliasedIncludeClause::class, 'posts', [PerimeterClause::class, DefaultOrderClause::class, KeyOrderClause::class], []],
+                [IncludeClause::class, 'posts', [PerimeterClause::class, DefaultOrderClause::class, KeyOrderClause::class], [$author]],
             ],
             self::tree($this->includes([['relation' => 'posts', 'alias' => 'drafted'], ['relation' => 'posts.author']])),
         );

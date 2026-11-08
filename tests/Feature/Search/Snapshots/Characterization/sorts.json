@@ -123,6 +123,6 @@
         "meta": []
     },
     "raw_queries": [
-        "select \"posts\".\"id\", \"posts\".\"title\", \"posts\".\"summary\", \"posts\".\"status\", \"posts\".\"featured\", \"posts\".\"views\", \"posts\".\"rating\", \"posts\".\"published_on\", \"posts\".\"published_at\", \"posts\".\"metadata\" from \"posts\" order by \"posts\".\"featured\" desc, \"posts\".\"title\" asc limit 50 offset 0"
+        "select \"posts\".\"id\", \"posts\".\"title\", \"posts\".\"summary\", \"posts\".\"status\", \"posts\".\"featured\", \"posts\".\"views\", \"posts\".\"rating\", \"posts\".\"published_on\", \"posts\".\"published_at\", \"posts\".\"metadata\" from \"posts\" order by \"posts\".\"featured\" desc, \"posts\".\"title\" asc, \"posts\".\"id\" desc limit 50 offset 0"
     ]
 }

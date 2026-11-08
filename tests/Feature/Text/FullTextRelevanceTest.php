@@ -52,6 +52,18 @@ class FullTextRelevanceTest extends FullTextTestCase
     }
 
     #[Test]
+    public function it_orders_the_matches_of_an_equal_relevance_by_the_key(): void
+    {
+        $this->requiresFullText();
+        $first = $this->createPost('Glass vase', 'Hand blown glass', ['featured' => true]);
+        $second = $this->createPost('Glass vase', 'Hand blown glass', ['featured' => true]);
+
+        $response = $this->search('perimeter-posts', ['text' => ['value' => 'vase'], 'sorts' => [['field' => '@relevance']]]);
+
+        $response->assertOk()->assertJsonPath('data.*.id', [$second->id, $first->id, $this->posts['vase']->id]);
+    }
+
+    #[Test]
     public function it_ranks_the_matches_of_a_prefix_search(): void
     {
         $this->requiresFullText();

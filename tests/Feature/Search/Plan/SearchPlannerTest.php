@@ -21,6 +21,7 @@ use Lomkit\Rest\Query\Clauses\TrashedClause;
 use Lomkit\Rest\Search\FilterGroup;
 use Lomkit\Rest\Search\Plan\DefaultOrderClause;
 use Lomkit\Rest\Search\Plan\IncludeClause;
+use Lomkit\Rest\Search\Plan\KeyOrderClause;
 use Lomkit\Rest\Search\Plan\LimitPolicy;
 use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
@@ -69,17 +70,17 @@ class SearchPlannerTest extends PackageTestCase
     /** @return iterable<string, array{class-string<Resource>, array<string, mixed>, list<class-string<Clause>>}> */
     public static function levels(): iterable
     {
-        yield 'no sorts' => [PostResource::class, [], [PerimeterClause::class, DefaultOrderClause::class]];
+        yield 'no sorts' => [PostResource::class, [], [PerimeterClause::class, DefaultOrderClause::class, KeyOrderClause::class]];
         yield 'filters and sorts' => [
             PostResource::class,
             ['filters' => [['field' => 'views', 'value' => 1]], 'sorts' => [['field' => 'title'], ['field' => 'views']]],
-            [PerimeterClause::class, FilterGroupClause::class, SortClause::class, SortClause::class],
+            [PerimeterClause::class, FilterGroupClause::class, SortClause::class, SortClause::class, KeyOrderClause::class],
         ];
-        yield 'trashed' => [AuthorResource::class, ['trashed' => 'with'], [PerimeterClause::class, TrashedClause::class, DefaultOrderClause::class]];
+        yield 'trashed' => [AuthorResource::class, ['trashed' => 'with'], [PerimeterClause::class, TrashedClause::class, DefaultOrderClause::class, KeyOrderClause::class]];
         yield 'scopes and instructions' => [
             PostResource::class,
             ['scopes' => [['name' => 'popular']], 'instructions' => [['name' => 'in-status', 'fields' => [['name' => 'status', 'value' => 'draft']]]]],
-            [PerimeterClause::class, DefaultOrderClause::class, ScopeClause::class, InstructionClause::class],
+            [PerimeterClause::class, DefaultOrderClause::class, ScopeClause::class, InstructionClause::class, KeyOrderClause::class],
         ];
     }
 
