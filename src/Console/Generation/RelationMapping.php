@@ -36,7 +36,7 @@ final readonly class RelationMapping
     private function mapRelation(string $name, Relation $relation, Table $table, RelationList $list): RelationList
     {
         if ($relation instanceof EloquentMorphTo) {
-            return $list->skipping($this->morphToNote($name));
+            return $list->skipping($this->morphToNote($name, new MorphToTargets($relation)));
         }
 
         $type = RelationType::of($relation);
@@ -98,12 +98,18 @@ final readonly class RelationMapping
         return $fields;
     }
 
-    private function morphToNote(string $name): string
+    private function morphToNote(string $name, MorphToTargets $targets): string
     {
-        $resources = array_map(class_basename(...), array_values(array_intersect_key($this->resources, array_flip(Relation::morphMap()))));
-        $targets = $resources === [] ? '...' : implode('::class, ', $resources).'::class';
+        $note = "{$name}: MorphTo relations are not generated, declare it in relations() by hand with its targets";
+        $resources = $targets->resources($this->resources);
 
-        return "{$name}: MorphTo relations are not generated, declare it in relations() by hand with its targets, for example MorphTo::make('{$name}', [{$targets}]).";
+        if ($resources === []) {
+            return "{$note}.";
+        }
+
+        $classes = implode(', ', array_map(fn (string $resource): string => class_basename($resource).'::class', $resources));
+
+        return "{$note}, for example MorphTo::make('{$name}', [{$classes}]).";
     }
 
     private function missingResource(string $name, string $model): string

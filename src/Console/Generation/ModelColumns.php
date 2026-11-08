@@ -2,13 +2,23 @@
 
 namespace Lomkit\Rest\Console\Generation;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Console\Generation\Schema\Column;
 
 final readonly class ModelColumns
 {
+    private const array AUTH_COLUMNS = ['remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_confirmed_at'];
+
     /** @param  list<string>  $relationKeys */
     public function __construct(private Model $model, private array $relationKeys) {}
+
+    public function isAuthColumn(Column $column): bool
+    {
+        $rememberToken = $this->model instanceof Authenticatable ? $this->model->getRememberTokenName() : null;
+
+        return in_array($column->name, [...self::AUTH_COLUMNS, $rememberToken], true);
+    }
 
     public function isKey(Column $column): bool
     {
