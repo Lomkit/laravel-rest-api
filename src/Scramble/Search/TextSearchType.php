@@ -1,6 +1,6 @@
 <?php
 
-namespace Lomkit\Rest\Scramble;
+namespace Lomkit\Rest\Scramble\Search;
 
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;

@@ -15,7 +15,7 @@ use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scramble\Components\PageSchema;
 use Lomkit\Rest\Scramble\DocumentationContext;
 use Lomkit\Rest\Scramble\Schemas;
-use Lomkit\Rest\Scramble\TextSearchType;
+use Lomkit\Rest\Scramble\Search\TextSearchType;
 
 final readonly class SearchDocumenter implements EndpointDocumenter
 {
