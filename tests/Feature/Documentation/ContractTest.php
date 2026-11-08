@@ -230,7 +230,7 @@ class ContractTest extends DocumentationTestCase
     }
 
     #[Test]
-    public function it_answers_the_gates_of_an_include_whose_resource_turns_its_gates_off(): void
+    public function it_refuses_the_gates_of_an_include_whose_resource_turns_its_gates_off(): void
     {
         $this->app->bind(LabelResource::class, UngatedLabelResource::class);
         $this->seedFestival();
@@ -238,7 +238,7 @@ class ContractTest extends DocumentationTestCase
         $search = ['includes' => [['relation' => 'labels', 'gates' => ['view']]]];
 
         $this->assertSame(['/search/includes/0/relation', '/search/includes/0'], array_keys((new OpenApiValidator)->requestErrors($this->document(), '/shows/search', 'post', ['search' => $search])));
-        $this->postJson('api/shows/search', ['search' => $search])->assertOk();
+        $this->postJson('api/shows/search', ['search' => $search])->assertUnprocessable()->assertJsonValidationErrors(['search.includes.0.gates']);
     }
 
     #[Test]

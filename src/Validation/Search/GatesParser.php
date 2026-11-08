@@ -6,6 +6,7 @@ use Lomkit\Rest\Rules\Distinct;
 use Lomkit\Rest\Search\GateAbility;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ValidationContext;
+use Lomkit\Rest\Validation\Violation;
 
 final readonly class GatesParser
 {
@@ -14,6 +15,12 @@ final readonly class GatesParser
     /** @return list<GateAbility>|null */
     public function parse(Cursor $gates, ValidationContext $context): ?array
     {
+        if ($gates->present && $context->includeDepth > 0 && ! $context->resource->isGatingEnabled()) {
+            $context->rules->reject(Violation::gatesOff($gates->path));
+
+            return null;
+        }
+
         $context->rules->addWhenPresent($gates, ['array']);
         $entries = $context->reader->entries($gates, PHP_INT_MAX);
 
