@@ -59,25 +59,31 @@ final readonly class ExposureReport
         return $this->problems === [];
     }
 
-    public function toJson(): string
+    /** @return array{routes: int, policies: int, problems: list<string>, search: string|null} */
+    public function toArray(): array
     {
-        return json_encode([
+        return [
             'routes' => $this->routes,
             'policies' => $this->policies,
             'problems' => $this->problems,
             'search' => $this->search,
-        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+        ];
     }
 
-    public function render(Factory $components): void
+    public function toJson(): string
+    {
+        return json_encode($this->toArray(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+    }
+
+    public function render(Factory $components, string $label = self::LABEL): void
     {
         if ($this->passed()) {
-            $components->twoColumnDetail(self::LABEL, $this->summary());
+            $components->twoColumnDetail($label, $this->summary());
 
             return;
         }
 
-        $components->twoColumnDetail(self::LABEL, '<fg=red;options=bold>FAILED</>');
+        $components->twoColumnDetail($label, '<fg=red;options=bold>FAILED</>');
         $components->bulletList($this->problems);
     }
 

@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Library;
 
+use Lomkit\Rest\Attributes\WithoutPerimeter;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Resource;
@@ -12,6 +13,7 @@ use Lomkit\Rest\Relations\MorphMany;
 use Lomkit\Rest\Relations\MorphOne;
 use Lomkit\Rest\Relations\MorphOneOfMany;
 
+#[WithoutPerimeter]
 class BookResource extends Resource
 {
     public static string $model = Book::class;

@@ -2,8 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Feature\Scaffolding;
 
+use Illuminate\Contracts\Process\ProcessResult;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Process;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Fixtures\Accounts\Accounts;
 use Lomkit\Rest\Tests\Fixtures\Blog\Blog;
@@ -103,6 +106,29 @@ class QuickStartCommandTest extends ScaffoldingTestCase
 
         $this->assertSame(0, $exitCode);
         $this->assertStringEndsWith("\n".self::FIRST_RUN, $this->summary($output->fetch()));
+    }
+
+    #[Test]
+    public function it_succeeds_when_rest_check_reports_resources_without_a_perimeter(): void
+    {
+        $output = $this->quickStart('Post', 'Tag');
+
+        $this->assertStringNotContainsString('perimeterQuery', $output);
+        Process::assertRan(function (PendingProcess $process, ProcessResult $result): bool {
+            $report = (array) json_decode($result->output(), true);
+
+            return in_array('rest:check', (array) $process->command, true)
+                && $result->exitCode() === 1
+                && $report['problems'] === []
+                && $report['rows'] === [
+                    'perimeter' => [],
+                    'without_perimeter' => [],
+                    'problems' => [
+                        'App\Rest\Resources\PostResource does not override perimeterQuery(): every row is visible to users who pass viewAny. Override perimeterQuery() to limit the rows, or mark the resource with #[WithoutPerimeter] when every row is meant for these users.',
+                        'App\Rest\Resources\TagResource does not override perimeterQuery(): every row is visible to users who pass viewAny. Override perimeterQuery() to limit the rows, or mark the resource with #[WithoutPerimeter] when every row is meant for these users.',
+                    ],
+                ];
+        });
     }
 
     #[Test]
