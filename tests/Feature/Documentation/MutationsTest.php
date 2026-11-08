@@ -58,7 +58,7 @@ class MutationsTest extends DocumentationTestCase
         $schemas = $this->document()['components']['schemas'];
 
         $this->assertSame(
-            '{"type":"object","description":"The fields that `create` writes","properties":{"title":{"type":"string","description":"Rules: string, max:80, required","examples":["Opening night","Closing night"]},"summary":{"type":["string","null"],"description":"Rules: nullable, string"},"price":{"type":["number","null"],"description":"Rules: nullable, numeric","examples":[12.5],"x-lomkit-meta":{"unit":"EUR"}},"seats":{"type":"integer","description":"Rules: integer, min:0"},"featured":{"type":"boolean","description":"Rules: boolean"},"starts_on":{"type":"string","format":"date","description":"Rules: date, required"},"starts_at":{"type":["string","null"],"format":"date-time","description":"Rules: nullable, date"},"status":{"type":"string","description":"Rules: enum, required","enum":["planned","on_sale"]},"level":{"type":"integer","description":"Rules: enum","enum":[1,2,3]},"settings":{"type":["object","null"],"description":"Rules: nullable, array, max_depth:64"},"secret":{"type":["string","null"],"description":"Rules: nullable, string"}},"additionalProperties":false,"title":"ShowCreate"}',
+            '{"type":"object","description":"The fields that `create` writes","properties":{"title":{"type":"string","description":"Rules: string, max:80, required","examples":["Opening night","Closing night"]},"summary":{"type":["string","null"],"description":"Rules: nullable, string, min:8"},"price":{"type":["number","null"],"description":"Rules: nullable, numeric","examples":[12.5],"x-lomkit-meta":{"unit":"EUR"}},"seats":{"type":"integer","description":"Rules: integer, min:0"},"featured":{"type":"boolean","description":"Rules: boolean"},"starts_on":{"type":"string","format":"date","description":"Rules: date, required"},"starts_at":{"type":["string","null"],"format":"date-time","description":"Rules: nullable, date"},"status":{"type":"string","description":"Rules: enum, required","enum":["planned","on_sale"]},"level":{"type":"integer","description":"Rules: enum","enum":[1,2,3]},"settings":{"type":["object","null"],"description":"Rules: nullable, array, max_depth:64"},"secret":{"type":["string","null"],"description":"Rules: nullable, string"}},"additionalProperties":false,"title":"ShowCreate"}',
             json_encode($schemas['ShowCreate']),
         );
         $this->assertSame(array_keys($schemas['ShowCreate']['properties']), array_keys($schemas['ShowUpdate']['properties']));
@@ -105,6 +105,19 @@ class MutationsTest extends DocumentationTestCase
     }
 
     #[Test]
+    public function it_requires_the_relations_of_a_create_that_a_relation_requires_on_creation(): void
+    {
+        $schemas = $this->document()['components']['schemas'];
+
+        $this->assertSame(['operation', 'relations'], $schemas['NoteMutationCreate']['required']);
+        $this->assertSame('#/components/schemas/NoteCreateRelations', $schemas['NoteMutationCreate']['properties']['relations']['$ref']);
+        $this->assertSame(['notable'], $schemas['NoteCreateRelations']['required']);
+        $this->assertSame(['operation', 'key'], $schemas['NoteMutationUpdate']['required']);
+        $this->assertSame('#/components/schemas/NoteRelations', $schemas['NoteMutationUpdate']['properties']['relations']['$ref']);
+        $this->assertSame(['operation'], $schemas['ShowMutationCreate']['required']);
+    }
+
+    #[Test]
     public function it_lists_the_relations_that_take_entries(): void
     {
         $schemas = $this->document()['components']['schemas'];
@@ -148,10 +161,10 @@ class MutationsTest extends DocumentationTestCase
     public static function examples(): array
     {
         return [
-            'a field without examples' => ['/notes/mutate', ['mutate' => [['operation' => 'create', 'attributes' => ['body' => 'a']]]]],
+            'a field without examples and a required relation' => ['/notes/mutate', ['mutate' => [['operation' => 'create', 'attributes' => ['body' => 'a'], 'relations' => ['notable' => ['operation' => 'attach', 'type' => Show::class, 'key' => 1]]]]]],
             'every type of field' => ['/shows/mutate', ['mutate' => [['operation' => 'create', 'attributes' => [
                 'title' => 'Opening night',
-                'summary' => 'a',
+                'summary' => 'aaaaaaaa',
                 'price' => 12.5,
                 'seats' => 1,
                 'featured' => true,

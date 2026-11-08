@@ -14,12 +14,12 @@ class NoteResource extends Resource
     #[\Override]
     public function fields(): array
     {
-        return [ID::make('id'), Text::make('body')];
+        return [ID::make('id'), Text::make('notable_type')->readonly(), Text::make('body')];
     }
 
     #[\Override]
     public function relations(): array
     {
-        return [MorphTo::make('notable', [ShowResource::class, StageResource::class])];
+        return [MorphTo::make('notable', [ShowResource::class, StageResource::class])->requiredOnCreation()];
     }
 }

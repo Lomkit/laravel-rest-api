@@ -5,15 +5,13 @@ namespace Lomkit\Rest\Scramble\Actions;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
-use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\ActionTarget;
-use Lomkit\Rest\Fields\Details\RuleDescriptions;
 use Lomkit\Rest\Fields\FieldSet;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\KeySchema;
-use Lomkit\Rest\Scramble\FieldSchema;
+use Lomkit\Rest\Scramble\InputFieldSchema;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\Search\SearchSchema;
 use Lomkit\Rest\Scramble\Types\Nothing;
@@ -61,25 +59,13 @@ final readonly class ActionSchema
         $entries = [];
 
         foreach ($fields as $field) {
-            $entries[] = Schemas::closed(['name' => (new StringType)->const($field->name), 'value' => self::value($field->getRules()->shared(), FieldSchema::written($field))], ['name']);
+            $entries[] = Schemas::closed(['name' => (new StringType)->const($field->name), 'value' => InputFieldSchema::of($field)], ['name']);
         }
 
         $list = Schemas::list(count($entries) === 1 ? $entries[0] : new OneOf($entries), 'The values of the fields of the action: one `{"name", "value"}` entry for each field that the request gives');
         $list->setMax($max);
 
         return $list;
-    }
-
-    /** @param list<mixed> $rules */
-    private static function value(array $rules, Type $type): Type
-    {
-        $described = (new RuleDescriptions($rules))->toArray();
-
-        if ($described === []) {
-            return $type;
-        }
-
-        return $type->setDescription('Rules: '.implode(', ', $described));
     }
 
     private static function description(Action $action): string

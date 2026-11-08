@@ -15,7 +15,7 @@ use Lomkit\Rest\Instructions\InstructionSupport;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
-use Lomkit\Rest\Scramble\FieldSchema;
+use Lomkit\Rest\Scramble\InputFieldSchema;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\Types\OneOf;
 use Lomkit\Rest\Text\TextBackend;
@@ -82,7 +82,7 @@ final readonly class InputSchema
         $given = 0;
 
         foreach ($fields as $field) {
-            $items[] = FieldSchema::written($field);
+            $items[] = InputFieldSchema::of($field);
             $given = $field->hasDefault() ? $given : count($items);
         }
 
@@ -104,7 +104,7 @@ final readonly class InputSchema
         $entries = [];
 
         foreach ($fields as $field) {
-            $entries[] = Schemas::closed(['name' => (new StringType)->const($field->name), 'value' => FieldSchema::written($field)], ['name']);
+            $entries[] = Schemas::closed(['name' => (new StringType)->const($field->name), 'value' => InputFieldSchema::of($field)], ['name']);
         }
 
         if ($entries !== []) {

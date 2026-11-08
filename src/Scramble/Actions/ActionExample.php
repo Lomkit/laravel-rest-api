@@ -26,7 +26,9 @@ final class ActionExample
             ->inputFields($action);
 
         foreach ($inputs as $field) {
-            $fields[] = ['name' => $field->name, 'value' => $field->getExamples() === [] && $field->hasDefault() ? $field->defaultValue() : FieldExample::written($field)];
+            if (! $field->hasDefault()) {
+                $fields[] = ['name' => $field->name, 'value' => FieldExample::written($field)];
+            }
         }
 
         if ($fields !== []) {

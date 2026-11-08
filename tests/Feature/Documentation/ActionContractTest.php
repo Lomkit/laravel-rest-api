@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Feature\Documentation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
-use Lomkit\Rest\Tests\Fixtures\Festival\ShowResource;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -61,17 +60,13 @@ class ActionContractTest extends DocumentationTestCase
     }
 
     #[Test]
-    public function it_sends_each_action_example_built_from_the_examples_and_defaults_of_its_fields(): void
+    public function it_sends_each_action_example_of_the_document(): void
     {
         $document = $this->document();
         $validator = new OpenApiValidator;
         $sent = [];
 
         foreach ($this->examples($document) as $path => $example) {
-            if (! $this->declared($document, $path, $example)) {
-                continue;
-            }
-
             $response = $this->postJson('api'.$path, (array) $example);
 
             $response->assertOk();
@@ -79,7 +74,7 @@ class ActionContractTest extends DocumentationTestCase
             $sent[] = $path;
         }
 
-        $this->assertSame(['/shows/actions/cancel-shows', '/shows/actions/import-shows', '/shows/actions/archive-shows'], $sent);
+        $this->assertSame(['/shows/actions/reschedule-shows', '/shows/actions/cancel-shows', '/shows/actions/import-shows', '/shows/actions/archive-shows'], $sent);
     }
 
     /** @param array<string, mixed>|stdClass $body */
@@ -196,51 +191,5 @@ class ActionContractTest extends DocumentationTestCase
         }
 
         return $examples;
-    }
-
-    /**
-     * @param  array<string, mixed>  $document
-     * @param  array<string, mixed>|stdClass  $example
-     */
-    private function declared(array $document, string $path, array|stdClass $example): bool
-    {
-        $fields = $document['paths'][$path]['post']['requestBody']['content']['application/json']['schema']['properties']['fields']['items'] ?? null;
-        $values = $this->defaults($path);
-
-        foreach ($fields === null ? [] : $fields['oneOf'] ?? [$fields] as $entry) {
-            $declared = $entry['properties']['value']['examples'] ?? $entry['properties']['value']['enum'] ?? [];
-
-            if ($declared !== []) {
-                $values[$entry['properties']['name']['const']] = $declared[0];
-            }
-        }
-
-        foreach (((array) $example)['fields'] ?? [] as $field) {
-            if (! array_key_exists($field['name'], $values) || $values[$field['name']] !== $field['value']) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /** @return array<string, mixed> */
-    private function defaults(string $path): array
-    {
-        $defaults = [];
-
-        foreach ((new ShowResource)->actions() as $action) {
-            if ('/shows/actions/'.$action->uriKey() !== $path) {
-                continue;
-            }
-
-            foreach ($action->fields() as $field) {
-                if ($field->hasDefault()) {
-                    $defaults[$field->name] = $field->defaultValue();
-                }
-            }
-        }
-
-        return $defaults;
     }
 }

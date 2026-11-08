@@ -46,7 +46,7 @@ class SearchGrammarTest extends DocumentationTestCase
         $search = $schemas['ShowSearch']['properties'];
 
         $this->assertSame(
-            '{"type":"object","description":"`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.","properties":{"field":{"type":"string","enum":["id","title","summary","price","seats","featured","starts_on","starts_at","status","level","updated_at","stage.code","stage.name","stage_count","stage_min_code","stage_min_name","stage_max_code","stage_max_name","stage_exists","artists_count","artists_min_id","artists_min_name","artists_max_id","artists_max_name","artists_exists","comments_count","comments_min_id","comments_min_rating","comments_min_body","comments_max_id","comments_max_rating","comments_max_body","comments_avg_rating","comments_sum_rating","comments_exists","labels_count","labels_min_id","labels_min_name","labels_max_id","labels_max_name","labels_exists"]},"direction":{"type":"string","enum":["asc","desc"]}},"required":["field"],"additionalProperties":false,"title":"ShowSort"}',
+            '{"type":"object","description":"`field` lists the default key of each aggregate that sorts, such as `comments_count`: an aggregate over a relation to many, on no field or on a field that is not a key. It sorts only when the same search declares that aggregate. The key of such an aggregate with an `alias` is accepted too, and is not listed.","properties":{"field":{"type":"string","enum":["id","title","summary","price","seats","featured","starts_on","starts_at","status","level","updated_at","stage.code","stage.name","artists_count","artists_min_name","artists_max_name","artists_exists","comments_count","comments_min_rating","comments_min_body","comments_max_rating","comments_max_body","comments_avg_rating","comments_sum_rating","comments_exists","labels_count","labels_min_name","labels_max_name","labels_exists"]},"direction":{"type":"string","enum":["asc","desc"]}},"required":["field"],"additionalProperties":false,"title":"ShowSort"}',
             json_encode($schemas['ShowSort']),
         );
         $this->assertSame('{"type":"object","properties":{"field":{"type":"string","enum":["id","title","summary","price","seats","featured","starts_on","starts_at","status","level","settings","updated_at"]}},"required":["field"],"additionalProperties":false,"title":"ShowSelect"}', json_encode($schemas['ShowSelect']));
@@ -63,10 +63,13 @@ class SearchGrammarTest extends DocumentationTestCase
         $show = $schemas['ShowSort']['properties']['field']['enum'];
         $comment = $schemas['CommentSort']['properties']['field']['enum'];
 
-        $this->assertSame(['comments_count', 'comments_min_id', 'comments_min_rating', 'comments_min_body', 'comments_max_id', 'comments_max_rating', 'comments_max_body', 'comments_avg_rating', 'comments_sum_rating', 'comments_exists'], array_values(array_filter($show, fn (string $name): bool => str_starts_with($name, 'comments_'))));
+        $this->assertSame(['comments_count', 'comments_min_rating', 'comments_min_body', 'comments_max_rating', 'comments_max_body', 'comments_avg_rating', 'comments_sum_rating', 'comments_exists'], array_values(array_filter($show, fn (string $name): bool => str_starts_with($name, 'comments_'))));
         $this->assertSame([], array_values(array_filter($comment, fn (string $name): bool => str_starts_with($name, 'comments_'))));
+        $this->assertSame([], array_values(preg_grep('/^(stage|show)_(count|exists|min|max|avg|sum)/', [...$show, ...$comment]) ?: []));
+        $this->assertContains('shows_max_starts_on', $schemas['StageSort']['properties']['field']['enum']);
+        $this->assertNotContains('shows_max_id', $schemas['StageSort']['properties']['field']['enum']);
         $this->assertSame(
-            '`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.',
+            '`field` lists the default key of each aggregate that sorts, such as `comments_count`: an aggregate over a relation to many, on no field or on a field that is not a key. It sorts only when the same search declares that aggregate. The key of such an aggregate with an `alias` is accepted too, and is not listed.',
             $schemas['ShowSort']['description'],
         );
     }
@@ -127,7 +130,7 @@ class SearchGrammarTest extends DocumentationTestCase
 
         $this->assertSame(['stage', 'artists', 'comments', 'labels'], array_keys((array) $schemas['ShowAggregate']['discriminator']['mapping']));
         $this->assertSame(
-            '{"oneOf":['.$branch('"count","exists"', '').','.$branch('"min","max"', '"field":{"type":"string","enum":["id","rating","body"]},').','.$branch('"avg","sum"', '"field":{"type":"string","enum":["rating"]},').'],"title":"ShowAggregateComments"}',
+            '{"oneOf":['.$branch('"count","exists"', '').','.$branch('"min","max"', '"field":{"type":"string","enum":["id","show_id","rating","body"]},').','.$branch('"avg","sum"', '"field":{"type":"string","enum":["show_id","rating"]},').'],"title":"ShowAggregateComments"}',
             json_encode($schemas['ShowAggregateComments']),
         );
     }
@@ -144,8 +147,8 @@ class SearchGrammarTest extends DocumentationTestCase
     {
         return [
             'the scopes' => ['ShowScope', '{"discriminator":{"propertyName":"name","mapping":{"startingFrom":"#\/components\/schemas\/ShowScopeStartingFrom"}},"oneOf":[{"$ref":"#\/components\/schemas\/ShowScopeStartingFrom"}],"title":"ShowScope"}'],
-            'a scope with a required and a default parameter' => ['ShowScopeStartingFrom', '{"type":"object","properties":{"name":{"type":"string","const":"startingFrom"},"parameters":{"type":"array","description":"In this order: from, min_seats","prefixItems":[{"type":"string","format":"date"},{"type":"integer"}],"minItems":1,"maxItems":2}},"required":["name","parameters"],"additionalProperties":false,"title":"ShowScopeStartingFrom"}'],
-            'an instruction with a default and a nullable field' => ['ShowInstructionOnlyFeatured', '{"type":"object","properties":{"name":{"type":"string","const":"only-featured"},"alias":{"type":"string","description":"The key of this entry among the instructions of the search, in place of the instruction name. It lets a search send one instruction several times.",'.self::ALIAS.',"fields":{"type":"array","items":{"oneOf":[{"type":"object","properties":{"name":{"type":"string","const":"featured"},"value":{"type":"boolean"}},"required":["name"],"additionalProperties":false},{"type":"object","properties":{"name":{"type":"string","const":"min_seats"},"value":{"type":["integer","null"]}},"required":["name"],"additionalProperties":false}]},"maxItems":100}},"required":["name"],"additionalProperties":false,"title":"ShowInstructionOnlyFeatured"}'],
+            'a scope with a required and a default parameter' => ['ShowScopeStartingFrom', '{"type":"object","properties":{"name":{"type":"string","const":"startingFrom"},"parameters":{"type":"array","description":"In this order: from, min_seats","prefixItems":[{"type":"string","format":"date","description":"Rules: date"},{"type":"integer","description":"Rules: integer","default":0}],"minItems":1,"maxItems":2}},"required":["name","parameters"],"additionalProperties":false,"title":"ShowScopeStartingFrom"}'],
+            'an instruction with a default and a nullable field' => ['ShowInstructionOnlyFeatured', '{"type":"object","properties":{"name":{"type":"string","const":"only-featured"},"alias":{"type":"string","description":"The key of this entry among the instructions of the search, in place of the instruction name. It lets a search send one instruction several times.",'.self::ALIAS.',"fields":{"type":"array","items":{"oneOf":[{"type":"object","properties":{"name":{"type":"string","const":"featured"},"value":{"type":"boolean","description":"Rules: boolean","default":true}},"required":["name"],"additionalProperties":false},{"type":"object","properties":{"name":{"type":"string","const":"min_seats"},"value":{"type":["integer","null"],"description":"Rules: nullable, integer"}},"required":["name"],"additionalProperties":false}]},"maxItems":100}},"required":["name"],"additionalProperties":false,"title":"ShowInstructionOnlyFeatured"}'],
         ];
     }
 

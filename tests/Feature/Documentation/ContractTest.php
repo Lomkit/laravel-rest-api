@@ -221,6 +221,7 @@ class ContractTest extends DocumentationTestCase
             'a string key' => ['/stages/search', ['filters' => [['field' => 'code', 'operator' => 'in', 'value' => ['main', 'side']]]]],
             'sorts on a field and on a field of a relation' => ['/shows/search', ['sorts' => [['field' => 'stage.name', 'direction' => 'desc'], ['field' => 'title']]]],
             'a sort on the key of an aggregate' => ['/shows/search', ['aggregates' => [['relation' => 'comments', 'type' => 'count']], 'sorts' => [['field' => 'comments_count', 'direction' => 'desc']]]],
+            'a sort on the latest date of the related rows' => ['/stages/search', ['aggregates' => [['relation' => 'shows', 'type' => 'max', 'field' => 'starts_on']], 'sorts' => [['field' => 'shows_max_starts_on', 'direction' => 'desc']]]],
             'selects, gates, a limit and a page' => ['/shows/search', ['selects' => [['field' => 'title']], 'gates' => ['view', 'create'], 'limit' => 25, 'page' => 2]],
             'a text and the trashed rows' => ['/shows/search', ['text' => ['value' => 'night', 'mode' => 'phrase'], 'trashed' => 'with']],
             'includes of each family' => ['/shows/search', ['includes' => [
@@ -267,6 +268,10 @@ class ContractTest extends DocumentationTestCase
             'a limit on an include of a relation to one' => ['/shows/search', ['includes' => [['relation' => 'stage', 'limit' => 10]]]],
             'the create gate on an include' => ['/shows/search', ['includes' => [['relation' => 'comments', 'gates' => ['create']]]]],
             'a field that an average does not take' => ['/shows/search', ['aggregates' => [['relation' => 'comments', 'type' => 'avg', 'field' => 'body']]]],
+            'a sort on an aggregate of a relation to one' => ['/shows/search', ['aggregates' => [['relation' => 'stage', 'type' => 'count']], 'sorts' => [['field' => 'stage_count']]]],
+            'a sort on an aggregate of a key' => ['/shows/search', ['aggregates' => [['relation' => 'comments', 'type' => 'max', 'field' => 'id']], 'sorts' => [['field' => 'comments_max_id']]]],
+            'a sort on an aggregate of a foreign key' => ['/shows/search', ['aggregates' => [['relation' => 'comments', 'type' => 'sum', 'field' => 'show_id']], 'sorts' => [['field' => 'comments_sum_show_id']]]],
+            'a sort on the alias of an aggregate that does not sort' => ['/shows/search', ['aggregates' => [['relation' => 'stage', 'type' => 'count', 'alias' => 'staged']], 'sorts' => [['field' => 'staged']]]],
             'a scope without its first parameter' => ['/shows/search', ['scopes' => [['name' => 'startingFrom']]]],
             'a text on a resource without a text search' => ['/stages/search', ['text' => ['value' => 'main']]],
             'the trashed rows on a resource without soft deletes' => ['/stages/search', ['trashed' => 'with']],
@@ -314,18 +319,16 @@ class ContractTest extends DocumentationTestCase
     }
 
     #[Test]
-    public function it_sends_each_mutation_example_built_from_the_examples_of_its_fields(): void
+    public function it_sends_each_mutation_example_of_the_document(): void
     {
+        $show = DB::table('shows')->insertGetId(['title' => 'Opening night', 'seats' => 300, 'featured' => true, 'starts_on' => '2026-07-01', 'status' => 'on_sale', 'level' => 3, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00']);
+        DB::table('shows')->where('id', $show)->update(['id' => 1]);
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
         $document = $this->document();
         $validator = new OpenApiValidator;
         $sent = [];
 
         foreach ($this->mutationExamples($document) as $path => $example) {
-            if (! $this->declared($document, $path, $example)) {
-                continue;
-            }
-
             $response = $this->postJson('api'.$path, $example);
 
             $response->assertOk();
@@ -333,7 +336,7 @@ class ContractTest extends DocumentationTestCase
             $sent[] = $path;
         }
 
-        $this->assertSame(['/stages/mutate'], $sent);
+        $this->assertSame(['/notes/mutate', '/shows/mutate', '/stages/mutate'], $sent);
     }
 
     /**
@@ -524,26 +527,6 @@ class ContractTest extends DocumentationTestCase
         }
 
         return $examples;
-    }
-
-    /**
-     * @param  array<string, mixed>  $document
-     * @param  array{mutate: list<array{attributes?: array<string, mixed>}>}  $example
-     */
-    private function declared(array $document, string $path, array $example): bool
-    {
-        $schemas = $document['components']['schemas'];
-        $mutation = $document['paths'][$path]['post']['requestBody']['content']['application/json']['schema']['properties']['mutate']['items']['$ref'];
-        $create = $schemas[basename(((array) $schemas[basename($mutation)]['discriminator']['mapping'])['create'])];
-        $fields = $schemas[basename($create['properties']['attributes']['$ref'])]['properties'];
-
-        foreach ($example['mutate'][0]['attributes'] ?? [] as $name => $value) {
-            if (($fields[$name]['examples'][0] ?? $fields[$name]['enum'][0] ?? null) !== $value) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     #[Test]

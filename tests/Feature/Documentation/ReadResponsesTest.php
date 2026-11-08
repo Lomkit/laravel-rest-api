@@ -9,6 +9,8 @@ use Lomkit\Rest\Tests\Feature\Documentation\Stubs\FeaturedStageController;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\KeyedStageController;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\KeyedStageResource;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\OtherStageController;
+use Lomkit\Rest\Tests\Fixtures\Festival\Show;
+use Lomkit\Rest\Tests\Fixtures\Festival\Stage;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -17,6 +19,12 @@ use stdClass;
 class ReadResponsesTest extends DocumentationTestCase
 {
     private const string GATE = '{"$ref":"#\/components\/schemas\/RestGateAnswer"}';
+
+    #[Test]
+    public function it_lists_the_morph_types_of_a_morph_type_column_in_the_record(): void
+    {
+        $this->assertSame(['type' => 'string', 'enum' => [Show::class, Stage::class]], $this->document()['components']['schemas']['Note']['properties']['notable_type']);
+    }
 
     #[Test]
     public function it_documents_a_record_a_page_and_changed_rows_for_each_resource(): void

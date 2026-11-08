@@ -50,18 +50,6 @@ final readonly class MetricSchema
         return Schemas::required(['data' => $data]);
     }
 
-    /** @return array<string, int|string> */
-    public function example(Metric $metric): array
-    {
-        $values = self::values($metric);
-
-        if ($values === []) {
-            return ['timezone' => 'UTC'];
-        }
-
-        return ['range' => $values[0], 'timezone' => 'UTC'];
-    }
-
     private function result(Type $schema, ?int $groups): Type
     {
         $json = json_encode($schema->serializeAs31());
@@ -83,7 +71,10 @@ final readonly class MetricSchema
             return new Nothing;
         }
 
-        return (new IntegerType)->enum($values)->setDescription("The range of the metric: `{$values[0]}` when the request sends none");
+        return (new IntegerType)
+            ->enum($values)
+            ->default($values[0])
+            ->setDescription("The range of the metric: `{$values[0]}` when the request sends none");
     }
 
     /** @return list<int> */

@@ -201,6 +201,13 @@
                                                 "operation": "create",
                                                 "attributes": {
                                                     "body": "a"
+                                                },
+                                                "relations": {
+                                                    "notable": {
+                                                        "operation": "attach",
+                                                        "type": "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Show",
+                                                        "key": 1
+                                                    }
                                                 }
                                             }
                                         ]
@@ -444,7 +451,7 @@
                                                 "operation": "create",
                                                 "attributes": {
                                                     "title": "Opening night",
-                                                    "summary": "a",
+                                                    "summary": "aaaaaaaa",
                                                     "price": 12.5,
                                                     "seats": 1,
                                                     "featured": true,
@@ -542,11 +549,32 @@
                                                     "properties": {
                                                         "name": {
                                                             "type": "string",
+                                                            "const": "notice_days"
+                                                        },
+                                                        "value": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ],
+                                                            "description": "Rules: nullable, integer, between:7,365"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string",
                                                             "const": "notify"
                                                         },
                                                         "value": {
                                                             "type": "boolean",
-                                                            "description": "Rules: boolean"
+                                                            "description": "Rules: boolean",
+                                                            "default": true
                                                         }
                                                     },
                                                     "required": [
@@ -580,8 +608,8 @@
                                                 "value": "2026-01-01T00:00:00Z"
                                             },
                                             {
-                                                "name": "notify",
-                                                "value": true
+                                                "name": "notice_days",
+                                                "value": 7
                                             }
                                         ]
                                     }
@@ -619,6 +647,7 @@
         "/shows/actions/cancel-shows": {
             "post": {
                 "operationId": "shows.operate.cancel-shows",
+                "description": "The action is destructive: a hint for clients, the endpoint runs it the same way.\n\nThe text that a client shows before it runs the action: Cancel the selected shows?\n\nThe action can answer 428: send the same body again with the token of the answer in `confirmation`.",
                 "summary": "Cancel Shows",
                 "tags": [
                     "Show"
@@ -722,7 +751,9 @@
                     "428": {
                         "$ref": "#/components/responses/RestConfirmationRequired"
                     }
-                }
+                },
+                "x-lomkit-destructive": true,
+                "x-lomkit-confirm": "Cancel the selected shows?"
             }
         },
         "/shows/actions/import-shows": {
@@ -869,7 +900,8 @@
                                         "enum": [
                                             30,
                                             90
-                                        ]
+                                        ],
+                                        "default": 30
                                     },
                                     "timezone": {
                                         "type": "string",
@@ -879,10 +911,7 @@
                             },
                             "examples": {
                                 "default": {
-                                    "value": {
-                                        "range": 30,
-                                        "timezone": "UTC"
-                                    }
+                                    "value": {}
                                 }
                             }
                         }
@@ -961,7 +990,8 @@
                                         "enum": [
                                             3,
                                             12
-                                        ]
+                                        ],
+                                        "default": 3
                                     },
                                     "timezone": {
                                         "type": "string",
@@ -971,10 +1001,7 @@
                             },
                             "examples": {
                                 "default": {
-                                    "value": {
-                                        "range": 3,
-                                        "timezone": "UTC"
-                                    }
+                                    "value": {}
                                 }
                             }
                         }
@@ -1172,9 +1199,7 @@
                             },
                             "examples": {
                                 "default": {
-                                    "value": {
-                                        "timezone": "UTC"
-                                    }
+                                    "value": {}
                                 }
                             }
                         }
@@ -1250,7 +1275,8 @@
                                         "description": "The range of the metric: `30` when the request sends none",
                                         "enum": [
                                             30
-                                        ]
+                                        ],
+                                        "default": 30
                                     },
                                     "timezone": {
                                         "type": "string",
@@ -1260,10 +1286,7 @@
                             },
                             "examples": {
                                 "default": {
-                                    "value": {
-                                        "range": 30,
-                                        "timezone": "UTC"
-                                    }
+                                    "value": {}
                                 }
                             }
                         }
@@ -1421,7 +1444,8 @@
                                         "description": "The range of the metric: `30` when the request sends none",
                                         "enum": [
                                             30
-                                        ]
+                                        ],
+                                        "default": 30
                                     },
                                     "timezone": {
                                         "type": "string",
@@ -1431,10 +1455,7 @@
                             },
                             "examples": {
                                 "default": {
-                                    "value": {
-                                        "range": 30,
-                                        "timezone": "UTC"
-                                    }
+                                    "value": {}
                                 }
                             }
                         }
@@ -1516,9 +1537,7 @@
                             },
                             "examples": {
                                 "default": {
-                                    "value": {
-                                        "timezone": "UTC"
-                                    }
+                                    "value": {}
                                 }
                             }
                         }
@@ -1600,9 +1619,7 @@
                             },
                             "examples": {
                                 "default": {
-                                    "value": {
-                                        "timezone": "UTC"
-                                    }
+                                    "value": {}
                                 }
                             }
                         }
@@ -1684,9 +1701,7 @@
                             },
                             "examples": {
                                 "default": {
-                                    "value": {
-                                        "timezone": "UTC"
-                                    }
+                                    "value": {}
                                 }
                             }
                         }
@@ -2479,7 +2494,7 @@
             },
             "ArtistSort": {
                 "type": "object",
-                "description": "`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.",
+                "description": "`field` lists the default key of each aggregate that sorts, such as `comments_count`: an aggregate over a relation to many, on no field or on a field that is not a key. It sorts only when the same search declares that aggregate. The key of such an aggregate with an `alias` is accepted too, and is not listed.",
                 "properties": {
                     "field": {
                         "type": "string",
@@ -2519,6 +2534,9 @@
                 "description": "A row: the fields that the search selects, every selectable field when it selects none, then the gates and the relations that it asks for. Aggregates and include aliases add keys named by the search.",
                 "properties": {
                     "id": {
+                        "type": "integer"
+                    },
+                    "show_id": {
                         "type": "integer"
                     },
                     "rating": {
@@ -2724,6 +2742,7 @@
                     "propertyName": "field",
                     "mapping": {
                         "id": "#/components/schemas/CommentFilterId",
+                        "show_id": "#/components/schemas/CommentFilterShowId",
                         "rating": "#/components/schemas/CommentFilterRating",
                         "body": "#/components/schemas/CommentFilterBody",
                         "show.id": "#/components/schemas/CommentFilterShow_Id",
@@ -2742,6 +2761,9 @@
                 "oneOf": [
                     {
                         "$ref": "#/components/schemas/CommentFilterId"
+                    },
+                    {
+                        "$ref": "#/components/schemas/CommentFilterShowId"
                     },
                     {
                         "$ref": "#/components/schemas/CommentFilterRating"
@@ -3121,6 +3143,120 @@
                     }
                 ],
                 "title": "CommentFilterRating"
+            },
+            "CommentFilterShowId": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "show_id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "show_id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "show_id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "CommentFilterShowId"
             },
             "CommentFilterShow_Featured": {
                 "type": "object",
@@ -4421,6 +4557,7 @@
                         "type": "string",
                         "enum": [
                             "id",
+                            "show_id",
                             "rating",
                             "body"
                         ]
@@ -4434,12 +4571,13 @@
             },
             "CommentSort": {
                 "type": "object",
-                "description": "`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.",
+                "description": "`field` lists the default key of each aggregate that sorts, such as `comments_count`: an aggregate over a relation to many, on no field or on a field that is not a key. It sorts only when the same search declares that aggregate. The key of such an aggregate with an `alias` is accepted too, and is not listed.",
                 "properties": {
                     "field": {
                         "type": "string",
                         "enum": [
                             "id",
+                            "show_id",
                             "rating",
                             "body",
                             "show.id",
@@ -4451,33 +4589,7 @@
                             "show.starts_at",
                             "show.status",
                             "show.level",
-                            "show.updated_at",
-                            "show_count",
-                            "show_min_id",
-                            "show_min_title",
-                            "show_min_summary",
-                            "show_min_price",
-                            "show_min_seats",
-                            "show_min_starts_on",
-                            "show_min_starts_at",
-                            "show_min_status",
-                            "show_min_level",
-                            "show_min_updated_at",
-                            "show_max_id",
-                            "show_max_title",
-                            "show_max_summary",
-                            "show_max_price",
-                            "show_max_seats",
-                            "show_max_starts_on",
-                            "show_max_starts_at",
-                            "show_max_status",
-                            "show_max_level",
-                            "show_max_updated_at",
-                            "show_avg_price",
-                            "show_avg_seats",
-                            "show_sum_price",
-                            "show_sum_seats",
-                            "show_exists"
+                            "show.updated_at"
                         ]
                     },
                     "direction": {
@@ -4808,7 +4920,7 @@
             },
             "LabelSort": {
                 "type": "object",
-                "description": "`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.",
+                "description": "`field` lists the default key of each aggregate that sorts, such as `comments_count`: an aggregate over a relation to many, on no field or on a field that is not a key. It sorts only when the same search declares that aggregate. The key of such an aggregate with an `alias` is accepted too, and is not listed.",
                 "properties": {
                     "field": {
                         "type": "string",
@@ -4849,6 +4961,13 @@
                 "properties": {
                     "id": {
                         "type": "integer"
+                    },
+                    "notable_type": {
+                        "type": "string",
+                        "enum": [
+                            "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Show",
+                            "Lomkit\\Rest\\Tests\\Fixtures\\Festival\\Stage"
+                        ]
                     },
                     "body": {
                         "type": "string"
@@ -4907,6 +5026,20 @@
                 },
                 "additionalProperties": false,
                 "title": "NoteCreate"
+            },
+            "NoteCreateRelations": {
+                "type": "object",
+                "description": "The operations on the related rows, by relation. Relations nest at most 3 deep: each `relations` inside an entry is one more level.",
+                "properties": {
+                    "notable": {
+                        "$ref": "#/components/schemas/NoteRelationMutationNotable"
+                    }
+                },
+                "required": [
+                    "notable"
+                ],
+                "additionalProperties": false,
+                "title": "NoteCreateRelations"
             },
             "NoteDetails": {
                 "type": "object",
@@ -5165,6 +5298,7 @@
                                             "type": "string",
                                             "enum": [
                                                 "id",
+                                                "notable_type",
                                                 "body"
                                             ]
                                         },
@@ -5812,12 +5946,16 @@
                     "propertyName": "field",
                     "mapping": {
                         "id": "#/components/schemas/NoteFilterId",
+                        "notable_type": "#/components/schemas/NoteFilterNotableType",
                         "body": "#/components/schemas/NoteFilterBody"
                     }
                 },
                 "oneOf": [
                     {
                         "$ref": "#/components/schemas/NoteFilterId"
+                    },
+                    {
+                        "$ref": "#/components/schemas/NoteFilterNotableType"
                     },
                     {
                         "$ref": "#/components/schemas/NoteFilterBody"
@@ -6048,6 +6186,116 @@
                 ],
                 "title": "NoteFilterId"
             },
+            "NoteFilterNotableType": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "notable_type"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!="
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 1000
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "notable_type"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "like",
+                                    "not like",
+                                    "ilike",
+                                    "not ilike"
+                                ]
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "notable_type"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "maxLength": 1000
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "NoteFilterNotableType"
+            },
             "NoteInclude": {
                 "description": "Related rows to add to each row. Includes nest at most 3 deep: each `includes` inside an include is one more level.",
                 "discriminator": {
@@ -6262,11 +6510,12 @@
                         "$ref": "#/components/schemas/NoteCreate"
                     },
                     "relations": {
-                        "$ref": "#/components/schemas/NoteRelations"
+                        "$ref": "#/components/schemas/NoteCreateRelations"
                     }
                 },
                 "required": [
-                    "operation"
+                    "operation",
+                    "relations"
                 ],
                 "additionalProperties": false,
                 "title": "NoteMutationCreate"
@@ -6761,6 +7010,7 @@
                         "type": "string",
                         "enum": [
                             "id",
+                            "notable_type",
                             "body"
                         ]
                     }
@@ -6773,12 +7023,13 @@
             },
             "NoteSort": {
                 "type": "object",
-                "description": "`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.",
+                "description": "`field` lists the default key of each aggregate that sorts, such as `comments_count`: an aggregate over a relation to many, on no field or on a field that is not a key. It sorts only when the same search declares that aggregate. The key of such an aggregate with an `alias` is accepted too, and is not listed.",
                 "properties": {
                     "field": {
                         "type": "string",
                         "enum": [
                             "id",
+                            "notable_type",
                             "body"
                         ]
                     },
@@ -7880,6 +8131,7 @@
                                 "type": "string",
                                 "enum": [
                                     "id",
+                                    "show_id",
                                     "rating",
                                     "body"
                                 ]
@@ -7922,6 +8174,7 @@
                             "field": {
                                 "type": "string",
                                 "enum": [
+                                    "show_id",
                                     "rating"
                                 ]
                             },
@@ -8128,7 +8381,7 @@
                             "string",
                             "null"
                         ],
-                        "description": "Rules: nullable, string"
+                        "description": "Rules: nullable, string, min:8"
                     },
                     "price": {
                         "type": [
@@ -9159,6 +9412,7 @@
                         "artists.name": "#/components/schemas/ShowFilterArtists_Name",
                         "artists.pivot.role": "#/components/schemas/ShowFilterArtists_Pivot_Role",
                         "comments.id": "#/components/schemas/ShowFilterComments_Id",
+                        "comments.show_id": "#/components/schemas/ShowFilterComments_ShowId",
                         "comments.rating": "#/components/schemas/ShowFilterComments_Rating",
                         "comments.body": "#/components/schemas/ShowFilterComments_Body",
                         "labels.id": "#/components/schemas/ShowFilterLabels_Id",
@@ -9217,6 +9471,9 @@
                     },
                     {
                         "$ref": "#/components/schemas/ShowFilterComments_Id"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ShowFilterComments_ShowId"
                     },
                     {
                         "$ref": "#/components/schemas/ShowFilterComments_Rating"
@@ -9868,6 +10125,120 @@
                     }
                 ],
                 "title": "ShowFilterComments_Rating"
+            },
+            "ShowFilterComments_ShowId": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "comments.show_id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "comments.show_id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "comments.show_id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "ShowFilterComments_ShowId"
             },
             "ShowFilterFeatured": {
                 "type": "object",
@@ -11806,7 +12177,9 @@
                                             "const": "featured"
                                         },
                                         "value": {
-                                            "type": "boolean"
+                                            "type": "boolean",
+                                            "description": "Rules: boolean",
+                                            "default": true
                                         }
                                     },
                                     "required": [
@@ -11825,7 +12198,8 @@
                                             "type": [
                                                 "integer",
                                                 "null"
-                                            ]
+                                            ],
+                                            "description": "Rules: nullable, integer"
                                         }
                                     },
                                     "required": [
@@ -12950,10 +13324,13 @@
                         "prefixItems": [
                             {
                                 "type": "string",
-                                "format": "date"
+                                "format": "date",
+                                "description": "Rules: date"
                             },
                             {
-                                "type": "integer"
+                                "type": "integer",
+                                "description": "Rules: integer",
+                                "default": 0
                             }
                         ],
                         "minItems": 1,
@@ -13110,7 +13487,7 @@
             },
             "ShowSort": {
                 "type": "object",
-                "description": "`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.",
+                "description": "`field` lists the default key of each aggregate that sorts, such as `comments_count`: an aggregate over a relation to many, on no field or on a field that is not a key. It sorts only when the same search declares that aggregate. The key of such an aggregate with an `alias` is accepted too, and is not listed.",
                 "properties": {
                     "field": {
                         "type": "string",
@@ -13128,32 +13505,20 @@
                             "updated_at",
                             "stage.code",
                             "stage.name",
-                            "stage_count",
-                            "stage_min_code",
-                            "stage_min_name",
-                            "stage_max_code",
-                            "stage_max_name",
-                            "stage_exists",
                             "artists_count",
-                            "artists_min_id",
                             "artists_min_name",
-                            "artists_max_id",
                             "artists_max_name",
                             "artists_exists",
                             "comments_count",
-                            "comments_min_id",
                             "comments_min_rating",
                             "comments_min_body",
-                            "comments_max_id",
                             "comments_max_rating",
                             "comments_max_body",
                             "comments_avg_rating",
                             "comments_sum_rating",
                             "comments_exists",
                             "labels_count",
-                            "labels_min_id",
                             "labels_min_name",
-                            "labels_max_id",
                             "labels_max_name",
                             "labels_exists"
                         ]
@@ -13189,7 +13554,7 @@
                             "string",
                             "null"
                         ],
-                        "description": "Rules: nullable, string"
+                        "description": "Rules: nullable, string, min:8"
                     },
                     "price": {
                         "type": [
@@ -13420,6 +13785,7 @@
                                 "type": "string",
                                 "enum": [
                                     "id",
+                                    "show_id",
                                     "rating",
                                     "body"
                                 ]
@@ -13462,6 +13828,7 @@
                             "field": {
                                 "type": "string",
                                 "enum": [
+                                    "show_id",
                                     "rating"
                                 ]
                             },
@@ -14560,6 +14927,7 @@
                         "shows.level": "#/components/schemas/StageFilterShows_Level",
                         "shows.updated_at": "#/components/schemas/StageFilterShows_UpdatedAt",
                         "comments.id": "#/components/schemas/StageFilterComments_Id",
+                        "comments.show_id": "#/components/schemas/StageFilterComments_ShowId",
                         "comments.rating": "#/components/schemas/StageFilterComments_Rating",
                         "comments.body": "#/components/schemas/StageFilterComments_Body"
                     }
@@ -14606,6 +14974,9 @@
                     },
                     {
                         "$ref": "#/components/schemas/StageFilterComments_Id"
+                    },
+                    {
+                        "$ref": "#/components/schemas/StageFilterComments_ShowId"
                     },
                     {
                         "$ref": "#/components/schemas/StageFilterComments_Rating"
@@ -15008,6 +15379,120 @@
                     }
                 ],
                 "title": "StageFilterComments_Rating"
+            },
+            "StageFilterComments_ShowId": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "comments.show_id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "=",
+                                    "!=",
+                                    ">",
+                                    ">=",
+                                    "<",
+                                    "<="
+                                ]
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "comments.show_id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "between",
+                                    "not between"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "field": {
+                                "type": "string",
+                                "const": "comments.show_id"
+                            },
+                            "operator": {
+                                "type": "string",
+                                "enum": [
+                                    "in",
+                                    "not in"
+                                ]
+                            },
+                            "value": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "minItems": 1,
+                                "maxItems": 100
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "and",
+                                    "or"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "field",
+                            "operator",
+                            "value"
+                        ],
+                        "additionalProperties": false
+                    }
+                ],
+                "title": "StageFilterComments_ShowId"
             },
             "StageFilterGroup": {
                 "type": "object",
@@ -16943,7 +17428,7 @@
             },
             "StageSort": {
                 "type": "object",
-                "description": "`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.",
+                "description": "`field` lists the default key of each aggregate that sorts, such as `comments_count`: an aggregate over a relation to many, on no field or on a field that is not a key. It sorts only when the same search declares that aggregate. The key of such an aggregate with an `alias` is accepted too, and is not listed.",
                 "properties": {
                     "field": {
                         "type": "string",
@@ -16951,7 +17436,6 @@
                             "code",
                             "name",
                             "shows_count",
-                            "shows_min_id",
                             "shows_min_title",
                             "shows_min_summary",
                             "shows_min_price",
@@ -16961,7 +17445,6 @@
                             "shows_min_status",
                             "shows_min_level",
                             "shows_min_updated_at",
-                            "shows_max_id",
                             "shows_max_title",
                             "shows_max_summary",
                             "shows_max_price",
@@ -16977,10 +17460,8 @@
                             "shows_sum_seats",
                             "shows_exists",
                             "comments_count",
-                            "comments_min_id",
                             "comments_min_rating",
                             "comments_min_body",
-                            "comments_max_id",
                             "comments_max_rating",
                             "comments_max_body",
                             "comments_avg_rating",

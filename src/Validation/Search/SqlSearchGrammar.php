@@ -74,11 +74,13 @@ final readonly class SqlSearchGrammar implements SearchGrammar
     {
         $fields = $this->resourceSorts($context);
 
-        if ($context->aggregates === []) {
+        $aggregates = array_filter($context->aggregates, static fn (AggregateNode $aggregate): bool => $aggregate->sortable);
+
+        if ($aggregates === []) {
             return new SortPaths($context->resource, $fields);
         }
 
-        return new SortPaths($context->resource, new OneOf([...$fields->values(), ...array_map(static fn (AggregateNode $aggregate): string => $aggregate->key->value, $context->aggregates)]));
+        return new SortPaths($context->resource, new OneOf([...$fields->values(), ...array_values(array_map(static fn (AggregateNode $aggregate): string => $aggregate->key->value, $aggregates))]));
     }
 
     #[\Override]

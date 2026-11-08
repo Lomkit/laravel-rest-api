@@ -32,7 +32,7 @@ class ActionsTest extends DocumentationTestCase
     public static function bodies(): array
     {
         return [
-            'a search without a cap and two fields' => ['/shows/actions/reschedule-shows', '{"type":"object","description":"The action runs on the rows that `search` matches, every row with an empty `search`","properties":{"search":{"$ref":"#\/components\/schemas\/ShowActionSearch"},"resources":false,"fields":{'.self::FIELDS.',"items":{"oneOf":[{"type":"object","properties":{"name":{"type":"string","const":"at"},"value":{"type":["string","null"],"format":"date-time","description":"Rules: nullable, date"}},"required":["name"],"additionalProperties":false},{"type":"object","properties":{"name":{"type":"string","const":"notify"},"value":{"type":"boolean","description":"Rules: boolean"}},"required":["name"],"additionalProperties":false}]},"maxItems":100}},"required":["search"]}'],
+            'a search without a cap and three fields' => ['/shows/actions/reschedule-shows', '{"type":"object","description":"The action runs on the rows that `search` matches, every row with an empty `search`","properties":{"search":{"$ref":"#\/components\/schemas\/ShowActionSearch"},"resources":false,"fields":{'.self::FIELDS.',"items":{"oneOf":[{"type":"object","properties":{"name":{"type":"string","const":"at"},"value":{"type":["string","null"],"format":"date-time","description":"Rules: nullable, date"}},"required":["name"],"additionalProperties":false},{"type":"object","properties":{"name":{"type":"string","const":"notice_days"},"value":{"type":["integer","null"],"description":"Rules: nullable, integer, between:7,365"}},"required":["name"],"additionalProperties":false},{"type":"object","properties":{"name":{"type":"string","const":"notify"},"value":{"type":"boolean","description":"Rules: boolean","default":true}},"required":["name"],"additionalProperties":false}]},"maxItems":100}},"required":["search"]}'],
             'keys and one field' => ['/shows/actions/cancel-shows', '{"type":"object","description":"The action runs on the rows of the keys in `resources`","properties":{"search":false,"resources":{"type":"array","items":{"type":"integer"},"minItems":1,"maxItems":2,"uniqueItems":true},"fields":{'.self::FIELDS.',"items":{"type":"object","properties":{"name":{"type":"string","const":"reason"},"value":{"type":["string","null"],"description":"Rules: nullable, string","examples":["Rain"]}},"required":["name"],"additionalProperties":false},"maxItems":100},"confirmation":{"type":"string","description":"The token of the 428 answer of this action, sent back with the same body to run the action"}},"required":["resources"]}'],
             'no rows and no field' => ['/shows/actions/import-shows', '{"type":"object","description":"The action runs without rows","properties":{"search":false,"resources":false,"fields":false}}'],
             'a search with the default cap' => ['/shows/actions/archive-shows', '{"type":"object","description":"The action runs on the rows that `search` matches, every row with an empty `search`, at most 1000: a search that matches more answers 422","properties":{"search":{"$ref":"#\/components\/schemas\/ShowActionSearch"},"resources":false,"fields":false},"required":["search"]}'],
@@ -87,7 +87,7 @@ class ActionsTest extends DocumentationTestCase
     public static function examples(): array
     {
         return [
-            'a search and every field' => ['/shows/actions/reschedule-shows', '{"search":{"filters":[{"field":"title","value":"Opening night"}]},"fields":[{"name":"at","value":"2026-01-01T00:00:00Z"},{"name":"notify","value":true}]}'],
+            'a search and the fields without a default' => ['/shows/actions/reschedule-shows', '{"search":{"filters":[{"field":"title","value":"Opening night"}]},"fields":[{"name":"at","value":"2026-01-01T00:00:00Z"},{"name":"notice_days","value":7}]}'],
             'a key and a declared example' => ['/shows/actions/cancel-shows', '{"resources":[1],"fields":[{"name":"reason","value":"Rain"}]}'],
             'an empty body' => ['/shows/actions/import-shows', '{}'],
             'a search' => ['/shows/actions/archive-shows', '{"search":{"filters":[{"field":"title","value":"Opening night"}]}}'],
@@ -95,7 +95,21 @@ class ActionsTest extends DocumentationTestCase
     }
 
     #[Test]
-    public function it_gives_each_field_its_declared_example_then_its_default_then_a_value_of_its_type(): void
+    public function it_announces_a_destructive_action_its_confirm_text_and_its_confirmation_in_the_operation(): void
+    {
+        $document = $this->document();
+        $cancel = $document['paths']['/shows/actions/cancel-shows']['post'];
+        $reschedule = $document['paths']['/shows/actions/reschedule-shows']['post'];
+
+        $this->assertTrue($cancel['x-lomkit-destructive']);
+        $this->assertSame('Cancel the selected shows?', $cancel['x-lomkit-confirm']);
+        $this->assertSame("The action is destructive: a hint for clients, the endpoint runs it the same way.\n\nThe text that a client shows before it runs the action: Cancel the selected shows?\n\nThe action can answer 428: send the same body again with the token of the answer in `confirmation`.", $cancel['description']);
+        $this->assertArrayHasKey(428, $cancel['responses']);
+        $this->assertSame([], array_intersect(['x-lomkit-destructive', 'x-lomkit-confirm', 'description'], array_keys($reschedule)));
+    }
+
+    #[Test]
+    public function it_leaves_out_the_fields_with_a_default_and_gives_the_others_a_value_that_honours_their_rules(): void
     {
         $resource = (new RestContext(RestRequest::createFrom(Request::create('/api/shows/actions/cancel-shows', 'POST')), $this->app))->resource(ShowResource::class);
         $action = new class extends Action
@@ -111,11 +125,13 @@ class ActionsTest extends DocumentationTestCase
                         ->examples('Rain'),
                     Integer::make('delay')->default(0),
                     Text::make('note'),
+                    Integer::make('nights')->rules('between:2,5'),
+                    Text::make('code')->rules('size:4'),
                 ];
             }
         };
 
-        $this->assertSame('{"fields":[{"name":"reason","value":"Rain"},{"name":"delay","value":0},{"name":"note","value":"a"}]}', json_encode(ActionExample::of($resource, $action)));
+        $this->assertSame('{"fields":[{"name":"note","value":"a"},{"name":"nights","value":2},{"name":"code","value":"aaaa"}]}', json_encode(ActionExample::of($resource, $action)));
     }
 
     #[Test]

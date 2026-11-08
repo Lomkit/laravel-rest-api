@@ -51,6 +51,15 @@ final readonly class RelationEntrySchema
         return $this->components->schema($name, $resource::class, fn (): Type => $this->object($resource, $relations, $constrained));
     }
 
+    /** @return list<Relation> */
+    public static function required(Resource $resource, MutationOperation $operation): array
+    {
+        return array_values(array_filter(
+            $resource->definition()->relations(),
+            fn (Relation $relation): bool => $relation->acceptedOperations() !== [] && RelationMutationParser::constraint($relation, $operation) === 'required',
+        ));
+    }
+
     /** @param list<Relation> $relations */
     private function object(Resource $resource, array $relations, ?MutationOperation $operation): ObjectType
     {

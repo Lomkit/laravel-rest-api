@@ -16,6 +16,7 @@ use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\Types\OneOf;
 use Lomkit\Rest\Search\AggregateKey;
+use Lomkit\Rest\Search\SortableAggregate;
 
 final readonly class AggregateSchema
 {
@@ -62,7 +63,9 @@ final readonly class AggregateSchema
 
             foreach (AggregateFunction::cases() as $function) {
                 foreach ($function->needsField() ? $function->acceptedFieldNames($fields) : [null] as $field) {
-                    $keys[] = AggregateKey::named($relation->relation, $function, $field, null)->value;
+                    if (SortableAggregate::accepts([$relation], $field)) {
+                        $keys[] = AggregateKey::named($relation->relation, $function, $field, null)->value;
+                    }
                 }
             }
         }

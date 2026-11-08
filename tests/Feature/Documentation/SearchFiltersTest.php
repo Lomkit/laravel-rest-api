@@ -55,12 +55,12 @@ class SearchFiltersTest extends DocumentationTestCase
         $schemas = $this->document()['components']['schemas'];
 
         $this->assertSame(
-            ['id', 'title', 'summary', 'price', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'updated_at', 'stage.code', 'stage.name', 'artists.id', 'artists.name', 'artists.pivot.role', 'comments.id', 'comments.rating', 'comments.body', 'labels.id', 'labels.name', 'labels.pivot.position'],
+            ['id', 'title', 'summary', 'price', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'updated_at', 'stage.code', 'stage.name', 'artists.id', 'artists.name', 'artists.pivot.role', 'comments.id', 'comments.show_id', 'comments.rating', 'comments.body', 'labels.id', 'labels.name', 'labels.pivot.position'],
             array_keys((array) $schemas['ShowFieldFilter']['discriminator']['mapping']),
         );
         $this->assertSame('#/components/schemas/ShowFilterArtists_Pivot_Role', ((array) $schemas['ShowFieldFilter']['discriminator']['mapping'])['artists.pivot.role']);
-        $this->assertSame(['code', 'name', 'shows.id', 'shows.title', 'shows.summary', 'shows.price', 'shows.seats', 'shows.featured', 'shows.starts_on', 'shows.starts_at', 'shows.status', 'shows.level', 'shows.updated_at', 'comments.id', 'comments.rating', 'comments.body'], array_keys((array) $schemas['StageFieldFilter']['discriminator']['mapping']));
-        $this->assertSame(['id', 'body'], array_keys((array) $schemas['NoteFieldFilter']['discriminator']['mapping']));
+        $this->assertSame(['code', 'name', 'shows.id', 'shows.title', 'shows.summary', 'shows.price', 'shows.seats', 'shows.featured', 'shows.starts_on', 'shows.starts_at', 'shows.status', 'shows.level', 'shows.updated_at', 'comments.id', 'comments.show_id', 'comments.rating', 'comments.body'], array_keys((array) $schemas['StageFieldFilter']['discriminator']['mapping']));
+        $this->assertSame(['id', 'notable_type', 'body'], array_keys((array) $schemas['NoteFieldFilter']['discriminator']['mapping']));
         $this->assertSame(
             'A condition on a field. Without `operator`, the condition is `=`. The fields of each related resource are listed one level deep, such as `stage.name`; deeper dotted paths are accepted too and are not listed.',
             $schemas['ShowFieldFilter']['description'],

@@ -20,5 +20,6 @@ final readonly class AggregateNode
         public FilterGroup $filters,
         public array $through = [],
         public ?Relation $last = null,
+        public bool $sortable = true,
     ) {}
 }

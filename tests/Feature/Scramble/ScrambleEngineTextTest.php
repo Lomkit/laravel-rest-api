@@ -52,7 +52,7 @@ class ScrambleEngineTextTest extends ScrambleTestCase
 
         $this->assertSame(['id', 'code', 'number', 'team', 'title', 'price', 'active', 'lines.id', 'lines.voucher_id', 'lines.label'], array_keys((array) $this->schemas()['VoucherFieldFilter']['discriminator']['mapping']));
         $this->assertSame(['$ref' => '#/components/schemas/VoucherFilter'], $search['filters']['items']);
-        $this->assertSame(['id', 'code', 'number', 'team', 'title', 'price', 'active', 'lines_count', 'lines_min_id', 'lines_min_voucher_id', 'lines_min_label', 'lines_max_id', 'lines_max_voucher_id', 'lines_max_label', 'lines_avg_voucher_id', 'lines_sum_voucher_id', 'lines_exists', '@relevance'], $search['sorts']['items']['properties']['field']['enum']);
+        $this->assertSame(['id', 'code', 'number', 'team', 'title', 'price', 'active', 'lines_count', 'lines_min_label', 'lines_max_label', 'lines_exists', '@relevance'], $search['sorts']['items']['properties']['field']['enum']);
     }
 
     /** @param array<string, mixed> $trashed */
