@@ -36,7 +36,7 @@ final readonly class InstructionAlias implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (is_string($value) && $this->isShared($value)) {
-            $fail('The :attribute is already used by another instruction.')->translate();
+            $fail('rest::validation.alias_taken_by_another_instruction')->translate();
         }
     }
 

@@ -9,10 +9,10 @@ use Lomkit\Rest\Authorization\Denial;
 use Lomkit\Rest\Exceptions\AuthorizationDenied;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
+use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
-class AuthorizationDeniedTest extends TestCase
+class AuthorizationDeniedTest extends PackageTestCase
 {
     #[Test]
     public function it_takes_the_message_the_code_and_the_status_of_the_first_denial(): void

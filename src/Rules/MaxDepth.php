@@ -17,7 +17,7 @@ final readonly class MaxDepth implements Stringable, ValidationRule
             return;
         }
 
-        $fail('The :attribute field goes deeper than the limit of :max levels.')->translate(['max' => (string) $this->levels]);
+        $fail('rest::validation.max_depth')->translate(['max' => (string) $this->levels]);
     }
 
     public function accepts(mixed $value): bool

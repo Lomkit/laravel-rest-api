@@ -90,6 +90,10 @@ php artisan rest:quick-start                     # optional: asks which models t
 
 The `RestServiceProvider` and `Rest` facade are auto-registered via composer's `extra.laravel`.
 
+### Translations
+
+Every message that the package writes for a client (its validation texts, the action caps, the default denial, the 409 conflict) is a line under the `rest` namespace: `rest::validation.*`, `rest::actions.*`, `rest::errors.*`. The package ships `en` and `fr` and follows the locale of the request. `php artisan vendor:publish --tag="rest-lang"` copies the files to `lang/vendor/rest` to reword them or add a locale. Exception messages for developers stay English, and field labels stay the request paths unless `label()` or `attributes()` names them.
+
 ## Core concepts
 
 ### 1. Resource — `app/Rest/Resources/{Name}Resource.php`

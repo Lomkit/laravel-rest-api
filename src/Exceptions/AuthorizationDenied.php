@@ -18,7 +18,7 @@ final class AuthorizationDenied extends AuthorizationException
         $this->denials = array_slice($denials, 0, self::LIMIT);
         $decision = $denials[0]->decision;
 
-        parent::__construct($decision->message, $decision->code);
+        parent::__construct($denials[0]->message(), $decision->code);
 
         $this->setResponse($decision->toResponse());
         $this->withStatus($decision->status);

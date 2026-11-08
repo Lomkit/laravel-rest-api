@@ -30,27 +30,27 @@ final readonly class Violation
 
     public static function tooManyFilters(string $key, int $max): self
     {
-        return new self($key, 'The :attribute field goes over the limit of :max filters in one search.', ['max' => (string) $max]);
+        return new self($key, 'rest::validation.filters_total', ['max' => (string) $max]);
     }
 
     public static function tooManyRelationFilters(string $key, int $max): self
     {
-        return new self($key, 'The :attribute field goes over the limit of :max relation filters in one search.', ['max' => (string) $max]);
+        return new self($key, 'rest::validation.relation_filters_total', ['max' => (string) $max]);
     }
 
     public static function tooManyPatternFilters(string $key, int $max): self
     {
-        return new self($key, 'The :attribute field goes over the limit of :max pattern filters in one search.', ['max' => (string) $max]);
+        return new self($key, 'rest::validation.pattern_filters_total', ['max' => (string) $max]);
     }
 
     public static function tooManyEntries(string $key, int $max): self
     {
-        return new self($key, 'The :attribute field goes over the limit of :max list entries in one request.', ['max' => (string) $max]);
+        return new self($key, 'rest::validation.entries_total', ['max' => (string) $max]);
     }
 
     public static function tooManyRelationEntries(string $key, int $max): self
     {
-        return new self($key, 'The :attribute field goes over the limit of :max entries, each deleted key counting as one entry.', ['max' => (string) $max]);
+        return new self($key, 'rest::validation.relation_entries_total', ['max' => (string) $max]);
     }
 
     public static function tooManyRows(string $key, int $rows, int $max): self
@@ -65,47 +65,47 @@ final readonly class Violation
 
     public static function unnamedKey(string $container, string $key): self
     {
-        return new self($container, 'The :key key is not valid for the :attribute field.', ['key' => $key]);
+        return new self($container, 'rest::validation.unknown_key', ['key' => $key]);
     }
 
     public static function notWritable(string $key, string $attribute, WriteOperation $operation): self
     {
-        return new self($key, 'The :key key of the :attribute field is not writable on :operation.', ['key' => $attribute, 'operation' => $operation->value]);
+        return new self($key, 'rest::validation.not_writable', ['key' => $attribute, 'operation' => $operation->value]);
     }
 
     public static function tooDeep(string $key, int $max): self
     {
-        return new self($key, 'The :attribute field goes deeper than the limit of :max include levels.', ['max' => (string) $max]);
+        return new self($key, 'rest::validation.include_depth', ['max' => (string) $max]);
     }
 
     public static function tooManyRelations(string $key, int $max): self
     {
-        return new self($key, 'The :attribute field goes through more relations than the limit of :max.', ['max' => (string) $max]);
+        return new self($key, 'rest::validation.relation_depth', ['max' => (string) $max]);
     }
 
     public static function takenKey(string $key, string $name): self
     {
-        return new self($key, 'The :attribute field is required, because the key :key is already used.', ['key' => $name]);
+        return new self($key, 'rest::validation.taken_key', ['key' => $name]);
     }
 
     public static function ownerInclude(string $key): self
     {
-        return new self($key, 'The :attribute field is prohibited: this relation loads at most one record per parent.');
+        return new self($key, 'rest::validation.owner_include');
     }
 
     public static function gatesOff(string $key): self
     {
-        return new self($key, 'The :attribute field is prohibited: the included resource turns its gates off.');
+        return new self($key, 'rest::validation.gates_off');
     }
 
     public static function severalTypes(string $key): self
     {
-        return new self($key, 'The :attribute field is prohibited: this relation has several types. Set it for each type, under types.');
+        return new self($key, 'rest::validation.several_types');
     }
 
     public static function morphToAggregate(string $key): self
     {
-        return new self($key, 'The :attribute field cannot be a MorphTo relation.');
+        return new self($key, 'rest::validation.morph_to_aggregate');
     }
 
     public static function notLinked(string $key): self
@@ -115,11 +115,11 @@ final readonly class Violation
 
     public static function heldRecord(string $key): self
     {
-        return new self($key, 'The :attribute field is prohibited: this relation already holds a record. Detach it first.');
+        return new self($key, 'rest::validation.held_record');
     }
 
     public static function throughMorphTo(string $key): self
     {
-        return new self($key, 'The :attribute field cannot go through a MorphTo relation.');
+        return new self($key, 'rest::validation.through_morph_to');
     }
 }

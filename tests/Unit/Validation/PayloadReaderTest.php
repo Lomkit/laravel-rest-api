@@ -170,7 +170,7 @@ class PayloadReaderTest extends TestCase
         $this->reader()->known($this->object(['field' => 'name', '*' => 1]), ['field' => true]);
 
         $this->assertSame(['o'], array_keys($this->rules->rules()));
-        $this->assertRejected(new Violation('o', 'The :key key is not valid for the :attribute field.', ['key' => '*']), $this->rules->rules()['o']);
+        $this->assertRejected(new Violation('o', 'rest::validation.unknown_key', ['key' => '*']), $this->rules->rules()['o']);
     }
 
     private function reader(): PayloadReader

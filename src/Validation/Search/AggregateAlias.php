@@ -26,11 +26,11 @@ final readonly class AggregateAlias implements ValidationRule
     public function conflict(string $key): ?string
     {
         return match (true) {
-            $this->keys->isReserved($key) => 'The :attribute is reserved.',
-            $this->keys->isField($key) => 'The :attribute conflicts with a field of this resource.',
-            $this->keys->isRelation($key) => 'The :attribute conflicts with a relation of this resource.',
-            $this->keys->includeUses($key) > 0 => 'The :attribute is already used by an include.',
-            $this->keys->aggregateUses($key) > 1 => 'The :attribute is already used by another aggregate.',
+            $this->keys->isReserved($key) => 'rest::validation.alias_reserved',
+            $this->keys->isField($key) => 'rest::validation.alias_taken_by_field',
+            $this->keys->isRelation($key) => 'rest::validation.alias_taken_by_relation',
+            $this->keys->includeUses($key) > 0 => 'rest::validation.alias_taken_by_include',
+            $this->keys->aggregateUses($key) > 1 => 'rest::validation.alias_taken_by_another_aggregate',
             default => null,
         };
     }
