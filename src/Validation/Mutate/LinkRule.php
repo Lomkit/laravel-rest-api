@@ -21,7 +21,7 @@ final readonly class LinkRule implements ValidationRule
     {
         return match (true) {
             $relation === null => [],
-            $operation === MutationOperation::Update, $operation === MutationOperation::Detach => [$entry->at('key')->path],
+            $operation === MutationOperation::Update, $operation === MutationOperation::Detach, $operation === MutationOperation::Delete => [$entry->at('key')->path],
             $relation->hasMultipleEntries() => [],
             $operation === MutationOperation::Create, $operation === MutationOperation::Attach => [$entry->path],
             default => [],

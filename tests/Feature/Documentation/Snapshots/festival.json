@@ -6598,7 +6598,8 @@
                             "attach",
                             "detach",
                             "sync",
-                            "toggle"
+                            "toggle",
+                            "delete"
                         ]
                     },
                     "type": {
@@ -16068,6 +16069,37 @@
                             "key"
                         ],
                         "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
+                                    "delete"
+                                ]
+                            },
+                            "key": {
+                                "description": "A key, or a list of keys: the operation applies to each of them",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
                     }
                 ],
                 "title": "StageRelationMutationShows"
@@ -16078,6 +16110,7 @@
                 "properties": {
                     "shows": {
                         "type": "array",
+                        "description": "Each key of a `delete` entry counts as one entry.",
                         "items": {
                             "$ref": "#/components/schemas/StageRelationMutationShows"
                         },

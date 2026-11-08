@@ -16,6 +16,6 @@ class BelongsToMany extends Relation implements PivotRelation
     #[\Override]
     public function mutationOperations(): array
     {
-        return MutationOperation::cases();
+        return [MutationOperation::Create, MutationOperation::Update, MutationOperation::Attach, MutationOperation::Detach, MutationOperation::Sync, MutationOperation::Toggle];
     }
 }

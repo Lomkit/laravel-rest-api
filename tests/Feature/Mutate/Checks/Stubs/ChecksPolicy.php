@@ -44,6 +44,16 @@ class ChecksPolicy
         return self::answer('update', func_get_args());
     }
 
+    public function delete(?Authenticatable $user, Model $model): Response
+    {
+        return self::answer('delete', func_get_args());
+    }
+
+    public function detachLabel(?Authenticatable $user, Model $model, Model $related): Response
+    {
+        return self::answer('detachLabel', func_get_args());
+    }
+
     public function attachLoan(?Authenticatable $user, Model $model, Model $related): Response
     {
         return self::answer('attachLoan', func_get_args());

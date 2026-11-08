@@ -143,6 +143,10 @@ final class WriteChecks
             return new Check($resource, 'create', $row, $node->path);
         }
 
+        if ($node->operation === MutationOperation::Delete) {
+            return new Check($resource, 'delete', $row, $node->path, [], $row);
+        }
+
         $updates = $node->operation === MutationOperation::Update || $moves || ($node->attributes ?? []) !== [];
 
         return $updates

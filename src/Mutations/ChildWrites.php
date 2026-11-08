@@ -18,6 +18,12 @@ final readonly class ChildWrites extends RelationWrites
         $resource = $this->relation->resource();
 
         foreach ($this->nodes() as $node) {
+            if ($node->operation === MutationOperation::Delete) {
+                $mutator->delete($resource, $node, $log);
+
+                continue;
+            }
+
             $detach = $node->operation === MutationOperation::Detach;
             $keys = $this->keys($parent, $detach);
             $linking = function (Model $child) use ($mutator, $node, $parent, $detach): void {
@@ -46,7 +52,7 @@ final readonly class ChildWrites extends RelationWrites
 
         foreach ($this->nodes() as $node) {
             $check = match ($node->operation) {
-                MutationOperation::Update, MutationOperation::Detach => LinkCheck::Current,
+                MutationOperation::Update, MutationOperation::Detach, MutationOperation::Delete => LinkCheck::Current,
                 default => $single ? LinkCheck::Single : LinkCheck::None,
             };
             $path = $check === LinkCheck::Single ? $node->path : $node->path.'.key';
@@ -54,7 +60,7 @@ final readonly class ChildWrites extends RelationWrites
             $replay->walk(
                 $this->relation->resource(),
                 $node,
-                fn (LinkedRow $child): LinkStep => new LinkStep($path, $column, $child->identity, $child->link($column), $owner, $node->operation === MutationOperation::Detach, $check, $seed),
+                fn (LinkedRow $child): LinkStep => new LinkStep($path, $column, $child->identity, $child->link($column), $owner, self::unlinks($node), $check, $seed),
             );
         }
     }
@@ -63,14 +69,19 @@ final readonly class ChildWrites extends RelationWrites
     public function check(Model $parent, WriteChecks $checks): void
     {
         foreach ($this->nodes() as $node) {
-            $detach = $node->operation === MutationOperation::Detach;
+            $deletes = $node->operation === MutationOperation::Delete;
             $moves = ! in_array($node->operation, [MutationOperation::Create, MutationOperation::Update], true);
-            $keys = $parent->exists ? $this->keys($parent, $detach) : [];
+            $keys = $parent->exists && ! $deletes ? $this->keys($parent, $node->operation === MutationOperation::Detach) : [];
 
             foreach ($checks->walk($this->relation->resource(), $node, $keys, $moves) as $child) {
-                $checks->link($this->relation, $node, $parent, $child, $detach);
+                $checks->link($this->relation, $node, $parent, $child, self::unlinks($node));
             }
         }
+    }
+
+    private static function unlinks(MutationNode $node): bool
+    {
+        return $node->operation === MutationOperation::Detach || $node->operation === MutationOperation::Delete;
     }
 
     /** @return array<string, mixed> */

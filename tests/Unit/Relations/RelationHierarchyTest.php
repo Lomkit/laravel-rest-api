@@ -30,6 +30,8 @@ use Lomkit\Rest\Relations\MorphOneOfMany;
 use Lomkit\Rest\Relations\MorphTo;
 use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\SyncedHasMany;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\SyncedMorphTo;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\NewsDeskResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
@@ -133,11 +135,41 @@ class RelationHierarchyTest extends PackageTestCase
         $relation = $this->declared($resource, $name);
         $many = [HasMany::class, MorphMany::class, BelongsToMany::class, MorphToMany::class, MorphedByMany::class, HasManyThrough::class];
         $operations = $base === BelongsToMany::class
-            ? MutationOperation::cases()
+            ? [MutationOperation::Create, MutationOperation::Update, MutationOperation::Attach, MutationOperation::Detach, MutationOperation::Sync, MutationOperation::Toggle]
             : [MutationOperation::Create, MutationOperation::Update, MutationOperation::Attach, MutationOperation::Detach];
 
         $this->assertSame($operations, $relation->mutationOperations());
         $this->assertSame(in_array($class, $many, true), $relation->hasMultipleEntries());
+    }
+
+    /**
+     * @param  class-string<Relation>  $class
+     * @param  class-string<Relation>  $parent
+     * @param  class-string<Relation>  $base
+     * @param  class-string<Resource>  $resource
+     */
+    #[Test]
+    #[DataProvider('relations')]
+    public function it_accepts_delete_on_a_child_relation_that_opts_in_only(string $class, string $parent, string $base, string $resource, string $name): void
+    {
+        $relation = $this->declared($resource, $name);
+        $operations = $relation->mutationOperations();
+
+        $this->assertSame($operations, $relation->acceptedOperations());
+
+        $deletable = $relation instanceof HasOneOrMany ? $relation->deletable() : $relation;
+
+        $this->assertSame($base === HasOneOrMany::class ? [...$operations, MutationOperation::Delete] : $operations, $deletable->acceptedOperations());
+    }
+
+    #[Test]
+    public function it_accepts_delete_through_deletable_only(): void
+    {
+        $operations = [MutationOperation::Create, MutationOperation::Update, MutationOperation::Attach, MutationOperation::Detach, MutationOperation::Sync, MutationOperation::Toggle];
+
+        $this->assertSame($operations, SyncedHasMany::make('tickets', TicketResource::class)->acceptedOperations());
+        $this->assertSame($operations, SyncedMorphTo::make('labelable', BookResource::class)->acceptedOperations());
+        $this->assertSame([...$operations, MutationOperation::Delete], SyncedHasMany::make('tickets', TicketResource::class)->deletable()->acceptedOperations());
     }
 
     /**

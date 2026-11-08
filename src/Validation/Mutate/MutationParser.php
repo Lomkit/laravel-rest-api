@@ -104,7 +104,7 @@ final readonly class MutationParser
             $this->entryRules->attributes($entry, $resource, $write, $mutation);
         }
 
-        $operations = $relation?->mutationOperations() ?? [MutationOperation::Create, MutationOperation::Update];
+        $operations = $relation?->acceptedOperations() ?? [MutationOperation::Create, MutationOperation::Update];
         $key = $this->ownKeys($entry, $resource, $operation, $operations, $listed);
         $relations = $this->relations->relations($entry, $resource, $depth, $this);
         $pivot = $this->relations->pivot($entry, $relation, $operation, $mutation);
@@ -158,6 +158,7 @@ final readonly class MutationParser
             ...self::whenOperation('present_if', $entry, fn (MutationOperation $candidate): bool => $candidate->requiresKey()),
             ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => ! $candidate->requiresKey()),
         ]);
+        $this->rules->addWhenPresent($entry->at('relations'), self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => ! $candidate->takesRelations()));
         $key = $this->keys->read($entry->at('key'), $resource, $operation, $listed);
         $this->rules->add($entry->at('without_detaching')->path, ['boolean', 'prohibited_unless:'.$entry->at('operation')->path.','.MutationOperation::Sync->value]);
 
