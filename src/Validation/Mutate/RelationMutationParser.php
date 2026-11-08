@@ -148,7 +148,24 @@ final readonly class RelationMutationParser
             }
         }
 
+        $this->countDeletions($value, $nodes);
+
         return $nodes;
+    }
+
+    /** @param list<MutationNode> $nodes */
+    private function countDeletions(Cursor $value, array $nodes): void
+    {
+        $max = $this->limits->sizes->relationEntries;
+        $entries = 0;
+
+        foreach ($nodes as $node) {
+            $entries += $node->operation === MutationOperation::Delete && is_array($node->key) ? count($node->key) : 1;
+        }
+
+        if ($entries > $max) {
+            $this->rules->reject(Violation::tooManyRelationEntries($value->path, $max));
+        }
     }
 
     private function undeclared(Cursor $relations, int|string $name): void

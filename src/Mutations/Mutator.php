@@ -62,6 +62,23 @@ final readonly class Mutator
         return $models;
     }
 
+    public function delete(Resource $resource, MutationNode $node, OperationLog $log): void
+    {
+        $log->begin($node);
+
+        foreach (is_array($node->key) ? $node->key : [$node->key] as $key) {
+            $model = $log->wrote($this->rows->find($resource, $key));
+
+            $resource->performDelete($model);
+            $resource
+                ->context()
+                ->authorizer()
+                ->forget($model);
+        }
+
+        $log->end();
+    }
+
     /**
      * @param  array<string, mixed>  $owned
      * @param  (Closure(Model): void)|null  $linking

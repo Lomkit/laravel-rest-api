@@ -103,6 +103,19 @@ class Relation implements \JsonSerializable
         return [MutationOperation::Create, MutationOperation::Update, MutationOperation::Attach, MutationOperation::Detach];
     }
 
+    public function isDeletable(): bool
+    {
+        return false;
+    }
+
+    /** @return list<MutationOperation> */
+    final public function acceptedOperations(): array
+    {
+        $operations = array_values(array_filter($this->mutationOperations(), fn (MutationOperation $operation): bool => $operation !== MutationOperation::Delete));
+
+        return $this->isDeletable() ? [...$operations, MutationOperation::Delete] : $operations;
+    }
+
     public function entryRule(): EntryRule
     {
         return new RelatedEntryRule($this);

@@ -16,6 +16,7 @@ use Lomkit\Rest\Events\ResourceMutated;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Deletion\Stubs\SecondaryDocument;
 use Lomkit\Rest\Tests\Feature\Transactions\Stubs\Interruptions;
+use Lomkit\Rest\Tests\Feature\Transactions\Stubs\NestedDocumentController;
 use Lomkit\Rest\Tests\Feature\Transactions\Stubs\RetriedDocumentController;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -49,6 +50,7 @@ class DeadlockRetriesTest extends PackageTestCase
     protected function defineRoutes($router): void
     {
         Rest::resource('retried-documents', RetriedDocumentController::class);
+        Rest::resource('nested-documents', NestedDocumentController::class);
     }
 
     #[\Override]
@@ -58,6 +60,7 @@ class DeadlockRetriesTest extends PackageTestCase
 
         Schema::connection('secondary')->create('documents', function (Blueprint $table): void {
             $table->id();
+            $table->foreignId('parent_id')->nullable();
             $table->string('title');
             $table->timestamps();
         });
@@ -237,6 +240,25 @@ class DeadlockRetriesTest extends PackageTestCase
         $this->assertSame(['destroyedAll'], Interruptions::$runs);
         $this->assertSame(['begin secondary', 'begin secondary', 'rollback secondary'], $this->transactions);
         $this->assertSame(['Annual report', 'Roadmap', 'Minutes'], $this->titles());
+    }
+
+    #[Test]
+    public function it_deletes_the_children_of_a_retried_mutation_again(): void
+    {
+        config(['rest.transactions.attempts' => 2]);
+        SecondaryDocument::query()
+            ->whereKey([2, 3])
+            ->update(['parent_id' => 1]);
+        Interruptions::reset([Interruptions::deadlock()]);
+
+        $response = $this->postJson('/nested-documents/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => 1, 'relations' => ['children' => [['operation' => 'delete', 'key' => [2, 3]]]]],
+        ]]);
+
+        $response->assertOk();
+        $this->assertSame(['mutatedAll', 'mutatedAll'], Interruptions::$runs);
+        $this->assertSame(['begin secondary', 'rollback secondary', 'begin secondary', 'commit secondary'], $this->transactions);
+        $this->assertSame(['Annual report'], $this->titles());
     }
 
     private function listenToWriteEvents(): void

@@ -10,6 +10,7 @@ enum MutationOperation: string
     case Detach = 'detach';
     case Sync = 'sync';
     case Toggle = 'toggle';
+    case Delete = 'delete';
 
     public static function tryFromEntry(mixed $entry): ?self
     {
@@ -23,7 +24,7 @@ enum MutationOperation: string
         return match ($this) {
             self::Create => WriteOperation::Create,
             self::Update, self::Sync, self::Toggle => WriteOperation::Update,
-            self::Attach, self::Detach => null,
+            self::Attach, self::Detach, self::Delete => null,
         };
     }
 
@@ -32,12 +33,17 @@ enum MutationOperation: string
         return match ($this) {
             self::Create, self::Attach => WriteOperation::Create,
             self::Update, self::Sync, self::Toggle => WriteOperation::Update,
-            self::Detach => null,
+            self::Detach, self::Delete => null,
         };
     }
 
     public function requiresKey(): bool
     {
         return $this !== self::Create;
+    }
+
+    public function takesRelations(): bool
+    {
+        return $this !== self::Delete;
     }
 }

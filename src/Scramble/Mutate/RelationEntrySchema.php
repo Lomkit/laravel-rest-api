@@ -85,7 +85,7 @@ final readonly class RelationEntrySchema
             return $entry;
         }
 
-        $entries = Schemas::list($entry);
+        $entries = Schemas::list($entry, $relation->isDeletable() ? 'Each key of a `delete` entry counts as one entry.' : '');
         $entries->setMax($resource->context()->limits()->sizes->relationEntries);
 
         return $entries;
@@ -121,7 +121,7 @@ final readonly class RelationEntrySchema
     {
         $groups = [];
 
-        foreach ($relation->mutationOperations() as $operation) {
+        foreach ($relation->acceptedOperations() as $operation) {
             $keys = $this->keys($relation, $related, $operation);
             $signature = (string) json_encode(array_map(fn (Type $key): mixed => $key->serializeAs31(), $keys));
             $groups[$signature] ??= [[], $keys];
@@ -150,7 +150,7 @@ final readonly class RelationEntrySchema
             'attributes' => $write === null ? null : $this->writable->attributes($related, $write),
             'pivot' => $pivot === null ? null : $this->writable->pivot($relation, $pivot),
             'without_detaching' => $operation === MutationOperation::Sync ? (new BooleanType)->setDescription('When true, the rows that `key` does not list stay attached') : null,
-            'relations' => $this->relations($related, $operation),
+            'relations' => $operation->takesRelations() ? $this->relations($related, $operation) : null,
         ]);
     }
 

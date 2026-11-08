@@ -61,6 +61,7 @@ final readonly class PivotWrites extends RelationWrites
             MutationOperation::Attach => $pivots->attach($ids),
             MutationOperation::Detach => $pivots->detach($related),
             MutationOperation::Toggle => $pivots->toggle($ids),
+            MutationOperation::Delete => throw new LogicException("The relation [{$this->relation->relation}] does not delete its related rows."),
         };
 
         $resource
