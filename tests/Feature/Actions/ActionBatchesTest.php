@@ -5,12 +5,16 @@ namespace Lomkit\Rest\Tests\Feature\Actions;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Bus\PendingBatch;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\QueuedAction;
+use Lomkit\Rest\Events\ActionOperated;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Actions\Stubs\BatchedCloseOpenTickets;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\ChunkedTicketController;
+use Lomkit\Rest\Tests\Feature\Actions\Stubs\ChunkedTicketResource;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\CloseOpenTickets;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
@@ -68,6 +72,26 @@ class ActionBatchesTest extends HelpdeskTestCase
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 7, 'batch' => self::BATCH, 'result' => null]]);
         Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->name === 'batched-close-open-tickets'
             && $batch->jobs->map(fn (QueuedAction $job): array => $job->rows->keys)->all() === [[1, 2], [3, 4], [5, 6], [7]]);
+    }
+
+    #[Test]
+    public function it_dispatches_action_operated_with_the_batch_once_it_is_dispatched(): void
+    {
+        Queue::fake();
+        Event::fake([ActionOperated::class]);
+        $this->actingAs(new GenericUser(['id' => 7]));
+
+        $this->postJson('/chunked-tickets/actions/batched-close-open-tickets')->assertOk();
+
+        Event::assertDispatchedTimes(ActionOperated::class, 1);
+        Event::assertDispatched(ActionOperated::class, fn (ActionOperated $event): bool => get_object_vars($event) === [
+            'resource' => ChunkedTicketResource::class,
+            'action' => BatchedCloseOpenTickets::class,
+            'uriKey' => 'batched-close-open-tickets',
+            'fields' => [],
+            'impacted' => 7,
+            'batch' => self::BATCH,
+        ] && Bus::findBatch(self::BATCH)?->totalJobs === 4);
     }
 
     #[Test]

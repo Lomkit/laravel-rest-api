@@ -5,6 +5,9 @@ namespace Lomkit\Rest\Http;
 use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Lomkit\Rest\Events\ResourceDestroyed;
+use Lomkit\Rest\Events\ResourceForceDestroyed;
+use Lomkit\Rest\Events\ResourceRestored;
 
 final readonly class RowBatch
 {
@@ -28,9 +31,10 @@ final readonly class RowBatch
      * @param  Closure(Collection<int, Model>): void  $before
      * @param  Closure(Model): void  $write
      * @param  Closure(Collection<int, Model>): void  $after
+     * @param  class-string<ResourceDestroyed|ResourceRestored|ResourceForceDestroyed>  $written
      * @return Collection<int, Model>
      */
-    public function write(Closure $before, Closure $write, Closure $after): Collection
+    public function write(Closure $before, Closure $write, Closure $after, string $written): Collection
     {
         WriteTransaction::of($this->resource)
             ->over($this->rows)
@@ -43,6 +47,8 @@ final readonly class RowBatch
 
                 $after($this->rows);
             });
+
+        $this->resource->context()->events()->dispatch($written::of($this->resource, $this->rows));
 
         return $this->rows;
     }

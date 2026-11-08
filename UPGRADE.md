@@ -630,6 +630,31 @@ The controller hooks are removed. The resource has endpoint events instead: publ
 - The resource now declares `describing()`, `described()`, `searching()`, `searched()`, `mutatingAll()`, `mutatedAll()`, `operating()`, `operated()`, `destroyingAll()`, `destroyedAll()`, `restoringAll()`, `restoredAll()`, `forceDestroyingAll()` and `forceDestroyedAll()`. A resource method with one of these names and another signature no longer loads: rename it.
 - The queued jobs of an action run no event: the events run in the request.
 
+Laravel events:
+
+- After each write, the package dispatches a Laravel event through the event dispatcher, for every resource. Listen to it with `Event::listen()` in place of a resource event that only reports the write. `resource` is the class of the resource:
+
+  | Event (`Lomkit\Rest\Events`) | Endpoint | Properties |
+  |---|---|---|
+  | `ResourceMutated` | `mutate` | `resource`, `operations` (the `operations` of the response, as arrays) |
+  | `ResourceDestroyed`, `ResourceForceDestroyed` | `destroy`, `forceDestroy` | `resource`, `model` (the class of the model), `keys` (the keys of the rows, in the order of `resources`) |
+  | `ResourceRestored` | `restore` | `resource`, `models` (the `Collection` that `restoredAll()` receives) |
+  | `ActionOperated` | `operate` | `resource`, `action` (the class of the action), `uriKey`, `fields` (the values of the fields, by name), `impacted`, `batch` (the id of the batch, or `null`) |
+
+- The event is dispatched once the write is committed, once per request: never for a write that rolls back, nor for an attempt that a deadlock runs again. The events implement `ShouldDispatchAfterCommit`: inside a transaction of your application, they wait for its commit, and a rollback drops them. A listener cannot refuse or change the write: refuse it in the resource events.
+- `ActionOperated` is dispatched once the run ends without error: after the last chunk, after the commit of `ActionTransaction::Whole`, and, for a queued action, in the request once the jobs are queued and the batch is dispatched. A run that throws dispatches nothing, even when earlier chunks stay committed. The queued jobs dispatch no event. Searches, details and metrics dispatch none.
+- A listener filters by resource: `$event->resource === TicketResource::class`. Log every deletion:
+
+  ```php
+  use Illuminate\Support\Facades\Event;
+  use Lomkit\Rest\Events\ResourceDestroyed;
+
+  Event::listen(ResourceDestroyed::class, fn (ResourceDestroyed $event) => ActivityLog::record($event->resource, 'destroyed', $event->keys));
+  ```
+
+- A listener may implement `ShouldQueue`. The events serialize: `ResourceRestored` uses `SerializesModels`, so the worker reloads its rows. `ResourceDestroyed` and `ResourceForceDestroyed` carry keys, since a deleted row may no longer load.
+- A resource method that already dispatches its own event for these writes now runs next to the package event: remove one of the two.
+
 Hooks of each row and the perimeter:
 
 - The hooks of each row, the `perform*()` methods, `perimeterQuery()` and the closure of `ScoutEngine::perimeter()` no longer take the request. Read it with `$this->request()`: it is the request of the endpoint, such as `DestroyRequest`, also in the hooks and the perimeter of a nested entry or an include, and in the worker of a queued action. Remove the request parameter from each override, and the argument of its `parent::` call. PHP refuses to load a class whose override keeps it, and names the method. A perimeter closure that keeps it throws an `ArgumentCountError` when a text search runs.
@@ -1859,7 +1884,7 @@ Response:
 - `Lomkit\Rest\Http\MutateResponse` runs the mutation in one transaction, on the connection of the model of the endpoint's resource (before, on the default connection; rows of models on another connection are written outside it), and renders `operations`, and `records` when the request sends `response`. `mutatingAll()` and `mutatedAll()` run inside the transaction, see [Events](#events).
 - `destroy`, `restore` and `forceDestroy` write their rows in one database transaction, on the connection of the model of the resource. For each row, in the order of `resources`, the hook before the write (`destroying()`, `restoring()` or `forceDestroying()`), `performDelete()`, `performRestore()` or `performForceDelete()`, and the hook after the write run inside it. `destroyingAll()` runs inside it before the first row and `destroyedAll()` after the last row; the same holds for `restoringAll()`, `restoredAll()`, `forceDestroyingAll()` and `forceDestroyedAll()`, and a throw in one of them rolls the rows back. A failure on any row, in a hook, in a `perform` method or in the database, rolls back the rows written before it, and the request answers with the error. An observer or a listener that runs after commit runs only when the transaction commits. Before, each row was written on its own, and the rows written before a failure stayed written. A `perform` method that writes on another connection writes outside the transaction.
 - `Lomkit\Rest\Http\RowBatch::write()` takes three closures: `write(Closure $before, Closure $write, Closure $after)`. The first receives the rows before the first row is written, the last after the last row, both inside the transaction.
-- `transactions.attempts` in `config/rest.php` (`1` by default, `REST_TRANSACTION_ATTEMPTS`) runs a transaction of the package again when the database reports a deadlock or a lock timeout: the transaction of a mutation, of `destroy`, `restore` and `forceDestroy`, and of each chunk or whole run of an action, in the request or in the worker. Each attempt rolls the previous one back, gives the rows read before the transaction their attributes as read, and runs everything inside the transaction again, at once: the row checks, the hooks, the events and `handle()`. Send mails, HTTP calls and jobs after the commit, with `afterCommit()` or `ShouldDispatchAfterCommit`, so that they run once. Laravel runs only the outermost transaction again: inside a transaction of your application, a deadlock throws `Illuminate\Database\DeadlockException` at once.
+- `transactions.attempts` in `config/rest.php` (`1` by default, `REST_TRANSACTION_ATTEMPTS`) runs a transaction of the package again when the database reports a deadlock or a lock timeout: the transaction of a mutation, of `destroy`, `restore` and `forceDestroy`, and of each chunk or whole run of an action, in the request or in the worker. Each attempt rolls the previous one back, gives the rows read before the transaction their attributes as read, and runs everything inside the transaction again, at once: the row checks, the hooks, the events and `handle()`. Send mails, HTTP calls and jobs after the commit, with `afterCommit()`, `ShouldDispatchAfterCommit` or a listener of the Laravel events of the package (see [Events](#events)), so that they run once. Laravel runs only the outermost transaction again: inside a transaction of your application, a deadlock throws `Illuminate\Database\DeadlockException` at once.
 - The package collects the entries of the response in a `Lomkit\Rest\Mutations\OperationLog` that each mutation creates: `RestContext::operations()` and `OperationLog::start()` are removed, and `OperationLog::begin()` and `OperationEntry::of()` take a `Lomkit\Rest\Mutations\MutationNode`.
 
 Response block:

@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Http;
 
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
+use Lomkit\Rest\Events\ResourceMutated;
 use Lomkit\Rest\Http\Requests\MutateRequest;
 use Lomkit\Rest\Mutations\Mutator;
 use Lomkit\Rest\Mutations\OperationEntry;
@@ -25,6 +26,7 @@ final readonly class MutateResponse implements Responsable
         $operations = WriteTransaction::of($resource)
             ->over($request->rows()->loaded())
             ->run(fn (): array => self::write($request, $resource));
+        $resource->context()->events()->dispatch(ResourceMutated::of($resource, $operations));
         $block = $request->responseBlock();
 
         return new self($operations, $block === null ? null : WrittenRecords::read($resource, $block, $operations)->rows());
