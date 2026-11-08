@@ -62,7 +62,7 @@ jobs:
           MYSQL_DATABASE: rest
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --tmpfs /var/lib/mysql --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
       pgsql:
         image: ${{ matrix.database == 'pgsql' && 'postgres:16' || '' }}
@@ -72,7 +72,7 @@ jobs:
           POSTGRES_DB: rest
         ports:
           - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        options: --tmpfs /var/lib/postgresql/data --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
       meilisearch:
         image: ${{ matrix.scout == 'engines' && 'getmeili/meilisearch:v1.55.0' || '' }}
@@ -143,6 +143,10 @@ jobs:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
 
+      - name: Turn off the durability of MySQL
+        if: matrix.database == 'mysql'
+        run: mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} --user root --execute "SET GLOBAL innodb_flush_log_at_trx_commit = 0; SET GLOBAL sync_binlog = 0"
+
       - name: Run test suite with MySQL
         if: matrix.database == 'mysql' && matrix.scout == 'installed'
         run: vendor/bin/phpunit
@@ -151,6 +155,12 @@ jobs:
           DB_PORT: ${{ job.services.mysql.ports['3306'] }}
           DB_DATABASE: rest
           DB_USERNAME: root
+
+      - name: Turn off the durability of PostgreSQL
+        if: matrix.database == 'pgsql'
+        run: psql --host 127.0.0.1 --port ${{ job.services.pgsql.ports['5432'] }} --username postgres --command "ALTER SYSTEM SET fsync = off" --command "ALTER SYSTEM SET synchronous_commit = off" --command "ALTER SYSTEM SET full_page_writes = off" --command "SELECT pg_reload_conf()"
+        env:
+          PGPASSWORD: postgres
 
       - name: Run test suite with PostgreSQL
         if: matrix.database == 'pgsql' && matrix.scout == 'installed'
