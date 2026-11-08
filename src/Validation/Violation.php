@@ -73,6 +73,11 @@ final readonly class Violation
         return new self($key, 'The :attribute field is prohibited: this relation loads at most one record per parent.');
     }
 
+    public static function gatesOff(string $key): self
+    {
+        return new self($key, 'The :attribute field is prohibited: the included resource turns its gates off.');
+    }
+
     public static function severalTypes(string $key): self
     {
         return new self($key, 'The :attribute field is prohibited: this relation has several types. Set it for each type, under types.');
