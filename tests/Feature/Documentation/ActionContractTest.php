@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Documentation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
+use Lomkit\Rest\Tests\Fixtures\Festival\ShowResource;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -60,7 +61,7 @@ class ActionContractTest extends DocumentationTestCase
     }
 
     #[Test]
-    public function it_sends_each_action_example_built_from_the_examples_of_its_fields(): void
+    public function it_sends_each_action_example_built_from_the_examples_and_defaults_of_its_fields(): void
     {
         $document = $this->document();
         $validator = new OpenApiValidator;
@@ -182,10 +183,14 @@ class ActionContractTest extends DocumentationTestCase
     private function declared(array $document, string $path, array|stdClass $example): bool
     {
         $fields = $document['paths'][$path]['post']['requestBody']['content']['application/json']['schema']['properties']['fields']['items'] ?? null;
-        $values = [];
+        $values = $this->defaults($path);
 
         foreach ($fields === null ? [] : $fields['oneOf'] ?? [$fields] as $entry) {
-            $values[$entry['properties']['name']['const']] = $entry['properties']['value']['examples'][0] ?? $entry['properties']['value']['enum'][0] ?? null;
+            $declared = $entry['properties']['value']['examples'] ?? $entry['properties']['value']['enum'] ?? [];
+
+            if ($declared !== []) {
+                $values[$entry['properties']['name']['const']] = $declared[0];
+            }
         }
 
         foreach (((array) $example)['fields'] ?? [] as $field) {
@@ -195,5 +200,25 @@ class ActionContractTest extends DocumentationTestCase
         }
 
         return true;
+    }
+
+    /** @return array<string, mixed> */
+    private function defaults(string $path): array
+    {
+        $defaults = [];
+
+        foreach ((new ShowResource)->actions() as $action) {
+            if ('/shows/actions/'.$action->uriKey() !== $path) {
+                continue;
+            }
+
+            foreach ($action->fields() as $field) {
+                if ($field->hasDefault()) {
+                    $defaults[$field->name] = $field->defaultValue();
+                }
+            }
+        }
+
+        return $defaults;
     }
 }

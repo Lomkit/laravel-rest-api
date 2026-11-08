@@ -3,8 +3,13 @@
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Http\Request;
+use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionTarget;
+use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Scramble\Actions\ActionExample;
 use Lomkit\Rest\Scramble\Components\KeySchema;
 use Lomkit\Rest\Tests\Fixtures\Festival\ShowResource;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -81,11 +86,35 @@ class ActionsTest extends DocumentationTestCase
     public static function examples(): array
     {
         return [
-            'a search and the fields without a default' => ['/shows/actions/reschedule-shows', '{"search":{"filters":[{"field":"title","value":"Opening night"}]},"fields":[{"name":"at","value":"2026-01-01T00:00:00Z"}]}'],
+            'a search and every field' => ['/shows/actions/reschedule-shows', '{"search":{"filters":[{"field":"title","value":"Opening night"}]},"fields":[{"name":"at","value":"2026-01-01T00:00:00Z"},{"name":"notify","value":true}]}'],
             'a key and a declared example' => ['/shows/actions/cancel-shows', '{"resources":[1],"fields":[{"name":"reason","value":"Rain"}]}'],
             'an empty body' => ['/shows/actions/import-shows', '{}'],
             'a search' => ['/shows/actions/archive-shows', '{"search":{"filters":[{"field":"title","value":"Opening night"}]}}'],
         ];
+    }
+
+    #[Test]
+    public function it_gives_each_field_its_declared_example_then_its_default_then_a_value_of_its_type(): void
+    {
+        $resource = (new RestContext(RestRequest::createFrom(Request::create('/api/shows/actions/cancel-shows', 'POST')), $this->app))->resource(ShowResource::class);
+        $action = new class extends Action
+        {
+            public ActionTarget $target = ActionTarget::None;
+
+            #[\Override]
+            public function fields(): array
+            {
+                return [
+                    Text::make('reason')
+                        ->default('Storm')
+                        ->examples('Rain'),
+                    Integer::make('delay')->default(0),
+                    Text::make('note'),
+                ];
+            }
+        };
+
+        $this->assertSame('{"fields":[{"name":"reason","value":"Rain"},{"name":"delay","value":0},{"name":"note","value":"a"}]}', json_encode(ActionExample::of($resource, $action)));
     }
 
     #[Test]
