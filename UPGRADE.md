@@ -223,6 +223,7 @@ These items change:
 - `Controller::newResource()` is removed. In a controller action, use `$request->context()->resource(static::resourceClass())`.
 - `app(RestRequest::class)` no longer returns the request in progress. It builds a new request. In a resource, read it with `$this->request()`.
 - A package request reads its resource from the class of the route controller, which must extend `Lomkit\Rest\Http\Controllers\Controller`. On another route, such as a closure route, the request throws `Lomkit\Rest\Exceptions\InvalidControllerException`. Before, it failed with a PHP error.
+- `RestContext` takes an optional third argument, a `Lomkit\Rest\Authorization\ActingUser` (`ActingUser::of($guard, $user)`). The authorizer, the decision cache and the metric cache of that context use its guard and user, also when the user is `null`, instead of the user of the request.
 
 ### Resource definitions
 
@@ -959,6 +960,29 @@ Query builder and requests:
 - When `includes` lists one relation twice without an alias, directly or through dotted paths, the response renders the last entry: its `selects`, `gates`, `aggregates` and `includes`, as its rows already did. Before, the response rendered the first entry over the rows of the last.
 - `OperationNode::search()` returns the search of the action, empty when it is not sent. `Lomkit\Rest\Query\EngineSearch` takes the search as a third constructor argument and reads it: `query()` takes no argument, `paginate()` takes none and returns a `Lomkit\Rest\Search\Plan\PlannedPage`, which holds the `plan` of the page and the paginator of its `rows`, and `rows(array $keys)` loads the rows of a page.
 
+### Searching outside HTTP
+
+`Rest::search()` runs the search of a resource from PHP, for a given user, as the search endpoint runs it. Use it to replay a search payload that a client built, outside its request: a saved search that a scheduled job sends each morning, or a console command that reruns it. To read rows that your own code chooses, keep using Eloquent.
+
+```php
+use Lomkit\Rest\Facades\Rest;
+
+$search = Rest::search(TicketResource::class)
+    ->as($user)
+    ->payload($savedSearch);
+
+$page = $search->page();
+$body = $search->render(page: 2);
+```
+
+- `payload()` takes the value of the `search` key of the endpoint body. It is validated with the rules and limits of the endpoint: a failure throws `Illuminate\Validation\ValidationException` with the keys and messages of the endpoint, such as `search.filters.0.field`. Without `payload()`, the search runs as an endpoint body without `search`.
+- `as()` is required: a search without it throws `Lomkit\Rest\Exceptions\SearchRunException`. `as(null)` searches as a guest, also when a user is logged in. `as($user, 'api')` names the guard of the user; the default guard applies otherwise.
+- The given user is the one that `$this->request()->user()` returns in `perimeterQuery()`, the declarations of the resources and their hooks, at every include level. The policies and the decision cache use that user and guard. The logged-in user and the default guard of the application do not change.
+- `viewAny` is checked before the search, as on the endpoint: a denial throws `Lomkit\Rest\Exceptions\AuthorizationDenied`.
+- `page()` returns the `Illuminate\Contracts\Pagination\LengthAwarePaginator` of the models of the page, with their includes cut to their limits. `render()` returns the body of the endpoint as an array: `json_encode()` turns it into the content of the endpoint response. The objects that stay `{}` when empty, such as `meta`, `pivot` and `gates`, are `stdClass` instances in that array.
+- `page(page: 2)` and `render(page: 2)` read that page instead of the `page` of the payload. It is validated as `search.page`.
+- `searching()` runs before the query and `searched()` after it, as on the endpoint.
+
 ### Text search
 
 A resource declares its text search with `text()`. With the `Contains` and `FullText` strategies, `searchable()` marks the fields to search, and the text becomes one more condition of the SQL search: filters, scopes, instructions, includes, aggregates, sorts, pagination, `perimeterQuery()` and actions work with it as they do without it. `ScoutEngine` runs the text on a search engine instead, see [Search engines](#search-engines).
@@ -1534,6 +1558,7 @@ The package renders the rows of a response from the plan of the search: the `sel
 - `Lomkit\Rest\Http\Response::resource()` is replaced by `plan(QueryPlan $plan)`, which takes the `Lomkit\Rest\Search\Plan\QueryPlan` of the rows. `responsable()` takes an `Illuminate\Contracts\Pagination\LengthAwarePaginator`, a `Collection` of models or one model. `plan()` and `responsable()` return the response.
 - `rows(array $models): array` renders models with the plan of the response and `map()`, and keeps their keys. The records of a mutation use it, see [Writes](#writes). A `Response` subclass that already defines a method named `rows()` must give it this signature.
 - `toResponse()` returns an `Illuminate\Http\JsonResponse`. A page holds `current_page`, `data`, `from`, `last_page`, `per_page`, `to`, `total` and `meta`, and a list or one model holds `data` and `meta`. The pages of a resource that sets `$maxTotal` add `total_capped` after `total`, see [Search](#search).
+- `body()` returns the array that `toResponse()` encodes, see [Searching outside HTTP](#searching-outside-http). Change the rows with `map()`: a subclass that overrides `toResponse()` changes the endpoint response only. A `Response` subclass that already defines a method named `body()` must rename it.
 - `meta` is always an object: `{}` when it holds nothing. The `pivot` of a row is an object too: `{}` when its relation returns no pivot field. Before, both were `[]` when empty.
 - A paginator that `paginate()` returns renders as a page when it implements `Illuminate\Contracts\Pagination\LengthAwarePaginator`, whatever its class. Before, only an `Illuminate\Pagination\LengthAwarePaginator` did.
 - `Lomkit\Rest\Pagination\LengthAwarePaginator` declares native types: `__construct(array $items, int $total, int $perPage, int $currentPage, array $options = [], array $meta = [], ?bool $totalCapped = null)`. Its items are the rendered rows, and `toArray()` adds `total_capped` when `$totalCapped` is not `null`. The default `paginate()` of a resource that sets `$maxTotal` returns a `Lomkit\Rest\Pagination\CappedPaginator`, whose `totalCapped` fills it.

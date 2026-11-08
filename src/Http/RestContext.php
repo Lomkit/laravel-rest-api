@@ -9,11 +9,11 @@ use Illuminate\Contracts\Cache\Factory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
+use Lomkit\Rest\Authorization\ActingUser;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\CacheDecisionStore;
 use Lomkit\Rest\Authorization\DecisionStore;
 use Lomkit\Rest\Authorization\NullDecisionStore;
-use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Config\RestConfig;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Metrics\CacheMetricStore;
@@ -46,6 +46,7 @@ final class RestContext
     public function __construct(
         public readonly RestRequest $request,
         private readonly Container $container,
+        private readonly ?ActingUser $actingUser = null,
     ) {
         $this->resources = new ResourceRegistry($container);
         $this->definitions = new WeakMap;
@@ -84,9 +85,8 @@ final class RestContext
 
     public function authorizer(): Authorizer
     {
-        $auth = $this->container->make(AuthManager::class);
-        $guard = $auth->getDefaultDriver();
-        $user = $this->request->user() ?? $auth->guard()->user();
+        $acting = $this->actingUser();
+        [$guard, $user] = [$acting->guard, $acting->user];
 
         if ($this->authorizer !== null && $guard === $this->authorizerGuard && $user === $this->authorizerUser) {
             return $this->authorizer;
@@ -96,7 +96,7 @@ final class RestContext
 
         return $this->authorizer = new Authorizer(
             $this->container->make(Gate::class)->forUser($user),
-            $this->decisionStore($guard, $user),
+            $this->decisionStore($acting),
             strict: $this->config()->strict,
         );
     }
@@ -112,18 +112,26 @@ final class RestContext
             return new NullMetricStore;
         }
 
-        $auth = $this->container->make(AuthManager::class);
-        $user = UserIdentity::of($auth->getDefaultDriver(), $this->request->user() ?? $auth->guard()->user());
-
-        return new CacheMetricStore($this->container->make(Factory::class), $user, $this->config()->cacheStore);
+        return new CacheMetricStore($this->container->make(Factory::class), $this->actingUser()->identity(), $this->config()->cacheStore);
     }
 
-    private function decisionStore(string $guard, ?Authenticatable $user): DecisionStore
+    private function actingUser(): ActingUser
+    {
+        if ($this->actingUser !== null) {
+            return $this->actingUser;
+        }
+
+        $auth = $this->container->make(AuthManager::class);
+
+        return ActingUser::of($auth->getDefaultDriver(), $this->request->user() ?? $auth->guard()->user());
+    }
+
+    private function decisionStore(ActingUser $acting): DecisionStore
     {
         if (! $this->config()->cacheEnabled) {
             return new NullDecisionStore;
         }
 
-        return new CacheDecisionStore($this->container->make(Factory::class), UserIdentity::of($guard, $user), $this->config()->cacheStore);
+        return new CacheDecisionStore($this->container->make(Factory::class), $acting->identity(), $this->config()->cacheStore);
     }
 }

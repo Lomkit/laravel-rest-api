@@ -51,6 +51,12 @@ class Response implements Responsable
     #[\Override]
     public function toResponse(mixed $request): JsonResponse
     {
+        return new JsonResponse($this->body());
+    }
+
+    /** @return array<array-key, mixed> */
+    public function body(): array
+    {
         $models = $this->models();
         $reach = GateReach::of($this->plan, $models);
         $rows = RowSerializer::of($this->plan, reach: $reach, overflow: $this->overflow);
@@ -60,7 +66,7 @@ class Response implements Responsable
 
         return $this->authorizer()->batch(
             GatePrefetch::page($this->plan, $models, $reach),
-            fn (): JsonResponse => new JsonResponse($envelope->wrap(fn (Model $model): array => $this->render($model, $rows), $rows->meta())),
+            fn (): array => $envelope->wrap(fn (Model $model): array => $this->render($model, $rows), $rows->meta()),
         );
     }
 

@@ -14,10 +14,12 @@ use Lomkit\Rest\Authorization\UserIdentity;
 use Lomkit\Rest\Config\ConfigValue;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
+use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
 use Lomkit\Rest\Http\Routing\ResourceRegistrar;
 use Lomkit\Rest\Http\Routing\RouteMiddleware;
 use Lomkit\Rest\Http\Routing\UriSegment;
+use Lomkit\Rest\Search\Run\PendingSearch;
 
 #[Singleton]
 class Rest
@@ -43,6 +45,12 @@ class Rest
             new RouteMiddleware($this->packageMiddleware()),
             $this->container,
         );
+    }
+
+    /** @param class-string<Resource> $resource */
+    public function search(string $resource): PendingSearch
+    {
+        return new PendingSearch($this->container, $resource);
     }
 
     public function forgetAuthorizationsFor(Authenticatable $user): void
