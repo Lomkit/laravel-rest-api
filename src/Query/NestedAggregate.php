@@ -16,7 +16,7 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\SortDirection;
 use Lomkit\Rest\Query\Expressions\AggregateColumn;
 use Lomkit\Rest\Query\Expressions\ExistsQuery;
-use Lomkit\Rest\Query\Expressions\UuidColumn;
+use Lomkit\Rest\Query\Expressions\TextColumn;
 use Lomkit\Rest\Relations\Relation;
 
 final readonly class NestedAggregate implements AggregateQuery
@@ -145,6 +145,6 @@ final readonly class NestedAggregate implements AggregateQuery
 
         $column = self::ROWS.'.'.$this->field->name;
 
-        return $this->field instanceof ID && $this->field->resolvedKeyType() === 'uuid' ? new UuidColumn($column) : $column;
+        return $this->field instanceof ID && $this->field->resolvedKeyType() === 'uuid' ? new TextColumn($column) : $column;
     }
 }
