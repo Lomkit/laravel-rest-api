@@ -22,7 +22,7 @@ class SearchFiltersTest extends DocumentationTestCase
             json_encode($schemas['ShowFilter']),
         );
         $this->assertSame(
-            '{"type":"object","description":"Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most 1 deep.","properties":{"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowFilter"},"maxItems":100},'.self::JOINT.'},"required":["nested"],"additionalProperties":false,"title":"ShowFilterGroup"}',
+            '{"type":"object","description":"Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most 1 deep.","properties":{"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowFilter"},"maxItems":100},'.self::JOINT.'},"required":["nested"],"not":{"anyOf":[{"required":["field"]},{"required":["operator"]},{"required":["value"]},{"required":["relation"]}]},"title":"ShowFilterGroup"}',
             json_encode($schemas['ShowFilterGroup']),
         );
     }
@@ -38,33 +38,53 @@ class SearchFiltersTest extends DocumentationTestCase
     public static function fields(): array
     {
         return [
-            'a boolean' => ['ShowFilterFeatured', '{"type":"object","properties":{"field":{"type":"string","const":"featured"},"operator":{"type":"string","enum":["=","!="]},"value":{"type":"boolean"},'.self::JOINT.'},"required":["field","value"],"additionalProperties":false,"title":"ShowFilterFeatured"}'],
+            'a boolean' => ['ShowFilterFeatured', '{"type":"object","properties":{"field":{"type":"string","const":"featured"},"operator":{"type":"string","enum":["=","!="]},"value":{"type":"boolean"},'.self::JOINT.'},"required":["field","value"],"not":{"anyOf":[{"required":["nested"]},{"required":["relation"]}]},"title":"ShowFilterFeatured"}'],
             'an integer' => ['ShowFilterSeats', '{"oneOf":['.self::branch('seats', '"=","!=",">",">=","<","<="', '{"type":"integer"}', false).','.self::branch('seats', '"between","not between"', '{"type":"array","items":{"type":"integer"},"minItems":2,"maxItems":2}').','.self::branch('seats', '"in","not in"', '{"type":"array","items":{"type":"integer"},"minItems":1,"maxItems":100}').'],"title":"ShowFilterSeats"}'],
             'a nullable text' => ['ShowFilterSummary', '{"oneOf":['.self::branch('summary', '"=","!="', '{"type":"string"}', false).','.self::branch('summary', '"like","not like","ilike","not ilike"', '{"type":"string","maxLength":255}').','.self::branch('summary', '"in","not in"', '{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":100}').','.self::nullity('summary').'],"title":"ShowFilterSummary"}'],
             'a text with examples' => ['ShowFilterTitle', '{"oneOf":['.self::branch('title', '"=","!="', '{"type":"string","examples":["Opening night","Closing night"]}', false).','.self::branch('title', '"like","not like","ilike","not ilike"', '{"type":"string","maxLength":255}').','.self::branch('title', '"in","not in"', '{"type":"array","items":{"type":"string","examples":["Opening night","Closing night"]},"minItems":1,"maxItems":100}').'],"title":"ShowFilterTitle"}'],
             'a date' => ['ShowFilterStartsOn', '{"oneOf":['.self::branch('starts_on', '"=","!=",">",">=","<","<="', '{"type":"string","format":"date"}', false).','.self::branch('starts_on', '"between","not between"', '{"type":"array","items":{"type":"string","format":"date"},"minItems":2,"maxItems":2}').'],"title":"ShowFilterStartsOn"}'],
             'an enum backed by integers' => ['ShowFilterLevel', '{"oneOf":['.self::branch('level', '"=","!="', '{"type":"integer","enum":[1,2,3]}', false).','.self::branch('level', '"in","not in"', '{"type":"array","items":{"type":"integer","enum":[1,2,3]},"minItems":1,"maxItems":100}').'],"title":"ShowFilterLevel"}'],
             'a string key with an example' => ['StageFilterCode', '{"oneOf":['.self::branch('code', '"=","!="', '{"type":"string","examples":["main"]}', false).','.self::branch('code', '"in","not in"', '{"type":"array","items":{"type":"string","examples":["main"]},"minItems":1,"maxItems":100}').'],"title":"StageFilterCode"}'],
-            'a nullable pivot field' => ['ShowFilterLabelsPivotPosition', '{"oneOf":['.self::branch('labels.pivot.position', '"=","!=",">",">=","<","<="', '{"type":"integer"}', false).','.self::branch('labels.pivot.position', '"between","not between"', '{"type":"array","items":{"type":"integer"},"minItems":2,"maxItems":2}').','.self::branch('labels.pivot.position', '"in","not in"', '{"type":"array","items":{"type":"integer"},"minItems":1,"maxItems":100}').','.self::nullity('labels.pivot.position').'],"title":"ShowFilterLabelsPivotPosition"}'],
+            'a nullable pivot field' => ['ShowFilterLabels_Pivot_Position', '{"oneOf":['.self::branch('labels.pivot.position', '"=","!=",">",">=","<","<="', '{"type":"integer"}', false).','.self::branch('labels.pivot.position', '"between","not between"', '{"type":"array","items":{"type":"integer"},"minItems":2,"maxItems":2}').','.self::branch('labels.pivot.position', '"in","not in"', '{"type":"array","items":{"type":"integer"},"minItems":1,"maxItems":100}').','.self::nullity('labels.pivot.position').'],"title":"ShowFilterLabels_Pivot_Position"}'],
         ];
     }
 
     #[Test]
-    public function it_lists_the_filterable_fields_and_the_filterable_pivot_fields_of_each_resource(): void
+    public function it_lists_the_filterable_fields_and_the_fields_of_each_relation_one_level_deep(): void
     {
         $schemas = $this->document()['components']['schemas'];
 
         $this->assertSame(
-            ['id', 'title', 'summary', 'price', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'artists.pivot.role', 'labels.pivot.position'],
+            ['id', 'title', 'summary', 'price', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'stage.code', 'stage.name', 'artists.id', 'artists.name', 'artists.pivot.role', 'comments.id', 'comments.rating', 'comments.body', 'labels.id', 'labels.name', 'labels.pivot.position'],
             array_keys((array) $schemas['ShowFieldFilter']['discriminator']['mapping']),
         );
-        $this->assertSame('#/components/schemas/ShowFilterArtistsPivotRole', ((array) $schemas['ShowFieldFilter']['discriminator']['mapping'])['artists.pivot.role']);
-        $this->assertSame(['code', 'name'], array_keys((array) $schemas['StageFieldFilter']['discriminator']['mapping']));
+        $this->assertSame('#/components/schemas/ShowFilterArtists_Pivot_Role', ((array) $schemas['ShowFieldFilter']['discriminator']['mapping'])['artists.pivot.role']);
+        $this->assertSame(['code', 'name', 'shows.id', 'shows.title', 'shows.summary', 'shows.price', 'shows.seats', 'shows.featured', 'shows.starts_on', 'shows.starts_at', 'shows.status', 'shows.level', 'comments.id', 'comments.rating', 'comments.body'], array_keys((array) $schemas['StageFieldFilter']['discriminator']['mapping']));
         $this->assertSame(['id', 'body'], array_keys((array) $schemas['NoteFieldFilter']['discriminator']['mapping']));
         $this->assertSame(
-            'A condition on a field. Without `operator`, the condition is `=`. A dotted path to a field of a related resource is accepted too and is not listed: a condition on related rows covers it.',
+            'A condition on a field. Without `operator`, the condition is `=`. The fields of each related resource are listed one level deep, such as `stage.name`; deeper dotted paths are accepted too and are not listed.',
             $schemas['ShowFieldFilter']['description'],
         );
+    }
+
+    #[Test]
+    #[DataProvider('relatedFields')]
+    public function it_documents_a_field_of_a_related_resource_with_the_operators_and_the_value_of_its_own_filter(string $component, string $own, string $path, string $field): void
+    {
+        $schemas = $this->document()['components']['schemas'];
+        $expected = str_replace(['"const":"'.$field.'"', '"title":"'.$own.'"'], ['"const":"'.$path.'"', '"title":"'.$component.'"'], (string) json_encode($schemas[$own]));
+
+        $this->assertSame('#/components/schemas/'.$component, ((array) $schemas['ShowFieldFilter']['discriminator']['mapping'])[$path]);
+        $this->assertSame($expected, json_encode($schemas[$component]));
+    }
+
+    /** @return array<string, array{string, string, string, string}> */
+    public static function relatedFields(): array
+    {
+        return [
+            'a field of a relation to one' => ['ShowFilterStage_Name', 'StageFilterName', 'stage.name', 'name'],
+            'a field of a relation to many' => ['ShowFilterComments_Rating', 'CommentFilterRating', 'comments.rating', 'rating'],
+        ];
     }
 
     #[Test]
@@ -80,9 +100,9 @@ class SearchFiltersTest extends DocumentationTestCase
         $head = fn (string $relation): string => '{"type":"object","properties":{"relation":{"type":"string","const":"'.$relation.'"},"exists":{"type":"boolean"},'.self::JOINT;
 
         return [
-            'a relation to one' => ['ShowRelationFilterStage', $head('stage').',"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageFilter"},"maxItems":100}},"required":["relation"],"additionalProperties":false,"title":"ShowRelationFilterStage"}'],
-            'a relation through another' => ['StageRelationFilterComments', $head('comments').',"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/CommentFilter"},"maxItems":100}},"required":["relation"],"additionalProperties":false,"title":"StageRelationFilterComments"}'],
-            'a morph to relation of two types' => ['NoteRelationFilterNotable', $head('notable').',"types":{"type":"object","description":"The filters of each type of related row, keyed by morph type","properties":{"Lomkit\\\\Rest\\\\Tests\\\\Fixtures\\\\Festival\\\\Show":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowFilter"},"maxItems":100},"Lomkit\\\\Rest\\\\Tests\\\\Fixtures\\\\Festival\\\\Stage":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageFilter"},"maxItems":100}},"additionalProperties":false}},"required":["relation"],"additionalProperties":false,"title":"NoteRelationFilterNotable"}'],
+            'a relation to one' => ['ShowRelationFilterStage', $head('stage').',"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageFilter"},"maxItems":100}},"required":["relation"],"title":"ShowRelationFilterStage"}'],
+            'a relation through another' => ['StageRelationFilterComments', $head('comments').',"nested":{"type":"array","items":{"$ref":"#\/components\/schemas\/CommentFilter"},"maxItems":100}},"required":["relation"],"title":"StageRelationFilterComments"}'],
+            'a morph to relation of two types' => ['NoteRelationFilterNotable', $head('notable').',"types":{"type":"object","description":"The filters of each type of related row, keyed by morph type","properties":{"Lomkit\\\\Rest\\\\Tests\\\\Fixtures\\\\Festival\\\\Show":{"type":"array","items":{"$ref":"#\/components\/schemas\/ShowFilter"},"maxItems":100},"Lomkit\\\\Rest\\\\Tests\\\\Fixtures\\\\Festival\\\\Stage":{"type":"array","items":{"$ref":"#\/components\/schemas\/StageFilter"},"maxItems":100}}}},"required":["relation"],"not":{"required":["nested"]},"title":"NoteRelationFilterNotable"}'],
         ];
     }
 
@@ -122,11 +142,11 @@ class SearchFiltersTest extends DocumentationTestCase
 
     private static function branch(string $field, string $operators, string $value, bool $operator = true): string
     {
-        return '{"type":"object","properties":{"field":{"type":"string","const":"'.$field.'"},"operator":{"type":"string","enum":['.$operators.']},"value":'.$value.','.self::JOINT.'},"required":["field",'.($operator ? '"operator",' : '').'"value"],"additionalProperties":false}';
+        return '{"type":"object","properties":{"field":{"type":"string","const":"'.$field.'"},"operator":{"type":"string","enum":['.$operators.']},"value":'.$value.','.self::JOINT.'},"required":["field",'.($operator ? '"operator",' : '').'"value"],"not":{"anyOf":[{"required":["nested"]},{"required":["relation"]}]}}';
     }
 
     private static function nullity(string $field): string
     {
-        return '{"type":"object","properties":{"field":{"type":"string","const":"'.$field.'"},"operator":{"type":"string","enum":["is null","is not null"]},'.self::JOINT.'},"required":["field","operator"],"additionalProperties":false}';
+        return '{"type":"object","properties":{"field":{"type":"string","const":"'.$field.'"},"operator":{"type":"string","enum":["is null","is not null"]},'.self::JOINT.'},"required":["field","operator"],"not":{"anyOf":[{"required":["value"]},{"required":["nested"]},{"required":["relation"]}]}}';
     }
 }

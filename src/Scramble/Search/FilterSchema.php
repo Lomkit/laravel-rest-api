@@ -9,10 +9,7 @@ use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Support\Str;
-use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
-use Lomkit\Rest\Fields\Field;
-use Lomkit\Rest\Fields\FieldPath;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scramble\ComponentRegistry;
@@ -46,7 +43,7 @@ final readonly class FilterSchema
 
     public function reference(Resource $resource): ?Reference
     {
-        if (self::paths($resource) === [] && $resource->definition()->relations() === []) {
+        if (FilterPaths::of($resource) === [] && $resource->definition()->relations() === []) {
             return null;
         }
 
@@ -65,7 +62,7 @@ final readonly class FilterSchema
 
     private function fields(Resource $resource, string $name): ?Reference
     {
-        $paths = self::paths($resource);
+        $paths = FilterPaths::of($resource);
 
         if ($paths === []) {
             return null;
@@ -76,11 +73,11 @@ final readonly class FilterSchema
             $branches = [];
 
             foreach ($paths as $path => $field) {
-                $branches[] = [$path, $name.'Filter'.Str::studly(str_replace('.', '_', $path)), fn (): Type => $schema->schema($path, $field)];
+                $branches[] = [$path, $name.'Filter'.FilterPaths::component($path), fn (): Type => $schema->schema($path, $field)];
             }
 
             return $this->components->discriminated('field', $resource::class, $branches)
-                ->setDescription('A condition on a field. Without `operator`, the condition is `=`. A dotted path to a field of a related resource is accepted too and is not listed: a condition on related rows covers it.');
+                ->setDescription('A condition on a field. Without `operator`, the condition is `=`. The fields of each related resource are listed one level deep, such as `stage.name`; deeper dotted paths are accepted too and are not listed.');
         });
     }
 
@@ -111,7 +108,8 @@ final readonly class FilterSchema
             'exists' => new BooleanType,
             'type' => FieldFilterSchema::joint(),
         ];
-        $nested = $relation instanceof PolymorphicRelation && $relation->targets()->isPolymorphic() ? null : $this->list($relation->resource());
+        $several = $relation instanceof PolymorphicRelation && $relation->targets()->isPolymorphic();
+        $nested = $several ? null : $this->list($relation->resource());
 
         if ($nested !== null) {
             $properties['nested'] = $nested;
@@ -121,7 +119,7 @@ final readonly class FilterSchema
             $properties['types'] = $this->types($relation);
         }
 
-        return Schemas::closed($properties, ['relation']);
+        return Schemas::shape($properties, ['relation'], '', $several ? ['nested'] : []);
     }
 
     private function types(Relation&PolymorphicRelation $relation): ObjectType
@@ -136,45 +134,18 @@ final readonly class FilterSchema
             }
         }
 
-        return Schemas::closed($types, [], 'The filters of each type of related row, keyed by morph type');
+        return Schemas::shape($types, [], 'The filters of each type of related row, keyed by morph type');
     }
 
     private function group(Resource $resource): ObjectType
     {
         $depth = $resource->context()->limits()->depths->filters;
 
-        return Schemas::closed(
+        return Schemas::shape(
             ['nested' => $this->list($resource) ?? new ArrayType, 'type' => FieldFilterSchema::joint()],
             ['nested'],
             "Filters that count as one condition. Groups, and the `nested` filters of related rows, nest at most {$depth} deep.",
+            ['field', 'operator', 'value', 'relation'],
         );
-    }
-
-    /** @return array<string, Field> */
-    private static function paths(Resource $resource): array
-    {
-        $paths = [];
-
-        $filterable = $resource
-            ->definition()
-            ->fields()
-            ->filterable();
-
-        foreach ($filterable as $field) {
-            $paths[$field->name] = $field;
-        }
-
-        foreach ($resource->definition()->relations() as $relation) {
-            foreach ($relation instanceof PivotRelation ? $relation->getPivotFields() : [] as $field) {
-                $path = $relation->relation.'.pivot.'.$field->name;
-                $resolved = FieldPath::resolve($resource, $path);
-
-                if ($resolved !== null) {
-                    $paths[$path] = $resolved->field;
-                }
-            }
-        }
-
-        return $paths;
     }
 }

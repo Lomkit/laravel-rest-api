@@ -34,7 +34,7 @@ class ScrambleTextSearchTest extends ScrambleTestCase
                 'value' => ['type' => ['string', 'null'], 'maxLength' => 255],
                 'mode' => ['type' => 'string', 'enum' => ['words', 'phrase']],
             ],
-            'additionalProperties' => false,
+            'not' => ['required' => ['trashed']],
         ], $search['text']);
         $this->assertSame(['$ref' => '#/components/schemas/ContainsPostSort'], $search['sorts']['items']);
         $this->assertNotContains('@relevance', $this->schemas()['ContainsPostSort']['properties']['field']['enum']);
@@ -45,7 +45,7 @@ class ScrambleTextSearchTest extends ScrambleTestCase
     {
         $search = $this->search('/full-text-posts/search');
         $fullText = in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb', 'pgsql'], true);
-        $sorts = ['id', 'title', 'summary', 'status', 'featured', 'views', 'rating', 'published_on', 'published_at', 'author.first_name', 'author.last_name'];
+        $sorts = ['id', 'title', 'summary', 'status', 'featured', 'views', 'rating', 'published_on', 'published_at', 'author.first_name', 'author.last_name', 'author_count', 'author_min_first_name', 'author_min_last_name', 'author_max_first_name', 'author_max_last_name', 'author_exists'];
         $sort = $fullText ? $search['sorts']['items'] : $this->schemas()['FullTextPostSort'];
 
         $this->assertSame(

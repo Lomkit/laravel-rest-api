@@ -62,7 +62,7 @@ final readonly class FieldFilterSchema
         $properties['type'] = self::joint();
         $operator = in_array(FilterOperator::Equal, $operators, true) ? [] : ['operator'];
 
-        return Schemas::closed($properties, ['field', ...$operator, ...($value === null ? [] : ['value'])]);
+        return Schemas::shape($properties, ['field', ...$operator, ...($value === null ? [] : ['value'])], '', $value === null ? ['value', 'nested', 'relation'] : ['nested', 'relation']);
     }
 
     private function value(Field $field, string $shape): ?Type

@@ -75,7 +75,7 @@ final readonly class InputSchema
         $properties = ['name' => (new StringType)->const($scope->name)];
 
         if (count($fields) === 0) {
-            return Schemas::closed($properties, ['name']);
+            return Schemas::shape($properties, ['name']);
         }
 
         $items = [];
@@ -92,7 +92,7 @@ final readonly class InputSchema
         $parameters->setMax(count($items));
         $parameters->setDescription('In this order: '.implode(', ', $fields->names()));
 
-        return Schemas::closed([...$properties, 'parameters' => $parameters], $given === 0 ? ['name'] : ['name', 'parameters']);
+        return Schemas::shape([...$properties, 'parameters' => $parameters], $given === 0 ? ['name'] : ['name', 'parameters']);
     }
 
     private function fields(Instruction $instruction, FieldSet $fields, Resource $resource): ObjectType
@@ -101,7 +101,7 @@ final readonly class InputSchema
         $entries = [];
 
         foreach ($fields as $field) {
-            $entries[] = Schemas::closed(['name' => (new StringType)->const($field->name), 'value' => FieldSchema::of($field)], ['name']);
+            $entries[] = Schemas::shape(['name' => (new StringType)->const($field->name), 'value' => FieldSchema::of($field)], ['name']);
         }
 
         if ($entries !== []) {
@@ -110,6 +110,6 @@ final readonly class InputSchema
             $properties['fields'] = $list;
         }
 
-        return Schemas::closed($properties, ['name']);
+        return Schemas::shape($properties, ['name']);
     }
 }

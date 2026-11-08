@@ -45,7 +45,7 @@ final readonly class SearchSchema
             SearchShape::Aggregate => 'MetricSearch',
         };
 
-        return $this->components->schema($name, $resource::class, fn (): Type => Schemas::closed($this->properties($resource, array_keys($shape->keys()), true)));
+        return $this->components->schema($name, $resource::class, fn (): Type => $this->search($resource, array_keys($shape->keys())));
     }
 
     /**
@@ -65,6 +65,15 @@ final readonly class SearchSchema
         }
 
         return $properties;
+    }
+
+    /** @param list<string> $keys */
+    private function search(Resource $resource, array $keys): Type
+    {
+        $properties = $this->properties($resource, $keys, true);
+        $prohibited = array_values(array_diff(array_intersect(['text', 'trashed'], $keys), array_keys($properties)));
+
+        return Schemas::shape($properties, [], '', $prohibited);
     }
 
     private function property(Resource $resource, string $key, bool $root): ?Type
@@ -88,8 +97,12 @@ final readonly class SearchSchema
         };
     }
 
-    private function gates(Resource $resource, bool $root): ArrayType
+    private function gates(Resource $resource, bool $root): ?ArrayType
     {
+        if (! $resource->isGatingEnabled()) {
+            return null;
+        }
+
         $vocabulary = $resource->definition()->gates();
         $names = array_values(array_filter($vocabulary->names(), fn (string $name): bool => $root || $vocabulary->find($name)?->isClassLevel() !== true));
         $key = $resource->context()->config()->gatesKey;
@@ -105,17 +118,17 @@ final readonly class SearchSchema
             ->definition()
             ->fields()
             ->sortable();
-        $names = [...$sortable->names(), ...self::relationPaths($resource)];
+        $names = array_values(array_unique([...$sortable->names(), ...self::relationPaths($resource), ...AggregateSchema::keys($resource)]));
         $ranked = $root ? TextSearchType::of($resource)->sortNames($names) : $names;
 
         if ($ranked === []) {
             return null;
         }
 
-        $sort = fn (): Type => Schemas::closed([
+        $sort = fn (): Type => Schemas::shape([
             'field' => (new StringType)->enum($ranked),
             'direction' => (new StringType)->enum(array_column(SortDirection::cases(), 'value')),
-        ], ['field'], 'The key of an aggregate of the same search is accepted as `field` too, and is not listed.');
+        ], ['field'], '`field` lists the default key of each aggregate, such as `comments_count`: it sorts only when the same search declares that aggregate. The key of an aggregate with an `alias` is accepted too, and is not listed.');
 
         return $ranked === $names ? $this->components->schema($this->records->name($resource).'Sort', $resource::class, $sort) : $sort();
     }
@@ -132,7 +145,7 @@ final readonly class SearchSchema
             return null;
         }
 
-        return $this->components->schema($this->records->name($resource).'Select', $resource::class, fn (): Type => Schemas::closed(['field' => (new StringType)->enum($names)], ['field']));
+        return $this->components->schema($this->records->name($resource).'Select', $resource::class, fn (): Type => Schemas::shape(['field' => (new StringType)->enum($names)], ['field']));
     }
 
     /** @return list<string> */

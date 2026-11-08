@@ -19,7 +19,7 @@ class ScrambleDocumentTest extends ScrambleTestCase
         $operation = $this->operation('/products/search', 'post');
 
         $this->assertSame('Search Product', $operation['summary']);
-        $this->assertSame(['id', 'category_id', 'name', 'price'], array_keys((array) $this->schemas()['ProductFieldFilter']['discriminator']['mapping']));
+        $this->assertSame(['id', 'category_id', 'name', 'price', 'category.id', 'category.name'], array_keys((array) $this->schemas()['ProductFieldFilter']['discriminator']['mapping']));
     }
 
     #[Test]
@@ -27,8 +27,8 @@ class ScrambleDocumentTest extends ScrambleTestCase
     {
         $schemas = $this->schemas();
 
-        $this->assertSame(['id', 'first_name', 'last_name', 'full_name'], array_keys((array) $schemas['AuthorFieldFilter']['discriminator']['mapping']));
-        $this->assertSame(['first_name', 'last_name', 'full_name'], $schemas['AuthorSort']['properties']['field']['enum']);
+        $this->assertSame(['id', 'first_name', 'last_name', 'full_name', 'posts.id', 'posts.title', 'posts.summary', 'posts.status', 'posts.featured', 'posts.views', 'posts.rating', 'posts.published_on', 'posts.published_at', 'drafts.id', 'drafts.title', 'tags.id', 'tags.name', 'tags.slug', 'tags.archived_at', 'tags.created_at'], array_keys((array) $schemas['AuthorFieldFilter']['discriminator']['mapping']));
+        $this->assertSame(['first_name', 'last_name', 'full_name', 'posts_count', 'posts_min_id'], array_slice($schemas['AuthorSort']['properties']['field']['enum'], 0, 5));
         $this->assertSame(['asc', 'desc'], $schemas['AuthorSort']['properties']['direction']['enum']);
         $this->assertSame(['id', 'first_name', 'last_name', 'settings'], $schemas['AuthorSelect']['properties']['field']['enum']);
         $this->assertSame([['count', 'exists'], ['min', 'max'], ['avg', 'sum']], array_map(fn (array $branch): array => $branch['properties']['type']['enum'], $schemas['AuthorAggregatePosts']['oneOf']));

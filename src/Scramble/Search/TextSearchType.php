@@ -54,10 +54,10 @@ final readonly class TextSearchType
             return (new EngineTextType($capabilities))->text();
         }
 
-        return Schemas::closed([
+        return Schemas::shape([
             'value' => self::value($capabilities),
             'mode' => (new StringType)->enum($capabilities->modeNames()),
-        ], [], 'Text to search in the searchable fields');
+        ], [], 'Text to search in the searchable fields', ['trashed']);
     }
 
     public function trashed(): ?StringType

@@ -15,6 +15,7 @@ use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Scramble\Schemas;
 use Lomkit\Rest\Scramble\Types\OneOf;
+use Lomkit\Rest\Search\AggregateKey;
 
 final readonly class AggregateSchema
 {
@@ -28,7 +29,7 @@ final readonly class AggregateSchema
 
     public function reference(Resource $resource): ?Reference
     {
-        $relations = array_values(array_filter($resource->definition()->relations(), fn (Relation $relation): bool => ! $relation instanceof PolymorphicRelation));
+        $relations = self::relations($resource);
 
         if ($relations === []) {
             return null;
@@ -46,6 +47,27 @@ final readonly class AggregateSchema
             return $this->components->discriminated('relation', $resource::class, $branches)
                 ->setDescription('A value computed over the related rows of each row.');
         });
+    }
+
+    /** @return list<string> */
+    public static function keys(Resource $resource): array
+    {
+        $keys = [];
+
+        foreach (self::relations($resource) as $relation) {
+            $fields = $relation
+                ->resource()
+                ->definition()
+                ->fields();
+
+            foreach (AggregateFunction::cases() as $function) {
+                foreach ($function->needsField() ? $function->acceptedFieldNames($fields) : [null] as $field) {
+                    $keys[] = AggregateKey::named($relation->relation, $function, $field, null)->value;
+                }
+            }
+        }
+
+        return $keys;
     }
 
     private function aggregate(Relation $relation): Type
@@ -91,6 +113,12 @@ final readonly class AggregateSchema
             $properties['filters'] = $filters;
         }
 
-        return Schemas::closed($properties, ['relation', 'type', ...($fields === [] ? [] : ['field'])]);
+        return $fields === [] ? Schemas::shape($properties, ['relation', 'type'], '', ['field']) : Schemas::shape($properties, ['relation', 'type', 'field']);
+    }
+
+    /** @return list<Relation> */
+    private static function relations(Resource $resource): array
+    {
+        return array_values(array_filter($resource->definition()->relations(), fn (Relation $relation): bool => ! $relation instanceof PolymorphicRelation));
     }
 }

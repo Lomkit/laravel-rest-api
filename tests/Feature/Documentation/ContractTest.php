@@ -3,7 +3,11 @@
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
 use Illuminate\Support\Facades\DB;
+use Lomkit\Rest\Tests\Feature\Documentation\Stubs\UngatedLabelResource;
+use Lomkit\Rest\Tests\Feature\Documentation\Stubs\UngatedNoteResource;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
+use Lomkit\Rest\Tests\Fixtures\Festival\LabelResource;
+use Lomkit\Rest\Tests\Fixtures\Festival\NoteResource;
 use Lomkit\Rest\Tests\Fixtures\Festival\Show;
 use Lomkit\Rest\Tests\Fixtures\Festival\Stage;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -92,11 +96,18 @@ class ContractTest extends DocumentationTestCase
         $this->assertSame(['DELETE /notes default', 'POST /notes/search default', 'DELETE /shows default', 'POST /shows/search default', 'POST /shows/restore default', 'DELETE /shows/force default', 'DELETE /stages default', 'POST /stages/search default'], $checked);
     }
 
-    /** @param array<string, mixed> $search */
+    /**
+     * @param  array<string, mixed>  $search
+     * @param  array<class-string, class-string>  $bindings
+     */
     #[Test]
     #[DataProvider('acceptedSearches')]
-    public function it_answers_a_search_that_the_document_describes(string $path, array $search): void
+    public function it_answers_a_search_that_the_document_describes(string $path, array $search, array $bindings = []): void
     {
+        foreach ($bindings as $abstract => $concrete) {
+            $this->app->bind($abstract, $concrete);
+        }
+
         $this->seedFestival();
         $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
         $document = $this->document();
@@ -110,7 +121,7 @@ class ContractTest extends DocumentationTestCase
         $this->assertSame([], $validator->responseErrors($document, $path, 'post', 200, (string) $response->getContent()));
     }
 
-    /** @return array<string, array{string, array<string, mixed>}> */
+    /** @return array<string, array{0: string, 1: array<string, mixed>, 2?: array<class-string, class-string>}> */
     public static function acceptedSearches(): array
     {
         return [
@@ -120,11 +131,13 @@ class ContractTest extends DocumentationTestCase
             'a range' => ['/shows/search', ['filters' => [['field' => 'starts_on', 'operator' => 'between', 'value' => ['2026-07-01', '2026-07-03']]]]],
             'a null check' => ['/shows/search', ['filters' => [['field' => 'summary', 'operator' => 'is null']]]],
             'a pivot field' => ['/shows/search', ['filters' => [['field' => 'artists.pivot.role', 'value' => 'lead']]]],
+            'a field of a related resource' => ['/shows/search', ['filters' => [['field' => 'stage.name', 'value' => 'Main stage']]]],
             'related rows' => ['/shows/search', ['filters' => [['relation' => 'comments', 'exists' => false, 'nested' => [['field' => 'rating', 'operator' => '>=', 'value' => 4]]]]]],
             'related rows of one type' => ['/notes/search', ['filters' => [['relation' => 'notable', 'types' => [Stage::class => [['field' => 'code', 'value' => 'main']]]]]]],
             'a group joined with or' => ['/shows/search', ['filters' => [['field' => 'featured', 'value' => true], ['type' => 'or', 'nested' => [['field' => 'seats', 'operator' => '>', 'value' => 100]]]]]],
             'a string key' => ['/stages/search', ['filters' => [['field' => 'code', 'operator' => 'in', 'value' => ['main', 'side']]]]],
             'sorts on a field and on a field of a relation' => ['/shows/search', ['sorts' => [['field' => 'stage.name', 'direction' => 'desc'], ['field' => 'title']]]],
+            'a sort on the key of an aggregate' => ['/shows/search', ['aggregates' => [['relation' => 'comments', 'type' => 'count']], 'sorts' => [['field' => 'comments_count', 'direction' => 'desc']]]],
             'selects, gates, a limit and a page' => ['/shows/search', ['selects' => [['field' => 'title']], 'gates' => ['view', 'create'], 'limit' => 25, 'page' => 2]],
             'a text and the trashed rows' => ['/shows/search', ['text' => ['value' => 'night', 'mode' => 'phrase'], 'trashed' => 'with']],
             'includes of each family' => ['/shows/search', ['includes' => [
@@ -140,6 +153,8 @@ class ContractTest extends DocumentationTestCase
             ]]],
             'a scope with its parameters' => ['/shows/search', ['scopes' => [['name' => 'startingFrom', 'parameters' => ['2026-07-01']]]]],
             'an instruction with its fields' => ['/shows/search', ['instructions' => [['name' => 'only-featured', 'fields' => [['name' => 'featured', 'value' => true], ['name' => 'min_seats', 'value' => null]]]]]],
+            'the gates of a resource that turns its gates off' => ['/notes/search', ['gates' => ['view']], [NoteResource::class => UngatedNoteResource::class]],
+            'the gates of an include whose resource turns its gates off' => ['/shows/search', ['includes' => [['relation' => 'labels', 'gates' => ['view']]]], [LabelResource::class => UngatedLabelResource::class]],
         ];
     }
 
