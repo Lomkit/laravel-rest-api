@@ -9,6 +9,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Console\Check\PerimeterCheck;
 use Lomkit\Rest\Console\QuickStart\ExposureCheck;
 use Lomkit\Rest\Tests\Fixtures\Blog\FakeApiInstallCommand;
 
@@ -128,9 +129,11 @@ trait RunsTheQuickStart
             $arguments = array_slice((array) $process->command, 3);
             $controllers = array_values(array_filter($arguments, fn (string $argument): bool => ! str_starts_with($argument, '--')));
             $this->app->make(HttpKernel::class);
-            $report = $this->app->make(ExposureCheck::class)->run($controllers);
+            $access = $this->app->make(ExposureCheck::class)->run($controllers);
+            $rows = $this->app->make(PerimeterCheck::class)->run($controllers);
+            $report = (string) json_encode([...$access->toArray(), ...$rows->toArray()], JSON_UNESCAPED_SLASHES);
 
-            return Process::result($report->toJson(), '', $report->passed() ? 0 : 1);
+            return Process::result($report, '', $access->passed() && $rows->passed() ? 0 : 1);
         }]);
     }
 

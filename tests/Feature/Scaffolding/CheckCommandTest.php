@@ -6,10 +6,15 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Fixtures\Library\BookController;
+use Lomkit\Rest\Tests\Fixtures\Library\BookResource;
 use Lomkit\Rest\Tests\Fixtures\Library\LabelController;
+use Lomkit\Rest\Tests\Fixtures\Library\LabelResource;
+use Lomkit\Rest\Tests\Fixtures\Library\LoanResource;
+use Lomkit\Rest\Tests\Fixtures\Library\ShelfResource;
 use Lomkit\Rest\Tests\Fixtures\Library\StaffAuthenticate;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Article;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
@@ -30,7 +35,7 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $output = $this->check(0, BookController::class, LabelController::class);
 
-        $this->assertSame("  checks (fresh process) ... 12 routes authenticated, 2 policies found\n", $output);
+        $this->assertSame("  routes and policies ... 12 routes authenticated, 2 policies found\n", $output);
     }
 
     #[Test]
@@ -40,7 +45,7 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $output = $this->check(0, BookController::class);
 
-        $this->assertSame("  checks (fresh process) ... 1 route authenticated, 1 policy found\n", $output);
+        $this->assertSame("  routes and policies ... 1 route authenticated, 1 policy found\n", $output);
     }
 
     #[Test]
@@ -51,7 +56,7 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $output = $this->check(1, BookController::class);
 
-        $this->assertStringContainsString("  checks (fresh process) ... FAILED\n", $output);
+        $this->assertStringContainsString("  routes and policies ... FAILED\n", $output);
         $this->assertStringContainsString("  ⇂ POST /api/books/search is not behind an authentication middleware\n", $output);
         $this->assertSame(1, substr_count($output, '⇂'));
     }
@@ -74,7 +79,7 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $output = $this->check(0, BookController::class);
 
-        $this->assertSame("  checks (fresh process) ... 6 routes authenticated, 1 policy found\n", $output);
+        $this->assertSame("  routes and policies ... 6 routes authenticated, 1 policy found\n", $output);
     }
 
     #[Test]
@@ -84,7 +89,7 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $output = $this->check(0, BookController::class);
 
-        $this->assertSame("  checks (fresh process) ... 6 routes authenticated, 1 policy found\n", $output);
+        $this->assertSame("  routes and policies ... 6 routes authenticated, 1 policy found\n", $output);
     }
 
     #[Test]
@@ -108,7 +113,18 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $this->assertSame(1, $exitCode);
         $this->assertSame(
-            ['routes' => 6, 'policies' => 2, 'problems' => ['POST /api/labels/search is not behind an authentication middleware.'], 'search' => '/api/books/search'],
+            [
+                'routes' => 6,
+                'policies' => 2,
+                'problems' => ['POST /api/labels/search is not behind an authentication middleware.'],
+                'search' => '/api/books/search',
+                'rows' => [
+                    'perimeter' => [],
+                    'without_perimeter' => [BookResource::class, LabelResource::class, LoanResource::class, ShelfResource::class],
+                    'problems' => [],
+                ],
+                'actions' => ['checked' => [], 'problems' => []],
+            ],
             json_decode($output->fetch(), true),
         );
     }
@@ -164,13 +180,13 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $output = $this->check(0, BookController::class);
 
-        $this->assertSame("  checks (fresh process) ... 6 routes authenticated, 1 policy found\n", $output);
+        $this->assertSame("  routes and policies ... 6 routes authenticated, 1 policy found\n", $output);
     }
 
     #[Test]
-    public function it_is_hidden_from_the_command_list(): void
+    public function it_is_listed_with_the_other_commands(): void
     {
-        $this->assertTrue(Artisan::all()['rest:check']->isHidden());
+        $this->assertFalse(Artisan::all()['rest:check']->isHidden());
     }
 
     private function expose(string $name, string $controller, string $middleware): void
@@ -189,6 +205,6 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $this->assertSame($expectedExitCode, $exitCode, $contents);
 
-        return $contents;
+        return Str::before($contents, '  rows ... ');
     }
 }
