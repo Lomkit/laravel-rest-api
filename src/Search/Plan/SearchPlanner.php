@@ -34,6 +34,11 @@ final readonly class SearchPlanner
         return (new self(new SqlRows($text), ColumnSelection::of($resource), true))->plan($resource, $search, LimitPolicy::paged($search->limit ?? self::limits($resource)->defaultLimit, $search->page ?? 1));
     }
 
+    public static function rendered(Resource $resource, SearchNode $search, ResolvedText $text): QueryPlan
+    {
+        return (new self(new SqlRows($text), ColumnSelection::of($resource), true))->plan($resource, $search, LimitPolicy::none());
+    }
+
     public static function all(Resource $resource, SearchNode $search, ResolvedText $text): QueryPlan
     {
         return (new self(new SqlRows($text), ColumnSelection::Every))->plan($resource, $search, LimitPolicy::explicit($search->limit));

@@ -7,6 +7,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\LazyCollection;
 use Lomkit\Rest\Authorization\ActingUser;
 use Lomkit\Rest\Exceptions\SearchRunException;
 use Lomkit\Rest\Http\Resource;
@@ -54,6 +55,20 @@ final readonly class PendingSearch
             ->page()
             ->response()
             ->body();
+    }
+
+    /** @return LazyCollection<int, array<string, mixed>> */
+    public function lazy(int $chunk = 500, ?int $max = null): LazyCollection
+    {
+        if ($chunk < 1) {
+            throw SearchRunException::invalidChunk($chunk);
+        }
+
+        if ($max !== null && $max < 0) {
+            throw SearchRunException::invalidMax($max);
+        }
+
+        return $this->run(null)->lazy($chunk, $max);
     }
 
     private function run(?int $page): SearchRun

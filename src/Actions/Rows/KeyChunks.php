@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Actions\Rows;
 
 use Closure;
+use Generator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -37,8 +38,11 @@ final readonly class KeyChunks implements ActionRows
         return new self($rows, $id, $keys, $chunkCount);
     }
 
-    /** @param Builder<Model> $query */
-    public static function read(Builder $query, ID $id, int $chunkCount, ?int $limit, ?RowCap $cap): self
+    /**
+     * @param  Builder<Model>  $query
+     * @param  Builder<Model>|null  $rows
+     */
+    public static function read(Builder $query, ID $id, int $chunkCount, ?int $limit, ?RowCap $cap, ?Builder $rows = null): self
     {
         $values = $query
             ->clone()
@@ -56,7 +60,7 @@ final readonly class KeyChunks implements ActionRows
 
         $cap?->check(count($keys));
 
-        return self::of($query, $id, array_values($keys), $chunkCount);
+        return self::of($rows ?? $query, $id, array_values($keys), $chunkCount);
     }
 
     #[\Override]
@@ -64,8 +68,8 @@ final readonly class KeyChunks implements ActionRows
     {
         $impacted = 0;
 
-        foreach (array_chunk($this->keys, max(1, $this->chunkCount)) as $keys) {
-            $impacted += $each($this->load($keys));
+        foreach ($this->chunks() as $rows) {
+            $impacted += $each($rows);
         }
 
         return $impacted;
@@ -75,6 +79,14 @@ final readonly class KeyChunks implements ActionRows
     public function count(): int
     {
         return count($this->keys);
+    }
+
+    /** @return Generator<int, Collection<int, Model>> */
+    public function chunks(): Generator
+    {
+        foreach (array_chunk($this->keys, max(1, $this->chunkCount)) as $keys) {
+            yield $this->load($keys);
+        }
     }
 
     /**
