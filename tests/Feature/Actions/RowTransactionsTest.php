@@ -76,7 +76,7 @@ class RowTransactionsTest extends PackageTestCase
     {
         $this->seedDocuments(['Annual report', 'Roadmap', 'Minutes', 'Agenda', 'Budget plan']);
 
-        $response = $this->postJson("/row-renamed-documents/actions/{$action}");
+        $response = $this->postJson("/row-renamed-documents/actions/{$action}", ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 5, 'result' => null]]);
         $this->assertSame([...self::COMMITTED, ...self::COMMITTED, ...self::COMMITTED, ...self::COMMITTED, ...self::COMMITTED], $this->transactions);
@@ -96,7 +96,7 @@ class RowTransactionsTest extends PackageTestCase
     {
         $this->seedDocuments(['Annual report', 'Roadmap', 'Budget', 'Minutes']);
 
-        $response = $this->postJson("/row-renamed-documents/actions/{$action}");
+        $response = $this->postJson("/row-renamed-documents/actions/{$action}", ['search' => []]);
 
         $response->assertInternalServerError();
         $this->assertSame([...self::COMMITTED, ...self::COMMITTED, 'begin secondary', 'rollback secondary'], $this->transactions);

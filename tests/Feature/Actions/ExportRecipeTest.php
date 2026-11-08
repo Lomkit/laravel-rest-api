@@ -87,6 +87,7 @@ class ExportRecipeTest extends HelpdeskTestCase
     public function it_refuses_a_column_outside_the_allowed_list(): void
     {
         $response = $this->postJson('/exported-tickets/actions/export-tickets', [
+            'search' => [],
             'fields' => [['name' => 'columns', 'value' => ['title', 'team_id']]],
         ]);
 
