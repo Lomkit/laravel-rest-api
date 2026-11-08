@@ -31,6 +31,11 @@ final class InvalidMetricException extends LogicException
         return new self("{$metric}::{$helper}() {$use} [{$name}], whose type is [{$type}]: it needs {$expected} field.");
     }
 
+    public static function invalidPercentile(string $metric, string $helper, float $fraction): self
+    {
+        return new self("{$metric}::{$helper}() takes the percentile [{$fraction}]. A percentile is a number from 0 to 1, for example 0.9.");
+    }
+
     public static function invalidCacheDuration(string $metric, int $seconds): self
     {
         return new self("{$metric} caches its result for [{$seconds}] seconds. Cache a metric for 1 second or more, for example ->cacheFor(600).");

@@ -13,11 +13,6 @@ final readonly class AggregateRank implements Expression
         private ?string $column,
     ) {}
 
-    public function nullable(): bool
-    {
-        return in_array($this->function, [Aggregate::Average, Aggregate::Min, Aggregate::Max], true);
-    }
-
     #[\Override]
     public function getValue(Grammar $grammar): string
     {

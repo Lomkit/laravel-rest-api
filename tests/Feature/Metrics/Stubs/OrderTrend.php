@@ -20,6 +20,7 @@ class OrderTrend extends Trend
         private array $declaredRanges = [12 => '12 months', 7 => '7 periods'],
         private array $labels = [],
         private ?string $other = null,
+        private float $percentile = 0.5,
     ) {}
 
     #[\Override]
@@ -31,9 +32,11 @@ class OrderTrend extends Trend
     #[\Override]
     public function calculate(Builder $query): TrendResult
     {
-        $result = str_starts_with($this->helper, 'count')
-            ? $this->{$this->helper}($query, $this->dateColumn, $this->splitBy)
-            : $this->{$this->helper}($query, $this->column, $this->dateColumn, $this->splitBy);
+        $result = match (true) {
+            str_starts_with($this->helper, 'count') => $this->{$this->helper}($query, $this->dateColumn, $this->splitBy),
+            str_starts_with($this->helper, 'percentile') => $this->{$this->helper}($query, $this->column, $this->percentile, $this->dateColumn, $this->splitBy),
+            default => $this->{$this->helper}($query, $this->column, $this->dateColumn, $this->splitBy),
+        };
 
         return $this->labels === [] && $this->other === null ? $result : $result->labels($this->labels, $this->other);
     }

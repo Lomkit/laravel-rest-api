@@ -77,7 +77,7 @@ abstract class Table extends Metric
     /**
      * @param  Builder<Model>  $query
      * @param  array<string, TableColumn>  $columns
-     * @return array<string, AggregateQuery>
+     * @return array<string, Measure>
      */
     protected function aggregates(Builder $query, array $columns): array
     {
@@ -92,7 +92,9 @@ abstract class Table extends Metric
                 throw InvalidMetricException::invalidColumn(static::class, (string) $name);
             }
 
-            $aggregates[$name] = new AggregateQuery($column->function, $column->field === null ? null : MetricColumn::aggregated($this, $query, 'rows', $column->field));
+            $aggregates[$name] = $column->function instanceof Percentile
+                ? PercentileQuery::of($this, $query, 'rows', $column->function, (string) $column->field)
+                : new AggregateQuery($column->function, $column->field === null ? null : MetricColumn::aggregated($this, $query, 'rows', $column->field));
         }
 
         return $aggregates;

@@ -20,6 +20,7 @@ class OrderPartition extends Partition
         private ?string $other = null,
         private ?string $dateColumn = null,
         private array $declaredRanges = [],
+        private float $percentile = 0.5,
     ) {}
 
     #[\Override]
@@ -37,6 +38,8 @@ class OrderPartition extends Partition
             'average' => $this->average($query, $this->column, $this->groupBy, dateColumn: $this->dateColumn),
             'min' => $this->min($query, $this->column, $this->groupBy, dateColumn: $this->dateColumn),
             'max' => $this->max($query, $this->column, $this->groupBy, dateColumn: $this->dateColumn),
+            'median' => $this->median($query, $this->column, $this->groupBy, dateColumn: $this->dateColumn),
+            'percentile' => $this->percentile($query, $this->column, $this->percentile, $this->groupBy, dateColumn: $this->dateColumn),
         };
 
         return $this->labels === [] && $this->other === null ? $result : $result->labels($this->labels, $this->other);

@@ -14,22 +14,26 @@ final readonly class TrendResult implements MetricResult
         public ?TrendSplit $other = null,
     ) {}
 
-    /** @param list<array{period: string, key: int|string|bool|null, partials: list<int|float|null>}> $rows */
-    public static function of(Aggregate $function, bool $integer, Periods $periods, ?MetricColumn $split, array $rows, ?int $limit): self
+    public static function of(PeriodValues $values, Periods $periods, ?MetricColumn $split, ?int $limit): self
     {
-        $empty = $function->value($function->partials([null, null], $integer));
-        $series = self::series($function, $periods, $rows, $empty);
+        $empty = $values->empty();
+        $series = self::series($periods, $values->series(), $empty);
 
         if ($split === null) {
             return new self($series);
         }
 
-        $kept = array_map(fn (PartitionPart $part): int|string|bool|null => $part->key, PartitionResult::of($function, $split, self::totals($function, $rows), $limit)->parts);
+        $parts = PartitionResult::ranked($values->groups($split), $split);
+        $kept = array_map(fn (PartitionPart $part): int|string|bool|null => $part->key, array_slice($parts, 0, $limit));
         usort($kept, fn (int|string|bool|null $one, int|string|bool|null $two): int => [$one === null, $one] <=> [$two === null, $two]);
-        $splits = array_map(fn (int|string|bool|null $key): TrendSplit => new TrendSplit($key, $split->label($key), self::series($function, $periods, array_filter($rows, fn (array $row): bool => $row['key'] === $key), $empty)), $kept);
-        $folded = array_filter($rows, fn (array $row): bool => ! in_array($row['key'], $kept, true));
+        $cells = $values->cells($split);
+        $splits = array_map(fn (int|string|bool|null $key): TrendSplit => new TrendSplit($key, $split->label($key), self::series($periods, self::keyed($cells, $key), $empty)), $kept);
 
-        return new self($series, $splits, $folded === [] ? null : new TrendSplit(null, PartitionResult::OTHER, self::series($function, $periods, $folded, $empty)));
+        if (count($kept) === count($parts)) {
+            return new self($series, $splits);
+        }
+
+        return new self($series, $splits, new TrendSplit(null, PartitionResult::OTHER, self::series($periods, $values->others($split, $kept), $empty)));
     }
 
     /** @param array<int|string, string> $labels */
@@ -55,42 +59,20 @@ final readonly class TrendResult implements MetricResult
     }
 
     /**
-     * @param  array<array{period: string, key: int|string|bool|null, partials: list<int|float|null>}>  $rows
+     * @param  array<string, int|float|null>  $values
      * @return list<TrendPoint>
      */
-    private static function series(Aggregate $function, Periods $periods, array $rows, int|float|null $empty): array
+    private static function series(Periods $periods, array $values, int|float|null $empty): array
     {
-        $partials = [];
-
-        foreach ($rows as $row) {
-            $partials[$row['period']] = isset($partials[$row['period']]) ? $function->merge($partials[$row['period']], $row['partials']) : $row['partials'];
-        }
-
-        return array_map(fn (string $label): TrendPoint => new TrendPoint($label, isset($partials[$label]) ? $function->value($partials[$label]) : $empty), $periods->labels());
+        return array_map(fn (string $label): TrendPoint => new TrendPoint($label, array_key_exists($label, $values) ? $values[$label] : $empty), $periods->labels());
     }
 
     /**
-     * @param  list<array{period: string, key: int|string|bool|null, partials: list<int|float|null>}>  $rows
-     * @return list<array{key: int|string|bool|null, partials: list<int|float|null>}>
+     * @param  list<array{period: string, key: int|string|bool|null, value: int|float|null}>  $cells
+     * @return array<string, int|float|null>
      */
-    private static function totals(Aggregate $function, array $rows): array
+    private static function keyed(array $cells, int|string|bool|null $key): array
     {
-        $keys = [];
-        $totals = [];
-
-        foreach ($rows as $row) {
-            $index = array_search($row['key'], $keys, true);
-
-            if ($index === false) {
-                $keys[] = $row['key'];
-                $totals[] = $row['partials'];
-
-                continue;
-            }
-
-            $totals[$index] = $function->merge($totals[$index], $row['partials']);
-        }
-
-        return array_map(fn (int|string|bool|null $key, array $partials): array => ['key' => $key, 'partials' => $partials], $keys, $totals);
+        return array_column(array_filter($cells, fn (array $cell): bool => $cell['key'] === $key), 'value', 'period');
     }
 }

@@ -132,14 +132,69 @@ abstract class Trend extends Metric
     }
 
     /** @param Builder<Model> $query */
+    public function medianByDays(Builder $query, string $column, string $dateColumn = 'created_at', ?string $splitBy = null): TrendResult
+    {
+        return $this->percentiles($query, Percentile::median(), PeriodUnit::Day, $column, $dateColumn, $splitBy);
+    }
+
+    /** @param Builder<Model> $query */
+    public function medianByWeeks(Builder $query, string $column, string $dateColumn = 'created_at', ?string $splitBy = null): TrendResult
+    {
+        return $this->percentiles($query, Percentile::median(), PeriodUnit::Week, $column, $dateColumn, $splitBy);
+    }
+
+    /** @param Builder<Model> $query */
+    public function medianByMonths(Builder $query, string $column, string $dateColumn = 'created_at', ?string $splitBy = null): TrendResult
+    {
+        return $this->percentiles($query, Percentile::median(), PeriodUnit::Month, $column, $dateColumn, $splitBy);
+    }
+
+    /** @param Builder<Model> $query */
+    public function percentileByDays(Builder $query, string $column, float $percentile, string $dateColumn = 'created_at', ?string $splitBy = null): TrendResult
+    {
+        return $this->percentiles($query, Percentile::of($percentile), PeriodUnit::Day, $column, $dateColumn, $splitBy);
+    }
+
+    /** @param Builder<Model> $query */
+    public function percentileByWeeks(Builder $query, string $column, float $percentile, string $dateColumn = 'created_at', ?string $splitBy = null): TrendResult
+    {
+        return $this->percentiles($query, Percentile::of($percentile), PeriodUnit::Week, $column, $dateColumn, $splitBy);
+    }
+
+    /** @param Builder<Model> $query */
+    public function percentileByMonths(Builder $query, string $column, float $percentile, string $dateColumn = 'created_at', ?string $splitBy = null): TrendResult
+    {
+        return $this->percentiles($query, Percentile::of($percentile), PeriodUnit::Month, $column, $dateColumn, $splitBy);
+    }
+
+    /** @param Builder<Model> $query */
     protected function aggregate(Builder $query, Aggregate $function, PeriodUnit $unit, ?string $column, string $dateColumn, ?string $splitBy): TrendResult
     {
-        $helper = $function->value.'By'.ucfirst($unit->value).'s';
+        $helper = self::helper($function->value, $unit);
         $aggregated = $column === null ? null : MetricColumn::aggregated($this, $query, $helper, $column);
+
+        return $this->measure($query, new AggregateQuery($function, $aggregated), $helper, $unit, $dateColumn, $splitBy);
+    }
+
+    /** @param Builder<Model> $query */
+    protected function percentiles(Builder $query, Percentile $percentile, PeriodUnit $unit, string $column, string $dateColumn, ?string $splitBy): TrendResult
+    {
+        $helper = self::helper($percentile->value, $unit);
+
+        return $this->measure($query, PercentileQuery::of($this, $query, $helper, $percentile, $column), $helper, $unit, $dateColumn, $splitBy);
+    }
+
+    /** @param Builder<Model> $query */
+    protected function measure(Builder $query, Measure $measure, string $helper, PeriodUnit $unit, string $dateColumn, ?string $splitBy): TrendResult
+    {
         $split = $splitBy === null ? null : MetricColumn::group($this, $query, $helper, $splitBy);
         $periods = $this->periodsFor($helper, $query, $dateColumn, $unit, null);
-        $rows = (new AggregateQuery($function, $aggregated))->trend($query, $periods, $split);
 
-        return TrendResult::of($function, $aggregated?->integer() ?? true, $periods, $split, $rows, $this->limit);
+        return TrendResult::of($measure->trend($query, $periods, $split), $periods, $split, $this->limit);
+    }
+
+    private static function helper(string $aggregate, PeriodUnit $unit): string
+    {
+        return $aggregate.'By'.ucfirst($unit->value).'s';
     }
 }

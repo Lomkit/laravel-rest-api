@@ -55,16 +55,41 @@ abstract class Value extends Metric
     }
 
     /** @param Builder<Model> $query */
+    public function median(Builder $query, string $column, string $dateColumn = 'created_at'): ValueResult
+    {
+        return $this->percentiles($query, Percentile::median(), $column, $dateColumn);
+    }
+
+    /** @param Builder<Model> $query */
+    public function percentile(Builder $query, string $column, float $percentile, string $dateColumn = 'created_at'): ValueResult
+    {
+        return $this->percentiles($query, Percentile::of($percentile), $column, $dateColumn);
+    }
+
+    /** @param Builder<Model> $query */
     protected function aggregate(Builder $query, Aggregate $function, ?string $column, string $dateColumn): ValueResult
     {
-        $aggregate = new AggregateQuery($function, $column === null ? null : MetricColumn::aggregated($this, $query, $function->value, $column));
+        $aggregated = $column === null ? null : MetricColumn::aggregated($this, $query, $function->value, $column);
+
+        return $this->measure($query, new AggregateQuery($function, $aggregated), $function->value, $dateColumn);
+    }
+
+    /** @param Builder<Model> $query */
+    protected function percentiles(Builder $query, Percentile $percentile, string $column, string $dateColumn): ValueResult
+    {
+        return $this->measure($query, PercentileQuery::of($this, $query, $percentile->value, $percentile, $column), $percentile->value, $dateColumn);
+    }
+
+    /** @param Builder<Model> $query */
+    protected function measure(Builder $query, Measure $measure, string $helper, string $dateColumn): ValueResult
+    {
         $range = $this->range();
 
         if ($range === null) {
-            return new ValueResult($aggregate->total($query));
+            return new ValueResult($measure->total($query));
         }
 
-        [$current, $previous] = $aggregate->periods($query, MetricColumn::date($this, $query, $function->value, $dateColumn), RangePeriods::of($range));
+        [$current, $previous] = $measure->periods($query, MetricColumn::date($this, $query, $helper, $dateColumn), RangePeriods::of($range));
 
         return new ValueResult($current, $previous);
     }

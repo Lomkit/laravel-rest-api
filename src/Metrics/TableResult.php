@@ -2,8 +2,6 @@
 
 namespace Lomkit\Rest\Metrics;
 
-use Illuminate\Support\Str;
-
 final readonly class TableResult implements MetricResult
 {
     /**
@@ -38,11 +36,11 @@ final readonly class TableResult implements MetricResult
         return array_map(fn (TableRow $row): int|string|bool|null => $row->key, $this->rows);
     }
 
-    /** @return array{columns: list<array{name: string, label: string, aggregate: string}>, rows: list<TableRow>} */
+    /** @return array{columns: list<array{name: string, label: string, aggregate: string, percentile?: float}>, rows: list<TableRow>} */
     #[\Override]
     public function jsonSerialize(): array
     {
-        $columns = array_map(fn (string $name, TableColumn $column): array => ['name' => $name, 'label' => $column->label ?? Str::headline($name), 'aggregate' => $column->function->value], array_keys($this->columns), array_values($this->columns));
+        $columns = array_map(fn (string $name, TableColumn $column): array => $column->describe($name), array_keys($this->columns), array_values($this->columns));
 
         return ['columns' => $columns, 'rows' => $this->rows];
     }

@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Metrics;
 
+use Closure;
+
 final readonly class PartitionResult implements MetricResult
 {
     public const string OTHER = 'Other';
@@ -12,22 +14,26 @@ final readonly class PartitionResult implements MetricResult
         public ?PartitionPart $other = null,
     ) {}
 
-    /** @param list<array{key: int|string|bool|null, partials: list<int|float|null>|null, previous?: list<int|float|null>|null}> $groups */
-    public static function of(Aggregate $function, MetricColumn $group, array $groups, ?int $limit, bool $compared = false): self
+    public static function of(GroupValues $values, MetricColumn $group, ?int $limit): self
     {
-        $parts = array_map(fn (array $row): array => [self::part($function, $row['key'], $group->label($row['key']), $row['partials'], $row['previous'] ?? null, $compared), $row], $groups);
-        usort($parts, fn (array $one, array $two): int => self::order($one[0], $two[0]));
-        $kept = array_column(array_slice($parts, 0, $limit), 0);
-        $folded = $limit === null ? [] : array_column(array_slice($parts, $limit), 1);
+        return self::limited(self::ranked($values, $group), $limit, fn (array $kept): PartitionPart => new PartitionPart(null, self::OTHER, $values->others($kept)));
+    }
 
-        if ($folded === []) {
-            return new self($kept);
-        }
+    public static function compared(ComparedGroups $values, MetricColumn $group, ?int $limit): self
+    {
+        $parts = $values->parts($group);
+        usort($parts, self::order(...));
 
-        $partials = self::fold($function, array_map(fn (array $row): ?array => $row['partials'], $folded));
-        $previous = self::fold($function, array_map(fn (array $row): ?array => $row['previous'] ?? null, $folded));
+        return self::limited($parts, $limit, $values->other(...));
+    }
 
-        return new self($kept, self::part($function, null, self::OTHER, $partials, $previous, $compared));
+    /** @return list<PartitionPart> */
+    public static function ranked(GroupValues $values, MetricColumn $group): array
+    {
+        $parts = array_map(fn (array $row): PartitionPart => new PartitionPart($row['key'], $group->label($row['key']), $row['value']), $values->groups());
+        usort($parts, self::order(...));
+
+        return $parts;
     }
 
     /** @param array<int|string, string> $labels */
@@ -53,24 +59,18 @@ final readonly class PartitionResult implements MetricResult
     }
 
     /**
-     * @param  list<int|float|null>|null  $partials
-     * @param  list<int|float|null>|null  $previous
+     * @param  list<PartitionPart>  $parts
+     * @param  Closure(list<int|string|bool|null>): PartitionPart  $other
      */
-    private static function part(Aggregate $function, int|string|bool|null $key, ?string $label, ?array $partials, ?array $previous, bool $compared): PartitionPart
+    private static function limited(array $parts, ?int $limit, Closure $other): self
     {
-        return new PartitionPart($key, $label, $partials === null ? null : $function->value($partials), $compared, $previous === null ? null : $function->value($previous));
-    }
+        $kept = array_slice($parts, 0, $limit);
 
-    /**
-     * @param  list<list<int|float|null>|null>  $partials
-     * @return list<int|float|null>|null
-     */
-    private static function fold(Aggregate $function, array $partials): ?array
-    {
-        $present = array_values(array_filter($partials, fn (?array $one): bool => $one !== null));
-        $first = array_shift($present);
+        if (count($kept) === count($parts)) {
+            return new self($kept);
+        }
 
-        return $first === null ? null : array_reduce($present, $function->merge(...), $first);
+        return new self($kept, $other(array_map(fn (PartitionPart $part): int|string|bool|null => $part->key, $kept)));
     }
 
     private static function order(PartitionPart $one, PartitionPart $two): int
