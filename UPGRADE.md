@@ -2128,6 +2128,9 @@ Actions:
 - `fields` lists the values of the fields of the action as `{"name", "value"}` entries, at most `limits.sizes.fields`, each typed by its field, with the rules that validate it in the description, such as `Rules: nullable, date`. An action without fields documents `fields` as `false`.
 - Each action operation has a request example: the search example of the resource on the `Search` target, one key on the `Resources` target, as for `destroy`, and one entry for each field without a default, with the first value of its `examples()`, else a value of its type. An action without rows and without such a field has the example `{}`. Declare `examples()` on the fields of an action so that the example passes its rules.
 - `destructive` and `confirm` stay in the details: the operation of an action does not carry them.
+- An action answers `RestActionResponse`: `data`, with `impacted`, the number of rows that the action ran on, and `result`, `null` or a `RestActionResult`. An action that implements `BatchableAction` answers `RestBatchableActionResponse`, which adds `batch`, the id of its batch, before `result`.
+- `RestActionResult` is `oneOf` one schema for each type of `ActionResponse`, with a `discriminator` on `type`: `RestActionResultMessage` and `RestActionResultDanger` (`message`), `RestActionResultDownload` (`url` and `name`), `RestActionResultRedirect` (`url`), `RestActionResultCreated` (`keys`, each an integer or a string) and `RestActionResultData` (`data`). Each type documents the optional `data` object that `withData()` adds; the `data` type requires it.
+- The batch progress operation lists the batchable actions of the resource in its `action` path parameter and answers `RestBatchProgress`: `data`, with `id`, `total_jobs`, `pending_jobs`, `failed_jobs`, `progress` (from 0 to 100), `finished` and `cancelled`.
 
 Error responses:
 

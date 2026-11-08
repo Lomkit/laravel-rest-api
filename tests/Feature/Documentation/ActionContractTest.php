@@ -142,6 +142,22 @@ class ActionContractTest extends DocumentationTestCase
         ];
     }
 
+    #[Test]
+    public function it_answers_the_progress_of_a_batch_as_the_document_describes(): void
+    {
+        $document = $this->document();
+        $validator = new OpenApiValidator;
+        $started = $this->postJson('api/shows/actions/archive-shows');
+
+        $started->assertOk();
+        $this->assertSame([], $validator->responseErrors($document, '/shows/actions/archive-shows', 'post', 200, (string) $started->getContent()));
+
+        $response = $this->getJson('api/shows/actions/archive-shows/batches/'.self::BATCH);
+
+        $response->assertOk();
+        $this->assertSame([], $validator->responseErrors($document, '/shows/actions/{action}/batches/{batch}', 'get', 200, (string) $response->getContent()));
+    }
+
     /**
      * @param  array<string, mixed>  $document
      * @return array<string, array<string, mixed>|stdClass>

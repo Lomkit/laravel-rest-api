@@ -87,4 +87,55 @@ class ActionsTest extends DocumentationTestCase
             'a search' => ['/shows/actions/archive-shows', '{"search":{"filters":[{"field":"title","value":"Opening night"}]}}'],
         ];
     }
+
+    #[Test]
+    #[DataProvider('results')]
+    public function it_documents_the_result_of_an_action_by_its_type(string $component, string $schema): void
+    {
+        $this->assertSame($schema, json_encode($this->document()['components']['schemas'][$component]));
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function results(): array
+    {
+        $data = '"data":{"type":"object","description":"Present when the action adds data to its result with `withData()`"}';
+
+        return [
+            'the result' => ['RestActionResult', '{"discriminator":{"propertyName":"type","mapping":{"message":"#\/components\/schemas\/RestActionResultMessage","danger":"#\/components\/schemas\/RestActionResultDanger","download":"#\/components\/schemas\/RestActionResultDownload","redirect":"#\/components\/schemas\/RestActionResultRedirect","created":"#\/components\/schemas\/RestActionResultCreated","data":"#\/components\/schemas\/RestActionResultData"}},"oneOf":[{"$ref":"#\/components\/schemas\/RestActionResultMessage"},{"$ref":"#\/components\/schemas\/RestActionResultDanger"},{"$ref":"#\/components\/schemas\/RestActionResultDownload"},{"$ref":"#\/components\/schemas\/RestActionResultRedirect"},{"$ref":"#\/components\/schemas\/RestActionResultCreated"},{"$ref":"#\/components\/schemas\/RestActionResultData"}],"title":"RestActionResult"}'],
+            'a message' => ['RestActionResultMessage', '{"type":"object","description":"A message for the user","properties":{"type":{"type":"string","const":"message"},"message":{"type":"string"},'.$data.'},"required":["type","message"],"title":"RestActionResultMessage"}'],
+            'a warning' => ['RestActionResultDanger', '{"type":"object","description":"A warning for the user","properties":{"type":{"type":"string","const":"danger"},"message":{"type":"string"},'.$data.'},"required":["type","message"],"title":"RestActionResultDanger"}'],
+            'a download' => ['RestActionResultDownload', '{"type":"object","description":"A file for the client to download","properties":{"type":{"type":"string","const":"download"},"url":{"type":"string"},"name":{"type":"string","description":"The name of the file"},'.$data.'},"required":["type","url","name"],"title":"RestActionResultDownload"}'],
+            'a redirect' => ['RestActionResultRedirect', '{"type":"object","description":"A URL for the client to open","properties":{"type":{"type":"string","const":"redirect"},"url":{"type":"string"},'.$data.'},"required":["type","url"],"title":"RestActionResultRedirect"}'],
+            'the created rows' => ['RestActionResultCreated', '{"type":"object","description":"The keys of the rows that the action created","properties":{"type":{"type":"string","const":"created"},"keys":{"type":"array","description":"In the order that the action gives the rows","items":{"oneOf":[{"type":"integer"},{"type":"string"}]}},'.$data.'},"required":["type","keys"],"title":"RestActionResultCreated"}'],
+            'data' => ['RestActionResultData', '{"type":"object","description":"Data for the client","properties":{"type":{"type":"string","const":"data"},"data":{"type":"object","description":"The data of the action"}},"required":["type","data"],"title":"RestActionResultData"}'],
+        ];
+    }
+
+    #[Test]
+    public function it_documents_the_batch_of_a_batchable_action_only(): void
+    {
+        $document = $this->document();
+        $schemas = $document['components']['schemas'];
+        $impacted = '"impacted":{"type":"integer","description":"The number of rows that the action ran on","minimum":0}';
+        $result = '"result":{"anyOf":[{"$ref":"#\/components\/schemas\/RestActionResult"},{"type":"null"}]}';
+
+        $this->assertSame('{"$ref":"#\/components\/schemas\/RestActionResponse"}', json_encode($document['paths']['/shows/actions/reschedule-shows']['post']['responses'][200]['content']['application/json']['schema']));
+        $this->assertSame('{"$ref":"#\/components\/schemas\/RestBatchableActionResponse"}', json_encode($document['paths']['/shows/actions/archive-shows']['post']['responses'][200]['content']['application/json']['schema']));
+        $this->assertSame('{"type":"object","properties":{"data":{"type":"object","properties":{'.$impacted.','.$result.'},"required":["impacted","result"]}},"required":["data"],"title":"RestActionResponse"}', json_encode($schemas['RestActionResponse']));
+        $this->assertSame('{"type":"object","properties":{"data":{"type":"object","properties":{'.$impacted.',"batch":{"type":"string","description":"The id of the batch of the queued jobs of the action"},'.$result.'},"required":["impacted","batch","result"]}},"required":["data"],"title":"RestBatchableActionResponse"}', json_encode($schemas['RestBatchableActionResponse']));
+    }
+
+    #[Test]
+    public function it_documents_the_progress_of_a_batch_of_a_batchable_action(): void
+    {
+        $document = $this->document();
+        $operation = $document['paths']['/shows/actions/{action}/batches/{batch}']['get'];
+
+        $this->assertSame('[{"name":"action","in":"path","required":true,"schema":{"type":"string","enum":["archive-shows"]}},{"name":"batch","in":"path","required":true,"schema":{"type":"string"}}]', json_encode($operation['parameters']));
+        $this->assertSame('{"$ref":"#\/components\/schemas\/RestBatchProgress"}', json_encode($operation['responses'][200]['content']['application/json']['schema']));
+        $this->assertSame(
+            '{"type":"object","properties":{"data":{"type":"object","properties":{"id":{"type":"string"},"total_jobs":{"type":"integer"},"pending_jobs":{"type":"integer"},"failed_jobs":{"type":"integer"},"progress":{"type":"integer","description":"The share of the jobs that ran, in percent","minimum":0,"maximum":100},"finished":{"type":"boolean"},"cancelled":{"type":"boolean"}},"required":["id","total_jobs","pending_jobs","failed_jobs","progress","finished","cancelled"]}},"required":["data"],"title":"RestBatchProgress"}',
+            json_encode($document['components']['schemas']['RestBatchProgress']),
+        );
+    }
 }
