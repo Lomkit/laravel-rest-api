@@ -13,16 +13,18 @@ final readonly class GateVocabulary
     private function __construct(private array $gates) {}
 
     /** @param array<mixed> $declared */
-    public static function of(array $declared, string $owner): self
+    public static function of(array $declared, string $owner, bool $softDeletes): self
     {
         $gates = [];
 
         foreach (Ability::cases() as $ability) {
-            $gates[$ability->value] = new GateAbility($ability);
+            if ($softDeletes || ! $ability->needsSoftDeletes()) {
+                $gates[$ability->value] = new GateAbility($ability);
+            }
         }
 
         foreach (array_values($declared) as $index => $name) {
-            if (! is_string($name) || preg_match(self::NAME, $name) !== 1 || $name === 'viewAny' || isset($gates[$name])) {
+            if (! is_string($name) || preg_match(self::NAME, $name) !== 1 || $name === 'viewAny' || Ability::tryFrom($name) !== null || isset($gates[$name])) {
                 throw InvalidResourceException::invalidGate($owner, $index, $name);
             }
 

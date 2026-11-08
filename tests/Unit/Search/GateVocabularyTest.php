@@ -17,15 +17,33 @@ class GateVocabularyTest extends TestCase
     {
         $this->assertSame(
             ['view', 'create', 'update', 'delete', 'restore', 'forceDelete', 'escalate', 'reassignTeam'],
-            GateVocabulary::of(['escalate', 'reassignTeam'], self::OWNER)->names(),
+            GateVocabulary::of(['escalate', 'reassignTeam'], self::OWNER, true)->names(),
         );
+    }
+
+    #[Test]
+    public function it_leaves_out_restore_and_force_delete_without_soft_deletes(): void
+    {
+        $gates = GateVocabulary::of(['escalate'], self::OWNER, false);
+
+        $this->assertSame(['view', 'create', 'update', 'delete', 'escalate'], $gates->names());
+        $this->assertNull($gates->find('restore'));
+        $this->assertNull($gates->find('forceDelete'));
+    }
+
+    #[Test]
+    public function it_refuses_a_declared_restore_gate_without_soft_deletes(): void
+    {
+        $this->expectExceptionObject(new InvalidResourceException(self::OWNER.' declares the gate [restore] at index 0. A declared gate is the camelCase name of a policy method, listed once, other than viewAny and the built-in gates view, create, update, delete, restore and forceDelete.'));
+
+        GateVocabulary::of(['restore'], self::OWNER, false);
     }
 
     #[Test]
     #[DataProvider('names')]
     public function it_finds_a_gate_by_its_name(mixed $name, ?string $key): void
     {
-        $gate = GateVocabulary::of(['escalate', 'reassignTeam'], self::OWNER)->find($name);
+        $gate = GateVocabulary::of(['escalate', 'reassignTeam'], self::OWNER, true)->find($name);
 
         $this->assertSame($key, $gate?->key());
     }
@@ -51,7 +69,7 @@ class GateVocabularyTest extends TestCase
     {
         $this->expectExceptionObject(new InvalidResourceException(self::OWNER.$message));
 
-        GateVocabulary::of($declared, self::OWNER);
+        GateVocabulary::of($declared, self::OWNER, true);
     }
 
     /** @return array<string, array{array<mixed>, string}> */

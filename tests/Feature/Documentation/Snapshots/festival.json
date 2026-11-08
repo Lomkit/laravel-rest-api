@@ -1817,12 +1817,6 @@
                             },
                             "authorized_to_delete": {
                                 "$ref": "#/components/schemas/RestGateAnswer"
-                            },
-                            "authorized_to_restore": {
-                                "$ref": "#/components/schemas/RestGateAnswer"
-                            },
-                            "authorized_to_force_delete": {
-                                "$ref": "#/components/schemas/RestGateAnswer"
                             }
                         }
                     }
@@ -2156,12 +2150,6 @@
                                 "$ref": "#/components/schemas/RestGateAnswer"
                             },
                             "authorized_to_delete": {
-                                "$ref": "#/components/schemas/RestGateAnswer"
-                            },
-                            "authorized_to_restore": {
-                                "$ref": "#/components/schemas/RestGateAnswer"
-                            },
-                            "authorized_to_force_delete": {
                                 "$ref": "#/components/schemas/RestGateAnswer"
                             }
                         }
@@ -4144,12 +4132,6 @@
                             },
                             "authorized_to_delete": {
                                 "$ref": "#/components/schemas/RestGateAnswer"
-                            },
-                            "authorized_to_restore": {
-                                "$ref": "#/components/schemas/RestGateAnswer"
-                            },
-                            "authorized_to_force_delete": {
-                                "$ref": "#/components/schemas/RestGateAnswer"
                             }
                         }
                     }
@@ -4480,12 +4462,6 @@
                                 "$ref": "#/components/schemas/RestGateAnswer"
                             },
                             "authorized_to_delete": {
-                                "$ref": "#/components/schemas/RestGateAnswer"
-                            },
-                            "authorized_to_restore": {
-                                "$ref": "#/components/schemas/RestGateAnswer"
-                            },
-                            "authorized_to_force_delete": {
                                 "$ref": "#/components/schemas/RestGateAnswer"
                             }
                         }
@@ -5359,9 +5335,7 @@
                                         "view",
                                         "create",
                                         "update",
-                                        "delete",
-                                        "restore",
-                                        "forceDelete"
+                                        "delete"
                                     ]
                                 }
                             },
@@ -5759,9 +5733,7 @@
                                             "enum": [
                                                 "view",
                                                 "update",
-                                                "delete",
-                                                "restore",
-                                                "forceDelete"
+                                                "delete"
                                             ]
                                         },
                                         "uniqueItems": true
@@ -5896,9 +5868,7 @@
                             "enum": [
                                 "view",
                                 "update",
-                                "delete",
-                                "restore",
-                                "forceDelete"
+                                "delete"
                             ]
                         },
                         "uniqueItems": true
@@ -6310,9 +6280,7 @@
                                 "view",
                                 "create",
                                 "update",
-                                "delete",
-                                "restore",
-                                "forceDelete"
+                                "delete"
                             ]
                         },
                         "uniqueItems": true
@@ -11195,9 +11163,7 @@
                             "enum": [
                                 "view",
                                 "update",
-                                "delete",
-                                "restore",
-                                "forceDelete"
+                                "delete"
                             ]
                         },
                         "uniqueItems": true
@@ -11259,9 +11225,7 @@
                             "enum": [
                                 "view",
                                 "update",
-                                "delete",
-                                "restore",
-                                "forceDelete"
+                                "delete"
                             ]
                         },
                         "uniqueItems": true
@@ -11337,9 +11301,7 @@
                             "enum": [
                                 "view",
                                 "update",
-                                "delete",
-                                "restore",
-                                "forceDelete"
+                                "delete"
                             ]
                         },
                         "uniqueItems": true
@@ -11401,9 +11363,7 @@
                             "enum": [
                                 "view",
                                 "update",
-                                "delete",
-                                "restore",
-                                "forceDelete"
+                                "delete"
                             ]
                         },
                         "uniqueItems": true
@@ -12977,12 +12937,6 @@
                             },
                             "authorized_to_delete": {
                                 "$ref": "#/components/schemas/RestGateAnswer"
-                            },
-                            "authorized_to_restore": {
-                                "$ref": "#/components/schemas/RestGateAnswer"
-                            },
-                            "authorized_to_force_delete": {
-                                "$ref": "#/components/schemas/RestGateAnswer"
                             }
                         }
                     },
@@ -14147,9 +14101,7 @@
                                         "view",
                                         "create",
                                         "update",
-                                        "delete",
-                                        "restore",
-                                        "forceDelete"
+                                        "delete"
                                     ]
                                 }
                             },
@@ -15896,9 +15848,7 @@
                             "enum": [
                                 "view",
                                 "update",
-                                "delete",
-                                "restore",
-                                "forceDelete"
+                                "delete"
                             ]
                         },
                         "uniqueItems": true
@@ -16142,9 +16092,7 @@
                             "enum": [
                                 "view",
                                 "update",
-                                "delete",
-                                "restore",
-                                "forceDelete"
+                                "delete"
                             ]
                         },
                         "uniqueItems": true
@@ -16512,9 +16460,7 @@
                                 "view",
                                 "create",
                                 "update",
-                                "delete",
-                                "restore",
-                                "forceDelete"
+                                "delete"
                             ]
                         },
                         "uniqueItems": true

@@ -171,8 +171,9 @@ class CustomGatesTest extends HelpdeskTestCase
     public static function detailedGates(): array
     {
         return [
-            'built-in and declared gates' => ['/api/tickets', ['view', 'create', 'update', 'delete', 'restore', 'forceDelete', 'escalate', 'reassignTeam', 'archive']],
-            'built-in gates only' => ['/api/teams', ['view', 'create', 'update', 'delete', 'restore', 'forceDelete']],
+            'built-in and declared gates' => ['/api/tickets', ['view', 'create', 'update', 'delete', 'escalate', 'reassignTeam', 'archive']],
+            'built-in gates only' => ['/api/teams', ['view', 'create', 'update', 'delete']],
+            'a soft-deletable resource' => ['/api/tags', ['view', 'create', 'update', 'delete', 'restore', 'forceDelete']],
             'a resource that turns its gates off' => ['/api/ungated-tickets', []],
         ];
     }

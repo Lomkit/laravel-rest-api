@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Tests\Feature\Authorization;
 
 use Illuminate\Auth\Access\Response;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -30,7 +31,7 @@ class GatesTest extends HelpdeskTestCase
         $this->withoutDeprecationHandling();
 
         $response = $this->postJson('/api/tickets/search', ['search' => [
-            'gates' => ['view', 'update', 'delete', 'restore', 'forceDelete', 'create'],
+            'gates' => ['view', 'update', 'delete', 'create'],
             'selects' => [['field' => 'id']],
             'sorts' => [['field' => 'id']],
         ]]);
@@ -42,18 +43,33 @@ class GatesTest extends HelpdeskTestCase
                     'authorized_to_view' => self::ALLOWED,
                     'authorized_to_update' => self::ALLOWED,
                     'authorized_to_delete' => self::NOT_DELETED,
-                    'authorized_to_restore' => self::ALLOWED,
-                    'authorized_to_force_delete' => self::ALLOWED,
                 ],
                 [
                     'authorized_to_view' => self::ALLOWED,
                     'authorized_to_update' => ['allowed' => false, 'message' => 'Closed tickets are read-only.'],
                     'authorized_to_delete' => self::NOT_DELETED,
-                    'authorized_to_restore' => self::ALLOWED,
-                    'authorized_to_force_delete' => self::ALLOWED,
                 ],
             ])
             ->assertJsonPath('meta.gates', ['authorized_to_create' => self::ALLOWED]);
+    }
+
+    #[Test]
+    public function it_answers_restore_and_force_delete_on_a_soft_deletable_resource(): void
+    {
+        Tag::create(['id' => 1, 'name' => 'Urgent']);
+        $this->tags->answers['forceDelete'] = Response::deny('Tags are only soft deleted.');
+
+        $response = $this->postJson('/api/tags/search', ['search' => [
+            'gates' => ['restore', 'forceDelete'],
+            'selects' => [['field' => 'id']],
+        ]]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data', [['id' => 1, 'gates' => [
+                'authorized_to_restore' => self::ALLOWED,
+                'authorized_to_force_delete' => ['allowed' => false, 'message' => 'Tags are only soft deleted.'],
+            ]]]);
     }
 
     #[Test]
@@ -138,6 +154,9 @@ class GatesTest extends HelpdeskTestCase
         return [
             'viewAny' => ['/api/tickets/search', ['gates' => ['view', 'viewAny']], $invalid('search.gates.1')],
             'an unknown ability' => ['/api/tickets/search', ['gates' => ['approve']], $invalid('search.gates.0')],
+            'restore without soft deletes' => ['/api/tickets/search', ['gates' => ['view', 'restore']], $invalid('search.gates.1')],
+            'forceDelete without soft deletes' => ['/api/tickets/search', ['gates' => ['forceDelete']], $invalid('search.gates.0')],
+            'restore in an include without soft deletes' => ['/api/tags/search', ['includes' => [['relation' => 'labelledTickets', 'gates' => ['restore']]]], $invalid('search.includes.0.gates.0')],
             'a value that is not a string' => ['/api/tickets/search', ['gates' => [null]], $invalid('search.gates.0')],
             'a repeated ability' => ['/api/tickets/search', ['gates' => ['view', 'update', 'view']], [
                 'search.gates.0' => ['The search.gates.0 field has a duplicate value.'],

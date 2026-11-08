@@ -81,7 +81,13 @@ class ScrambleDetailsTest extends ScrambleTestCase
     #[Test]
     public function it_documents_the_gates_of_the_resource(): void
     {
-        $this->assertSame('{"type":"array","description":"With gates: the abilities that search.gates accepts, the built-in ones first, then those that the resource declares; empty when the resource turns its gates off","items":{"type":"string","enum":["view","create","update","delete","restore","forceDelete"]}}', json_encode($this->details()['gates']));
+        $this->assertSame('{"type":"array","description":"With gates: the abilities that search.gates accepts, the built-in ones first, then those that the resource declares; empty when the resource turns its gates off","items":{"type":"string","enum":["view","create","update","delete"]}}', json_encode($this->details()['gates']));
+    }
+
+    #[Test]
+    public function it_documents_restore_and_force_delete_for_a_soft_deletable_model(): void
+    {
+        $this->assertSame('{"type":"string","enum":["view","create","update","delete","restore","forceDelete"]}', json_encode($this->detailsSchema('/authors')['properties']['data']['properties']['gates']['items']));
     }
 
     #[Test]
