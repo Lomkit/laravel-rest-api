@@ -202,7 +202,7 @@ To upgrade:
 
 1. Remove the calls to `Rest::withDocumentationCallback()`, and the service provider that `rest:documentation-provider` created.
 2. Remove the `generateDocumentation*Operation()` methods from your controllers.
-3. Install `dedoc/scramble` 0.13. The package registers its extension, so `config/scramble.php` needs no change. If you added `Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension` to its `extensions`, you can remove it.
+3. Install `dedoc/scramble` 0.13.48 or a later 0.13 release. The package registers its documentation itself, so `config/scramble.php` needs no change. If its `extensions` list `Lomkit\Rest\Scramble\LomkitLaravelRestApiOperationExtension`, remove the line: the class is removed. See [OpenAPI documentation](#openapi-documentation).
 
 ### Request context
 
@@ -1998,6 +1998,31 @@ Behaviour:
 Scramble:
 
 - Scramble documents the details response: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, `authorizations`, the input entries of actions, instructions and scopes, and `authorized` on actions and metrics. It also documents the `type` of a `MorphTo` mutate entry and the `types` of an include.
+
+### OpenAPI documentation
+
+The package registers its documentation in the `boot()` method of its service provider, through `Scramble::configure()`, whatever the order in which the providers register. It adds an operation transformer, `Lomkit\Rest\Scramble\RestOperations`, and a document transformer, `Lomkit\Rest\Scramble\RestDocument`, to the default API of Scramble. An API that the application registers with `Scramble::registerApi()` after the package boots starts from the default API and gets them too. For an API registered before, add them:
+
+```php
+Scramble::registerApi('v2', ['api_path' => 'api/v2'])
+    ->withOperationTransformers(\Lomkit\Rest\Scramble\RestOperations::class)
+    ->withDocumentTransformers(\Lomkit\Rest\Scramble\RestDocument::class);
+```
+
+The document:
+
+- is the same for every reader, for `scramble:export` and for the document cache of Scramble. The package reads the declarations of each resource as a guest: a request on the path of the operation, without a user. A declaration that adds a field, an action or a metric for some users only is documented as a guest sees it;
+- has one operation for each route of an action and of a metric, with the name of the declaration as its summary. The routes `{resource}/actions/{action}` and `{resource}/metrics/{metric}`, which only answer an unknown name, are left out;
+- has the summaries `Get {Resource} details`, `Search {Resource}`, `Mutate {Resource}`, `Delete {Resource}`, `Restore {Resource}`, `Force delete {Resource}` and `Batch progress of {Resource} actions`, where `{Resource}` is the resource class name without its `Resource` suffix, also used as the tag;
+- holds the responses that the package writes for its operations. Scramble no longer infers the responses of the package routes; it still infers those of the other routes of the application.
+
+Error responses:
+
+- `components.responses` holds four shared responses: `RestUnauthenticated` (`401`, `{"message"}`), `RestForbidden` (`403`, `{"message"}`, plus the `denials` list when the application registers `DenialsRenderer`, see [Authorization](#authorization)), `RestNotFound` (`404`, `{"message"}`) and `RestValidationFailed` (`422`, `{"message", "errors"}`).
+- `401` is listed when the route of the operation runs `auth` or `auth:<guard>` and does not exclude it: a metric declared with `->withoutMiddleware('auth')` on a resource behind `auth` has no `401`. Before, Scramble listed `401` on resources without `auth` too.
+- `403` and `404` are listed on every operation of the package, `422` on every operation that reads a body: all but details and batch progress. Before, `422` was listed on details and batch progress, and `403` and `404` nowhere.
+- An operation whose route does not run `auth` has `"security": []`, so a security scheme that the application declares for the whole document does not apply to it. The package declares no scheme: declare yours with `$openApi->secure(...)` in a document transformer.
+- Two different components under one name, for example a response named `RestNotFound` that the application defines, throw `Lomkit\Rest\Exceptions\InvalidDocumentationException` when the document is generated: "The OpenAPI response component [RestNotFound] of [Lomkit\Rest\Scramble\ErrorResponses] is already defined differently by [the application]. Give one of them another name."
 
 ### Framework integration
 

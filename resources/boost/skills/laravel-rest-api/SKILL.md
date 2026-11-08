@@ -57,7 +57,7 @@ Use this skill when working with the `lomkit/laravel-rest-api` package — build
   php artisan rest:response UserResponse
   ```
 
-- **OpenAPI documentation**: native Scramble extension (`LomkitLaravelRestApiOperationExtension`) infers docs from Resources.
+- **OpenAPI documentation**: Scramble documents every endpoint of the resources; the package registers its documentation itself.
 - **Precognition**: live form validation (`Precognition: true` header) short-circuits the request after validation when `rest.precognition.enabled = true`.
 - **Request size limits**: each list of a request accepts a limited number of entries, filters nest up to 1 level and includes and relation operations up to 3 levels, two totals bound one search and one request, and a pattern of `like` or `ilike` takes a limited number of characters, all set in `rest.limits` (`config/rest.php`): `sizes` for the lists, `depths` for the nesting of filters, includes and relations, `totals` for the two totals, `lengths` for the patterns. A pattern over its length is a `422` on its value. A list over its limit is one `422` on that list.
 
@@ -1038,13 +1038,21 @@ Use sparingly — overriding the response can bypass authorization shaping and f
 
 ## OpenAPI documentation
 
-The package documents its endpoints through a Scramble extension.
+The package documents its endpoints through Scramble.
 
 ```bash
-composer require dedoc/scramble:^0.13
+composer require dedoc/scramble:^0.13.48
 ```
 
-The package registers the extension itself: `config/scramble.php` needs no change.
+The package registers its documentation itself: `config/scramble.php` needs no change. The document is the same for every reader: the package reads the declarations of each resource as a guest, without a user. It documents one operation for each route of an action or a metric, and leaves out the routes `{resource}/actions/{action}` and `{resource}/metrics/{metric}` that only answer an unknown name. The package writes the responses of its operations; Scramble keeps inferring the responses of the other routes of the application.
+
+Each operation of the package lists the shared error responses of `components.responses`: `RestUnauthenticated` (`401`) when its route runs the `auth` middleware, `RestForbidden` (`403`) and `RestNotFound` (`404`) on every operation, and `RestValidationFailed` (`422`) on the operations that read a body (all but details and batch progress). An operation whose route does not run `auth` has `"security": []`. The application declares its security scheme:
+
+```php
+Scramble::configure()->withDocumentTransformers(function (OpenApi $openApi): void {
+    $openApi->secure(SecurityScheme::http('bearer'));
+});
+```
 
 Docs are served at `/docs/api`. Fields, validation rules, relations, search filters, and mutate payloads are inferred automatically from the resources. The search `filters` list the filterable fields (dotted paths are not listed) and every `FilterOperator`. The search `text` (with the `mode`s of its strategy), `trashed` (on `SoftDeletes` models) and the `@relevance` sort only appear on the resources that support them. The mutate `attributes` list the writable fields only, with their field and resource rules for `create` and `update`. Relations come from the relation objects of `relations()` (their class name, `mutationOperations()` and number of entries), and the `pivot` of a many-to-many entry lists the writable pivot fields with their rules for `create` and `attach`, then `update`, `sync` and `toggle`. The details response is documented with its entries: the field entries, the relations with `pivot_fields`, `types` and `morph`, the rules, `text`, `gates`, and the input entries of actions, instructions and scopes.
 
@@ -1102,5 +1110,5 @@ Set `rest.precognition.enabled = true` (default `false`). Clients send `Precogni
 - Relations — `src/Relations/*.php` (the relation classes follow the Eloquent hierarchy: `MorphTo` extends `BelongsTo`, `MorphToMany` and `MorphedByMany` extend `BelongsToMany`, `HasOne`, `HasMany`, `MorphOne` and `MorphMany` extend `HasOneOrMany`, the through relations extend `HasOneOrManyThrough`) (`MorphColumns`, the columns of a `MorphTo` in the details); `src/Contracts/PolymorphicRelation.php` and `src/Relations/MorphTargets.php` (the targets of a `MorphTo`, by morph type); `src/Contracts/OwnerRelation.php` (`BelongsTo` and `MorphTo`: one row per parent, no include limit); pivot fields in `src/Concerns/Relations/HasPivotFields.php` (`src/Contracts/PivotRelation.php`), validated by `src/Validation/Mutate/EntryRules.php`
 - Validation of the request bodies — the parsers in `src/Validation/{Search,Operate,Mutate}/*` (the search parser with `SearchGrammar`, `SqlSearchGrammar` (with `SortPaths`, the sort names of a level and its relation paths) and `LevelBounds`, the bounds of a level, and `RowKeys`, the keys of a row, read by the `IncludeAlias` and `AggregateAlias` rules), the typed nodes in `src/Search/*` (with the sort nodes `FieldSort`, `RelationSort`, `AggregateSort` and `RelevanceSort`, `AggregateKey`, and `SearchContext`, which `FilterFlattener` builds from the filters as `FlatFilter` entries), `EngineFilterCondition` and `EngineSort` in `src/Text/Engine/`, `src/Actions/OperationNode.php` and `src/Mutations/*` (`MutationNode`, `MutationContext`, `Contextual`, `MutationAwareRule`), and `src/Validation/{ValidationContext,Vocabulary,ParsedRules,PayloadReader,InputSet,CompiledRules,MessageBook}.php`
 - Request limits and resource keys — `src/Validation/{Limits,ListSizes,Depths,Totals,LimitGroup,NodeBudget,Cursor,Violation,Violations,Rejected,KeysGrammar,KeyList,KeyLookup,KeyRead,ExistingKey}.php` and `src/Http/Requests/Traits/ParsesResourceKeys.php` (the `resources` of the deletion requests, whose key query loads their rows; the operate parser reads the `resources` of the actions with the `Resources` target)
-- Scramble extension — `src/Scramble/LomkitLaravelRestApiOperationExtension.php`, with `RelationMutationType` (a relation entry), `WritableFieldsType` (writable fields per operation), `RuleType` (the type a rule list implies), `TextSearchType` (`search.text`, `search.trashed` and the `@relevance` sort), `EngineTextType` (`search.text` of a `ScoutEngine` resource), `DetailsResponseType` (the details response) and `DetailsEntryTypes` (its entries)
+- OpenAPI documentation — `src/Scramble/RestOperations.php` (the Scramble operation transformer: it builds a `DocumentationContext` as a guest for each route of the package and hands the operation to the documenter of its endpoint in `src/Scramble/Endpoints/`, `EndpointDocumenters`) and `src/Scramble/RestDocument.php` (the document transformer: it leaves out the catch-all routes), `ErrorResponses` (the shared error responses) and `ComponentRegistry` (one name per component of the document), with `Schemas` (the shared object, list and request body builders), `RelationMutationType` (a relation entry), `WritableFieldsType` (writable fields per operation), `RuleType` (the type a rule list implies), `TextSearchType` (`search.text`, `search.trashed` and the `@relevance` sort), `EngineTextType` (`search.text` of a `ScoutEngine` resource), `DetailsResponseType` (the details response) and `DetailsEntryTypes` (its entries)
 - Generator stubs — `src/Console/stubs/*.stub`

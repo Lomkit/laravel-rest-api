@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Scramble;
 
 use Dedoc\Scramble\Generator;
-use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\ScrambleServiceProvider;
 use Lomkit\Rest\RestServiceProvider;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
@@ -12,14 +11,6 @@ use Lomkit\Rest\Tests\PackageTestCase;
 
 abstract class ScrambleTestCase extends PackageTestCase
 {
-    #[\Override]
-    protected function setUp(): void
-    {
-        Scramble::$extensions = [];
-
-        parent::setUp();
-    }
-
     #[\Override]
     protected function fixtures(): array
     {
