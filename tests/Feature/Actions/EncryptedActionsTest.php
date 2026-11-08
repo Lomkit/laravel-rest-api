@@ -44,7 +44,7 @@ class EncryptedActionsTest extends PackageTestCase
     {
         parent::setUp();
 
-        QueuedRuns::$runs = [];
+        QueuedRuns::reset();
         Rest::resource('staff-documents', StaffDocumentController::class)->register();
         Gate::policy(Document::class, StaffArchivePolicy::class);
         Document::create(['id' => 1, 'title' => 'Budget']);

@@ -60,8 +60,7 @@ class QueuedActionsTest extends PackageTestCase
     {
         parent::setUp();
 
-        QueuedRuns::$runs = [];
-        StaffDocumentResource::$exports = true;
+        QueuedRuns::reset();
         Rest::resource('staff-documents', StaffDocumentController::class)
             ->withSoftDeletes()
             ->register();
