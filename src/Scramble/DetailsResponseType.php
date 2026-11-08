@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Scramble;
 use Dedoc\Scramble\Support\Generator\Operation;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
+use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
@@ -16,6 +17,7 @@ use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Text\TextMode;
+use ReflectionMethod;
 
 final class DetailsResponseType
 {
@@ -45,7 +47,21 @@ final class DetailsResponseType
             'text' => self::text(),
             'gates' => Schemas::list((new StringType)->enum($resource->isGatingEnabled() ? $definition->gates()->names() : []), 'The abilities that search.gates accepts: the built-in ones, then those that the resource declares; empty when the resource turns its gates off'),
             'authorizations' => self::authorizations(),
+            'meta' => self::meta($resource),
         ]);
+    }
+
+    private static function meta(Resource $resource): ObjectType
+    {
+        if ((new ReflectionMethod($resource, 'detailsMeta'))->class === Resource::class) {
+            return Schemas::closed([], description: 'Empty: the resource adds no keys with detailsMeta()');
+        }
+
+        $meta = new ObjectType;
+        $meta->additionalProperties(new MixedType);
+        $meta->setDescription('The keys that detailsMeta() of the resource returns for the user of the request');
+
+        return $meta;
     }
 
     private static function authorizations(): ObjectType

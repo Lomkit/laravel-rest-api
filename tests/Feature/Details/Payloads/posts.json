@@ -60,5 +60,6 @@
   "rules": {"all": {}, "create": {}, "update": {}},
   "text": null,
   "gates": ["view", "create", "update", "delete", "restore", "forceDelete"],
-  "authorizations": {"viewAny": {"allowed": true, "message": null}, "create": {"allowed": true, "message": null}}
+  "authorizations": {"viewAny": {"allowed": true, "message": null}, "create": {"allowed": true, "message": null}},
+  "meta": {}
 }}

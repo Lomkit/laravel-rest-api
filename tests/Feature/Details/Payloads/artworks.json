@@ -30,5 +30,6 @@
   "rules": {"all": {}, "create": {"price": ["required", "min:0"]}, "update": {}},
   "text": {"fields": ["title"], "modes": ["words", "phrase"], "relevance": false, "trashed": false, "max_length": 255, "engine": null},
   "gates": ["view", "create", "update", "delete", "restore", "forceDelete"],
-  "authorizations": {"viewAny": {"allowed": true, "message": null}, "create": {"allowed": true, "message": null}}
+  "authorizations": {"viewAny": {"allowed": true, "message": null}, "create": {"allowed": true, "message": null}},
+  "meta": {}
 }}

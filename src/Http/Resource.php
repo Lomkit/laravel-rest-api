@@ -101,6 +101,12 @@ class Resource implements \JsonSerializable
     }
 
     /** @return array<string, mixed> */
+    public function detailsMeta(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, mixed> */
     #[\Override]
     public function jsonSerialize(): mixed
     {
@@ -119,6 +125,7 @@ class Resource implements \JsonSerializable
             'text' => $this->context()->text($this)->capabilities?->jsonSerialize(),
             'gates' => $this->isGatingEnabled() ? $definition->gates()->names() : [],
             'authorizations' => $authorizations->jsonSerialize(),
+            'meta' => (object) $this->detailsMeta(),
         ];
     }
 }

@@ -103,6 +103,12 @@ class ShowResource extends Resource
     }
 
     #[\Override]
+    public function detailsMeta(): array
+    {
+        return ['label' => 'Shows', 'default_sort' => ['field' => 'starts_on', 'direction' => 'desc']];
+    }
+
+    #[\Override]
     public function gates(): array
     {
         return ['feature'];
