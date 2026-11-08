@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Fields;
 
+use Dedoc\Scramble\Support\Generator\Types\ObjectType;
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Database\Eloquent\Casts\AsStringable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Stringable;
@@ -59,6 +61,12 @@ class Json extends Field
     public function type(): string
     {
         return 'json';
+    }
+
+    #[\Override]
+    public function toSchema(): Type
+    {
+        return new ObjectType;
     }
 
     #[\Override]

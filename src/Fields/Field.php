@@ -2,11 +2,14 @@
 
 namespace Lomkit\Rest\Fields;
 
+use Dedoc\Scramble\Support\Generator\Types\StringType;
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
+use Lomkit\Rest\Fields\Concerns\ConfiguresExamples;
 use Lomkit\Rest\Fields\Concerns\ConfiguresFiltering;
 use Lomkit\Rest\Fields\Concerns\ConfiguresMessages;
 use Lomkit\Rest\Fields\Concerns\ConfiguresReading;
@@ -17,6 +20,7 @@ use Lomkit\Rest\Fields\Filtering\FilterOperator;
 
 abstract class Field
 {
+    use ConfiguresExamples;
     use ConfiguresFiltering;
     use ConfiguresMessages;
     use ConfiguresReading;
@@ -50,6 +54,11 @@ abstract class Field
     public function type(): string
     {
         return Str::snake(class_basename(static::class));
+    }
+
+    public function toSchema(): Type
+    {
+        return new StringType;
     }
 
     public function bind(Model $model): void {}

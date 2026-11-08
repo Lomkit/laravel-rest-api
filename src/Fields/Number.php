@@ -2,6 +2,9 @@
 
 namespace Lomkit\Rest\Fields;
 
+use Dedoc\Scramble\Support\Generator\Types\NumberType;
+use Dedoc\Scramble\Support\Generator\Types\Type;
+
 class Number extends Field
 {
     #[\Override]
@@ -20,5 +23,11 @@ class Number extends Field
     public function type(): string
     {
         return 'number';
+    }
+
+    #[\Override]
+    public function toSchema(): Type
+    {
+        return new NumberType;
     }
 }

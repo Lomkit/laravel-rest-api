@@ -3,6 +3,8 @@
 namespace Lomkit\Rest\Fields;
 
 use DateTimeInterface;
+use Dedoc\Scramble\Support\Generator\Types\StringType;
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
@@ -24,6 +26,12 @@ class Date extends Field
     public function type(): string
     {
         return 'date';
+    }
+
+    #[\Override]
+    public function toSchema(): Type
+    {
+        return (new StringType)->format('date');
     }
 
     #[\Override]

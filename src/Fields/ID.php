@@ -2,6 +2,9 @@
 
 namespace Lomkit\Rest\Fields;
 
+use Dedoc\Scramble\Support\Generator\Types\IntegerType;
+use Dedoc\Scramble\Support\Generator\Types\StringType;
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -62,6 +65,16 @@ class ID extends Field
     public function type(): string
     {
         return 'id';
+    }
+
+    #[\Override]
+    public function toSchema(): Type
+    {
+        return match ($this->resolvedKeyType()) {
+            'int' => new IntegerType,
+            'uuid' => (new StringType)->format('uuid'),
+            'string', 'ulid' => new StringType,
+        };
     }
 
     public function parseKey(mixed $value): int|string|null

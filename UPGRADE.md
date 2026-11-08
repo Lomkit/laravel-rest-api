@@ -278,6 +278,22 @@ A resource holds no request state. Its context evaluates `fields()`, `scopes()`,
 - `rest:resource` generates `ID::make()` with the key name of the model, `ID::make('id')` by default. See [Generators](#generators).
 - `Lomkit\Rest\Fields\DateTime` has the same short name as PHP's `\DateTime`. In a file that uses both, alias one of them.
 - A field can declare `label()` and `messages()`. The label names the field's key in validation messages, and the messages replace Laravel's text for the rules of that key. See "Labels and messages" in [Validation engine](#validation-engine).
+- A field gives its OpenAPI type with `toSchema()`, which returns a Scramble type (`Dedoc\Scramble\Support\Generator\Types\Type`): `ID` an `integer` or a `string` from the key type (`format: uuid` for a UUID key), `Text` a `string`, `Number` a `number`, `Integer` an `integer`, `Boolean` a `boolean`, `Date` a `string` with `format: date`, `DateTime` a `string` with `format: date-time`, `Enum` an `enum` of its backing values, `Json` an `object`. The document adds `null` for a `nullable()` field and the `meta()` of the field under `x-lomkit-meta`. A field type of the application documents a `string` until it overrides `toSchema()`. The package reads it only when Scramble builds the document:
+
+  ```php
+  use Dedoc\Scramble\Support\Generator\Types\NumberType;
+  use Dedoc\Scramble\Support\Generator\Types\Type;
+
+  class Money extends Field
+  {
+      public function toSchema(): Type
+      {
+          return new NumberType;
+      }
+  }
+  ```
+
+- `examples(...$values)` gives the example values of a field, which its OpenAPI type lists under `examples`: `Text::make('title')->examples('Weekly report')`, `Text::make('priority')->examples('low', 'normal', 'urgent')`. Each call replaces the list. A value is an integer, a float, a string, a boolean, an array or `null`, and is not checked when the field is declared. An `Enum` field lists its cases in `enum` and needs no example. The request examples of the document use the first value.
 
 ### Typed inputs
 
