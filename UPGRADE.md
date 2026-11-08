@@ -543,7 +543,28 @@ A queued or batched action no longer serializes its resource, its rows and its i
   ```
 
   An action that implements `ShouldQueue` and runs with `Whole` throws `Lomkit\Rest\Exceptions\InvalidActionException` when the resource's actions are read: "App\Rest\Actions\ExportOrders runs its chunks in one transaction (ActionTransaction::Whole), but it implements ShouldQueue: its chunks run in the worker, outside the request."
-- An action that already defines `atomic()`, `withoutTransaction()` or a `$transaction` property gives them this signature and this meaning.
+- `ActionTransaction::Row`, or `->transactionPerRow()` when the resource declares the action, runs each row in its own transaction, in the request and in the jobs of a queued action, whatever `$chunkCount`. The rows reach `handleRow(ActionFields $fields, Model $row): void`, inside the transaction of the row, instead of `handle()`; `beforeRow(ActionFields $fields, Model $row): void` runs just before, outside any transaction, for a call to an external service. When a row throws, its transaction is rolled back, the run (or the job) stops there and the rows before it stay written. A deadlock runs the transaction of the row again, `handleRow()` included, but not `beforeRow()`.
+
+  ```php
+  use Illuminate\Database\Eloquent\Model;
+  use Lomkit\Rest\Actions\ActionFields;
+  use Lomkit\Rest\Actions\ActionTransaction;
+
+  public ActionTransaction $transaction = ActionTransaction::Row;
+
+  public function beforeRow(ActionFields $fields, Model $row): void
+  {
+      $this->billing->reserveInvoiceNumber($row);
+  }
+
+  public function handleRow(ActionFields $fields, Model $row): void
+  {
+      $row->update(['status' => 'invoiced']);
+  }
+  ```
+
+  An action with `Row` throws `Lomkit\Rest\Exceptions\InvalidActionException` when the resource's actions are read if it does not declare `handleRow()`, if it declares `handle()`, or if its target is `None`, and so does an action that declares `handleRow()` or `beforeRow()` without `Row`: "App\Rest\Actions\InvoiceOrders runs each row in its own transaction (ActionTransaction::Row), but it does not declare handleRow(): with Row, each row reaches handleRow(ActionFields $fields, Model $row) instead of handle()."
+- An action that already defines `atomic()`, `transactionPerRow()`, `withoutTransaction()`, `beforeRow()`, `handleRow()` or a `$transaction` property gives them this signature and this meaning.
 - A batched action (`BatchableAction`) gives the id of its batch in the response, between `impacted` and `result`:
 
   ```json

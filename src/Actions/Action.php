@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Actions;
 
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\PendingBatch;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
@@ -14,7 +13,6 @@ use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Concerns\HasRouteMiddleware;
 use Lomkit\Rest\Concerns\Makeable;
 use Lomkit\Rest\Concerns\Resourcable;
-use Lomkit\Rest\Exceptions\InvalidActionException;
 use Lomkit\Rest\Fields\Concerns\HasInputFields;
 use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Http\Details\DetailsSelection;
@@ -108,6 +106,13 @@ class Action
         return $this;
     }
 
+    public function transactionPerRow(): static
+    {
+        $this->transaction = ActionTransaction::Row;
+
+        return $this;
+    }
+
     public function withoutTransaction(): static
     {
         $this->transaction = ActionTransaction::None;
@@ -146,19 +151,7 @@ class Action
 
     public function ensureValid(): static
     {
-        $ability = $this->authorizeEach();
-
-        if ($ability === null && $this->skipUnauthorized) {
-            throw InvalidActionException::skipWithoutAbility(static::class);
-        }
-
-        if ($ability !== null && $this->target === ActionTarget::None) {
-            throw InvalidActionException::abilityWithoutRows(static::class, $ability);
-        }
-
-        if ($this->transaction === ActionTransaction::Whole && $this instanceof ShouldQueue) {
-            throw InvalidActionException::wholeTransactionQueued(static::class);
-        }
+        (new ActionDeclaration($this))->check();
 
         return $this;
     }
@@ -180,6 +173,10 @@ class Action
 
     /** @param Collection<array-key, Model> $models */
     public function handle(ActionFields $fields, Collection $models): void {}
+
+    public function beforeRow(ActionFields $fields, Model $row): void {}
+
+    public function handleRow(ActionFields $fields, Model $row): void {}
 
     public function withBatch(ActionFields $fields, PendingBatch $batch): void {}
 

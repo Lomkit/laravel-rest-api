@@ -14,6 +14,8 @@ class RetriedDocumentResource extends SecondaryDocumentResource
             RenameRetriedDocuments::make(),
             AtomicRenameRetriedDocuments::make()->atomic(),
             QueuedRenameRetriedDocuments::make(),
+            RenameRetriedDocumentsPerRow::make()->transactionPerRow(),
+            QueuedRenameRetriedDocumentsPerRow::make()->transactionPerRow(),
         ];
     }
 
