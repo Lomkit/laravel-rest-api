@@ -275,7 +275,7 @@ class MetricCacheTest extends SalesTestCase
 
     #[Test]
     #[DataProvider('settings')]
-    public function it_keeps_the_result_of_each_setting_apart(Closure $first, Closure $second, string $key, string $before, string $after): void
+    public function it_keeps_the_result_of_each_setting_apart(Closure $first, Closure $second, string $key, string $before, string $after, int $statements): void
     {
         $this->serve($first());
         $this->logQueries();
@@ -285,10 +285,10 @@ class MetricCacheTest extends SalesTestCase
         $contents[] = $this->metric($key)->getContent();
 
         $this->assertSame([$before, $after], $contents);
-        $this->assertSame(2, $this->orderStatements());
+        $this->assertSame($statements, $this->orderStatements());
     }
 
-    /** @return iterable<string, array{Closure(): Metric, Closure(): Metric, string, string, string}> */
+    /** @return iterable<string, array{Closure(): Metric, Closure(): Metric, string, string, string, int}> */
     public static function settings(): iterable
     {
         yield 'a limit' => [
@@ -297,6 +297,7 @@ class MetricCacheTest extends SalesTestCase
             'orders-by-status',
             self::BY_STATUS,
             '{"data":{"type":"partition","parts":[{"key":"paid","label":"Paid","value":4}],"other":{"label":"Other","value":3}}}',
+            3,
         ];
         yield 'a week start' => [
             fn (): Metric => WeeklyOrders::make()->cacheFor(600),
@@ -304,6 +305,7 @@ class MetricCacheTest extends SalesTestCase
             'weekly-orders',
             '{"data":{"type":"trend","series":[{"label":"2026-10-26","value":1},{"label":"2026-11-02","value":0}]}}',
             '{"data":{"type":"trend","series":[{"label":"2026-10-25","value":0},{"label":"2026-11-01","value":1}]}}',
+            2,
         ];
     }
 

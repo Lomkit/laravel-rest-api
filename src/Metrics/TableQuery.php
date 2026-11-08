@@ -4,7 +4,7 @@ namespace Lomkit\Rest\Metrics;
 
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Lomkit\Rest\Fields\SortDirection;
-use Lomkit\Rest\Query\Expressions\NullsLast;
+use Lomkit\Rest\Metrics\Grouping\GroupOrder;
 
 final readonly class TableQuery
 {
@@ -28,17 +28,8 @@ final readonly class TableQuery
         }
 
         $order = $this->columns[$orderBy];
-        $rank = $order->rank($orderBy);
-
-        if ($order->nullable()) {
-            $base->orderBy(new NullsLast($rank));
-        }
-
-        $base->groupBy($this->group->column)
-            ->orderBy($rank, $direction->value)
-            ->orderBy(new NullsLast($this->group->column))
-            ->orderBy($this->group->column)
-            ->limit($limit);
+        $base->groupBy($this->group->column);
+        GroupOrder::byValue($base, $order->rank($orderBy), $order->nullable(), $this->group, $direction)->limit($limit);
 
         return array_values(array_map(fn (object $row): array => $this->row(get_object_vars($row)), $base->get()->all()));
     }

@@ -122,9 +122,9 @@ class PercentileMetricTest extends SalesTestCase
             'pgsql' => 'select percentile_cont(0.75) within group (order by "orders"."price") as "total_0" from "orders" where ("orders"."team_id" = ?)',
         ], [1]];
         yield 'a median for each group' => [OrderPartition::make('median'), 'order-partition', [
-            'sqlite' => 'select "orders"."status" as "group_key", min(case when abs("rest_offset_group") < 1 then "orders"."price" end) + max(case when abs("rest_offset_group") < 1 then "rest_offset_group" end) * (max(case when abs("rest_offset_group") < 1 then "orders"."price" end) - min(case when abs("rest_offset_group") < 1 then "orders"."price" end)) as "group_0" from (select "orders".*, 0.5 * (count("orders"."price") over (partition by "orders"."status") - 1) - row_number() over (partition by "orders"."status" order by case when "orders"."price" is null then 1 else 0 end, "orders"."price") + 1 as "rest_offset_group" from "orders" where ("orders"."team_id" = ?)) as "orders" group by "orders"."status"',
-            'mysql' => 'select `orders`.`status` as `group_key`, min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) + max(case when abs(`rest_offset_group`) < 1 then `rest_offset_group` end) * (max(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) - min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end)) as `group_0` from (select `orders`.*, 0.5 * (count(`orders`.`price`) over (partition by `orders`.`status`) - 1) - row_number() over (partition by `orders`.`status` order by case when `orders`.`price` is null then 1 else 0 end, `orders`.`price`) + 1 as `rest_offset_group` from `orders` where (`orders`.`team_id` = ?)) as `orders` group by `orders`.`status`',
-            'pgsql' => 'select "orders"."status" as "group_key", percentile_cont(0.5) within group (order by "orders"."price") as "group_0" from "orders" where ("orders"."team_id" = ?) group by "orders"."status"',
+            'sqlite' => 'select "orders"."status" as "group_key", min(case when abs("rest_offset_group") < 1 then "orders"."price" end) + max(case when abs("rest_offset_group") < 1 then "rest_offset_group" end) * (max(case when abs("rest_offset_group") < 1 then "orders"."price" end) - min(case when abs("rest_offset_group") < 1 then "orders"."price" end)) as "group_0" from (select "orders".*, 0.5 * (count("orders"."price") over (partition by "orders"."status") - 1) - row_number() over (partition by "orders"."status" order by case when "orders"."price" is null then 1 else 0 end, "orders"."price") + 1 as "rest_offset_group" from "orders" where ("orders"."team_id" = ?)) as "orders" group by "orders"."status" order by case when min(case when abs("rest_offset_group") < 1 then "orders"."price" end) + max(case when abs("rest_offset_group") < 1 then "rest_offset_group" end) * (max(case when abs("rest_offset_group") < 1 then "orders"."price" end) - min(case when abs("rest_offset_group") < 1 then "orders"."price" end)) is null then 1 else 0 end asc, min(case when abs("rest_offset_group") < 1 then "orders"."price" end) + max(case when abs("rest_offset_group") < 1 then "rest_offset_group" end) * (max(case when abs("rest_offset_group") < 1 then "orders"."price" end) - min(case when abs("rest_offset_group") < 1 then "orders"."price" end)) desc, case when "orders"."status" is null then 1 else 0 end asc, "orders"."status" asc limit 101',
+            'mysql' => 'select `orders`.`status` as `group_key`, min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) + max(case when abs(`rest_offset_group`) < 1 then `rest_offset_group` end) * (max(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) - min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end)) as `group_0` from (select `orders`.*, 0.5 * (count(`orders`.`price`) over (partition by `orders`.`status`) - 1) - row_number() over (partition by `orders`.`status` order by case when `orders`.`price` is null then 1 else 0 end, `orders`.`price`) + 1 as `rest_offset_group` from `orders` where (`orders`.`team_id` = ?)) as `orders` group by `orders`.`status` order by case when min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) + max(case when abs(`rest_offset_group`) < 1 then `rest_offset_group` end) * (max(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) - min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end)) is null then 1 else 0 end asc, min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) + max(case when abs(`rest_offset_group`) < 1 then `rest_offset_group` end) * (max(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) - min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end)) desc, case when `orders`.`status` is null then 1 else 0 end asc, `orders`.`status` asc limit 101',
+            'pgsql' => 'select "orders"."status" as "group_key", percentile_cont(0.5) within group (order by "orders"."price") as "group_0" from "orders" where ("orders"."team_id" = ?) group by "orders"."status" order by case when percentile_cont(0.5) within group (order by "orders"."price") is null then 1 else 0 end asc, percentile_cont(0.5) within group (order by "orders"."price") desc, case when "orders"."status" is null then 1 else 0 end asc, "orders"."status" asc limit 101',
         ], [1]];
     }
 
@@ -192,7 +192,7 @@ class PercentileMetricTest extends SalesTestCase
     }
 
     #[Test]
-    public function it_groups_each_period_of_a_percentile_partition_in_its_own_query(): void
+    public function it_ranks_the_current_period_then_reads_the_previous_period_of_the_ranked_keys(): void
     {
         $this->serve(self::compared('median', 'status'));
         $this->logQueries();
@@ -200,22 +200,36 @@ class PercentileMetricTest extends SalesTestCase
         $this->metric('order-partition')->assertOk();
 
         $sql = [
-            'sqlite' => 'select "orders"."status" as "group_key", min(case when abs("rest_offset_group") < 1 then "orders"."price" end) + max(case when abs("rest_offset_group") < 1 then "rest_offset_group" end) * (max(case when abs("rest_offset_group") < 1 then "orders"."price" end) - min(case when abs("rest_offset_group") < 1 then "orders"."price" end)) as "group_0" from (select "orders".*, 0.5 * (count("orders"."price") over (partition by "orders"."status") - 1) - row_number() over (partition by "orders"."status" order by case when "orders"."price" is null then 1 else 0 end, "orders"."price") + 1 as "rest_offset_group" from "orders" where ("orders"."team_id" = ?) and %s) as "orders" group by "orders"."status"',
-            'mysql' => 'select `orders`.`status` as `group_key`, min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) + max(case when abs(`rest_offset_group`) < 1 then `rest_offset_group` end) * (max(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) - min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end)) as `group_0` from (select `orders`.*, 0.5 * (count(`orders`.`price`) over (partition by `orders`.`status`) - 1) - row_number() over (partition by `orders`.`status` order by case when `orders`.`price` is null then 1 else 0 end, `orders`.`price`) + 1 as `rest_offset_group` from `orders` where (`orders`.`team_id` = ?) and %s) as `orders` group by `orders`.`status`',
-            'pgsql' => 'select "orders"."status" as "group_key", percentile_cont(0.5) within group (order by "orders"."price") as "group_0" from "orders" where ("orders"."team_id" = ?) and %s group by "orders"."status"',
+            'sqlite' => 'select "orders"."status" as "group_key", min(case when abs("rest_offset_group") < 1 then "orders"."price" end) + max(case when abs("rest_offset_group") < 1 then "rest_offset_group" end) * (max(case when abs("rest_offset_group") < 1 then "orders"."price" end) - min(case when abs("rest_offset_group") < 1 then "orders"."price" end)) as "group_0" from (select "orders".*, 0.5 * (count("orders"."price") over (partition by "orders"."status") - 1) - row_number() over (partition by "orders"."status" order by case when "orders"."price" is null then 1 else 0 end, "orders"."price") + 1 as "rest_offset_group" from "orders" where ("orders"."team_id" = ?) and %s) as "orders" group by "orders"."status"%s',
+            'mysql' => 'select `orders`.`status` as `group_key`, min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) + max(case when abs(`rest_offset_group`) < 1 then `rest_offset_group` end) * (max(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) - min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end)) as `group_0` from (select `orders`.*, 0.5 * (count(`orders`.`price`) over (partition by `orders`.`status`) - 1) - row_number() over (partition by `orders`.`status` order by case when `orders`.`price` is null then 1 else 0 end, `orders`.`price`) + 1 as `rest_offset_group` from `orders` where (`orders`.`team_id` = ?) and %s) as `orders` group by `orders`.`status`%s',
+            'pgsql' => 'select "orders"."status" as "group_key", percentile_cont(0.5) within group (order by "orders"."price") as "group_0" from "orders" where ("orders"."team_id" = ?) and %s group by "orders"."status"%s',
         ];
         $windows = [
             'sqlite' => ['"orders"."placed_at" between ? and ?', '"orders"."placed_at" >= ? and "orders"."placed_at" < ?'],
             'mysql' => ['`orders`.`placed_at` between ? and ?', '`orders`.`placed_at` >= ? and `orders`.`placed_at` < ?'],
             'pgsql' => ['"orders"."placed_at" between ? and ?', '"orders"."placed_at" >= ? and "orders"."placed_at" < ?'],
         ];
+        $ranks = [
+            'sqlite' => ['min(case when abs("rest_offset_group") < 1 then "orders"."price" end) + max(case when abs("rest_offset_group") < 1 then "rest_offset_group" end) * (max(case when abs("rest_offset_group") < 1 then "orders"."price" end) - min(case when abs("rest_offset_group") < 1 then "orders"."price" end))', '"orders"."status"'],
+            'mysql' => ['min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) + max(case when abs(`rest_offset_group`) < 1 then `rest_offset_group` end) * (max(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end) - min(case when abs(`rest_offset_group`) < 1 then `orders`.`price` end))', '`orders`.`status`'],
+            'pgsql' => ['percentile_cont(0.5) within group (order by "orders"."price")', '"orders"."status"'],
+        ];
         $driver = DB::connection()->getDriverName();
+        [$rank, $status] = $ranks[$driver];
+        [$current, $previous] = $windows[$driver];
+        $byValue = " order by case when {$rank} is null then 1 else 0 end asc, {$rank} desc, case when {$status} is null then 1 else 0 end asc, {$status} asc limit 101";
+        $byKey = " order by case when {$status} is null then 1 else 0 end asc, {$status} asc limit 101";
         $queries = DB::getQueryLog();
-        $this->assertCount(2, $queries);
-        $this->assertSame(sprintf($sql[$driver], $windows[$driver][0]), $queries[0]['query']);
-        $this->assertSame([1, '2026-10-08 12:00:00', '2026-11-07 12:00:00'], $queries[0]['bindings']);
-        $this->assertSame(sprintf($sql[$driver], $windows[$driver][1]), $queries[1]['query']);
-        $this->assertSame([1, '2026-09-08 12:00:00', '2026-10-08 12:00:00'], $queries[1]['bindings']);
+        $this->assertSame([
+            sprintf($sql[$driver], $current, $byValue),
+            sprintf($sql[$driver], "{$previous} and {$status} in (?, ?)", ''),
+            sprintf($sql[$driver], "{$previous} and ({$status} not in (?, ?) or {$status} is null)", $byKey),
+        ], array_column($queries, 'query'));
+        $this->assertSame([
+            [1, '2026-10-08 12:00:00', '2026-11-07 12:00:00'],
+            [1, '2026-09-08 12:00:00', '2026-10-08 12:00:00', 'pending', 'paid'],
+            [1, '2026-09-08 12:00:00', '2026-10-08 12:00:00', 'pending', 'paid'],
+        ], array_column($queries, 'bindings'));
     }
 
     /** @param array<string, mixed> $data */

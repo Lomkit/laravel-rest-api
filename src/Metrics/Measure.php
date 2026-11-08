@@ -19,13 +19,11 @@ interface Measure
     public function periods(Builder $query, MetricColumn $date, RangePeriods $periods): array;
 
     /** @param Builder<Model> $query */
-    public function groups(Builder $query, MetricColumn $group): GroupValues;
+    public function comparedGroups(Builder $query, MetricColumn $group, MetricColumn $date, RangePeriods $periods, int $limit): ComparedGroups;
 
-    /** @param Builder<Model> $query */
-    public function comparedGroups(Builder $query, MetricColumn $group, MetricColumn $date, RangePeriods $periods): ComparedGroups;
+    public function single(QueryBuilder $filtered): int|float|null;
 
-    /** @param Builder<Model> $query */
-    public function trend(Builder $query, Periods $periods, ?MetricColumn $split): PeriodValues;
+    public function empty(): int|float|null;
 
     /** @param list<Expression|string> $partition */
     public function rows(QueryBuilder $base, string $alias, array $partition): QueryBuilder;

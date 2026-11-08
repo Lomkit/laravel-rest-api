@@ -5,15 +5,15 @@ namespace Lomkit\Rest\Metrics;
 final readonly class ComparedGroups
 {
     public function __construct(
-        private GroupValues $current,
-        private ?GroupValues $previous,
+        private RankedGroups $current,
+        private ?RankedGroups $previous,
     ) {}
 
     /** @return list<PartitionPart> */
     public function parts(MetricColumn $group): array
     {
-        $current = $this->current->groups();
-        $previous = $this->previous?->groups() ?? [];
+        $current = $this->current->groups;
+        $previous = $this->previous->groups ?? [];
         $parts = array_map(fn (array $row): PartitionPart => new PartitionPart($row['key'], $group->label($row['key']), $row['value'], true, self::find($previous, $row['key'])), $current);
         $keys = array_map(fn (PartitionPart $part): int|string|bool|null => $part->key, $parts);
 

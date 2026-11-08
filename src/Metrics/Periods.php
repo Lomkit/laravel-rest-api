@@ -70,6 +70,7 @@ final readonly class Periods
         return $query->clone()
             ->toBase()
             ->reorder()
+            ->select([])
             ->whereBetween($this->date->column, [$this->stored($this->from), $this->stored($this->to)]);
     }
 

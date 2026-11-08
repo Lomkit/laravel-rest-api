@@ -31,6 +31,7 @@ class LimitsTest extends TestCase
         $this->assertSame(1000, $limits->sizes->resources);
         $this->assertSame(100, $limits->sizes->jobs);
         $this->assertSame(10000, $limits->sizes->rows);
+        $this->assertSame(100, $limits->sizes->groups);
         $this->assertSame(['filters' => 1, 'includes' => 3, 'mutations' => 3], get_object_vars($limits->depths));
         $this->assertSame(['filters' => 500, 'entries' => 1000, 'relations' => 20, 'patterns' => 10], get_object_vars($limits->totals));
         $this->assertSame(['patterns' => 255, 'values' => 1000], get_object_vars($limits->lengths));
@@ -164,12 +165,30 @@ class LimitsTest extends TestCase
     }
 
     #[Test]
+    public function it_reads_the_group_size(): void
+    {
+        $this->assertSame(42, Limits::fromConfig($this->withLimit('sizes', 'groups', '42'))->sizes->groups);
+        $this->assertSame(1, Limits::fromConfig($this->withLimit('sizes', 'groups', 1))->sizes->groups);
+    }
+
+    #[Test]
     #[DataProvider('invalidPositiveTotals')]
     public function it_refuses_rows_that_are_not_an_integer_of_one_or_more(bool $present, mixed $value): void
     {
         $config = $present ? $this->withLimit('sizes', 'rows', $value) : $this->withoutLimit('sizes', 'rows');
 
         $this->expectExceptionObject(new InvalidArgumentException('The [rest.limits.sizes.rows] option must be an integer of 1 or more.'));
+
+        Limits::fromConfig($config);
+    }
+
+    #[Test]
+    #[DataProvider('invalidPositiveTotals')]
+    public function it_refuses_a_group_size_that_is_not_an_integer_of_one_or_more(bool $present, mixed $value): void
+    {
+        $config = $present ? $this->withLimit('sizes', 'groups', $value) : $this->withoutLimit('sizes', 'groups');
+
+        $this->expectExceptionObject(new InvalidArgumentException('The [rest.limits.sizes.groups] option must be an integer of 1 or more.'));
 
         Limits::fromConfig($config);
     }

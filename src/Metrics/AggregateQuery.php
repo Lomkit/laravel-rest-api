@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Lomkit\Rest\Metrics\Grouping\AggregateRank;
+use Lomkit\Rest\Metrics\Grouping\GroupOrder;
 use Lomkit\Rest\Query\Expressions\AggregateSelect;
 
 final readonly class AggregateQuery implements Measure
@@ -66,22 +67,7 @@ final readonly class AggregateQuery implements Measure
     }
 
     #[\Override]
-    public function groups(Builder $query, MetricColumn $group): PartialGroups
-    {
-        $base = self::base($query);
-        $base->addSelect("{$group->column} as group_key");
-        $this->select($base, 'group');
-        $base->groupBy($group->column);
-
-        return new PartialGroups($this->function, $this->integer(), array_values(array_map(function (object $row) use ($group): array {
-            $values = get_object_vars($row);
-
-            return ['key' => $group->key($values['group_key'] ?? null), 'partials' => $this->partials($values, 'group')];
-        }, $base->get()->all())));
-    }
-
-    #[\Override]
-    public function comparedGroups(Builder $query, MetricColumn $group, MetricColumn $date, RangePeriods $periods): ComparedGroups
+    public function comparedGroups(Builder $query, MetricColumn $group, MetricColumn $date, RangePeriods $periods, int $limit): ComparedGroups
     {
         $base = self::window(self::base($query), $query, $date, $periods->from, $periods->to);
         $base->addSelect("{$group->column} as group_key");
@@ -89,6 +75,9 @@ final readonly class AggregateQuery implements Measure
         $rows = new self(Aggregate::Count, null);
         $rows->compare($base, $query, $date, $periods, '_rows');
         $base->groupBy($group->column);
+        GroupOrder::byValue($base, new AggregateRank($this->function, $this->column?->column, $date->column), true, $group)
+            ->limit($limit + 1)
+            ->addBinding(array_fill(0, 4, self::stored($query, $periods->split)), 'order');
         $current = [];
         $previous = [];
 
@@ -97,35 +86,32 @@ final readonly class AggregateQuery implements Measure
             $key = $group->key($values['group_key'] ?? null);
 
             if ($rows->value($values, 'current_rows') !== 0) {
-                $current[] = ['key' => $key, 'partials' => $this->partials($values, 'current')];
+                $current[] = ['key' => $key, 'value' => $this->value($values, 'current')];
             }
 
             if ($rows->value($values, 'previous_rows') !== 0) {
-                $previous[] = ['key' => $key, 'partials' => $this->partials($values, 'previous')];
+                $previous[] = ['key' => $key, 'value' => $this->value($values, 'previous')];
             }
         }
 
-        return new ComparedGroups(new PartialGroups($this->function, $this->integer(), $current), new PartialGroups($this->function, $this->integer(), $previous));
+        return new ComparedGroups(new RankedGroups($current, $this, $periods->current($query, $date), $group), new RankedGroups($previous, $this, $periods->previous($query, $date), $group));
     }
 
     #[\Override]
-    public function trend(Builder $query, Periods $periods, ?MetricColumn $split): PartialPeriods
+    public function single(QueryBuilder $filtered): int|float|null
     {
-        $base = $periods->group($query);
+        $rows = new self(Aggregate::Count, null);
+        $this->select($filtered, 'total');
+        $rows->select($filtered, 'total_rows');
+        $row = $this->row($filtered);
 
-        if ($split !== null) {
-            $base->addSelect("{$split->column} as split_key");
-            $base->groupBy($split->column);
-        }
+        return $rows->value($row, 'total_rows') === 0 ? null : $this->value($row, 'total');
+    }
 
-        $this->select($base, 'period');
-
-        return new PartialPeriods($this->function, $this->integer(), array_values(array_map(function (object $row) use ($split): array {
-            $values = get_object_vars($row);
-            $period = $values['period'] ?? null;
-
-            return ['period' => is_string($period) ? $period : '', 'key' => $split?->key($values['split_key'] ?? null), 'partials' => $this->partials($values, 'period')];
-        }, $base->get()->all())));
+    #[\Override]
+    public function empty(): int|float|null
+    {
+        return $this->function->value($this->function->partials([null, null], $this->integer()));
     }
 
     #[\Override]

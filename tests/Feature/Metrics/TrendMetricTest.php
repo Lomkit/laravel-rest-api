@@ -94,12 +94,12 @@ class TrendMetricTest extends TrendTestCase
 
     /**
      * @param  array<string, mixed>  $body
-     * @param  array<string, string>  $sql
+     * @param  array<string, list<string>>  $sql
      * @param  list<mixed>  $bindings
      */
     #[Test]
     #[DataProvider('queries')]
-    public function it_groups_the_search_inside_the_perimeter_in_one_query(?string $splitBy, array $body, array $sql, array $bindings): void
+    public function it_groups_the_search_inside_the_perimeter(?string $splitBy, array $body, array $sql, array $bindings): void
     {
         $this->serve(OrderTrend::make('countByMonths', 'price', 'placed_at', $splitBy, [3 => '3 months']));
         $this->logQueries();
@@ -107,23 +107,34 @@ class TrendMetricTest extends TrendTestCase
         $this->metric('order-trend', $body)->assertOk();
 
         $queries = DB::getQueryLog();
-        $this->assertCount(1, $queries);
-        $this->assertSame($sql[DB::connection()->getDriverName()], $queries[0]['query']);
-        $this->assertSame($bindings, $queries[0]['bindings']);
+        $this->assertSame($sql[DB::connection()->getDriverName()], array_column($queries, 'query'));
+        $this->assertSame(array_fill(0, count($queries), $bindings), array_column($queries, 'bindings'));
     }
 
-    /** @return iterable<string, array{string|null, array<string, mixed>, array<string, string>, list<mixed>}> */
+    /** @return iterable<string, array{string|null, array<string, mixed>, array<string, list<string>>, list<mixed>}> */
     public static function queries(): iterable
     {
-        yield 'a filter' => [null, ['search' => ['filters' => [['field' => 'status', 'value' => 'paid']]]], [
-            'sqlite' => 'select strftime(\'%Y-%m\', "orders"."placed_at") as "period", count(*) as "period_0" from "orders" where ("orders"."team_id" = ?) and ("orders"."status" = ?) and "orders"."placed_at" between ? and ? group by strftime(\'%Y-%m\', "orders"."placed_at")',
-            'mysql' => 'select date_format(`orders`.`placed_at`, \'%Y-%m\') as `period`, count(*) as `period_0` from `orders` where (`orders`.`team_id` = ?) and (`orders`.`status` = ?) and `orders`.`placed_at` between ? and ? group by date_format(`orders`.`placed_at`, \'%Y-%m\')',
-            'pgsql' => 'select to_char(date_trunc(\'month\', "orders"."placed_at"), \'YYYY-MM\') as "period", count(*) as "period_0" from "orders" where ("orders"."team_id" = ?) and ("orders"."status" = ?) and "orders"."placed_at" between ? and ? group by to_char(date_trunc(\'month\', "orders"."placed_at"), \'YYYY-MM\')',
+        yield 'a filter, in one query' => [null, ['search' => ['filters' => [['field' => 'status', 'value' => 'paid']]]], [
+            'sqlite' => ['select strftime(\'%Y-%m\', "orders"."placed_at") as "period", count(*) as "period_0" from "orders" where ("orders"."team_id" = ?) and ("orders"."status" = ?) and "orders"."placed_at" between ? and ? group by strftime(\'%Y-%m\', "orders"."placed_at")'],
+            'mysql' => ['select date_format(`orders`.`placed_at`, \'%Y-%m\') as `period`, count(*) as `period_0` from `orders` where (`orders`.`team_id` = ?) and (`orders`.`status` = ?) and `orders`.`placed_at` between ? and ? group by date_format(`orders`.`placed_at`, \'%Y-%m\')'],
+            'pgsql' => ['select to_char(date_trunc(\'month\', "orders"."placed_at"), \'YYYY-MM\') as "period", count(*) as "period_0" from "orders" where ("orders"."team_id" = ?) and ("orders"."status" = ?) and "orders"."placed_at" between ? and ? group by to_char(date_trunc(\'month\', "orders"."placed_at"), \'YYYY-MM\')'],
         ], [1, 'paid', '2026-09-01 00:00:00', '2026-11-07 12:00:00']];
-        yield 'a split and a text' => ['status', ['search' => ['text' => ['value' => 'T-1']]], [
-            'sqlite' => 'select strftime(\'%Y-%m\', "orders"."placed_at") as "period", "orders"."status" as "split_key", count(*) as "period_0" from "orders" where ("orders"."team_id" = ?) and (("orders"."reference" like ? escape \'!\')) and "orders"."placed_at" between ? and ? group by strftime(\'%Y-%m\', "orders"."placed_at"), "orders"."status"',
-            'mysql' => 'select date_format(`orders`.`placed_at`, \'%Y-%m\') as `period`, `orders`.`status` as `split_key`, count(*) as `period_0` from `orders` where (`orders`.`team_id` = ?) and ((`orders`.`reference` like ? escape \'!\')) and `orders`.`placed_at` between ? and ? group by date_format(`orders`.`placed_at`, \'%Y-%m\'), `orders`.`status`',
-            'pgsql' => 'select to_char(date_trunc(\'month\', "orders"."placed_at"), \'YYYY-MM\') as "period", "orders"."status" as "split_key", count(*) as "period_0" from "orders" where ("orders"."team_id" = ?) and (("orders"."reference" ilike ? escape \'!\')) and "orders"."placed_at" between ? and ? group by to_char(date_trunc(\'month\', "orders"."placed_at"), \'YYYY-MM\'), "orders"."status"',
+        yield 'a split and a text, the splits ranked in their own query' => ['status', ['search' => ['text' => ['value' => 'T-1']]], [
+            'sqlite' => [
+                'select strftime(\'%Y-%m\', "orders"."placed_at") as "period", count(*) as "period_0" from "orders" where ("orders"."team_id" = ?) and (("orders"."reference" like ? escape \'!\')) and "orders"."placed_at" between ? and ? group by strftime(\'%Y-%m\', "orders"."placed_at")',
+                'select "orders"."status" as "group_key", count(*) as "group_0" from "orders" where ("orders"."team_id" = ?) and (("orders"."reference" like ? escape \'!\')) and "orders"."placed_at" between ? and ? group by "orders"."status" order by count(*) desc, case when "orders"."status" is null then 1 else 0 end asc, "orders"."status" asc limit 101',
+                'select strftime(\'%Y-%m\', "orders"."placed_at") as "period", "orders"."status" as "split_key", count(*) as "period_0" from "orders" where ("orders"."team_id" = ?) and (("orders"."reference" like ? escape \'!\')) and "orders"."placed_at" between ? and ? group by strftime(\'%Y-%m\', "orders"."placed_at"), "orders"."status"',
+            ],
+            'mysql' => [
+                'select date_format(`orders`.`placed_at`, \'%Y-%m\') as `period`, count(*) as `period_0` from `orders` where (`orders`.`team_id` = ?) and ((`orders`.`reference` like ? escape \'!\')) and `orders`.`placed_at` between ? and ? group by date_format(`orders`.`placed_at`, \'%Y-%m\')',
+                'select `orders`.`status` as `group_key`, count(*) as `group_0` from `orders` where (`orders`.`team_id` = ?) and ((`orders`.`reference` like ? escape \'!\')) and `orders`.`placed_at` between ? and ? group by `orders`.`status` order by count(*) desc, case when `orders`.`status` is null then 1 else 0 end asc, `orders`.`status` asc limit 101',
+                'select date_format(`orders`.`placed_at`, \'%Y-%m\') as `period`, `orders`.`status` as `split_key`, count(*) as `period_0` from `orders` where (`orders`.`team_id` = ?) and ((`orders`.`reference` like ? escape \'!\')) and `orders`.`placed_at` between ? and ? group by date_format(`orders`.`placed_at`, \'%Y-%m\'), `orders`.`status`',
+            ],
+            'pgsql' => [
+                'select to_char(date_trunc(\'month\', "orders"."placed_at"), \'YYYY-MM\') as "period", count(*) as "period_0" from "orders" where ("orders"."team_id" = ?) and (("orders"."reference" ilike ? escape \'!\')) and "orders"."placed_at" between ? and ? group by to_char(date_trunc(\'month\', "orders"."placed_at"), \'YYYY-MM\')',
+                'select "orders"."status" as "group_key", count(*) as "group_0" from "orders" where ("orders"."team_id" = ?) and (("orders"."reference" ilike ? escape \'!\')) and "orders"."placed_at" between ? and ? group by "orders"."status" order by count(*) desc, case when "orders"."status" is null then 1 else 0 end asc, "orders"."status" asc limit 101',
+                'select to_char(date_trunc(\'month\', "orders"."placed_at"), \'YYYY-MM\') as "period", "orders"."status" as "split_key", count(*) as "period_0" from "orders" where ("orders"."team_id" = ?) and (("orders"."reference" ilike ? escape \'!\')) and "orders"."placed_at" between ? and ? group by to_char(date_trunc(\'month\', "orders"."placed_at"), \'YYYY-MM\'), "orders"."status"',
+            ],
         ], [1, '%T-1%', '2026-09-01 00:00:00', '2026-11-07 12:00:00']];
     }
 

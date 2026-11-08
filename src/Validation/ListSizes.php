@@ -19,6 +19,7 @@ final readonly class ListSizes
         'resources',
         'jobs',
         'rows',
+        'groups',
     ];
 
     public function __construct(
@@ -36,6 +37,7 @@ final readonly class ListSizes
         public int $resources,
         public int $jobs,
         public int $rows,
+        public int $groups,
     ) {}
 
     public static function from(LimitGroup $group): self
@@ -55,6 +57,7 @@ final readonly class ListSizes
             resources: $group->read('resources'),
             jobs: $group->read('jobs', 1),
             rows: $group->read('rows', 1),
+            groups: $group->read('groups', 1),
         );
     }
 }

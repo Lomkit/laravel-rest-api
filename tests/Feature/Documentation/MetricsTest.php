@@ -11,6 +11,16 @@ class MetricsTest extends DocumentationTestCase
 
     private const string TIMEZONE = '"timezone":{"type":"string","description":"The time zone of the periods of the metric, such as `Europe\/Paris`; the time zone of the application when the request sends none"}';
 
+    private const string NUMBER = '{"type":["number","null"]}';
+
+    private const string KEY = '{"type":["integer","string","boolean","null"]}';
+
+    private const string LABEL = '{"type":["string","null"]}';
+
+    private const string SERIES = '{"type":"array","items":{"type":"object","properties":{"label":{"type":"string"},"value":'.self::NUMBER.'},"required":["label","value"]}}';
+
+    private const string TREND = '{"type":"object","properties":{"series":'.self::SERIES.',"splits":{"type":"array","description":"One series for each value of the split column with the largest totals, up to the limit of the metric, present when the trend is split","items":{"type":"object","properties":{"key":'.self::KEY.',"label":'.self::LABEL.',"series":'.self::SERIES.'},"required":["key","label","series"]},"maxItems":1},"other":{"type":["object","null"],"description":"The splits that the limit folds, present with `splits`","properties":{"label":'.self::LABEL.',"series":'.self::SERIES.'},"required":["label","series"]}},"required":["series"]}';
+
     private const array METRICS = [
         '/shows/metrics/show-count',
         '/shows/metrics/shows-per-month',
@@ -86,9 +96,9 @@ class MetricsTest extends DocumentationTestCase
     {
         return [
             'a value' => ['/shows/metrics/show-count', self::typed('value', '{"$ref":"#\/components\/schemas\/RestValueResult"}')],
-            'a trend' => ['/shows/metrics/shows-per-month', self::typed('trend', '{"$ref":"#\/components\/schemas\/RestTrendResult"}')],
+            'a trend with its own limit' => ['/shows/metrics/shows-per-month', self::typed('trend', self::TREND)],
             'a partition' => ['/shows/metrics/shows-by-status', self::typed('partition', '{"$ref":"#\/components\/schemas\/RestPartitionResult"}')],
-            'a partition that compares two periods' => ['/shows/metrics/shows-by-level', self::typed('partition', '{"$ref":"#\/components\/schemas\/RestPartitionResult"}')],
+            'a partition that compares two periods, with its own limit' => ['/shows/metrics/shows-by-level', self::typed('partition', self::partition(2))],
             'a partition of percentiles that compares two periods' => ['/shows/metrics/seats-by-level', self::typed('partition', '{"$ref":"#\/components\/schemas\/RestPartitionResult"}')],
             'a table' => ['/shows/metrics/top-stages', self::typed('table', '{"$ref":"#\/components\/schemas\/RestTableResult"}')],
             'a progress' => ['/shows/metrics/seats-goal', self::typed('progress', '{"$ref":"#\/components\/schemas\/RestProgressResult"}')],
@@ -109,16 +119,20 @@ class MetricsTest extends DocumentationTestCase
         $number = '{"type":["number","null"]}';
         $key = '{"type":["integer","string","boolean","null"]}';
         $label = '{"type":["string","null"]}';
-        $series = '{"type":"array","items":{"type":"object","properties":{"label":{"type":"string"},"value":'.$number.'},"required":["label","value"]}}';
-        $previous = '"previous":{"type":["number","null"],"description":"The value of the period before the range, present when the partition compares two periods"}';
 
         return [
             'value' => ['RestValueResult', '{"type":"object","properties":{"value":'.$number.',"previous":{"type":["number","null"],"description":"The value of the period before the range"}},"required":["value","previous"],"title":"RestValueResult"}'],
-            'trend' => ['RestTrendResult', '{"type":"object","properties":{"series":'.$series.',"splits":{"type":"array","description":"One series for each value of the split column, present when the trend is split","items":{"type":"object","properties":{"key":'.$key.',"label":'.$label.',"series":'.$series.'},"required":["key","label","series"]}},"other":{"type":["object","null"],"description":"The splits that the limit folds, present with `splits`","properties":{"label":'.$label.',"series":'.$series.'},"required":["label","series"]}},"required":["series"],"title":"RestTrendResult"}'],
-            'partition' => ['RestPartitionResult', '{"type":"object","properties":{"parts":{"type":"array","items":{"type":"object","properties":{"key":'.$key.',"label":'.$label.',"value":'.$number.','.$previous.'},"required":["key","label","value"]}},"other":{"type":["object","null"],"description":"The parts that the limit folds","properties":{"label":'.$label.',"value":'.$number.','.$previous.'},"required":["label","value"]}},"required":["parts","other"],"title":"RestPartitionResult"}'],
+            'partition' => ['RestPartitionResult', substr(self::partition(100), 0, -1).',"title":"RestPartitionResult"}'],
             'table' => ['RestTableResult', '{"type":"object","properties":{"columns":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"label":{"type":"string"},"aggregate":{"type":"string","enum":["count","sum","average","min","max","median","percentile"]},"percentile":{"type":"number","description":"The percentile of the column, from 0 to 1, present when `aggregate` is `percentile`","minimum":0,"maximum":1}},"required":["name","label","aggregate"]}},"rows":{"type":"array","items":{"type":"object","properties":{"key":'.$key.',"label":'.$label.',"values":{"type":"object","description":"One value for each column, under the `name` of the column","additionalProperties":'.$number.'}},"required":["key","label","values"]}}},"required":["columns","rows"],"title":"RestTableResult"}'],
             'progress' => ['RestProgressResult', '{"type":"object","properties":{"value":'.$number.',"target":{"type":"number"}},"required":["value","target"],"title":"RestProgressResult"}'],
         ];
+    }
+
+    private static function partition(int $max): string
+    {
+        $previous = '"previous":{"type":["number","null"],"description":"The value of the period before the range, present when the partition compares two periods"}';
+
+        return '{"type":"object","properties":{"parts":{"type":"array","description":"The parts with the largest values, up to the limit of the metric","items":{"type":"object","properties":{"key":'.self::KEY.',"label":'.self::LABEL.',"value":'.self::NUMBER.','.$previous.'},"required":["key","label","value"]},"maxItems":'.$max.'},"other":{"type":["object","null"],"description":"The parts that the limit folds","properties":{"label":'.self::LABEL.',"value":'.self::NUMBER.','.$previous.'},"required":["label","value"]}},"required":["parts","other"]}';
     }
 
     private static function typed(string $type, string $result): string

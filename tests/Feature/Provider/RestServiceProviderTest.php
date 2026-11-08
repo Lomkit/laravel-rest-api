@@ -52,6 +52,7 @@ class RestServiceProviderTest extends PackageTestCase
                 'resources' => 1000,
                 'jobs' => 100,
                 'rows' => 10000,
+                'groups' => 100,
             ],
             'depths' => ['filters' => 1, 'includes' => 3, 'mutations' => 3],
             'totals' => ['filters' => 500, 'entries' => 1000, 'relations' => 20, 'patterns' => 10],
