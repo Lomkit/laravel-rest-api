@@ -80,8 +80,10 @@ class ShowResource extends Resource
     public function actions(): array
     {
         return [
-            RescheduleShows::make(),
-            CancelShows::make()->destructive(),
+            RescheduleShows::make()->maxResources(null),
+            CancelShows::make()
+                ->destructive()
+                ->maxResources(2),
             ImportShows::make(),
             ArchiveShows::make(),
         ];

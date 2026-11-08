@@ -2122,6 +2122,13 @@ Mutations:
 - `response` is `{Resource}MutationResponse`: the `selects`, `aggregates`, `includes` and `gates` of a search of the resource, without `create` in `gates`.
 - The mutation answers `{Resource}MutateResult`: `operations`, one `RestMutateOperation` for each entry (`operation`, `type` on an entry of a `MorphTo` relation, `key`, and `relations` when the entry sends relations), then `records` when the request sends `response`, one `{Resource}` record or `null` for each entry.
 
+Actions:
+
+- Each action has one operation, with the name of the action as its summary. Its body depends on the target of the action: on the `Search` target, `search` is `{Resource}ActionSearch`, the search of the rows (`text`, `trashed`, `filters`, `gates`, `scopes`, `sorts`, `selects`, `aggregates`, `includes`, `instructions` and `limit`); on the `Resources` target, `resources` is required, from 1 to `$maxResources` distinct keys typed by the `ID` field, without a maximum when `$maxResources` is `null`; the `None` target takes neither. A key that the target refuses is documented as `false`, as the endpoint answers 422 when the request sends it. The body accepts other keys, which the endpoint ignores. Its description gives the rows that the action runs on and the cap of a `Search` target.
+- `fields` lists the values of the fields of the action as `{"name", "value"}` entries, at most `limits.sizes.fields`, each typed by its field, with the rules that validate it in the description, such as `Rules: nullable, date`. An action without fields documents `fields` as `false`.
+- Each action operation has a request example: the search example of the resource on the `Search` target, one key on the `Resources` target, as for `destroy`, and one entry for each field without a default, with the first value of its `examples()`, else a value of its type. An action without rows and without such a field has the example `{}`. Declare `examples()` on the fields of an action so that the example passes its rules.
+- `destructive` and `confirm` stay in the details: the operation of an action does not carry them.
+
 Error responses:
 
 - `components.responses` holds four shared responses: `RestUnauthenticated` (`401`, `{"message"}`), `RestForbidden` (`403`, `{"message"}`, plus the `denials` list when the application registers `DenialsRenderer`, see [Authorization](#authorization)), `RestNotFound` (`404`, `{"message"}`) and `RestValidationFailed` (`422`, `{"message", "errors"}`).

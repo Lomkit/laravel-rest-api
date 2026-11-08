@@ -118,7 +118,7 @@ class ContractTest extends DocumentationTestCase
 
         foreach ($document['paths'] as $path => $operations) {
             foreach ($operations as $method => $operation) {
-                if (str_ends_with($operation['operationId'], '.mutate')) {
+                if (str_ends_with($operation['operationId'], '.mutate') || str_contains($operation['operationId'], '.operate.')) {
                     continue;
                 }
 

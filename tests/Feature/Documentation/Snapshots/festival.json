@@ -465,6 +465,89 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The action runs on the rows that `search` matches, every row without `search`",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowActionSearch"
+                                    },
+                                    "resources": false,
+                                    "fields": {
+                                        "type": "array",
+                                        "description": "The values of the fields of the action: one `{\"name\", \"value\"}` entry for each field that the request gives",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string",
+                                                            "const": "at"
+                                                        },
+                                                        "value": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ],
+                                                            "format": "date-time",
+                                                            "description": "Rules: nullable, date"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string",
+                                                            "const": "notify"
+                                                        },
+                                                        "value": {
+                                                            "type": "boolean",
+                                                            "description": "Rules: boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            ]
+                                        },
+                                        "maxItems": 100
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "search": {
+                                            "filters": [
+                                                {
+                                                    "field": "title",
+                                                    "value": "Opening night"
+                                                }
+                                            ]
+                                        },
+                                        "fields": [
+                                            {
+                                                "name": "at",
+                                                "value": "2026-01-01T00:00:00Z"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -498,6 +581,75 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The action runs on the rows of the keys in `resources`",
+                                "properties": {
+                                    "search": false,
+                                    "resources": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 2,
+                                        "uniqueItems": true
+                                    },
+                                    "fields": {
+                                        "type": "array",
+                                        "description": "The values of the fields of the action: one `{\"name\", \"value\"}` entry for each field that the request gives",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "const": "reason"
+                                                },
+                                                "value": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Rules: nullable, string",
+                                                    "examples": [
+                                                        "Rain"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "name"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "maxItems": 100
+                                    }
+                                },
+                                "required": [
+                                    "resources"
+                                ]
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "resources": [
+                                            1
+                                        ],
+                                        "fields": [
+                                            {
+                                                "name": "reason",
+                                                "value": "Rain"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -531,6 +683,26 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The action runs without rows",
+                                "properties": {
+                                    "search": false,
+                                    "resources": false,
+                                    "fields": false
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {}
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -564,6 +736,37 @@
                 "tags": [
                     "Show"
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "The action runs on the rows that `search` matches, every row without `search`, at most 1000: a search that matches more answers 422",
+                                "properties": {
+                                    "search": {
+                                        "$ref": "#/components/schemas/ShowActionSearch"
+                                    },
+                                    "resources": false,
+                                    "fields": false
+                                }
+                            },
+                            "examples": {
+                                "default": {
+                                    "value": {
+                                        "search": {
+                                            "filters": [
+                                                {
+                                                    "field": "title",
+                                                    "value": "Opening night"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -5996,6 +6199,114 @@
                     }
                 },
                 "title": "Show"
+            },
+            "ShowActionSearch": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "object",
+                        "description": "Text to search in the searchable fields",
+                        "properties": {
+                            "value": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 255
+                            },
+                            "mode": {
+                                "type": "string",
+                                "enum": [
+                                    "words",
+                                    "phrase"
+                                ]
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "trashed": {
+                        "type": "string",
+                        "enum": [
+                            "with",
+                            "only"
+                        ]
+                    },
+                    "filters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowFilter"
+                        },
+                        "maxItems": 100
+                    },
+                    "gates": {
+                        "type": "array",
+                        "description": "The abilities to answer for each row, under `gates` in the row, and for `create` under `gates` in `meta`",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "view",
+                                "create",
+                                "update",
+                                "delete",
+                                "restore",
+                                "forceDelete",
+                                "feature"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowScope"
+                        },
+                        "maxItems": 10
+                    },
+                    "sorts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowSort"
+                        },
+                        "maxItems": 20
+                    },
+                    "selects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowSelect"
+                        },
+                        "maxItems": 100
+                    },
+                    "aggregates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowAggregate"
+                        },
+                        "maxItems": 20
+                    },
+                    "includes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowInclude"
+                        },
+                        "maxItems": 20
+                    },
+                    "instructions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShowInstruction"
+                        },
+                        "maxItems": 10
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ]
+                    }
+                },
+                "title": "ShowActionSearch"
             },
             "ShowAggregate": {
                 "description": "A value computed over the related rows of each row.",

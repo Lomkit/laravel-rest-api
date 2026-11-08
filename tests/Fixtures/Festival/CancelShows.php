@@ -15,7 +15,11 @@ class CancelShows extends Action
     #[\Override]
     public function fields(): array
     {
-        return [Text::make('reason')->nullable()];
+        return [
+            Text::make('reason')
+                ->nullable()
+                ->examples('Rain'),
+        ];
     }
 
     /** @param Collection<int, Show> $models */

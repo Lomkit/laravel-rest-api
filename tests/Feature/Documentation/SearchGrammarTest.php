@@ -160,6 +160,6 @@ class SearchGrammarTest extends DocumentationTestCase
         $this->assertSame('#/components/schemas/ShowMetricSearch', $searches->reference($resource, SearchShape::Aggregate)->getUri());
         $this->assertSame(['text', 'trashed', 'filters', 'gates', 'scopes', 'sorts', 'selects', 'aggregates', 'includes', 'instructions', 'limit'], array_keys($components->schemas['ShowActionSearch']->type->properties));
         $this->assertSame(['text', 'trashed', 'filters', 'scopes', 'instructions'], array_keys($components->schemas['ShowMetricSearch']->type->properties));
-        $this->assertArrayNotHasKey('ShowActionSearch', $this->document()['components']['schemas']);
+        $this->assertArrayNotHasKey('ShowMetricSearch', $this->document()['components']['schemas']);
     }
 }
