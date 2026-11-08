@@ -900,6 +900,7 @@ Text search (`search.text`). A resource now declares its text search with `text(
 Validation:
 
 - `search.page` must be an integer of at least 1, with or without text. Before, a page below 1 was accepted.
+- `search.page` must be at most `intdiv(PHP_INT_MAX, L) + 1`, L being the largest value of the `limits()` of the resource, so that the offset of the page stays an integer (184467440737095517 with the default `limits()`). A larger page gives a 422 on SQL and on search engines: "The search.page field must not be greater than 184467440737095517." Before, it could answer 500.
 - `search.aggregates.*.type` is required, and `search.aggregates.*.alias` must be a string when it is sent. A `null` alias gives a 422, "The search.aggregates.0.alias field must be a string.": leave the key out to keep the default name.
 - An include or an aggregate whose `relation` is a dotted path with an unknown first relation (`suppliers.country`) gives a 422 under its `relation` key.
 - A filter whose `field` is not a string gives a 422 under its `field` key, in `search.filters`, in nested filters and in the filters of includes and aggregates.

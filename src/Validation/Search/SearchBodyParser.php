@@ -42,7 +42,8 @@ final readonly class SearchBodyParser
         }
 
         if ($bounds->paged()) {
-            $context->rules->addWhenPresent($page, ['integer', 'min:1', ...$grammar->pageRules($limit->value, $sizes->defaultLimit)]);
+            $maxPage = min($sizes->maxPage, $grammar->maxPage($limit->value, $sizes->defaultLimit) ?? PHP_INT_MAX);
+            $context->rules->addWhenPresent($page, ['integer', 'min:1', 'max:'.$maxPage]);
         }
 
         $filters = self::filters($search->at('filters'), $context);

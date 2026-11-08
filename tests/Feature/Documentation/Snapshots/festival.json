@@ -6178,7 +6178,8 @@
                     },
                     "page": {
                         "type": "integer",
-                        "minimum": 1
+                        "minimum": 1,
+                        "maximum": 184467440737095517
                     }
                 },
                 "not": {
@@ -12448,7 +12449,8 @@
                     },
                     "page": {
                         "type": "integer",
-                        "minimum": 1
+                        "minimum": 1,
+                        "maximum": 184467440737095517
                     }
                 },
                 "title": "ShowSearch"
@@ -16123,7 +16125,8 @@
                     },
                     "page": {
                         "type": "integer",
-                        "minimum": 1
+                        "minimum": 1,
+                        "maximum": 184467440737095517
                     }
                 },
                 "not": {
