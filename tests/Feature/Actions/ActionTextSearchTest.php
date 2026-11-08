@@ -73,6 +73,20 @@ class ActionTextSearchTest extends EngineSearchTestCase
     }
 
     #[Test]
+    #[DataProvider('drivers')]
+    public function it_grows_the_chunks_of_the_engine_keys_so_that_the_jobs_stay_at_the_limit(string $driver): void
+    {
+        config(['scout.driver' => $driver, 'rest.limits.sizes.jobs' => 2]);
+        Queue::fake();
+        Rest::resource('target-team-vouchers', TargetTeamVoucherController::class)->register();
+
+        $response = $this->postJson('/target-team-vouchers/actions/queued-retitle-vouchers', ['search' => ['text' => ['value' => 'report'], 'trashed' => 'with']]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 5, 'result' => null]]);
+        $this->assertSame([[6, 5, 4], [1, 3]], Queue::pushed(QueuedAction::class)->map(fn (QueuedAction $job): array => $job->rows->keys)->all());
+    }
+
+    #[Test]
     public function it_reads_the_keys_in_pages_of_the_chunk_count(): void
     {
         $engine = new RecordingCollectionEngine;

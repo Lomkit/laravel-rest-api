@@ -140,7 +140,10 @@ return [
     | "in", "not in", "between" or "not between" filter, and the keys of
     | one mutation entry. "relation_entries" covers each to-many relation
     | of a mutation. "resources" covers destroy, restore and force
-    | destroy; an action uses its $maxResources property instead.
+    | destroy; an action uses its $maxResources property instead. "jobs"
+    | is the most jobs that one run of a queued action creates, at least
+    | 1. When its rows need more jobs, each job takes more rows than its
+    | $chunkCount: the number of rows divided by "jobs", rounded up.
     |
     | "depths" is how many levels nest: "nested" filter groups, includes,
     | and relations in a mutation. A text search run by a search engine
@@ -175,6 +178,7 @@ return [
             'mutate' => 100,
             'relation_entries' => 100,
             'resources' => 1000,
+            'jobs' => 100,
         ],
 
         'depths' => [

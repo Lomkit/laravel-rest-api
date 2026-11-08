@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Query;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Lomkit\Rest\Actions\Rows\ChunkSize;
 use Lomkit\Rest\Actions\Rows\KeyChunks;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Search\Plan\PlannedPage;
@@ -35,7 +36,7 @@ final readonly class SqlSearch implements SearchSource
         $plan = SearchPlanner::rendered($this->resource, $this->search, $this->text);
         $keys = $plan->keys()->query();
         $id = KeysGrammar::idOf($this->resource);
-        $chunks = $this->text->run(fn (): KeyChunks => KeyChunks::read($keys, $id, $chunk, $max, null, $plan->query()));
+        $chunks = $this->text->run(fn (): KeyChunks => KeyChunks::read($keys, $id, ChunkSize::fixed($chunk), $max, null, $plan->query()));
 
         return new PlannedRows($plan, $chunks);
     }

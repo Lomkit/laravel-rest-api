@@ -12,23 +12,23 @@ final readonly class ChunkedRows implements ActionRows
     /** @param Builder<Model> $query */
     private function __construct(
         private Builder $query,
-        private int $chunkCount,
+        private ChunkSize $size,
         private ?int $count,
     ) {}
 
     /** @param Builder<Model> $query */
-    public static function of(Builder $query, int $chunkCount, ?RowCap $cap): self
+    public static function of(Builder $query, ChunkSize $size, ?RowCap $cap): self
     {
         $rows = $query->clone()->reorder();
 
         if ($cap === null) {
-            return new self($rows, $chunkCount, null);
+            return new self($rows, $size, null);
         }
 
         $count = $rows->toBase()->getCountForPagination();
         $cap->check($count);
 
-        return new self($rows, $chunkCount, $count);
+        return new self($rows, $size, $count);
     }
 
     #[\Override]
@@ -37,7 +37,7 @@ final readonly class ChunkedRows implements ActionRows
         $model = $this->query->getModel();
         $impacted = 0;
 
-        $this->query->chunkById(max(1, $this->chunkCount), function (Collection $chunk) use ($each, &$impacted): void {
+        $this->query->chunkById($this->size->for($this->count(...)), function (Collection $chunk) use ($each, &$impacted): void {
             $impacted += $each($chunk);
         }, $model->getQualifiedKeyName(), $model->getKeyName());
 

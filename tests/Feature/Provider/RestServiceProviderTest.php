@@ -50,6 +50,7 @@ class RestServiceProviderTest extends PackageTestCase
                 'mutate' => 100,
                 'relation_entries' => 100,
                 'resources' => 1000,
+                'jobs' => 100,
             ],
             'depths' => ['filters' => 1, 'includes' => 3, 'mutations' => 3],
             'totals' => ['filters' => 500, 'entries' => 1000, 'relations' => 20],
