@@ -96,7 +96,7 @@ class OperateRequest extends RestRequest
             throw new HttpException(404);
         }
 
-        return (new OperationParser(fn (): Builder => $this->keysQuery($resource)))->parse(
+        return (new OperationParser(fn (): Builder => $this->keysQuery($resource), $this->reachLog()))->parse(
             Cursor::of($this->all(), $this->parsedRules()->violations()),
             $resource->definition()->action($key),
             ValidationContext::root($resource, $this->budget(), $this->parsedRules()),

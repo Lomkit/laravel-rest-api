@@ -17,11 +17,11 @@ final readonly class KeysGrammar
     ) {}
 
     /** @param Closure(): Builder<Model> $query */
-    public static function of(Resource $resource, Closure $query, ?int $max, KeyRead $read = KeyRead::Keys): self
+    public static function of(Resource $resource, Closure $query, ?int $max, KeyRead $read = KeyRead::Keys, ?ReachLog $log = null): self
     {
         $id = self::idOf($resource);
 
-        return new self($id, new KeyLookup($query, $id, $read), $max);
+        return new self($id, new KeyLookup($query, $id, $read, $log?->recorder($resource)), $max);
     }
 
     public function parse(Cursor $resources): KeyList
@@ -46,7 +46,7 @@ final readonly class KeysGrammar
 
         foreach ($groups as $group) {
             if (count($group) === 1) {
-                $rules[$group[0][0]->path][] = $this->lookup->expect($group[0][1]);
+                $rules[$group[0][0]->path][] = $this->lookup->expect($group[0][1], $group[0][0]->path);
 
                 continue;
             }

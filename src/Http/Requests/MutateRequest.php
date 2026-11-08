@@ -42,7 +42,7 @@ class MutateRequest extends RestRequest
 
         if ($this->mutations === null) {
             $input = Cursor::of($this->all(), $this->parsedRules()->violations());
-            $this->rows = new RowSet;
+            $this->rows = new RowSet($this->reachLog());
             $this->versions = new VersionClaims;
             $links = new LinkReplay($this->rows);
             $this->mutations = MutationParser::of($this, $this->parsedRules(), $this->budget(), $this->rows, $links, $this->versions)

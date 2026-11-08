@@ -139,6 +139,6 @@ class RowSetTest extends PackageTestCase
     {
         $rows
             ->lookup($resource, fn (): Builder => $resource::newModel()->newQuery(), KeysGrammar::idOf($resource))
-            ->expect($key);
+            ->expect($key, 'mutate.0.key');
     }
 }

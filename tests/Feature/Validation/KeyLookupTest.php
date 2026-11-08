@@ -37,7 +37,7 @@ class KeyLookupTest extends PackageTestCase
         Document::factory()->create(['id' => 1, 'title' => 'Annual report']);
         Document::factory()->create(['id' => 2, 'title' => 'Quarterly report']);
         $lookup = new KeyLookup(fn (): Builder => Document::query(), ID::make('id'), KeyRead::Rows);
-        $lookup->expectAll([2, 3]);
+        $lookup->expectAll(['resources.0' => 2, 'resources.1' => 3]);
         $this->captureQueries();
 
         $rows = $lookup->rows();
@@ -68,7 +68,7 @@ class KeyLookupTest extends PackageTestCase
         $lookup = new KeyLookup(fn (): Builder => Document::query(), ID::make('id'));
 
         foreach (range(1, 2500) as $key) {
-            $lookup->expect($key);
+            $lookup->expect($key, 'resources.'.($key - 1));
         }
 
         $this->captureQueries();
@@ -97,8 +97,8 @@ class KeyLookupTest extends PackageTestCase
         Document::factory()->create(['id' => 2, 'title' => 'Old ledger', 'archived' => true]);
         $lookup = new KeyLookup(fn (): Builder => Document::query()->where('archived', false), ID::make('id'));
 
-        $lookup->expect(1);
-        $lookup->expect(2);
+        $lookup->expect(1, 'resources.0');
+        $lookup->expect(2, 'resources.1');
 
         $this->assertTrue($lookup->has(1));
         $this->assertFalse($lookup->has(2));
@@ -112,7 +112,7 @@ class KeyLookupTest extends PackageTestCase
             ->for(Author::factory())
             ->create(['id' => '019a35f0-7c2e-7a41-9b3d-5e8f1c2a4b60']);
         $lookup = new KeyLookup(fn (): Builder => Draft::query(), ID::make('id')->keyType('uuid'));
-        $lookup->expect($key);
+        $lookup->expect($key, 'resources.0');
         $this->captureQueries();
 
         $found = $lookup->has($key);
@@ -135,8 +135,8 @@ class KeyLookupTest extends PackageTestCase
             ->for(Author::factory())
             ->create(['id' => self::DRAFT]);
         $lookup = new KeyLookup(fn (): Builder => Draft::query(), ID::make('id')->keyType('uuid'));
-        $lookup->expect($first);
-        $lookup->expectAll([$second]);
+        $lookup->expect($first, 'resources.0');
+        $lookup->expectAll(['resources.1' => $second]);
         $this->captureQueries();
 
         $found = [$lookup->has(self::DRAFT), $lookup->has(self::UPPER_DRAFT)];
@@ -175,8 +175,8 @@ class KeyLookupTest extends PackageTestCase
 
             return Draft::query();
         }, ID::make('id')->keyType('uuid'));
-        $lookup->expect(self::DRAFT);
-        $lookup->expect(self::UPPER_DRAFT);
+        $lookup->expect(self::DRAFT, 'resources.0');
+        $lookup->expect(self::UPPER_DRAFT, 'resources.1');
         $this->captureQueries();
 
         $lookup->has(self::DRAFT);

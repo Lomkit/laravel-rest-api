@@ -663,6 +663,7 @@ Laravel events:
 
 - A listener may implement `ShouldQueue`. The events serialize: `ResourceRestored` uses `SerializesModels`, so the worker reloads its rows. `ResourceDestroyed` and `ResourceForceDestroyed` carry keys, since a deleted row may no longer load.
 - A resource method that already dispatches its own event for these writes now runs next to the package event: remove one of the two.
+- `KeysOutOfReach` (`Lomkit\Rest\Events`) is new: the package dispatches it when a request names keys that the `perimeterQuery()` of their resource does not return, so a listener can record it. It covers the `key` of a `mutate` entry and of a relation entry (`attach`, `detach`, `update`, `sync`, `toggle`, `delete`), the `resources` of an action, `destroy`, `restore` and `forceDestroy`. One event per resource and per request, dispatched before the `422`, which does not change. Properties: `resource`, `model` (the class of the model), `endpoint` (an `Endpoint` case), `keys` (at most 50), `paths` (the payload paths of the keys, such as `mutate.0.relations.tags.1.key`, at most 50), `capped` (`true` when keys or paths were left out), `guard`, `user` (the identifier of the user, or `null`). A key refused for another reason (its type, a repeated key, a list over its limit) dispatches nothing. A Precognition request dispatches it when it validates the keys.
 
 Hooks of each row and the perimeter:
 

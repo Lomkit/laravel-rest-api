@@ -115,7 +115,7 @@ final class RestContext
         return new CacheMetricStore($this->container->make(Factory::class), $this->actingUser()->identity(), $this->config()->cacheStore);
     }
 
-    private function actingUser(): ActingUser
+    public function actingUser(): ActingUser
     {
         if ($this->actingUser !== null) {
             return $this->actingUser;
