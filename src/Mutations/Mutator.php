@@ -97,7 +97,8 @@ final readonly class Mutator
     private function write(Resource $resource, Model $model, MutationNode $node, OperationLog $log, array $owned, ?Closure $linking): Model
     {
         $writes = RelationWrites::ofNode($resource, $model, $node);
-        $hooked = self::writesAttributes($node);
+        $saves = self::writesAttributes($node);
+        $hooked = $saves || array_filter($node->relations ?? []) !== [];
         $relationKeys = [];
 
         $log->rewind();
@@ -123,7 +124,7 @@ final readonly class Mutator
 
         $this->checks->settle($resource, $model);
 
-        if ($hooked || $model->isDirty()) {
+        if ($saves || $model->isDirty()) {
             $model->save();
         }
 

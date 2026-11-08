@@ -16,6 +16,7 @@ use Lomkit\Rest\Events\ResourceMutated;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Deletion\Stubs\SecondaryDocument;
 use Lomkit\Rest\Tests\Feature\Transactions\Stubs\Interruptions;
+use Lomkit\Rest\Tests\Feature\Transactions\Stubs\JournaledDocumentController;
 use Lomkit\Rest\Tests\Feature\Transactions\Stubs\NestedDocumentController;
 use Lomkit\Rest\Tests\Feature\Transactions\Stubs\RetriedDocumentController;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -53,6 +54,7 @@ class DeadlockRetriesTest extends PackageTestCase
     {
         Rest::resource('retried-documents', RetriedDocumentController::class);
         Rest::resource('nested-documents', NestedDocumentController::class);
+        Rest::resource('journaled-documents', JournaledDocumentController::class);
     }
 
     #[\Override]
@@ -67,7 +69,15 @@ class DeadlockRetriesTest extends PackageTestCase
             $table->timestamps();
         });
 
-        $this->beforeApplicationDestroyed(fn () => Schema::connection('secondary')->dropIfExists('documents'));
+        Schema::connection('secondary')->create('journal', function (Blueprint $table): void {
+            $table->id();
+            $table->string('note');
+        });
+
+        $this->beforeApplicationDestroyed(function (): void {
+            Schema::connection('secondary')->dropIfExists('documents');
+            Schema::connection('secondary')->dropIfExists('journal');
+        });
         Interruptions::reset([]);
         foreach (['Annual report', 'Roadmap', 'Minutes'] as $title) {
             SecondaryDocument::query()->create(['title' => $title]);
@@ -265,6 +275,40 @@ class DeadlockRetriesTest extends PackageTestCase
         $this->assertSame(['mutatedAll', 'mutatedAll'], Interruptions::$runs);
         $this->assertSame(['begin secondary', 'rollback secondary', 'begin secondary', 'commit secondary'], $this->transactions);
         $this->assertSame(['Annual report'], $this->titles());
+    }
+
+    /** @return array<string, array{string, string, array<string, mixed>, list<string>, list<string>}> */
+    public static function journaledWrites(): array
+    {
+        return [
+            'mutate' => ['POST', '/journaled-documents/mutate', self::MUTATE, ['update Final report', 'create Agenda', 'mutatedAll'], ['Final report', 'Roadmap', 'Minutes', 'Agenda']],
+            'destroy' => ['DELETE', '/journaled-documents', ['resources' => [1, 3]], ['destroy Annual report', 'destroy Minutes', 'destroyedAll'], ['Roadmap']],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  list<string>  $attempt
+     * @param  list<string>  $titles
+     */
+    #[Test]
+    #[DataProvider('journaledWrites')]
+    public function it_runs_the_row_hooks_again_and_keeps_only_the_rows_they_wrote_in_the_last_attempt(string $method, string $uri, array $payload, array $attempt, array $titles): void
+    {
+        config(['rest.transactions.attempts' => 2]);
+        Interruptions::reset([null, null, Interruptions::deadlock()]);
+
+        $response = $this->json($method, $uri, $payload);
+
+        $response->assertOk();
+        $this->assertSame([...$attempt, ...$attempt], Interruptions::$runs);
+        $this->assertSame(['begin secondary', 'rollback secondary', 'begin secondary', 'commit secondary'], $this->transactions);
+        $this->assertSame(array_slice($attempt, 0, 2), DB::connection('secondary')
+            ->table('journal')
+            ->orderBy('id')
+            ->pluck('note')
+            ->all());
+        $this->assertSame($titles, $this->titles());
     }
 
     private function listenToWriteEvents(): void

@@ -106,4 +106,22 @@ class EventTicketResource extends TicketResource
     {
         EventLog::record('destroying '.$model->getKey());
     }
+
+    #[\Override]
+    public function destroyed(Model $model): void
+    {
+        EventLog::record('destroyed '.$model->getKey());
+    }
+
+    #[\Override]
+    public function mutating(MutationNode $entry, Model $model): void
+    {
+        EventLog::record('mutating '.$entry->operation->value);
+    }
+
+    #[\Override]
+    public function mutated(MutationNode $entry, Model $model): void
+    {
+        EventLog::record('mutated '.$entry->operation->value.' '.$model->getKey());
+    }
 }

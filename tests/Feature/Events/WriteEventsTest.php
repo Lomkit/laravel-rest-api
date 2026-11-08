@@ -88,7 +88,9 @@ class WriteEventsTest extends HelpdeskTestCase
             'sql select tickets',
             'begin level 2',
             'mutatingAll update',
+            'mutating update',
             'sql update tickets',
+            "mutated update {$this->ids['Printer toner']}",
             'mutatedAll [{"operation":"update","key":'.$this->ids['Printer toner'].'}]',
             'commit level 1',
             'ResourceMutated [{"operation":"update","key":'.$this->ids['Printer toner'].'}]',
@@ -109,10 +111,19 @@ class WriteEventsTest extends HelpdeskTestCase
 
         $response->assertOk();
         $this->assertSame([
+            'sql select tickets',
+            'begin level 2',
+            "destroyingAll {$this->ids['Laptop setup']},{$this->ids['Password reset']}",
+            "destroying {$this->ids['Laptop setup']}",
+            'sql delete tickets',
+            "destroyed {$this->ids['Laptop setup']}",
+            "destroying {$this->ids['Password reset']}",
+            'sql delete tickets',
+            "destroyed {$this->ids['Password reset']}",
             "destroyedAll {$this->ids['Laptop setup']},{$this->ids['Password reset']}",
             'commit level 1',
             "ResourceDestroyed {$this->ids['Laptop setup']},{$this->ids['Password reset']}",
-        ], array_slice(EventLog::$lines, -3));
+        ], EventLog::$lines);
         $this->assertCount(1, $this->events);
         $this->assertInstanceOf(ResourceDestroyed::class, $this->events[0]);
         $this->assertSame([
@@ -225,7 +236,9 @@ class WriteEventsTest extends HelpdeskTestCase
     public static function failedWrites(): array
     {
         return [
+            'mutated throws' => ['mutated', 'POST', '/event-tickets/mutate'],
             'mutatedAll throws' => ['mutatedAll', 'POST', '/event-tickets/mutate'],
+            'destroyed throws' => ['destroyed', 'DELETE', '/event-tickets'],
             'destroyedAll throws' => ['destroyedAll', 'DELETE', '/event-tickets'],
             'operated throws in the transaction of a whole action' => ['operated', 'POST', '/event-tickets/actions/atomic-close-event-tickets'],
             'operated throws after the chunks are committed' => ['operated', 'POST', '/event-tickets/actions/close-event-tickets'],
@@ -241,8 +254,8 @@ class WriteEventsTest extends HelpdeskTestCase
         $key = $this->ids['Printer jam'];
 
         $response = $this->json($method, $uri, match ($failure) {
-            'mutatedAll' => ['mutate' => [['operation' => 'update', 'key' => $key, 'attributes' => ['title' => 'Paper jam']]]],
-            'destroyedAll' => ['resources' => [$key]],
+            'mutated', 'mutatedAll' => ['mutate' => [['operation' => 'update', 'key' => $key, 'attributes' => ['title' => 'Paper jam']]]],
+            'destroyed', 'destroyedAll' => ['resources' => [$key]],
             default => ['search' => self::OPEN],
         });
 

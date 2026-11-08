@@ -121,8 +121,12 @@ class EndpointEventsTest extends HelpdeskTestCase
             'sql select tickets',
             'begin level 2',
             'mutatingAll create,update',
+            'mutating create',
             'sql insert tickets',
+            "mutated create {$created}",
+            'mutating update',
             'sql update tickets',
+            "mutated update {$this->ids['Printer toner']}",
             'mutatedAll [{"operation":"create","key":'.$created.'},{"operation":"update","key":'.$this->ids['Printer toner'].'}]',
             'commit level 1',
             'sql select tickets',
@@ -154,8 +158,9 @@ class EndpointEventsTest extends HelpdeskTestCase
         ]]);
 
         $response->assertInternalServerError()->assertExactJson(['message' => 'Server Error']);
-        [$insert, $event, $rollback] = array_slice(EventLog::$lines, -3);
+        [$insert, $hook, $event, $rollback] = array_slice(EventLog::$lines, -4);
         $this->assertSame(['sql insert tickets', 'rollback level 1'], [$insert, $rollback]);
+        $this->assertStringStartsWith('mutated create ', $hook);
         $this->assertStringStartsWith('mutatedAll [{"operation":"create","key":', $event);
         $this->assertFalse(Ticket::query()->where('title', 'Mouse')->exists());
     }
@@ -312,8 +317,10 @@ class EndpointEventsTest extends HelpdeskTestCase
             "destroyingAll {$this->ids['Laptop setup']},{$this->ids['Password reset']}",
             "destroying {$this->ids['Laptop setup']}",
             'sql delete tickets',
+            "destroyed {$this->ids['Laptop setup']}",
             "destroying {$this->ids['Password reset']}",
             'sql delete tickets',
+            "destroyed {$this->ids['Password reset']}",
             "destroyedAll {$this->ids['Laptop setup']},{$this->ids['Password reset']}",
             'commit level 1',
         ], EventLog::$lines);
