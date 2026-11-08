@@ -67,11 +67,11 @@ class ActionChunksTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_runs_an_action_without_search_on_every_row_in_chunks_of_its_size(): void
+    public function it_runs_an_action_with_an_empty_search_on_every_row_in_chunks_of_its_size(): void
     {
         Ticket::query()->insert(array_map(fn (int $id): array => ['id' => $id, 'team_id' => 1, 'title' => "Ticket {$id}", 'status' => 'open'], range(8, 250)));
 
-        $response = $this->postJson('/chunked-tickets/actions/close-open-tickets');
+        $response = $this->postJson('/chunked-tickets/actions/close-open-tickets', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 250, 'result' => null]]);
         $this->assertSame(array_chunk(range(1, 250), 2), CloseOpenTickets::$runs);
@@ -148,7 +148,7 @@ class ActionChunksTest extends HelpdeskTestCase
     public static function cappedSearches(): array
     {
         return [
-            'every row' => [[]],
+            'every row' => [['search' => []]],
             'a sort' => [['search' => ['sorts' => [['field' => 'title']]]]],
             'a limit above the cap' => [['search' => ['limit' => 10]]],
         ];

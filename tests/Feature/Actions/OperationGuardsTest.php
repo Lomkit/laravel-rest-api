@@ -113,7 +113,7 @@ class OperationGuardsTest extends PackageTestCase
     #[DataProvider('closureRuledActions')]
     public function it_queues_an_action_whose_own_fields_hold_closures(string $action, array $batch): void
     {
-        $response = $this->postJson("/field-counting-posts/actions/{$action}", ['fields' => [['name' => 'reason', 'value' => 'spam']]]);
+        $response = $this->postJson("/field-counting-posts/actions/{$action}", ['search' => [], 'fields' => [['name' => 'reason', 'value' => 'spam']]]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, ...$batch, 'result' => null]]);
         $this->assertSame(

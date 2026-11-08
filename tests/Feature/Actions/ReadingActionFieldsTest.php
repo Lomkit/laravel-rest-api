@@ -225,7 +225,7 @@ class ReadingActionFieldsTest extends PackageTestCase
         $this->actingAs($this->grace);
         Str::createUuidsUsingSequence([Uuid::fromString('9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f')]);
 
-        $this->postJson('/field-documents/actions/batched-read-document-fields', self::BODY)
+        $this->postJson('/field-documents/actions/batched-read-document-fields', ['search' => [], ...self::BODY])
             ->assertOk()
             ->assertExactJson(['data' => ['impacted' => 4, 'batch' => '9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f', 'result' => null]]);
 
@@ -243,7 +243,7 @@ class ReadingActionFieldsTest extends PackageTestCase
     {
         $this->actingAs($this->grace);
 
-        $this->postJson('/field-documents/actions/chunked-read-document-fields', self::BODY)
+        $this->postJson('/field-documents/actions/chunked-read-document-fields', ['search' => [], ...self::BODY])
             ->assertOk()
             ->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
 
@@ -266,7 +266,8 @@ class ReadingActionFieldsTest extends PackageTestCase
 
     private function runAction(string $action): ActionFields
     {
-        $this->postJson("/field-documents/actions/{$action}", self::BODY)->assertOk();
+        $body = FieldDocumentResource::$target === ActionTarget::Search ? ['search' => [], ...self::BODY] : self::BODY;
+        $this->postJson("/field-documents/actions/{$action}", $body)->assertOk();
 
         return ReadDocumentFields::$runs[0]['fields'];
     }

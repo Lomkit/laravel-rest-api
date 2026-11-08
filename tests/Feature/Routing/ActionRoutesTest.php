@@ -116,8 +116,8 @@ class ActionRoutesTest extends HelpdeskTestCase
     {
         Rest::resource('routed-tickets', RoutedTicketController::class)->register();
 
-        $this->postJson('/routed-tickets/actions/close-tickets')->assertOk();
-        $this->postJson('/routed-tickets/actions/close-tickets')
+        $this->postJson('/routed-tickets/actions/close-tickets', ['search' => []])->assertOk();
+        $this->postJson('/routed-tickets/actions/close-tickets', ['search' => []])
             ->assertTooManyRequests()
             ->assertExactJson(['message' => 'Too Many Attempts.']);
         $this->postJson('/routed-tickets/actions/refresh-tickets')->assertOk();

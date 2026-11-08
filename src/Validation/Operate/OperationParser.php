@@ -50,6 +50,10 @@ final readonly class OperationParser
 
     private function search(Cursor $search, Cursor $resources, ValidationContext $context): SearchNode
     {
+        if ($search->value === null) {
+            $context->rules->add($search->path, ['required']);
+        }
+
         $node = (new SearchParser(SearchShape::Rows))->parse($search, $context);
         $context->rules->add($resources->path, ['prohibited']);
 

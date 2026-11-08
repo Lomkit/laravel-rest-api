@@ -76,7 +76,7 @@ class ActionJobsTest extends HelpdeskTestCase
     public static function batches(): array
     {
         return [
-            'a search in the order of the key' => [ActionTarget::Search, [], [[1, 2, 3], [4, 5, 6], [7]]],
+            'a search in the order of the key' => [ActionTarget::Search, ['search' => []], [[1, 2, 3], [4, 5, 6], [7]]],
             'a sorted search' => [ActionTarget::Search, ['search' => ['sorts' => [['field' => 'title', 'direction' => 'desc']]]], [[7, 6, 5], [4, 3, 2], [1]]],
             'the named rows' => [ActionTarget::Resources, ['resources' => [5, 2, 7, 1, 3, 6, 4]], [[5, 2, 7], [1, 3, 6], [4]]],
         ];
@@ -88,7 +88,7 @@ class ActionJobsTest extends HelpdeskTestCase
     {
         Bus::fake();
 
-        $this->postJson('/chunked-tickets/actions/batched-close-open-tickets')->assertOk();
+        $this->postJson('/chunked-tickets/actions/batched-close-open-tickets', ['search' => []])->assertOk();
 
         Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->jobs->map(fn (QueuedAction $job): array => $job->rows->keys)->all() === [[1, 2], [3, 4], [5, 6], [7]]);
     }
@@ -99,7 +99,7 @@ class ActionJobsTest extends HelpdeskTestCase
     {
         Queue::fake();
 
-        $response = $this->postJson('/chunked-tickets/actions/queued-close-open-tickets');
+        $response = $this->postJson('/chunked-tickets/actions/queued-close-open-tickets', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 7, 'result' => null]]);
         $this->assertSame([[1, 2, 3], [4, 5, 6], [7]], Queue::pushed(QueuedAction::class)->map(fn (QueuedAction $job): array => $job->rows->keys)->all());
@@ -109,7 +109,7 @@ class ActionJobsTest extends HelpdeskTestCase
     #[WithConfig('rest.limits.sizes.jobs', 3)]
     public function it_keeps_the_chunk_size_of_an_action_that_is_not_queued(): void
     {
-        $response = $this->postJson('/chunked-tickets/actions/close-open-tickets');
+        $response = $this->postJson('/chunked-tickets/actions/close-open-tickets', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 7, 'result' => null]]);
         $this->assertSame([[1, 2], [3, 4], [5, 6], [7]], CloseOpenTickets::$runs);
@@ -120,7 +120,7 @@ class ActionJobsTest extends HelpdeskTestCase
     {
         Ticket::query()->insert(array_map(fn (int $id): array => ['id' => $id, 'team_id' => 1, 'title' => "Ticket {$id}", 'status' => 'open'], range(8, 250)));
 
-        $response = $this->postJson('/chunked-tickets/actions/batched-close-open-tickets');
+        $response = $this->postJson('/chunked-tickets/actions/batched-close-open-tickets', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 250, 'batch' => self::BATCH, 'result' => null]]);
         $this->assertSame(array_chunk(range(1, 250), 3), CloseOpenTickets::$runs);

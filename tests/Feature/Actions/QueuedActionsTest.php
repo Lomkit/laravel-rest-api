@@ -270,7 +270,7 @@ class QueuedActionsTest extends PackageTestCase
     {
         $this->travelTo(CarbonImmutable::parse('2026-11-06 10:00:00'));
         $this->actingAs($this->grace);
-        $this->postJson('/staff-documents/actions/retried-export-documents', self::DUE)->assertOk();
+        $this->postJson('/staff-documents/actions/retried-export-documents', ['search' => [], ...self::DUE])->assertOk();
         $this->app['auth']->forgetGuards();
 
         $this->artisan('queue:work', ['connection' => 'database', '--once' => true])->assertSuccessful();
@@ -287,7 +287,7 @@ class QueuedActionsTest extends PackageTestCase
     {
         $this->actingAs($this->grace);
 
-        $this->postJson('/staff-documents/actions/batched-export-documents', self::DUE)->assertOk();
+        $this->postJson('/staff-documents/actions/batched-export-documents', ['search' => [], ...self::DUE])->assertOk();
 
         $this->assertSame([[2, 'batched-export-documents']], array_map(fn (array $run): array => [$run['user'], $run['batch']], QueuedRuns::$runs));
     }
@@ -311,7 +311,7 @@ class QueuedActionsTest extends PackageTestCase
     {
         $this->actingAs($this->grace);
 
-        $response = $this->postJson('/staff-documents/actions/export-documents', self::DUE);
+        $response = $this->postJson('/staff-documents/actions/export-documents', ['search' => [], ...self::DUE]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
         $this->assertSame([[2, [1, 2, 3, 4], true]], array_map(fn (array $run): array => [$run['user'], $run['keys'], $run['shred']], QueuedRuns::$runs));
@@ -333,7 +333,7 @@ class QueuedActionsTest extends PackageTestCase
     {
         Queue::fake();
 
-        $this->postJson("/staff-documents/actions/{$action}", $body)->assertOk();
+        $this->postJson("/staff-documents/actions/{$action}", ['search' => [], ...$body])->assertOk();
 
         return Queue::pushed(QueuedAction::class)->sole();
     }

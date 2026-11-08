@@ -33,7 +33,7 @@ class AddedFieldRulesTest extends PackageTestCase
     {
         RuledOperateRequest::$added = ['fields.*' => ['array']];
 
-        $response = $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 'notify', 'value' => true]]]);
+        $response = $this->postJson('/api/posts/actions/publish-posts', ['search' => [], 'fields' => [['name' => 'notify', 'value' => true]]]);
 
         $this->assertExactErrors($response, ['fields.notify' => ['The notify field must be an array.']]);
     }
@@ -43,7 +43,7 @@ class AddedFieldRulesTest extends PackageTestCase
     {
         RuledOperateRequest::$added = ['fields.*.default' => ['boolean']];
 
-        $response = $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 'notify', 'value' => true, 'default' => false]]]);
+        $response = $this->postJson('/api/posts/actions/publish-posts', ['search' => [], 'fields' => [['name' => 'notify', 'value' => true, 'default' => false]]]);
 
         $this->assertExactErrors($response, ['fields.0.default' => ['The fields.0.default field is prohibited.']]);
     }
@@ -53,7 +53,7 @@ class AddedFieldRulesTest extends PackageTestCase
     {
         RuledOperateRequest::$added = ['fields' => ['min:1']];
 
-        $response = $this->postJson('/api/posts/actions/publish-posts', []);
+        $response = $this->postJson('/api/posts/actions/publish-posts', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 0, 'result' => null]]);
     }
@@ -63,7 +63,7 @@ class AddedFieldRulesTest extends PackageTestCase
     {
         RuledOperateRequest::$added = ['fields' => ['present']];
 
-        $response = $this->postJson('/api/posts/actions/publish-posts', []);
+        $response = $this->postJson('/api/posts/actions/publish-posts', ['search' => []]);
 
         $this->assertExactErrors($response, ['fields' => ['The fields field must be present.']]);
     }
@@ -74,7 +74,7 @@ class AddedFieldRulesTest extends PackageTestCase
         RuledOperateRequest::$added = ['extra' => ['required']];
         $errors = ['fields.0.name' => ['The selected fields.0.name is invalid.'], 'extra' => ['The extra field is required.']];
 
-        $response = $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 'bogus', 'value' => 1]]]);
+        $response = $this->postJson('/api/posts/actions/publish-posts', ['search' => [], 'fields' => [['name' => 'bogus', 'value' => 1]]]);
 
         $this->assertExactErrors($response, $errors);
         $response->assertJsonPath('errors', $errors);

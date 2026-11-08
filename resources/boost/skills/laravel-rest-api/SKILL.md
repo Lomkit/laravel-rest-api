@@ -776,18 +776,18 @@ POST /api/users/actions/send-welcome-notification
 }
 ```
 
-Note the **`fields` payload is an array of `{name, value}` pairs**, not an object, and each name may appear only once (a repeated name is a `422` under `fields.{index}.name`). An entry accepts `name` and `value` only: another key is a `422` (`The fields.0.default field is prohibited.`). The list takes at most `rest.limits.sizes.fields` entries (default `100`), as do the `fields` of an instruction. The `search` block resolves the target models (the whole `search` schema without `page`, which is a `422`; `text` only on a resource that declares `text()`, and the action then acts on the matching rows only, while on other resources `text` is a `422` "The search.text field is prohibited."; with `ScoutEngine`, see "Search engines" for how the keys are read and capped); when sent, it must be an object. Actions with the `None` target omit `search` and receive an empty collection.
+Note the **`fields` payload is an array of `{name, value}` pairs**, not an object, and each name may appear only once (a repeated name is a `422` under `fields.{index}.name`). An entry accepts `name` and `value` only: another key is a `422` (`The fields.0.default field is prohibited.`). The list takes at most `rest.limits.sizes.fields` entries (default `100`), as do the `fields` of an instruction. The `search` block resolves the target models (the whole `search` schema without `page`, which is a `422`; `text` only on a resource that declares `text()`, and the action then acts on the matching rows only, while on other resources `text` is a `422` "The search.text field is prohibited."; with `ScoutEngine`, see "Search engines" for how the keys are read and capped). Actions with the `Search` target require `search`, an object: `"search": {}` runs the action on every model of the perimeter, and a body without `search` is a `422` under `search` ("The search field is required."). Actions with the `None` target omit `search` and receive an empty collection.
 
 The target of an action (`Lomkit\Rest\Actions\ActionTarget`, the `$target` property or `->target()` when declaring) decides what the request body may carry:
 
 | Target | `search` | `resources` | Models impacted |
 |---|---|---|---|
-| `ActionTarget::Search` (default) | optional | prohibited | whatever `search` resolves — **every model when `search` is omitted**, at most `$maxResources` |
+| `ActionTarget::Search` (default) | required | prohibited | whatever `search` resolves — every model with `"search": {}`, at most `$maxResources` |
 | `ActionTarget::Resources` | prohibited | required, list of ids | exactly the ids named, each returned by the resource's `perimeterQuery()` |
 | `ActionTarget::None` | prohibited | prohibited | none, `handle()` gets an empty collection |
 
-Reach for `ActionTarget::Resources` when an action must never be able to hit every model by accident: the caller has
-to name its targets, and omitting `resources` is a `422` rather than a silent mass update. Ids that do
+Reach for `ActionTarget::Resources` when an action must never run on every model: the caller has
+to name its targets, and omitting `resources` is a `422`. Ids that do
 not exist, or that `perimeterQuery()` hides, are a `422` under `resources.{index}`, checked with one query
 per 1,000 ids. Keys are typed like the resource's `ID` field, and repeated ids are a `422`.
 `resources` is capped at

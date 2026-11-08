@@ -55,6 +55,7 @@ class ActionFieldsTest extends PackageTestCase
         Str::createUuidsUsingSequence([Uuid::fromString(self::BATCH)]);
 
         $response = $this->postJson("/api/posts/actions/{$action}", [
+            'search' => [],
             'fields' => [['name' => 'at', 'value' => '2026-03-01 09:30:00']],
         ]);
 
@@ -86,7 +87,7 @@ class ActionFieldsTest extends PackageTestCase
     {
         Post::factory()->create();
 
-        $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 'at', 'value' => null]]])->assertOk();
+        $this->postJson('/api/posts/actions/publish-posts', ['search' => [], 'fields' => [['name' => 'at', 'value' => null]]])->assertOk();
 
         $this->assertSame([['handle', ['at' => null, 'notify' => true]]], $this->received->calls());
     }
@@ -96,7 +97,7 @@ class ActionFieldsTest extends PackageTestCase
     {
         Post::factory()->create();
 
-        $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 'at'], ['name' => 'notify']]])->assertOk();
+        $this->postJson('/api/posts/actions/publish-posts', ['search' => [], 'fields' => [['name' => 'at'], ['name' => 'notify']]])->assertOk();
 
         $this->assertSame([['handle', ['notify' => true]]], $this->received->calls());
     }
@@ -106,7 +107,7 @@ class ActionFieldsTest extends PackageTestCase
     {
         Post::factory()->create();
 
-        $this->postJson('/api/posts/actions/publish-posts', ['fields' => [['name' => 'notify', 'value' => '0']]])->assertOk();
+        $this->postJson('/api/posts/actions/publish-posts', ['search' => [], 'fields' => [['name' => 'notify', 'value' => '0']]])->assertOk();
 
         $this->assertSame([['handle', ['notify' => false]]], $this->received->calls());
     }
@@ -137,7 +138,7 @@ class ActionFieldsTest extends PackageTestCase
     {
         $post = Post::factory()->create(['status' => PostStatus::Draft]);
 
-        $this->postJson('/api/posts/actions/change-status', ['fields' => [['name' => 'status', 'value' => 'review']]])->assertOk();
+        $this->postJson('/api/posts/actions/change-status', ['search' => [], 'fields' => [['name' => 'status', 'value' => 'review']]])->assertOk();
 
         $this->assertSame([['handle', ['status' => PostStatus::Review]]], $this->received->calls());
         $this->assertSame(PostStatus::Review, $post->fresh()?->status);

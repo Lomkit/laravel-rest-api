@@ -34,7 +34,7 @@ class ActionConfirmationTest extends PackageTestCase
 {
     private const string SHRED = '/confirmed-documents/actions/shred-documents';
 
-    private const string TOKEN = '1794132300.1fd50fa4edba5784fb3ac2b71662fcbc9be3b716fba0383ddd6a4b6dd652bfb1';
+    private const string TOKEN = '1794132300.d6a7d61a5d8a93a91900763e30dbec59ce10b7840f08a7fca952f64d9f1fda07';
 
     private ArchiveUser $grace;
 
@@ -69,7 +69,7 @@ class ActionConfirmationTest extends PackageTestCase
     {
         Event::fake([ActionOperated::class]);
 
-        $response = $this->postJson(self::SHRED);
+        $response = $this->postJson(self::SHRED, ['search' => (object) []]);
 
         $response->assertStatus(428)->assertExactJson([
             'message' => 'Shred 4 documents?',
@@ -95,6 +95,39 @@ class ActionConfirmationTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_runs_the_action_on_every_row_when_an_empty_search_comes_back_with_the_token(): void
+    {
+        $token = $this->tokenOf($this->postJson(self::SHRED, ['search' => (object) []]));
+
+        $response = $this->postJson(self::SHRED, ['search' => (object) [], 'confirmation' => $token]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
+        $this->assertSame([[1, 2, 3, 4]], ShredDocuments::$runs);
+    }
+
+    #[Test]
+    public function it_refuses_the_token_of_an_empty_search_on_a_body_without_search(): void
+    {
+        $token = $this->tokenOf($this->postJson(self::SHRED, ['search' => (object) []]));
+
+        $response = $this->postJson(self::SHRED, ['confirmation' => $token]);
+
+        $response->assertUnprocessable()->assertJsonPath('errors', ['search' => ['The search field is required.']]);
+        $this->assertSame([[4], []], [ShredDocuments::$asked, ShredDocuments::$runs]);
+    }
+
+    #[Test]
+    public function it_answers_a_new_428_when_the_token_of_an_empty_search_comes_back_with_a_filter(): void
+    {
+        $token = $this->tokenOf($this->postJson(self::SHRED, ['search' => (object) []]));
+
+        $response = $this->postJson(self::SHRED, ['search' => ['filters' => [['field' => 'title', 'operator' => '!=', 'value' => 'Receipt']]], 'confirmation' => $token]);
+
+        $response->assertStatus(428)->assertJsonPath('confirmation.data', ['rows' => 4]);
+        $this->assertSame([], ShredDocuments::$runs);
+    }
+
+    #[Test]
     public function it_reads_the_body_without_its_key_order_and_its_unknown_first_level_keys(): void
     {
         $token = $this->tokenOf($this->postJson(self::SHRED, ['search' => ['filters' => [['field' => 'title', 'operator' => '!=', 'value' => 'Budget']], 'limit' => 10]]), 3);
@@ -109,12 +142,12 @@ class ActionConfirmationTest extends PackageTestCase
     public function it_answers_a_new_428_when_the_token_does_not_match_the_request(string $mismatch): void
     {
         Queue::fake();
-        $body = ['fields' => [['name' => 'note', 'value' => 'Year end']]];
+        $body = ['search' => [], 'fields' => [['name' => 'note', 'value' => 'Year end']]];
         $token = $this->tokenOf($this->postJson(self::SHRED, $body));
         $path = self::SHRED;
 
         match ($mismatch) {
-            'another body' => $body = ['fields' => [['name' => 'note', 'value' => 'Spring']]],
+            'another body' => $body = ['search' => [], 'fields' => [['name' => 'note', 'value' => 'Spring']]],
             'another user' => $this->actingAs(ArchiveUser::query()->findOrFail(3)),
             'another action' => $path = '/confirmed-documents/actions/queued-shred-documents',
             'an expired token' => $this->travel(300)->seconds(),
@@ -150,11 +183,11 @@ class ActionConfirmationTest extends PackageTestCase
     public function it_accepts_the_token_until_it_expires(): void
     {
         ShredDocuments::$seconds = 60;
-        $first = $this->postJson(self::SHRED);
+        $first = $this->postJson(self::SHRED, ['search' => []]);
         $first->assertStatus(428)->assertJsonPath('confirmation.expires_at', '2026-11-08T10:01:00Z');
         $this->travel(59)->seconds();
 
-        $response = $this->postJson(self::SHRED, ['confirmation' => $this->tokenOf($first)]);
+        $response = $this->postJson(self::SHRED, ['search' => [], 'confirmation' => $this->tokenOf($first)]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
     }
@@ -162,10 +195,10 @@ class ActionConfirmationTest extends PackageTestCase
     #[Test]
     public function it_answers_a_new_428_when_the_number_of_rows_changed(): void
     {
-        $token = $this->tokenOf($this->postJson(self::SHRED));
+        $token = $this->tokenOf($this->postJson(self::SHRED, ['search' => []]));
         Document::create(['id' => 5, 'title' => 'Receipt']);
 
-        $response = $this->postJson(self::SHRED, ['confirmation' => $token]);
+        $response = $this->postJson(self::SHRED, ['search' => [], 'confirmation' => $token]);
 
         $response->assertStatus(428)->assertJsonPath('message', 'Shred 5 documents?')->assertJsonPath('confirmation.data', ['rows' => 5]);
         $this->assertSame([[4, 5], []], [ShredDocuments::$asked, ShredDocuments::$runs]);
@@ -176,7 +209,7 @@ class ActionConfirmationTest extends PackageTestCase
     {
         ShredDocuments::$from = 5;
 
-        $response = $this->postJson(self::SHRED);
+        $response = $this->postJson(self::SHRED, ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
         $this->assertSame([[4], [[1, 2, 3, 4]]], [ShredDocuments::$asked, ShredDocuments::$runs]);
@@ -205,8 +238,8 @@ class ActionConfirmationTest extends PackageTestCase
     public static function searches(): array
     {
         return [
-            'every row under a cap' => [1000, [], 13],
-            'every row without a cap' => [null, [], 13],
+            'every row under a cap' => [1000, ['search' => []], 13],
+            'every row without a cap' => [null, ['search' => []], 13],
             'a filter' => [1000, ['search' => ['filters' => [['field' => 'title', 'value' => 'Invoice']]]], 1],
             'a limit' => [1000, ['search' => ['limit' => 10]], 10],
             'a sort without a cap' => [null, ['search' => ['sorts' => [['field' => 'title']]]], 13],
@@ -243,7 +276,7 @@ class ActionConfirmationTest extends PackageTestCase
     {
         $this->actingAs(ArchiveUser::query()->findOrFail(1));
 
-        $response = $this->postJson(self::SHRED);
+        $response = $this->postJson(self::SHRED, ['search' => []]);
 
         $response->assertForbidden()->assertJsonPath('message', 'Only the staff shreds documents.');
         $this->assertSame([], ShredDocuments::$asked);
@@ -267,8 +300,8 @@ class ActionConfirmationTest extends PackageTestCase
     public static function invalidBodies(): array
     {
         return [
-            'a confirmation that is not a string' => [['confirmation' => 1794132300], ['confirmation' => ['The confirmation field must be a string.']]],
-            'a confirmation set to null' => [['confirmation' => null], ['confirmation' => ['The confirmation field must be a string.']]],
+            'a confirmation that is not a string' => [['search' => [], 'confirmation' => 1794132300], ['confirmation' => ['The confirmation field must be a string.']]],
+            'a confirmation set to null' => [['search' => [], 'confirmation' => null], ['confirmation' => ['The confirmation field must be a string.']]],
             'an unknown filter field' => [['search' => ['filters' => [['field' => 'shelf', 'value' => 'A']]], 'confirmation' => 'confirmed'], ['search.filters.0.field' => ['The selected search.filters.0.field is invalid.']]],
         ];
     }
@@ -277,7 +310,7 @@ class ActionConfirmationTest extends PackageTestCase
     #[WithConfig('rest.precognition.enabled', true)]
     public function it_stops_a_precognitive_request_before_the_confirmation(): void
     {
-        $response = $this->postJson(self::SHRED, [], ['Precognition' => 'true']);
+        $response = $this->postJson(self::SHRED, ['search' => []], ['Precognition' => 'true']);
 
         $response->assertNoContent();
         $this->assertSame([], ShredDocuments::$asked);
@@ -287,10 +320,10 @@ class ActionConfirmationTest extends PackageTestCase
     public function it_queues_nothing_before_the_confirmation(): void
     {
         Queue::fake();
-        $token = $this->tokenOf($this->postJson('/confirmed-documents/actions/queued-shred-documents'));
+        $token = $this->tokenOf($this->postJson('/confirmed-documents/actions/queued-shred-documents', ['search' => []]));
         Queue::assertNothingPushed();
 
-        $response = $this->postJson('/confirmed-documents/actions/queued-shred-documents', ['confirmation' => $token]);
+        $response = $this->postJson('/confirmed-documents/actions/queued-shred-documents', ['search' => [], 'confirmation' => $token]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 4, 'result' => null]]);
         Queue::assertPushed(QueuedAction::class, 1);
@@ -300,11 +333,11 @@ class ActionConfirmationTest extends PackageTestCase
     public function it_starts_no_batch_before_the_confirmation(): void
     {
         Bus::fake();
-        $token = $this->tokenOf($this->postJson('/confirmed-documents/actions/batched-shred-documents'));
+        $token = $this->tokenOf($this->postJson('/confirmed-documents/actions/batched-shred-documents', ['search' => []]));
         Bus::assertNothingBatched();
         $this->assertSame([], ShredDocuments::$batches);
 
-        $response = $this->postJson('/confirmed-documents/actions/batched-shred-documents', ['confirmation' => $token]);
+        $response = $this->postJson('/confirmed-documents/actions/batched-shred-documents', ['search' => [], 'confirmation' => $token]);
 
         $response->assertOk()->assertJsonPath('data.impacted', 4);
         Bus::assertBatchCount(1);
@@ -319,7 +352,7 @@ class ActionConfirmationTest extends PackageTestCase
 
         $this->expectExceptionObject(InvalidConfigException::missingAppKey());
 
-        $this->postJson(self::SHRED);
+        $this->postJson(self::SHRED, ['search' => []]);
     }
 
     #[Test]
@@ -328,7 +361,7 @@ class ActionConfirmationTest extends PackageTestCase
     {
         ShredDocuments::$from = 5;
 
-        $this->postJson(self::SHRED)->assertOk();
+        $this->postJson(self::SHRED, ['search' => []])->assertOk();
     }
 
     #[Test]

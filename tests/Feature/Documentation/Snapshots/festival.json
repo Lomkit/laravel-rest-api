@@ -500,11 +500,12 @@
                     "Show"
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "type": "object",
-                                "description": "The action runs on the rows that `search` matches, every row without `search`",
+                                "description": "The action runs on the rows that `search` matches, every row with an empty `search`",
                                 "properties": {
                                     "search": {
                                         "$ref": "#/components/schemas/ShowActionSearch"
@@ -557,7 +558,10 @@
                                         },
                                         "maxItems": 100
                                     }
-                                }
+                                },
+                                "required": [
+                                    "search"
+                                ]
                             },
                             "examples": {
                                 "default": {
@@ -782,18 +786,22 @@
                     "Show"
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "type": "object",
-                                "description": "The action runs on the rows that `search` matches, every row without `search`, at most 1000: a search that matches more answers 422",
+                                "description": "The action runs on the rows that `search` matches, every row with an empty `search`, at most 1000: a search that matches more answers 422",
                                 "properties": {
                                     "search": {
                                         "$ref": "#/components/schemas/ShowActionSearch"
                                     },
                                     "resources": false,
                                     "fields": false
-                                }
+                                },
+                                "required": [
+                                    "search"
+                                ]
                             },
                             "examples": {
                                 "default": {

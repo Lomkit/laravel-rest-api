@@ -56,7 +56,7 @@ class ActionResultsTest extends PackageTestCase
     {
         TouchDocuments::$answer = $answer;
 
-        $response = $this->postJson('/touch-documents/actions/touch-documents');
+        $response = $this->postJson('/touch-documents/actions/touch-documents', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'result' => $result]]);
     }
@@ -86,7 +86,7 @@ class ActionResultsTest extends PackageTestCase
     {
         TouchDocuments::$answer = fn (ActionFields $fields, int $impacted): ActionResponse => ActionResponse::message("{$fields->note}: {$impacted}");
 
-        $response = $this->postJson('/touch-documents/actions/touch-documents', self::NOTE);
+        $response = $this->postJson('/touch-documents/actions/touch-documents', ['search' => [], ...self::NOTE]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'result' => ['type' => 'message', 'message' => 'Quarterly: 11']]]);
         $this->assertSame([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11]], TouchDocuments::$runs);
@@ -113,7 +113,7 @@ class ActionResultsTest extends PackageTestCase
         Queue::fake();
         TouchDocuments::$answer = fn (ActionFields $fields, int $impacted): ActionResponse => ActionResponse::message(Queue::pushed(QueuedAction::class)->count()." jobs for {$impacted} documents");
 
-        $response = $this->postJson('/touch-documents/actions/queued-touch-documents', self::NOTE);
+        $response = $this->postJson('/touch-documents/actions/queued-touch-documents', ['search' => [], ...self::NOTE]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'result' => ['type' => 'message', 'message' => '3 jobs for 11 documents']]]);
         $this->assertSame([], TouchDocuments::$runs);
@@ -127,7 +127,7 @@ class ActionResultsTest extends PackageTestCase
         TouchDocuments::$answer = fn (ActionFields $fields, int $impacted): ActionResponse => ActionResponse::message(count(Bus::dispatchedBatches())." batch for {$impacted} documents");
         Str::createUuidsUsingSequence([Uuid::fromString('9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f')]);
 
-        $response = $this->postJson('/touch-documents/actions/batched-touch-documents');
+        $response = $this->postJson('/touch-documents/actions/batched-touch-documents', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 11, 'batch' => '9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f', 'result' => ['type' => 'message', 'message' => '1 batch for 11 documents']]]);
     }
@@ -139,7 +139,7 @@ class ActionResultsTest extends PackageTestCase
         TouchDocuments::$answer = fn (ActionFields $fields, int $impacted): ActionResponse => ActionResponse::data(['batches' => count(Bus::dispatchedBatches()), 'rows' => $impacted]);
         Str::createUuidsUsingSequence([Uuid::fromString('9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f')]);
 
-        $response = $this->postJson('/touch-documents/actions/batched-touch-documents');
+        $response = $this->postJson('/touch-documents/actions/batched-touch-documents', ['search' => []]);
 
         $response->assertOk();
         $this->assertSame('{"data":{"impacted":11,"batch":"9f0c4d2e-5a1b-4c3d-8e7f-0a1b2c3d4e5f","result":{"type":"data","data":{"batches":1,"rows":11}}}}', $response->getContent());
@@ -150,7 +150,7 @@ class ActionResultsTest extends PackageTestCase
     {
         TouchDocuments::$answer = fn (): ActionResponse => ActionResponse::message('Export started')->withData(['export' => 41]);
 
-        $response = $this->postJson('/touch-documents/actions/touch-documents');
+        $response = $this->postJson('/touch-documents/actions/touch-documents', ['search' => []]);
 
         $response->assertOk();
         $this->assertSame('{"data":{"impacted":11,"result":{"type":"message","message":"Export started","data":{"export":41}}}}', $response->getContent());
@@ -163,7 +163,7 @@ class ActionResultsTest extends PackageTestCase
     {
         TouchDocuments::$answer = $answer;
 
-        $response = $this->postJson('/touch-documents/actions/touch-documents');
+        $response = $this->postJson('/touch-documents/actions/touch-documents', ['search' => []]);
 
         $response->assertOk();
         $this->assertSame('{"data":{"impacted":11,"result":'.$result.'}}', $response->getContent());

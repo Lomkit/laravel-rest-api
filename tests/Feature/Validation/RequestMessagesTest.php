@@ -27,7 +27,7 @@ class RequestMessagesTest extends PackageTestCase
     #[Test]
     public function it_applies_the_request_messages_to_the_action_fields(): void
     {
-        $response = $this->postJson('/api/posts/actions/change-status', ['fields' => []]);
+        $response = $this->postJson('/api/posts/actions/change-status', ['search' => [], 'fields' => []]);
 
         $response->assertUnprocessable()->assertExactJson([
             'message' => 'Pick a status.',
@@ -39,6 +39,7 @@ class RequestMessagesTest extends PackageTestCase
     public function it_applies_the_request_attribute_names_to_the_action_fields(): void
     {
         $response = $this->postJson('/api/posts/actions/change-status', [
+            'search' => [],
             'fields' => [['name' => 'status', 'value' => 'published'], ['name' => 'at', 'value' => 'soon']],
         ]);
 

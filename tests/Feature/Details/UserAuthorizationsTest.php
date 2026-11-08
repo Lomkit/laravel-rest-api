@@ -142,8 +142,10 @@ class UserAuthorizationsTest extends HelpdeskTestCase
         $this->decideFor($agent);
         $details = $this->getJson('/metric-tickets?with=authorizations,actions.authorized,metrics.authorized')->assertOk();
 
+        $targets = array_column($details->json('data.actions'), 'target', 'uriKey');
+
         foreach ($actions as $key => $status) {
-            $this->assertSame($status, $this->postJson("/metric-tickets/actions/{$key}")->status());
+            $this->assertSame($status, $this->postJson("/metric-tickets/actions/{$key}", $targets[$key] === 'search' ? ['search' => []] : [])->status());
         }
 
         foreach ($metrics as $key => $status) {

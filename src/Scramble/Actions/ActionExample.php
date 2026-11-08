@@ -16,7 +16,7 @@ final class ActionExample
     public static function of(Resource $resource, Action $action): array|stdClass
     {
         $example = match ($action->target) {
-            ActionTarget::Search => SearchExample::of($resource) ?? [],
+            ActionTarget::Search => SearchExample::of($resource) ?? ['search' => new stdClass],
             ActionTarget::Resources => ['resources' => [KeySchema::example($resource)]],
             ActionTarget::None => [],
         };

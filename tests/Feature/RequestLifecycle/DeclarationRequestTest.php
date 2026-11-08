@@ -46,7 +46,7 @@ class DeclarationRequestTest extends PackageTestCase
     public function it_reads_the_user_of_the_request_in_the_fields_of_an_action(): void
     {
         Rest::resource('staff-noted-posts', StaffNotedPostController::class)->register();
-        $payload = ['fields' => [['name' => 'note', 'value' => 'Checked']]];
+        $payload = ['search' => [], 'fields' => [['name' => 'note', 'value' => 'Checked']]];
 
         $staffResponse = $this->actingAs(User::factory()->staff()->create())
             ->postJson('/staff-noted-posts/actions/staff-noted-publish-posts', $payload);

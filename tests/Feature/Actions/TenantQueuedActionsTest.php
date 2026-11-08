@@ -74,7 +74,7 @@ class TenantQueuedActionsTest extends PackageTestCase
     {
         QueueTenancy::listen($this->app['events'], initializesTenant: true);
 
-        $this->postJson('/staff-documents/actions/export-documents', self::DUE)->assertOk();
+        $this->postJson('/staff-documents/actions/export-documents', ['search' => [], ...self::DUE])->assertOk();
 
         $this->assertSame([[2, [1, 2]]], array_map(fn (array $run): array => [$run['user'], $run['keys']], QueuedRuns::$runs));
         $this->assertSame(['a', Tenancy::$connections['a']], [Tenancy::$tenant, config('database.default')]);
@@ -85,7 +85,7 @@ class TenantQueuedActionsTest extends PackageTestCase
     {
         QueueTenancy::listen($this->app['events'], initializesTenant: false);
 
-        $response = $this->postJson('/staff-documents/actions/export-documents', self::DUE);
+        $response = $this->postJson('/staff-documents/actions/export-documents', ['search' => [], ...self::DUE]);
 
         $exception = $response->exception;
         $this->assertInstanceOf(QueryException::class, $exception);

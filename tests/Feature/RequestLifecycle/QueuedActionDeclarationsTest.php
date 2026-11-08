@@ -52,7 +52,7 @@ class QueuedActionDeclarationsTest extends PackageTestCase
 
         Str::createUuidsUsingSequence([Uuid::fromString(self::BATCH)]);
 
-        $response = $this->postJson("/configurable-action-posts/actions/{$action}");
+        $response = $this->postJson("/configurable-action-posts/actions/{$action}", ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 2, ...$batch, 'result' => null]]);
         $this->assertSame(2, Post::query()->where('status', PostStatus::Published)->count());

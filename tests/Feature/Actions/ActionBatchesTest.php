@@ -67,7 +67,7 @@ class ActionBatchesTest extends HelpdeskTestCase
         Bus::fake();
         $this->actingAs(new GenericUser(['id' => 7]));
 
-        $response = $this->postJson('/chunked-tickets/actions/batched-close-open-tickets');
+        $response = $this->postJson('/chunked-tickets/actions/batched-close-open-tickets', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 7, 'batch' => self::BATCH, 'result' => null]]);
         Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->name === 'batched-close-open-tickets'
@@ -81,7 +81,7 @@ class ActionBatchesTest extends HelpdeskTestCase
         Event::fake([ActionOperated::class]);
         $this->actingAs(new GenericUser(['id' => 7]));
 
-        $this->postJson('/chunked-tickets/actions/batched-close-open-tickets')->assertOk();
+        $this->postJson('/chunked-tickets/actions/batched-close-open-tickets', ['search' => []])->assertOk();
 
         Event::assertDispatchedTimes(ActionOperated::class, 1);
         Event::assertDispatched(ActionOperated::class, fn (ActionOperated $event): bool => get_object_vars($event) === [
@@ -99,7 +99,7 @@ class ActionBatchesTest extends HelpdeskTestCase
     {
         CloseOpenTickets::$cancel = true;
 
-        $response = $this->postJson('/chunked-tickets/actions/batched-close-open-tickets');
+        $response = $this->postJson('/chunked-tickets/actions/batched-close-open-tickets', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 7, 'batch' => self::BATCH, 'result' => null]]);
         $this->assertSame([[1, 2]], CloseOpenTickets::$runs);
@@ -111,7 +111,7 @@ class ActionBatchesTest extends HelpdeskTestCase
     {
         Queue::fake();
         $this->actingAs(new GenericUser(['id' => 7]));
-        $this->postJson('/chunked-tickets/actions/batched-close-open-tickets')->assertOk();
+        $this->postJson('/chunked-tickets/actions/batched-close-open-tickets', ['search' => []])->assertOk();
         Bus::findBatch(self::BATCH)?->recordSuccessfulJob('job-1');
 
         $response = $this->getJson('/chunked-tickets/actions/batched-close-open-tickets/batches/'.self::BATCH);
@@ -137,7 +137,7 @@ class ActionBatchesTest extends HelpdeskTestCase
             $this->actingAs(new GenericUser(['id' => $starter]));
         }
 
-        $this->postJson('/chunked-tickets/actions/batched-close-open-tickets')->assertOk();
+        $this->postJson('/chunked-tickets/actions/batched-close-open-tickets', ['search' => []])->assertOk();
         $this->app['auth']->forgetGuards();
 
         if ($reader !== null) {

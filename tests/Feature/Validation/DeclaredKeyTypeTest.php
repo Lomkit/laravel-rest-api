@@ -86,6 +86,6 @@ class DeclaredKeyTypeTest extends PackageTestCase
 
         $this->expectExceptionObject(new LogicException('The request has no resource keys.'));
 
-        $this->postJson('/reading-drafts/actions/count-untyped-drafts');
+        $this->postJson('/reading-drafts/actions/count-untyped-drafts', ['search' => []]);
     }
 }

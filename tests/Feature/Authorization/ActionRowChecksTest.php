@@ -75,7 +75,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
                 ['path' => 'resources.0', 'ability' => 'update', 'key' => 6, 'message' => self::READ_ONLY],
                 ['path' => 'resources.1', 'ability' => 'update', 'key' => 2, 'message' => self::READ_ONLY],
             ]],
-            'rows of the search in two chunks' => [ActionTarget::Search, 'update', [], [2, 6], 423, [
+            'rows of the search in two chunks' => [ActionTarget::Search, 'update', ['search' => []], [2, 6], 423, [
                 ['path' => 'search', 'ability' => 'update', 'key' => 2, 'message' => self::READ_ONLY],
                 ['path' => 'search', 'ability' => 'update', 'key' => 6, 'message' => self::READ_ONLY],
             ]],
@@ -91,7 +91,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
         $this->seedRows([2]);
         $this->logQueries();
 
-        $response = $this->postJson('/reviewed-tickets/actions/review-tickets');
+        $response = $this->postJson('/reviewed-tickets/actions/review-tickets', ['search' => []]);
 
         $response->assertStatus(423)->assertExactJson(['message' => self::READ_ONLY]);
         $this->assertSame([], ReviewTickets::$runs);
@@ -105,7 +105,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
         $this->seedRows();
         $this->logQueries();
 
-        $response = $this->postJson('/reviewed-tickets/actions/review-tickets');
+        $response = $this->postJson('/reviewed-tickets/actions/review-tickets', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 7, 'result' => null]]);
         $this->assertSame(self::CHUNKS, ReviewTickets::$runs);
@@ -124,7 +124,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
         $this->seedRows($closed);
         $this->logQueries();
 
-        $response = $this->postJson('/reviewed-tickets/actions/review-allowed-tickets');
+        $response = $this->postJson('/reviewed-tickets/actions/review-allowed-tickets', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => $impacted, 'result' => null]]);
         $this->assertSame($runs, ReviewTickets::$runs);
@@ -178,7 +178,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
         $this->seedRows();
         ReviewTickets::$recheck = true;
 
-        $this->postJson("/reviewed-tickets/actions/{$action}")->assertOk();
+        $this->postJson("/reviewed-tickets/actions/{$action}", ['search' => []])->assertOk();
 
         $this->assertSame($calls, $this->tickets->calls);
     }
@@ -198,7 +198,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
         Queue::fake();
         $this->seedRows([2]);
 
-        $this->postJson('/reviewed-tickets/actions/queued-review-tickets')->assertStatus(423);
+        $this->postJson('/reviewed-tickets/actions/queued-review-tickets', ['search' => []])->assertStatus(423);
 
         Queue::assertNothingPushed();
     }
@@ -209,7 +209,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
         Queue::fake();
         $this->seedRows([2, 6]);
 
-        $response = $this->postJson('/reviewed-tickets/actions/queued-review-allowed-tickets');
+        $response = $this->postJson('/reviewed-tickets/actions/queued-review-allowed-tickets', ['search' => []]);
 
         $response->assertOk()->assertExactJson(['data' => ['impacted' => 5, 'result' => null]]);
         $this->assertSame([[1], [3, 4], [5], [7]], Queue::pushed(QueuedAction::class)->map(fn (QueuedAction $job): array => $job->rows->keys)->all());
@@ -221,7 +221,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
         Bus::fake();
         $this->seedRows([2]);
 
-        $this->postJson('/reviewed-tickets/actions/batched-review-tickets')->assertStatus(423);
+        $this->postJson('/reviewed-tickets/actions/batched-review-tickets', ['search' => []])->assertStatus(423);
 
         Bus::assertNothingBatched();
         $this->assertFalse(ReviewTickets::$batched);
@@ -232,7 +232,7 @@ class ActionRowChecksTest extends HelpdeskTestCase
     {
         Queue::fake();
         $this->seedRows();
-        $this->postJson('/reviewed-tickets/actions/queued-review-tickets')->assertOk();
+        $this->postJson('/reviewed-tickets/actions/queued-review-tickets', ['search' => []])->assertOk();
         $job = Queue::pushed(QueuedAction::class)->first();
         Ticket::query()->whereKey(1)->update(['status' => 'closed']);
         $this->tickets->calls = [];
@@ -264,10 +264,10 @@ class ActionRowChecksTest extends HelpdeskTestCase
         $this->seedRows();
         $this->travel(1)->seconds();
 
-        $this->postJson('/cached-reviewed-tickets/actions/review-tickets')->assertOk();
+        $this->postJson('/cached-reviewed-tickets/actions/review-tickets', ['search' => []])->assertOk();
         $cold = [$reads, $writes, $this->tickets->calls];
         [$reads, $writes, $this->tickets->calls] = [[], [], []];
-        $this->postJson('/cached-reviewed-tickets/actions/review-tickets')->assertOk();
+        $this->postJson('/cached-reviewed-tickets/actions/review-tickets', ['search' => []])->assertOk();
 
         $this->assertSame([['stamps', 1, 2, 2, 2, 1], [[300, 1], [300, 2], [300, 2], [300, 2], [300, 1]], self::UPDATES], $cold);
         $this->assertSame([['stamps', 1, 2, 2, 2, 1], [], []], [$reads, $writes, $this->tickets->calls]);
