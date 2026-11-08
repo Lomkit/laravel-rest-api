@@ -108,7 +108,7 @@ final readonly class ActionRunner
     /** @param Collection<array-key, Model> $models */
     private function handle(Collection $models): void
     {
-        $this->action->transaction->aroundChunk($this->transaction->over($models), fn () => $this->action->handle($this->fields, $models));
+        $this->action->transaction->handle($this->action, $this->fields, $this->transaction, $models);
     }
 
     private static function batch(Action $action, ActionFields $fields, UserReference $user): PendingBatch

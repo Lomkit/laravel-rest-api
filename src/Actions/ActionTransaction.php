@@ -3,12 +3,15 @@
 namespace Lomkit\Rest\Actions;
 
 use Closure;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Lomkit\Rest\Http\WriteTransaction;
 
 enum ActionTransaction
 {
     case Chunk;
     case Whole;
+    case Row;
     case None;
 
     /**
@@ -22,9 +25,24 @@ enum ActionTransaction
         return $this === self::Whole ? $transaction->run($run) : $run();
     }
 
-    /** @param Closure(): void $chunk */
-    public function aroundChunk(WriteTransaction $transaction, Closure $chunk): void
+    /** @param Collection<array-key, Model> $models */
+    public function handle(Action $action, ActionFields $fields, WriteTransaction $transaction, Collection $models): void
     {
-        $this === self::Chunk ? $transaction->run($chunk) : $chunk();
+        if ($this === self::Row) {
+            foreach ($models as $row) {
+                $action->beforeRow($fields, $row);
+                $transaction->over([$row])->run(fn () => $action->handleRow($fields, $row));
+            }
+
+            return;
+        }
+
+        if ($this === self::Chunk) {
+            $transaction->over($models)->run(fn () => $action->handle($fields, $models));
+
+            return;
+        }
+
+        $action->handle($fields, $models);
     }
 }

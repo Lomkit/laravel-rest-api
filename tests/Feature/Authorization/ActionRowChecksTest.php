@@ -142,6 +142,34 @@ class ActionRowChecksTest extends HelpdeskTestCase
         ];
     }
 
+    /**
+     * @param  list<int>  $closed
+     * @param  list<list<int>>  $runs
+     */
+    #[Test]
+    #[DataProvider('rowsPerTransaction')]
+    public function it_checks_the_rows_of_an_action_that_runs_each_row_in_its_own_transaction(string $action, array $closed, int $status, array $runs): void
+    {
+        $this->seedRows($closed);
+
+        $response = $this->postJson("/reviewed-tickets/actions/{$action}");
+
+        $response->assertStatus($status);
+        $this->assertSame($runs, ReviewTickets::$runs);
+        $this->assertSame(self::UPDATES, $this->tickets->calls);
+    }
+
+    /** @return array<string, array{string, list<int>, int, list<list<int>>}> */
+    public static function rowsPerTransaction(): array
+    {
+        return [
+            'every row allowed' => ['review-tickets-per-row', [], 200, [[1], [2], [3], [4], [5], [6], [7]]],
+            'a refused row' => ['review-tickets-per-row', [2, 6], 423, []],
+            'refused rows skipped' => ['review-allowed-tickets-per-row', [2, 6], 200, [[1], [3], [4], [5], [7]]],
+            'refused rows skipped in the jobs' => ['queued-review-allowed-tickets-per-row', [2, 6], 200, [[1], [3], [4], [5], [7]]],
+        ];
+    }
+
     /** @param list<string> $calls */
     #[Test]
     #[DataProvider('rechecks')]

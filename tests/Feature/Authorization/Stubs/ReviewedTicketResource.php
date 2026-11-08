@@ -20,6 +20,17 @@ class ReviewedTicketResource extends TicketResource
             QueuedReviewTickets::make()->target(self::$target),
             QueuedReviewAllowedTickets::make()->target(self::$target),
             BatchedReviewTickets::make()->target(self::$target),
+            ReviewTicketsPerRow::make()
+                ->target(self::$target)
+                ->transactionPerRow(),
+            ReviewAllowedTicketsPerRow::make()
+                ->target(self::$target)
+                ->transactionPerRow()
+                ->skipUnauthorized(),
+            QueuedReviewAllowedTicketsPerRow::make()
+                ->target(self::$target)
+                ->transactionPerRow()
+                ->skipUnauthorized(),
         ];
     }
 }
