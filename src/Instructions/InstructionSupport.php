@@ -2,8 +2,8 @@
 
 namespace Lomkit\Rest\Instructions;
 
+use Lomkit\Rest\Support\Overrides;
 use Lomkit\Rest\Text\TextBackend;
-use ReflectionMethod;
 
 final readonly class InstructionSupport
 {
@@ -15,7 +15,7 @@ final readonly class InstructionSupport
     public static function of(Instruction $instruction): self
     {
         $engine = $instruction instanceof AppliesToEngine;
-        $handled = (new ReflectionMethod($instruction, 'handle'))->getDeclaringClass()->getName() !== Instruction::class;
+        $handled = Overrides::method($instruction, 'handle', Instruction::class);
 
         return new self(! $engine || $handled, $engine);
     }

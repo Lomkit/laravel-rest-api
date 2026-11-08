@@ -10,11 +10,15 @@ use Lomkit\Rest\Search\Plan\QueryPlan;
 
 final readonly class SearchedPage
 {
-    /** @param LengthAwarePaginator<int, Model> $rows */
+    /**
+     * @param  LengthAwarePaginator<int, Model>  $rows
+     * @param  array<string, mixed>  $meta
+     */
     public function __construct(
         public QueryPlan $plan,
         public LengthAwarePaginator $rows,
         public IncludeOverflow $overflow,
+        public array $meta,
     ) {}
 
     public function response(): Response
@@ -22,6 +26,7 @@ final readonly class SearchedPage
         return $this->plan->resource::newResponse()
             ->plan($this->plan)
             ->responsable($this->rows)
-            ->overflow($this->overflow);
+            ->overflow($this->overflow)
+            ->meta($this->meta);
     }
 }

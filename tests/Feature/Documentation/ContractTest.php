@@ -116,6 +116,26 @@ class ContractTest extends DocumentationTestCase
     }
 
     #[Test]
+    public function it_answers_a_search_with_the_meta_of_the_resource_and_of_its_instructions_as_the_document_describes(): void
+    {
+        $this->seedFestival();
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+
+        $response = $this->postJson('api/shows/search', ['search' => [
+            'instructions' => [['name' => 'only-featured'], ['name' => 'only-featured', 'alias' => 'others', 'fields' => [['name' => 'featured', 'value' => false]]]],
+            'gates' => ['create'],
+        ]]);
+
+        $response->assertOk();
+        $this->assertSame(
+            '{"gates":{"authorized_to_create":{"allowed":true,"message":null}},"listed":0,"instructions":{"only-featured":{"featured":true},"others":{"featured":false}}}',
+            json_encode($response->json('meta')),
+        );
+        $this->assertSame([], (new OpenApiValidator)->responseErrors($document, '/shows/search', 'post', 200, (string) $response->getContent()));
+    }
+
+    #[Test]
     public function it_answers_a_search_of_a_resource_with_a_maximum_total_as_the_document_describes(): void
     {
         Route::prefix('api')->group(fn () => Rest::resource('capped-stages', CappedStageController::class));

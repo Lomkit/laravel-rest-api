@@ -5,12 +5,14 @@ namespace Lomkit\Rest\Tests\Feature\Documentation;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\CappedStageController;
+use Lomkit\Rest\Tests\Feature\Documentation\Stubs\FeaturedStageController;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\KeyedStageController;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\KeyedStageResource;
 use Lomkit\Rest\Tests\Feature\Documentation\Stubs\OtherStageController;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use stdClass;
 
 class ReadResponsesTest extends DocumentationTestCase
 {
@@ -114,8 +116,8 @@ class ReadResponsesTest extends DocumentationTestCase
             json_encode($schemas['Show']['properties']['gates']),
         );
         $this->assertSame(
-            '{"type":"object","properties":{"gates":{"type":"object","description":"Present when the search lists the create gate","properties":{"authorized_to_create":'.self::GATE.'}}}}',
-            json_encode($schemas['ShowPaginated']['properties']['meta']),
+            '{"type":"object","properties":{"gates":{"type":"object","description":"Present when the search lists the create gate","properties":{"authorized_to_create":'.self::GATE.'}}},"additionalProperties":false}',
+            json_encode($schemas['StagePaginated']['properties']['meta']),
         );
         $this->assertSame('{"type":"object","properties":{"allowed":{"type":"boolean"},"message":{"type":["string","null"]}},"required":["allowed","message"],"title":"RestGateAnswer"}', json_encode($schemas['RestGateAnswer']));
     }
@@ -133,6 +135,50 @@ class ReadResponsesTest extends DocumentationTestCase
             '{"type":"object","description":"The rows that the request changed","properties":{"data":{"type":"array","items":{"$ref":"#\/components\/schemas\/Stage"}},"meta":{"type":"object"}},"required":["data","meta"],"title":"StageRows"}',
             json_encode($schemas['StageRows']),
         );
+    }
+
+    #[Test]
+    public function it_closes_the_meta_of_a_page_without_search_meta(): void
+    {
+        $document = $this->document();
+        $pointer = '#/components/schemas/StagePaginated/properties/meta';
+        $validator = new OpenApiValidator;
+
+        $this->assertSame([], $validator->schemaErrors($document, $pointer, (object) []));
+        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['listed' => 2]));
+        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['instructions' => ['only-featured' => ['featured' => true]]]));
+    }
+
+    #[Test]
+    public function it_opens_the_meta_of_a_page_whose_resource_declares_search_meta(): void
+    {
+        $document = $this->document();
+        $meta = $document['components']['schemas']['ShowPaginated']['properties']['meta'];
+        $pointer = '#/components/schemas/ShowPaginated/properties/meta';
+        $validator = new OpenApiValidator;
+
+        $this->assertSame('Also holds the keys that searchMeta() of the resource returns for the page', $meta['description']);
+        $this->assertSame(['gates', 'instructions'], array_keys($meta['properties']));
+        $this->assertEquals(new stdClass, $meta['additionalProperties']);
+        $this->assertSame([], $validator->schemaErrors($document, $pointer, ['listed' => 2, 'instructions' => ['only-featured' => ['featured' => true], 'large' => ['featured' => false]]]));
+        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['instructions' => ['only-featured' => 'featured']]));
+    }
+
+    #[Test]
+    public function it_documents_the_meta_of_the_instructions_of_a_resource_without_search_meta(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('featured-stages', FeaturedStageController::class));
+
+        $document = $this->document();
+        $pointer = '#/components/schemas/FeaturedStagePaginated/properties/meta';
+        $validator = new OpenApiValidator;
+
+        $this->assertSame(
+            '{"type":"object","properties":{"gates":{"type":"object","description":"Present when the search lists the create gate","properties":{"authorized_to_create":'.self::GATE.'}},"instructions":{"type":"object","description":"Present when an instruction of the search returns keys from searchMeta(): its keys, under the alias of the instruction or else its uriKey","additionalProperties":{"type":"object","additionalProperties":{}}}},"additionalProperties":false}',
+            json_encode($document['components']['schemas']['FeaturedStagePaginated']['properties']['meta']),
+        );
+        $this->assertSame([], $validator->schemaErrors($document, $pointer, ['instructions' => ['only-featured' => ['featured' => true]]]));
+        $this->assertNotSame([], $validator->schemaErrors($document, $pointer, ['listed' => 2]));
     }
 
     #[Test]

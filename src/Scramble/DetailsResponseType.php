@@ -17,8 +17,8 @@ use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
+use Lomkit\Rest\Support\Overrides;
 use Lomkit\Rest\Text\TextMode;
-use ReflectionMethod;
 
 final class DetailsResponseType
 {
@@ -55,7 +55,7 @@ final class DetailsResponseType
 
     private static function meta(Resource $resource): ObjectType
     {
-        if ((new ReflectionMethod($resource, 'detailsMeta'))->class === Resource::class) {
+        if (! Overrides::method($resource, 'detailsMeta', Resource::class)) {
             return Schemas::closed([], description: 'Empty: the resource adds no keys with detailsMeta()');
         }
 

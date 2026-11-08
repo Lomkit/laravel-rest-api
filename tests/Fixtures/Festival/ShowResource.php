@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Fixtures\Festival;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Lomkit\Rest\Fields\Boolean;
 use Lomkit\Rest\Fields\Date;
 use Lomkit\Rest\Fields\DateTime;
@@ -17,6 +18,7 @@ use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Scopes\Scope;
+use Lomkit\Rest\Search\SearchContext;
 use Lomkit\Rest\Text\Contains;
 use Lomkit\Rest\Text\TextSearch;
 
@@ -106,6 +108,12 @@ class ShowResource extends Resource
     public function detailsMeta(): array
     {
         return ['label' => 'Shows', 'default_sort' => ['field' => 'starts_on', 'direction' => 'desc']];
+    }
+
+    #[\Override]
+    public function searchMeta(SearchContext $search, LengthAwarePaginator $page): array
+    {
+        return ['listed' => count($page->items())];
     }
 
     #[\Override]

@@ -5,11 +5,15 @@ namespace Lomkit\Rest\Scramble\Components;
 use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\IntegerType;
+use Dedoc\Scramble\Support\Generator\Types\MixedType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Schemas;
+use Lomkit\Rest\Search\Run\SearchMeta;
+use Lomkit\Rest\Support\Overrides;
 use Lomkit\Rest\Text\TextBackend;
 
 final readonly class PageSchema
@@ -68,13 +72,48 @@ final readonly class PageSchema
 
     private function meta(Resource $resource): ObjectType
     {
-        $meta = new ObjectType;
+        $properties = [];
         $gates = $this->records->gates($resource, true);
 
         if ($gates !== null) {
-            $meta->addProperty($resource->context()->config()->gatesKey, $gates->setDescription('Present when the search lists the create gate'));
+            $properties[$resource->context()->config()->gatesKey] = $gates->setDescription('Present when the search lists the create gate');
         }
 
+        if (self::instructionsAddMeta($resource)) {
+            $properties[SearchMeta::INSTRUCTIONS] = self::instructions();
+        }
+
+        if (! Overrides::method($resource, 'searchMeta', Resource::class)) {
+            return Schemas::closed($properties);
+        }
+
+        $meta = Schemas::object($properties);
+        $meta->additionalProperties(new MixedType);
+        $meta->setDescription('Also holds the keys that searchMeta() of the resource returns for the page');
+
         return $meta;
+    }
+
+    private static function instructionsAddMeta(Resource $resource): bool
+    {
+        foreach ($resource->definition()->instructions() as $instruction) {
+            if (Overrides::method($instruction, 'searchMeta', Instruction::class)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function instructions(): ObjectType
+    {
+        $instruction = new ObjectType;
+        $instruction->additionalProperties(new MixedType);
+
+        $instructions = new ObjectType;
+        $instructions->additionalProperties($instruction);
+        $instructions->setDescription('Present when an instruction of the search returns keys from searchMeta(): its keys, under the alias of the instruction or else its uriKey');
+
+        return $instructions;
     }
 }
