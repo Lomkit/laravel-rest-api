@@ -99,6 +99,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Transactions
+    |--------------------------------------------------------------------------
+    |
+    | Each write runs in a database transaction: a mutation, a destroy, a
+    | restore, a force destroy, and each chunk or whole run of an action.
+    | "attempts" is how many times a transaction runs when the database
+    | reports a deadlock or a lock timeout; 1 runs it once. Each attempt
+    | runs the whole write again, with its events and the handle() method
+    | of the action, right after the failed one. A transaction inside a
+    | transaction of your application is not run again.
+    |
+    */
+
+    'transactions' => [
+        'attempts' => env('REST_TRANSACTION_ATTEMPTS', 1),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Request Limits
     |--------------------------------------------------------------------------
     |

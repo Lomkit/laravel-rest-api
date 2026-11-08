@@ -3,7 +3,7 @@
 namespace Lomkit\Rest\Actions;
 
 use Closure;
-use Illuminate\Database\ConnectionInterface;
+use Lomkit\Rest\Http\WriteTransaction;
 
 enum ActionTransaction
 {
@@ -17,14 +17,14 @@ enum ActionTransaction
      * @param  Closure(): TResult  $run
      * @return TResult
      */
-    public function aroundRun(ConnectionInterface $connection, Closure $run): mixed
+    public function aroundRun(WriteTransaction $transaction, Closure $run): mixed
     {
-        return $this === self::Whole ? $connection->transaction($run) : $run();
+        return $this === self::Whole ? $transaction->run($run) : $run();
     }
 
     /** @param Closure(): void $chunk */
-    public function aroundChunk(ConnectionInterface $connection, Closure $chunk): void
+    public function aroundChunk(WriteTransaction $transaction, Closure $chunk): void
     {
-        $this === self::Chunk ? $connection->transaction($chunk) : $chunk();
+        $this === self::Chunk ? $transaction->run($chunk) : $chunk();
     }
 }

@@ -72,6 +72,24 @@ class ConfigValueTest extends TestCase
     }
 
     #[Test]
+    public function it_reads_an_integer_of_a_given_minimum_or_more(): void
+    {
+        $this->assertSame(
+            [1, 3, 1, 12],
+            array_map(fn (int|string $value): int => ConfigValue::at('rest.transactions.attempts', $value)->integer(1), [1, 3, '1', '12']),
+        );
+    }
+
+    #[Test]
+    #[DataProvider('integersUnderOne')]
+    public function it_names_the_minimum_of_an_integer_under_it(mixed $value): void
+    {
+        $this->expectExceptionObject(new InvalidConfigException('The [rest.transactions.attempts] option must be an integer of 1 or more.'));
+
+        ConfigValue::at('rest.transactions.attempts', $value)->integer(1);
+    }
+
+    #[Test]
     public function it_reads_a_string_that_is_not_empty(): void
     {
         $this->assertSame('abilities', ConfigValue::at('rest.gates.key', 'abilities')->string());
@@ -175,6 +193,18 @@ class ConfigValueTest extends TestCase
             'a boolean' => [true],
             'null' => [null],
             'an empty string' => [''],
+        ];
+    }
+
+    /** @return array<string, array{mixed}> */
+    public static function integersUnderOne(): array
+    {
+        return [
+            'zero' => [0],
+            'the string 0' => ['0'],
+            'a negative integer' => [-1],
+            'a word' => ['abc'],
+            'null' => [null],
         ];
     }
 

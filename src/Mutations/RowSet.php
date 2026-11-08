@@ -51,6 +51,14 @@ final class RowSet
         return $this->named[$resource::class][$key] ?? null;
     }
 
+    /** @return list<Model> */
+    public function loaded(): array
+    {
+        $this->index();
+
+        return array_merge(...array_map(array_values(...), array_values($this->named)));
+    }
+
     private function index(): void
     {
         foreach ($this->lookups as $class => $lookup) {

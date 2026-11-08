@@ -22,9 +22,9 @@ final readonly class MutateResponse implements Responsable
 
     public static function of(MutateRequest $request, Resource $resource): self
     {
-        $operations = $resource::newModel()
-            ->getConnection()
-            ->transaction(fn (): array => self::write($request, $resource));
+        $operations = WriteTransaction::of($resource)
+            ->over($request->rows()->loaded())
+            ->run(fn (): array => self::write($request, $resource));
         $block = $request->responseBlock();
 
         return new self($operations, $block === null ? null : WrittenRecords::read($resource, $block, $operations)->rows());

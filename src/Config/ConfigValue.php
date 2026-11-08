@@ -31,17 +31,19 @@ final readonly class ConfigValue
         };
     }
 
-    public function integer(): int
+    public function integer(int $min = 0): int
     {
-        if (is_int($this->value) && $this->value >= 0) {
-            return $this->value;
+        $integer = match (true) {
+            is_int($this->value) => $this->value,
+            is_string($this->value) && ctype_digit($this->value) => (int) $this->value,
+            default => null,
+        };
+
+        if ($integer === null || $integer < $min) {
+            throw InvalidConfigException::mustBe($this->key, "an integer of {$min} or more");
         }
 
-        if (is_string($this->value) && ctype_digit($this->value)) {
-            return (int) $this->value;
-        }
-
-        throw InvalidConfigException::mustBe($this->key, 'an integer of 0 or more');
+        return $integer;
     }
 
     public function string(): string
