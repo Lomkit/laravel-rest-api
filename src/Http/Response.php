@@ -26,6 +26,9 @@ class Response implements Responsable
 
     private ?IncludeOverflow $overflow = null;
 
+    /** @var array<string, mixed> */
+    private array $meta = [];
+
     public function plan(QueryPlan $plan): static
     {
         $this->plan = $plan;
@@ -36,6 +39,14 @@ class Response implements Responsable
     public function overflow(IncludeOverflow $overflow): static
     {
         $this->overflow = $overflow;
+
+        return $this;
+    }
+
+    /** @param array<string, mixed> $meta */
+    public function meta(array $meta): static
+    {
+        $this->meta = $meta;
 
         return $this;
     }
@@ -66,7 +77,7 @@ class Response implements Responsable
 
         return $this->authorizer()->batch(
             GatePrefetch::page($this->plan, $models, $reach),
-            fn (): array => $envelope->wrap(fn (Model $model): array => $this->render($model, $rows), $rows->meta()),
+            fn (): array => $envelope->wrap(fn (Model $model): array => $this->render($model, $rows), [...$rows->meta(), ...$this->meta]),
         );
     }
 

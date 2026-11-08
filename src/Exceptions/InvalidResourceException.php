@@ -16,6 +16,11 @@ final class InvalidResourceException extends LogicException
         return new self("The resource [{$resource}] declares the field [{$field}], which is the key of the gates of its rows. Rename the field, or set rest.gates.key to another name.");
     }
 
+    public static function reservedSearchMetaKey(string $resource, string $key): self
+    {
+        return new self("The resource [{$resource}] returns the key [{$key}] from searchMeta(), which the package fills in the meta of a search page. Rename the key.");
+    }
+
     public static function moreKeyField(string $resource, string $field): self
     {
         return new self("The resource [{$resource}] declares the field [{$field}], which is the key that lists the includes of a row with more rows. Rename the field, or set rest.search.more_key to another name.");

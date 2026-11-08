@@ -52,4 +52,10 @@ class Instruction
 
     /** @param Builder<Model> $query */
     public function handle(InstructionFields $fields, Builder $query): void {}
+
+    /** @return array<string, mixed> */
+    public function searchMeta(InstructionFields $fields): array
+    {
+        return [];
+    }
 }

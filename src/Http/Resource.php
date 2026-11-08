@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Http;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Actions\Actionable;
 use Lomkit\Rest\Concerns\Authorizable;
@@ -21,6 +22,7 @@ use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Details\ResourceDetails;
 use Lomkit\Rest\Instructions\Instructionable;
 use Lomkit\Rest\Metrics\HasMetrics;
+use Lomkit\Rest\Search\SearchContext;
 
 class Resource implements \JsonSerializable
 {
@@ -92,6 +94,15 @@ class Resource implements \JsonSerializable
     public function isAuthorizingEnabled(): bool
     {
         return true;
+    }
+
+    /**
+     * @param  LengthAwarePaginator<int, Model>  $page
+     * @return array<string, mixed>
+     */
+    public function searchMeta(SearchContext $search, LengthAwarePaginator $page): array
+    {
+        return [];
     }
 
     /** @return array<string, mixed> */

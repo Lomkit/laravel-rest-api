@@ -5876,7 +5876,8 @@
                                     }
                                 }
                             }
-                        }
+                        },
+                        "additionalProperties": false
                     }
                 },
                 "required": [
@@ -11548,6 +11549,7 @@
                     },
                     "meta": {
                         "type": "object",
+                        "description": "Also holds the keys that searchMeta() of the resource returns for the page",
                         "properties": {
                             "gates": {
                                 "type": "object",
@@ -11557,8 +11559,17 @@
                                         "$ref": "#/components/schemas/RestGateAnswer"
                                     }
                                 }
+                            },
+                            "instructions": {
+                                "type": "object",
+                                "description": "Present when an instruction of the search returns keys from searchMeta(): its keys, under the alias of the instruction or else its uriKey",
+                                "additionalProperties": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
                             }
-                        }
+                        },
+                        "additionalProperties": {}
                     }
                 },
                 "required": [
@@ -15930,7 +15941,8 @@
                                     }
                                 }
                             }
-                        }
+                        },
+                        "additionalProperties": false
                     }
                 },
                 "required": [

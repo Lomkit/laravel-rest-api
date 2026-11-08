@@ -25,4 +25,10 @@ class OnlyFeatured extends Instruction
             $query->where('seats', '>=', $fields->min_seats);
         }
     }
+
+    #[\Override]
+    public function searchMeta(InstructionFields $fields): array
+    {
+        return ['featured' => $fields->featured];
+    }
 }
