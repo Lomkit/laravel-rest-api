@@ -12,4 +12,10 @@ final readonly class NoRows implements ActionRows
     {
         return $each(new Collection);
     }
+
+    #[\Override]
+    public function count(): int
+    {
+        return 0;
+    }
 }

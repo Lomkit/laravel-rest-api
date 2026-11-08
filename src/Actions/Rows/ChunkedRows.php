@@ -13,6 +13,7 @@ final readonly class ChunkedRows implements ActionRows
     private function __construct(
         private Builder $query,
         private int $chunkCount,
+        private ?int $count,
     ) {}
 
     /** @param Builder<Model> $query */
@@ -20,9 +21,14 @@ final readonly class ChunkedRows implements ActionRows
     {
         $rows = $query->clone()->reorder();
 
-        $cap?->check($rows->toBase()->getCountForPagination());
+        if ($cap === null) {
+            return new self($rows, $chunkCount, null);
+        }
 
-        return new self($rows, $chunkCount);
+        $count = $rows->toBase()->getCountForPagination();
+        $cap->check($count);
+
+        return new self($rows, $chunkCount, $count);
     }
 
     #[\Override]
@@ -36,5 +42,11 @@ final readonly class ChunkedRows implements ActionRows
         }, $model->getQualifiedKeyName(), $model->getKeyName());
 
         return $impacted;
+    }
+
+    #[\Override]
+    public function count(): int
+    {
+        return $this->count ?? $this->query->toBase()->getCountForPagination();
     }
 }

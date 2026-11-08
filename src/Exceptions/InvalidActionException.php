@@ -25,4 +25,14 @@ final class InvalidActionException extends LogicException
     {
         return new self('The data of an ActionResponse is a list, but the result gives it as a JSON object: pass an array with string keys, such as [\'skipped\' => [4, 9]].');
     }
+
+    public static function confirmationDataList(): self
+    {
+        return new self('The data of an ActionConfirmation is a list, but the answer gives it as a JSON object: pass an array with string keys, such as [\'rows\' => 37].');
+    }
+
+    public static function confirmationExpiry(int $seconds): self
+    {
+        return new self("An ActionConfirmation expires after one second at least, but expiresIn() received {$seconds}.");
+    }
 }

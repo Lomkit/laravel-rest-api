@@ -64,6 +64,7 @@ final class DetailsEntryTypes
             'meta' => new ObjectType,
             'destructive' => (new BooleanType)->setDescription('True when the action is declared with destructive(); a hint for clients, the endpoint runs the action the same way'),
             'confirm' => (new StringType)->nullable(true)->setDescription('The text set with confirm(), for clients to show before they run the action; null without one'),
+            'confirmation' => (new BooleanType)->setDescription('True when the action declares confirmation(): the endpoint can answer 428 with a signed token, and runs the action when the same body comes back with that token'),
             'authorized' => (new BooleanType)->setDescription('True when the user passes the abilities that the action route checks before it reads the request'),
         ]);
     }

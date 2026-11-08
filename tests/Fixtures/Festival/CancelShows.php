@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Fixtures\Festival;
 
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Actions\ActionConfirmation;
 use Lomkit\Rest\Actions\ActionFields;
 use Lomkit\Rest\Actions\ActionResponse;
 use Lomkit\Rest\Actions\ActionTarget;
@@ -30,6 +31,16 @@ class CancelShows extends Action
         foreach ($models as $show) {
             $show->update(['status' => ShowStatus::Planned]);
         }
+    }
+
+    #[\Override]
+    public function confirmation(ActionFields $fields, int $rows): ?ActionConfirmation
+    {
+        if ($rows < 2) {
+            return null;
+        }
+
+        return ActionConfirmation::make("Cancel {$rows} shows?")->data(['rows' => $rows]);
     }
 
     #[\Override]

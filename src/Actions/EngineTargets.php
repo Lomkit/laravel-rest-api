@@ -49,4 +49,10 @@ final readonly class EngineTargets implements ActionRows
 
         return $impacted;
     }
+
+    #[\Override]
+    public function count(): int
+    {
+        return array_sum(array_map(count(...), $this->chunks));
+    }
 }

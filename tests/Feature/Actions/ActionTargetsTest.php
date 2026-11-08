@@ -112,10 +112,10 @@ class ActionTargetsTest extends PackageTestCase
         $response = $this->getJson('/target-notes');
 
         $response->assertOk()->assertJsonPath('data.actions', [
-            ['name' => 'Record Notes', 'uriKey' => 'record-notes', 'target' => 'search', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null, 'authorized' => true],
-            ['name' => 'Record Named Notes', 'uriKey' => 'record-named-notes', 'target' => 'resources', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null, 'authorized' => true],
-            ['name' => 'Record No Note', 'uriKey' => 'record-no-note', 'target' => 'none', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null, 'authorized' => true],
-            ['name' => 'Queued Record Notes', 'uriKey' => 'queued-record-notes', 'target' => 'none', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null, 'authorized' => true],
+            ['name' => 'Record Notes', 'uriKey' => 'record-notes', 'target' => 'search', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null, 'confirmation' => false, 'authorized' => true],
+            ['name' => 'Record Named Notes', 'uriKey' => 'record-named-notes', 'target' => 'resources', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null, 'confirmation' => false, 'authorized' => true],
+            ['name' => 'Record No Note', 'uriKey' => 'record-no-note', 'target' => 'none', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null, 'confirmation' => false, 'authorized' => true],
+            ['name' => 'Queued Record Notes', 'uriKey' => 'queued-record-notes', 'target' => 'none', 'fields' => [self::REASON], 'meta' => [], 'destructive' => false, 'confirm' => null, 'confirmation' => false, 'authorized' => true],
         ]);
     }
 
