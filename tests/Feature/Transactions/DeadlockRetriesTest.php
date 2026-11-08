@@ -10,6 +10,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
+use Lomkit\Rest\Events\ActionOperated;
+use Lomkit\Rest\Events\ResourceDestroyed;
+use Lomkit\Rest\Events\ResourceMutated;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Deletion\Stubs\SecondaryDocument;
 use Lomkit\Rest\Tests\Feature\Transactions\Stubs\Interruptions;
@@ -146,6 +149,59 @@ class DeadlockRetriesTest extends PackageTestCase
         ];
     }
 
+    /** @return array<string, array{string, string, array<string, mixed>, int, list<string>}> */
+    public static function retriedEvents(): array
+    {
+        $retried = ['begin secondary', 'rollback secondary', 'begin secondary', 'commit secondary'];
+
+        return [
+            'mutate' => ['POST', '/retried-documents/mutate', self::MUTATE, 0, [...$retried, 'ResourceMutated']],
+            'destroy' => ['DELETE', '/retried-documents', ['resources' => [1, 3]], 0, [...$retried, 'ResourceDestroyed']],
+            'an action chunk' => ['POST', '/retried-documents/actions/rename-retried-documents', [], 1, ['begin secondary', 'commit secondary', ...$retried, 'ActionOperated']],
+            'a queued action chunk' => ['POST', '/retried-documents/actions/queued-rename-retried-documents', [], 1, ['begin secondary', 'commit secondary', ...$retried, 'ActionOperated']],
+            'a whole action' => ['POST', '/retried-documents/actions/atomic-rename-retried-documents', [], 1, [...$retried, 'ActionOperated']],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  list<string>  $log
+     */
+    #[Test]
+    #[DataProvider('retriedEvents')]
+    public function it_dispatches_the_event_of_a_retried_write_once_after_the_commit_of_the_last_attempt(string $method, string $uri, array $payload, int $deadlockAt, array $log): void
+    {
+        config(['rest.transactions.attempts' => 2]);
+        Interruptions::reset([...array_fill(0, $deadlockAt, null), Interruptions::deadlock()]);
+        $this->listenToWriteEvents();
+
+        $response = $this->json($method, $uri, $payload);
+
+        $response->assertOk();
+        $this->assertSame($log, $this->transactions);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  list<string>  $runs
+     * @param  list<string>  $transactions
+     * @param  list<string>  $titles
+     */
+    #[Test]
+    #[DataProvider('failedWrites')]
+    public function it_dispatches_no_event_when_the_last_attempt_is_deadlocked(string $method, string $uri, array $payload, int $deadlockAt, array $runs, array $transactions, array $titles): void
+    {
+        Interruptions::reset([...array_fill(0, $deadlockAt, null), Interruptions::deadlock()]);
+        $this->listenToWriteEvents();
+
+        $response = $this->json($method, $uri, $payload);
+
+        $response->assertInternalServerError();
+        $this->assertSame($runs, Interruptions::$runs);
+        $this->assertSame($transactions, $this->transactions);
+        $this->assertSame($titles, $this->titles());
+    }
+
     #[Test]
     public function it_does_not_run_a_transaction_again_after_another_error(): void
     {
@@ -181,6 +237,13 @@ class DeadlockRetriesTest extends PackageTestCase
         $this->assertSame(['destroyedAll'], Interruptions::$runs);
         $this->assertSame(['begin secondary', 'begin secondary', 'rollback secondary'], $this->transactions);
         $this->assertSame(['Annual report', 'Roadmap', 'Minutes'], $this->titles());
+    }
+
+    private function listenToWriteEvents(): void
+    {
+        Event::listen([ResourceMutated::class, ResourceDestroyed::class, ActionOperated::class], function (object $event): void {
+            $this->transactions[] = class_basename($event);
+        });
     }
 
     /** @return list<string> */

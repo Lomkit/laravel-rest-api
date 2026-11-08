@@ -9,6 +9,7 @@ use Lomkit\Rest\Actions\Rows\ChunkedRows;
 use Lomkit\Rest\Actions\Rows\KeyChunks;
 use Lomkit\Rest\Actions\Rows\NoRows;
 use Lomkit\Rest\Actions\Rows\RowCap;
+use Lomkit\Rest\Events\ActionOperated;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
@@ -42,8 +43,11 @@ final readonly class DispatchAction
 
         $runner = ActionRunner::for($this->request, $this->action, $this->fields, ! $rows instanceof EngineTargets, $checks);
         $impacted = $runner->through($rows);
+        $batch = $runner->finish();
 
-        return new OperateResponse($impacted, null, $runner->finish());
+        $this->request->context()->events()->dispatch(new ActionOperated($this->request->resource, $this->action, $this->fields, $impacted, $batch));
+
+        return new OperateResponse($impacted, null, $batch);
     }
 
     private function rows(): ActionRows

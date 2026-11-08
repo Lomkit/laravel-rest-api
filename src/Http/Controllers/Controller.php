@@ -6,6 +6,9 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Events\ResourceDestroyed;
+use Lomkit\Rest\Events\ResourceForceDestroyed;
+use Lomkit\Rest\Events\ResourceRestored;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Http\BatchProgress;
 use Lomkit\Rest\Http\MetricResponse;
@@ -135,7 +138,7 @@ abstract class Controller
             $request->context()->authorizer()->forget($model);
 
             $resource->destroyed($model);
-        }, $resource->destroyedAll(...));
+        }, $resource->destroyedAll(...), ResourceDestroyed::class);
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }
@@ -152,7 +155,7 @@ abstract class Controller
             $request->context()->authorizer()->forget($model);
 
             $resource->restored($model);
-        }, $resource->restoredAll(...));
+        }, $resource->restoredAll(...), ResourceRestored::class);
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }
@@ -169,7 +172,7 @@ abstract class Controller
             $request->context()->authorizer()->forget($model);
 
             $resource->forceDestroyed($model);
-        }, $resource->forceDestroyedAll(...));
+        }, $resource->forceDestroyedAll(...), ResourceForceDestroyed::class);
 
         return $this->buildResponse(QueryPlan::bare($resource), $models);
     }

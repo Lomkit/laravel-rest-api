@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Cache\Factory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\Events\Dispatcher;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\CacheDecisionStore;
 use Lomkit\Rest\Authorization\DecisionStore;
@@ -98,6 +99,11 @@ final class RestContext
             $this->decisionStore($guard, $user),
             strict: $this->config()->strict,
         );
+    }
+
+    public function events(): Dispatcher
+    {
+        return $this->container->make(Dispatcher::class);
     }
 
     public function metricStore(): MetricStore
