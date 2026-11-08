@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Metrics;
 
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
@@ -17,6 +18,12 @@ abstract class Progress extends Metric
     /** @param Builder<Model> $query */
     #[\Override]
     abstract public function calculate(Builder $query): ProgressResult;
+
+    #[\Override]
+    public function schema(): ?Type
+    {
+        return ResultSchemas::progress();
+    }
 
     /** @param Builder<Model> $query */
     public function count(Builder $query, int|float $target, string $dateColumn = 'created_at'): ProgressResult

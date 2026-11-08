@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Metrics;
 
+use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,6 +19,12 @@ abstract class Partition extends Metric
     /** @param Builder<Model> $query */
     #[\Override]
     abstract public function calculate(Builder $query): PartitionResult;
+
+    #[\Override]
+    public function schema(): ?Type
+    {
+        return ResultSchemas::partition();
+    }
 
     #[\Override]
     public function ensureValid(): static

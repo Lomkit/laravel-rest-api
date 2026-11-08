@@ -3,19 +3,26 @@
 namespace Lomkit\Rest\Scramble\Endpoints;
 
 use Dedoc\Scramble\Support\Generator\Operation;
+use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Scramble\DocumentationContext;
+use Lomkit\Rest\Scramble\Metrics\MetricSchema;
+use Lomkit\Rest\Scramble\Schemas;
 
 final readonly class MetricDocumenter implements EndpointDocumenter
 {
     #[\Override]
     public function document(Operation $operation, DocumentationContext $context): void
     {
-        $declaration = $context->declaration();
+        $metric = $context->declaration();
 
-        if ($declaration === null) {
+        if (! $metric instanceof Metric) {
             return;
         }
 
-        $operation->summary($declaration->name());
+        $schema = new MetricSchema($context->components);
+
+        $operation->summary($metric->name());
+        Schemas::requestBody($operation, $schema->body($context->resource, $metric), ['default' => $schema->example($metric)]);
+        $operation->addResponse(Schemas::response(200, 'The result of the metric', $schema->response($metric)));
     }
 }

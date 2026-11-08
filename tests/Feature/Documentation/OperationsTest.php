@@ -88,11 +88,17 @@ class OperationsTest extends DocumentationTestCase
     public function it_replaces_the_responses_that_scramble_infers_on_the_routes_of_the_package(): void
     {
         $document = $this->document();
+        $placeholders = [];
 
-        $this->assertSame(
-            ['description' => 'Success', 'content' => ['application/json' => ['schema' => ['type' => 'object']]]],
-            $document['paths']['/shows/metrics/show-count']['post']['responses'][200],
-        );
+        foreach ($document['paths'] as $path => $operations) {
+            foreach ($operations as $method => $operation) {
+                if ($operation['responses'][200] === ['description' => 'Success', 'content' => ['application/json' => ['schema' => ['type' => 'object']]]]) {
+                    $placeholders[] = strtoupper($method).' '.$path;
+                }
+            }
+        }
+
+        $this->assertSame([], $placeholders);
         $this->assertArrayNotHasKey('ValidationException', $document['components']['responses'] ?? []);
         $this->assertArrayNotHasKey('AuthenticationException', $document['components']['responses'] ?? []);
     }
