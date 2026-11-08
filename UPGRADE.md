@@ -2030,8 +2030,8 @@ Response block:
 
   ```json
   {"operations": [{"operation": "update", "key": 2}, {"operation": "create", "key": 3}], "records": [
-    {"title": "Dune Messiah", "gates": {"authorized_to_update": {"allowed": true, "message": null}}, "labels": [{"text": "Classic"}]},
-    {"title": "Ivanhoe", "gates": {"authorized_to_update": {"allowed": true, "message": null}}, "labels": []}
+    {"title": "Dune Messiah", "gates": {"authorized_to_update": {"allowed": true, "message": null}}, "labels": [{"text": "Classic"}], "@more": []},
+    {"title": "Ivanhoe", "gates": {"authorized_to_update": {"allowed": true, "message": null}}, "labels": [], "@more": []}
   ]}
   ```
 
