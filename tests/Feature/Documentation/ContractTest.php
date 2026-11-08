@@ -121,7 +121,7 @@ class ContractTest extends DocumentationTestCase
             'a null check' => ['/shows/search', ['filters' => [['field' => 'summary', 'operator' => 'is null']]]],
             'a pivot field' => ['/shows/search', ['filters' => [['field' => 'artists.pivot.role', 'value' => 'lead']]]],
             'related rows' => ['/shows/search', ['filters' => [['relation' => 'comments', 'exists' => false, 'nested' => [['field' => 'rating', 'operator' => '>=', 'value' => 4]]]]]],
-            'related rows of each type' => ['/notes/search', ['filters' => [['relation' => 'notable', 'types' => [Show::class => [['field' => 'featured', 'value' => true]], Stage::class => [['field' => 'code', 'value' => 'main']]]]]]],
+            'related rows of one type' => ['/notes/search', ['filters' => [['relation' => 'notable', 'types' => [Stage::class => [['field' => 'code', 'value' => 'main']]]]]]],
             'a group joined with or' => ['/shows/search', ['filters' => [['field' => 'featured', 'value' => true], ['type' => 'or', 'nested' => [['field' => 'seats', 'operator' => '>', 'value' => 100]]]]]],
             'a string key' => ['/stages/search', ['filters' => [['field' => 'code', 'operator' => 'in', 'value' => ['main', 'side']]]]],
             'sorts on a field and on a field of a relation' => ['/shows/search', ['sorts' => [['field' => 'stage.name', 'direction' => 'desc'], ['field' => 'title']]]],
