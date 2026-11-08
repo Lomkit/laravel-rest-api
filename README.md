@@ -163,8 +163,8 @@ Each row says whether the user may update it, so the frontend knows which button
 | `POST /api/shows/actions/{action}` | operate | Runs a custom action on the rows a search matches, on listed ids, or on none |
 | `POST /api/shows/metrics/{metric}` | metric | Computes a value, trend, partition, progress or table |
 | `DELETE /api/shows` | destroy | Deletes rows (soft deletes when the model uses them) |
-| `POST /api/shows/restore` | restore | Restores soft deleted rows, with `->withSoftDeletes()` |
-| `DELETE /api/shows/force` | forceDestroy | Deletes rows for good, with `->withSoftDeletes()` |
+| `POST /api/shows/restore` | restore | Restores soft deleted rows, with `->withSoftDeletes()` on a model that uses `SoftDeletes` |
+| `DELETE /api/shows/force` | forceDestroy | Deletes rows for good, with `->withSoftDeletes()` on a model that uses `SoftDeletes` |
 | `GET /api/shows/actions/{action}/batches/{batch}` | batch | Progress of a queued batch, with `->withBatchProgress()` |
 
 `only()`, `except()`, `names()`, `middleware()` and `middlewareFor()` shape the routes like any Laravel route.
@@ -264,7 +264,9 @@ This search uses two more declarations on the resource: `Scope::make('upcoming')
 {"operations": [{"operation": "create", "key": 4, "relations": {"stage": {"operation": "attach", "key": 1}, "artists": [{"operation": "attach", "key": 4}, {"operation": "create", "key": 5}]}}]}
 ```
 
-Every entry is validated by the rules of its fields and checked against the policies before the first write, then everything runs in one transaction. Relation entries also take `detach`, `sync` and `toggle` on many-to-many relations, and `delete` on child rows. Add a `response` block to get the written rows back, and `versioned()` on the resource to answer `409` when a row changed since the client read it.
+Every entry is validated by the rules of its fields and checked against the policies before the first write, then everything runs in one transaction. An `Enum` field can offer only some of its cases to writes, `->offered([...])`, so a withdrawn status stays readable and filterable on old rows. Relation entries also take `detach`, `sync` and `toggle` on many-to-many relations, and `delete` on child rows. Add a `response` block to get the written rows back, and `versioned()` on the resource to answer `409` when a row changed since the client read it.
+
+A write can ask first: when `mutateConfirmation()` on the resource (or `destroyConfirmation()`, `restoreConfirmation()`, `forceDestroyConfirmation()`) returns a `Confirmation`, the request answers `428` with a signed token and writes nothing, and the same body sent back with `"confirmation": "<token>"` runs it.
 
 A mistake comes back on its exact key. Here, an entry without `title`, with `"seats": -3` and a `created_at`:
 
@@ -289,6 +291,11 @@ class CancelShows extends Action
         return [Text::make('reason')->rules('required')];
     }
 
+    public function authorizeEach(): ?string
+    {
+        return 'update';
+    }
+
     public function handle(ActionFields $fields, Collection $models): void
     {
         foreach ($models as $show) {
@@ -303,7 +310,7 @@ class CancelShows extends Action
 }
 ```
 
-Declare it in the resource's `actions()`, and it runs on the rows of a search:
+Declare it in the resource's `actions()`, and it runs on the rows of a search, once the policy lets the user `update` each of them:
 
 ```http
 POST /api/shows/actions/cancel-shows
@@ -320,7 +327,7 @@ POST /api/shows/actions/cancel-shows
 {"data": {"impacted": 2, "result": {"type": "message", "message": "2 shows cancelled: Storm warning"}}}
 ```
 
-Implement `ShouldQueue` to process the rows in queued chunks, and `BatchableAction` to run them as a batch whose progress the client can follow. An action can also target listed ids or no row at all, check a policy ability on each row, and ask the user to confirm before it runs.
+The `search` block is required: `"search": {}` runs the action on every row the user may reach. Each chunk of rows runs in its own transaction: `->atomic()` puts the whole run in one, and `->transactionPerRow()` hands each row to `handleRow()` in a transaction of its own. Implement `ShouldQueue` to process the rows in queued chunks, and `BatchableAction` to run them as a batch whose progress the client can follow; the [exports recipe](https://laravel-rest-api.lomkit.com/actions-and-metrics/exports) builds a CSV download that way. An action can also target listed ids or no row at all, and ask the user to confirm before it runs.
 
 ## Metrics: dashboards without extra endpoints
 
@@ -346,7 +353,9 @@ class ShowsByStatus extends Partition
 - **OpenAPI documentation**: install [Scramble](https://scramble.dedoc.co) and `/docs/api` documents every endpoint, with a typed body per resource, request examples and error responses.
 - **Details for frontends**: `GET /api/shows?with=fields.filter,fields.rules,actions.authorized` tells a frontend how each field filters, which rules each form field follows, and which actions the user may run.
 - **Precognition**: live form validation with Laravel Precognition on every endpoint, once `rest.precognition.enabled` is on.
-- **Predictable limits**: list sizes, nesting depths and totals are bounded in `config/rest.php`, and an oversized request answers one clear `422`.
+- **Predictable limits**: list sizes, nesting depths, totals, value lengths and the rows one search renders are bounded in `config/rest.php`, and an oversized request answers one clear `422` before any query. A partition or a trend keeps its largest groups, 100 by default, and folds the rest into `other`.
+- **Translated messages**: every message the package writes for a client ships in English and French and follows the locale of the request; `php artisan vendor:publish --tag=rest-lang` lets you reword them or add a language.
+- **`rest:check` for CI**: reports routes without authentication, models without a policy, resources that show every row (no `perimeterQuery()`) and actions without row checks.
 - **Generators**: `rest:resource --generate` reads the table, and `rest:controller`, `rest:policy`, `rest:action`, `rest:instruction`, `rest:metric` and `rest:response` scaffold the rest.
 - **Laravel Boost**: the package ships a Boost skill with the full feature reference.
 
