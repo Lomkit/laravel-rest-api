@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Fields\Filtering;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Query\Expression;
 use Lomkit\Rest\Rules\MaxLength;
 use Lomkit\Rest\Validation\Lengths;
 
@@ -11,7 +12,7 @@ final readonly class Comparison implements Condition
     public function __construct(private string $operator) {}
 
     #[\Override]
-    public function apply(Builder $query, string $column, mixed $value, string $boolean): void
+    public function apply(Builder $query, Expression|string $column, mixed $value, string $boolean): void
     {
         $query->where($column, $this->operator, $value, $boolean);
     }

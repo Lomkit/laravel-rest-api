@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Fields;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\HasMeta;
@@ -93,7 +94,7 @@ abstract class Field
             throw InvalidFieldException::unsupportedOperator($this->name, $operator->value);
         }
 
-        $operator->condition()->apply($query, $column ?? $query->qualifyColumn($this->name), $this->filterValue($query, $value), $boolean);
+        $operator->condition()->apply($query, $this->filterColumn($query, $column ?? $query->qualifyColumn($this->name)), $this->filterValue($query, $value), $boolean);
     }
 
     /** @return list<FilterOperator> */
@@ -117,6 +118,11 @@ abstract class Field
     protected function castValue(mixed $value): mixed
     {
         return $value;
+    }
+
+    protected function filterColumn(Builder $query, string $column): Expression|string
+    {
+        return $column;
     }
 
     protected function filterValue(Builder $query, mixed $value): mixed
