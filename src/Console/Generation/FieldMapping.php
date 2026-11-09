@@ -8,15 +8,17 @@ use Lomkit\Rest\Console\Generation\Schema\Column;
 use Lomkit\Rest\Console\Generation\Schema\Table;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Mutations\Contextual;
+use Lomkit\Rest\Mutations\MutationContext;
 
 final readonly class FieldMapping
 {
-    private function __construct(private ModelColumns $columns, private ImportSet $imports, private ?string $uniqueModel, private string $prefix) {}
+    private function __construct(private ModelColumns $columns, private ImportSet $imports, private ?ModelTable $source, private string $prefix) {}
 
     /** @param  list<string>  $relationKeys */
     public static function forModel(ModelTable $source, ImportSet $imports, array $relationKeys): self
     {
-        return new self(new ModelColumns($source->model, $relationKeys), $imports, $source->class, '');
+        return new self(new ModelColumns($source->model, $relationKeys), $imports, $source, '');
     }
 
     /** @param  list<string>  $timestamps */
@@ -81,7 +83,7 @@ final readonly class FieldMapping
             $field = $field->with("rules('{$rule}')");
         }
 
-        return $this->withCreationRules($field, $column, $table);
+        return $this->withWriteRules($field, $column, $table, $class);
     }
 
     private function rule(Column $column, string $class): ?string
@@ -91,16 +93,24 @@ final readonly class FieldMapping
         return $length !== null && in_array($class, [ID::class, Text::class], true) ? "max:{$length}" : null;
     }
 
-    private function withCreationRules(Declaration $field, Column $column, Table $table): Declaration
+    private function withWriteRules(Declaration $field, Column $column, Table $table, string $class): Declaration
     {
         $rules = $column->isRequired() ? ["'required'"] : [];
 
-        if ($this->uniqueModel === null || ! $table->isUniqueOn($column->name)) {
+        if ($this->source === null || ! $table->isUniqueOn($column->name)) {
             return $rules === [] ? $field : $field->with('creationRules('.implode(', ', $rules).')');
         }
 
-        $rules[] = sprintf('%s::unique(%s::class, %s)', $this->imports->name(Rule::class), $this->imports->name($this->uniqueModel), var_export($column->name, true));
+        $unique = sprintf('%s::unique(%s::class, %s)', $this->imports->name(Rule::class), $this->imports->name($this->source->class), var_export($column->name, true));
+        $field = $field->with('creationRules('.implode(', ', [...$rules, $unique]).')', Rule::class);
 
-        return $field->with('creationRules('.implode(', ', $rules).')', Rule::class);
+        return $class === ID::class ? $field : $field->with($this->updateUniqueRule($unique, $this->source->model->getKeyName()), Contextual::class, MutationContext::class);
+    }
+
+    private function updateUniqueRule(string $unique, string $keyName): string
+    {
+        $ignored = $keyName === 'id' ? '$mutation->key' : '$mutation->key, '.var_export($keyName, true);
+
+        return sprintf('updateRules(%s::rule(fn (%s $mutation) => %s->ignore(%s)))', $this->imports->name(Contextual::class), $this->imports->name(MutationContext::class), $unique, $ignored);
     }
 }

@@ -5,6 +5,8 @@ namespace App\Rest\Resources;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Mutations\Contextual;
+use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Edition;
 
 class EditionResource extends Resource
@@ -21,7 +23,8 @@ class EditionResource extends Resource
                 ->creationRules('required', Rule::unique(Edition::class, 'code')),
             Text::make('name')
                 ->rules('max:255')
-                ->creationRules('required'),
+                ->creationRules('required', Rule::unique(Edition::class, 'name'))
+                ->updateRules(Contextual::rule(fn (MutationContext $mutation) => Rule::unique(Edition::class, 'name')->ignore($mutation->key, 'code'))),
         ];
     }
 

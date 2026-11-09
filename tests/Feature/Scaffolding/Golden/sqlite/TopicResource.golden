@@ -5,6 +5,8 @@ namespace App\Rest\Resources;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Mutations\Contextual;
+use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Topic;
 
@@ -17,7 +19,9 @@ class TopicResource extends Resource
     {
         return [
             ID::make('id'),
-            Text::make('name')->creationRules('required', Rule::unique(Topic::class, 'name')),
+            Text::make('name')
+                ->creationRules('required', Rule::unique(Topic::class, 'name'))
+                ->updateRules(Contextual::rule(fn (MutationContext $mutation) => Rule::unique(Topic::class, 'name')->ignore($mutation->key))),
         ];
     }
 
