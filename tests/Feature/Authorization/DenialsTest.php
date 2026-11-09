@@ -52,6 +52,19 @@ class DenialsTest extends HelpdeskTestCase
     }
 
     #[Test]
+    public function it_lists_no_denial_that_hides_a_resource(): void
+    {
+        $this->renderDenials();
+        $this->tags->answers['viewAny'] = Response::deny('Tags are not listed.');
+        $this->teams->answers['viewAny'] = Response::denyAsNotFound('Teams are hidden.');
+
+        $this->postJson('/api/tickets/search', self::SEARCH)->assertForbidden()->assertExactJson([
+            'message' => 'Tags are not listed.',
+            'denials' => [['path' => 'search.aggregates.0', 'ability' => 'viewAny', 'message' => 'Tags are not listed.']],
+        ]);
+    }
+
+    #[Test]
     public function it_renders_the_denial_of_the_endpoint_without_a_path(): void
     {
         $this->renderDenials();
