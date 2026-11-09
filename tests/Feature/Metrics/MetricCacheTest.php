@@ -25,6 +25,7 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Metrics\CacheScope;
 use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\MetricOrderResource;
+use Lomkit\Rest\Tests\Feature\Metrics\Stubs\NotedOrderController;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\OrderCount;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\OrdersByStatus;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\PerimeterOrderController;
@@ -399,6 +400,21 @@ class MetricCacheTest extends SalesTestCase
 
         $this->assertSame([['read 1 keys', 'write a stamp', 'read a result', 'write a result'], ['read 1 keys', 'read a result'], []], $calls);
         $this->assertSame(2, $this->orderStatements());
+    }
+
+    #[Test]
+    public function it_keeps_the_result_of_a_search_with_invalid_utf8(): void
+    {
+        MetricOrderResource::$declared = [OrderCount::make()->cacheFor(600)];
+        Rest::resource('noted-orders', NotedOrderController::class)->register();
+        $body = ['search' => ['filters' => [['field' => 'note', 'value' => "Q4\xFF"]]]];
+        $this->logQueries();
+
+        $first = $this->post('/noted-orders/metrics/order-count', $body, ['Accept' => 'application/json']);
+        $second = $this->post('/noted-orders/metrics/order-count', $body, ['Accept' => 'application/json']);
+
+        $this->assertSame([self::SEVEN, self::SEVEN], [$first->getContent(), $second->getContent()]);
+        $this->assertSame(1, $this->orderStatements());
     }
 
     #[Test]

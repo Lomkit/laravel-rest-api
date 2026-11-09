@@ -277,6 +277,28 @@ class WriteConfirmationTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_writes_a_body_with_invalid_utf8_when_the_hook_gives_no_confirmation(): void
+    {
+        ConfirmedWriteResource::$confirms = [];
+
+        $response = $this->post('/confirmed-writes/mutate', self::noted(), ['Accept' => 'application/json']);
+
+        $response->assertOk();
+        $this->assertSame([self::WRITES['mutate']['written'], ['mutate']], [self::state(), ConfirmedWriteResource::$asked]);
+    }
+
+    #[Test]
+    public function it_confirms_a_body_with_invalid_utf8(): void
+    {
+        $token = $this->tokenOf($this->post('/confirmed-writes/mutate', self::noted(), ['Accept' => 'application/json']), 'mutate');
+
+        $response = $this->post('/confirmed-writes/mutate', [...self::noted(), 'confirmation' => $token], ['Accept' => 'application/json']);
+
+        $response->assertOk();
+        $this->assertSame(self::WRITES['mutate']['written'], self::state());
+    }
+
+    #[Test]
     public function it_says_which_writes_ask_for_a_confirmation_in_the_details(): void
     {
         $confirmed = $this->getJson('/confirmed-writes?with=confirmations');
@@ -286,6 +308,15 @@ class WriteConfirmationTest extends PackageTestCase
         $confirmed->assertOk()->assertJsonPath('data.confirmations', ['mutate' => true, 'destroy' => true, 'restore' => true, 'forceDestroy' => true]);
         $plain->assertOk()->assertJsonPath('data.confirmations', ['mutate' => false, 'destroy' => false, 'restore' => false, 'forceDestroy' => false]);
         $this->assertSame(['fields', 'limits', 'meta'], array_keys($base->json('data')));
+    }
+
+    /** @return array<string, mixed> */
+    private static function noted(): array
+    {
+        return ['mutate' => [
+            ['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Budget 2027', 'note' => "Q4\xFF"]],
+            ['operation' => 'update', 'key' => 2, 'attributes' => ['title' => 'Contract 2027']],
+        ]];
     }
 
     /** @param array<string, mixed> $extra */

@@ -16,9 +16,9 @@ final class ConfirmationGate
 {
     private bool $passed = false;
 
-    /** @param list<mixed> $subject */
+    /** @param Closure(): list<mixed> $subject */
     private function __construct(
-        private readonly array $subject,
+        private readonly Closure $subject,
         private readonly ?string $offered,
     ) {}
 
@@ -29,14 +29,8 @@ final class ConfirmationGate
     public static function of(RestRequest $request, array $scope, array $body): self
     {
         $offered = $request->input('confirmation');
-        $signed = json_encode(self::canonical(Arr::only($request->all(), $body)), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        return new self([
-            UserIdentity::of(Auth::getDefaultDriver(), $request->user())->key(),
-            $request->resource::class,
-            ...$scope,
-            hash('sha256', $signed),
-        ], is_string($offered) ? $offered : null);
+        return new self(fn (): array => self::subject($request, $scope, $body), is_string($offered) ? $offered : null);
     }
 
     /** @param Closure(): ?Confirmation $ask */
@@ -57,7 +51,7 @@ final class ConfirmationGate
 
     private function check(Confirmation $confirmation): void
     {
-        $token = ConfirmationToken::for(self::key(), $this->subject);
+        $token = ConfirmationToken::for(self::key(), ($this->subject)());
         $now = Date::now()->toImmutable();
 
         if ($token->accepts($this->offered, $now->getTimestamp())) {
@@ -67,6 +61,23 @@ final class ConfirmationGate
         $expires = $now->addSeconds($confirmation->seconds);
 
         throw new ConfirmationRequired($confirmation, $token->issue($expires->getTimestamp()), $expires);
+    }
+
+    /**
+     * @param  list<int|string>  $scope
+     * @param  list<string>  $body
+     * @return list<mixed>
+     */
+    private static function subject(RestRequest $request, array $scope, array $body): array
+    {
+        $signed = json_encode(self::canonical(Arr::only($request->all(), $body)), JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        return [
+            UserIdentity::of(Auth::getDefaultDriver(), $request->user())->key(),
+            $request->resource::class,
+            ...$scope,
+            hash('sha256', $signed),
+        ];
     }
 
     private static function canonical(mixed $value): mixed
