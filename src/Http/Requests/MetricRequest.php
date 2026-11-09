@@ -94,7 +94,9 @@ class MetricRequest extends RestRequest
         $context = ValidationContext::root($resource, $this->budget(), $rules, $text->sqlGrammar());
         $search = (new SearchParser(SearchShape::Aggregate))->parse(Cursor::of($this->all(), $rules->violations())->at('search'), $context);
 
-        return new MetricNode($metric, $search, $this->range($metric, $rules), $this->timezone($rules));
+        $reached = array_map(fn (Check $check): Resource => $check->resource, $rules->checks());
+
+        return new MetricNode($metric, $search, $this->range($metric, $rules), $this->timezone($rules), $reached);
     }
 
     private function range(Metric $metric, ParsedRules $rules): ?MetricRange

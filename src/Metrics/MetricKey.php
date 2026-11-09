@@ -18,6 +18,7 @@ final readonly class MetricKey
     {
         $metric = $node->metric;
         $resource = $metric->resource;
+        $others = self::others($resource, $node->reached);
 
         $parts = [
             $resource::class,
@@ -29,9 +30,18 @@ final readonly class MetricKey
             self::canonical($metric->request()->input('search', [])),
             CacheContext::of($resource->authorizationCacheContext(), $resource::class),
         ];
+        $contexts = self::contexts($others);
+
+        if ($contexts !== []) {
+            $parts[] = $contexts;
+        }
 
         if ($metric->cacheScope === CacheScope::Global) {
             $parts[] = self::perimeter($resource);
+
+            if ($others !== []) {
+                $parts[] = array_map(self::perimeter(...), $others);
+            }
         }
 
         return new self(json_encode($parts, JSON_THROW_ON_ERROR));
@@ -40,6 +50,44 @@ final readonly class MetricKey
     public function for(?UserIdentity $user, string $stamps): string
     {
         return self::PREFIX.hash('sha256', implode('|', [$stamps, $user?->key() ?? 'global', $this->parts]));
+    }
+
+    /**
+     * @param  list<Resource>  $reached
+     * @return array<class-string<Resource>, Resource>
+     */
+    private static function others(Resource $root, array $reached): array
+    {
+        $others = [];
+
+        foreach ($reached as $resource) {
+            if ($resource::class !== $root::class) {
+                $others[$resource::class] ??= $resource;
+            }
+        }
+
+        ksort($others, SORT_STRING);
+
+        return $others;
+    }
+
+    /**
+     * @param  array<class-string<Resource>, Resource>  $others
+     * @return array<class-string<Resource>, string>
+     */
+    private static function contexts(array $others): array
+    {
+        $contexts = [];
+
+        foreach ($others as $class => $resource) {
+            $context = $resource->authorizationCacheContext();
+
+            if ($context !== []) {
+                $contexts[$class] = CacheContext::of($context, $class);
+            }
+        }
+
+        return $contexts;
     }
 
     private static function perimeter(Resource $resource): string
