@@ -6,9 +6,11 @@ use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\LockedTeamTicketController;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\LockedTicketsTagController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ReadOnlyTicketsTeamController;
 use Lomkit\Rest\Tests\Feature\Search\Stubs\Illustrated\LeadDeskController;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Helpdesk;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Newsroom;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -29,6 +31,7 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
         parent::setUp();
 
         Rest::resource('locked-team-tickets', LockedTeamTicketController::class)->register();
+        Rest::resource('locked-tickets-tags', LockedTicketsTagController::class)->register();
         Rest::resource('lead-desks', LeadDeskController::class)->register();
         Rest::resource('read-only-tickets-teams', ReadOnlyTicketsTeamController::class)->register();
     }
@@ -72,6 +75,31 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
         ]);
 
         $this->assertSame([['viewAny'], ['create']], [$this->tickets->calls, $this->teams->calls]);
+    }
+
+    #[Test]
+    #[DataProvider('linkOperations')]
+    public function it_refuses_a_relation_prohibited_on_update_under_a_link_entry(string $operation): void
+    {
+        $jam = $this->seedTickets()['Printer jam'];
+        $tag = Tag::create(['name' => 'Hardware']);
+        $tag->labelledTickets()->attach($jam->id);
+        $path = 'mutate.0.relations.labelledTickets.0.relations.team';
+
+        $response = $this->postJson('/locked-tickets-tags/mutate', ['mutate' => [[
+            'operation' => 'update',
+            'key' => $tag->id,
+            'relations' => ['labelledTickets' => [['operation' => $operation, 'key' => [$jam->id], 'relations' => ['team' => self::NEW_TEAM]]]],
+        ]]]);
+
+        $response->assertUnprocessable()->assertExactJson(['message' => "The {$path} field is prohibited.", 'errors' => [$path => ["The {$path} field is prohibited."]]]);
+        $this->assertSame(['Billing', 'Support'], DB::table('teams')->orderBy('name')->pluck('name')->all());
+    }
+
+    /** @return array<string, array{string}> */
+    public static function linkOperations(): array
+    {
+        return ['attach' => ['attach'], 'detach' => ['detach'], 'sync' => ['sync'], 'toggle' => ['toggle']];
     }
 
     #[Test]

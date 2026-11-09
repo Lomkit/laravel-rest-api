@@ -46,4 +46,13 @@ enum MutationOperation: string
     {
         return $this !== self::Delete;
     }
+
+    public function constrainedAs(): ?self
+    {
+        return match ($this) {
+            self::Create => self::Create,
+            self::Delete => null,
+            default => self::Update,
+        };
+    }
 }

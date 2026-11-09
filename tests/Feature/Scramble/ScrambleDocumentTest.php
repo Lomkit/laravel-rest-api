@@ -6,6 +6,7 @@ use Dedoc\Scramble\Generator;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\LockedTicketsTagController;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\ConstrainedCategoryController;
 use Lomkit\Rest\Tests\Feature\RequestLifecycle\Stubs\UndeclaredResourceController;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\ImmutableTagController;
@@ -144,6 +145,27 @@ class ScrambleDocumentTest extends ScrambleTestCase
         $this->assertArrayNotHasKey('required', $schemas['ConstrainedCategoryRelations']);
         $this->assertSame(['products'], array_keys($schemas['CuratedCategoryCreateRelations']['properties']));
         $this->assertSame(['products', 'featuredProducts'], array_keys($schemas['CuratedCategoryRelations']['properties']));
+    }
+
+    #[Test]
+    public function it_applies_the_update_constraints_to_the_relations_of_a_link_entry(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('locked-tickets-tags', LockedTicketsTagController::class)->register());
+
+        $schemas = $this->schemas();
+        $relations = [];
+
+        foreach ($schemas['LockedTicketsTagRelationMutationLabelledTickets']['oneOf'] as $branch) {
+            $relations[implode(' ', $branch['properties']['operation']['enum'])] = $branch['properties']['relations']['$ref'];
+        }
+
+        $this->assertSame([
+            'create' => '#/components/schemas/LockedTeamTicketCreateRelations',
+            'update toggle' => '#/components/schemas/LockedTeamTicketUpdateRelations',
+            'attach detach' => '#/components/schemas/LockedTeamTicketUpdateRelations',
+            'sync' => '#/components/schemas/LockedTeamTicketUpdateRelations',
+        ], $relations);
+        $this->assertArrayNotHasKey('properties', $schemas['LockedTeamTicketUpdateRelations']);
     }
 
     #[Test]

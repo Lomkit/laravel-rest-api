@@ -36,7 +36,7 @@ final readonly class RelationEntrySchema
     public function relations(Resource $resource, ?MutationOperation $operation): ?Reference
     {
         $relations = array_values(array_filter($resource->definition()->relations(), fn (Relation $relation): bool => $relation->acceptedOperations() !== []));
-        $constrained = $operation === MutationOperation::Create || $operation === MutationOperation::Update ? $operation : null;
+        $constrained = $operation?->constrainedAs();
 
         if ($relations === []) {
             return null;
