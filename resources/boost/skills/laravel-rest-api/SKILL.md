@@ -1295,7 +1295,7 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 | `delete` | `destroy` |
 | `restore` | `restore` |
 | `forceDelete` | `forceDestroy` |
-| the abilities of `->abilities(attach: 'attachTag', detach: 'detachTag')` on a relation, `($user, $parent, $related)` | links of that relation; without them, `update` on the parent |
+| the abilities of `->abilities(attach: 'attachTag', detach: 'detachTag')` on a relation, `($user, $parent, $related)` | links of that relation, and the `pivot` of a `sync` entry on the rows it keeps attached; without them, `update` on the parent |
 
 **Define a policy for every model you expose.** A relation that needs its own link check declares its abilities; a declared ability with no policy method is denied. `php artisan rest:policy PostPolicy --model=Post` writes a starting point that allows every ability: edit it before production.
 
