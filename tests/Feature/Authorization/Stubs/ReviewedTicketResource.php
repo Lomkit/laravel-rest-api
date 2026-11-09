@@ -9,11 +9,15 @@ class ReviewedTicketResource extends TicketResource
 {
     public static ActionTarget $target = ActionTarget::Search;
 
+    public static ?int $maxResources = 1000;
+
     #[\Override]
     public function actions(): array
     {
         return [
-            ReviewTickets::make()->target(self::$target),
+            ReviewTickets::make()
+                ->target(self::$target)
+                ->maxResources(self::$maxResources),
             ReviewAllowedTickets::make()
                 ->target(self::$target)
                 ->skipUnauthorized(),

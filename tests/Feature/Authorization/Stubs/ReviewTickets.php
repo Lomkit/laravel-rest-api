@@ -29,6 +29,7 @@ class ReviewTickets extends Action
         self::$batched = false;
         self::$recheck = false;
         ReviewedTicketResource::$target = ActionTarget::Search;
+        ReviewedTicketResource::$maxResources = 1000;
     }
 
     #[\Override]

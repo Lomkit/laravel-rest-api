@@ -95,7 +95,7 @@ class ActionChunksTest extends HelpdeskTestCase
      */
     #[Test]
     #[DataProvider('growingSearches')]
-    public function it_runs_on_the_keys_that_the_row_checks_read_when_the_search_is_sorted_or_limited(array $search, array $runs, int $impacted): void
+    public function it_runs_on_the_keys_that_the_row_checks_read(array $search, array $runs, int $impacted): void
     {
         $this->app->instance(TicketPolicy::class, $policy = new class extends TicketPolicy
         {
@@ -122,7 +122,7 @@ class ActionChunksTest extends HelpdeskTestCase
     {
         return [
             'a sorted search reads its keys once' => [['filters' => [self::OPEN], 'sorts' => [['field' => 'title']]], [[4, 2], [5, 3], [6, 1], [7]], 7],
-            'a search without sorts reads its rows again' => [['filters' => [self::OPEN]], [[1, 2], [3, 4], [5, 6], [7, 8]], 8],
+            'a search without sorts skips the rows added after the checks' => [['filters' => [self::OPEN]], [[1, 2], [3, 4], [5, 6], [7]], 7],
         ];
     }
 
