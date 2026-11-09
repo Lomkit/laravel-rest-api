@@ -40,7 +40,7 @@ final class NodeBudget
         return new self($limits->totals->entries, $limits->totals->filters, $limits->totals->relations, $limits->totals->patterns);
     }
 
-    public function admit(string $key, int $count, int $max, bool $filters, FilterCounts $counts = new FilterCounts): bool
+    public function admit(string $key, int $count, int $max, bool $filters, FilterCounts $counts = new FilterCounts, int $runs = 1): bool
     {
         if ($count > $max) {
             return $this->refuse($key, Violation::tooMany($key, $max));
@@ -58,11 +58,11 @@ final class NodeBudget
             return $this->overTotal($key, Violation::tooManyPatternFilters($key, $this->patterns));
         }
 
-        if ($count > $this->entriesLeft) {
+        if ($count > intdiv($this->entriesLeft, $runs)) {
             return $this->overTotal($key, Violation::tooManyEntries($key, $this->entries));
         }
 
-        $this->entriesLeft -= $count;
+        $this->entriesLeft -= $count * $runs;
         $this->relationsLeft -= $counts->relations;
         $this->patternsLeft -= $counts->patterns;
 

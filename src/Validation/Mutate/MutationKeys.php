@@ -35,14 +35,14 @@ final class MutationKeys
     }
 
     /** @return int|string|list<int|string>|null */
-    public function read(Cursor $key, Resource $resource, ?MutationOperation $operation, bool $list): int|string|array|null
+    public function read(Cursor $key, Resource $resource, ?MutationOperation $operation, bool $list, int $runs): int|string|array|null
     {
         if ($operation === MutationOperation::Create) {
             return null;
         }
 
         if ($list && is_array($key->value)) {
-            return $this->keyList($key, $resource);
+            return $this->keyList($key, $resource, $runs);
         }
 
         $this->rules->add($key->path, $this->id($resource)->baseRules());
@@ -56,9 +56,9 @@ final class MutationKeys
     }
 
     /** @return list<int|string>|null */
-    private function keyList(Cursor $key, Resource $resource): ?array
+    private function keyList(Cursor $key, Resource $resource, int $runs): ?array
     {
-        $items = $this->reader->entries($key, $this->maxValues);
+        $items = $this->reader->entries($key, $this->maxValues, runs: $runs);
 
         if ($items === null) {
             return null;
