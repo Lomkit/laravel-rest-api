@@ -74,6 +74,15 @@ final readonly class WebSearch
         return implode(' ', [...$groups, ...$excluded]);
     }
 
+    public function toMySqlExclusion(): ?string
+    {
+        if ($this->groups !== [] || $this->excluded === []) {
+            return null;
+        }
+
+        return implode(' ', array_map(self::term(...), $this->excluded));
+    }
+
     private static function isAlternative(string $word): bool
     {
         return strtolower($word) === self::ALTERNATIVE;

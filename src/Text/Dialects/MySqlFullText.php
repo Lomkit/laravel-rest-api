@@ -32,11 +32,22 @@ final readonly class MySqlFullText implements QueryTextSearch
     #[\Override]
     public function apply(Builder $query, TextQuery $text, TextTarget $target): void
     {
+        $exclusion = self::exclusion($text);
         $against = self::against($text);
         $options = self::isBoolean($text) ? ['mode' => 'boolean'] : [];
 
         foreach ($this->groups as $group) {
-            $query->orWhereFullText(self::qualified($target, $group), $against, $options);
+            $columns = self::qualified($target, $group);
+
+            if ($exclusion === null) {
+                $query->orWhereFullText($columns, $against, $options);
+
+                continue;
+            }
+
+            $query->orWhereNot(function (Builder $query) use ($columns, $exclusion, $options): void {
+                $query->whereFullText($columns, $exclusion, $options);
+            });
         }
     }
 
@@ -94,6 +105,15 @@ final readonly class MySqlFullText implements QueryTextSearch
             TextMode::Prefix => implode(' ', array_map(fn (string $term): string => '+'.$term.'*', $terms)),
             TextMode::Websearch => WebSearch::parse($text->value, TermPattern::Underscored)->toMySqlBoolean(),
         };
+    }
+
+    private static function exclusion(TextQuery $text): ?string
+    {
+        if ($text->mode !== TextMode::Websearch) {
+            return null;
+        }
+
+        return WebSearch::parse($text->value, TermPattern::Underscored)->toMySqlExclusion();
     }
 
     private static function isBoolean(TextQuery $text): bool
