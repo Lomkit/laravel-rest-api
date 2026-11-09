@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Fields;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Fields\Boolean;
 use Lomkit\Rest\Fields\Date;
 use Lomkit\Rest\Fields\DateTime;
@@ -149,6 +150,35 @@ class ApplyFilterTest extends PackageTestCase
         yield 'date between with time parts' => [fn (): Field => Date::make('published_on'), 'between', ['2026-02-10 23:00', '2026-03-15 01:00'], ['Beta Notes', 'Gamma release']];
         yield 'datetime keeps the time part' => [fn (): Field => DateTime::make('published_at'), '>', '2026-02-10 10:00', ['Gamma release', 'DELTA Recap']];
         yield 'date = written without separators' => [fn (): Field => Date::make('published_on'), '=', '20260210', ['Beta Notes']];
+    }
+
+    /** @param list<string> $expected */
+    #[Test]
+    #[DataProvider('plainDays')]
+    public function it_compares_a_date_by_day_when_the_column_holds_a_plain_day(string $operator, mixed $value, array $expected): void
+    {
+        DB::table('posts')->where('id', 2)->update(['published_on' => '2026-02-10']);
+        DB::table('posts')->where('id', 3)->update(['published_on' => '2026-03-15']);
+        $query = Post::query();
+
+        $this->bound(fn (): Field => Date::make('published_on'))->applyFilter($query, $operator, $value);
+
+        $this->assertTitles($expected, $query);
+    }
+
+    /** @return iterable<string, array{string, mixed, list<string>}> */
+    public static function plainDays(): iterable
+    {
+        yield '=' => ['=', '2026-02-10', ['Beta Notes']];
+        yield '!=' => ['!=', '2026-02-10', ['Alpha launch', 'Gamma release', 'DELTA Recap', 'epsilon draft']];
+        yield '>' => ['>', '2026-02-10', ['Gamma release', 'DELTA Recap', 'epsilon draft']];
+        yield '>=' => ['>=', '2026-02-10', ['Beta Notes', 'Gamma release', 'DELTA Recap', 'epsilon draft']];
+        yield '<' => ['<', '2026-02-10', ['Alpha launch']];
+        yield '<=' => ['<=', '2026-02-10', ['Alpha launch', 'Beta Notes']];
+        yield 'between' => ['between', ['2026-02-10', '2026-03-15'], ['Beta Notes', 'Gamma release']];
+        yield 'not between' => ['not between', ['2026-02-10', '2026-03-15'], ['Alpha launch', 'DELTA Recap', 'epsilon draft']];
+        yield '= on a day stored with a time' => ['=', '2026-04-20', ['DELTA Recap']];
+        yield '< on a day stored with a time' => ['<', '2026-04-20', ['Alpha launch', 'Beta Notes', 'Gamma release']];
     }
 
     /** @param Closure(): Field $factory */

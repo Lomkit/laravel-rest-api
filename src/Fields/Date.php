@@ -6,7 +6,9 @@ use DateTimeInterface;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Support\Carbon;
+use Lomkit\Rest\Query\Expressions\DayOf;
 
 class Date extends Field
 {
@@ -45,6 +47,12 @@ class Date extends Field
     }
 
     #[\Override]
+    protected function filterColumn(Builder $query, string $column): Expression|string
+    {
+        return $this->comparesByDay($query) ? new DayOf($column) : $column;
+    }
+
+    #[\Override]
     protected function filterValue(Builder $query, mixed $value): mixed
     {
         if (is_array($value)) {
@@ -55,7 +63,14 @@ class Date extends Field
             return $value;
         }
 
-        return $query->getModel()->fromDateTime($this->toDate($value));
+        $date = $this->toDate($value);
+
+        return $this->comparesByDay($query) ? $date->toDateString() : $query->getModel()->fromDateTime($date);
+    }
+
+    protected function comparesByDay(Builder $query): bool
+    {
+        return $query->getModel()->getConnection()->getDriverName() === 'sqlite';
     }
 
     protected function normalize(Carbon $date): Carbon
