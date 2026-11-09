@@ -69,6 +69,14 @@ abstract class Field
 
     public function bind(Model $model): void {}
 
+    protected function convertedBy(Model $model): bool
+    {
+        return $model->hasCast($this->name)
+            || in_array($this->name, $model->getDates(), true)
+            || $model->hasGetMutator($this->name)
+            || $model->hasAttributeGetMutator($this->name);
+    }
+
     public function boundTo(Model $model): static
     {
         $bound = clone $this;

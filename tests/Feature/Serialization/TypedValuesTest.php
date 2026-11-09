@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Serialization\Stubs\ResolvedShowController;
+use Lomkit\Rest\Tests\Feature\Serialization\Stubs\UncastShowController;
 use Lomkit\Rest\Tests\Fixtures\Accounts\Accounts;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Lomkit\Rest\Tests\Fixtures\Festival\Festival;
@@ -84,6 +85,18 @@ class TypedValuesTest extends PackageTestCase
         $response = $this->search('/resolved-shows/search', ['selects' => [['field' => 'id'], ['field' => 'total'], ['field' => 'extras']], 'sorts' => [['field' => 'id']]]);
 
         $this->assertSame('[{"id":1,"total":30,"extras":{}},{"id":2,"total":30,"extras":{}},{"id":3,"total":30,"extras":{}},{"id":4,"total":30,"extras":{}}]', $this->data($response));
+    }
+
+    #[Test]
+    public function it_returns_a_boolean_and_a_date_time_without_cast_in_their_type(): void
+    {
+        Rest::resource('uncast-shows', UncastShowController::class)->register();
+        DB::table('shows')->where('id', 1)->update(['featured' => true, 'starts_at' => '2026-02-10 09:30:00']);
+        $search = ['selects' => [['field' => 'id'], ['field' => 'featured'], ['field' => 'starts_at'], ['field' => 'updated_at']], 'filters' => [['field' => 'id', 'operator' => 'in', 'value' => [1, 2]]], 'sorts' => [['field' => 'id']]];
+        $rows = '[{"id":1,"featured":true,"starts_at":"2026-02-10T09:30:00.000000Z","updated_at":"2026-01-01T00:00:00.000000Z"},{"id":2,"featured":false,"starts_at":null,"updated_at":"2026-01-01T00:00:00.000000Z"}]';
+
+        $this->assertSame($rows, $this->data($this->search('/uncast-shows/search', $search)));
+        $this->assertSame($rows, $this->data($this->search('/api/shows/search', $search)));
     }
 
     #[Test]
