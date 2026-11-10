@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Validation\Mutate;
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Fields\MutationOperation;
@@ -132,6 +133,15 @@ final readonly class MutationParser
         }
 
         return new MutationNode($operation, $key, $attributes, $pivot, $withoutDetaching, $relations, $depth, $type, $entry->path);
+    }
+
+    /**
+     * @param  Closure(MutationOperation): bool  $applies
+     * @return list<string>
+     */
+    public static function whenOperation(string $rule, Cursor $entry, Closure $applies): array
+    {
+        return EntryKeyRules::whenOperation($rule, $entry, $applies);
     }
 
     /** @param int|string|list<int|string>|null $key */
