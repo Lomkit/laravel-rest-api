@@ -80,6 +80,7 @@ class WritePerimeterTest extends PackageTestCase
             ['select * from books where (books.title <> ?) and books.id in (101, 102)', ['Hidden']],
             ['select * from loans where (loans.borrower <> ?) and loans.id in (101)', ['Hidden']],
             ['select * from shelves where (shelves.name <> ?) and shelves.id in (102)', ['Hidden']],
+            ['select shelf_id from book_shelf where book_shelf.book_id = ? and book_shelf.shelf_id in (?)', [102, 102]],
         ], array_values(array_filter($this->statements, fn (array $statement): bool => str_starts_with($statement[0], 'select'))));
     }
 

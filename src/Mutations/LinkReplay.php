@@ -28,7 +28,12 @@ final class LinkReplay
     /** @var list<array{string, string}> */
     private array $deleted = [];
 
-    public function __construct(private readonly RowSet $rows) {}
+    public readonly PivotLedger $pivots;
+
+    public function __construct(private readonly RowSet $rows)
+    {
+        $this->pivots = new PivotLedger;
+    }
 
     /** @param list<MutationNode> $nodes */
     public function plan(Resource $resource, array $nodes): void
@@ -108,6 +113,10 @@ final class LinkReplay
             if (! $ledger->passes($step)) {
                 $violations[$step->path] ??= $step->check === LinkCheck::Single ? Violation::heldRecord($step->path) : Violation::notLinked($step->path);
             }
+        }
+
+        foreach ($this->pivots->violations() as $path => $violation) {
+            $violations[$path] ??= $violation;
         }
 
         foreach ($this->deleted as [$path, $identity]) {

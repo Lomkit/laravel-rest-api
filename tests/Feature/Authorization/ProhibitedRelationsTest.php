@@ -83,8 +83,11 @@ class ProhibitedRelationsTest extends HelpdeskTestCase
     {
         $jam = $this->seedTickets()['Printer jam'];
         $tag = Tag::create(['name' => 'Hardware']);
-        $tag->labelledTickets()->attach($jam->id);
         $path = 'mutate.0.relations.labelledTickets.0.relations.team';
+
+        if ($operation !== 'attach') {
+            $tag->labelledTickets()->attach($jam->id);
+        }
 
         $response = $this->postJson('/locked-tickets-tags/mutate', ['mutate' => [[
             'operation' => 'update',

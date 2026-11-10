@@ -69,7 +69,8 @@ class MutationKeyQueriesTest extends PackageTestCase
         $response->assertNoContent();
         $this->assertCount(1, $this->readsOf('categories'));
         $this->assertCount(1, $this->readsOf('products'));
-        $this->assertCount(2, $this->statements);
+        $this->assertCount(1, $this->readsOf('featured_products'));
+        $this->assertCount(3, $this->statements);
     }
 
     #[Test]

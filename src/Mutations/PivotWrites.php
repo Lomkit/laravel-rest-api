@@ -91,7 +91,8 @@ final readonly class PivotWrites extends RelationWrites
     public function rehearseAfter(LinkedRow $parent, LinkReplay $replay): void
     {
         foreach ($this->nodes() as $node) {
-            $replay->walk($this->relation->resource(), $node);
+            $rows = $replay->walk($this->relation->resource(), $node);
+            $replay->pivots->add($parent, $this->pivots($parent->model), $node, $rows);
         }
     }
 

@@ -19,6 +19,7 @@ return [
     'gates_off' => 'The :attribute field is prohibited: the included resource turns its gates off.',
     'several_types' => 'The :attribute field is prohibited: this relation has several types. Set it for each type, under types.',
     'held_record' => 'The :attribute field is prohibited: this relation already holds a record. Detach it first.',
+    'attached_record' => 'The :attribute field holds a record that is already attached. Use update or sync to change its pivot.',
     'morph_to_aggregate' => 'The :attribute field cannot be a MorphTo relation.',
     'through_morph_to' => 'The :attribute field cannot go through a MorphTo relation.',
     'alias_on_nested_relation' => 'The :attribute is not allowed on a nested relation, use a nested include instead.',
