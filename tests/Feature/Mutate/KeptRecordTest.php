@@ -2,11 +2,14 @@
 
 namespace Lomkit\Rest\Tests\Feature\Mutate;
 
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
 use Lomkit\Rest\Tests\Feature\Mutate\Concerns\SeedsLibraryRows;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\KeptBookController;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\LockedBookController;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\PerimeterBookController;
 use Lomkit\Rest\Tests\Fixtures\Library\Library;
 use Lomkit\Rest\Tests\Fixtures\Library\Loan;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -83,5 +86,25 @@ class KeptRecordTest extends PackageTestCase
         ]]);
 
         $this->assertExactErrors($response, ['mutate.0.relations.label' => ['Le champ mutate.0.relations.label est interdit : cette relation contient déjà un élément et ne le détache pas. Modifiez plutôt cet élément, ou supprimez-le d\'abord.']]);
+    }
+
+    #[Test]
+    public function it_tells_how_to_replace_the_record_of_a_relation_whose_foreign_key_does_not_accept_null(): void
+    {
+        Rest::resource('perimeter-books', PerimeterBookController::class)->register();
+        Schema::drop('loans');
+        Schema::create('loans', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('book_id');
+            $table->string('borrower');
+            $table->timestamps();
+        });
+        Loan::query()->insert([['id' => 102, 'book_id' => 102, 'borrower' => 'Grace'], ['id' => 103, 'book_id' => 101, 'borrower' => 'Alan']]);
+
+        $response = $this->postJson('/perimeter-books/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => 102, 'relations' => ['loan' => ['operation' => 'attach', 'key' => 103]]],
+        ]]);
+
+        $this->assertExactErrors($response, ['mutate.0.relations.loan' => ['The mutate.0.relations.loan '.self::KEPT.' Update that record instead.']]);
     }
 }

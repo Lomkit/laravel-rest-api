@@ -61,8 +61,8 @@ final readonly class ChildWrites extends RelationWrites
                 $replay->clear($path, $column);
             }
 
-            if ($check === LinkCheck::Single && ! in_array(MutationOperation::Detach, $this->relation->acceptedOperations(), true)) {
-                $replay->keep($path, $this->relation->acceptedOperations());
+            if ($check === LinkCheck::Single) {
+                $replay->single($path, $this->relation->acceptedOperations());
             }
 
             $replay->walk(

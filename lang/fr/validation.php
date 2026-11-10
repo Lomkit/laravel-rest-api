@@ -24,7 +24,7 @@ return [
     'kept_record_update' => 'Le champ :attribute est interdit : cette relation contient déjà un élément et ne le détache pas. Modifiez plutôt cet élément.',
     'kept_record_delete' => 'Le champ :attribute est interdit : cette relation contient déjà un élément et ne le détache pas. Supprimez-le d\'abord.',
     'kept_record_update_or_delete' => 'Le champ :attribute est interdit : cette relation contient déjà un élément et ne le détache pas. Modifiez plutôt cet élément, ou supprimez-le d\'abord.',
-    'required_link' => 'Le champ :attribute est interdit : cette relation ne peut pas être détachée, sa clé étrangère n\'accepte pas null.',
+    'required_link' => 'Le champ :attribute est interdit : cette relation ne peut pas être détachée, sa colonne de lien n\'accepte pas null.',
     'kept_links' => 'Le champ :attribute doit valoir true : cette relation ne détache pas de lignes.',
     'morph_to_aggregate' => 'Le champ :attribute ne peut pas être une relation MorphTo.',
     'through_morph_to' => 'Le champ :attribute ne peut pas traverser une relation MorphTo.',

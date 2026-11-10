@@ -92,7 +92,7 @@ class FrenchMessagesTest extends HelpdeskTestCase
             ['operation' => 'update', 'key' => $jam->id, 'relations' => ['team' => ['operation' => 'detach', 'key' => $jam->team_id]]],
         ]]);
 
-        $this->assertExactErrors($response, ['mutate.0.relations.team.key' => ['Le champ mutate.0.relations.team.key est interdit : cette relation ne peut pas être détachée, sa clé étrangère n\'accepte pas null.']]);
+        $this->assertExactErrors($response, ['mutate.0.relations.team.key' => ['Le champ mutate.0.relations.team.key est interdit : cette relation ne peut pas être détachée, sa colonne de lien n\'accepte pas null.']]);
     }
 
     #[Test]

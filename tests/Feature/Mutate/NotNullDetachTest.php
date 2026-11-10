@@ -11,7 +11,7 @@ class NotNullDetachTest extends HelpdeskTestCase
 {
     use AssertsExactErrors;
 
-    private const string KEPT = 'field is prohibited: this relation cannot be detached, its foreign key does not accept null.';
+    private const string KEPT = 'field is prohibited: this relation cannot be detached, its link column does not accept null.';
 
     #[Test]
     public function it_refuses_to_detach_a_child_whose_foreign_key_does_not_accept_null(): void

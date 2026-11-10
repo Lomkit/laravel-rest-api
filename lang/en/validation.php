@@ -24,7 +24,7 @@ return [
     'kept_record_update' => 'The :attribute field is prohibited: this relation already holds a record and does not detach it. Update that record instead.',
     'kept_record_delete' => 'The :attribute field is prohibited: this relation already holds a record and does not detach it. Delete it first.',
     'kept_record_update_or_delete' => 'The :attribute field is prohibited: this relation already holds a record and does not detach it. Update that record instead, or delete it first.',
-    'required_link' => 'The :attribute field is prohibited: this relation cannot be detached, its foreign key does not accept null.',
+    'required_link' => 'The :attribute field is prohibited: this relation cannot be detached, its link column does not accept null.',
     'kept_links' => 'The :attribute field must be true: this relation does not detach rows.',
     'morph_to_aggregate' => 'The :attribute field cannot be a MorphTo relation.',
     'through_morph_to' => 'The :attribute field cannot go through a MorphTo relation.',

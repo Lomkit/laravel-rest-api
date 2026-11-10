@@ -31,8 +31,8 @@ final class LinkReplay
     /** @var array<string, LinkColumn> */
     private array $cleared = [];
 
-    /** @var array<string, Violation> */
-    private array $kept = [];
+    /** @var array<string, list<MutationOperation>> */
+    private array $singles = [];
 
     public readonly PivotLedger $pivots;
 
@@ -95,9 +95,9 @@ final class LinkReplay
     }
 
     /** @param list<MutationOperation> $operations */
-    public function keep(string $path, array $operations): void
+    public function single(string $path, array $operations): void
     {
-        $this->kept[$path] = Violation::keptRecord($path, $operations);
+        $this->singles[$path] = $operations;
     }
 
     private function save(LinkStep $link, int $from): void
@@ -125,10 +125,11 @@ final class LinkReplay
         $ledger = new LinkLedger;
         $ledger->seed($this->steps);
         $violations = [];
+        $columns = new NullableColumns;
 
         foreach ($this->steps as $step) {
             if (! $ledger->passes($step)) {
-                $violations[$step->path] ??= $step->check === LinkCheck::Single ? ($this->kept[$step->path] ?? Violation::heldRecord($step->path)) : Violation::notLinked($step->path);
+                $violations[$step->path] ??= $step->check === LinkCheck::Single ? $this->heldRecord($step, $columns) : Violation::notLinked($step->path);
             }
         }
 
@@ -142,8 +143,6 @@ final class LinkReplay
             }
         }
 
-        $columns = new NullableColumns;
-
         foreach ($this->cleared as $path => $column) {
             if (! $column->nullable($columns)) {
                 $violations[$path] ??= Violation::requiredLink($path);
@@ -151,6 +150,17 @@ final class LinkReplay
         }
 
         return $violations;
+    }
+
+    private function heldRecord(LinkStep $step, NullableColumns $columns): Violation
+    {
+        $operations = $this->singles[$step->path] ?? null;
+
+        if ($operations === null || (in_array(MutationOperation::Detach, $operations, true) && $step->column->nullable($columns))) {
+            return Violation::heldRecord($step->path);
+        }
+
+        return Violation::keptRecord($step->path, $operations);
     }
 
     private function name(MutationNode $node, LinkedRow $row): void
