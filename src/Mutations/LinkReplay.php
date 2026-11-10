@@ -31,6 +31,9 @@ final class LinkReplay
     /** @var array<string, LinkColumn> */
     private array $cleared = [];
 
+    /** @var array<string, Violation> */
+    private array $kept = [];
+
     public readonly PivotLedger $pivots;
 
     public function __construct(private readonly RowSet $rows)
@@ -91,6 +94,12 @@ final class LinkReplay
         $this->cleared[$path] = $column;
     }
 
+    /** @param list<MutationOperation> $operations */
+    public function keep(string $path, array $operations): void
+    {
+        $this->kept[$path] = Violation::keptRecord($path, $operations);
+    }
+
     private function save(LinkStep $link, int $from): void
     {
         $steps = array_slice($this->steps, 0, $from);
@@ -119,7 +128,7 @@ final class LinkReplay
 
         foreach ($this->steps as $step) {
             if (! $ledger->passes($step)) {
-                $violations[$step->path] ??= $step->check === LinkCheck::Single ? Violation::heldRecord($step->path) : Violation::notLinked($step->path);
+                $violations[$step->path] ??= $step->check === LinkCheck::Single ? ($this->kept[$step->path] ?? Violation::heldRecord($step->path)) : Violation::notLinked($step->path);
             }
         }
 
