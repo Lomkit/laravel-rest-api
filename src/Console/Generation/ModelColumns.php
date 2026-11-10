@@ -35,6 +35,11 @@ final readonly class ModelColumns
         return in_array($column->name, $this->model->getHidden(), true);
     }
 
+    public function isEncrypted(Column $column): bool
+    {
+        return $this->model->hasCast($column->name, 'encrypted');
+    }
+
     public function isLeftOut(Column $column): bool
     {
         return ! $this->isKey($column)

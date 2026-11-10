@@ -73,10 +73,7 @@ final readonly class FieldMapping
             $field = $field->with('creatable()');
         }
 
-        if ($this->columns->isHidden($column)) {
-            $field = $field->with('writeOnly()');
-        }
-
+        $field = $this->withReading($field, $column);
         $rule = $this->rule($column, $class);
 
         if ($rule !== null) {
@@ -84,6 +81,19 @@ final readonly class FieldMapping
         }
 
         return $this->withWriteRules($field, $column, $table, $class);
+    }
+
+    private function withReading(Declaration $field, Column $column): Declaration
+    {
+        if ($this->columns->isHidden($column)) {
+            return $field->with('writeOnly()');
+        }
+
+        if ($this->columns->isEncrypted($column)) {
+            return $field->with('filterable(false)')->with('sortable(false)');
+        }
+
+        return $field;
     }
 
     private function rule(Column $column, string $class): ?string
