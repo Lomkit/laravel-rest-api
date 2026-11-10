@@ -47,6 +47,12 @@ enum MutationOperation: string
         return $this !== self::Delete;
     }
 
+    /** @param list<self> $accepted */
+    public function writesRowAmong(array $accepted): bool
+    {
+        return $this === self::Create || in_array(self::Update, $accepted, true);
+    }
+
     public function constrainedAs(): ?self
     {
         return match ($this) {

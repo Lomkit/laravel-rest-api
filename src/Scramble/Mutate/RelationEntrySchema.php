@@ -151,7 +151,8 @@ final readonly class RelationEntrySchema
     /** @return array<string, Type> */
     private function keys(Relation $relation, Resource $related, MutationOperation $operation): array
     {
-        $write = $operation->writeOperation();
+        $writesRow = $operation->writesRowAmong($relation->acceptedOperations());
+        $write = $writesRow ? $operation->writeOperation() : null;
         $pivot = $relation instanceof PivotRelation ? $operation->pivotWriteOperation() : null;
 
         return array_filter([
@@ -160,7 +161,7 @@ final readonly class RelationEntrySchema
             'attributes' => $write === null ? null : $this->writable->attributes($related, $write),
             'pivot' => $pivot === null ? null : $this->writable->pivot($relation, $pivot),
             'without_detaching' => $operation === MutationOperation::Sync ? self::withoutDetaching($relation) : null,
-            'relations' => $operation->takesRelations() ? $this->relations($related, $operation) : null,
+            'relations' => $writesRow && $operation->takesRelations() ? $this->relations($related, $operation) : null,
         ]);
     }
 

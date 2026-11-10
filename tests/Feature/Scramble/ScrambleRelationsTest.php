@@ -121,7 +121,7 @@ class ScrambleRelationsTest extends ScrambleTestCase
 
         $this->assertSame([['create'], ['update'], ['attach']], $operations('KeptTicketRelationMutationTeam'));
         $this->assertSame([['create'], ['update'], ['attach'], ['sync']], $operations('KeptTicketRelationMutationTags'));
-        $this->assertSame([['create'], ['attach'], ['detach'], ['sync'], ['toggle']], $operations('KeptTicketRelationMutationLabels'));
+        $this->assertSame([['create'], ['attach', 'toggle'], ['detach'], ['sync']], $operations('KeptTicketRelationMutationLabels'));
         $this->assertSame(
             ['type' => 'boolean', 'description' => 'Must be true: the relation does not detach rows, so the rows that `key` does not list stay attached', 'const' => true],
             $tags[3]['properties']['without_detaching'],
@@ -129,6 +129,7 @@ class ScrambleRelationsTest extends ScrambleTestCase
         $this->assertSame(['operation', 'key', 'without_detaching'], $tags[3]['required']);
         $this->assertSame(['type' => 'boolean', 'description' => 'When true, the rows that `key` does not list stay attached'], $labels[3]['properties']['without_detaching']);
         $this->assertSame(['operation', 'key'], $labels[3]['required']);
+        $this->assertSame([['attributes', 'pivot', 'relations'], ['key', 'pivot'], ['key'], ['key', 'pivot', 'without_detaching']], array_map(fn (array $branch): array => array_values(array_diff(array_keys($branch['properties']), ['operation'])), $labels));
     }
 
     #[Test]

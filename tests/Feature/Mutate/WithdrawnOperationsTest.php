@@ -101,6 +101,47 @@ class WithdrawnOperationsTest extends HelpdeskTestCase
         $this->assertSame(['101 > 101', '102 > 101'], self::tags());
     }
 
+    /** @param array<string, mixed> $entry */
+    #[Test]
+    #[DataProvider('rowWrites')]
+    public function it_refuses_a_link_entry_that_writes_the_row_of_a_relation_without_update(array $entry, string $key, string $operation): void
+    {
+        $rows = [self::rows(), DB::table('tags')->orderBy('id')->pluck('name')->all()];
+
+        $response = $this->postJson('/api/kept-tickets/mutate', ['mutate' => [['operation' => 'update', 'key' => 101, 'relations' => ['labels' => [$entry]]]]]);
+
+        $path = "mutate.0.relations.labels.0.{$key}";
+        $this->assertExactErrors($response, [$path => ["The {$path} field is prohibited when mutate.0.relations.labels.0.operation is {$operation}."]]);
+        $this->assertSame($rows, [self::rows(), DB::table('tags')->orderBy('id')->pluck('name')->all()]);
+    }
+
+    /** @return array<string, array{array<string, mixed>, string, string}> */
+    public static function rowWrites(): array
+    {
+        $relations = ['labelledTickets' => [['operation' => 'update', 'key' => 102, 'attributes' => ['title' => 'Renamed']]]];
+
+        return [
+            'attributes on a sync' => [['operation' => 'sync', 'key' => [101], 'attributes' => ['name' => 'Renamed'], 'pivot' => ['position' => 7]], 'attributes', 'sync'],
+            'attributes on a toggle' => [['operation' => 'toggle', 'key' => [101], 'attributes' => ['name' => 'Renamed']], 'attributes', 'toggle'],
+            'relations on an attach' => [['operation' => 'attach', 'key' => [101], 'relations' => $relations], 'relations', 'attach'],
+            'relations on a sync' => [['operation' => 'sync', 'key' => [101], 'relations' => $relations], 'relations', 'sync'],
+            'relations on a detach' => [['operation' => 'detach', 'key' => [101], 'relations' => $relations], 'relations', 'detach'],
+        ];
+    }
+
+    #[Test]
+    public function it_creates_a_row_with_its_attributes_on_a_relation_without_update(): void
+    {
+        $response = $this->postJson('/api/kept-tickets/mutate', ['mutate' => [[
+            'operation' => 'update',
+            'key' => 101,
+            'relations' => ['labels' => [['operation' => 'create', 'attributes' => ['name' => 'Urgent']]]],
+        ]]]);
+
+        $response->assertOk();
+        $this->assertSame(['Hardware', 'Network', 'Urgent'], DB::table('tags')->orderBy('id')->pluck('name')->all());
+    }
+
     #[Test]
     public function it_keeps_the_other_operations_of_the_relation(): void
     {

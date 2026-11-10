@@ -42,11 +42,12 @@ final readonly class EntryKeyRules
     {
         $attributes = $entry->at('attributes');
         $write = $operation?->writeOperation();
+        $writesRow = fn (MutationOperation $candidate): bool => $operations === [] || $candidate->writesRowAmong($operations);
 
         $this->rules->add($entry->at('operation')->path, ['required', $operations === [] ? Rule::enum(MutationOperation::class) : Rule::enum(MutationOperation::class)->only($operations)]);
-        $this->rules->add($attributes->path, ['array', ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => $candidate->writeOperation() === null)]);
+        $this->rules->add($attributes->path, ['array', ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => $candidate->writeOperation() === null || ! $writesRow($candidate))]);
 
-        if ($write !== null) {
+        if ($write !== null && $operation !== null && $writesRow($operation)) {
             $this->entryRules->writable($attributes, $resource->definition()->fields(), $write);
         }
 
@@ -54,7 +55,7 @@ final readonly class EntryKeyRules
             ...self::whenOperation('present_if', $entry, fn (MutationOperation $candidate): bool => $candidate->requiresKey()),
             ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => ! $candidate->requiresKey()),
         ]);
-        $this->rules->addWhenPresent($entry->at('relations'), self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => ! $candidate->takesRelations()));
+        $this->rules->addWhenPresent($entry->at('relations'), self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => ! $candidate->takesRelations() || ! $writesRow($candidate)));
         $key = $this->keys->read($entry->at('key'), $resource, $operation, $listed, $runs);
         $this->rules->add($entry->at('without_detaching')->path, ['boolean', 'prohibited_unless:'.$entry->at('operation')->path.','.MutationOperation::Sync->value]);
         $this->version($entry, $resource, $operation, $key);
