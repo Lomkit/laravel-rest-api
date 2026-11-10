@@ -12,6 +12,8 @@ use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Mutations\Contextual;
+use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Article;
 
 class ArticleResource extends Resource
@@ -23,9 +25,13 @@ class ArticleResource extends Resource
     {
         return [
             ID::make('id'),
-            Text::make('reference')->creationRules('required', Rule::unique(Article::class, 'reference')),
+            Text::make('reference')
+                ->creationRules('required', Rule::unique(Article::class, 'reference'))
+                ->updateRules(Contextual::rule(fn (MutationContext $mutation) => Rule::unique(Article::class, 'reference')->ignore($mutation->key))),
             Text::make('title')->creationRules('required'),
-            Text::make('slug')->creationRules('required', Rule::unique(Article::class, 'slug')),
+            Text::make('slug')
+                ->creationRules('required', Rule::unique(Article::class, 'slug'))
+                ->updateRules(Contextual::rule(fn (MutationContext $mutation) => Rule::unique(Article::class, 'slug')->ignore($mutation->key))),
             Text::make('locale'),
             Text::make('body')->creationRules('required'),
             Text::make('summary')->nullable(),

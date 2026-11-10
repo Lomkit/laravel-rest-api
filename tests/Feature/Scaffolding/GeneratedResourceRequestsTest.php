@@ -147,6 +147,36 @@ class GeneratedResourceRequestsTest extends ScaffoldingTestCase
         $this->assertSame(1, Edition::query()->count());
     }
 
+    #[Test]
+    public function it_refuses_an_update_to_a_unique_value_of_another_row(): void
+    {
+        $this->serve('UpdatedArticle', Article::class, 'updated-articles');
+        $first = Article::query()->create(self::ARTICLE);
+        $second = Article::query()->create([...self::ARTICLE, 'reference' => '7d1e3a5c-2b4f-4c6d-8e9f-0a1b2c3d4e5f', 'title' => 'Summer launch', 'slug' => 'taken']);
+
+        $this->update('updated-articles', $second->getKey(), ['slug' => 'spring-launch'])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors', ['mutate.0.attributes.slug' => ['The mutate.0.attributes.slug has already been taken.']]);
+        $this->update('updated-articles', $first->getKey(), ['slug' => 'spring-launch', 'title' => 'Spring relaunch'])->assertOk();
+
+        $this->assertSame(['spring-launch', 'taken'], Article::query()->orderBy('slug')->pluck('slug')->all());
+    }
+
+    #[Test]
+    public function it_refuses_an_update_to_a_unique_value_of_another_row_keyed_by_a_string(): void
+    {
+        $this->serve('UpdatedEdition', Edition::class, 'updated-editions');
+        Edition::query()->create(['code' => 'am', 'name' => 'Morning']);
+        Edition::query()->create(['code' => 'pm', 'name' => 'Evening']);
+
+        $this->update('updated-editions', 'pm', ['name' => 'Morning'])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors', ['mutate.0.attributes.name' => ['The mutate.0.attributes.name has already been taken.']]);
+        $this->update('updated-editions', 'am', ['name' => 'Morning'])->assertOk();
+
+        $this->assertDatabaseHas('editions', ['code' => 'pm', 'name' => 'Evening']);
+    }
+
     private function serve(string $name, string $model, string $uri): void
     {
         $this->artisan('rest:resource', ['name' => "{$name}Resource", '--model' => $model, '--generate' => true, '--no-interaction' => true])->assertSuccessful();
@@ -160,5 +190,11 @@ class GeneratedResourceRequestsTest extends ScaffoldingTestCase
     private function mutate(string $uri, array $attributes): TestResponse
     {
         return $this->postJson("/{$uri}/mutate", ['mutate' => [['operation' => 'create', 'attributes' => $attributes]]]);
+    }
+
+    /** @param  array<string, mixed>  $attributes */
+    private function update(string $uri, int|string $key, array $attributes): TestResponse
+    {
+        return $this->postJson("/{$uri}/mutate", ['mutate' => [['operation' => 'update', 'key' => $key, 'attributes' => $attributes]]]);
     }
 }

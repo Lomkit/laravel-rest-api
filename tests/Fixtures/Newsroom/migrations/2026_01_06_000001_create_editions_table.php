@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('editions', function (Blueprint $table): void {
             $table->string('code', 12)->primary();
-            $table->string('name');
+            $table->string('name')->unique();
         });
     }
 };

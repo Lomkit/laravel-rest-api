@@ -5,6 +5,8 @@ namespace App\Rest\Resources;
 use Illuminate\Validation\Rule;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
+use Lomkit\Rest\Mutations\Contextual;
+use Lomkit\Rest\Mutations\MutationContext;
 use Lomkit\Rest\Tests\Fixtures\Newsroom\Rule as RuleModel;
 
 class RuleResource extends Resource
@@ -18,7 +20,8 @@ class RuleResource extends Resource
             ID::make('id'),
             Text::make('name')
                 ->rules('max:255')
-                ->creationRules('required', Rule::unique(RuleModel::class, 'name')),
+                ->creationRules('required', Rule::unique(RuleModel::class, 'name'))
+                ->updateRules(Contextual::rule(fn (MutationContext $mutation) => Rule::unique(RuleModel::class, 'name')->ignore($mutation->key))),
             Text::make('pattern')
                 ->nullable()
                 ->rules('max:255'),
