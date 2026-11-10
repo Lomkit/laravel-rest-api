@@ -81,6 +81,16 @@ class RestConfigTest extends TestCase
     }
 
     #[Test]
+    public function it_uses_the_default_cache_store_when_the_environment_value_is_empty(): void
+    {
+        Env::getRepository()->set('REST_AUTHORIZATIONS_CACHE_STORE', '');
+
+        $config = RestConfig::from($this->packageConfig());
+
+        $this->assertNull($config->cacheStore);
+    }
+
+    #[Test]
     public function it_reads_the_transaction_attempts_from_the_environment(): void
     {
         Env::getRepository()->set('REST_TRANSACTION_ATTEMPTS', '3');
