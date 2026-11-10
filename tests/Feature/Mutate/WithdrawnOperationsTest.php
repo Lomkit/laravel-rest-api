@@ -139,7 +139,7 @@ class WithdrawnOperationsTest extends HelpdeskTestCase
         ]]]);
 
         $response->assertOk();
-        $this->assertSame(['Hardware', 'Network', 'Urgent'], DB::table('tags')->orderBy('id')->pluck('name')->all());
+        $this->assertSame(['Hardware', 'Network', 'Urgent'], DB::table('tags')->orderBy('name')->pluck('name')->all());
     }
 
     #[Test]
