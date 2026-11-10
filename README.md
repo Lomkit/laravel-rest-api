@@ -264,7 +264,7 @@ This search uses two more declarations on the resource: `Scope::make('upcoming')
 {"operations": [{"operation": "create", "key": 4, "relations": {"stage": {"operation": "attach", "key": 1}, "artists": [{"operation": "attach", "key": 4}, {"operation": "create", "key": 5}]}}]}
 ```
 
-Every entry is validated by the rules of its fields and checked against the policies before the first write, then everything runs in one transaction. An `Enum` field can offer only some of its cases to writes, `->offered([...])`, so a withdrawn status stays readable and filterable on old rows. Relation entries also take `detach`, `sync` and `toggle` on many-to-many relations, and `delete` on child rows. Add a `response` block to get the written rows back, and `versioned()` on the resource to answer `409` when a row changed since the client read it.
+Every entry is validated by the rules of its fields and checked against the policies before the first write, then everything runs in one transaction. An `Enum` field can offer only some of its cases to writes, `->offered([...])`, so a withdrawn status stays readable and filterable on old rows. Relation entries also take `attach` and `detach`, plus `sync` and `toggle` on many-to-many relations and `delete` on child rows, and a relation can withdraw some of them with `withoutOperations()`. Add a `response` block to get the written rows back, and `versioned()` on the resource to answer `409` when a row changed since the client read it.
 
 A write can ask first: when `mutateConfirmation()` on the resource (or `destroyConfirmation()`, `restoreConfirmation()`, `forceDestroyConfirmation()`) returns a `Confirmation`, the request answers `428` with a signed token and writes nothing, and the same body sent back with `"confirmation": "<token>"` runs it.
 
@@ -355,7 +355,7 @@ class ShowsByStatus extends Partition
 - **Precognition**: live form validation with Laravel Precognition on every endpoint, once `rest.precognition.enabled` is on.
 - **Predictable limits**: list sizes, nesting depths, totals, value lengths and the rows one search renders are bounded in `config/rest.php`, and an oversized request answers one clear `422` before any query. A partition or a trend keeps its largest groups, 100 by default, and folds the rest into `other`.
 - **Translated messages**: every message the package writes for a client ships in English and French and follows the locale of the request; `php artisan vendor:publish --tag=rest-lang` lets you reword them or add a language.
-- **`rest:check` for CI**: reports routes without authentication, models without a policy, resources that show every row (no `perimeterQuery()`) and actions without row checks.
+- **`rest:check` for CI**: reports routes without authentication, models without a policy, resources that show every row (no `perimeterQuery()`), actions without row checks and relations that accept `detach` on a foreign key that does not accept null.
 - **Generators**: `rest:resource --generate` reads the table, and `rest:controller`, `rest:policy`, `rest:action`, `rest:instruction`, `rest:metric` and `rest:response` scaffold the rest.
 - **Laravel Boost**: the package ships a Boost skill with the full feature reference.
 

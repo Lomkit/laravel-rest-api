@@ -1,5 +1,14 @@
 # Upgrade Guide
 
+## 3.1 additions
+
+Version 3.1 only adds features: upgrading from 3.0 needs no change.
+
+- A relation can withdraw some of its mutation operations: `HasMany::make('lines', LineResource::class)->withoutOperations(MutationOperation::Detach)`. Validation, `/details` and the OpenAPI document follow. Withdrawing `detach` from a many-to-many relation also withdraws `toggle`, and `sync` then needs `"without_detaching": true`.
+- A `detach` that would set a foreign key or morph type that does not accept null answers a `422` on the `key` of the entry.
+- `rest:resource --generate` and `rest:quick-start` withdraw `detach` from a relation whose foreign key or morph type does not accept null.
+- `rest:check` reports each relation that accepts `detach` while its foreign key or morph type does not accept null, and its `--json` report adds `relations`.
+
 ## Upgrading to 3.0 from 2.x
 
 This guide lists every breaking change of version 3.0, area by area. Update the requirements first, then go through the sections of the features that your application uses.
