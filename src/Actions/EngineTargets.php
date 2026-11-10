@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Actions\Rows\ActionRows;
+use Lomkit\Rest\Actions\Rows\CheckedKeys;
 use Lomkit\Rest\Actions\Rows\ChunkSize;
 use Lomkit\Rest\Actions\Rows\RowCap;
 use Lomkit\Rest\Http\Requests\OperateRequest;
@@ -57,5 +58,13 @@ final readonly class EngineTargets implements ActionRows
     public function count(): int
     {
         return array_sum(array_map(count(...), $this->chunks));
+    }
+
+    #[\Override]
+    public function only(CheckedKeys $keys): ActionRows
+    {
+        $chunks = array_map(fn (array $chunk): array => array_values(array_filter($chunk, $keys->has(...))), $this->chunks);
+
+        return new self($this->search, array_values(array_filter($chunks, fn (array $chunk): bool => $chunk !== [])));
     }
 }

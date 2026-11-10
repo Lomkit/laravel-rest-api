@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Actions\Rows\ActionRows;
-use Lomkit\Rest\Actions\Rows\CheckedRows;
+use Lomkit\Rest\Actions\Rows\CheckedKeys;
 use Lomkit\Rest\Actions\Rows\RowCap;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
@@ -58,10 +58,20 @@ final readonly class RowChecks
 
         $denials = [];
         $keys = [];
+        $read = 0;
 
-        $rows->each(function (Collection $models) use (&$denials, &$keys): int {
+        $rows->each(function (Collection $models) use (&$denials, &$keys, &$read): int {
+            $read += $models->count();
+            $this->cap?->check($read);
             array_push($denials, ...$this->denials($models));
-            array_push($keys, ...$models->map(fn (Model $model): mixed => $model->getKey())->values()->all());
+
+            foreach ($models as $model) {
+                $key = CheckedKeys::normalize($this->id, $model->getKey());
+
+                if ($key !== null) {
+                    $keys[$key] = true;
+                }
+            }
 
             return $models->count();
         });
@@ -70,7 +80,7 @@ final readonly class RowChecks
             throw new AuthorizationDenied($denials);
         }
 
-        return CheckedRows::of($rows, $this->id, $keys, $this->cap);
+        return $rows->only(new CheckedKeys($this->id, $keys));
     }
 
     /**

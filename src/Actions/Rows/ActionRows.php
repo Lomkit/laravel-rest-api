@@ -12,4 +12,6 @@ interface ActionRows
     public function each(Closure $each): int;
 
     public function count(): int;
+
+    public function only(CheckedKeys $keys): ActionRows;
 }

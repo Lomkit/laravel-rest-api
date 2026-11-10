@@ -18,4 +18,10 @@ final readonly class NoRows implements ActionRows
     {
         return 0;
     }
+
+    #[\Override]
+    public function only(CheckedKeys $keys): ActionRows
+    {
+        return $this;
+    }
 }
