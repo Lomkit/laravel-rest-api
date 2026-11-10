@@ -113,6 +113,35 @@ class ActionRowChecksTest extends HelpdeskTestCase
         $this->assertSame(8, $this->ticketSelects());
     }
 
+    #[Test]
+    public function it_queues_the_checked_rows_only(): void
+    {
+        Queue::fake();
+        $this->seedRows();
+        $this->insertOnRead(7, 8, 'closed');
+
+        $response = $this->postJson('/reviewed-tickets/actions/queued-review-tickets', ['search' => []]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 7, 'result' => null]]);
+        $this->assertSame(self::CHUNKS, Queue::pushed(QueuedAction::class)->map(fn (QueuedAction $job): array => $job->rows->keys)->all());
+    }
+
+    #[Test]
+    public function it_refuses_the_action_when_the_checked_rows_exceed_the_maximum(): void
+    {
+        ReviewedTicketResource::$maxResources = 7;
+        $this->seedRows();
+        $this->insertOnRead(1, 8, 'open');
+
+        $response = $this->postJson('/reviewed-tickets/actions/review-tickets', ['search' => []]);
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'This action can be run on at most 7 resources; narrow the search.',
+            'errors' => ['search' => ['This action can be run on at most 7 resources; narrow the search.']],
+        ]);
+        $this->assertSame([], ReviewTickets::$runs);
+    }
+
     /**
      * @param  list<int>  $closed
      * @param  list<list<int>>  $runs
@@ -303,6 +332,20 @@ class ActionRowChecksTest extends HelpdeskTestCase
         foreach (range(1, 7) as $id) {
             Ticket::create(['id' => $id, 'team_id' => 1, 'title' => "Ticket {$id}", 'status' => in_array($id, $closed, true) ? 'closed' : 'open']);
         }
+    }
+
+    private function insertOnRead(int $read, int $id, string $status): void
+    {
+        $inserted = false;
+
+        Ticket::retrieved(function (Ticket $ticket) use (&$inserted, $read, $id, $status): void {
+            if ($inserted || $ticket->getKey() !== $read) {
+                return;
+            }
+
+            $inserted = true;
+            Ticket::create(['id' => $id, 'team_id' => 1, 'title' => "Ticket {$id}", 'status' => $status]);
+        });
     }
 
     private function ticketSelects(): int

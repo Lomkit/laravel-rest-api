@@ -5,13 +5,18 @@ namespace Lomkit\Rest\Actions;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Lomkit\Rest\Actions\Rows\ActionRows;
+use Lomkit\Rest\Actions\Rows\CheckedRows;
+use Lomkit\Rest\Actions\Rows\RowCap;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Authorization\Decision;
 use Lomkit\Rest\Authorization\Denial;
 use Lomkit\Rest\Exceptions\AuthorizationDenied;
+use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Validation\KeysGrammar;
 
 final readonly class RowChecks
 {
@@ -22,6 +27,8 @@ final readonly class RowChecks
         private string $ability,
         private Closure $path,
         private bool $skip,
+        private ID $id,
+        private ?RowCap $cap,
     ) {}
 
     public static function of(OperateRequest $request, Action $action): ?self
@@ -38,20 +45,23 @@ final readonly class RowChecks
             $ability,
             self::paths($request, $action),
             $action->skipUnauthorized,
+            KeysGrammar::idOf($request->resource),
+            RowCap::of($action->maxResources),
         );
     }
 
-    /** @param Closure(Closure(Collection<int, Model>): int): int $read */
-    public function verify(Closure $read): void
+    public function verify(ActionRows $rows): ActionRows
     {
         if ($this->skip) {
-            return;
+            return $rows;
         }
 
         $denials = [];
+        $keys = [];
 
-        $read(function (Collection $models) use (&$denials): int {
+        $rows->each(function (Collection $models) use (&$denials, &$keys): int {
             array_push($denials, ...$this->denials($models));
+            array_push($keys, ...$models->map(fn (Model $model): mixed => $model->getKey())->values()->all());
 
             return $models->count();
         });
@@ -59,6 +69,8 @@ final readonly class RowChecks
         if ($denials !== []) {
             throw new AuthorizationDenied($denials);
         }
+
+        return CheckedRows::of($rows, $this->id, $keys, $this->cap);
     }
 
     /**
