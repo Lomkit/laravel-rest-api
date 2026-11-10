@@ -49,10 +49,12 @@ final readonly class FieldCasts
      */
     public function appliedTo(Model $copy): Model
     {
-        if ($this->casts === []) {
+        $casts = array_diff_key($this->casts, $copy->getCasts());
+
+        if ($casts === []) {
             return $copy;
         }
 
-        return $copy->mergeCasts($this->casts);
+        return $copy->mergeCasts($casts);
     }
 }

@@ -9,6 +9,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Http\Serialization\RowSerializer;
 use Lomkit\Rest\Search\Plan\QueryPlan;
+use Lomkit\Rest\Tests\Feature\Serialization\Stubs\CastingShowController;
 use Lomkit\Rest\Tests\Feature\Serialization\Stubs\ResolvedShowController;
 use Lomkit\Rest\Tests\Feature\Serialization\Stubs\SerializedShowController;
 use Lomkit\Rest\Tests\Feature\Serialization\Stubs\UncastShow;
@@ -126,6 +127,17 @@ class TypedValuesTest extends PackageTestCase
         $response = $this->search('/serialized-shows/search', ['selects' => [['field' => 'id'], ['field' => 'featured']], 'filters' => [['field' => 'id', 'operator' => 'in', 'value' => [1, 2]]], 'sorts' => [['field' => 'id']]]);
 
         $this->assertSame('[{"id":1,"featured":"yes"},{"id":2,"featured":"no"}]', $this->data($response));
+    }
+
+    #[Test]
+    public function it_keeps_the_casts_that_a_query_adds_to_its_rows(): void
+    {
+        Rest::resource('casting-shows', CastingShowController::class)->register();
+        DB::table('shows')->where('id', 1)->update(['featured' => true, 'starts_at' => '2026-02-10 09:30:00']);
+
+        $response = $this->search('/casting-shows/search', ['selects' => [['field' => 'id'], ['field' => 'featured'], ['field' => 'starts_at']], 'filters' => [['field' => 'id', 'operator' => '=', 'value' => 1]]]);
+
+        $this->assertSame('[{"id":1,"featured":1,"starts_at":"2026-02-10"}]', $this->data($response));
     }
 
     #[Test]
