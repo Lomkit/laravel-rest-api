@@ -21,6 +21,7 @@ return [
     'held_record' => 'The :attribute field is prohibited: this relation already holds a record. Detach it first.',
     'attached_record' => 'The :attribute field holds a record that is already attached. Use update or sync to change its pivot.',
     'required_link' => 'The :attribute field is prohibited: this relation cannot be detached, its foreign key does not accept null.',
+    'kept_links' => 'The :attribute field must be true: this relation does not detach rows.',
     'morph_to_aggregate' => 'The :attribute field cannot be a MorphTo relation.',
     'through_morph_to' => 'The :attribute field cannot go through a MorphTo relation.',
     'alias_on_nested_relation' => 'The :attribute is not allowed on a nested relation, use a nested include instead.',

@@ -21,6 +21,7 @@ return [
     'held_record' => 'Le champ :attribute est interdit : cette relation contient déjà un élément. Détachez-le d\'abord.',
     'attached_record' => 'Le champ :attribute contient un élément déjà attaché. Utilisez update ou sync pour modifier son pivot.',
     'required_link' => 'Le champ :attribute est interdit : cette relation ne peut pas être détachée, sa clé étrangère n\'accepte pas null.',
+    'kept_links' => 'Le champ :attribute doit valoir true : cette relation ne détache pas de lignes.',
     'morph_to_aggregate' => 'Le champ :attribute ne peut pas être une relation MorphTo.',
     'through_morph_to' => 'Le champ :attribute ne peut pas traverser une relation MorphTo.',
     'alias_on_nested_relation' => 'Le champ :attribute n\'est pas permis sur une relation imbriquée : utilisez plutôt une inclusion imbriquée.',

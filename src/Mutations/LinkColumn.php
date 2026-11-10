@@ -44,9 +44,29 @@ final readonly class LinkColumn
         return $key === null ? null : ($type ?? '')."\n".self::text($key);
     }
 
+    public static function detachedBy(mixed $relation): ?self
+    {
+        return match (true) {
+            $relation instanceof HasOneOrMany => self::ofChildren($relation),
+            $relation instanceof BelongsTo => self::ofOwner($relation),
+            default => null,
+        };
+    }
+
     public function nullable(NullableColumns $columns): bool
     {
-        return $columns->allows($this->child, $this->foreignKey) && ($this->morphType === null || $columns->allows($this->child, $this->morphType));
+        return $this->requiredColumn($columns) === null;
+    }
+
+    public function requiredColumn(NullableColumns $columns): ?string
+    {
+        foreach ([$this->foreignKey, $this->morphType] as $column) {
+            if ($column !== null && ! $columns->allows($this->child, $column)) {
+                return $this->child->getTable().'.'.$column;
+            }
+        }
+
+        return null;
     }
 
     public function of(Model $row): ?string

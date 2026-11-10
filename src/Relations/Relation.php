@@ -33,11 +33,14 @@ class Relation
 
     private ?string $detachAbility = null;
 
+    private WithdrawnOperations $withdrawn;
+
     /** @param class-string<Resource> $type */
     public function __construct(string $relation, string $type)
     {
         $this->relation = $relation;
         $this->type = $type;
+        $this->withdrawn = WithdrawnOperations::none();
     }
 
     /** @param class-string<Resource> $type */
@@ -104,6 +107,18 @@ class Relation
         return [MutationOperation::Create, MutationOperation::Update, MutationOperation::Attach, MutationOperation::Detach];
     }
 
+    public function withoutOperations(MutationOperation ...$operations): static
+    {
+        $this->withdrawn = $this->withdrawn->with($this, ...$operations);
+
+        return $this;
+    }
+
+    public function syncRequiresWithoutDetaching(): bool
+    {
+        return $this instanceof PivotRelation && $this->withdrawn->keepsLinks();
+    }
+
     public function isDeletable(): bool
     {
         return false;
@@ -112,7 +127,8 @@ class Relation
     /** @return list<MutationOperation> */
     final public function acceptedOperations(): array
     {
-        $operations = array_values(array_filter($this->mutationOperations(), fn (MutationOperation $operation): bool => $operation !== MutationOperation::Delete));
+        $supported = array_values(array_filter($this->mutationOperations(), fn (MutationOperation $operation): bool => $operation !== MutationOperation::Delete));
+        $operations = $this->withdrawn->from($supported, $this instanceof PivotRelation);
 
         return $this->isDeletable() ? [...$operations, MutationOperation::Delete] : $operations;
     }

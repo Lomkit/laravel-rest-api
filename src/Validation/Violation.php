@@ -138,6 +138,11 @@ final readonly class Violation
         return new self($key, 'rest::validation.required_link');
     }
 
+    public static function keptLinks(string $key): self
+    {
+        return new self($key, 'rest::validation.kept_links');
+    }
+
     public static function throughMorphTo(string $key): self
     {
         return new self($key, 'rest::validation.through_morph_to');

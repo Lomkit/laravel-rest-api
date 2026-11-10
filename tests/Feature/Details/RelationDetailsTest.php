@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Details\Stubs\DeletableTicketsTeamController;
 use Lomkit\Rest\Tests\Feature\Details\Stubs\TeamPivotTicketController;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\KeptTeamController;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\KeptTicketController;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Helpdesk;
 use Lomkit\Rest\Tests\Fixtures\Library\Book;
 use Lomkit\Rest\Tests\Fixtures\Library\BookResource;
@@ -101,6 +103,21 @@ class RelationDetailsTest extends PackageTestCase
         Route::prefix('api')->group(fn () => Rest::resource('deletable-tickets-teams', DeletableTicketsTeamController::class)->register());
 
         $this->assertSame(['tickets' => ['create', 'update', 'attach', 'detach', 'delete'], 'replies' => []], $this->operations('/api/deletable-tickets-teams'));
+    }
+
+    #[Test]
+    public function it_lists_the_operations_left_on_a_relation_that_withdraws_some(): void
+    {
+        Route::prefix('api')->group(function (): void {
+            Rest::resource('kept-tickets', KeptTicketController::class)->register();
+            Rest::resource('kept-teams', KeptTeamController::class)->register();
+        });
+
+        $this->assertSame(
+            ['team' => ['create', 'update', 'attach'], 'tags' => ['create', 'update', 'attach', 'sync'], 'labels' => ['create', 'attach', 'detach', 'sync', 'toggle']],
+            $this->operations('/api/kept-tickets'),
+        );
+        $this->assertSame(['tickets' => ['create', 'update', 'attach']], $this->operations('/api/kept-teams'));
     }
 
     /** @return array<string, list<string>> */

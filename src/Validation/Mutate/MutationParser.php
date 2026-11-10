@@ -20,6 +20,7 @@ use Lomkit\Rest\Validation\Limits;
 use Lomkit\Rest\Validation\NodeBudget;
 use Lomkit\Rest\Validation\ParsedRules;
 use Lomkit\Rest\Validation\PayloadReader;
+use Lomkit\Rest\Validation\Violation;
 
 final readonly class MutationParser
 {
@@ -125,6 +126,10 @@ final readonly class MutationParser
             return null;
         }
 
+        if ($operation === MutationOperation::Sync && $relation?->syncRequiresWithoutDetaching() === true) {
+            $this->keepLinks($entry->at('without_detaching'), $withoutDetaching);
+        }
+
         foreach (LinkRule::paths($entry, $operation, $relation) as $path) {
             $this->rules->add($path, [new LinkRule($this->links, $path)]);
         }
@@ -188,6 +193,15 @@ final readonly class MutationParser
         if ($operation === MutationOperation::Update && $key !== null && is_string($value->value)) {
             $this->versions->claim($resource, $version, $entry->path, $key, $value->value);
         }
+    }
+
+    private function keepLinks(Cursor $value, ?bool $withoutDetaching): void
+    {
+        if ($withoutDetaching === true || ($value->present && $withoutDetaching === null)) {
+            return;
+        }
+
+        $this->rules->reject(Violation::keptLinks($value->path));
     }
 
     /** @param int|string|list<int|string>|null $key */
