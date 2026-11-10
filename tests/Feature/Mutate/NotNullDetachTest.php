@@ -58,6 +58,22 @@ class NotNullDetachTest extends HelpdeskTestCase
         $this->assertSame($once, $twice);
     }
 
+    #[Test]
+    public function it_reads_no_column_for_a_request_without_detach(): void
+    {
+        $rows = $this->seedTickets();
+        $this->logQueries();
+
+        $this->postJson('/api/teams/mutate', ['mutate' => [[
+            'operation' => 'update',
+            'key' => $rows['Printer jam']->team_id,
+            'relations' => ['tickets' => [['operation' => 'update', 'key' => [$rows['Printer toner']->id], 'attributes' => ['title' => 'Toner']]]],
+        ]]])->assertOk();
+
+        $schema = array_filter(DB::getQueryLog(), fn (array $query): bool => preg_match('/pragma_table_xinfo|sqlite_master|information_schema\.columns|pg_attribute/', $query['query']) === 1);
+        $this->assertSame([], array_values($schema));
+    }
+
     /** @param array<string, mixed> $relations */
     private function queries(array $relations, int $team): int
     {
