@@ -68,7 +68,7 @@ final readonly class MutationParser
         $nodes = [];
 
         foreach ($this->reader->entries($mutate, $this->limits->sizes->mutate) ?? [] as $entry) {
-            $node = $this->entry($entry, $resource, 0, null);
+            $node = $this->entry($entry, $resource, 0, null, null, 1);
 
             if ($node !== null) {
                 $nodes[] = $node;
@@ -78,7 +78,7 @@ final readonly class MutationParser
         return $nodes;
     }
 
-    public function entry(Cursor $entry, Resource $resource, int $depth, ?Relation $relation, ?string $type = null): ?MutationNode
+    public function entry(Cursor $entry, Resource $resource, int $depth, ?Relation $relation, ?string $type, int $runs): ?MutationNode
     {
         $operation = MutationOperation::tryFromEntry($entry->value);
         $listed = $relation?->hasMultipleEntries() === true;
@@ -108,9 +108,9 @@ final readonly class MutationParser
         }
 
         $operations = $relation?->acceptedOperations() ?? [MutationOperation::Create, MutationOperation::Update];
-        $key = $this->ownKeys($entry, $resource, $operation, $operations, $listed);
+        $key = $this->ownKeys($entry, $resource, $operation, $operations, $listed, $runs);
         $this->version($entry, $resource, $operation, $key);
-        $relations = $this->relations->relations($entry, $resource, $depth, $this);
+        $relations = $this->relations->relations($entry, $resource, $depth, $this, $runs * self::rows($key));
         $pivot = $this->relations->pivot($entry, $relation, $operation, $mutation);
         $attributes = $this->values($entry->at('attributes'));
         $withoutDetaching = $this->flag($entry->at('without_detaching'));
@@ -150,7 +150,7 @@ final readonly class MutationParser
      * @param  list<MutationOperation>  $operations
      * @return int|string|list<int|string>|null
      */
-    private function ownKeys(Cursor $entry, Resource $resource, ?MutationOperation $operation, array $operations, bool $listed): int|string|array|null
+    private function ownKeys(Cursor $entry, Resource $resource, ?MutationOperation $operation, array $operations, bool $listed, int $runs): int|string|array|null
     {
         $attributes = $entry->at('attributes');
         $write = $operation?->writeOperation();
@@ -167,7 +167,7 @@ final readonly class MutationParser
             ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => ! $candidate->requiresKey()),
         ]);
         $this->rules->addWhenPresent($entry->at('relations'), self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => ! $candidate->takesRelations()));
-        $key = $this->keys->read($entry->at('key'), $resource, $operation, $listed);
+        $key = $this->keys->read($entry->at('key'), $resource, $operation, $listed, $runs);
         $this->rules->add($entry->at('without_detaching')->path, ['boolean', 'prohibited_unless:'.$entry->at('operation')->path.','.MutationOperation::Sync->value]);
 
         return $key;
@@ -188,6 +188,12 @@ final readonly class MutationParser
         if ($operation === MutationOperation::Update && $key !== null && is_string($value->value)) {
             $this->versions->claim($resource, $version, $entry->path, $key, $value->value);
         }
+    }
+
+    /** @param int|string|list<int|string>|null $key */
+    private static function rows(int|string|array|null $key): int
+    {
+        return is_array($key) ? max(1, count($key)) : 1;
     }
 
     /** @return array<array-key, mixed>|null */

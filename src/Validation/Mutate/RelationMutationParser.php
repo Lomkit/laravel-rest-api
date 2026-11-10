@@ -58,7 +58,7 @@ final readonly class RelationMutationParser
     }
 
     /** @return array<string, MutationNode|list<MutationNode>>|null */
-    public function relations(Cursor $entry, Resource $resource, int $depth, MutationParser $parser): ?array
+    public function relations(Cursor $entry, Resource $resource, int $depth, MutationParser $parser, int $runs): ?array
     {
         $relations = $entry->at('relations');
 
@@ -95,7 +95,7 @@ final readonly class RelationMutationParser
                 continue;
             }
 
-            $node = $this->relation($relations->at($name), $declared[$name], $depth, $parser);
+            $node = $this->relation($relations->at($name), $declared[$name], $depth, $parser, $runs);
 
             if ($node !== null) {
                 $nodes[$declared[$name]->relation] = $node;
@@ -119,7 +119,7 @@ final readonly class RelationMutationParser
     }
 
     /** @return MutationNode|list<MutationNode>|null */
-    private function relation(Cursor $value, Relation $relation, int $depth, MutationParser $parser): MutationNode|array|null
+    private function relation(Cursor $value, Relation $relation, int $depth, MutationParser $parser, int $runs): MutationNode|array|null
     {
         if (! $this->reader->object($value)) {
             return null;
@@ -134,7 +134,7 @@ final readonly class RelationMutationParser
 
             $this->relationRules($value, $relation, $target->resource);
 
-            return $parser->entry($value, $target->resource, $depth + 1, $relation, $target->type);
+            return $parser->entry($value, $target->resource, $depth + 1, $relation, $target->type, $runs);
         }
 
         $resource = $relation->resource();
@@ -144,8 +144,8 @@ final readonly class RelationMutationParser
 
         $nodes = [];
 
-        foreach ($this->reader->entries($value, $this->limits->sizes->relationEntries) ?? [] as $item) {
-            $node = $parser->entry($item, $resource, $depth + 1, $relation);
+        foreach ($this->reader->entries($value, $this->limits->sizes->relationEntries, runs: $runs) ?? [] as $item) {
+            $node = $parser->entry($item, $resource, $depth + 1, $relation, null, $runs);
 
             if ($node !== null) {
                 $nodes[] = $node;
