@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Validation\Mutate;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Mutations\LinkReplay;
 use Lomkit\Rest\Relations\Relation;
@@ -22,6 +23,7 @@ final readonly class LinkRule implements ValidationRule
         return match (true) {
             $relation === null => [],
             $operation === MutationOperation::Update, $operation === MutationOperation::Detach, $operation === MutationOperation::Delete => [$entry->at('key')->path],
+            $relation instanceof PivotRelation && $operation === MutationOperation::Attach => [$entry->at('key')->path],
             $relation->hasMultipleEntries() => [],
             $operation === MutationOperation::Create, $operation === MutationOperation::Attach => [$entry->path],
             default => [],

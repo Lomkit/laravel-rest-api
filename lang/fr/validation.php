@@ -19,6 +19,7 @@ return [
     'gates_off' => 'Le champ :attribute est interdit : la ressource incluse désactive ses gates.',
     'several_types' => 'Le champ :attribute est interdit : cette relation a plusieurs types. Indiquez-le pour chaque type, sous types.',
     'held_record' => 'Le champ :attribute est interdit : cette relation contient déjà un élément. Détachez-le d\'abord.',
+    'attached_record' => 'Le champ :attribute contient un élément déjà attaché. Utilisez update ou sync pour modifier son pivot.',
     'morph_to_aggregate' => 'Le champ :attribute ne peut pas être une relation MorphTo.',
     'through_morph_to' => 'Le champ :attribute ne peut pas traverser une relation MorphTo.',
     'alias_on_nested_relation' => 'Le champ :attribute n\'est pas permis sur une relation imbriquée : utilisez plutôt une inclusion imbriquée.',

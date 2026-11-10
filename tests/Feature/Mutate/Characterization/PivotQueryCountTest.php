@@ -43,6 +43,7 @@ class PivotQueryCountTest extends WriteTraceTestCase
         ]), [
             self::TICKET,
             'select * from tags where tags.id in (101, 102, 103) and tags.deleted_at is null',
+            'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             self::ATTACHED,
             self::RENAME,
             'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
@@ -69,6 +70,7 @@ class PivotQueryCountTest extends WriteTraceTestCase
         ]), [
             self::TICKET,
             'select * from tags where tags.id in (101, 102, 103) and tags.deleted_at is null',
+            'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             self::ATTACHED,
             self::RENAME,
             self::DETACH,
@@ -87,6 +89,9 @@ class PivotQueryCountTest extends WriteTraceTestCase
     #[Test]
     public function it_reads_a_tag_that_each_operation_names_once(): void
     {
+        DB::table('tag_ticket')->delete();
+        TracingPolicy::$trace = [];
+
         $this->assertQueries('/api/tickets/mutate', self::tags([
             ['operation' => 'attach', 'key' => [101, 102]],
             ['operation' => 'detach', 'key' => [101]],
@@ -95,6 +100,7 @@ class PivotQueryCountTest extends WriteTraceTestCase
         ]), [
             self::TICKET,
             'select * from tags where tags.id in (101, 102) and tags.deleted_at is null',
+            'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
             self::ATTACHED,
             self::RENAME,
             'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?), (?, ?, ?)',

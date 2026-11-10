@@ -13,6 +13,7 @@ use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Product;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Helpdesk;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use PHPUnit\Framework\Attributes\Test;
@@ -125,6 +126,20 @@ class FrenchMessagesTest extends HelpdeskTestCase
             'message' => 'Vous n\'êtes pas autorisé à effectuer cette action.',
             'denials' => [['path' => 'search.includes.0', 'ability' => 'viewAny', 'message' => 'Vous n\'êtes pas autorisé à effectuer cette action.']],
         ]);
+    }
+
+    #[Test]
+    public function it_answers_an_attached_record_in_french(): void
+    {
+        $jam = $this->seedTickets()['Printer jam'];
+        $hardware = Tag::create(['name' => 'Hardware']);
+        $jam->tags()->attach([$hardware->id]);
+
+        $response = $this->postJson('/api/tickets/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => $jam->id, 'relations' => ['tags' => [['operation' => 'attach', 'key' => [$hardware->id]]]]],
+        ]]);
+
+        $this->assertExactErrors($response, ['mutate.0.relations.tags.0.key' => ['Le champ mutate.0.relations.tags.0.key contient un élément déjà attaché. Utilisez update ou sync pour modifier son pivot.']]);
     }
 
     #[Test]

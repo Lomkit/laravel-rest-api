@@ -123,6 +123,11 @@ final readonly class Violation
         return new self($key, 'rest::validation.held_record');
     }
 
+    public static function attachedRecord(string $key): self
+    {
+        return new self($key, 'rest::validation.attached_record');
+    }
+
     public static function throughMorphTo(string $key): self
     {
         return new self($key, 'rest::validation.through_morph_to');
