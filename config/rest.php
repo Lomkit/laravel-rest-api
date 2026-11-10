@@ -30,7 +30,7 @@ return [
 
         'cache' => [
             'enabled' => env('REST_AUTHORIZATIONS_CACHE_ENABLED', true),
-            'store' => env('REST_AUTHORIZATIONS_CACHE_STORE'),
+            'store' => env('REST_AUTHORIZATIONS_CACHE_STORE') ?: null,
         ],
     ],
 
