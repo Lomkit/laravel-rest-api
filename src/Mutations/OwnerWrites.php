@@ -46,6 +46,10 @@ final readonly class OwnerWrites extends RelationWrites
             $value = $related->owner($this->ownerKey($parent->model, $related->model), $owner instanceof EloquentMorphTo ? $related->model->getMorphClass() : null);
             $detach = $node->operation === MutationOperation::Detach;
 
+            if ($detach) {
+                $replay->clear($node->path.'.key', $column);
+            }
+
             $replay->add(new LinkStep($node->path.'.key', $column, $parent->identity, $parent->link($column), $value, $detach, $detach ? LinkCheck::Current : LinkCheck::None));
         }
     }

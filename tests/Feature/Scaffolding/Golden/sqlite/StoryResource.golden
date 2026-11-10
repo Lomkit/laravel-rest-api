@@ -7,6 +7,7 @@ use Lomkit\Rest\Fields\Boolean;
 use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
@@ -42,9 +43,11 @@ class StoryResource extends Resource
     public function relations(): array
     {
         return [
-            BelongsTo::make('desk', RelatedDeskResource::class)->requiredOnCreation(),
-            HasOne::make('summary', RelatedSummaryResource::class),
-            HasMany::make('comments', RelatedCommentResource::class),
+            BelongsTo::make('desk', RelatedDeskResource::class)
+                ->requiredOnCreation()
+                ->withoutOperations(MutationOperation::Detach),
+            HasOne::make('summary', RelatedSummaryResource::class)->withoutOperations(MutationOperation::Detach),
+            HasMany::make('comments', RelatedCommentResource::class)->withoutOperations(MutationOperation::Detach),
             BelongsToMany::make('topics', RelatedTopicResource::class)->pivotFields([
                 Integer::make('position'),
                 Text::make('note')->nullable(),
@@ -58,8 +61,8 @@ class StoryResource extends Resource
                     ->nullable()
                     ->readonly(),
             ]),
-            MorphOne::make('cover', RelatedPhotoResource::class),
-            MorphMany::make('photos', RelatedPhotoResource::class),
+            MorphOne::make('cover', RelatedPhotoResource::class)->withoutOperations(MutationOperation::Detach),
+            MorphMany::make('photos', RelatedPhotoResource::class)->withoutOperations(MutationOperation::Detach),
             MorphToMany::make('keywords', RelatedKeywordResource::class),
         ];
     }

@@ -2,6 +2,9 @@
 
 namespace Lomkit\Rest\Tests\Feature\Documentation;
 
+use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Tests\Feature\Documentation\Stubs\FixedNoteController;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -109,5 +112,13 @@ class ErrorResponsesTest extends DocumentationTestCase
         $authenticated
             ? $this->assertArrayNotHasKey('security', $operation)
             : $this->assertSame([], $operation['security']);
+    }
+
+    #[Test]
+    public function it_lists_no_conflict_for_a_mutation_that_reaches_no_versioned_update(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('fixed-notes', FixedNoteController::class)->register());
+
+        $this->assertSame([200, 403, 404, 422], array_keys($this->operation('/fixed-notes/mutate', 'post')['responses']));
     }
 }

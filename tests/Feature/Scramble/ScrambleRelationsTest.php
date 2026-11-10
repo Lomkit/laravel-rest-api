@@ -5,6 +5,8 @@ namespace Lomkit\Rest\Tests\Feature\Scramble;
 use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ReadOnlyTicketsTeamController;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\KeptTicketController;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\OnlyTicketController;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTagController;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTicketController;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\CuratedTicketController;
@@ -105,6 +107,44 @@ class ScrambleRelationsTest extends ScrambleTestCase
             'properties' => ['position' => ['type' => ['integer', 'null'], 'description' => 'Rules: nullable, integer']],
             'additionalProperties' => false,
         ], $tags[0]['properties']['pivot']);
+    }
+
+    #[Test]
+    public function it_documents_the_operations_left_on_a_relation_and_a_sync_that_keeps_the_rows(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('kept-tickets', KeptTicketController::class)->register());
+
+        $schemas = $this->schemas();
+        $operations = fn (string $component): array => array_map(fn (array $branch): array => $branch['properties']['operation']['enum'], $schemas[$component]['oneOf']);
+        $tags = $schemas['KeptTicketRelationMutationTags']['oneOf'];
+        $labels = $schemas['KeptTicketRelationMutationLabels']['oneOf'];
+
+        $this->assertSame([['create'], ['update'], ['attach']], $operations('KeptTicketRelationMutationTeam'));
+        $this->assertSame([['create'], ['update'], ['attach'], ['sync']], $operations('KeptTicketRelationMutationTags'));
+        $this->assertSame([['create'], ['attach', 'toggle'], ['detach'], ['sync']], $operations('KeptTicketRelationMutationLabels'));
+        $this->assertSame(
+            ['type' => 'boolean', 'description' => 'Must be true: the relation does not detach rows, so the rows that `key` does not list stay attached', 'const' => true],
+            $tags[3]['properties']['without_detaching'],
+        );
+        $this->assertSame(['operation', 'key', 'without_detaching'], $tags[3]['required']);
+        $this->assertSame(['type' => 'boolean', 'description' => 'When true, the rows that `key` does not list stay attached'], $labels[3]['properties']['without_detaching']);
+        $this->assertSame(['operation', 'key'], $labels[3]['required']);
+        $this->assertSame([['attributes', 'pivot', 'relations'], ['key', 'pivot'], ['key'], ['key', 'pivot', 'without_detaching']], array_map(fn (array $branch): array => array_values(array_diff(array_keys($branch['properties']), ['operation'])), $labels));
+    }
+
+    #[Test]
+    public function it_documents_the_operations_that_a_relation_keeps(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('only-tickets', OnlyTicketController::class)->register());
+
+        $schemas = $this->schemas();
+        $tags = $schemas['OnlyTicketRelationMutationTags']['oneOf'];
+
+        $this->assertSame(['team', 'tags'], array_keys($schemas['OnlyTicketRelations']['properties']));
+        $this->assertSame(['attach'], $schemas['OnlyTicketRelationMutationTeam']['properties']['operation']['enum']);
+        $this->assertSame([['attach'], ['sync']], array_map(fn (array $branch): array => $branch['properties']['operation']['enum'], $tags));
+        $this->assertTrue($tags[1]['properties']['without_detaching']['const']);
+        $this->assertSame(['operation', 'key', 'without_detaching'], $tags[1]['required']);
     }
 
     #[Test]

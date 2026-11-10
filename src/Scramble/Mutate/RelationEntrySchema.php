@@ -140,7 +140,8 @@ final readonly class RelationEntrySchema
 
         foreach ($groups as [$operations, $keys]) {
             $properties = ['operation' => (new StringType)->enum($operations), ...($type === null ? [] : ['type' => $type]), ...$keys];
-            $required = array_values(array_intersect(['operation', ...($typeRequired ? ['type'] : []), 'key'], array_keys($properties)));
+            $kept = $relation->syncRequiresWithoutDetaching() ? ['without_detaching'] : [];
+            $required = array_values(array_intersect(['operation', ...($typeRequired ? ['type'] : []), 'key', ...$kept], array_keys($properties)));
             $branches[] = Schemas::closed($properties, $required);
         }
 
@@ -150,7 +151,8 @@ final readonly class RelationEntrySchema
     /** @return array<string, Type> */
     private function keys(Relation $relation, Resource $related, MutationOperation $operation): array
     {
-        $write = $operation->writeOperation();
+        $writesRow = $relation->writesRelatedRows($operation);
+        $write = $writesRow ? $operation->writeOperation() : null;
         $pivot = $relation instanceof PivotRelation ? $operation->pivotWriteOperation() : null;
 
         return array_filter([
@@ -158,9 +160,20 @@ final readonly class RelationEntrySchema
             'version' => MutationSchema::version($related, $operation),
             'attributes' => $write === null ? null : $this->writable->attributes($related, $write),
             'pivot' => $pivot === null ? null : $this->writable->pivot($relation, $pivot),
-            'without_detaching' => $operation === MutationOperation::Sync ? (new BooleanType)->setDescription('When true, the rows that `key` does not list stay attached') : null,
-            'relations' => $operation->takesRelations() ? $this->relations($related, $operation) : null,
+            'without_detaching' => $operation === MutationOperation::Sync ? self::withoutDetaching($relation) : null,
+            'relations' => $writesRow && $operation->takesRelations() ? $this->relations($related, $operation) : null,
         ]);
+    }
+
+    private static function withoutDetaching(Relation $relation): Type
+    {
+        if ($relation->syncRequiresWithoutDetaching()) {
+            return (new BooleanType)
+                ->const(true)
+                ->setDescription('Must be true: the relation does not detach rows, so the rows that `key` does not list stay attached');
+        }
+
+        return (new BooleanType)->setDescription('When true, the rows that `key` does not list stay attached');
     }
 
     private function key(Relation $relation, Resource $related): Type

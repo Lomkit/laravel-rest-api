@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\ActionTarget;
 use Lomkit\Rest\Attributes\WithoutPerimeter;
-use Lomkit\Rest\Exceptions\InvalidControllerException;
-use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
@@ -23,7 +21,7 @@ final readonly class PerimeterCheck
     public function run(array $controllers): PerimeterReport
     {
         $context = new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
-        $resources = self::resourcesOf($controllers);
+        $resources = ControllerResources::of($controllers);
         $report = new PerimeterReport;
 
         foreach ((new ReachedResources($context))->from($resources) as $resource) {
@@ -39,33 +37,6 @@ final readonly class PerimeterCheck
         }
 
         return $report;
-    }
-
-    /**
-     * @param  list<string>  $controllers
-     * @return list<class-string<Resource>>
-     */
-    private static function resourcesOf(array $controllers): array
-    {
-        $resources = [];
-
-        foreach ($controllers as $controller) {
-            if (! is_subclass_of($controller, Controller::class)) {
-                continue;
-            }
-
-            try {
-                $resource = $controller::resourceClass();
-            } catch (InvalidControllerException) {
-                continue;
-            }
-
-            if (! in_array($resource, $resources, true)) {
-                $resources[] = $resource;
-            }
-        }
-
-        return $resources;
     }
 
     /** @param class-string<Resource> $resource */

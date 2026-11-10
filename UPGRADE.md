@@ -1,5 +1,16 @@
 # Upgrade Guide
 
+## 3.1 additions
+
+Version 3.1 adds features, and one check is stricter: `rest:check` now fails for each relation that accepts `detach` while its foreign key or morph type does not accept null. An application generated with 3.0 sees `rest:check` exit 1 until it adds `->withoutOperations(MutationOperation::Detach)` to these relations or makes the columns nullable.
+
+- A relation can limit its mutation operations: `HasMany::make('lines', LineResource::class)->withoutOperations(MutationOperation::Detach)` withdraws some, `->onlyOperations(MutationOperation::Attach, MutationOperation::Sync)` keeps only some, and `->onlyOperations()` makes the relation read-only. Validation, `/details` and the OpenAPI document follow. A many-to-many relation that does not accept `detach` does not accept `toggle` either, and `sync` then needs `"without_detaching": true`.
+- A `detach` that would set a foreign key or morph type that does not accept null answers a `422` on the `key` of the entry. On MySQL without strict mode, such a detach used to write `0` or `''`: it is now refused.
+- A relation whose `update` is left out by `onlyOperations()` or `withoutOperations()` refuses `attributes` on `sync` and `toggle` and `relations` on its link entries; the pivot of these entries is still written.
+- The OpenAPI document now lists the `409` of a mutation that reaches a versioned resource through any operation that takes `relations`, so a custom relation without `update` (an `attach` with nested `relations`) can add it.
+- `rest:resource --generate` and `rest:quick-start` withdraw `detach` from a relation whose foreign key or morph type does not accept null.
+- `rest:check` reads the database schema and reports each relation that accepts `detach` while its foreign key or morph type does not accept null (exit 1). A table that does not exist yet is listed as skipped, and a schema that cannot be read is a problem that names the table and the connection. Its `--json` report adds `relations` (`detachable`, `skipped`, `problems`).
+
 ## Upgrading to 3.0 from 2.x
 
 This guide lists every breaking change of version 3.0, area by area. Update the requirements first, then go through the sections of the features that your application uses.

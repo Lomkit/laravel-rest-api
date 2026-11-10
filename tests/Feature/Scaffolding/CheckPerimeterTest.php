@@ -37,7 +37,9 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             ."  rows ... 1 resource with a perimeter, 2 marked #[WithoutPerimeter]\n"
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\ContinentResource ... #[WithoutPerimeter]\n"
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
-            ."  actions ... 1 action checks each row\n",
+            ."  actions ... 1 action checks each row\n"
+            ."  relations ... no relation accepts detach, 1 skipped\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource [country] ... skipped, no trips table\n",
             $output,
         );
     }
@@ -53,7 +55,8 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             "  routes and policies ... 6 routes authenticated, 1 policy found\n"
             ."  rows ... FAILED\n"
             .'  ⇂ '.rtrim(self::JOURNAL_PROBLEM, '.')."\n"
-            ."  actions ... no action runs on rows\n",
+            ."  actions ... no action runs on rows\n"
+            ."  relations ... no relation accepts detach\n",
             $output,
         );
     }
@@ -69,7 +72,8 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             "  routes and policies ... 7 routes authenticated, 1 policy found\n"
             ."  rows ... 1 resource with a perimeter\n"
             ."  actions ... FAILED\n"
-            .'  ⇂ '.rtrim(self::EXPORT_PROBLEM, '.')."\n",
+            .'  ⇂ '.rtrim(self::EXPORT_PROBLEM, '.')."\n"
+            ."  relations ... no relation accepts detach\n",
             $output,
         );
     }
@@ -100,6 +104,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                     'checked' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'action' => 'Lomkit\Rest\Tests\Fixtures\Atlas\CancelTripsAction', 'ability' => 'update']],
                     'problems' => [self::EXPORT_PROBLEM],
                 ],
+                'relations' => ['detachable' => [], 'skipped' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'relation' => 'country', 'table' => 'trips']], 'problems' => []],
             ],
             json_decode($output->fetch(), true),
         );
@@ -119,7 +124,9 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             ."  rows ... FAILED\n"
             .'  ⇂ '.rtrim(self::JOURNAL_PROBLEM, '.')."\n"
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
-            ."  actions ... 1 action checks each row\n",
+            ."  actions ... 1 action checks each row\n"
+            ."  relations ... no relation accepts detach, 1 skipped\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource [country] ... skipped, no trips table\n",
             $output,
         );
     }
@@ -147,6 +154,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                     'checked' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'action' => 'Lomkit\Rest\Tests\Fixtures\Atlas\CancelTripsAction', 'ability' => 'update']],
                     'problems' => [],
                 ],
+                'relations' => ['detachable' => [], 'skipped' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'relation' => 'country', 'table' => 'trips']], 'problems' => []],
             ],
             json_decode($output->fetch(), true),
         );
@@ -163,7 +171,8 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             "  routes and policies ... FAILED\n"
             ."  ⇂ No route uses a controller of the package. Register resources with Rest::resource() in routes/api.php, and check that bootstrap/app.php loads routes/api.php\n"
             ."  rows ... 0 resources with a perimeter\n"
-            ."  actions ... no action runs on rows\n",
+            ."  actions ... no action runs on rows\n"
+            ."  relations ... no relation accepts detach\n",
             $output,
         );
     }

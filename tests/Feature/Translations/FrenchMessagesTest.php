@@ -8,6 +8,7 @@ use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\ChunkedTicketController;
 use Lomkit\Rest\Tests\Feature\Actions\Stubs\CloseOpenTickets;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\KeptTicketController;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\VersionedProductController;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Catalog;
 use Lomkit\Rest\Tests\Fixtures\Catalog\Category;
@@ -67,6 +68,31 @@ class FrenchMessagesTest extends HelpdeskTestCase
         $response = $this->postJson('/api/products/search', ['search' => ['filters' => [$pattern, $pattern]]]);
 
         $this->assertExactErrors($response, ['search.filters' => ['Le champ search.filters dépasse la limite de 1 filtres de motif par recherche.']]);
+    }
+
+    #[Test]
+    public function it_answers_a_sync_that_would_detach_rows_in_french(): void
+    {
+        Rest::resource('kept-tickets', KeptTicketController::class)->register();
+        $jam = $this->seedTickets()['Printer jam'];
+
+        $response = $this->postJson('/kept-tickets/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => $jam->id, 'relations' => ['tags' => [['operation' => 'sync', 'key' => []]]]],
+        ]]);
+
+        $this->assertExactErrors($response, ['mutate.0.relations.tags.0.without_detaching' => ['Le champ mutate.0.relations.tags.0.without_detaching doit valoir true : cette relation ne détache pas de lignes.']]);
+    }
+
+    #[Test]
+    public function it_answers_a_detach_of_a_required_foreign_key_in_french(): void
+    {
+        $jam = $this->seedTickets()['Printer jam'];
+
+        $response = $this->postJson('/api/tickets/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => $jam->id, 'relations' => ['team' => ['operation' => 'detach', 'key' => $jam->team_id]]],
+        ]]);
+
+        $this->assertExactErrors($response, ['mutate.0.relations.team.key' => ['Le champ mutate.0.relations.team.key est interdit : cette relation ne peut pas être détachée, sa colonne de lien n\'accepte pas null.']]);
     }
 
     #[Test]

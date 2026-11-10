@@ -5,26 +5,25 @@ namespace Lomkit\Rest\Scramble\Mutate;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Relations\HasOneOrManyThrough;
 
 final class VersionReach
 {
     public static function of(Resource $resource): bool
     {
-        $level = [$resource];
+        $level = [[$resource, true]];
         $seen = [];
         $depth = $resource->context()->limits()->depths->mutations;
 
         for ($at = 0; $level !== [] && $at <= $depth; $at++) {
             $next = [];
 
-            foreach ($level as $current) {
-                if (isset($seen[$current::class])) {
-                    continue;
+            foreach ($level as [$current, $updated]) {
+                if ($updated && $current->definition()->version() !== null) {
+                    return true;
                 }
 
-                if ($current->definition()->version() !== null) {
-                    return true;
+                if (isset($seen[$current::class])) {
+                    continue;
                 }
 
                 $seen[$current::class] = true;
@@ -37,24 +36,29 @@ final class VersionReach
         return false;
     }
 
-    /** @return list<Resource> */
+    /** @return list<array{Resource, bool}> */
     private static function related(Resource $resource): array
     {
         $related = [];
 
         foreach ($resource->definition()->relations() as $relation) {
-            if ($relation instanceof HasOneOrManyThrough || ! in_array(MutationOperation::Update, $relation->mutationOperations(), true)) {
+            $accepted = $relation->acceptedOperations();
+            $operations = array_filter($accepted, fn (MutationOperation $operation): bool => $operation->takesRelations() && $relation->writesRelatedRows($operation));
+
+            if ($operations === []) {
                 continue;
             }
 
+            $updated = in_array(MutationOperation::Update, $operations, true);
+
             if (! $relation instanceof PolymorphicRelation) {
-                $related[] = $relation->resource();
+                $related[] = [$relation->resource(), $updated];
 
                 continue;
             }
 
             foreach ($relation->targets() as $target) {
-                $related[] = $relation->resourceOf($target);
+                $related[] = [$relation->resourceOf($target), $updated];
             }
         }
 

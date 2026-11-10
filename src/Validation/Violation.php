@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Validation;
 
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Fields\WriteOperation;
 
 final readonly class Violation
@@ -131,6 +132,30 @@ final readonly class Violation
     public static function attachedRecord(string $key): self
     {
         return new self($key, 'rest::validation.attached_record');
+    }
+
+    /** @param list<MutationOperation> $operations */
+    public static function keptRecord(string $key, array $operations): self
+    {
+        $update = in_array(MutationOperation::Update, $operations, true);
+        $delete = in_array(MutationOperation::Delete, $operations, true);
+
+        return new self($key, match (true) {
+            $update && $delete => 'rest::validation.kept_record_update_or_delete',
+            $update => 'rest::validation.kept_record_update',
+            $delete => 'rest::validation.kept_record_delete',
+            default => 'rest::validation.kept_record',
+        });
+    }
+
+    public static function requiredLink(string $key): self
+    {
+        return new self($key, 'rest::validation.required_link');
+    }
+
+    public static function keptLinks(string $key): self
+    {
+        return new self($key, 'rest::validation.kept_links');
     }
 
     public static function throughMorphTo(string $key): self

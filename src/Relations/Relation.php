@@ -12,6 +12,7 @@ use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Traits\Constrained;
+use Lomkit\Rest\Relations\Traits\SelectsOperations;
 use Lomkit\Rest\Validation\Mutate\EntryRule;
 use Lomkit\Rest\Validation\Mutate\RelatedEntryRule;
 
@@ -19,6 +20,7 @@ use Lomkit\Rest\Validation\Mutate\RelatedEntryRule;
 class Relation
 {
     use Constrained;
+    use SelectsOperations;
 
     public string $relation;
 
@@ -112,7 +114,8 @@ class Relation
     /** @return list<MutationOperation> */
     final public function acceptedOperations(): array
     {
-        $operations = array_values(array_filter($this->mutationOperations(), fn (MutationOperation $operation): bool => $operation !== MutationOperation::Delete));
+        $supported = array_values(array_filter($this->mutationOperations(), fn (MutationOperation $operation): bool => $operation !== MutationOperation::Delete));
+        $operations = $this->operationSelection()->from($supported, $this instanceof PivotRelation);
 
         return $this->isDeletable() ? [...$operations, MutationOperation::Delete] : $operations;
     }
