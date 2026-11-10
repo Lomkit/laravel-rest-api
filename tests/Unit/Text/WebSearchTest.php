@@ -28,6 +28,25 @@ class WebSearchTest extends TestCase
         $this->assertSame('+snake_case +("x_y z" abc_123) -draft', $search->toMySqlBoolean());
     }
 
+    #[Test]
+    #[DataProvider('exclusions')]
+    public function it_lists_the_excluded_terms_of_a_mysql_search_without_other_terms(string $value, ?string $exclusion): void
+    {
+        $this->assertSame($exclusion, WebSearch::parse($value, TermPattern::Underscored)->toMySqlExclusion());
+    }
+
+    /** @return array<string, array{string, string|null}> */
+    public static function exclusions(): array
+    {
+        return [
+            'an excluded word' => ['-draft', 'draft'],
+            'excluded words and a phrase' => ['-draft -"old_lamp shade"', 'draft "old_lamp shade"'],
+            'an excluded word next to a word' => ['lamp -draft', null],
+            'a word' => ['lamp', null],
+            'punctuation only' => ['-- ""', null],
+        ];
+    }
+
     /** @return array<string, array{string, string, string}> */
     public static function searches(): array
     {

@@ -95,6 +95,9 @@ class FullTextSearchTest extends FullTextTestCase
             'a phrase with quotes' => [['value' => 'lamp" "shade', 'mode' => 'phrase'], ['lamp']],
             'a quoted or in a web search' => [['value' => 'lamp "or" vase', 'mode' => 'websearch'], []],
             'a hyphenated word in a web search' => [['value' => 'lamp-shade', 'mode' => 'websearch'], ['lamp']],
+            'only an excluded word in a web search' => [['value' => '-brass', 'mode' => 'websearch'], ['lamp', 'vase']],
+            'only excluded words in a web search' => [['value' => '-brass -glass', 'mode' => 'websearch'], ['lamp']],
+            'only an excluded phrase in a web search' => [['value' => '-"desk lamp"', 'mode' => 'websearch'], ['lamp', 'vase']],
         ];
     }
 
