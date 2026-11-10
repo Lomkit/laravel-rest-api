@@ -43,7 +43,7 @@ final class VersionReach
 
         foreach ($resource->definition()->relations() as $relation) {
             $accepted = $relation->acceptedOperations();
-            $operations = array_filter($accepted, fn (MutationOperation $operation): bool => $operation->takesRelations() && $operation->writesRowAmong($accepted));
+            $operations = array_filter($accepted, fn (MutationOperation $operation): bool => $operation->takesRelations() && $relation->writesRelatedRows($operation));
 
             if ($operations === []) {
                 continue;

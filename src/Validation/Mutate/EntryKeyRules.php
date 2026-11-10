@@ -7,6 +7,7 @@ use Illuminate\Validation\Rule;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Mutations\VersionClaims;
+use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\ParsedRules;
 use Lomkit\Rest\Validation\Violation;
@@ -38,11 +39,11 @@ final readonly class EntryKeyRules
      * @param  list<MutationOperation>  $operations
      * @return int|string|list<int|string>|null
      */
-    public function apply(Cursor $entry, Resource $resource, ?MutationOperation $operation, array $operations, bool $listed, int $runs): int|string|array|null
+    public function apply(Cursor $entry, Resource $resource, ?Relation $relation, ?MutationOperation $operation, array $operations, bool $listed, int $runs): int|string|array|null
     {
         $attributes = $entry->at('attributes');
         $write = $operation?->writeOperation();
-        $writesRow = fn (MutationOperation $candidate): bool => $operations === [] || $candidate->writesRowAmong($operations);
+        $writesRow = fn (MutationOperation $candidate): bool => $operations === [] || $relation === null || $relation->writesRelatedRows($candidate);
 
         $this->rules->add($entry->at('operation')->path, ['required', $operations === [] ? Rule::enum(MutationOperation::class) : Rule::enum(MutationOperation::class)->only($operations)]);
         $this->rules->add($attributes->path, ['array', ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => $candidate->writeOperation() === null || ! $writesRow($candidate))]);

@@ -9,6 +9,7 @@ use Lomkit\Rest\Tests\Concerns\AssertsExactErrors;
 use Lomkit\Rest\Tests\Feature\Authorization\HelpdeskTestCase;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\KeptTeamController;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\KeptTicketController;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\LinkedTicketController;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
@@ -29,6 +30,7 @@ class WithdrawnOperationsTest extends HelpdeskTestCase
         Route::prefix('api')->group(function (): void {
             Rest::resource('kept-tickets', KeptTicketController::class)->register();
             Rest::resource('kept-teams', KeptTeamController::class)->register();
+            Rest::resource('linked-tickets', LinkedTicketController::class)->register();
         });
 
         Team::query()->insert([['id' => 101, 'name' => 'Support'], ['id' => 102, 'name' => 'Ops']]);
@@ -140,6 +142,19 @@ class WithdrawnOperationsTest extends HelpdeskTestCase
 
         $response->assertOk();
         $this->assertSame(['Hardware', 'Network', 'Urgent'], DB::table('tags')->orderBy('name')->pluck('name')->all());
+    }
+
+    #[Test]
+    public function it_writes_the_rows_of_a_custom_relation_that_never_accepted_update(): void
+    {
+        $response = $this->postJson('/api/linked-tickets/mutate', ['mutate' => [[
+            'operation' => 'update',
+            'key' => 101,
+            'relations' => ['tags' => [['operation' => 'sync', 'key' => [101], 'attributes' => ['name' => 'Printers']]]],
+        ]]]);
+
+        $response->assertOk();
+        $this->assertSame(['Network', 'Printers'], DB::table('tags')->orderBy('name')->pluck('name')->all());
     }
 
     #[Test]

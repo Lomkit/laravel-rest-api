@@ -53,7 +53,13 @@ final readonly class OperationSelection
     /** @param list<MutationOperation> $supported */
     public function keepsLinks(array $supported): bool
     {
-        return in_array(MutationOperation::Detach, $supported, true) && ! $this->accepts(MutationOperation::Detach);
+        return $this->withdraws(MutationOperation::Detach, $supported);
+    }
+
+    /** @param list<MutationOperation> $supported */
+    public function withdraws(MutationOperation $operation, array $supported): bool
+    {
+        return in_array($operation, $supported, true) && ! $this->accepts($operation);
     }
 
     private function accepts(MutationOperation $operation): bool

@@ -151,7 +151,7 @@ final readonly class RelationEntrySchema
     /** @return array<string, Type> */
     private function keys(Relation $relation, Resource $related, MutationOperation $operation): array
     {
-        $writesRow = $operation->writesRowAmong($relation->acceptedOperations());
+        $writesRow = $relation->writesRelatedRows($operation);
         $write = $writesRow ? $operation->writeOperation() : null;
         $pivot = $relation instanceof PivotRelation ? $operation->pivotWriteOperation() : null;
 

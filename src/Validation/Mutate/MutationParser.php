@@ -108,7 +108,7 @@ final readonly class MutationParser
         }
 
         $operations = $relation?->acceptedOperations() ?? [MutationOperation::Create, MutationOperation::Update];
-        $key = $this->keyRules->apply($entry, $resource, $operation, $operations, $listed, $runs);
+        $key = $this->keyRules->apply($entry, $resource, $relation, $operation, $operations, $listed, $runs);
         $relations = $this->relations->relations($entry, $resource, $depth, $this, $runs * self::rows($key));
         $pivot = $this->relations->pivot($entry, $relation, $operation, $mutation);
         $attributes = $this->values($entry->at('attributes'));

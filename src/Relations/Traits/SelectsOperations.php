@@ -29,6 +29,11 @@ trait SelectsOperations
         return $this instanceof PivotRelation && $this->operationSelection()->keepsLinks($this->mutationOperations());
     }
 
+    final public function writesRelatedRows(MutationOperation $operation): bool
+    {
+        return $operation === MutationOperation::Create || ! $this->operationSelection()->withdraws(MutationOperation::Update, $this->mutationOperations());
+    }
+
     private function operationSelection(): OperationSelection
     {
         return $this->selection ??= OperationSelection::all();
