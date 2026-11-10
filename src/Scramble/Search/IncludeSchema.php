@@ -56,7 +56,7 @@ final readonly class IncludeSchema
     {
         $properties = [
             'relation' => (new StringType)->const($relation->relation),
-            'alias' => SearchSchema::alias('The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.'),
+            'alias' => SearchSchema::alias('The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times, which needs an alias on all but one of them.'),
         ];
 
         if (! $relation instanceof PolymorphicRelation) {

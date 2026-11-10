@@ -37,9 +37,10 @@ final readonly class IncludeParser
     public function parse(array $entries, ValidationContext $context, RowKeys $keys): array
     {
         $includes = [];
+        $repeated = IncludePaths::repeated($entries, $context->limits->depths->includes - $context->includeDepth);
 
         foreach ($entries as $entry) {
-            $include = $this->include($entry, $keys, $context);
+            $include = $this->include($entry, $keys, $context, isset($repeated[$entry->path]));
 
             if ($include !== null) {
                 $includes[] = $include;
@@ -49,7 +50,7 @@ final readonly class IncludeParser
         return $includes;
     }
 
-    private function include(Cursor $entry, RowKeys $keys, ValidationContext $context): IncludeNode|MorphIncludeNode|null
+    private function include(Cursor $entry, RowKeys $keys, ValidationContext $context, bool $repeated): IncludeNode|MorphIncludeNode|null
     {
         if (! $context->reader->object($entry)) {
             return null;
@@ -83,8 +84,13 @@ final readonly class IncludeParser
             new IncludeAlias($keys, $name ?? ''),
         ]);
 
-        if (! $alias->present && $name !== null && $keys->isTaken(RowKeys::includeKey($name))) {
+        $nested = $name !== null && str_contains($name, '.');
+        $repeated = $repeated && $relations !== null;
+
+        if (! $alias->present && $name !== null && ($keys->isTaken(RowKeys::includeKey($name)) || ($repeated && ! $nested))) {
             $rules->reject(Violation::takenKey($alias->path, RowKeys::includeKey($name)));
+        } elseif ($repeated && $nested) {
+            $rules->reject(Violation::repeatedInclude($relation->path));
         }
 
         $aliased = is_string($alias->value) ? $alias->value : null;

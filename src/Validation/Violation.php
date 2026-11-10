@@ -88,6 +88,11 @@ final readonly class Violation
         return new self($key, 'rest::validation.taken_key', ['key' => $name]);
     }
 
+    public static function repeatedInclude(string $key): self
+    {
+        return new self($key, 'rest::validation.repeated_include');
+    }
+
     public static function ownerInclude(string $key): self
     {
         return new self($key, 'rest::validation.owner_include');

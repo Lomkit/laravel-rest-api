@@ -5,6 +5,7 @@ return [
     'not_writable' => 'The :key key of the :attribute field is not writable on :operation.',
     'unknown_relation' => 'The :attribute field is not a valid or allowed relation for this resource.',
     'taken_key' => 'The :attribute field is required, because the key :key is already used.',
+    'repeated_include' => 'The :attribute field loads a relation that another include already loads: nest it in an include with an alias instead.',
     'max_depth' => 'The :attribute field goes deeper than the limit of :max levels.',
     'include_depth' => 'The :attribute field goes deeper than the limit of :max include levels.',
     'relation_depth' => 'The :attribute field goes through more relations than the limit of :max.',

@@ -4359,7 +4359,7 @@
                     },
                     "alias": {
                         "type": "string",
-                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times, which needs an alias on all but one of them.",
                         "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
                         "maxLength": 255
                     },
@@ -6351,7 +6351,7 @@
                     },
                     "alias": {
                         "type": "string",
-                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times, which needs an alias on all but one of them.",
                         "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
                         "maxLength": 255
                     },
@@ -11942,7 +11942,7 @@
                     },
                     "alias": {
                         "type": "string",
-                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times, which needs an alias on all but one of them.",
                         "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
                         "maxLength": 255
                     },
@@ -12004,7 +12004,7 @@
                     },
                     "alias": {
                         "type": "string",
-                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times, which needs an alias on all but one of them.",
                         "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
                         "maxLength": 255
                     },
@@ -12080,7 +12080,7 @@
                     },
                     "alias": {
                         "type": "string",
-                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times, which needs an alias on all but one of them.",
                         "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
                         "maxLength": 255
                     },
@@ -12142,7 +12142,7 @@
                     },
                     "alias": {
                         "type": "string",
-                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times, which needs an alias on all but one of them.",
                         "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
                         "maxLength": 255
                     },
@@ -16799,7 +16799,7 @@
                     },
                     "alias": {
                         "type": "string",
-                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times, which needs an alias on all but one of them.",
                         "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
                         "maxLength": 255
                     },
@@ -16875,7 +16875,7 @@
                     },
                     "alias": {
                         "type": "string",
-                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times.",
+                        "description": "The key of the related rows in each row, in place of the name of the relation. It lets a search include one relation several times, which needs an alias on all but one of them.",
                         "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
                         "maxLength": 255
                     },
