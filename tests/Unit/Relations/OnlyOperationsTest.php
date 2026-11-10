@@ -12,6 +12,7 @@ use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
 use Lomkit\Rest\Tests\PackageTestCase;
 use Lomkit\Rest\Tests\Unit\Relations\Stubs\AttachedAndSyncedTags;
+use Lomkit\Rest\Tests\Unit\Relations\Stubs\UnconstructedHasMany;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -107,5 +108,12 @@ class OnlyOperationsTest extends PackageTestCase
         $this->expectExceptionMessage('The HasMany relation [tickets] cannot keep the toggle operation: it does not accept it. Keep only the operations it accepts [create, update, attach, detach].');
 
         HasMany::make('tickets', TicketResource::class)->onlyOperations(MutationOperation::Toggle);
+    }
+
+    #[Test]
+    public function it_selects_the_operations_of_a_relation_whose_constructor_skips_the_parent_one(): void
+    {
+        $this->assertSame(['create', 'update', 'attach', 'detach'], array_column(UnconstructedHasMany::make('tickets', TicketResource::class)->acceptedOperations(), 'value'));
+        $this->assertSame(['update'], array_column(UnconstructedHasMany::make('tickets', TicketResource::class)->withoutOperations(MutationOperation::Create)->onlyOperations(MutationOperation::Create, MutationOperation::Update)->acceptedOperations(), 'value'));
     }
 }
