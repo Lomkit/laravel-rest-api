@@ -98,62 +98,62 @@ class GeneratedRelationsTest extends ScaffoldingTestCase
     #[Test]
     public function it_withdraws_detach_where_the_foreign_key_or_the_morph_type_does_not_accept_null(): void
     {
-        $this->writeModel('App\Models\Badge');
-        $this->writeModel('App\Models\Shift');
-        $this->writeModel('App\Models\Memo');
-        $this->writeModel('App\Models\Crew', "public function badge(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo { return \$this->belongsTo(Badge::class); }\n\n    public function shifts(): \\Illuminate\\Database\\Eloquent\\Relations\\HasMany { return \$this->hasMany(Shift::class); }\n\n    public function memos(): \\Illuminate\\Database\\Eloquent\\Relations\\MorphMany { return \$this->morphMany(Memo::class, 'memoable'); }");
-        Schema::create('badges', function (Blueprint $table): void {
+        $this->writeModel('App\Models\KeptBadge');
+        $this->writeModel('App\Models\KeptShift');
+        $this->writeModel('App\Models\KeptMemo');
+        $this->writeModel('App\Models\KeptCrew', "public function badge(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo { return \$this->belongsTo(KeptBadge::class); }\n\n    public function shifts(): \\Illuminate\\Database\\Eloquent\\Relations\\HasMany { return \$this->hasMany(KeptShift::class); }\n\n    public function memos(): \\Illuminate\\Database\\Eloquent\\Relations\\MorphMany { return \$this->morphMany(KeptMemo::class, 'memoable'); }");
+        Schema::create('kept_badges', function (Blueprint $table): void {
             $table->id();
         });
-        Schema::create('crews', function (Blueprint $table): void {
+        Schema::create('kept_crews', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('badge_id')->default(1);
         });
-        Schema::create('shifts', function (Blueprint $table): void {
+        Schema::create('kept_shifts', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('crew_id')->nullable();
+            $table->foreignId('kept_crew_id')->nullable();
         });
-        Schema::create('memos', function (Blueprint $table): void {
+        Schema::create('kept_memos', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('memoable_id')->nullable();
             $table->string('memoable_type');
         });
-        foreach (['Badge', 'Shift', 'Memo'] as $model) {
+        foreach (['KeptBadge', 'KeptShift', 'KeptMemo'] as $model) {
             $this->artisan('rest:resource', ['name' => "{$model}Resource", '--model' => $model, '--no-interaction' => true])->assertSuccessful();
         }
 
-        $this->artisan('rest:resource', ['name' => 'CrewResource', '--model' => 'Crew', '--generate' => true, '--no-interaction' => true])->assertSuccessful();
+        $this->artisan('rest:resource', ['name' => 'KeptCrewResource', '--model' => 'KeptCrew', '--generate' => true, '--no-interaction' => true])->assertSuccessful();
 
-        $code = (string) file_get_contents(app_path('Rest/Resources/CrewResource.php'));
+        $code = (string) file_get_contents(app_path('Rest/Resources/KeptCrewResource.php'));
         $this->assertStringContainsString("use Lomkit\\Rest\\Fields\\MutationOperation;\n", $code);
         $this->assertStringContainsString(
             "        return [\n"
-            ."            BelongsTo::make('badge', BadgeResource::class)->withoutOperations(MutationOperation::Detach),\n"
-            ."            HasMany::make('shifts', ShiftResource::class),\n"
-            ."            MorphMany::make('memos', MemoResource::class)->withoutOperations(MutationOperation::Detach),\n"
+            ."            BelongsTo::make('badge', KeptBadgeResource::class)->withoutOperations(MutationOperation::Detach),\n"
+            ."            HasMany::make('shifts', KeptShiftResource::class),\n"
+            ."            MorphMany::make('memos', KeptMemoResource::class)->withoutOperations(MutationOperation::Detach),\n"
             ."        ];\n",
             $code,
         );
-        $this->loadGeneratedClass('App\Rest\Resources\CrewResource');
+        $this->loadGeneratedClass('App\Rest\Resources\KeptCrewResource');
     }
 
     #[Test]
     public function it_aliases_a_related_resource_named_like_the_operation_enum(): void
     {
-        $this->writeModel('App\Models\Permit');
-        $this->writeModel('App\Models\Driver', "public function permit(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo { return \$this->belongsTo(Permit::class); }");
-        Schema::create('permits', function (Blueprint $table): void {
+        $this->writeModel('App\Models\KeptPermit');
+        $this->writeModel('App\Models\KeptDriver', 'public function permit(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo { return $this->belongsTo(KeptPermit::class); }');
+        Schema::create('kept_permits', function (Blueprint $table): void {
             $table->id();
         });
-        Schema::create('drivers', function (Blueprint $table): void {
+        Schema::create('kept_drivers', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('permit_id')->constrained();
+            $table->foreignId('permit_id');
         });
-        $this->artisan('rest:resource', ['name' => 'MutationOperation', '--model' => 'Permit', '--no-interaction' => true])->assertSuccessful();
+        $this->artisan('rest:resource', ['name' => 'MutationOperation', '--model' => 'KeptPermit', '--no-interaction' => true])->assertSuccessful();
 
-        $this->artisan('rest:resource', ['name' => 'DriverResource', '--model' => 'Driver', '--generate' => true, '--no-interaction' => true])->assertSuccessful();
+        $this->artisan('rest:resource', ['name' => 'KeptDriverResource', '--model' => 'KeptDriver', '--generate' => true, '--no-interaction' => true])->assertSuccessful();
 
-        $code = (string) file_get_contents(app_path('Rest/Resources/DriverResource.php'));
+        $code = (string) file_get_contents(app_path('Rest/Resources/KeptDriverResource.php'));
         $this->assertStringContainsString("use Lomkit\\Rest\\Fields\\MutationOperation;\n", $code);
         $this->assertStringContainsString(
             "            BelongsTo::make('permit', MutationOperationResource::class)\n"
@@ -161,7 +161,7 @@ class GeneratedRelationsTest extends ScaffoldingTestCase
             ."                ->withoutOperations(MutationOperation::Detach),\n",
             $code,
         );
-        $this->loadGeneratedClass('App\Rest\Resources\DriverResource');
+        $this->loadGeneratedClass('App\Rest\Resources\KeptDriverResource');
     }
 
     /** @return array<string, array{string, class-string, array<string, class-string>}> */

@@ -46,7 +46,7 @@ class QuickStartModelsTest extends ScaffoldingTestCase
     {
         $output = $this->quickStart('Post', 'Tag', 'User');
 
-        $this->assertStringContainsString("            BelongsTo::make('author', UserResource::class)->requiredOnCreation(),\n", $this->contents('Rest/Resources/PostResource.php'));
+        $this->assertStringContainsString("            BelongsTo::make('author', UserResource::class)\n                ->requiredOnCreation()\n                ->withoutOperations(MutationOperation::Detach),\n", $this->contents('Rest/Resources/PostResource.php'));
         $this->assertStringContainsString("            Integer::make('author_id')->readonly(),\n", $this->contents('Rest/Resources/PostResource.php'));
         $this->assertStringContainsString('  checks (fresh process) ... 18 routes authenticated, 3 policies found', $output);
         $this->assertStringNotContainsString('Skipped:', $output);

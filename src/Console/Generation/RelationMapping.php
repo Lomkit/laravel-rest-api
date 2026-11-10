@@ -75,7 +75,7 @@ final readonly class RelationMapping
         return $list->with($pivot->fields === [] ? $declaration : $declaration->withList('pivotFields', $pivot->fields), $imports, null, $pivot->notes);
     }
 
-    /** @param  Relation<Model, Model, mixed>  $relation */
+    /** @param  Relation<*, *, *>  $relation */
     private function keepingLinks(Relation $relation, Declaration $declaration, ImportSet $imports): Declaration
     {
         if (LinkColumn::detachedBy($relation)?->nullable($this->columns) !== false) {
