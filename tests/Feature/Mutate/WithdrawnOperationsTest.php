@@ -158,6 +158,26 @@ class WithdrawnOperationsTest extends HelpdeskTestCase
     }
 
     #[Test]
+    #[DataProvider('linkOperations')]
+    public function it_links_without_the_attribute_rules_of_a_relation_without_update(string $operation): void
+    {
+        $response = $this->postJson('/api/linked-tickets/mutate', ['mutate' => [[
+            'operation' => 'update',
+            'key' => 101,
+            'relations' => ['labels' => [['operation' => $operation, 'key' => [102]]]],
+        ]]]);
+
+        $response->assertOk();
+        $this->assertSame([102], DB::table('labelables')->pluck('tag_id')->all());
+    }
+
+    /** @return array<string, array{string}> */
+    public static function linkOperations(): array
+    {
+        return ['sync' => ['sync'], 'toggle' => ['toggle']];
+    }
+
+    #[Test]
     public function it_keeps_the_other_operations_of_the_relation(): void
     {
         $response = $this->postJson('/api/kept-teams/mutate', ['mutate' => [[

@@ -103,7 +103,7 @@ final readonly class MutationParser
         $mutation = $operation === null ? null : new MutationContext($operation, $contextKey, $depth);
         $write = $operation?->writeOperation();
 
-        if ($mutation !== null && $write !== null) {
+        if ($mutation !== null && $write !== null && $relation?->writesRelatedRows($mutation->operation) !== false) {
             $this->entryRules->attributes($entry, $resource, $write, $mutation);
         }
 
