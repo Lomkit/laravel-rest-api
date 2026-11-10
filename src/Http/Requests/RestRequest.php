@@ -11,6 +11,7 @@ use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Concerns\Resourcable;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Http\Controllers\Controller;
+use Lomkit\Rest\Http\Requests\Traits\ChecksUtf8Input;
 use Lomkit\Rest\Http\Requests\Traits\InteractsWithRules;
 use Lomkit\Rest\Http\Requests\Traits\ReportsKeysOutOfReach;
 use Lomkit\Rest\Http\Resource;
@@ -23,6 +24,7 @@ use Lomkit\Rest\Validation\ValidateOnly;
 
 class RestRequest extends FormRequest
 {
+    use ChecksUtf8Input;
     use InteractsWithRules;
     use ReportsKeysOutOfReach;
     use Resourcable;
@@ -80,7 +82,7 @@ class RestRequest extends FormRequest
     /** @return list<Check> */
     protected function reach(): array
     {
-        return $this->compiledRules()->reach;
+        return $this->utf8Input()->isValid() ? $this->compiledRules()->reach : [];
     }
 
     /**
@@ -114,6 +116,10 @@ class RestRequest extends FormRequest
     #[\Override]
     protected function createDefaultValidator(ValidationFactory $factory): ValidatorContract
     {
+        if (! $this->utf8Input()->isValid()) {
+            return $this->utf8Input()->validator($factory);
+        }
+
         $validator = parent::createDefaultValidator($factory);
 
         if ($validator instanceof Validator) {

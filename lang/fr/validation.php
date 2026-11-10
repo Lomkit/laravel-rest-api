@@ -33,5 +33,6 @@ return [
     'alias_taken_by_another_instruction' => 'Le champ :attribute est déjà utilisé par une autre instruction.',
     'engine_value' => 'Le champ :attribute contient une valeur que le moteur de recherche ne peut pas comparer.',
     'engine_characters' => 'Le champ :attribute contient des caractères que le moteur de recherche ne peut pas rechercher tels quels.',
+    'utf8' => 'Le champ :attribute doit être en UTF-8 valide.',
     'details_parts' => 'Le champ :attribute accepte ces valeurs, séparées par des virgules : :values.',
 ];

@@ -33,5 +33,6 @@ return [
     'alias_taken_by_another_instruction' => 'The :attribute is already used by another instruction.',
     'engine_value' => 'The :attribute field holds a value the search engine cannot compare.',
     'engine_characters' => 'The :attribute field holds characters the search engine cannot match as they are.',
+    'utf8' => 'The :attribute field must be valid UTF-8.',
     'details_parts' => 'The :attribute field accepts these values, separated by commas: :values.',
 ];

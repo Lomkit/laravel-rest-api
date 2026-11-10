@@ -58,6 +58,11 @@ final readonly class Violation
         return new self($key, 'rest::validation.response_rows', ['max' => (string) $max, 'rows' => (string) $rows]);
     }
 
+    public static function notUtf8(string $key): self
+    {
+        return new self($key, 'rest::validation.utf8');
+    }
+
     public static function unknown(string $key): self
     {
         return new self($key, 'validation.prohibited');

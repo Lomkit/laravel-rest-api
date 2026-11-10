@@ -402,6 +402,24 @@ class MetricCacheTest extends SalesTestCase
     }
 
     #[Test]
+    public function it_refuses_a_search_value_that_is_not_valid_utf8_before_the_cache(): void
+    {
+        $this->serveTeams(OrderCount::make()->cacheFor(600));
+        $body = ['search' => ['filters' => [['field' => 'customer', 'value' => "Q4\xFF"]]]];
+        $this->logQueries();
+
+        $response = $this->actingAs(new GenericUser(['id' => 1, 'team_id' => 1]))
+            ->post('/team-orders/metrics/order-count', $body, ['Accept' => 'application/json']);
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The search.filters.0.value field must be valid UTF-8.',
+            'errors' => ['search.filters.0.value' => ['The search.filters.0.value field must be valid UTF-8.']],
+        ]);
+        $this->assertSame([], array_values(array_filter($this->calls, fn (string $call): bool => str_ends_with($call, 'a result'))));
+        $this->assertSame(0, $this->orderStatements());
+    }
+
+    #[Test]
     public function it_still_validates_and_checks_a_request_whose_result_is_kept(): void
     {
         $this->serve(TotalRevenue::make()->cacheFor(600)->cacheScope('global'));
