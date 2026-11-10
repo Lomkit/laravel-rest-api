@@ -124,6 +124,19 @@ class CheckCommandTest extends ScaffoldingTestCase
                     'problems' => [],
                 ],
                 'actions' => ['checked' => [], 'problems' => []],
+                'relations' => [
+                    'detachable' => [
+                        ['resource' => BookResource::class, 'relation' => 'loan'],
+                        ['resource' => BookResource::class, 'relation' => 'latestLoan'],
+                        ['resource' => BookResource::class, 'relation' => 'label'],
+                        ['resource' => BookResource::class, 'relation' => 'latestLabel'],
+                        ['resource' => BookResource::class, 'relation' => 'labels'],
+                        ['resource' => BookResource::class, 'relation' => 'shelves'],
+                        ['resource' => LabelResource::class, 'relation' => 'labelable'],
+                        ['resource' => LoanResource::class, 'relation' => 'book'],
+                    ],
+                    'problems' => [],
+                ],
             ],
             json_decode($output->fetch(), true),
         );
