@@ -56,8 +56,11 @@ final class PivotSet
             $node->withoutDetaching === true => [],
             default => array_diff_key($current, $named),
         };
+        $rewritten = $node->operation === MutationOperation::Sync && ($node->pivot ?? []) !== []
+            ? array_intersect_key($named, $current)
+            : [];
         $this->moves[$slot][] = [$attached, $detached];
-        $changes = [array_values($attached), array_values($detached)];
+        $changes = [array_values($attached + $rewritten), array_values($detached)];
         $this->changes[spl_object_id($node)][] = $changes;
 
         return $changes;

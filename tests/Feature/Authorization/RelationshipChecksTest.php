@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Authorization;
 
+use Illuminate\Auth\Access\Response;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
@@ -146,6 +147,84 @@ class RelationshipChecksTest extends HelpdeskTestCase
         $this->assertSame(['viewAny', ...$this->calls('update', $this->jam)], $this->tickets->calls);
     }
 
+    #[Test]
+    #[DataProvider('relations')]
+    public function it_checks_the_link_of_an_attached_tag_whose_pivot_a_sync_writes(string $relation): void
+    {
+        $this->jam->{$relation}()->attach([$this->tag('Hardware') => ['position' => 1]]);
+
+        $this->mutateTags([['operation' => 'sync', 'key' => [$this->tag('Hardware')], 'pivot' => ['position' => 2]]], $relation)->assertOk();
+
+        $this->assertSame([2], $this->positions($relation));
+        $this->assertSame(['viewAny', ...$this->calls('update', $this->jam), $this->link('attachTag', 'Hardware')], $this->tickets->calls);
+    }
+
+    /** @param array<string, mixed> $entry */
+    #[Test]
+    #[DataProvider('refusedPivotWrites')]
+    public function it_refuses_a_sync_that_writes_the_pivot_of_a_link_the_parent_policy_denies(string $relation, array $entry): void
+    {
+        $this->jam->{$relation}()->attach([$this->tag('Urgent') => ['position' => 1]]);
+
+        $this->mutateTags([$this->withUrgent($entry)], $relation)
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'Urgent tickets are flagged by the escalation desk.');
+
+        $this->assertSame([1], $this->positions($relation));
+    }
+
+    /** @return iterable<string, array{string, array<string, mixed>}> */
+    public static function refusedPivotWrites(): iterable
+    {
+        return self::forEachRelation([
+            'sync' => ['operation' => 'sync', 'key' => ['Urgent'], 'pivot' => ['position' => 2]],
+            'sync without detaching' => ['operation' => 'sync', 'key' => ['Urgent'], 'without_detaching' => true, 'pivot' => ['position' => 2]],
+        ]);
+    }
+
+    #[Test]
+    public function it_checks_the_link_of_a_kept_tag_whose_pivot_a_sync_writes_under_an_attached_ticket(): void
+    {
+        $this->jam->tags()->attach([$this->tag('Urgent') => ['position' => 1]]);
+
+        $this->postJson('/api/tags/mutate', ['mutate' => [[
+            'operation' => 'update',
+            'key' => $this->tag('Hardware'),
+            'relations' => ['labelledTickets' => [[
+                'operation' => 'attach',
+                'key' => [$this->jam->id],
+                'relations' => ['tags' => [['operation' => 'sync', 'key' => [$this->tag('Urgent')], 'without_detaching' => true, 'pivot' => ['position' => 2]]]],
+            ]]],
+        ]]])
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'Urgent tickets are flagged by the escalation desk.');
+
+        $this->assertSame([1], $this->positions('tags'));
+        $this->assertSame([], $this->attachedTags('labels'));
+    }
+
+    #[Test]
+    public function it_checks_update_on_the_parent_of_a_kept_row_whose_pivot_a_sync_writes_without_link_abilities(): void
+    {
+        $this->labels['Hardware']->labelledTickets()->attach([$this->jam->id => ['position' => 1]]);
+        $this->tags->answers['update'] = Response::deny('Tags are frozen.');
+
+        $this->postJson('/api/tickets/mutate', ['mutate' => [[
+            'operation' => 'update',
+            'key' => $this->jam->id,
+            'relations' => ['tags' => [[
+                'operation' => 'attach',
+                'key' => [$this->tag('Hardware')],
+                'relations' => ['labelledTickets' => [['operation' => 'sync', 'key' => [$this->jam->id], 'pivot' => ['position' => 2]]]],
+            ]]],
+        ]]])
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Tags are frozen.');
+
+        $this->assertSame([1], $this->positions('labels'));
+        $this->assertSame(['update '.$this->tag('Hardware')], array_values(array_filter($this->tags->calls, fn (string $call): bool => str_starts_with($call, 'update'))));
+    }
+
     /** @return array<string, array{string}> */
     public static function relations(): array
     {
@@ -178,6 +257,16 @@ class RelationshipChecksTest extends HelpdeskTestCase
             ->withTrashed()
             ->orderBy('tags.id')
             ->pluck('tags.id')
+            ->all();
+    }
+
+    /** @return list<mixed> */
+    private function positions(string $relation): array
+    {
+        return $this->jam
+            ->{$relation}()
+            ->get()
+            ->pluck('pivot.position')
             ->all();
     }
 
