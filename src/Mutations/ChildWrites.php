@@ -57,6 +57,10 @@ final readonly class ChildWrites extends RelationWrites
             };
             $path = $check === LinkCheck::Single ? $node->path : $node->path.'.key';
 
+            if ($node->operation === MutationOperation::Detach) {
+                $replay->clear($path, $column);
+            }
+
             $replay->walk(
                 $this->relation->resource(),
                 $node,

@@ -127,8 +127,11 @@ class MutatePayloadValidationTest extends PackageTestCase
             'relations' => ['products' => [['operation' => $operation, 'key' => $deskLamp->id, 'attributes' => ['name' => 'Floor lamp']]]],
         ]]]);
 
+        $kept = ['mutate.0.relations.products.0.key' => ['The mutate.0.relations.products.0.key field is prohibited: this relation cannot be detached, its foreign key does not accept null.']];
+
         $response->assertUnprocessable()->assertJsonPath('errors', [
             'mutate.0.relations.products.0.attributes' => ['The mutate.0.relations.products.0.attributes field is prohibited when mutate.0.relations.products.0.operation is '.$operation.'.'],
+            ...($operation === 'detach' ? $kept : []),
         ]);
         $this->assertSame('Desk lamp', $deskLamp->fresh()?->name);
     }

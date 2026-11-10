@@ -53,6 +53,10 @@ abstract class WriteTraceTestCase extends PackageTestCase
         DB::table('tag_ticket')->insert(['tag_id' => 101, 'ticket_id' => 101, 'position' => 1]);
 
         DB::listen(function (QueryExecuted $query): void {
+            if (preg_match('/pragma_table_xinfo|sqlite_master|information_schema\.columns|pg_attribute/', $query->sql) === 1) {
+                return;
+            }
+
             TracingPolicy::$trace[] = 'sql '.preg_replace('/\w+\.updated_at = /', 'updated_at = ', str_replace(['"', '`', ' returning id'], '', $query->sql));
         });
         Event::listen('eloquent.saved: *', function (string $event, array $models): void {

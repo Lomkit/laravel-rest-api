@@ -28,6 +28,9 @@ final class LinkReplay
     /** @var list<array{string, string}> */
     private array $deleted = [];
 
+    /** @var array<string, LinkColumn> */
+    private array $cleared = [];
+
     public readonly PivotLedger $pivots;
 
     public function __construct(private readonly RowSet $rows)
@@ -83,6 +86,11 @@ final class LinkReplay
         $this->steps[] = $step;
     }
 
+    public function clear(string $path, LinkColumn $column): void
+    {
+        $this->cleared[$path] = $column;
+    }
+
     private function save(LinkStep $link, int $from): void
     {
         $steps = array_slice($this->steps, 0, $from);
@@ -122,6 +130,14 @@ final class LinkReplay
         foreach ($this->deleted as [$path, $identity]) {
             if ($this->named[$identity] > 1) {
                 $violations[$path] ??= Violation::repeated($path);
+            }
+        }
+
+        $columns = new NullableColumns;
+
+        foreach ($this->cleared as $path => $column) {
+            if (! $column->nullable($columns)) {
+                $violations[$path] ??= Violation::requiredLink($path);
             }
         }
 
