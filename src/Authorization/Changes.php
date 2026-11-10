@@ -2,10 +2,18 @@
 
 namespace Lomkit\Rest\Authorization;
 
+use Illuminate\Database\Eloquent\Model;
+
 final readonly class Changes
 {
-    /** @param array<array-key, mixed> $values */
-    public function __construct(private array $values) {}
+    /**
+     * @param  array<array-key, mixed>  $values
+     * @param  array<string, Model>  $targets
+     */
+    public function __construct(
+        private array $values,
+        private array $targets = [],
+    ) {}
 
     public function has(string $key): bool
     {
@@ -15,6 +23,11 @@ final readonly class Changes
     public function get(string $key): mixed
     {
         return $this->values[$key] ?? null;
+    }
+
+    public function target(string $key): ?Model
+    {
+        return $this->targets[$key] ?? null;
     }
 
     /** @return list<string> */

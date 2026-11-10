@@ -38,7 +38,7 @@ class RelationAbilitiesTest extends WriteChecksTestCase
         ]]);
 
         $response->assertOk();
-        $this->assertSame(['policy create', 'policy create Book* {"title":"Walden"}', 'policy update Label(loose) []'], self::policies());
+        $this->assertSame(['policy create', 'policy create Book* {"title":"Walden"}', 'policy update Label(loose) {"labelable_id":null,"labelable_type":"Lomkit\\\\Rest\\\\Tests\\\\Fixtures\\\\Library\\\\Book"}'], self::policies());
         $this->assertSame(['Label(classic) Book Book(Dune)', 'Label(loose) Book Book(Walden)'], self::rows('labels'));
     }
 

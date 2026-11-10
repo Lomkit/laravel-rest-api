@@ -64,28 +64,34 @@ final readonly class OwnerWrites extends RelationWrites
         return [...$keys, $owner->getMorphType() => $parent->getAttribute($owner->getMorphType())];
     }
 
-    /** @return array<string, mixed> */
     #[\Override]
-    public function plannedKeys(Model $parent, WriteChecks $checks): array
+    public function plannedKeys(Model $parent, WriteChecks $checks): PlannedKeys
     {
         $owner = $this->owner($parent);
-        $keys = [];
+        $foreignKey = $owner->getForeignKeyName();
+        $planned = new PlannedKeys;
 
         foreach ($this->nodes() as $node) {
-            $related = $node->operation === MutationOperation::Detach ? null : $checks->row($this->resource($node), $node->key);
+            $related = match ($node->operation) {
+                MutationOperation::Detach => null,
+                MutationOperation::Create => $checks->draft($this->resource($node), $node),
+                default => $checks->row($this->resource($node), $node->key),
+            };
 
             if ($related === null && $node->operation !== MutationOperation::Detach) {
                 continue;
             }
 
-            $keys[$owner->getForeignKeyName()] = $related === null ? null : $related->getAttribute($this->ownerKey($parent, $related));
+            $keys = [$foreignKey => $related === null ? null : $related->getAttribute($this->ownerKey($parent, $related))];
 
             if ($owner instanceof EloquentMorphTo) {
                 $keys[$owner->getMorphType()] = $related?->getMorphClass();
             }
+
+            $planned = $planned->with(new PlannedKeys($keys, $related === null ? [] : [$foreignKey => $related]));
         }
 
-        return $keys;
+        return $planned;
     }
 
     #[\Override]

@@ -1505,12 +1505,14 @@ Row checks of `mutate`:
   ```
 
   A `create(User $user)` method keeps working: Laravel passes the draft as an extra argument. The class-level `create` check of the request still runs first, so the policy is called once per resource class, then once per created row.
-- Each updated row is checked with `update`, the stored row and a `Lomkit\Rest\Authorization\Changes` object of the values that the write sets: the validated attributes, and the keys that its relations set when these rows exist. `has($key)`, `get($key)` and `keys()` read it:
+- Each updated row is checked with `update`, the stored row and a `Lomkit\Rest\Authorization\Changes` object of the values that the write sets: the validated attributes, and the keys that its relations set. `has($key)`, `get($key)` and `keys()` read it. `target($key)` gives the row that a foreign key column points to: the stored row, or the unsaved row of an entry that the request creates, filled with its attributes; `null` for a `detach`. A key that points to a created row is in the changes with a `null` value, like `associate()` sets it before that row is saved:
 
   ```php
   public function update(User $user, Post $post, ?Changes $changes = null): Response
   {
-      return $changes?->get('team_id') !== null && $changes->get('team_id') !== $user->team_id
+      $team = $changes?->target('team_id');
+
+      return $team !== null && $team->getKey() !== $user->team_id
           ? Response::deny('Posts cannot move to another team.')
           : Response::allow();
   }

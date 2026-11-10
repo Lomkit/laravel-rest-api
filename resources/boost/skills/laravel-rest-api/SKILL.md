@@ -1290,7 +1290,7 @@ Every model touched by a search/mutate/delete is checked against its Policy. Req
 | `viewAny` | `search`, `details`, `mutate`, `destroy`, `restore`, `forceDestroy`, `operate` and `metric` (unless the action's or the metric's `abilities()` returns `[]`), and every resource reached by an include, an aggregate or a relation filter (each level, pivot columns included), a relation group or a relation sort, and the `response` block of `mutate` (its resource and every resource it reaches) |
 | `view` | per-row visibility, includes |
 | `create` | `mutate` create: once per created resource class with the model class, then per created row with its draft (`create($user, ?Model $draft = null)`); `details` with `with=authorizations` or `actions.authorized`, with the model class, answered in `authorizations` or in `authorized` |
-| `update` | `mutate` update, with a `\Lomkit\Rest\Authorization\Changes` third argument (`has()`, `get()`, `keys()`); a child moved under a has-one/has-many relation |
+| `update` | `mutate` update, with a `\Lomkit\Rest\Authorization\Changes` third argument (`has()`, `get()`, `keys()`, and `target()`: the row a foreign key column points to, stored or created by the request); a child moved under a has-one/has-many relation |
 | `replicate` | `mutate` create when duplicating from existing data |
 | `delete` | `destroy` |
 | `restore` | `restore` |
