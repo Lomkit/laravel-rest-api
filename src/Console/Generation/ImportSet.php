@@ -11,6 +11,7 @@ use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Mutations\Contextual;
@@ -39,6 +40,7 @@ final readonly class ImportSet
         ID::class,
         Integer::class,
         Json::class,
+        MutationOperation::class,
         Number::class,
         Text::class,
         BelongsTo::class,

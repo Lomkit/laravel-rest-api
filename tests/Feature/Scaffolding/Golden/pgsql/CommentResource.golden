@@ -4,6 +4,7 @@ namespace App\Rest\Resources;
 
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Integer;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\HasMany;
@@ -30,7 +31,9 @@ class CommentResource extends Resource
     public function relations(): array
     {
         return [
-            BelongsTo::make('story', RelatedStoryResource::class)->requiredOnCreation(),
+            BelongsTo::make('story', RelatedStoryResource::class)
+                ->requiredOnCreation()
+                ->withoutOperations(MutationOperation::Detach),
             BelongsTo::make('parent', CommentResource::class),
             HasMany::make('replies', CommentResource::class),
         ];

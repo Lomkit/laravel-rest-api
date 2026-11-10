@@ -4,6 +4,7 @@ namespace App\Rest\Resources;
 
 use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\ID;
+use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
@@ -29,7 +30,7 @@ class DeskResource extends Resource
     public function relations(): array
     {
         return [
-            HasMany::make('stories', RelatedStoryResource::class),
+            HasMany::make('stories', RelatedStoryResource::class)->withoutOperations(MutationOperation::Detach),
             HasManyThrough::make('comments', RelatedCommentResource::class),
             HasOneThrough::make('leadSummary', RelatedSummaryResource::class),
             MorphToMany::make('keywords', RelatedKeywordResource::class),

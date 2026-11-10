@@ -10,15 +10,18 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Console\Generation\Schema\Table;
 use Lomkit\Rest\Console\Generation\Schema\TableReader;
+use Lomkit\Rest\Fields\MutationOperation;
+use Lomkit\Rest\Mutations\LinkColumn;
+use Lomkit\Rest\Mutations\NullableColumns;
 
 final readonly class RelationMapping
 {
     /** @param  array<string, string>  $resources */
-    private function __construct(private array $resources, private string $modelNamespace, private MissingResourceHint $hint) {}
+    private function __construct(private array $resources, private string $modelNamespace, private MissingResourceHint $hint, private NullableColumns $columns) {}
 
     public static function using(ResourceIndex $resources, string $modelNamespace, MissingResourceHint $hint = MissingResourceHint::GenerateTheResource): self
     {
-        return new self($resources->byModel(), $modelNamespace, $hint);
+        return new self($resources->byModel(), $modelNamespace, $hint, new NullableColumns);
     }
 
     public function map(ModelTable $source, Table $table, ImportSet $imports): RelationList
@@ -58,17 +61,28 @@ final readonly class RelationMapping
         if ($relation instanceof EloquentBelongsTo) {
             $key = $relation->getForeignKeyName();
             $required = $table->column($key)?->isRequired() === true;
+            $declaration = $required ? $declaration->with('requiredOnCreation()') : $declaration;
 
-            return $list->with($required ? $declaration->with('requiredOnCreation()') : $declaration, $imports, $key, []);
+            return $list->with($this->keepingLinks($relation, $declaration, $imports), $imports, $key, []);
         }
 
         if (! $relation instanceof EloquentBelongsToMany) {
-            return $list->with($declaration, $imports, null, []);
+            return $list->with($this->keepingLinks($relation, $declaration, $imports), $imports, null, []);
         }
 
         $pivot = $this->pivotFields($name, $relation, $imports);
 
         return $list->with($pivot->fields === [] ? $declaration : $declaration->withList('pivotFields', $pivot->fields), $imports, null, $pivot->notes);
+    }
+
+    /** @param  Relation<Model, Model, mixed>  $relation */
+    private function keepingLinks(Relation $relation, Declaration $declaration, ImportSet $imports): Declaration
+    {
+        if (LinkColumn::detachedBy($relation)?->nullable($this->columns) !== false) {
+            return $declaration;
+        }
+
+        return $declaration->with('withoutOperations('.$imports->name(MutationOperation::class).'::Detach)', MutationOperation::class);
     }
 
     /** @param  EloquentBelongsToMany<Model, Model, *, *>  $relation */
