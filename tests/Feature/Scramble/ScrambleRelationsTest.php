@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ReadOnlyTicketsTeamController;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\KeptTicketController;
+use Lomkit\Rest\Tests\Feature\Mutate\Stubs\OnlyTicketController;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTagController;
 use Lomkit\Rest\Tests\Feature\Relations\Stubs\WeightedTicketController;
 use Lomkit\Rest\Tests\Feature\Scramble\Stubs\CuratedTicketController;
@@ -128,6 +129,21 @@ class ScrambleRelationsTest extends ScrambleTestCase
         $this->assertSame(['operation', 'key', 'without_detaching'], $tags[3]['required']);
         $this->assertSame(['type' => 'boolean', 'description' => 'When true, the rows that `key` does not list stay attached'], $labels[3]['properties']['without_detaching']);
         $this->assertSame(['operation', 'key'], $labels[3]['required']);
+    }
+
+    #[Test]
+    public function it_documents_the_operations_that_a_relation_keeps(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('only-tickets', OnlyTicketController::class)->register());
+
+        $schemas = $this->schemas();
+        $tags = $schemas['OnlyTicketRelationMutationTags']['oneOf'];
+
+        $this->assertSame(['team', 'tags'], array_keys($schemas['OnlyTicketRelations']['properties']));
+        $this->assertSame(['attach'], $schemas['OnlyTicketRelationMutationTeam']['properties']['operation']['enum']);
+        $this->assertSame([['attach'], ['sync']], array_map(fn (array $branch): array => $branch['properties']['operation']['enum'], $tags));
+        $this->assertTrue($tags[1]['properties']['without_detaching']['const']);
+        $this->assertSame(['operation', 'key', 'without_detaching'], $tags[1]['required']);
     }
 
     #[Test]

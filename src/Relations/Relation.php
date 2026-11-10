@@ -33,14 +33,14 @@ class Relation
 
     private ?string $detachAbility = null;
 
-    private WithdrawnOperations $withdrawn;
+    private OperationSelection $selection;
 
     /** @param class-string<Resource> $type */
     public function __construct(string $relation, string $type)
     {
         $this->relation = $relation;
         $this->type = $type;
-        $this->withdrawn = WithdrawnOperations::none();
+        $this->selection = OperationSelection::all();
     }
 
     /** @param class-string<Resource> $type */
@@ -107,16 +107,23 @@ class Relation
         return [MutationOperation::Create, MutationOperation::Update, MutationOperation::Attach, MutationOperation::Detach];
     }
 
+    public function onlyOperations(MutationOperation ...$operations): static
+    {
+        $this->selection = $this->selection->only($this, ...$operations);
+
+        return $this;
+    }
+
     public function withoutOperations(MutationOperation ...$operations): static
     {
-        $this->withdrawn = $this->withdrawn->with($this, ...$operations);
+        $this->selection = $this->selection->without($this, ...$operations);
 
         return $this;
     }
 
     public function syncRequiresWithoutDetaching(): bool
     {
-        return $this instanceof PivotRelation && $this->withdrawn->keepsLinks();
+        return $this instanceof PivotRelation && $this->selection->keepsLinks($this->mutationOperations());
     }
 
     public function isDeletable(): bool
@@ -128,7 +135,7 @@ class Relation
     final public function acceptedOperations(): array
     {
         $supported = array_values(array_filter($this->mutationOperations(), fn (MutationOperation $operation): bool => $operation !== MutationOperation::Delete));
-        $operations = $this->withdrawn->from($supported, $this instanceof PivotRelation);
+        $operations = $this->selection->from($supported, $this instanceof PivotRelation);
 
         return $this->isDeletable() ? [...$operations, MutationOperation::Delete] : $operations;
     }
