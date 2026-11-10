@@ -5,8 +5,15 @@ namespace Lomkit\Rest\Tests\Feature\Serialization;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\RestContext;
+use Lomkit\Rest\Http\Serialization\RowSerializer;
+use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Tests\Feature\Serialization\Stubs\ResolvedShowController;
+use Lomkit\Rest\Tests\Feature\Serialization\Stubs\SerializedShowController;
+use Lomkit\Rest\Tests\Feature\Serialization\Stubs\UncastShow;
 use Lomkit\Rest\Tests\Feature\Serialization\Stubs\UncastShowController;
+use Lomkit\Rest\Tests\Feature\Serialization\Stubs\UncastShowResource;
 use Lomkit\Rest\Tests\Fixtures\Accounts\Accounts;
 use Lomkit\Rest\Tests\Fixtures\Accounts\User;
 use Lomkit\Rest\Tests\Fixtures\Festival\Festival;
@@ -97,6 +104,63 @@ class TypedValuesTest extends PackageTestCase
 
         $this->assertSame($rows, $this->data($this->search('/uncast-shows/search', $search)));
         $this->assertSame($rows, $this->data($this->search('/api/shows/search', $search)));
+    }
+
+    #[Test]
+    public function it_formats_a_date_time_without_cast_with_the_date_serialization_of_the_model(): void
+    {
+        Rest::resource('serialized-shows', SerializedShowController::class)->register();
+        DB::table('shows')->where('id', 1)->update(['starts_at' => '2026-02-10 09:30:00']);
+
+        $response = $this->search('/serialized-shows/search', ['selects' => [['field' => 'id'], ['field' => 'starts_at'], ['field' => 'updated_at']], 'filters' => [['field' => 'id', 'operator' => '=', 'value' => 1]]]);
+
+        $this->assertSame('[{"id":1,"starts_at":"2026-02-10 09:30","updated_at":"2026-01-01 00:00"}]', $this->data($response));
+    }
+
+    #[Test]
+    public function it_returns_the_value_of_an_accessor_over_the_type_of_its_field(): void
+    {
+        Rest::resource('serialized-shows', SerializedShowController::class)->register();
+        DB::table('shows')->where('id', 1)->update(['featured' => true]);
+
+        $response = $this->search('/serialized-shows/search', ['selects' => [['field' => 'id'], ['field' => 'featured']], 'filters' => [['field' => 'id', 'operator' => 'in', 'value' => [1, 2]]], 'sorts' => [['field' => 'id']]]);
+
+        $this->assertSame('[{"id":1,"featured":"yes"},{"id":2,"featured":"no"}]', $this->data($response));
+    }
+
+    #[Test]
+    public function it_leaves_the_casts_of_a_rendered_model_unchanged(): void
+    {
+        DB::table('shows')->where('id', 1)->update(['featured' => true, 'starts_at' => '2026-02-10 09:30:00']);
+        $show = UncastShow::query()->findOrFail(1);
+        $casts = $show->getCasts();
+        $resource = (new RestContext(RestRequest::create('/uncast-shows/search', 'POST'), $this->app))->resource(UncastShowResource::class);
+
+        $row = RowSerializer::of(QueryPlan::bare($resource))->row($show);
+
+        $this->assertTrue($row['featured']);
+        $this->assertSame('2026-02-10T09:30:00.000000Z', $row['starts_at']);
+        $this->assertSame($casts, $show->getCasts());
+        $this->assertSame('2026-02-10 09:30:00', $show->toArray()['starts_at']);
+    }
+
+    #[Test]
+    public function it_returns_a_boolean_and_a_date_time_of_a_pivot_without_cast_in_their_type(): void
+    {
+        Rest::resource('uncast-shows', UncastShowController::class)->register();
+        DB::table('artists')->insert([['id' => 1, 'name' => 'Nina'], ['id' => 2, 'name' => 'Omar']]);
+        DB::table('artist_show')->insert([
+            ['artist_id' => 1, 'show_id' => 1, 'role' => 'lead', 'headliner' => true, 'confirmed_at' => '2026-02-01 18:00:00'],
+            ['artist_id' => 2, 'show_id' => 1, 'role' => null, 'headliner' => false, 'confirmed_at' => null],
+        ]);
+
+        $response = $this->search('/uncast-shows/search', [
+            'selects' => [['field' => 'id']],
+            'filters' => [['field' => 'id', 'operator' => '=', 'value' => 1]],
+            'includes' => [['relation' => 'artists', 'sorts' => [['field' => 'id']]]],
+        ]);
+
+        $this->assertSame('[{"id":1,"artists":[{"id":1,"name":"Nina","pivot":{"role":"lead","headliner":true,"confirmed_at":"2026-02-01T18:00:00.000000Z"}},{"id":2,"name":"Omar","pivot":{"role":null,"headliner":false,"confirmed_at":null}}],"@more":[]}]', $this->data($response));
     }
 
     #[Test]

@@ -19,6 +19,7 @@ final readonly class RowFields
         private array $columns,
         private array $resolved,
         private array $aggregates,
+        private FieldCasts $casts,
     ) {}
 
     public static function of(QueryPlan $plan): self
@@ -27,6 +28,7 @@ final readonly class RowFields
         $names = array_values(array_unique($plan->selects ?? $fields->selectable()->names()));
         $named = array_map($fields->get(...), $names);
         $resolved = array_filter($named, static fn (Field $field): bool => $field->resolvesThroughCallback());
+        $columns = array_map(static fn (Field $field): string => $field->name, array_values(array_diff_key($named, $resolved)));
         $aggregates = [];
 
         foreach ($plan->aggregates as $aggregate) {
@@ -35,9 +37,10 @@ final readonly class RowFields
 
         return new self(
             $fields,
-            array_map(static fn (Field $field): string => $field->name, array_values(array_diff_key($named, $resolved))),
+            $columns,
             array_values($resolved),
             $aggregates,
+            FieldCasts::of($fields, $columns)->missingOn($plan->resource::newModel()),
         );
     }
 
@@ -75,9 +78,8 @@ final readonly class RowFields
             return [];
         }
 
-        return (clone $model)
-            ->setVisible($shown)
-            ->withoutAppends()
+        return $this->casts
+            ->appliedTo((clone $model)->setVisible($shown)->withoutAppends())
             ->attributesToArray();
     }
 
