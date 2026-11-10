@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Relations;
 
+use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Exceptions\InvalidRelationException;
 use Lomkit\Rest\Fields\MutationOperation;
 
@@ -21,6 +22,10 @@ final readonly class OperationSelection
     public function only(Relation $relation, MutationOperation ...$operations): self
     {
         $kept = self::checked($relation, true, $operations);
+
+        if ($relation instanceof PivotRelation && in_array(MutationOperation::Detach, $relation->mutationOperations(), true) && isset($kept[MutationOperation::Toggle->value]) && ! isset($kept[MutationOperation::Detach->value])) {
+            throw InvalidRelationException::toggleWithoutDetach(class_basename($relation), $relation->relation);
+        }
 
         return new self($this->kept === null ? $kept : array_intersect_key($this->kept, $kept), $this->withdrawn);
     }

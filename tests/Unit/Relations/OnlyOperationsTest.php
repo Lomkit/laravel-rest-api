@@ -32,7 +32,7 @@ class OnlyOperationsTest extends PackageTestCase
 
         if ($base === HasOneOrManyThrough::class) {
             $this->expectException(InvalidRelationException::class);
-            $this->expectExceptionMessage('The '.class_basename($class).' relation [rows] cannot keep the update operation: it does not accept it. Keep only the operations it accepts [].');
+            $this->expectExceptionMessage('The '.class_basename($class).' relation [rows] cannot keep the update operation: it accepts no operation.');
         }
 
         $relation->onlyOperations(MutationOperation::Update, MutationOperation::Attach);
@@ -77,7 +77,7 @@ class OnlyOperationsTest extends PackageTestCase
     #[Test]
     public function it_applies_the_many_to_many_rule_when_only_leaves_detach_out(): void
     {
-        $relation = BelongsToMany::make('tags', TicketResource::class)->onlyOperations(MutationOperation::Attach, MutationOperation::Sync, MutationOperation::Toggle);
+        $relation = BelongsToMany::make('tags', TicketResource::class)->onlyOperations(MutationOperation::Attach, MutationOperation::Sync);
 
         $this->assertSame(['attach', 'sync'], array_column($relation->acceptedOperations(), 'value'));
         $this->assertTrue($relation->syncRequiresWithoutDetaching());
@@ -115,5 +115,24 @@ class OnlyOperationsTest extends PackageTestCase
     {
         $this->assertSame(['create', 'update', 'attach', 'detach'], array_column(UnconstructedHasMany::make('tickets', TicketResource::class)->acceptedOperations(), 'value'));
         $this->assertSame(['update'], array_column(UnconstructedHasMany::make('tickets', TicketResource::class)->withoutOperations(MutationOperation::Create)->onlyOperations(MutationOperation::Create, MutationOperation::Update)->acceptedOperations(), 'value'));
+    }
+
+    #[Test]
+    public function it_refuses_to_keep_toggle_without_detach_on_a_many_to_many_relation(): void
+    {
+        $this->expectException(InvalidRelationException::class);
+        $this->expectExceptionMessage('The BelongsToMany relation [tags] cannot keep toggle without detach: a toggle detaches the attached rows that it names. Keep detach too, or leave toggle out.');
+
+        BelongsToMany::make('tags', TicketResource::class)->onlyOperations(MutationOperation::Attach, MutationOperation::Toggle);
+    }
+
+    #[Test]
+    public function it_leaves_toggle_out_when_another_call_withdraws_detach(): void
+    {
+        $relation = BelongsToMany::make('tags', TicketResource::class)
+            ->onlyOperations(MutationOperation::Attach, MutationOperation::Detach, MutationOperation::Toggle)
+            ->withoutOperations(MutationOperation::Detach);
+
+        $this->assertSame(['attach'], array_column($relation->acceptedOperations(), 'value'));
     }
 }

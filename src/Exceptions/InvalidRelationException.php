@@ -19,9 +19,20 @@ final class InvalidRelationException extends LogicException
     public static function unsupportedOperation(string $type, string $relation, bool $keep, MutationOperation $operation, array $supported): self
     {
         $verb = $keep ? 'keep' : 'withdraw';
+        $prefix = "The {$type} relation [{$relation}] cannot {$verb} the {$operation->value} operation:";
+
+        if ($supported === []) {
+            return new self("{$prefix} it accepts no operation.");
+        }
+
         $operations = implode(', ', array_column($supported, 'value'));
         $action = ucfirst($verb);
 
-        return new self("The {$type} relation [{$relation}] cannot {$verb} the {$operation->value} operation: it does not accept it. {$action} only the operations it accepts [{$operations}].");
+        return new self("{$prefix} it does not accept it. {$action} only the operations it accepts [{$operations}].");
+    }
+
+    public static function toggleWithoutDetach(string $type, string $relation): self
+    {
+        return new self("The {$type} relation [{$relation}] cannot keep toggle without detach: a toggle detaches the attached rows that it names. Keep detach too, or leave toggle out.");
     }
 }

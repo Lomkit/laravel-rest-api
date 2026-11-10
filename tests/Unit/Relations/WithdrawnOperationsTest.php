@@ -32,7 +32,7 @@ class WithdrawnOperationsTest extends PackageTestCase
 
         if ($base === HasOneOrManyThrough::class) {
             $this->expectException(InvalidRelationException::class);
-            $this->expectExceptionMessage('The '.class_basename($class).' relation [rows] cannot withdraw the update operation: it does not accept it. Withdraw only the operations it accepts [].');
+            $this->expectExceptionMessage('The '.class_basename($class).' relation [rows] cannot withdraw the update operation: it accepts no operation.');
         }
 
         $relation->withoutOperations(MutationOperation::Update, MutationOperation::Attach);
@@ -120,7 +120,7 @@ class WithdrawnOperationsTest extends PackageTestCase
     public function it_refuses_to_withdraw_an_operation_from_a_through_relation(): void
     {
         $this->expectException(InvalidRelationException::class);
-        $this->expectExceptionMessage('The HasOneThrough relation [leadSummary] cannot withdraw the detach operation: it does not accept it. Withdraw only the operations it accepts [].');
+        $this->expectExceptionMessage('The HasOneThrough relation [leadSummary] cannot withdraw the detach operation: it accepts no operation.');
 
         HasOneThrough::make('leadSummary', TicketResource::class)->withoutOperations(MutationOperation::Detach);
     }
