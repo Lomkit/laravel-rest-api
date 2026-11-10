@@ -2,12 +2,12 @@
 
 ## 3.1 additions
 
-Version 3.1 only adds features: upgrading from 3.0 needs no change.
+Version 3.1 adds features, and one check is stricter: `rest:check` now fails for each relation that accepts `detach` while its foreign key or morph type does not accept null. An application generated with 3.0 sees `rest:check` exit 1 until it adds `->withoutOperations(MutationOperation::Detach)` to these relations or makes the columns nullable.
 
 - A relation can limit its mutation operations: `HasMany::make('lines', LineResource::class)->withoutOperations(MutationOperation::Detach)` withdraws some, `->onlyOperations(MutationOperation::Attach, MutationOperation::Sync)` keeps only some, and `->onlyOperations()` makes the relation read-only. Validation, `/details` and the OpenAPI document follow. A many-to-many relation that does not accept `detach` does not accept `toggle` either, and `sync` then needs `"without_detaching": true`.
-- A `detach` that would set a foreign key or morph type that does not accept null answers a `422` on the `key` of the entry.
+- A `detach` that would set a foreign key or morph type that does not accept null answers a `422` on the `key` of the entry. On MySQL without strict mode, such a detach used to write `0` or `''`: it is now refused.
 - `rest:resource --generate` and `rest:quick-start` withdraw `detach` from a relation whose foreign key or morph type does not accept null.
-- `rest:check` reports each relation that accepts `detach` while its foreign key or morph type does not accept null, and its `--json` report adds `relations`.
+- `rest:check` reads the database schema and reports each relation that accepts `detach` while its foreign key or morph type does not accept null (exit 1). A table that does not exist yet is listed as skipped, and a schema that cannot be read is a problem that names the table and the connection. Its `--json` report adds `relations` (`detachable`, `skipped`, `problems`).
 
 ## Upgrading to 3.0 from 2.x
 
