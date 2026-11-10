@@ -2,8 +2,11 @@
 
 namespace Lomkit\Rest\Tests\Feature\Authorization;
 
+use Illuminate\Auth\Access\Response;
 use Illuminate\Cache\Events\RetrievingManyKeys;
 use Illuminate\Cache\Events\WritingManyKeys;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\Jobs\SyncJob;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +23,7 @@ use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ReviewedTicketResource;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ReviewTickets;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Team;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketPolicy;
 use Orchestra\Testbench\Attributes\WithConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -140,6 +144,68 @@ class ActionRowChecksTest extends HelpdeskTestCase
             'errors' => ['search' => ['This action can be run on at most 7 resources; narrow the search.']],
         ]);
         $this->assertSame([], ReviewTickets::$runs);
+    }
+
+    #[Test]
+    public function it_stops_checking_the_rows_once_they_exceed_the_maximum(): void
+    {
+        ReviewedTicketResource::$maxResources = 2;
+        Ticket::create(['id' => 1, 'team_id' => 1, 'title' => 'Ticket 1', 'status' => 'open']);
+        Ticket::create(['id' => 2, 'team_id' => 1, 'title' => 'Ticket 2', 'status' => 'open']);
+        $this->insertOnRead(1, 3, 'open');
+        $this->insertOnRead(1, 4, 'open');
+        $this->insertOnRead(1, 5, 'open');
+
+        $response = $this->postJson('/reviewed-tickets/actions/review-tickets', ['search' => []]);
+
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'This action can be run on at most 2 resources; narrow the search.',
+            'errors' => ['search' => ['This action can be run on at most 2 resources; narrow the search.']],
+        ]);
+        $this->assertSame(['viewAny', 'update 1', 'update 2'], $this->tickets->calls);
+        $this->assertSame([], ReviewTickets::$runs);
+    }
+
+    #[Test]
+    public function it_runs_a_sorted_search_on_the_keys_it_read_once_every_row_is_allowed(): void
+    {
+        $this->seedRows();
+        $this->insertOnRead(7, 8, 'open');
+        $this->logQueries();
+
+        $response = $this->postJson('/reviewed-tickets/actions/review-tickets', ['search' => ['sorts' => [['field' => 'title', 'direction' => 'desc']]]]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 7, 'result' => null]]);
+        $this->assertSame([[7, 6], [5, 4], [3, 2], [1]], ReviewTickets::$runs);
+        $this->assertSame(['viewAny', 'update 7', 'update 6', 'update 5', 'update 4', 'update 3', 'update 2', 'update 1'], $this->tickets->calls);
+        $this->assertSame(9, $this->ticketSelects());
+    }
+
+    #[Test]
+    public function it_skips_a_row_of_a_sorted_search_that_did_not_match_during_the_checks(): void
+    {
+        $this->seedRows();
+        $this->app->instance(TicketPolicy::class, $this->tickets = new class extends TicketPolicy
+        {
+            #[\Override]
+            public function update(?Authenticatable $user, Model $model): Response
+            {
+                if (in_array($model->getKey(), [7, 1], true)) {
+                    Ticket::query()->whereKey(5)->update(['status' => $model->getKey() === 7 ? 'closed' : 'open']);
+                }
+
+                return parent::update($user, $model);
+            }
+        });
+
+        $response = $this->postJson('/reviewed-tickets/actions/review-tickets', ['search' => [
+            'filters' => [['field' => 'status', 'value' => 'open']],
+            'sorts' => [['field' => 'title', 'direction' => 'desc']],
+        ]]);
+
+        $response->assertOk()->assertExactJson(['data' => ['impacted' => 6, 'result' => null]]);
+        $this->assertSame([[7, 6], [4, 3], [2, 1]], ReviewTickets::$runs);
+        $this->assertSame(['viewAny', 'update 7', 'update 6', 'update 4', 'update 3', 'update 2', 'update 1'], $this->tickets->calls);
     }
 
     /**

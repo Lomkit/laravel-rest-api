@@ -42,13 +42,13 @@ final readonly class DispatchAction
 
     private function run(): OperateResponse
     {
-        $read = $this->rows();
+        $rows = $this->rows();
         $checks = RowChecks::of($this->request, $this->action);
-        $rows = $checks?->verify($read) ?? $read;
+        $rows = $checks?->verify($rows) ?? $rows;
 
         $this->confirm($rows);
 
-        $runner = ActionRunner::for($this->request, $this->action, $this->fields, ! $read instanceof EngineTargets, $checks);
+        $runner = ActionRunner::for($this->request, $this->action, $this->fields, ! $rows instanceof EngineTargets, $checks);
         $impacted = $runner->through($rows);
         $batch = $runner->finish();
 

@@ -49,4 +49,10 @@ final readonly class ChunkedRows implements ActionRows
     {
         return $this->count ?? $this->query->toBase()->getCountForPagination();
     }
+
+    #[\Override]
+    public function only(CheckedKeys $keys): ActionRows
+    {
+        return new CheckedRows($this, $keys);
+    }
 }

@@ -81,6 +81,12 @@ final readonly class KeyChunks implements ActionRows
         return count($this->keys);
     }
 
+    #[\Override]
+    public function only(CheckedKeys $keys): ActionRows
+    {
+        return new self($this->rows, $this->id, array_values(array_filter($this->keys, $keys->has(...))), $this->size);
+    }
+
     /** @return Generator<int, Collection<int, Model>> */
     public function chunks(): Generator
     {
