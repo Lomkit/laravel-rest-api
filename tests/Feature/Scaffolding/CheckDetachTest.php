@@ -117,6 +117,17 @@ class CheckDetachTest extends ScaffoldingTestCase
         $this->assertStringContainsString("  relations ... FAILED\n  ⇂ Lomkit\Rest\Tests\Fixtures\Atlas\RemoteTripResource [country]: the columns of the trips table cannot be read on the [remote] connection: ", $output);
     }
 
+    #[Test]
+    public function it_fails_with_a_connection_that_is_not_configured(): void
+    {
+        $this->expose('remote-trips', RemoteTripController::class);
+
+        $output = $this->check(1, RemoteTripController::class);
+
+        $this->assertStringContainsString("  relations ... FAILED\n", $output);
+        $this->assertStringContainsString("Lomkit\\Rest\\Tests\\Fixtures\\Atlas\\RemoteTripResource [country]: the relation cannot be read: Database connection [remote] not configured\n", $output);
+    }
+
     private function expose(string $name, string $controller): void
     {
         Route::prefix('api')->group(function () use ($name, $controller): void {

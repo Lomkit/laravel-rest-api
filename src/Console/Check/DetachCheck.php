@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Console\Check;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -41,7 +42,12 @@ final readonly class DetachCheck
         }
 
         $model = $resource::newModel();
-        $link = $model->isRelation($relation->relation) ? LinkColumn::detachedBy($model->{$relation->relation}()) : null;
+
+        try {
+            $link = $model->isRelation($relation->relation) ? LinkColumn::detachedBy($model->{$relation->relation}()) : null;
+        } catch (InvalidArgumentException $exception) {
+            return $report->withProblem("{$resource} [{$relation->relation}]: the relation cannot be read: {$exception->getMessage()}");
+        }
 
         if ($link === null) {
             return $report->withDetachable($resource, $relation->relation);
