@@ -47,7 +47,7 @@ final readonly class EntryKeyRules
         $this->rules->add($entry->at('operation')->path, ['required', $operations === [] ? Rule::enum(MutationOperation::class) : Rule::enum(MutationOperation::class)->only($operations)]);
         $this->rules->add($attributes->path, ['array', ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => $candidate->writeOperation() === null || ! $writesRow($candidate))]);
 
-        if ($write !== null && $operation !== null && $writesRow($operation)) {
+        if ($write !== null && $writesRow($operation)) {
             $this->entryRules->writable($attributes, $resource->definition()->fields(), $write);
         }
 
