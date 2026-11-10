@@ -42,14 +42,15 @@ final readonly class RelationMutationParser
 
     public function constraints(Cursor $entry, Resource $resource, ?MutationOperation $operation): void
     {
-        if ($operation !== MutationOperation::Create && $operation !== MutationOperation::Update) {
+        $constrained = $operation?->constrainedAs();
+        $relations = $entry->at('relations');
+
+        if ($constrained === null || ($constrained !== $operation && ! $relations->present)) {
             return;
         }
 
-        $relations = $entry->at('relations');
-
         foreach ($resource->definition()->relations() as $relation) {
-            $constraint = self::constraint($relation, $operation);
+            $constraint = self::constraint($relation, $constrained);
 
             if ($constraint !== null) {
                 $this->rules->add($relations->at($relation->relation)->path, [$constraint]);
