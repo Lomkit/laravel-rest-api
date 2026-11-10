@@ -5,6 +5,7 @@ return [
     'not_writable' => 'La clé :key du champ :attribute n\'est pas modifiable par l\'opération :operation.',
     'unknown_relation' => 'Le champ :attribute n\'est pas une relation valide ou permise pour cette ressource.',
     'taken_key' => 'Le champ :attribute est obligatoire, car la clé :key est déjà utilisée.',
+    'repeated_include' => 'Le champ :attribute charge une relation qu\'une autre inclusion charge déjà : imbriquez-la plutôt dans une inclusion avec un alias.',
     'max_depth' => 'Le champ :attribute dépasse la limite de :max niveaux.',
     'include_depth' => 'Le champ :attribute dépasse la limite de :max niveaux d\'inclusion.',
     'relation_depth' => 'Le champ :attribute traverse plus de relations que la limite de :max.',

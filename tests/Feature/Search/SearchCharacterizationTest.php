@@ -90,14 +90,6 @@ class SearchCharacterizationTest extends PackageTestCase
                 ['relation' => 'posts.author'],
                 ['relation' => 'posts', 'filters' => [$published]],
             ]], 'dotted-include'],
-            'a repeated include' => [$authors, ['includes' => [
-                ['relation' => 'posts', 'filters' => [$draft]],
-                ['relation' => 'posts', 'filters' => [$published]],
-            ]], 'repeated-include'],
-            'a dotted include and an explicit level with its own include' => [$authors, ['includes' => [
-                ['relation' => 'posts.author'],
-                ['relation' => 'posts', 'includes' => [['relation' => 'author']]],
-            ]], 'dotted-and-explicit-include'],
             'an include with a limit' => [$authors, ['includes' => [['relation' => 'posts', 'limit' => 10, 'sorts' => [['field' => 'id']]]]], 'include-limit'],
             'aggregates with filters' => [$authors, ['aggregates' => [
                 ['relation' => 'posts', 'type' => 'count'],

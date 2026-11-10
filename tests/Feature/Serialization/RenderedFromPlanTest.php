@@ -27,12 +27,12 @@ class RenderedFromPlanTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_renders_the_last_entry_of_a_relation_included_twice(): void
+    public function it_renders_each_entry_of_a_relation_included_twice_under_its_key(): void
     {
         $response = $this->postJson('/api/authors/search', ['search' => [
             'includes' => [
                 ['relation' => 'posts', 'selects' => [['field' => 'id']]],
-                ['relation' => 'posts', 'selects' => [['field' => 'title']]],
+                ['relation' => 'posts', 'alias' => 'titles', 'selects' => [['field' => 'title']]],
             ],
             'selects' => [['field' => 'id']],
             'sorts' => [['field' => 'first_name']],
@@ -40,7 +40,7 @@ class RenderedFromPlanTest extends PackageTestCase
 
         $response->assertOk();
         $this->assertSame(
-            '{"current_page":1,"data":[{"id":1,"posts":[{"title":"Notes"},{"title":"Engines"}],"@more":[]},{"id":2,"posts":[],"@more":[]}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{}}',
+            '{"current_page":1,"data":[{"id":1,"posts":[{"id":2},{"id":1}],"titles":[{"title":"Notes"},{"title":"Engines"}],"@more":[]},{"id":2,"posts":[],"titles":[],"@more":[]}],"from":1,"last_page":1,"per_page":50,"to":2,"total":2,"meta":{}}',
             $response->getContent(),
         );
     }

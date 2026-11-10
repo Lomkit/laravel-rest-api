@@ -27,7 +27,10 @@ class SearchQueriesTest extends PackageTestCase
 
         $response = $this->postJson('/api/posts/search', ['search' => [
             'filters' => [...array_fill(0, 99, ['field' => 'views', 'value' => 1]), ['field' => 'secret']],
-            'includes' => array_fill(0, 3, ['relation' => 'author', 'filters' => [['field' => 'first_name', 'value' => 'Ada']]]),
+            'includes' => array_map(
+                fn (string $alias): array => ['relation' => 'author', 'alias' => $alias, 'filters' => [['field' => 'first_name', 'value' => 'Ada']]],
+                ['writer', 'editor', 'reviewer'],
+            ),
             'scopes' => [['name' => 'popular']],
             'instructions' => [['name' => 'highlight-posts']],
             'sorts' => [['field' => 'views']],

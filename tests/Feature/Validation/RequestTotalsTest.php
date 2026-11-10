@@ -43,7 +43,7 @@ class RequestTotalsTest extends PackageTestCase
             'filters' => [self::FILTER, self::FILTER],
             'includes' => [
                 ['relation' => 'author', 'filters' => [$ada, $ada]],
-                ['relation' => 'author', 'filters' => [$ada, $ada]],
+                ['relation' => 'author', 'alias' => 'writer', 'filters' => [$ada, $ada]],
             ],
         ]]);
 
