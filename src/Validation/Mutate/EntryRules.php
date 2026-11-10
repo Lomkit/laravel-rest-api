@@ -59,7 +59,7 @@ final readonly class EntryRules
 
         $this->rules->add($pivot->path, [
             'array',
-            ...MutationParser::whenOperation('prohibited_if', $entry, fn (MutationOperation $operation): bool => $operation->pivotWriteOperation() === null),
+            ...EntryKeyRules::whenOperation('prohibited_if', $entry, fn (MutationOperation $operation): bool => $operation->pivotWriteOperation() === null),
         ]);
         $this->reader->object($pivot);
 

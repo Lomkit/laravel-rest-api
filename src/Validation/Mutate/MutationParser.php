@@ -2,9 +2,7 @@
 
 namespace Lomkit\Rest\Validation\Mutate;
 
-use Closure;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Validation\Rule;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Requests\MutateRequest;
@@ -20,7 +18,6 @@ use Lomkit\Rest\Validation\Limits;
 use Lomkit\Rest\Validation\NodeBudget;
 use Lomkit\Rest\Validation\ParsedRules;
 use Lomkit\Rest\Validation\PayloadReader;
-use Lomkit\Rest\Validation\Violation;
 
 final readonly class MutationParser
 {
@@ -34,7 +31,7 @@ final readonly class MutationParser
         private EntryRules $entryRules,
         private RelationMutationParser $relations,
         private LinkReplay $links,
-        private VersionClaims $versions,
+        private EntryKeyRules $keyRules,
     ) {}
 
     public static function of(MutateRequest $request, ParsedRules $rules, NodeBudget $budget, RowSet $rows, LinkReplay $links, VersionClaims $versions): self
@@ -42,16 +39,17 @@ final readonly class MutationParser
         $reader = new PayloadReader($rules, $budget);
         $limits = $request->context()->limits();
         $entryRules = new EntryRules($rules, new ResourceRules, $reader);
+        $keys = new MutationKeys($rules, $reader, $limits->sizes->values, fn (Resource $resource): Builder => $request->keysQuery($resource), $rows);
 
         return new self(
             $rules,
             $reader,
             $limits,
-            new MutationKeys($rules, $reader, $limits->sizes->values, fn (Resource $resource): Builder => $request->keysQuery($resource), $rows),
+            $keys,
             $entryRules,
             new RelationMutationParser($rules, $reader, $limits, $entryRules),
             $links,
-            $versions,
+            new EntryKeyRules($rules, $keys, $entryRules, $versions),
         );
     }
 
@@ -109,8 +107,7 @@ final readonly class MutationParser
         }
 
         $operations = $relation?->acceptedOperations() ?? [MutationOperation::Create, MutationOperation::Update];
-        $key = $this->ownKeys($entry, $resource, $operation, $operations, $listed, $runs);
-        $this->version($entry, $resource, $operation, $key);
+        $key = $this->keyRules->apply($entry, $resource, $operation, $operations, $listed, $runs);
         $relations = $this->relations->relations($entry, $resource, $depth, $this, $runs * self::rows($key));
         $pivot = $this->relations->pivot($entry, $relation, $operation, $mutation);
         $attributes = $this->values($entry->at('attributes'));
@@ -127,7 +124,7 @@ final readonly class MutationParser
         }
 
         if ($operation === MutationOperation::Sync && $relation?->syncRequiresWithoutDetaching() === true) {
-            $this->keepLinks($entry->at('without_detaching'), $withoutDetaching);
+            $this->keyRules->keepLinks($entry->at('without_detaching'), $withoutDetaching);
         }
 
         foreach (LinkRule::paths($entry, $operation, $relation) as $path) {
@@ -135,73 +132,6 @@ final readonly class MutationParser
         }
 
         return new MutationNode($operation, $key, $attributes, $pivot, $withoutDetaching, $relations, $depth, $type, $entry->path);
-    }
-
-    /**
-     * @param  Closure(MutationOperation): bool  $applies
-     * @return list<string>
-     */
-    public static function whenOperation(string $rule, Cursor $entry, Closure $applies): array
-    {
-        $operation = $entry->at('operation')->path;
-
-        return array_values(array_map(
-            fn (MutationOperation $candidate): string => $rule.':'.$operation.','.$candidate->value,
-            array_filter(MutationOperation::cases(), $applies),
-        ));
-    }
-
-    /**
-     * @param  list<MutationOperation>  $operations
-     * @return int|string|list<int|string>|null
-     */
-    private function ownKeys(Cursor $entry, Resource $resource, ?MutationOperation $operation, array $operations, bool $listed, int $runs): int|string|array|null
-    {
-        $attributes = $entry->at('attributes');
-        $write = $operation?->writeOperation();
-
-        $this->rules->add($entry->at('operation')->path, ['required', $operations === [] ? Rule::enum(MutationOperation::class) : Rule::enum(MutationOperation::class)->only($operations)]);
-        $this->rules->add($attributes->path, ['array', ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => $candidate->writeOperation() === null)]);
-
-        if ($write !== null) {
-            $this->entryRules->writable($attributes, $resource->definition()->fields(), $write);
-        }
-
-        $this->rules->add($entry->at('key')->path, [
-            ...self::whenOperation('present_if', $entry, fn (MutationOperation $candidate): bool => $candidate->requiresKey()),
-            ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => ! $candidate->requiresKey()),
-        ]);
-        $this->rules->addWhenPresent($entry->at('relations'), self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => ! $candidate->takesRelations()));
-        $key = $this->keys->read($entry->at('key'), $resource, $operation, $listed, $runs);
-        $this->rules->add($entry->at('without_detaching')->path, ['boolean', 'prohibited_unless:'.$entry->at('operation')->path.','.MutationOperation::Sync->value]);
-
-        return $key;
-    }
-
-    /** @param int|string|list<int|string>|null $key */
-    private function version(Cursor $entry, Resource $resource, ?MutationOperation $operation, int|string|array|null $key): void
-    {
-        $version = $resource->definition()->version();
-
-        if ($version === null) {
-            return;
-        }
-
-        $value = $entry->at('version');
-        $this->rules->add($value->path, ['string', ...self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => $candidate !== MutationOperation::Update)]);
-
-        if ($operation === MutationOperation::Update && $key !== null && is_string($value->value)) {
-            $this->versions->claim($resource, $version, $entry->path, $key, $value->value);
-        }
-    }
-
-    private function keepLinks(Cursor $value, ?bool $withoutDetaching): void
-    {
-        if ($withoutDetaching === true || ($value->present && $withoutDetaching === null)) {
-            return;
-        }
-
-        $this->rules->reject(Violation::keptLinks($value->path));
     }
 
     /** @param int|string|list<int|string>|null $key */
