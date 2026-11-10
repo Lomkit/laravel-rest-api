@@ -25,7 +25,6 @@ use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Metrics\CacheScope;
 use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\MetricOrderResource;
-use Lomkit\Rest\Tests\Feature\Metrics\Stubs\NotedOrderController;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\OrderCount;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\OrdersByStatus;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\PerimeterOrderController;
@@ -403,18 +402,21 @@ class MetricCacheTest extends SalesTestCase
     }
 
     #[Test]
-    public function it_keeps_the_result_of_a_search_with_invalid_utf8(): void
+    public function it_refuses_a_search_value_that_is_not_valid_utf8_before_the_cache(): void
     {
-        MetricOrderResource::$declared = [OrderCount::make()->cacheFor(600)];
-        Rest::resource('noted-orders', NotedOrderController::class)->register();
-        $body = ['search' => ['filters' => [['field' => 'note', 'value' => "Q4\xFF"]]]];
+        $this->serveTeams(OrderCount::make()->cacheFor(600));
+        $body = ['search' => ['filters' => [['field' => 'customer', 'value' => "Q4\xFF"]]]];
         $this->logQueries();
 
-        $first = $this->post('/noted-orders/metrics/order-count', $body, ['Accept' => 'application/json']);
-        $second = $this->post('/noted-orders/metrics/order-count', $body, ['Accept' => 'application/json']);
+        $response = $this->actingAs(new GenericUser(['id' => 1, 'team_id' => 1]))
+            ->post('/team-orders/metrics/order-count', $body, ['Accept' => 'application/json']);
 
-        $this->assertSame([self::SEVEN, self::SEVEN], [$first->getContent(), $second->getContent()]);
-        $this->assertSame(1, $this->orderStatements());
+        $response->assertUnprocessable()->assertExactJson([
+            'message' => 'The search.filters.0.value field must be valid UTF-8.',
+            'errors' => ['search.filters.0.value' => ['The search.filters.0.value field must be valid UTF-8.']],
+        ]);
+        $this->assertSame([], array_values(array_filter($this->calls, fn (string $call): bool => str_ends_with($call, 'a result'))));
+        $this->assertSame(0, $this->orderStatements());
     }
 
     #[Test]

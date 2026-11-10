@@ -34,15 +34,7 @@ class ConfirmedWriteResource extends DocumentResource
     #[\Override]
     public function fields(): array
     {
-        return [
-            ID::make('id'),
-            Text::make('title'),
-            Boolean::make('archived'),
-            DateTime::make('updated_at')->readonly(),
-            Text::make('note')
-                ->virtual()
-                ->fillUsing(function (Model $model, mixed $value): void {}),
-        ];
+        return [ID::make('id'), Text::make('title'), Boolean::make('archived'), DateTime::make('updated_at')->readonly()];
     }
 
     #[\Override]

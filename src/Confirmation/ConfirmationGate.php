@@ -70,7 +70,7 @@ final class ConfirmationGate
      */
     private static function subject(RestRequest $request, array $scope, array $body): array
     {
-        $signed = json_encode(self::canonical(Arr::only($request->all(), $body)), JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $signed = json_encode(self::canonical(Arr::only($request->all(), $body)), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         return [
             UserIdentity::of(Auth::getDefaultDriver(), $request->user())->key(),

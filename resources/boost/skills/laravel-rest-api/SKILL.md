@@ -61,6 +61,7 @@ Use this skill when working with the `lomkit/laravel-rest-api` package — build
 - **OpenAPI documentation**: Scramble documents every endpoint of the resources; the package registers its documentation itself.
 - **Precognition**: live form validation (`Precognition: true` header) short-circuits the request after validation when `rest.precognition.enabled = true`.
 - **Request size limits**: each list of a request accepts a limited number of entries, filters nest up to 1 level and includes and relation operations up to 3 levels, four totals bound one search and one request, and a filter value takes a limited number of characters, all set in `rest.limits` (`config/rest.php`): `sizes` for the lists, `depths` for the nesting of filters, includes and relations, `totals` for the four totals, `lengths` for the patterns and the other string values, and `sizes.rows` for the rows of one search page or mutation response. A value over its length is a `422` on that value. A list over its limit is one `422` on that list. `sizes.groups` bounds a response instead: the parts of a partition and the splits of a trend, 100 by default.
+- **UTF-8**: every string value and every key of a request, query string included, must be valid UTF-8: another one is a `422` on its path (`The mutate.0.attributes.name field must be valid UTF-8.`; a key shows `?` in place of its invalid bytes), answered alone, before the rules of the request read the input.
 
 ## If the package is installed
 

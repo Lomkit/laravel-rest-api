@@ -44,7 +44,7 @@ final readonly class MetricKey
             }
         }
 
-        return new self(json_encode($parts, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE));
+        return new self(json_encode($parts, JSON_THROW_ON_ERROR));
     }
 
     public function for(?UserIdentity $user, string $stamps): string
