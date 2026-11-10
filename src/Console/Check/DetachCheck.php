@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Console\Check;
 
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -40,7 +41,23 @@ final readonly class DetachCheck
         }
 
         $model = $resource::newModel();
-        $column = $model->isRelation($relation->relation) ? LinkColumn::detachedBy($model->{$relation->relation}())?->requiredColumn($columns) : null;
+        $link = $model->isRelation($relation->relation) ? LinkColumn::detachedBy($model->{$relation->relation}()) : null;
+
+        if ($link === null) {
+            return $report->withDetachable($resource, $relation->relation);
+        }
+
+        try {
+            if (! $link->tableExists($columns)) {
+                return $report->withSkipped($resource, $relation->relation, $link->tableName());
+            }
+
+            $column = $link->requiredColumn($columns);
+        } catch (QueryException $exception) {
+            $reason = $exception->getPrevious()?->getMessage() ?? $exception->getMessage();
+
+            return $report->withProblem("{$resource} [{$relation->relation}]: the columns of the {$link->tableName()} table cannot be read on the [{$exception->getConnectionName()}] connection: {$reason}");
+        }
 
         if ($column === null) {
             return $report->withDetachable($resource, $relation->relation);

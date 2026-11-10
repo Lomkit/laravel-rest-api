@@ -53,6 +53,16 @@ final readonly class LinkColumn
         };
     }
 
+    public function tableExists(NullableColumns $columns): bool
+    {
+        return $columns->exists($this->child);
+    }
+
+    public function tableName(): string
+    {
+        return $this->child->getTable();
+    }
+
     public function nullable(NullableColumns $columns): bool
     {
         return $this->requiredColumn($columns) === null;

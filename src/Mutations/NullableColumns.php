@@ -11,10 +11,20 @@ final class NullableColumns
 
     public function allows(Model $model, string $column): bool
     {
-        $table = $model->getConnection()->getName().'.'.$model->getTable();
-        $this->tables[$table] ??= self::read($model);
+        return $this->columns($model)[$column] ?? true;
+    }
 
-        return $this->tables[$table][$column] ?? true;
+    public function exists(Model $model): bool
+    {
+        return $this->columns($model) !== [];
+    }
+
+    /** @return array<string, bool> */
+    private function columns(Model $model): array
+    {
+        $table = $model->getConnection()->getName().'.'.$model->getTable();
+
+        return $this->tables[$table] ??= self::read($model);
     }
 
     /** @return array<string, bool> */

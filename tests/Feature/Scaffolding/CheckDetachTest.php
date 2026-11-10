@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Schema;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
 use Lomkit\Rest\Tests\Fixtures\Atlas\KeptTripController;
+use Lomkit\Rest\Tests\Fixtures\Atlas\RemoteTripController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripController;
 use Lomkit\Rest\Tests\ScaffoldingTestCase;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -87,7 +88,33 @@ class CheckDetachTest extends ScaffoldingTestCase
 
         $this->assertSame(1, $exitCode);
         $this->assertIsArray($report);
-        $this->assertSame(['detachable' => [], 'problems' => [self::COUNTRY_PROBLEM]], $report['relations']);
+        $this->assertSame(['detachable' => [], 'skipped' => [], 'problems' => [self::COUNTRY_PROBLEM]], $report['relations']);
+    }
+
+    #[Test]
+    public function it_skips_a_relation_whose_table_does_not_exist(): void
+    {
+        Schema::drop('trips');
+        $this->expose('trips', TripController::class);
+
+        $output = $this->check(0, TripController::class);
+
+        $this->assertStringEndsWith(
+            "  relations ... no relation accepts detach, 1 skipped\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource [country] ... skipped, no trips table\n",
+            $output,
+        );
+    }
+
+    #[Test]
+    public function it_fails_with_the_connection_whose_columns_cannot_be_read(): void
+    {
+        config(['database.connections.remote' => ['driver' => 'sqlite', 'database' => sys_get_temp_dir(), 'prefix' => '']]);
+        $this->expose('remote-trips', RemoteTripController::class);
+
+        $output = $this->check(1, RemoteTripController::class);
+
+        $this->assertStringContainsString("  relations ... FAILED\n  ⇂ Lomkit\Rest\Tests\Fixtures\Atlas\RemoteTripResource [country]: the columns of the trips table cannot be read on the [remote] connection: ", $output);
     }
 
     private function expose(string $name, string $controller): void

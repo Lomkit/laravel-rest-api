@@ -38,7 +38,8 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\ContinentResource ... #[WithoutPerimeter]\n"
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
             ."  actions ... 1 action checks each row\n"
-            ."  relations ... 1 relation accepts detach\n",
+            ."  relations ... no relation accepts detach, 1 skipped\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource [country] ... skipped, no trips table\n",
             $output,
         );
     }
@@ -103,7 +104,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                     'checked' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'action' => 'Lomkit\Rest\Tests\Fixtures\Atlas\CancelTripsAction', 'ability' => 'update']],
                     'problems' => [self::EXPORT_PROBLEM],
                 ],
-                'relations' => ['detachable' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'relation' => 'country']], 'problems' => []],
+                'relations' => ['detachable' => [], 'skipped' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'relation' => 'country', 'table' => 'trips']], 'problems' => []],
             ],
             json_decode($output->fetch(), true),
         );
@@ -124,7 +125,8 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             .'  ⇂ '.rtrim(self::JOURNAL_PROBLEM, '.')."\n"
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
             ."  actions ... 1 action checks each row\n"
-            ."  relations ... 1 relation accepts detach\n",
+            ."  relations ... no relation accepts detach, 1 skipped\n"
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource [country] ... skipped, no trips table\n",
             $output,
         );
     }
@@ -152,7 +154,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                     'checked' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'action' => 'Lomkit\Rest\Tests\Fixtures\Atlas\CancelTripsAction', 'ability' => 'update']],
                     'problems' => [],
                 ],
-                'relations' => ['detachable' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'relation' => 'country']], 'problems' => []],
+                'relations' => ['detachable' => [], 'skipped' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'relation' => 'country', 'table' => 'trips']], 'problems' => []],
             ],
             json_decode($output->fetch(), true),
         );
