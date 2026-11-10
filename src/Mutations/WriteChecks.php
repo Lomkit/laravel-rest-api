@@ -27,6 +27,9 @@ final class WriteChecks
     /** @var array<int, list<Check>> */
     private array $pending = [];
 
+    /** @var array<int, Model> */
+    private array $drafts = [];
+
     public readonly PivotSet $pivots;
 
     public function __construct(private readonly RowSet $rows)
@@ -44,24 +47,22 @@ final class WriteChecks
         $this->plan($resource, $this->checks);
     }
 
-    /**
-     * @param  array<string, mixed>  $keys
-     * @return list<Model>
-     */
-    public function walk(Resource $resource, MutationNode $node, array $keys = [], bool $moves = false): array
+    /** @return list<Model> */
+    public function walk(Resource $resource, MutationNode $node, PlannedKeys $keys = new PlannedKeys, bool $moves = false): array
     {
         $rows = [];
 
         foreach ($this->rowsOf($resource, $node) as $row) {
             $writes = RelationWrites::ofNode($resource, $row, $node);
             $attributes = $node->attributes ?? [];
-            $written = $keys;
+            $planned = $keys;
 
             foreach ($writes as $write) {
-                $written = [...$written, ...$write->plannedKeys($row, $this)];
+                $planned = $planned->with($write->plannedKeys($row, $this));
             }
 
-            $changes = new Changes([...$attributes, ...$written]);
+            $written = $planned->values;
+            $changes = new Changes([...$attributes, ...$written], $planned->targets);
             $subject = $this->subjects[spl_object_id($row)] ?? $row;
             $preview = new AttributeWriter($resource->definition()->fields());
             $checked = $row->exists ? $subject : $preview->preview($row, $node->operation, $attributes, $written);
@@ -86,6 +87,11 @@ final class WriteChecks
     public function row(Resource $resource, mixed $key): ?Model
     {
         return is_int($key) || is_string($key) ? $this->rows->peek($resource, $key) : null;
+    }
+
+    public function draft(Resource $resource, MutationNode $node): Model
+    {
+        return $this->drafts[spl_object_id($node)] ??= $resource::newModel();
     }
 
     public function link(Relation $relation, MutationNode $node, Model $parent, Model $related, bool $detach): void
@@ -167,7 +173,10 @@ final class WriteChecks
     private function rowsOf(Resource $resource, MutationNode $node): array
     {
         if ($node->operation === MutationOperation::Create) {
-            return [$resource::newModel()];
+            $draft = $this->draft($resource, $node);
+            unset($this->drafts[spl_object_id($node)]);
+
+            return [$draft];
         }
 
         $rows = [];

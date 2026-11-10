@@ -59,10 +59,9 @@ abstract readonly class RelationWrites
 
     public function rehearseAfter(LinkedRow $parent, LinkReplay $replay): void {}
 
-    /** @return array<string, mixed> */
-    public function plannedKeys(Model $parent, WriteChecks $checks): array
+    public function plannedKeys(Model $parent, WriteChecks $checks): PlannedKeys
     {
-        return [];
+        return new PlannedKeys;
     }
 
     public function check(Model $parent, WriteChecks $checks): void {}

@@ -71,7 +71,7 @@ final readonly class ChildWrites extends RelationWrites
         foreach ($this->nodes() as $node) {
             $deletes = $node->operation === MutationOperation::Delete;
             $moves = ! in_array($node->operation, [MutationOperation::Create, MutationOperation::Update], true);
-            $keys = $parent->exists && ! $deletes ? $this->keys($parent, $node->operation === MutationOperation::Detach) : [];
+            $keys = $deletes ? new PlannedKeys : $this->planned($parent, $node->operation === MutationOperation::Detach);
 
             foreach ($checks->walk($this->relation->resource(), $node, $keys, $moves) as $child) {
                 $checks->link($this->relation, $node, $parent, $child, self::unlinks($node));
@@ -82,6 +82,13 @@ final readonly class ChildWrites extends RelationWrites
     private static function unlinks(MutationNode $node): bool
     {
         return $node->operation === MutationOperation::Detach || $node->operation === MutationOperation::Delete;
+    }
+
+    private function planned(Model $parent, bool $detach): PlannedKeys
+    {
+        $foreignKey = $this->children($parent)->getForeignKeyName();
+
+        return new PlannedKeys($this->keys($parent, $detach), $detach ? [] : [$foreignKey => $parent]);
     }
 
     /** @return array<string, mixed> */
