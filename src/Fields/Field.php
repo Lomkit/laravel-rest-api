@@ -69,6 +69,11 @@ abstract class Field
 
     public function bind(Model $model): void {}
 
+    public function modelCast(): ?string
+    {
+        return null;
+    }
+
     public function boundTo(Model $model): static
     {
         $bound = clone $this;

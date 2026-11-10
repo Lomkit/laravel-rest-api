@@ -22,6 +22,12 @@ class DateTime extends Date
     }
 
     #[\Override]
+    public function modelCast(): ?string
+    {
+        return 'datetime';
+    }
+
+    #[\Override]
     protected function comparesByDay(Builder $query): bool
     {
         return false;

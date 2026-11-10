@@ -41,6 +41,8 @@ return new class extends Migration
             $table->foreignId('artist_id');
             $table->foreignId('show_id');
             $table->string('role')->nullable();
+            $table->boolean('headliner')->default(false);
+            $table->dateTime('confirmed_at')->nullable();
         });
 
         Schema::create('comments', function (Blueprint $table): void {
