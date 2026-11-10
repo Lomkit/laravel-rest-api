@@ -69,6 +69,18 @@ class FrenchMessagesTest extends HelpdeskTestCase
     }
 
     #[Test]
+    public function it_answers_a_detach_of_a_required_foreign_key_in_french(): void
+    {
+        $jam = $this->seedTickets()['Printer jam'];
+
+        $response = $this->postJson('/api/tickets/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => $jam->id, 'relations' => ['team' => ['operation' => 'detach', 'key' => $jam->team_id]]],
+        ]]);
+
+        $this->assertExactErrors($response, ['mutate.0.relations.team.key' => ['Le champ mutate.0.relations.team.key est interdit : cette relation ne peut pas être détachée, sa clé étrangère n\'accepte pas null.']]);
+    }
+
+    #[Test]
     public function it_answers_an_unknown_relation_key_in_french(): void
     {
         $response = $this->postJson('/api/categories/mutate', ['mutate' => [

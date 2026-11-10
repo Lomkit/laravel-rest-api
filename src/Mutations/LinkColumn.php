@@ -44,6 +44,11 @@ final readonly class LinkColumn
         return $key === null ? null : ($type ?? '')."\n".self::text($key);
     }
 
+    public function nullable(NullableColumns $columns): bool
+    {
+        return $columns->allows($this->child, $this->foreignKey) && ($this->morphType === null || $columns->allows($this->child, $this->morphType));
+    }
+
     public function of(Model $row): ?string
     {
         return self::owner($this->morphType === null ? null : self::text($row->getRawOriginal($this->morphType)), $row->getRawOriginal($this->foreignKey));

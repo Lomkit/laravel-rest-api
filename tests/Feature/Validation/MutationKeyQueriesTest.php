@@ -60,7 +60,7 @@ class MutationKeyQueriesTest extends PackageTestCase
 
         $response = $this->postJson('/api/categories/mutate', ['mutate' => [
             ['operation' => 'update', 'key' => 1, 'relations' => [
-                'products' => [['operation' => 'attach', 'key' => [1, 2]], ['operation' => 'detach', 'key' => 3]],
+                'products' => [['operation' => 'attach', 'key' => [1, 2]], ['operation' => 'update', 'key' => 3]],
                 'featuredProducts' => [['operation' => 'attach', 'key' => [1]]],
             ]],
             ['operation' => 'update', 'key' => 2, 'relations' => ['products' => [['operation' => 'attach', 'key' => [3]]]]],
