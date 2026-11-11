@@ -78,7 +78,7 @@ class Date extends Field
         return $date->startOfDay();
     }
 
-    private function toDate(DateTimeInterface|int|float|string|bool $value): Carbon
+    protected function toDate(DateTimeInterface|int|float|string|bool $value): Carbon
     {
         return $this->normalize($value instanceof DateTimeInterface ? Carbon::instance($value) : Carbon::parse((string) $value));
     }

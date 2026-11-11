@@ -16,15 +16,15 @@ use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
+use Lomkit\Rest\Tests\PackageTestCase;
 use Lomkit\Rest\Tests\Unit\Fields\Stubs\Money;
 use Lomkit\Rest\Tests\Unit\Fields\Stubs\Priority;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 use Stringable;
 use ValueError;
 
-class FieldCastTest extends TestCase
+class FieldCastTest extends PackageTestCase
 {
     /** @return array<string, array{Field, mixed, mixed}> */
     public static function scalarCasts(): array

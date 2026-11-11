@@ -108,7 +108,7 @@ php artisan rest:resource UserResource --model=User --generate   # one field per
 
 Override these methods. They take no argument: a list that depends on the user reads `$this->request()->user()`. `fields()`, `relations()`, `scopes()`, `limits()`, `actions()`, `instructions()`, `text()` and `gates()` run once per request, the first time the package reads them, and the resource keeps nothing between requests:
 
-- `fields()` — list of typed `Lomkit\Rest\Fields\*` objects the client may select / filter / sort / mutate on: `ID`, `Text`, `Number`, `Integer`, `Boolean`, `Date`, `DateTime`, `Enum`, `Json`, or an app type extending `Field`. Strings and duplicate names throw `InvalidFieldException`. `$this->definition()->fields()` returns a `FieldSet`; `->names()` gives the list of names.
+- `fields()` — list of typed `Lomkit\Rest\Fields\*` objects the client may select / filter / sort / mutate on: `ID`, `Text`, `Number`, `Integer`, `Boolean`, `Date`, `DateTime`, `Enum`, `Json`, or an app type extending `Field`. Strings and duplicate names throw `InvalidFieldException`. `$this->definition()->fields()` returns a `FieldSet`; `->names()` gives the list of names. A `DateTime` value with an offset (`2026-10-12T08:00:00+02:00`) is converted to `config('app.timezone')` in filters, writes (pivot fields too) and inputs; a value without an offset is read in that zone, and a `Date` value keeps the day as sent.
 
   ```php
   use Lomkit\Rest\Fields\{ID, Integer, Text};
