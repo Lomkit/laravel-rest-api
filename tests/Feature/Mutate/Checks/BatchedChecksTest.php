@@ -68,7 +68,7 @@ class BatchedChecksTest extends WriteChecksTestCase
             'sql select * from shelves where (shelves.name != ?) and shelves.id in (101, 102, 103)',
             'sql select * from books where books.id in (102)',
             'begin',
-            'sql select shelves.*, book_shelf.book_id as pivot_book_id, book_shelf.shelf_id as pivot_shelf_id from shelves inner join book_shelf on shelves.id = book_shelf.shelf_id where book_shelf.book_id = ? and (shelves.name != ?)',
+            'sql select shelves.*, book_shelf.book_id as pivot_book_id, book_shelf.shelf_id as pivot_shelf_id from shelves inner join book_shelf on shelves.id = book_shelf.shelf_id where book_shelf.book_id = ? and (shelves.name != ?) limit 1004',
             'policy create Book* {"title":"Walden"}',
             'policy create Loan* {"borrower":"Linus","book_id":null}',
             'policy view Shelf(Classics)',
