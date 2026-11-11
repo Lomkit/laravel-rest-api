@@ -12,6 +12,8 @@ trait ConfiguresReading
 {
     private bool $selectable = true;
 
+    private bool $declaredSelectable = false;
+
     private bool $virtual = false;
 
     /** @var list<string> */
@@ -27,7 +29,12 @@ trait ConfiguresReading
 
     public function selectable(bool $selectable = true): static
     {
+        if ($selectable && $this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'selectable');
+        }
+
         $this->selectable = $selectable;
+        $this->declaredSelectable = $selectable;
 
         return $this;
     }
@@ -53,6 +60,10 @@ trait ConfiguresReading
 
     public function sortable(bool $sortable = true): static
     {
+        if ($sortable && $this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'sortable');
+        }
+
         $this->sortable = $sortable;
 
         return $this;
@@ -61,6 +72,10 @@ trait ConfiguresReading
     /** @param Closure(Builder, 'asc'|'desc'): mixed $callback */
     public function sortUsing(Closure $callback): static
     {
+        if ($this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'sortUsing');
+        }
+
         $this->sortUsing = $callback;
 
         return $this;
@@ -73,7 +88,7 @@ trait ConfiguresReading
 
     public function isVirtual(): bool
     {
-        return $this->virtual;
+        return $this->virtual || $this->isInputOnly();
     }
 
     public function fromStorage(mixed $value): mixed
@@ -109,6 +124,10 @@ trait ConfiguresReading
     /** @param Closure(Model): mixed $callback */
     public function resolveUsing(Closure $callback): static
     {
+        if ($this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'resolveUsing');
+        }
+
         $this->resolveUsing = $callback;
 
         return $this;

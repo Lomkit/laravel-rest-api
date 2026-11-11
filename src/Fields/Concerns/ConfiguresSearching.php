@@ -30,6 +30,10 @@ trait ConfiguresSearching
             throw InvalidFieldException::notSearchableType($this->name, $this->type());
         }
 
+        if ($this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'searchable');
+        }
+
         if ($this->isVirtual()) {
             throw InvalidFieldException::searchableVirtual($this->name);
         }

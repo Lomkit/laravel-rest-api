@@ -58,7 +58,7 @@ class MutationsTest extends DocumentationTestCase
         $schemas = $this->document()['components']['schemas'];
 
         $this->assertSame(
-            '{"type":"object","description":"The fields that `create` writes","properties":{"title":{"type":"string","description":"Rules: string, max:80, required","examples":["Opening night","Closing night"]},"summary":{"type":["string","null"],"description":"Rules: nullable, string, min:8"},"price":{"type":["number","null"],"description":"Rules: nullable, numeric","examples":[12.5],"x-lomkit-meta":{"unit":"EUR"}},"seats":{"type":"integer","description":"Rules: integer, min:0"},"featured":{"type":"boolean","description":"Rules: boolean"},"starts_on":{"type":"string","format":"date","description":"Rules: date, required"},"starts_at":{"type":["string","null"],"format":"date-time","description":"Rules: nullable, date"},"status":{"type":"string","description":"Rules: enum, required","enum":["planned","on_sale"]},"level":{"type":"integer","description":"Rules: enum","enum":[1,2,3]},"settings":{"type":["object","null"],"description":"Rules: nullable, array, max_depth:64"},"secret":{"type":["string","null"],"description":"Rules: nullable, string"}},"additionalProperties":false,"title":"ShowCreate"}',
+            '{"type":"object","description":"The fields that `create` writes","properties":{"title":{"type":"string","description":"Rules: string, max:80, required","examples":["Opening night","Closing night"]},"summary":{"type":["string","null"],"description":"Rules: nullable, string, min:8"},"price":{"type":["number","null"],"description":"Rules: nullable, numeric","examples":[12.5],"x-lomkit-meta":{"unit":"EUR"}},"seats":{"type":"integer","description":"Rules: integer, min:0"},"featured":{"type":"boolean","description":"Rules: boolean"},"starts_on":{"type":"string","format":"date","description":"Rules: date, required"},"starts_at":{"type":["string","null"],"format":"date-time","description":"Rules: nullable, date"},"status":{"type":"string","description":"Rules: enum, required","enum":["planned","on_sale"]},"level":{"type":"integer","description":"Rules: enum","enum":[1,2,3]},"settings":{"type":["object","null"],"description":"Rules: nullable, array, max_depth:64"},"secret":{"type":["string","null"],"description":"Rules: nullable, string"},"press_note":{"type":["string","null"],"description":"Rules: nullable, string"}},"additionalProperties":false,"title":"ShowCreate"}',
             json_encode($schemas['ShowCreate']),
         );
         $this->assertSame(array_keys($schemas['ShowCreate']['properties']), array_keys($schemas['ShowUpdate']['properties']));
@@ -68,6 +68,17 @@ class MutationsTest extends DocumentationTestCase
         $this->assertSame('Rules: string, max:80', $schemas['ShowUpdate']['properties']['title']['description']);
         $this->assertSame(['code', 'name'], array_keys($schemas['StageCreate']['properties']));
         $this->assertSame(['name'], array_keys($schemas['StageUpdate']['properties']));
+    }
+
+    #[Test]
+    public function it_documents_an_input_only_field_as_written_and_never_returned(): void
+    {
+        $schemas = $this->document()['components']['schemas'];
+
+        $this->assertSame('{"type":["string","null"],"description":"Rules: nullable, string"}', json_encode($schemas['ShowCreate']['properties']['press_note']));
+        $this->assertSame('{"type":["string","null"],"description":"Rules: nullable, string"}', json_encode($schemas['ShowUpdate']['properties']['press_note']));
+        $this->assertArrayHasKey('title', $schemas['Show']['properties']);
+        $this->assertArrayNotHasKey('press_note', $schemas['Show']['properties']);
     }
 
     #[Test]
@@ -174,6 +185,7 @@ class MutationsTest extends DocumentationTestCase
                 'level' => 1,
                 'settings' => new stdClass,
                 'secret' => 'a',
+                'press_note' => 'a',
             ]]]]],
             'a key that the client sends' => ['/stages/mutate', ['mutate' => [['operation' => 'create', 'attributes' => ['code' => 'main', 'name' => 'Main stage']]]]],
         ];

@@ -53,6 +53,11 @@ final class InvalidFieldException extends LogicException
         return new self("{$owner} declares the virtual field [{$name}]. A pivot field is a column of the pivot table.");
     }
 
+    public static function inputOnlyPivotField(string $owner, string $name): self
+    {
+        return new self("{$owner} declares the input-only field [{$name}]. A pivot field is a column of the pivot table.");
+    }
+
     public static function filledPivotField(string $owner, string $name): self
     {
         return new self("{$owner} declares fillUsing() on the field [{$name}]. A pivot value is written to its column as sent.");
@@ -76,6 +81,11 @@ final class InvalidFieldException extends LogicException
     public static function searchableWriteOnly(string $name): self
     {
         return new self("The field [{$name}] is write-only and cannot be searchable.");
+    }
+
+    public static function inputOnlyWith(string $name, string $method): self
+    {
+        return new self("The field [{$name}] is input-only and cannot declare {$method}(): its value is validated and handed to the hooks, never filled, returned, filtered, sorted or searched.");
     }
 
     public static function unknownField(string $name): self

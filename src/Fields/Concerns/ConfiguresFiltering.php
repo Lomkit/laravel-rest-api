@@ -20,6 +20,10 @@ trait ConfiguresFiltering
     /** @param bool|list<string> $filterable */
     public function filterable(bool|array $filterable = true): static
     {
+        if ($filterable !== false && $this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'filterable');
+        }
+
         $this->filterable = $filterable;
 
         return $this;
@@ -28,6 +32,10 @@ trait ConfiguresFiltering
     /** @param (Closure(Builder, string, mixed): mixed)|Filter $filter */
     public function filterUsing(Closure|Filter $filter): static
     {
+        if ($this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'filterUsing');
+        }
+
         $this->filterUsing = $filter;
 
         return $this;
