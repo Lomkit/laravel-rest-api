@@ -57,9 +57,10 @@ class InputOnlyFieldTest extends TestCase
     }
 
     #[Test]
-    #[DataProvider('declaredReads')]
-    public function it_never_selects_sorts_filters_or_aggregates_an_input_only_field(Field $field): void
+    public function it_never_selects_sorts_filters_or_aggregates_an_input_only_field_by_default(): void
     {
+        $field = Text::make('delivery_address')->inputOnly();
+
         $this->assertTrue($field->isVirtual());
         $this->assertTrue($field->isWriteOnly());
         $this->assertFalse($field->isSelectable());
@@ -70,21 +71,6 @@ class InputOnlyFieldTest extends TestCase
         $this->assertFalse($field->isSearchable());
         $this->assertFalse(AggregateFunction::Min->accepts($field));
         $this->assertFalse(AggregateFunction::Max->accepts($field));
-    }
-
-    /** @return array<string, array{Field}> */
-    public static function declaredReads(): array
-    {
-        return [
-            'plain' => [Text::make('delivery_address')->inputOnly()],
-            'selectable, sortable and filterable' => [
-                Text::make('delivery_address')
-                    ->inputOnly()
-                    ->selectable(true)
-                    ->sortable(true)
-                    ->filterable(true),
-            ],
-        ];
     }
 
     #[Test]
@@ -111,18 +97,76 @@ class InputOnlyFieldTest extends TestCase
     /** @return iterable<string, array{Closure(Field): Field, string}> */
     public static function conflicts(): iterable
     {
-        $declarations = [
-            'fillUsing' => fn (Field $field): Field => $field->fillUsing(self::fillNothing(...)),
-            'resolveUsing' => fn (Field $field): Field => $field->resolveUsing(fn (Model $model): null => null),
-            'filterUsing' => fn (Field $field): Field => $field->filterUsing(fn (Builder $query, string $operator, mixed $value): Builder => $query),
-            'sortUsing' => fn (Field $field): Field => $field->sortUsing(fn (Builder $query, string $direction): Builder => $query),
-            'searchable' => fn (Field $field): Field => $field->searchable(),
-        ];
-
-        foreach ($declarations as $method => $declaration) {
-            yield $method.' after inputOnly()' => [fn (Field $field): Field => $declaration($field->inputOnly()), $method];
-            yield $method.' before inputOnly()' => [fn (Field $field): Field => $declaration($field)->inputOnly(), $method];
+        foreach (self::conflictingDeclarations() as $name => [$method, $declaration]) {
+            yield $name.' after inputOnly()' => [fn (Field $field): Field => $declaration($field->inputOnly()), $method];
+            yield $name.' before inputOnly()' => [fn (Field $field): Field => $declaration($field)->inputOnly(), $method];
         }
+    }
+
+    /** @param list<string> $declared */
+    #[Test]
+    #[DataProvider('refusalOrder')]
+    public function it_names_the_first_conflict_in_a_fixed_order(array $declared, string $method): void
+    {
+        $field = Text::make('delivery_address');
+
+        foreach (array_reverse($declared) as $name) {
+            $field = self::conflictingDeclarations()[$name][1]($field);
+        }
+
+        $this->expectExceptionObject(InvalidFieldException::inputOnlyWith('delivery_address', $method));
+
+        $field->inputOnly();
+    }
+
+    /** @return iterable<string, array{list<string>, string}> */
+    public static function refusalOrder(): iterable
+    {
+        $order = ['fillUsing', 'resolveUsing', 'filterUsing', 'sortUsing', 'searchable', 'filterable(true)', 'sortable(true)', 'selectable(true)'];
+
+        foreach (array_keys($order) as $first) {
+            $declared = array_slice($order, $first);
+
+            yield implode(', ', $declared) => [$declared, self::conflictingDeclarations()[$declared[0]][0]];
+        }
+    }
+
+    #[Test]
+    public function it_accepts_the_false_read_flags_on_an_input_only_field(): void
+    {
+        $after = Text::make('delivery_address')
+            ->inputOnly()
+            ->filterable(false)
+            ->sortable(false)
+            ->selectable(false);
+        $before = Text::make('delivery_address')
+            ->filterable(false)
+            ->sortable(false)
+            ->selectable(false)
+            ->inputOnly();
+
+        foreach ([$after, $before] as $field) {
+            $this->assertTrue($field->isInputOnly());
+            $this->assertFalse($field->isSelectable());
+            $this->assertFalse($field->isSortable());
+            $this->assertFalse($field->isFilterable());
+        }
+    }
+
+    /** @return array<string, array{string, Closure(Field): Field}> */
+    private static function conflictingDeclarations(): array
+    {
+        return [
+            'fillUsing' => ['fillUsing', fn (Field $field): Field => $field->fillUsing(self::fillNothing(...))],
+            'resolveUsing' => ['resolveUsing', fn (Field $field): Field => $field->resolveUsing(fn (Model $model): null => null)],
+            'filterUsing' => ['filterUsing', fn (Field $field): Field => $field->filterUsing(fn (Builder $query, string $operator, mixed $value): Builder => $query)],
+            'sortUsing' => ['sortUsing', fn (Field $field): Field => $field->sortUsing(fn (Builder $query, string $direction): Builder => $query)],
+            'searchable' => ['searchable', fn (Field $field): Field => $field->searchable()],
+            'filterable(true)' => ['filterable', fn (Field $field): Field => $field->filterable(true)],
+            'sortable(true)' => ['sortable', fn (Field $field): Field => $field->sortable(true)],
+            'selectable(true)' => ['selectable', fn (Field $field): Field => $field->selectable(true)],
+            'filterable([=])' => ['filterable', fn (Field $field): Field => $field->filterable(['='])],
+        ];
     }
 
     #[Test]

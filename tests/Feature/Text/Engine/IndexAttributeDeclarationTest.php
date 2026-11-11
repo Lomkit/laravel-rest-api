@@ -123,6 +123,14 @@ class IndexAttributeDeclarationTest extends ScoutEngineDeclarationTestCase
     }
 
     #[Test]
+    public function it_refuses_an_input_only_attribute_kept_for_the_perimeter(): void
+    {
+        $this->expectExceptionObject(InvalidTextSearchException::unfilterableAttribute(VoucherResource::class, 'note'));
+
+        $this->capabilities(ScoutEngine::make()->perimeter(fn (): null => null, [Text::make('note')->inputOnly()]));
+    }
+
+    #[Test]
     public function it_refuses_an_attribute_that_cannot_be_selected(): void
     {
         $this->expectExceptionObject(InvalidTextSearchException::unfilterableAttribute(UnselectableTeamVoucherResource::class, 'team'));

@@ -155,6 +155,9 @@ trait ConfiguresWriting
             $this->filtersThroughCallback() => 'filterUsing',
             $this->sortsThroughCallback() => 'sortUsing',
             $this->isSearchable() => 'searchable',
+            $this->filterable !== null && $this->filterable !== false => 'filterable',
+            $this->sortable === true => 'sortable',
+            $this->declaredSelectable => 'selectable',
             default => null,
         };
     }

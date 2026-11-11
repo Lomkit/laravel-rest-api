@@ -86,7 +86,7 @@ final readonly class IndexAttributes
                 throw InvalidTextSearchException::duplicateAttribute($target->resource, $field->name);
             }
 
-            $attributes[$field->name] = self::attribute($target, $profile, $restricted ? (clone $field)->selectable() : $field);
+            $attributes[$field->name] = self::attribute($target, $profile, $restricted && ! $field->isInputOnly() ? (clone $field)->selectable() : $field);
         }
 
         return $attributes;

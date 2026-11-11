@@ -12,6 +12,8 @@ trait ConfiguresReading
 {
     private bool $selectable = true;
 
+    private bool $declaredSelectable = false;
+
     private bool $virtual = false;
 
     /** @var list<string> */
@@ -27,7 +29,12 @@ trait ConfiguresReading
 
     public function selectable(bool $selectable = true): static
     {
+        if ($selectable && $this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'selectable');
+        }
+
         $this->selectable = $selectable;
+        $this->declaredSelectable = $selectable;
 
         return $this;
     }
@@ -53,6 +60,10 @@ trait ConfiguresReading
 
     public function sortable(bool $sortable = true): static
     {
+        if ($sortable && $this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'sortable');
+        }
+
         $this->sortable = $sortable;
 
         return $this;
