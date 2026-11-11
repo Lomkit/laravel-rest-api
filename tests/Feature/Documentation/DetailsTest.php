@@ -59,7 +59,7 @@ class DetailsTest extends DocumentationTestCase
     public static function names(): array
     {
         return [
-            'fields' => ['fields', 'name', ['id', 'title', 'summary', 'price', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'settings', 'secret', 'headline', 'updated_at']],
+            'fields' => ['fields', 'name', ['id', 'title', 'summary', 'price', 'seats', 'featured', 'starts_on', 'starts_at', 'status', 'level', 'settings', 'secret', 'press_note', 'headline', 'updated_at']],
             'relations' => ['relations', 'relation', ['stage', 'artists', 'comments', 'labels']],
             'scopes' => ['scopes', 'name', ['startingFrom']],
             'instructions' => ['instructions', 'uriKey', ['only-featured']],

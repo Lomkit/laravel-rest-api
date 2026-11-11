@@ -179,6 +179,7 @@ class PivotFieldsTest extends WeightedPivotTestCase
                     ->fillUsing(self::fillNothing(...)),
                 InvalidFieldException::virtualPivotField($owner, 'label'),
             ];
+            yield $name.', input only' => [$relation, Text::make('label')->inputOnly(), InvalidFieldException::inputOnlyPivotField($owner, 'label')];
             yield $name.', fill callback' => [$relation, Text::make('note')->fillUsing(self::fillNothing(...)), InvalidFieldException::filledPivotField($owner, 'note')];
         }
     }

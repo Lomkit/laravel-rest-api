@@ -60,6 +60,9 @@ class ShowResource extends Resource
             Text::make('secret')
                 ->writeOnly()
                 ->nullable(),
+            Text::make('press_note')
+                ->inputOnly()
+                ->nullable(),
             Text::make('headline')->virtual(),
             DateTime::make('updated_at')->readonly(),
         ];

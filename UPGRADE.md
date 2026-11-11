@@ -1,5 +1,11 @@
 # Upgrade Guide
 
+## 3.2 additions
+
+Version 3.2 adds features. Nothing breaks.
+
+- `inputOnly()` declares a field that `mutate` validates and hands to the hooks without writing it on the model: `Text::make('delivery_address')->inputOnly()->rules('max:200')`. The value is in `$entry->attributes` in `mutating()` and `mutated()`, and in the `Changes` of the `update` policy on `update`, `sync` and `toggle`; the draft of a `create` check does not hold it. `creatable()`, `updatable()` and `readonly()` apply. The field is never selected, sorted, filtered, searched, aggregated or returned. `/details` and the OpenAPI document show it as a write-only field. It replaces `virtual()->writeOnly()->fillUsing(fn () => null)`. With `fillUsing()`, `resolveUsing()`, `filterUsing()`, `sortUsing()` or `searchable()`, in any order, or in `pivotFields()`, it throws `Lomkit\Rest\Exceptions\InvalidFieldException`.
+
 ## 3.1 additions
 
 Version 3.1 adds features, and one check is stricter: `rest:check` now fails for each relation that accepts `detach` while its foreign key or morph type does not accept null. An application generated with 3.0 sees `rest:check` exit 1 until it adds `->withoutOperations(MutationOperation::Detach)` to these relations or makes the columns nullable.

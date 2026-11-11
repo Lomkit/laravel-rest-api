@@ -464,7 +464,8 @@
                                                     "status": "planned",
                                                     "level": 1,
                                                     "settings": {},
-                                                    "secret": "a"
+                                                    "secret": "a",
+                                                    "press_note": "a"
                                                 }
                                             }
                                         ]
@@ -8478,6 +8479,13 @@
                             "null"
                         ],
                         "description": "Rules: nullable, string"
+                    },
+                    "press_note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Rules: nullable, string"
                     }
                 },
                 "additionalProperties": false,
@@ -8770,6 +8778,7 @@
                                                 "level",
                                                 "settings",
                                                 "secret",
+                                                "press_note",
                                                 "headline",
                                                 "updated_at"
                                             ]
@@ -13671,6 +13680,13 @@
                         "description": "Rules: nullable, array, max_depth:64"
                     },
                     "secret": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Rules: nullable, string"
+                    },
+                    "press_note": {
                         "type": [
                             "string",
                             "null"

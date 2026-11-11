@@ -61,6 +61,20 @@ class AttributeWriterTest extends TestCase
     }
 
     #[Test]
+    public function it_writes_and_previews_nothing_for_an_input_only_field(): void
+    {
+        $written = new Post;
+        $previewed = new Post;
+        $writer = new AttributeWriter(FieldSet::of([Text::make('title'), Text::make('headline')->inputOnly()]));
+
+        $writer->write($written, MutationOperation::Update, ['title' => 'Annual report', 'headline' => 'Read this first']);
+        $writer->preview($previewed, MutationOperation::Create, ['title' => 'Annual report', 'headline' => 'Read this first']);
+
+        $this->assertSame(['title' => 'Annual report'], $written->getAttributes());
+        $this->assertSame(['title' => 'Annual report'], $previewed->getAttributes());
+    }
+
+    #[Test]
     public function it_applies_the_owned_keys_on_attach_and_detach(): void
     {
         $post = new Post;

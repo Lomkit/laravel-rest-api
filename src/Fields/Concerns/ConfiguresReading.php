@@ -61,6 +61,10 @@ trait ConfiguresReading
     /** @param Closure(Builder, 'asc'|'desc'): mixed $callback */
     public function sortUsing(Closure $callback): static
     {
+        if ($this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'sortUsing');
+        }
+
         $this->sortUsing = $callback;
 
         return $this;
@@ -73,7 +77,7 @@ trait ConfiguresReading
 
     public function isVirtual(): bool
     {
-        return $this->virtual;
+        return $this->virtual || $this->isInputOnly();
     }
 
     public function fromStorage(mixed $value): mixed
@@ -109,6 +113,10 @@ trait ConfiguresReading
     /** @param Closure(Model): mixed $callback */
     public function resolveUsing(Closure $callback): static
     {
+        if ($this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'resolveUsing');
+        }
+
         $this->resolveUsing = $callback;
 
         return $this;

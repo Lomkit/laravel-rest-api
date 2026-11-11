@@ -28,6 +28,10 @@ trait ConfiguresFiltering
     /** @param (Closure(Builder, string, mixed): mixed)|Filter $filter */
     public function filterUsing(Closure|Filter $filter): static
     {
+        if ($this->isInputOnly()) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'filterUsing');
+        }
+
         $this->filterUsing = $filter;
 
         return $this;

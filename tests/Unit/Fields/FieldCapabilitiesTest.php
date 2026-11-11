@@ -183,6 +183,7 @@ class FieldCapabilitiesTest extends TestCase
             'creatable' => [fn (Field $field): Field => $field->creatable(false)],
             'updatable' => [fn (Field $field): Field => $field->updatable(false)],
             'writeOnly' => [fn (Field $field): Field => $field->writeOnly()],
+            'inputOnly' => [fn (Field $field): Field => $field->inputOnly()],
             'fillUsing' => [fn (Field $field): Field => $field->fillUsing(self::fillNothing(...))],
             'filterable' => [fn (Field $field): Field => $field->filterable(['='])],
             'filterUsing' => [fn (Field $field): Field => $field->filterUsing(fn (Builder $query, string $operator, mixed $value) => $query)],

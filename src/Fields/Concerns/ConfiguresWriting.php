@@ -15,6 +15,8 @@ trait ConfiguresWriting
 
     private bool $writeOnly = false;
 
+    private bool $inputOnly = false;
+
     private bool $hasDefault = false;
 
     private mixed $default = null;
@@ -73,9 +75,31 @@ trait ConfiguresWriting
         return $this;
     }
 
+    public function inputOnly(bool $inputOnly = true): static
+    {
+        $conflict = $inputOnly ? $this->inputOnlyConflict() : null;
+
+        if ($conflict !== null) {
+            throw InvalidFieldException::inputOnlyWith($this->name, $conflict);
+        }
+
+        $this->inputOnly = $inputOnly;
+
+        return $this;
+    }
+
+    public function isInputOnly(): bool
+    {
+        return $this->inputOnly;
+    }
+
     /** @param Closure(Model, mixed): void $callback */
     public function fillUsing(Closure $callback): static
     {
+        if ($this->inputOnly) {
+            throw InvalidFieldException::inputOnlyWith($this->name, 'fillUsing');
+        }
+
         $this->fillUsing = $callback;
 
         return $this;
@@ -88,6 +112,10 @@ trait ConfiguresWriting
 
     public function fill(Model $model, mixed $value): void
     {
+        if ($this->inputOnly) {
+            return;
+        }
+
         if ($this->fillUsing === null) {
             $model->forceFill([$this->name => $this->toStorage($value)]);
 
@@ -104,7 +132,7 @@ trait ConfiguresWriting
 
     public function isWritableOn(WriteOperation $operation): bool
     {
-        if ($this->isVirtual() && $this->fillUsing === null) {
+        if ($this->isVirtual() && $this->fillUsing === null && ! $this->inputOnly) {
             return false;
         }
 
@@ -116,6 +144,18 @@ trait ConfiguresWriting
 
     public function isWriteOnly(): bool
     {
-        return $this->writeOnly;
+        return $this->writeOnly || $this->inputOnly;
+    }
+
+    private function inputOnlyConflict(): ?string
+    {
+        return match (true) {
+            $this->fillUsing !== null => 'fillUsing',
+            $this->resolvesThroughCallback() => 'resolveUsing',
+            $this->filtersThroughCallback() => 'filterUsing',
+            $this->sortsThroughCallback() => 'sortUsing',
+            $this->isSearchable() => 'searchable',
+            default => null,
+        };
     }
 }

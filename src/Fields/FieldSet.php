@@ -60,7 +60,7 @@ final readonly class FieldSet implements Countable, IteratorAggregate
 
         foreach ($set->fields as $field) {
             if ($field->isVirtual()) {
-                throw InvalidFieldException::virtualPivotField($owner, $field->name);
+                throw $field->isInputOnly() ? InvalidFieldException::inputOnlyPivotField($owner, $field->name) : InvalidFieldException::virtualPivotField($owner, $field->name);
             }
 
             if ($field->fillsThroughCallback()) {
