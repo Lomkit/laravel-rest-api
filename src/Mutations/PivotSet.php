@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Mutations;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
+use LogicException;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Support\Translation;
@@ -16,7 +17,7 @@ final class PivotSet
     /** @var array<string, list<array{array<array-key, Model>, array<array-key, Model>}>> */
     private array $moves = [];
 
-    /** @var array<int, list<array{list<Model>, list<Model>}>> */
+    /** @var array<int, list<PivotPlan>> */
     private array $changes = [];
 
     /** @var array<int, list<Model>> */
@@ -25,11 +26,8 @@ final class PivotSet
     /** @var array<int, array{Model, Model}> */
     private array $creations = [];
 
-    /**
-     * @param  list<Model>  $related
-     * @return array{list<Model>, list<Model>}
-     */
-    public function apply(Relation $relation, Model $parent, MutationNode $node, array $related): array
+    /** @param list<Model> $related */
+    public function apply(Relation $relation, Model $parent, MutationNode $node, array $related): PivotPlan
     {
         $slot = spl_object_id($parent).'.'.$relation->relation;
         $named = [];
@@ -42,37 +40,16 @@ final class PivotSet
             $this->drafts[spl_object_id($node)] = [...($this->drafts[spl_object_id($node)] ?? []), ...$related];
         }
 
-        if (! in_array($node->operation, [MutationOperation::Sync, MutationOperation::Toggle], true)) {
-            $this->moves[$slot][] = $node->operation === MutationOperation::Detach ? [[], $named] : [$named, []];
-
-            return $node->operation === MutationOperation::Detach ? [[], $related] : [$related, []];
-        }
-
-        $whole = $node->operation === MutationOperation::Sync && $node->withoutDetaching !== true;
-        $max = $relation
-            ->resource()
-            ->context()
-            ->limits()->totals->entries;
-        $current = $this->current($relation, $parent, $slot, $named, $whole ? $max : null);
-        $attached = array_diff_key($named, $current);
-        $detached = match (true) {
-            $node->operation === MutationOperation::Toggle => array_intersect_key($current, $named),
-            $whole => array_diff_key($current, $named),
-            default => [],
+        [$attached, $updated, $detached] = match ($node->operation) {
+            MutationOperation::Create, MutationOperation::Attach => [$named, [], []],
+            MutationOperation::Detach => [[], [], $named],
+            default => $this->compare($relation, $parent, $slot, $node, $named),
         };
-
-        if (count($detached) > $max) {
-            throw self::refusal($node, $max);
-        }
-
-        $rewritten = $node->operation === MutationOperation::Sync && ($node->pivot ?? []) !== []
-            ? array_intersect_key($named, $current)
-            : [];
         $this->moves[$slot][] = [$attached, $detached];
-        $changes = [array_values($attached + $rewritten), array_values($detached)];
-        $this->changes[spl_object_id($node)][] = $changes;
+        $plan = new PivotPlan(array_values($attached), array_values($updated), array_values($detached));
+        $this->changes[spl_object_id($node)][] = $plan;
 
-        return $changes;
+        return $plan;
     }
 
     public function created(MutationNode $node, Model $model): void
@@ -86,14 +63,42 @@ final class PivotSet
         }
     }
 
-    /** @return array{list<Model>, list<Model>} */
-    public function written(MutationNode $node): array
+    public function written(MutationNode $node): PivotPlan
     {
         $queue = $this->changes[spl_object_id($node)] ?? [];
-        [$attached, $detached] = array_shift($queue) ?? [[], []];
+        $plan = array_shift($queue) ?? throw new LogicException("The pivot rows of the entry [{$node->path}] are written before they are checked.");
         $this->changes[spl_object_id($node)] = $queue;
 
-        return [$this->saved($attached), $this->saved($detached)];
+        return new PivotPlan($this->saved($plan->attached), $this->saved($plan->updated), $this->saved($plan->detached));
+    }
+
+    /**
+     * @param  array<array-key, Model>  $named
+     * @return array{array<array-key, Model>, array<array-key, Model>, array<array-key, Model>}
+     */
+    private function compare(Relation $relation, Model $parent, string $slot, MutationNode $node, array $named): array
+    {
+        $whole = $node->operation === MutationOperation::Sync && $node->withoutDetaching !== true;
+        $max = $relation
+            ->resource()
+            ->context()
+            ->limits()->totals->entries;
+        $current = $this->current($relation, $parent, $slot, $named, $whole ? $max : null);
+        $detached = match (true) {
+            $node->operation === MutationOperation::Toggle => array_intersect_key($current, $named),
+            $whole => array_diff_key($current, $named),
+            default => [],
+        };
+
+        if (count($detached) > $max) {
+            throw self::refusal($node, $max);
+        }
+
+        $updated = $node->operation !== MutationOperation::Toggle && ($node->pivot ?? []) !== []
+            ? array_intersect_key($named, $current)
+            : [];
+
+        return [array_diff_key($named, $current), $updated, $detached];
     }
 
     /**

@@ -90,7 +90,7 @@ class BatchedChecksTest extends WriteChecksTestCase
             'hook mutating Book(Emma)',
             'sql update books set title = ?, updated_at = ? where id = ?',
             'saved Book(Emma II)',
-            'sql select * from book_shelf where book_shelf.book_id = ?',
+            'sql select shelf_id from book_shelf where book_shelf.book_id = ? and book_shelf.shelf_id in (?)',
             'sql insert into book_shelf (book_id, shelf_id) values (?, ?)',
             'hook mutated Book(Emma II)',
             'commit',

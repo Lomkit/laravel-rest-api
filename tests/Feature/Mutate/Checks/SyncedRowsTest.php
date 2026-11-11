@@ -28,7 +28,7 @@ class SyncedRowsTest extends WriteChecksTestCase
             'hook mutating Book(Emma)',
             'saved Book(Emma)',
             'sql delete from book_shelf where book_shelf.book_id = ? and book_shelf.shelf_id in (?)',
-            'sql select * from book_shelf where book_shelf.book_id = ?',
+            'sql select shelf_id from book_shelf where book_shelf.book_id = ? and book_shelf.shelf_id in (?)',
             'sql insert into book_shelf (book_id, shelf_id) values (?, ?)',
             'hook mutated Book(Emma)',
             'commit',

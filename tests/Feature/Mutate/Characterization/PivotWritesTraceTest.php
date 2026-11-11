@@ -47,6 +47,7 @@ class PivotWritesTraceTest extends WriteTraceTestCase
             'sql select * from books where books.id in (102)',
             'sql select * from shelves where shelves.id in (101)',
             'sql select shelf_id from book_shelf where book_shelf.book_id = ? and book_shelf.shelf_id in (?)',
+            'sql select shelves.*, book_shelf.book_id as pivot_book_id, book_shelf.shelf_id as pivot_shelf_id from shelves inner join book_shelf on shelves.id = book_shelf.shelf_id where book_shelf.book_id = ? and shelves.id in (?)',
             'policy update Book(Emma)',
             'policy create',
             'policy view Shelf(Classics)',
@@ -54,12 +55,11 @@ class PivotWritesTraceTest extends WriteTraceTestCase
             'saved Book(Emma)',
             'sql insert into shelves (name, updated_at, created_at) values (?, ?, ?)',
             'saved Shelf(Sci-fi)',
-            'sql select * from book_shelf where book_shelf.book_id = ?',
             'sql insert into book_shelf (book_id, shelf_id) values (?, ?)',
+            'sql select shelf_id from book_shelf where book_shelf.book_id = ? and book_shelf.shelf_id in (?)',
             'sql insert into book_shelf (book_id, shelf_id) values (?, ?)',
             'sql update shelves set name = ?, updated_at = ? where id = ?',
             'saved Shelf(Old classics)',
-            'sql select * from book_shelf where book_shelf.book_id = ?',
             'sql delete from book_shelf where book_shelf.book_id = ? and book_shelf.shelf_id in (?)',
         ]);
         $this->assertSame(['Book(Dune) [Shelf(Old classics)]', 'Book(Emma) [Shelf(Sci-fi)]'], self::rows('books'));
@@ -114,12 +114,11 @@ class PivotWritesTraceTest extends WriteTraceTestCase
             'policy attachTag Ticket(Printer jam) Tag(Hardware)',
             'policy detachTag Ticket(Printer jam) Tag(Network)',
             'saved Ticket(Printer jam)',
-            'sql select * from tag_ticket where tag_ticket.ticket_id = ?',
+            'sql select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             'sql insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?)',
-            'sql select tag_id from tag_ticket where tag_ticket.ticket_id = ?',
             'sql delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             'sql delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
-            'sql select * from tag_ticket where tag_ticket.ticket_id = ?',
+            'sql select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             'sql insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?)',
         ]);
         $this->assertSame(['Ticket(Password reset) open [] []', 'Ticket(Printer jam) open [Tag(Hardware) 3] []'], self::rows('tickets'));
@@ -161,6 +160,7 @@ class PivotWritesTraceTest extends WriteTraceTestCase
             'policy view Ticket(Printer jam)',
             'policy view Ticket(Password reset)',
             'saved Tag(Network)',
+            'sql select labelable_id from labelables where labelables.tag_id = ? and labelable_type = ? and labelables.labelable_id in (?, ?)',
             'sql insert into labelables (created_at, labelable_id, labelable_type, position, tag_id) values (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)',
             'sql delete from labelables where labelables.tag_id = ? and labelable_type = ? and labelables.labelable_id in (?)',
         ]);
@@ -209,6 +209,7 @@ class PivotWritesTraceTest extends WriteTraceTestCase
             'policy detachTag Ticket(Printer jam) Tag(Hardware)',
             'policy detachTag Ticket(Printer jam) Tag(Network)',
             'saved Ticket(Printer jam)',
+            'sql select tag_id from labelables where labelables.labelable_id = ? and labelable_type = ? and labelables.tag_id in (?, ?)',
             'sql insert into labelables (created_at, labelable_id, labelable_type, tag_id) values (?, ?, ?, ?), (?, ?, ?, ?)',
             'sql delete from labelables where labelables.labelable_id = ? and labelable_type = ? and labelables.tag_id in (?)',
             'sql delete from labelables where labelables.labelable_id = ? and labelable_type = ? and labelables.tag_id in (?)',

@@ -37,8 +37,8 @@ class AttachedRowReadsTest extends WriteTraceTestCase
             'select * from tickets where tickets.id in (101)',
             'select * from tags where tags.id in (101, 102) and tags.deleted_at is null',
             self::ATTACHED.' and tags.id in (?, ?) and tags.deleted_at is null',
-            'select tag_id from tag_ticket where tag_ticket.ticket_id = ?',
             'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
+            'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?)',
         ]);
         $this->assertSame([102, 104, 105], self::attached());
@@ -51,9 +51,8 @@ class AttachedRowReadsTest extends WriteTraceTestCase
             'select * from tickets where tickets.id in (101)',
             'select * from tags where tags.id in (102, 103) and tags.deleted_at is null',
             self::ATTACHED.' and tags.id in (?, ?) and tags.deleted_at is null',
-            'select * from tag_ticket where tag_ticket.ticket_id = ?',
-            'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?)',
-            'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?)',
+            'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
+            'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?), (?, ?, ?)',
         ]);
         $this->assertSame([101, 102, 103, 104, 105], self::attached());
     }
@@ -93,7 +92,7 @@ class AttachedRowReadsTest extends WriteTraceTestCase
             'select * from tags where tags.id in (102) and tags.deleted_at is null',
             self::ATTACHED.' and tags.deleted_at is null limit 5',
             'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?, ?)',
-            'select * from tag_ticket where tag_ticket.ticket_id = ?',
+            'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?)',
         ]);
         $this->assertSame([102, 104], self::attached());
@@ -110,10 +109,9 @@ class AttachedRowReadsTest extends WriteTraceTestCase
             'select * from tags where tags.id in (102) and tags.deleted_at is null',
             self::ATTACHED.' and tags.id in (?) and tags.deleted_at is null',
             self::ATTACHED.' and tags.deleted_at is null limit 1002',
-            'select tag_id from tag_ticket where tag_ticket.ticket_id = ?',
+            'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?)',
             'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
-            'select * from tag_ticket where tag_ticket.ticket_id = ?',
         ], [
             'policy viewAny',
             'policy update Ticket(Printer jam)',
@@ -136,9 +134,9 @@ class AttachedRowReadsTest extends WriteTraceTestCase
             'select * from tags where tags.id in (102, 101) and tags.deleted_at is null',
             self::ATTACHED.' and tags.deleted_at is null limit 1002',
             'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
-            'select * from tag_ticket where tag_ticket.ticket_id = ?',
+            'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?)',
-            'select tag_id from tag_ticket where tag_ticket.ticket_id = ?',
+            'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
             'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?)',
         ], [
             'policy viewAny',
