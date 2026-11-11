@@ -7,7 +7,6 @@ use DateTimeZone;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Metrics\Grouping\PeriodGrammar;
@@ -49,7 +48,7 @@ final readonly class Periods
 
     public function label(): PeriodLabel
     {
-        $shift = $this->date->field instanceof DateTime ? ZoneShift::between($this->from, $this->to, self::storedZone(), $this->model) : null;
+        $shift = $this->date->field instanceof DateTime ? ZoneShift::between($this->from, $this->to, DateTime::storedZone(), $this->model) : null;
 
         return new PeriodLabel(PeriodGrammar::for($this->model->getConnection()->getDriverName(), $this->weekStartsOn), $this->unit, $this->date->column, $shift);
     }
@@ -85,14 +84,9 @@ final readonly class Periods
 
     private function stored(CarbonImmutable $date): string
     {
-        $date = $this->date->field instanceof DateTime ? $date->setTimezone(self::storedZone()) : CarbonImmutable::parse($date->toDateString(), self::storedZone());
+        $date = $this->date->field instanceof DateTime ? $date->setTimezone(DateTime::storedZone()) : CarbonImmutable::parse($date->toDateString(), DateTime::storedZone());
 
         return (string) $this->model->fromDateTime($date);
-    }
-
-    private static function storedZone(): DateTimeZone
-    {
-        return new DateTimeZone(Config::string('app.timezone'));
     }
 
     private static function number(mixed $value): int|float|null

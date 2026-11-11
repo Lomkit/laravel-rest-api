@@ -14,11 +14,11 @@ use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Fixtures\Publishing\PostStatus;
+use Lomkit\Rest\Tests\PackageTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
-class CastValuesTest extends TestCase
+class CastValuesTest extends PackageTestCase
 {
     #[Test]
     #[DataProvider('inputs')]

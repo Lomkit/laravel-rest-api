@@ -9,6 +9,7 @@ Version 3.2 adds features; a few many-to-many write details change, listed below
 - An `update` entry under a many-to-many relation reads whether the rows it names are attached, through the `perimeterQuery()` of the related resource, as `toggle` does.
 - A `toggle` leaves attached a row that the pivot table links but that the conditions of the Eloquent relation on the related table hide (`->where('tags.active', true)`), as its checks expect; it used to detach it.
 - A many-to-many `sync` or `toggle` writes its deletes, then its inserts, then its pivot updates. A `toggle` that both detaches and attaches, and a `sync` that both attaches rows and updates the pivot of others, touch the models of `$touches` twice instead of once.
+- 3.2.1: a `DateTime` value with an offset (`2026-10-12T08:00:00+02:00`) is now converted to `config('app.timezone')` in filters, in `mutate` attributes and pivot fields, and in the inputs of scopes, instructions and actions; before, the offset was dropped. An application that relied on the wall time being stored as sent now stores other values: send the time in the application timezone, or override `normalize()` in a `DateTime` subclass.
 
 ## 3.1 additions
 
@@ -1881,7 +1882,7 @@ Values:
   - A string value, or a string in a list, has at most `limits.lengths.values` characters, see [Validation engine](#validation-engine).
   - `is null` and `is not null` refuse a value.
 - `=` and `!=` with `null` give a 422 under `search.filters.<i>.value`. Before, `=` with `null` matched the rows without a value, and `!=` with `null` the rows with one. Use `is null` or `is not null` on a nullable field instead: `{"field": "summary", "operator": "is null"}`.
-- A `Date` value is compared as the start of its day, and a `Date` or `DateTime` value is written in the date format of the model before the comparison.
+- A `Date` value is compared as the start of its day, and a `Date` or `DateTime` value is written in the date format of the model before the comparison. A `DateTime` value with an offset is first converted to `config('app.timezone')`.
 
 Relations:
 
