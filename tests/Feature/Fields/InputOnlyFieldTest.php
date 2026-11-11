@@ -20,6 +20,8 @@ class InputOnlyFieldTest extends PackageTestCase
 {
     private const array ORDER = ['team_id' => 1, 'reference' => 'A-1002', 'price' => 12.5, 'quantity' => 1, 'gift' => true, 'placed_at' => '2026-11-10 09:00:00'];
 
+    private int $orderKey;
+
     #[\Override]
     protected function fixtures(): array
     {
@@ -31,23 +33,22 @@ class InputOnlyFieldTest extends PackageTestCase
     {
         parent::setUp();
 
-        $this->travelTo('2026-11-11 10:00:00');
         AddressedOrderResource::$updatable = true;
         AddressedOrderResource::$hooks = [];
         AddressedOrderPolicy::$checks = [];
         Gate::policy(AddressedOrder::class, AddressedOrderPolicy::class);
         Rest::resource('addressed-orders', AddressedOrderController::class)->register();
-        DB::table('orders')->insert([
-            'id' => 1,
+        $this->travelTo('2026-11-01 09:00:00');
+        $order = AddressedOrder::query()->create([
             'team_id' => 1,
             'reference' => 'A-1001',
             'price' => '20.00',
             'quantity' => 2,
             'gift' => false,
             'placed_at' => '2026-11-01 09:00:00',
-            'created_at' => '2026-11-01 09:00:00',
-            'updated_at' => '2026-11-01 09:00:00',
         ]);
+        $this->orderKey = (int) $order->getKey();
+        $this->travelTo('2026-11-11 10:00:00');
     }
 
     #[Test]
@@ -55,10 +56,10 @@ class InputOnlyFieldTest extends PackageTestCase
     {
         $response = $this->postJson('/addressed-orders/mutate', ['mutate' => [
             ['operation' => 'create', 'attributes' => [...self::ORDER, 'delivery_address' => '12 Quay Street']],
-            ['operation' => 'update', 'key' => 1, 'attributes' => ['quantity' => 3, 'delivery_address' => '4 Mill Lane']],
+            ['operation' => 'update', 'key' => $this->orderKey, 'attributes' => ['quantity' => 3, 'delivery_address' => '4 Mill Lane']],
         ]]);
 
-        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => 2], ['operation' => 'update', 'key' => 1]]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'create', 'key' => $this->orderKey + 1], ['operation' => 'update', 'key' => $this->orderKey]]]);
         $this->assertSame([
             'mutating create {"team_id":1,"reference":"A-1002","price":12.5,"quantity":1,"gift":true,"placed_at":"2026-11-10 09:00:00","delivery_address":"12 Quay Street"}',
             'mutated create {"team_id":1,"reference":"A-1002","price":12.5,"quantity":1,"gift":true,"placed_at":"2026-11-10 09:00:00","delivery_address":"12 Quay Street"}',
@@ -66,8 +67,8 @@ class InputOnlyFieldTest extends PackageTestCase
             'mutated update {"quantity":3,"delivery_address":"4 Mill Lane"}',
         ], AddressedOrderResource::$hooks);
         $this->assertSame([
-            ['id' => 1, 'reference' => 'A-1001', 'quantity' => 3, 'gift' => 0, 'updated_at' => '2026-11-11 10:00:00'],
-            ['id' => 2, 'reference' => 'A-1002', 'quantity' => 1, 'gift' => 1, 'updated_at' => '2026-11-11 10:00:00'],
+            ['reference' => 'A-1001', 'quantity' => 3, 'gift' => false, 'updated_at' => '2026-11-11 10:00:00'],
+            ['reference' => 'A-1002', 'quantity' => 1, 'gift' => true, 'updated_at' => '2026-11-11 10:00:00'],
         ], self::orders());
     }
 
@@ -90,7 +91,7 @@ class InputOnlyFieldTest extends PackageTestCase
         AddressedOrderResource::$updatable = false;
 
         $response = $this->postJson('/addressed-orders/mutate', ['mutate' => [
-            ['operation' => 'update', 'key' => 1, 'attributes' => ['delivery_address' => '4 Mill Lane']],
+            ['operation' => 'update', 'key' => $this->orderKey, 'attributes' => ['delivery_address' => '4 Mill Lane']],
         ]]);
 
         $response->assertUnprocessable()->assertJsonPath('errors', [
@@ -104,10 +105,10 @@ class InputOnlyFieldTest extends PackageTestCase
         DB::enableQueryLog();
 
         $response = $this->postJson('/addressed-orders/mutate', ['mutate' => [
-            ['operation' => 'update', 'key' => 1, 'attributes' => ['delivery_address' => '4 Mill Lane']],
+            ['operation' => 'update', 'key' => $this->orderKey, 'attributes' => ['delivery_address' => '4 Mill Lane']],
         ]]);
 
-        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => 1]]]);
+        $response->assertOk()->assertExactJson(['operations' => [['operation' => 'update', 'key' => $this->orderKey]]]);
         $this->assertSame([], array_values(array_filter(
             array_column(DB::getQueryLog(), 'query'),
             fn (string $query): bool => str_starts_with($query, 'update') || str_starts_with($query, 'insert'),
@@ -116,7 +117,7 @@ class InputOnlyFieldTest extends PackageTestCase
             'mutating update {"delivery_address":"4 Mill Lane"}',
             'mutated update {"delivery_address":"4 Mill Lane"}',
         ], AddressedOrderResource::$hooks);
-        $this->assertSame([['id' => 1, 'reference' => 'A-1001', 'quantity' => 2, 'gift' => 0, 'updated_at' => '2026-11-01 09:00:00']], self::orders());
+        $this->assertSame([['reference' => 'A-1001', 'quantity' => 2, 'gift' => false, 'updated_at' => '2026-11-01 09:00:00']], self::orders());
     }
 
     #[Test]
@@ -124,7 +125,7 @@ class InputOnlyFieldTest extends PackageTestCase
     {
         $response = $this->postJson('/addressed-orders/mutate', ['mutate' => [
             ['operation' => 'create', 'attributes' => [...self::ORDER, 'delivery_address' => '12 Quay Street']],
-            ['operation' => 'update', 'key' => 1, 'attributes' => ['quantity' => 3, 'delivery_address' => '4 Mill Lane']],
+            ['operation' => 'update', 'key' => $this->orderKey, 'attributes' => ['quantity' => 3, 'delivery_address' => '4 Mill Lane']],
         ]]);
 
         $response->assertOk();
@@ -168,7 +169,7 @@ class InputOnlyFieldTest extends PackageTestCase
             'aggregate' => ['/addressed-orders/search', ['search' => ['aggregates' => [['relation' => 'teamOrders', 'type' => 'min', ...$field]]]], 'search.aggregates.0.field'],
             'mutate response' => [
                 '/addressed-orders/mutate',
-                ['mutate' => [['operation' => 'update', 'key' => 1, 'attributes' => ['quantity' => 3]]], 'response' => ['selects' => [$field]]],
+                ['mutate' => [['operation' => 'create', 'attributes' => self::ORDER]], 'response' => ['selects' => [$field]]],
                 'response.selects.0.field',
             ],
         ];
@@ -189,10 +190,15 @@ class InputOnlyFieldTest extends PackageTestCase
     /** @return list<array<string, mixed>> */
     private static function orders(): array
     {
-        return DB::table('orders')
+        return AddressedOrder::query()
             ->orderBy('id')
-            ->get(['id', 'reference', 'quantity', 'gift', 'updated_at'])
-            ->map(fn (object $row): array => (array) $row)
+            ->get()
+            ->map(fn (AddressedOrder $order): array => [
+                'reference' => $order->getAttribute('reference'),
+                'quantity' => (int) $order->getAttribute('quantity'),
+                'gift' => $order->getAttribute('gift'),
+                'updated_at' => $order->getAttribute('updated_at')?->toDateTimeString(),
+            ])
             ->all();
     }
 }
