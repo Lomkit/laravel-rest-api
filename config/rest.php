@@ -164,7 +164,8 @@ return [
     | "entries" is the most entries of all the lists above and of the
     | "gates" lists in one request, except "resources". In a mutation,
     | a relation list and the key lists of its entries count once for
-    | each row of the parent entry, nested levels multiplying.
+    | each row of the parent entry, nested levels multiplying. It also
+    | bounds the attached rows that one "sync" detaches.
     | "relations" is the most relation filters in one search, at least
     | 1: each filter on a dotted field path and each "relation" group,
     | at every level and in its includes and aggregates. Each one runs a

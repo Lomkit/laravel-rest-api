@@ -19,7 +19,7 @@ class SyncedRowsTest extends WriteChecksTestCase
             'sql select * from books where books.id in (102)',
             'sql select * from shelves where (shelves.name != ?) and shelves.id in (101, 102)',
             'begin',
-            'sql select shelves.*, book_shelf.book_id as pivot_book_id, book_shelf.shelf_id as pivot_shelf_id from shelves inner join book_shelf on shelves.id = book_shelf.shelf_id where book_shelf.book_id = ? and (shelves.name != ?)',
+            'sql select shelves.*, book_shelf.book_id as pivot_book_id, book_shelf.shelf_id as pivot_shelf_id from shelves inner join book_shelf on shelves.id = book_shelf.shelf_id where book_shelf.book_id = ? and (shelves.name != ?) limit 1003',
             'policy update Book(Emma) []',
             'policy view Shelf(Classics)',
             'policy view Shelf(Poetry)',

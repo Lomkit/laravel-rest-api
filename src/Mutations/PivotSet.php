@@ -3,16 +3,15 @@
 namespace Lomkit\Rest\Mutations;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use LogicException;
+use Illuminate\Validation\ValidationException;
 use Lomkit\Rest\Fields\MutationOperation;
-use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Support\Translation;
 
 final class PivotSet
 {
-    /** @var array<string, array<array-key, Model>> */
-    private array $sets = [];
+    /** @var array<string, AttachedRows> */
+    private array $stored = [];
 
     /** @var array<string, list<array{array<array-key, Model>, array<array-key, Model>}>> */
     private array $moves = [];
@@ -36,7 +35,7 @@ final class PivotSet
         $named = [];
 
         foreach ($related as $row) {
-            $named[self::key($row)] = $row;
+            $named[AttachedRows::key($row)] = $row;
         }
 
         if ($node->operation === MutationOperation::Create) {
@@ -49,13 +48,23 @@ final class PivotSet
             return $node->operation === MutationOperation::Detach ? [[], $related] : [$related, []];
         }
 
-        $current = $this->current($relation, $parent, $slot);
+        $whole = $node->operation === MutationOperation::Sync && $node->withoutDetaching !== true;
+        $max = $relation
+            ->resource()
+            ->context()
+            ->limits()->totals->entries;
+        $current = $this->current($relation, $parent, $slot, $named, $whole ? $max : null);
         $attached = array_diff_key($named, $current);
         $detached = match (true) {
             $node->operation === MutationOperation::Toggle => array_intersect_key($current, $named),
-            $node->withoutDetaching === true => [],
-            default => array_diff_key($current, $named),
+            $whole => array_diff_key($current, $named),
+            default => [],
         };
+
+        if (count($detached) > $max) {
+            throw self::refusal($node, $max);
+        }
+
         $rewritten = $node->operation === MutationOperation::Sync && ($node->pivot ?? []) !== []
             ? array_intersect_key($named, $current)
             : [];
@@ -96,52 +105,29 @@ final class PivotSet
         return array_map(fn (Model $row): Model => ($this->creations[spl_object_id($row)] ?? [$row, $row])[1], $rows);
     }
 
-    /** @return array<array-key, Model> */
-    private function current(Relation $relation, Model $parent, string $slot): array
+    /**
+     * @param  array<array-key, Model>  $named
+     * @return array<array-key, Model>
+     */
+    private function current(Relation $relation, Model $parent, string $slot, array $named, ?int $max): array
     {
-        $current = $this->sets[$slot] ?? $this->attached($relation, $parent);
+        $stored = $this->stored[$slot] ??= new AttachedRows($relation, $parent);
+        $moves = $this->moves[$slot] ?? [];
+        $current = $max === null
+            ? $stored->among($named)
+            : $stored->all($max + count($named) + array_sum(array_map(fn (array $move): int => count($move[1]), $moves)) + 1);
 
-        foreach ($this->moves[$slot] ?? [] as [$attached, $detached]) {
+        foreach ($moves as [$attached, $detached]) {
             $current = array_diff_key($current + $attached, $detached);
         }
 
-        $this->moves[$slot] = [];
-
-        return $this->sets[$slot] = $current;
+        return $current;
     }
 
-    /** @return array<array-key, Model> */
-    private function attached(Relation $relation, Model $parent): array
+    private static function refusal(MutationNode $node, int $max): ValidationException
     {
-        if (! $parent->exists) {
-            return [];
-        }
+        $key = $node->path.'.key';
 
-        $pivots = $parent->{$relation->relation}();
-
-        if (! $pivots instanceof BelongsToMany) {
-            throw new LogicException("The relation [{$relation->relation}] is not a BelongsToMany, MorphToMany or MorphedByMany relation.");
-        }
-
-        (new PerimeterClause($relation->resource()))->apply($pivots);
-
-        $rows = [];
-
-        foreach ($pivots->get() as $row) {
-            $rows[self::key($row)] = $row;
-        }
-
-        return $rows;
-    }
-
-    private static function key(Model $row): string
-    {
-        if (! $row->exists) {
-            return 'new#'.spl_object_id($row);
-        }
-
-        $key = $row->getKey();
-
-        return is_int($key) || is_string($key) ? (string) $key : throw new LogicException($row::class.' has a key that cannot name a pivot row.');
+        return ValidationException::withMessages([$key => [Translation::line('rest::validation.sync_detached_total', ['attribute' => $key, 'max' => (string) $max])]]);
     }
 }
