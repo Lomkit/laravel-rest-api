@@ -5,8 +5,10 @@ namespace Lomkit\Rest\Mutations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use LogicException;
+use Lomkit\Rest\Contracts\PivotPersister;
 use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Fields\MutationOperation;
+use Lomkit\Rest\Relations\BelongsToMany as PivotRelationDefinition;
 
 final readonly class PivotWrites extends RelationWrites
 {
@@ -29,40 +31,27 @@ final readonly class PivotWrites extends RelationWrites
             $mutator->checks->pivots->created($node, $related[0]);
         }
 
+        $plan = $mutator->checks->pivots->written($node);
+
+        foreach (self::links($node, $related, $plan) as [$model, $detach]) {
+            $mutator->checks->linkNow($this->relation, $node, $parent, $model, $detach);
+        }
+
+        $persister = $this->persister();
         $pivot = $this->pivot($node);
-        $ids = [];
+        $name = $this->relation->relation;
 
-        foreach ($related as $model) {
-            $ids[self::key($model)] = $pivot;
+        if ($plan->detached !== []) {
+            $persister->detach(new PivotWrite($parent, $name, $plan->detached, [], $node));
         }
 
-        [$attached, $detached] = match ($node->operation) {
-            MutationOperation::Sync, MutationOperation::Toggle => $mutator->checks->pivots->written($node),
-            MutationOperation::Detach => [[], $related],
-            default => [$related, []],
-        };
-
-        foreach ($attached as $model) {
-            $mutator->checks->linkNow($this->relation, $node, $parent, $model, false);
+        if ($plan->attached !== []) {
+            $persister->attach(new PivotWrite($parent, $name, $plan->attached, $pivot, $node));
         }
 
-        foreach ($detached as $model) {
-            $mutator->checks->linkNow($this->relation, $node, $parent, $model, true);
+        if ($plan->updated !== [] && $pivot !== []) {
+            $persister->updatePivot(new PivotWrite($parent, $name, $plan->updated, $pivot, $node));
         }
-
-        $pivots = $this->pivots($parent);
-
-        if ($node->operation === MutationOperation::Sync && $detached !== []) {
-            $pivots->detach($detached);
-        }
-
-        match ($node->operation) {
-            MutationOperation::Create, MutationOperation::Update, MutationOperation::Sync => $pivots->syncWithoutDetaching($ids),
-            MutationOperation::Attach => $pivots->attach($ids),
-            MutationOperation::Detach => $pivots->detach($related),
-            MutationOperation::Toggle => $pivots->toggle($ids),
-            MutationOperation::Delete => throw new LogicException("The relation [{$this->relation->relation}] does not delete its related rows."),
-        };
 
         $resource
             ->context()
@@ -75,14 +64,10 @@ final readonly class PivotWrites extends RelationWrites
     {
         foreach ($this->nodes() as $node) {
             $related = $checks->walk($this->relation->resource(), $node);
-            [$attached, $detached] = $checks->pivots->apply($this->relation, $parent, $node, $related);
+            $plan = $checks->pivots->apply($this->relation, $parent, $node, $related);
 
-            foreach ($attached as $model) {
-                $checks->link($this->relation, $node, $parent, $model, false);
-            }
-
-            foreach ($detached as $model) {
-                $checks->link($this->relation, $node, $parent, $model, true);
+            foreach (self::links($node, $related, $plan) as [$model, $detach]) {
+                $checks->link($this->relation, $node, $parent, $model, $detach);
             }
         }
     }
@@ -96,14 +81,28 @@ final readonly class PivotWrites extends RelationWrites
         }
     }
 
-    private static function key(Model $model): int|string
+    /**
+     * @param  list<Model>  $related
+     * @return list<array{Model, bool}>
+     */
+    private static function links(MutationNode $node, array $related, PivotPlan $plan): array
     {
-        $key = $model->getKey();
+        $attached = $node->operation === MutationOperation::Update ? $related : [...$plan->attached, ...$plan->updated];
 
-        return is_int($key) || is_string($key) ? $key : throw new LogicException($model::class.' has a key that cannot name a pivot row.');
+        return [
+            ...array_map(fn (Model $model): array => [$model, false], $attached),
+            ...array_map(fn (Model $model): array => [$model, true], $plan->detached),
+        ];
     }
 
-    /** @return array<array-key, mixed> */
+    private function persister(): PivotPersister
+    {
+        $persister = $this->relation instanceof PivotRelationDefinition ? $this->relation->getPivotPersister() : new EloquentPivots;
+
+        return $persister instanceof EloquentPivots ? $persister : new VerifiedPersister($persister, $this->relation);
+    }
+
+    /** @return array<string, mixed> */
     private function pivot(MutationNode $node): array
     {
         $write = $node->operation->pivotWriteOperation();
@@ -115,8 +114,16 @@ final readonly class PivotWrites extends RelationWrites
         $writable = $this->relation
             ->getPivotFields()
             ->writableOn($write);
+        $names = array_flip($writable->names());
+        $values = [];
 
-        return $writable->toStorage(array_intersect_key($node->pivot, array_flip($writable->names())));
+        foreach ($node->pivot as $name => $value) {
+            if (is_string($name) && isset($names[$name])) {
+                $values[$name] = $value;
+            }
+        }
+
+        return $writable->toStorage($values);
     }
 
     /** @return BelongsToMany<Model, Model> */

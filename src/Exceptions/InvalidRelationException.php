@@ -35,4 +35,9 @@ final class InvalidRelationException extends LogicException
     {
         return new self("The {$type} relation [{$relation}] cannot keep toggle without detach: a toggle detaches the attached rows that it names. Keep detach too, or leave toggle out.");
     }
+
+    public static function notAPivotPersister(string $type, string $relation, string $persister): self
+    {
+        return new self("The {$type} relation [{$relation}] cannot be persisted by [{$persister}]: persistedBy() takes a class that implements Lomkit\\Rest\\Contracts\\PivotPersister.");
+    }
 }

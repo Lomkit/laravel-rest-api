@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Feature\Mutate\Characterization;
 use Illuminate\Support\Facades\DB;
 use Lomkit\Rest\Tests\Feature\Mutate\Characterization\Stubs\TracingPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
 use PHPUnit\Framework\Attributes\Test;
 
 class PivotQueryCountTest extends WriteTraceTestCase
@@ -17,9 +18,7 @@ class PivotQueryCountTest extends WriteTraceTestCase
 
     private const string ATTACH = 'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?)';
 
-    private const string SYNC = 'select * from tag_ticket where tag_ticket.ticket_id = ?';
-
-    private const string TOGGLE = 'select tag_id from tag_ticket where tag_ticket.ticket_id = ?';
+    private const string LINKED = 'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)';
 
     private const string ATTACHED = 'select tags.*, tag_ticket.ticket_id as pivot_ticket_id, tag_ticket.tag_id as pivot_tag_id, tag_ticket.position as pivot_position, tag_ticket.weight as pivot_weight, tag_ticket.added_by as pivot_added_by, tag_ticket.note as pivot_note, tag_ticket.created_at as pivot_created_at from tags inner join tag_ticket on tags.id = tag_ticket.tag_id where tag_ticket.ticket_id = ? and tags.deleted_at is null';
 
@@ -47,11 +46,12 @@ class PivotQueryCountTest extends WriteTraceTestCase
             self::ATTACHED.' limit 1005',
             self::RENAME,
             'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
+            self::LINKED,
             'insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?)',
-            self::SYNC,
+            self::LINKED,
             self::ATTACH,
-            self::TOGGLE,
             self::DETACH,
+            self::LINKED,
             self::ATTACH,
         ]);
     }
@@ -75,13 +75,12 @@ class PivotQueryCountTest extends WriteTraceTestCase
             self::RENAME,
             self::DETACH,
             self::DETACH,
+            self::LINKED,
             'insert into tag_ticket (created_at, position, tag_id, ticket_id) values (?, ?, ?, ?)',
-            self::SYNC,
-            self::SYNC,
+            self::LINKED,
             self::ATTACH,
-            self::TOGGLE,
+            self::LINKED,
             self::ATTACH,
-            self::TOGGLE,
             self::DETACH,
         ]);
     }
@@ -103,11 +102,11 @@ class PivotQueryCountTest extends WriteTraceTestCase
             'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
             self::ATTACHED.' limit 1004',
             self::RENAME,
+            'select tag_id from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
             'insert into tag_ticket (created_at, tag_id, ticket_id) values (?, ?, ?), (?, ?, ?)',
             self::DETACH,
-            self::SYNC,
+            self::LINKED,
             self::ATTACH,
-            self::TOGGLE,
             self::DETACH,
         ]);
     }
@@ -125,13 +124,55 @@ class PivotQueryCountTest extends WriteTraceTestCase
             'select * from tags where tags.id in (102) and tags.deleted_at is null',
             self::ATTACHED.' limit 1002',
             'delete from tag_ticket where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?, ?)',
-            self::SYNC,
+            self::LINKED,
             self::ATTACH,
         ]);
         $this->assertSame(
             ['policy viewAny', 'policy update Ticket(Printer jam)', 'policy view Tag(Network)', 'policy attachTag Ticket(Printer jam) Tag(Network)', 'policy detachTag Ticket(Printer jam) Tag(Hardware)', 'policy detachTag Ticket(Printer jam) Tag(Urgent)'],
             array_values(array_filter(TracingPolicy::$trace, fn (string $line): bool => str_starts_with($line, 'policy '))),
         );
+    }
+
+    #[Test]
+    public function it_reads_only_the_named_rows_for_the_update_entries_of_a_parent_row(): void
+    {
+        $this->assertQueries('/api/tickets/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => 101, 'relations' => ['tags' => [
+                ['operation' => 'update', 'key' => 101, 'pivot' => ['position' => 5]],
+                ['operation' => 'update', 'key' => 102],
+            ]]],
+            ['operation' => 'create', 'attributes' => ['title' => 'Fan noise', 'status' => 'open'], 'relations' => [
+                'team' => ['operation' => 'attach', 'key' => 101],
+                'tags' => [['operation' => 'update', 'key' => 103]],
+            ]],
+        ]], [
+            self::TICKET,
+            'select * from tags where tags.id in (101, 102, 103) and tags.deleted_at is null',
+            'select * from teams where teams.id in (101)',
+            str_replace(' where tag_ticket.ticket_id = ? and ', ' where tag_ticket.ticket_id = ? and tags.id in (?) and ', self::ATTACHED),
+            str_replace(' where tag_ticket.ticket_id = ? and ', ' where tag_ticket.ticket_id = ? and tags.id in (?) and ', self::ATTACHED),
+            'update tag_ticket set position = ? where tag_ticket.ticket_id = ? and tag_ticket.tag_id in (?)',
+            self::LINKED,
+            self::ATTACH,
+            'insert into tickets (team_id, title, status, updated_at, created_at) values (?, ?, ?, ?, ?)',
+            self::ATTACH,
+        ]);
+        $created = Ticket::query()
+            ->where('title', 'Fan noise')
+            ->value('id');
+        $this->assertSame([[101, 5], [102, null]], self::positions(101));
+        $this->assertSame([[103, null]], self::positions($created));
+    }
+
+    /** @return list<array{int, ?int}> */
+    private static function positions(mixed $ticket): array
+    {
+        return DB::table('tag_ticket')
+            ->where('ticket_id', $ticket)
+            ->orderBy('tag_id')
+            ->get()
+            ->map(fn (object $row): array => [(int) $row->tag_id, $row->position === null ? null : (int) $row->position])
+            ->all();
     }
 
     /**
