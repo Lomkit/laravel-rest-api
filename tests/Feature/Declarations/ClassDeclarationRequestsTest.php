@@ -24,6 +24,7 @@ use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketController;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketResource;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketsByStatus;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\GuardingAction;
+use Lomkit\Rest\Tests\Feature\Declarations\Stubs\GuardingMetric;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\NinthDayMetric;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\QueuedCloseTickets;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\RenamingAction;
@@ -165,15 +166,12 @@ class ClassDeclarationRequestsTest extends DeclarationTestCase
 
     #[Test]
     #[DataProvider('changedClasses')]
-    public function it_refuses_a_class_entry_that_changes_its_route_in_the_check(bool $metric, string $class): void
+    public function it_reports_a_class_entry_that_changes_its_route_in_the_check(bool $metric, string $class): void
     {
         $this->declare($metric, $class);
         Rest::resource('desk-tickets', DeskTicketController::class)->register();
 
-        $this->assertThrows(
-            fn () => Artisan::call('rest:check', ['controllers' => [DeskTicketController::class], '--json' => true], new BufferedOutput),
-            fn (Throwable $exception): bool => $exception->getMessage() === self::changedRoute($metric, $class),
-        );
+        $this->assertSame([DeskTicketResource::class.': '.self::changedRoute($metric, $class)], $this->checkProblems());
     }
 
     /** @return array<string, array{bool, class-string, string}> */
@@ -183,6 +181,7 @@ class ClassDeclarationRequestsTest extends DeclarationTestCase
             'an action that renames itself' => [false, RenamingAction::class, '/desk-tickets/actions/renaming'],
             'an action that adds middleware' => [false, GuardingAction::class, '/desk-tickets/actions/guarding'],
             'a metric that drops middleware' => [true, UnguardingMetric::class, '/desk-tickets/metrics/unguarding'],
+            'a metric that adds middleware' => [true, GuardingMetric::class, '/desk-tickets/metrics/guarding'],
         ];
     }
 
@@ -202,15 +201,12 @@ class ClassDeclarationRequestsTest extends DeclarationTestCase
 
     #[Test]
     #[DataProvider('invalidEntries')]
-    public function it_checks_every_class_entry_in_the_check(bool $metric, string $class, string $uri, LogicException $expected): void
+    public function it_reports_every_invalid_class_entry_in_the_check(bool $metric, string $class, string $uri, LogicException $expected): void
     {
         $this->declare($metric, $class);
         Rest::resource('desk-tickets', DeskTicketController::class)->register();
 
-        $this->assertThrows(
-            fn () => Artisan::call('rest:check', ['controllers' => [DeskTicketController::class], '--json' => true], new BufferedOutput),
-            fn (Throwable $exception): bool => $exception::class === $expected::class && $exception->getMessage() === $expected->getMessage(),
-        );
+        $this->assertSame([DeskTicketResource::class.': '.$expected->getMessage()], $this->checkProblems());
     }
 
     /** @return array<string, array{bool, class-string}> */
@@ -240,8 +236,9 @@ class ClassDeclarationRequestsTest extends DeclarationTestCase
 
         $this->assertSame(
             [DeskCloseTickets::class, DeskRefreshTickets::class, DeskReportOutage::class, DeskTicketBacklog::class, DeskTicketsByStatus::class, DeskGuestTicketBacklog::class],
-            array_values(array_unique(DeclarationLog::$built)),
+            DeclarationLog::$built,
         );
+        $this->assertSame(['actions' => 4, 'metrics' => 3, 'problems' => []], $report['declarations']);
         $this->assertContains('POST /desk-tickets/actions/report-outage is not behind an authentication middleware.', $report['problems']);
         $this->assertContains('POST /desk-tickets/metrics/guest-ticket-backlog is not behind an authentication middleware.', $report['problems']);
         $this->assertContains(DeskCloseTickets::class.' of '.DeskTicketResource::class." runs on rows without authorizeEach(): no policy ability is checked on each row. Return the ability to check from authorizeEach(), such as 'update', or 'view' for an action that only reads.", $report['actions']['problems']);
@@ -293,6 +290,17 @@ class ClassDeclarationRequestsTest extends DeclarationTestCase
 
         $this->assertSame([QueuedCloseTickets::class], DeclarationLog::$built);
         $this->assertSame(['closed 2'], DeclarationLog::$journal);
+    }
+
+    /** @return list<string> */
+    private function checkProblems(): array
+    {
+        $exitCode = Artisan::call('rest:check', ['controllers' => [DeskTicketController::class], '--json' => true], $output = new BufferedOutput);
+        $report = json_decode($output->fetch(), true);
+
+        $this->assertSame(1, $exitCode);
+
+        return $report['declarations']['problems'];
     }
 
     /** @param class-string $class */

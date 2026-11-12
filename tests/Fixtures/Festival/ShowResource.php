@@ -31,6 +31,8 @@ class ShowResource extends Resource
 {
     public static string $model = Show::class;
 
+    public static bool $instances = false;
+
     #[\Override]
     public function fields(): array
     {
@@ -115,6 +117,10 @@ class ShowResource extends Resource
     #[\Override]
     public function actions(): array
     {
+        if (self::$instances) {
+            return [RescheduleShows::make(), CancelShows::make(), ImportShows::make(), ArchiveShows::make()];
+        }
+
         return [
             RescheduleShows::class,
             CancelShows::class,
@@ -126,6 +132,10 @@ class ShowResource extends Resource
     #[\Override]
     public function metrics(): array
     {
+        if (self::$instances) {
+            return [ShowCount::make(), ShowsPerMonth::make(), ShowsByStatus::make(), ShowsByLevel::make(), SeatsByLevel::make(), TopStages::make(), SeatsGoal::make(), Occupancy::make()];
+        }
+
         return [
             ShowCount::class,
             ShowsPerMonth::class,

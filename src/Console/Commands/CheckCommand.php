@@ -13,34 +13,35 @@ use Lomkit\Rest\Console\QuickStart\ExposureReport;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'rest:check', description: 'Check the routes, policies, perimeters, action row checks and relation detaches of the resources')]
+#[AsCommand(name: 'rest:check', description: 'Check the routes, policies, actions and metrics, perimeters, action row checks and relation detaches of the resources')]
 class CheckCommand extends Command
 {
     protected $signature = 'rest:check
         {controllers?* : The controllers to check, every controller that a route uses by default}
         {--json : Print the report as JSON}';
 
-    protected $description = 'Check the routes, policies, perimeters, action row checks and relation detaches of the resources';
+    protected $description = 'Check the routes, policies, actions and metrics, perimeters, action row checks and relation detaches of the resources';
 
     public function handle(): int
     {
         $this->registerHttpMiddleware();
 
         $controllers = $this->controllers();
-        $this->laravel->make(DeclarationCheck::class)->run($controllers);
         $access = $this->access($controllers);
-        $rows = $this->laravel->make(PerimeterCheck::class)->run($controllers);
+        $declarations = $this->laravel->make(DeclarationCheck::class)->run($controllers);
+        $rows = $this->laravel->make(PerimeterCheck::class)->run($controllers, $declarations);
         $links = $this->laravel->make(DetachCheck::class)->run($controllers);
 
         if ($this->option('json') === true) {
-            $this->output->writeln(json_encode([...$access->toArray(), ...$rows->toArray(), ...$links->toArray()], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), OutputInterface::OUTPUT_RAW);
+            $this->output->writeln(json_encode([...$access->toArray(), ...$declarations->toArray(), ...$rows->toArray(), ...$links->toArray()], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), OutputInterface::OUTPUT_RAW);
         } else {
             $access->render($this->components, 'routes and policies');
+            $declarations->render($this->components);
             $rows->render($this->components);
             $links->render($this->components);
         }
 
-        return $access->passed() && $rows->passed() && $links->passed() ? self::SUCCESS : self::FAILURE;
+        return $access->passed() && $declarations->passed() && $rows->passed() && $links->passed() ? self::SUCCESS : self::FAILURE;
     }
 
     /** @return list<string> */

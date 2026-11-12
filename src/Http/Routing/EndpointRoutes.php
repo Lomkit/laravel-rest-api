@@ -73,6 +73,7 @@ final readonly class EndpointRoutes
             $catchAll->uses,
             $catchAll->middleware->with($declaration->middleware)->without($declaration->withoutMiddleware),
             [(string) $endpoint->parameter() => $key],
+            $declaration->fingerprint(),
         );
     }
 

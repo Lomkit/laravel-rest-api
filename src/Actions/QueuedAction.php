@@ -15,6 +15,9 @@ use Lomkit\Rest\Exceptions\QueuedActionException;
 use Lomkit\Rest\Fields\InputValues;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\Routing\DeclarationKind;
+use Lomkit\Rest\Http\Routing\DeclaredRoute;
+use Lomkit\Rest\Http\Routing\RouteFingerprint;
 use Lomkit\Rest\Http\WriteTransaction;
 
 final class QueuedAction implements ShouldQueue
@@ -48,12 +51,13 @@ final class QueuedAction implements ShouldQueue
         public readonly array $fields,
         public readonly QueuedRows $rows,
         public readonly UserReference $user,
+        public readonly ?string $fingerprint = null,
     ) {}
 
     /** @param array<string, mixed> $fields */
     public static function of(Action $action, array $fields, QueuedRows $rows, UserReference $user): self
     {
-        return (new QueueSettings($action))->configure(new self($action->resource::class, $action::class, $action->uriKey(), $fields, $rows, $user));
+        return (new QueueSettings($action))->configure(new self($action->resource::class, $action::class, $action->uriKey(), $fields, $rows, $user, DeclaredRoute::ofInstance($action)->fingerprint()));
     }
 
     public function handle(Container $container, AuthManager $auth): void
@@ -113,6 +117,8 @@ final class QueuedAction implements ShouldQueue
         if (! $action instanceof $this->action) {
             throw QueuedActionException::missingAction($this->resource, $this->action, $this->uriKey);
         }
+
+        RouteFingerprint::check($this->fingerprint ?? null, $action, DeclarationKind::Action);
 
         return $action;
     }

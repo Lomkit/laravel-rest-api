@@ -8,7 +8,11 @@ use Lomkit\Rest\Http\Routing\DeclarationKind;
 use Lomkit\Rest\Http\Routing\DeclaredRoute;
 use Lomkit\Rest\Metrics\Metric;
 
-/** @template T of Action|Metric */
+/**
+ * @internal
+ *
+ * @template T of Action|Metric
+ */
 final class DeclarationList
 {
     /** @var array<array-key, T> */
@@ -28,10 +32,16 @@ final class DeclarationList
         $routes = [];
 
         foreach ($this->entries as $index => $entry) {
-            $routes[] = is_string($entry) ? DeclaredRoute::ofClass($entry, $this->kind) : DeclaredRoute::ofInstance($this->built($index));
+            $routes[] = is_string($entry) ? DeclaredRoute::ofClass($entry, $this->kind) : DeclaredRoute::ofInstance($this->at($index));
         }
 
         return $routes;
+    }
+
+    /** @return list<int> */
+    public function indexes(): array
+    {
+        return array_keys($this->entries);
     }
 
     /** @return array<int, T> */
@@ -39,8 +49,8 @@ final class DeclarationList
     {
         $declarations = [];
 
-        foreach (array_keys($this->entries) as $index) {
-            $declarations[$index] = $this->built($index);
+        foreach ($this->indexes() as $index) {
+            $declarations[$index] = $this->at($index);
         }
 
         return $declarations;
@@ -51,11 +61,17 @@ final class DeclarationList
     {
         foreach ($this->entries as $index => $entry) {
             if ($this->keyOf($entry, $index) === $key) {
-                return $this->built($index);
+                return $this->at($index);
             }
         }
 
         return null;
+    }
+
+    /** @return T */
+    public function at(int|string $index): Action|Metric
+    {
+        return $this->built[$index] ??= $this->build($this->entries[$index]);
     }
 
     /** @param T|class-string<T> $entry */
@@ -65,13 +81,7 @@ final class DeclarationList
             return DeclaredRoute::ofClass($entry, $this->kind)->key;
         }
 
-        return $this->built($index)->uriKey();
-    }
-
-    /** @return T */
-    private function built(int|string $index): Action|Metric
-    {
-        return $this->built[$index] ??= $this->build($this->entries[$index]);
+        return $this->at($index)->uriKey();
     }
 
     /**
@@ -88,15 +98,19 @@ final class DeclarationList
         $declaration = $this->container->make($entry);
 
         if (! $declaration instanceof $entry) {
-            throw $this->kind->notDeclarable($entry);
+            throw $this->kind->foreignBinding($entry, get_debug_type($declaration));
         }
 
         $declaration->resource($this->resource)->ensureValid();
 
-        if (! DeclaredRoute::ofInstance($declaration)->equals($declared)) {
-            throw $this->kind->changedRoute($entry);
+        if (DeclaredRoute::ofInstance($declaration)->equals($declared)) {
+            return $declaration;
         }
 
-        return $declaration;
+        if ($declaration::class !== $entry) {
+            throw $this->kind->reboundRoute($entry, $declaration::class);
+        }
+
+        throw $this->kind->changedRoute($entry);
     }
 }
