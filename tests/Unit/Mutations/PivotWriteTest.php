@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Unit\Mutations;
 
+use Illuminate\Auth\GenericUser;
 use Lomkit\Rest\Exceptions\PivotPersisterException;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Mutations\MutationNode;
@@ -30,6 +31,24 @@ class PivotWriteTest extends PackageTestCase
         $this->expectExceptionObject(PivotPersisterException::notManyToMany(Ticket::class, 'team'));
 
         $write->pivots();
+    }
+
+    #[Test]
+    public function it_has_no_user_when_built_without_one(): void
+    {
+        $write = new PivotWrite(new Ticket, 'tags', [self::tag(7)], [], self::entry(MutationOperation::Attach));
+
+        $this->assertNull($write->user());
+    }
+
+    #[Test]
+    public function it_gives_the_user_it_was_built_with(): void
+    {
+        $user = new GenericUser(['id' => 7]);
+
+        $write = new PivotWrite(new Ticket, 'tags', [self::tag(7)], [], self::entry(MutationOperation::Attach), $user);
+
+        $this->assertSame($user, $write->user());
     }
 
     #[Test]

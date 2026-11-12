@@ -40,17 +40,18 @@ final readonly class PivotWrites extends RelationWrites
         $persister = $this->persister();
         $pivot = $this->pivot($node);
         $name = $this->relation->relation;
+        $user = $resource->context()->actingUser()->user;
 
         if ($plan->detached !== []) {
-            $persister->detach(new PivotWrite($parent, $name, $plan->detached, [], $node));
+            $persister->detach(new PivotWrite($parent, $name, $plan->detached, [], $node, $user));
         }
 
         if ($plan->attached !== []) {
-            $persister->attach(new PivotWrite($parent, $name, $plan->attached, $pivot, $node));
+            $persister->attach(new PivotWrite($parent, $name, $plan->attached, $pivot, $node, $user));
         }
 
         if ($plan->updated !== [] && $pivot !== []) {
-            $persister->updatePivot(new PivotWrite($parent, $name, $plan->updated, $pivot, $node));
+            $persister->updatePivot(new PivotWrite($parent, $name, $plan->updated, $pivot, $node, $user));
         }
 
         $resource
