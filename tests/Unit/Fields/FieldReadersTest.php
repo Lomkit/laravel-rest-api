@@ -134,6 +134,109 @@ class FieldReadersTest extends PackageTestCase
         $read(self::actionFields());
     }
 
+    /** @return array<string, array{Closure(FieldValues): mixed, mixed}> */
+    public static function requiredReadings(): array
+    {
+        return [
+            'string' => [fn (FieldValues $fields): string => $fields->string('reason', required: true), 'Late delivery'],
+            'integer' => [fn (FieldValues $fields): int => $fields->integer('code', required: true), 3],
+            'float' => [fn (FieldValues $fields): float => $fields->float('price', required: true), 19.99],
+            'boolean' => [fn (FieldValues $fields): bool => $fields->boolean('notify', required: true), false],
+            'date' => [fn (FieldValues $fields): string => $fields->date('starts_on', required: true)->toDateString(), '2026-03-01'],
+            'enum' => [fn (FieldValues $fields): PostStatus => $fields->enum('status', PostStatus::class, required: true), PostStatus::Review],
+            'array' => [fn (FieldValues $fields): array => $fields->array('tags', required: true), ['red', 'blue']],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('requiredReadings')]
+    public function it_returns_the_cast_value_of_a_required_read(Closure $read, mixed $expected): void
+    {
+        $this->assertSame($expected, $read(self::actionFields()));
+    }
+
+    /** @return array<string, array{Closure(FieldValues, string): mixed}> */
+    public static function requiredReaders(): array
+    {
+        return [
+            'string' => [fn (FieldValues $fields, string $name): string => $fields->string($name, required: true)],
+            'integer' => [fn (FieldValues $fields, string $name): int => $fields->integer($name, required: true)],
+            'float' => [fn (FieldValues $fields, string $name): float => $fields->float($name, required: true)],
+            'boolean' => [fn (FieldValues $fields, string $name): bool => $fields->boolean($name, required: true)],
+            'date' => [fn (FieldValues $fields, string $name): CarbonImmutable => $fields->date($name, required: true)],
+            'enum' => [fn (FieldValues $fields, string $name): PostStatus => $fields->enum($name, PostStatus::class, required: true)],
+            'array' => [fn (FieldValues $fields, string $name): array => $fields->array($name, required: true)],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('requiredReaders')]
+    public function it_throws_for_a_required_read_of_an_input_sent_as_null(Closure $read): void
+    {
+        $this->expectExceptionObject(new InvalidFieldException('The input [note] of '.self::OWNER.' is required, but its value is null. Add the required rule to the input.'));
+
+        $read(self::actionFields(), 'note');
+    }
+
+    #[Test]
+    #[DataProvider('requiredReaders')]
+    public function it_throws_for_a_required_read_of_an_input_not_sent_and_without_default(Closure $read): void
+    {
+        $this->expectExceptionObject(new InvalidFieldException('The input [comment] of '.self::OWNER.' is required, but its value is null. Add the required rule to the input.'));
+
+        $read(self::actionFields(), 'comment');
+    }
+
+    #[Test]
+    #[DataProvider('requiredReaders')]
+    public function it_checks_the_declaration_before_a_required_read(Closure $read): void
+    {
+        $this->expectExceptionObject(new InvalidFieldException(self::OWNER.' does not declare the input [missing].'));
+
+        $read(self::actionFields(), 'missing');
+    }
+
+    /** @return array<string, array{Closure(FieldValues, string): mixed}> */
+    public static function optionalReaders(): array
+    {
+        return [
+            'string' => [fn (FieldValues $fields, string $name): ?string => $fields->string($name, required: false)],
+            'integer' => [fn (FieldValues $fields, string $name): ?int => $fields->integer($name, required: false)],
+            'float' => [fn (FieldValues $fields, string $name): ?float => $fields->float($name, required: false)],
+            'boolean' => [fn (FieldValues $fields, string $name): ?bool => $fields->boolean($name, required: false)],
+            'date' => [fn (FieldValues $fields, string $name): ?CarbonImmutable => $fields->date($name, required: false)],
+            'enum' => [fn (FieldValues $fields, string $name): ?PostStatus => $fields->enum($name, PostStatus::class, required: false)],
+            'array' => [fn (FieldValues $fields, string $name): ?array => $fields->array($name, required: false)],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('optionalReaders')]
+    public function it_returns_null_for_a_read_that_is_not_required(Closure $read): void
+    {
+        $this->assertSame([null, null], [$read(self::actionFields(), 'note'), $read(self::actionFields(), 'comment')]);
+    }
+
+    #[Test]
+    public function it_keeps_the_type_check_of_a_required_read(): void
+    {
+        $this->expectExceptionObject(new InvalidFieldException('The input [rate] of '.self::OWNER.' is [float], not [int].'));
+
+        self::actionFields()->integer('rate', required: true);
+    }
+
+    #[Test]
+    public function it_reads_required_instruction_fields_the_same_way(): void
+    {
+        $fields = InstructionFields::of(new Instruction, self::inputs());
+
+        $this->assertSame(12, $fields->integer('seats', required: true));
+
+        $this->expectExceptionObject(new InvalidFieldException('The input [note] of Lomkit\Rest\Instructions\Instruction::fields() is required, but its value is null. Add the required rule to the input.'));
+
+        $fields->string('note', required: true);
+    }
+
     #[Test]
     public function it_reads_instruction_fields_the_same_way(): void
     {
