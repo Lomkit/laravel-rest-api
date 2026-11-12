@@ -60,7 +60,7 @@ final class RestContext
 
     public function definition(Resource $resource): ResourceDefinition
     {
-        return $this->definitions[$resource] ??= new ResourceDefinition($resource, $this->request);
+        return $this->definitions[$resource] ??= new ResourceDefinition($resource, $this->request, $this->container);
     }
 
     public function text(Resource $resource): ResolvedText

@@ -8,7 +8,7 @@ use Lomkit\Rest\Tests\Fixtures\Sales\OrderResource;
 
 class GeneratedMetricResource extends OrderResource
 {
-    /** @var list<Metric> */
+    /** @var list<Metric|class-string<Metric>> */
     public static array $declared = [];
 
     #[\Override]

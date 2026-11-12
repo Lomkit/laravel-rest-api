@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Unit\Fields;
 
+use Illuminate\Container\Container;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Exceptions\InvalidFieldException;
 use Lomkit\Rest\Fields\Integer;
@@ -90,6 +91,6 @@ class HasInputFieldsTest extends TestCase
 
     private static function definition(): ResourceDefinition
     {
-        return new ResourceDefinition(new Resource, new RestRequest);
+        return new ResourceDefinition(new Resource, new RestRequest, new Container);
     }
 }

@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Exceptions;
 
 use LogicException;
+use Lomkit\Rest\Actions\Action;
 
 final class InvalidActionException extends LogicException
 {
@@ -39,6 +40,21 @@ final class InvalidActionException extends LogicException
     public static function rowHookWithoutRowTransaction(string $action, string $hook, string $transaction): self
     {
         return new self("{$action} declares {$hook}(), but it runs with ActionTransaction::{$transaction}: only ActionTransaction::Row (->transactionPerRow()) calls it.");
+    }
+
+    public static function notAnAction(string $class): self
+    {
+        return new self("[{$class}] is listed in actions(), but it does not extend ".Action::class.'.');
+    }
+
+    public static function dynamicKey(string $action, string $method): self
+    {
+        return new self("{$action} is listed by its class, but it overrides {$method}(): its route key must be read without building it. Set \$name, or list the action as an instance.");
+    }
+
+    public static function changedRoute(string $action): self
+    {
+        return new self("{$action} is listed by its class, but its built instance has another route key or other middleware than its class declares. Set \$name, \$middleware and \$withoutMiddleware as property defaults, or list the action as an instance.");
     }
 
     public static function dataList(): self

@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Concerns\HasRouteMiddleware;
 use Lomkit\Rest\Concerns\Makeable;
@@ -20,6 +19,7 @@ use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
+use Lomkit\Rest\Http\Routing\DeclarationKind;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use ReflectionMethod;
 
@@ -52,12 +52,12 @@ class Action
 
     public function name(): string
     {
-        return $this->name ?: Str::of(class_basename(static::class))->beforeLast('Action')->snake(' ')->title()->toString();
+        return DeclarationKind::Action->displayName($this->name, static::class);
     }
 
     public function uriKey(): string
     {
-        return Str::slug($this->name(), '-', null);
+        return DeclarationKind::Action->uriKey($this->name());
     }
 
     public function request(): RestRequest

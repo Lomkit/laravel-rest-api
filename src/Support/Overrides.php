@@ -6,9 +6,12 @@ use ReflectionMethod;
 
 final readonly class Overrides
 {
-    /** @param class-string $base */
-    public static function method(object $object, string $method, string $base): bool
+    /**
+     * @param  object|class-string  $subject
+     * @param  class-string  $base
+     */
+    public static function method(object|string $subject, string $method, string $base): bool
     {
-        return (new ReflectionMethod($object, $method))->class !== $base;
+        return (new ReflectionMethod($subject, $method))->class !== $base;
     }
 }

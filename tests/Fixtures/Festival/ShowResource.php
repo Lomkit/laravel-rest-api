@@ -116,13 +116,10 @@ class ShowResource extends Resource
     public function actions(): array
     {
         return [
-            RescheduleShows::make()->maxResources(null),
-            CancelShows::make()
-                ->destructive()
-                ->confirm('Cancel the selected shows?')
-                ->maxResources(2),
-            ImportShows::make(),
-            ArchiveShows::make(),
+            RescheduleShows::class,
+            CancelShows::class,
+            ImportShows::class,
+            ArchiveShows::class,
         ];
     }
 
@@ -130,14 +127,14 @@ class ShowResource extends Resource
     public function metrics(): array
     {
         return [
-            ShowCount::make(),
-            ShowsPerMonth::make(),
-            ShowsByStatus::make()->withoutMiddleware('auth'),
-            ShowsByLevel::make(),
-            SeatsByLevel::make(),
-            TopStages::make(),
-            SeatsGoal::make(),
-            Occupancy::make(),
+            ShowCount::class,
+            ShowsPerMonth::class,
+            ShowsByStatus::class,
+            ShowsByLevel::class,
+            SeatsByLevel::class,
+            TopStages::class,
+            SeatsGoal::class,
+            Occupancy::class,
         ];
     }
 

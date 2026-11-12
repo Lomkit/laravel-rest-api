@@ -11,6 +11,8 @@ use Lomkit\Rest\Fields\Integer;
 
 class RescheduleShows extends Action
 {
+    public ?int $maxResources = null;
+
     #[\Override]
     public function fields(): array
     {

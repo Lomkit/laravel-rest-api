@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Http\Kernel;
+use Lomkit\Rest\Console\Check\DeclarationCheck;
 use Lomkit\Rest\Console\Check\DetachCheck;
 use Lomkit\Rest\Console\Check\PerimeterCheck;
 use Lomkit\Rest\Console\Check\RegisteredControllers;
@@ -26,6 +27,7 @@ class CheckCommand extends Command
         $this->registerHttpMiddleware();
 
         $controllers = $this->controllers();
+        $this->laravel->make(DeclarationCheck::class)->run($controllers);
         $access = $this->access($controllers);
         $rows = $this->laravel->make(PerimeterCheck::class)->run($controllers);
         $links = $this->laravel->make(DetachCheck::class)->run($controllers);

@@ -51,10 +51,9 @@ class GeneratedMetricRequestsTest extends ScaffoldingTestCase
         $this->artisan('rest:metric', ['name' => $name, ...$options, '--no-interaction' => true])->assertSuccessful();
         $class = "App\\Rest\\Metrics\\{$name}";
         $this->loadGeneratedClass($class);
-        $metric = $class::make();
-        $this->assertInstanceOf(Metric::class, $metric);
+        $this->assertTrue(is_subclass_of($class, Metric::class));
 
-        GeneratedMetricResource::$declared = [$metric];
+        GeneratedMetricResource::$declared = [$class];
         Rest::resource('generated-orders', GeneratedMetricController::class)->register();
 
         $this->getJson('/generated-orders?with=metrics.meta,metrics.authorized')
