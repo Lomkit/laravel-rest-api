@@ -13,6 +13,7 @@ use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
+/** @template TModel of Model = Model */
 class Instruction
 {
     use HasInputFields;
@@ -49,7 +50,7 @@ class Instruction
         ];
     }
 
-    /** @param Builder<Model> $query */
+    /** @param Builder<TModel> $query */
     public function handle(InstructionFields $fields, Builder $query): void {}
 
     /** @return array<string, mixed> */

@@ -1,5 +1,11 @@
 # Upgrade Guide
 
+## 3.3 additions
+
+Version 3.3 adds features.
+
+- `Action` and `Instruction` declare the model they run on as a PHPStan template with a default, `@template TModel of Model = Model`, applied to `handle()`, `beforeRow()` and `handleRow()` of an action and to `handle()` of an instruction. An action that reads its own model declares it with `/** @extends Action<Invoice> */` above the class and narrows its parameters with `@param Collection<array-key, Invoice> $models` (or `@param Invoice $row`); an instruction with `/** @extends Instruction<Invoice> */` and `@param Builder<Invoice> $query`. A class without `@extends` keeps `Model` and gets no new PHPStan error at any level.
+
 ## 3.2 additions
 
 Version 3.2 adds features; a few many-to-many write details change, listed below.
