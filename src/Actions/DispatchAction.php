@@ -17,6 +17,7 @@ use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Search\Plan\QueryPlan;
 use Lomkit\Rest\Search\Plan\SearchPlanner;
 use Lomkit\Rest\Search\SearchContext;
 use Lomkit\Rest\Search\SearchNode;
@@ -90,22 +91,27 @@ final readonly class DispatchAction
             return $engine;
         }
 
-        $query = $this->query($search);
+        $plan = $this->plan($search);
         $cap = RowCap::of($this->action->maxResources);
 
         if ($search->sorts === [] && $search->limit === null) {
-            return ChunkedRows::of($query, $this->size(), $cap);
+            return ChunkedRows::of($plan->query(), $this->size(), $cap);
         }
 
-        return KeyChunks::read($query, $this->id(), $this->size(), $search->limit, $cap);
+        return KeyChunks::read($plan->keys()->query(), $this->id(), $this->size(), $search->limit, $cap, $plan->query());
     }
 
     /** @return Builder<Model> */
     private function query(SearchNode $search): Builder
     {
+        return $this->plan($search)->query();
+    }
+
+    private function plan(SearchNode $search): QueryPlan
+    {
         $resource = $this->request->resource;
 
-        return SearchPlanner::all($resource, $search, $this->request->context()->text($resource))->query();
+        return SearchPlanner::all($resource, $search, $this->request->context()->text($resource));
     }
 
     private function id(): ID

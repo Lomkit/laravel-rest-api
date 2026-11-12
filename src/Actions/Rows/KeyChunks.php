@@ -47,6 +47,7 @@ final readonly class KeyChunks implements ActionRows
         $values = $query
             ->clone()
             ->limit($cap?->limit($limit) ?? $limit)
+            ->toBase()
             ->pluck($query->getModel()->getQualifiedKeyName());
         $keys = [];
 

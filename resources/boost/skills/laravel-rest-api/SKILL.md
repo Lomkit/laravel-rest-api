@@ -1212,6 +1212,8 @@ To send one instruction twice, give one entry an `alias` (`{"name": "odd-even-id
 
 Instruction `fields()` are typed and validated exactly like Action fields: full Laravel validation (including `required` on absent fields), with errors keyed by name under `search.instructions.{index}.fields.{name}` (custom translation lines go under `validation.custom.search.instructions.*.fields.{name}.{rule}`); a name repeated in `fields` is a `422` under `search.instructions.{index}.fields.{position}.name`. `handle()` and `handleEngine()` receive `Lomkit\Rest\Instructions\InstructionFields`: the reading API of `ActionFields` (properties, `has()`, `filled()`, `only()`, `toArray()`), without `user()` and `target()`; both extend `Lomkit\Rest\Fields\FieldValues`.
 
+An `afterQuery()` callback that an instruction or a scope of `scopes()` registers receives an `Illuminate\Database\Eloquent\Collection` for each batch of rows the package loads: the page, a batch of an export or of an action, the rows of an include. It never receives keys or counts, and it must not filter or reorder the rows, because totals and chunks are counted in SQL. A callback registered inside `perimeterQuery()` is not kept.
+
 ## Relationships
 
 All relations must extend `Lomkit\Rest\Relations\Relation` (do **not** use `Illuminate\Database\Eloquent\Relations\*`) and target a **Resource class**, not a model. Supported types: `BelongsTo`, `HasOne`, `HasOneOfMany`, `HasOneThrough`, `MorphOne`, `MorphOneOfMany`, `HasMany`, `HasManyThrough`, `MorphMany`, `BelongsToMany`, `MorphToMany`, `MorphedByMany`, `MorphTo`. A `MorphTo` takes one resource or a list: `MorphTo::make('labelable', [BookResource::class, ShelfResource::class])`.
