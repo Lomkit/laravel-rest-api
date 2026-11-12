@@ -45,6 +45,11 @@ final class InvalidFieldException extends LogicException
         return new self("The input [{$name}] of {$owner} is [{$given}], not [{$expected}].");
     }
 
+    public static function requiredInput(string $owner, string $name): self
+    {
+        return new self("The input [{$name}] of {$owner} is required, but its value is null. Add the required rule to the input.");
+    }
+
     public static function writeRulesOnInput(string $owner, string $name): self
     {
         return new self("{$owner} declares creation or update rules on the input field [{$name}]. Input fields take rules() only.");

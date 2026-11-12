@@ -1,5 +1,11 @@
 # Upgrade Guide
 
+## 3.4 additions
+
+Version 3.4 adds features.
+
+- The typed readers of `ActionFields` and `InstructionFields` take `required: true`: `$fields->date('last_day', required: true)` returns a `CarbonImmutable` instead of a `?CarbonImmutable`, and PHPStan reads the non-null type. A `null` value then throws `Lomkit\Rest\Exceptions\InvalidFieldException`: give the input the `required` rule. For `enum()`, the argument comes after the enum class: `$fields->enum('status', Status::class, required: true)`. The conversion rules do not change, and a read without `required` still returns `null` for a `null` value.
+
 ## 3.3 additions
 
 Version 3.3 adds features.
