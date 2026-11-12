@@ -186,8 +186,8 @@ class DetailsPartsTest extends PackageTestCase
     {
         $pivot = '[{"name":"position","label":null,"type":"integer","nullable":true,"select":true,"sort":false,"filter":{"operators":["=","!=",">",">=","<","<=","between","not between","in","not in","is null","is not null"]},"create":true,"update":true,"rules":{"all":["nullable","integer"],"create":[],"update":[]},"meta":{}},'
             .'{"name":"wall","label":null,"type":"text","nullable":false,"select":true,"sort":false,"filter":{"operators":'.self::TEXT_OPERATORS.'},"create":true,"update":false,"rules":{"all":["string"],"create":[],"update":[]},"meta":{}}]';
-        $one = $operations === '' ? '' : $operations.'["create","update","attach","detach"]';
-        $many = $operations === '' ? '' : $operations.'["create","update","attach","detach","sync","toggle"]';
+        $one = $operations === '' ? '' : $operations.'["create","update","attach","detach"],"sync":null';
+        $many = $operations === '' ? '' : $operations.'["create","update","attach","detach","sync","toggle"],"sync":"replace"';
 
         return '['
             .'{"resource":'.json_encode(ArtistResource::class).',"relation":"artist"'.$constraints.$one.',"name":"BelongsTo"},'

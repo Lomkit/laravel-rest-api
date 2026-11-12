@@ -156,7 +156,7 @@ final readonly class RelationEntrySchema
         $pivot = $relation instanceof PivotRelation ? $operation->pivotWriteOperation() : null;
 
         return array_filter([
-            'key' => $operation->requiresKey() ? $this->key($relation, $related) : null,
+            'key' => $operation->requiresKey() ? SyncSchema::keys($relation, $related, $operation) ?? $this->key($relation, $related) : null,
             'version' => MutationSchema::version($related, $operation),
             'attributes' => $write === null ? null : $this->writable->attributes($related, $write),
             'pivot' => $pivot === null ? null : $this->writable->pivot($relation, $pivot),

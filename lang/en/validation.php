@@ -29,7 +29,7 @@ return [
     'kept_links' => 'The :attribute field must be true: this relation does not detach rows.',
     'repeated_sync' => 'The :attribute field is prohibited: a relation takes one sync entry.',
     'beside_sync' => 'The :attribute field must be create, update, delete or detach next to a sync entry.',
-    'kept_by_sync' => 'The :attribute field holds a key that the sync entry of the relation keeps.',
+    'kept_by_sync' => 'The :attribute field removes or moves a related row that a sync entry of its parent keeps.',
     'unlisted_by_sync' => 'The :attribute field holds a key that the sync entry of the relation does not list.',
     'named_beside_sync' => 'The :attribute field neither lists nor removes a related row that another entry of the request names.',
     'morph_to_aggregate' => 'The :attribute field cannot be a MorphTo relation.',

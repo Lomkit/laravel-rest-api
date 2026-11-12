@@ -47,7 +47,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class RelationHierarchyTest extends PackageTestCase
 {
-    private const array DETAILS = ['resource', 'relation', 'constraints', 'operations', 'name'];
+    private const array DETAILS = ['resource', 'relation', 'constraints', 'operations', 'sync', 'name'];
 
     private const array WRITES = [
         BelongsTo::class => OwnerWrites::class,
@@ -205,7 +205,7 @@ class RelationHierarchyTest extends PackageTestCase
         $relation = $this->declared($resource, $name);
         [$details, $reserved] = match (true) {
             $base === BelongsToMany::class => [[...self::DETAILS, 'pivot_fields'], ['pivot']],
-            $class === MorphTo::class => [['relation', 'constraints', 'operations', 'name', 'types', 'morph'], ['@type']],
+            $class === MorphTo::class => [['relation', 'constraints', 'operations', 'sync', 'name', 'types', 'morph'], ['@type']],
             default => [self::DETAILS, []],
         };
 

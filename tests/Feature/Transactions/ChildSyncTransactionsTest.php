@@ -118,7 +118,7 @@ class ChildSyncTransactionsTest extends PackageTestCase
 
         $response->assertConflict()->assertExactJson([
             'message' => 'The relation has a related row that the sync neither lists nor removes. Read the relation again, without include limits or filters, then send the request again.',
-            'conflicts' => [['path' => 'mutate.0.relations.children.0.key', 'key' => 5]],
+            'conflicts' => [['reason' => 'unlisted', 'path' => 'mutate.0.relations.children.0', 'key' => 5]],
         ]);
         $this->assertSame(['mutatedAll'], Interruptions::$runs);
         $this->assertSame(['begin secondary', 'rollback secondary', 'begin secondary', 'rollback secondary'], $this->transactions);
@@ -139,7 +139,7 @@ class ChildSyncTransactionsTest extends PackageTestCase
 
         $response = $this->postJson('/syncing-documents/mutate', $sync([3, 2]));
 
-        $response->assertConflict()->assertJsonPath('conflicts', [['path' => 'mutate.0.relations.children.1.relations.children.0.key', 'key' => 5]]);
+        $response->assertConflict()->assertJsonPath('conflicts', [['reason' => 'unlisted', 'path' => 'mutate.0.relations.children.1.relations.children.0', 'key' => 5]]);
         $this->assertSame(0, SyncingDocument::query()->where('title', 'Kickoff')->count());
 
         $this->postJson('/syncing-documents/mutate', $sync([3, 4]))->assertOk();
@@ -153,21 +153,22 @@ class ChildSyncTransactionsTest extends PackageTestCase
     #[Test]
     public function it_locks_the_parent_of_a_sync_until_the_commit(): void
     {
-        if (DB::connection('secondary')->getDriverName() === 'sqlite') {
+        $driver = DB::connection('secondary')->getDriverName();
+
+        if ($driver === 'sqlite') {
             $this->markTestSkipped('SQLite has no row locks: it locks the whole database for a write.');
         }
 
-        $locked = null;
-        SyncingDocumentResource::$whileWriting = function () use (&$locked): void {
+        $refusal = null;
+        SyncingDocumentResource::$whileWriting = function () use (&$refusal): void {
             try {
                 DB::connection('competitor')
                     ->table('documents')
                     ->where('id', 1)
                     ->lock('for update nowait')
                     ->first();
-                $locked = false;
-            } catch (QueryException) {
-                $locked = true;
+            } catch (QueryException $exception) {
+                $refusal = self::code($exception);
             }
         };
 
@@ -176,8 +177,48 @@ class ChildSyncTransactionsTest extends PackageTestCase
         ]]);
 
         $response->assertOk();
-        $this->assertTrue($locked);
+        $this->assertSame($driver === 'mysql' ? '3572' : '55P03', $refusal);
         $this->assertSame([1 => null, 2 => 1], self::parents());
+    }
+
+    #[Test]
+    public function it_checks_the_children_when_it_runs_and_lets_another_writer_add_one_after_on_postgresql(): void
+    {
+        $driver = DB::connection('secondary')->getDriverName();
+
+        if ($driver === 'sqlite') {
+            $this->markTestSkipped('SQLite has no row locks: it locks the whole database for a write.');
+        }
+
+        $refusal = null;
+        SyncingDocumentResource::$whileWriting = function () use ($driver, &$refusal): void {
+            if ($driver === 'mysql') {
+                DB::connection('competitor')->statement('set session innodb_lock_wait_timeout = 1');
+            }
+
+            try {
+                DB::connection('competitor')
+                    ->table('documents')
+                    ->insert(['title' => 'Late addendum', 'parent_id' => 1]);
+            } catch (QueryException $exception) {
+                $refusal = self::code($exception);
+            }
+        };
+
+        $response = $this->postJson('/syncing-documents/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => 1, 'relations' => ['children' => [['operation' => 'sync', 'key' => [2, 3, 4]]]]],
+        ]]);
+
+        $response->assertOk();
+        $this->assertSame($driver === 'mysql' ? '1205' : null, $refusal);
+        $this->assertSame($driver === 'mysql' ? [2, 3, 4] : [2, 3, 4, 5], SyncingDocument::query()->where('parent_id', 1)->orderBy('id')->pluck('id')->all());
+    }
+
+    private static function code(QueryException $exception): string
+    {
+        [$state, $code] = [...($exception->errorInfo ?? []), null, null];
+
+        return (string) ($state === 'HY000' ? $code : $state);
     }
 
     /** @return array<int, int|null> */

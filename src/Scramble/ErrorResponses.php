@@ -13,8 +13,10 @@ use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Exceptions\ConflictReason;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use Lomkit\Rest\Scramble\Mutate\ConflictReach;
+use Lomkit\Rest\Scramble\Types\OneOf;
 
 final readonly class ErrorResponses
 {
@@ -95,15 +97,21 @@ final readonly class ErrorResponses
 
     private static function conflict(): ObjectType
     {
-        $conflict = Schemas::required([
-            'path' => new StringType,
+        $version = Schemas::required([
+            'reason' => (new StringType)->const(ConflictReason::Version->value),
+            'path' => (new StringType)->setDescription('The update entry'),
             'key' => self::key(),
-            'version' => (new MixedType)->setDescription('On an update entry: the version of the row as the request found it, written as the search returns it; null when the row is gone'),
-        ], ['version']);
+            'version' => (new MixedType)->setDescription('The version of the row as the request found it, written as the search returns it; null when the row is gone'),
+        ]);
+        $unlisted = Schemas::required([
+            'reason' => (new StringType)->const(ConflictReason::Unlisted->value),
+            'path' => (new StringType)->setDescription('The sync entry'),
+            'key' => self::key(),
+        ]);
 
         return Schemas::required([
             'message' => new StringType,
-            'conflicts' => Schemas::list($conflict, 'The update entries whose `version` is not the version of their row, and the `key` of the sync entries whose list leaves out a child, with that child: nothing was written'),
+            'conflicts' => Schemas::list(new OneOf([$version, $unlisted]), 'The entries in conflict, by `reason`: nothing was written. `version`: an update entry whose `version` is not the version of its row. `unlisted`: a sync entry whose list, with the `delete` and `detach` entries next to it, leaves out `key`, a child that the user can see'),
         ]);
     }
 

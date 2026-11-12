@@ -5,7 +5,11 @@ namespace Lomkit\Rest\Scramble\Mutate;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Fields\MutationOperation;
+use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Scramble\Components\KeySchema;
+use Lomkit\Rest\Scramble\Schemas;
+use Lomkit\Rest\Scramble\Types\OneOf;
 
 final readonly class SyncSchema
 {
@@ -22,6 +26,18 @@ final readonly class SyncSchema
         }
 
         return (new BooleanType)->setDescription('When true, the rows that `key` does not list stay attached');
+    }
+
+    public static function keys(Relation $relation, Resource $related, MutationOperation $operation): ?Type
+    {
+        if ($operation !== MutationOperation::Sync || ! $relation->syncsChildren()) {
+            return null;
+        }
+
+        $keys = Schemas::list(KeySchema::value($related));
+        $keys->setMax($related->context()->limits()->sizes->values);
+
+        return (new OneOf([KeySchema::value($related), $keys]))->setDescription('The keys of the children to keep, a key or a list: with the `delete` and `detach` entries next to the sync, they must account for every child that the user can see');
     }
 
     public static function children(Relation $relation): string

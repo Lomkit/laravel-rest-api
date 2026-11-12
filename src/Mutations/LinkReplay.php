@@ -134,7 +134,7 @@ final class LinkReplay
             $violations[$path] ??= $violation;
         }
 
-        foreach ($this->named->violations() as $path => $violation) {
+        foreach ($this->named->violations($this->steps) as $path => $violation) {
             $violations[$path] ??= $violation;
         }
 

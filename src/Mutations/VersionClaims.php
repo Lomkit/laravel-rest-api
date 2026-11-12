@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Mutations;
 
+use Lomkit\Rest\Exceptions\ConflictReason;
 use Lomkit\Rest\Exceptions\VersionConflict;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Validation\KeysGrammar;
@@ -28,7 +29,7 @@ final class VersionClaims
             $stored = $current[$resource::class][KeysGrammar::idOf($resource)->normalizeKey($key)] ?? null;
 
             if ($stored !== $value) {
-                $conflicts[] = ['path' => $path, 'key' => $key, 'version' => $stored];
+                $conflicts[] = ['reason' => ConflictReason::Version->value, 'path' => $path, 'key' => $key, 'version' => $stored];
             }
         }
 

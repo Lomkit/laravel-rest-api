@@ -29,7 +29,7 @@ return [
     'kept_links' => 'Le champ :attribute doit valoir true : cette relation ne détache pas de lignes.',
     'repeated_sync' => 'Le champ :attribute est interdit : une relation accepte une seule entrée sync.',
     'beside_sync' => 'Le champ :attribute doit valoir create, update, delete ou detach à côté d\'une entrée sync.',
-    'kept_by_sync' => 'Le champ :attribute contient une clé que l\'entrée sync de la relation conserve.',
+    'kept_by_sync' => 'Le champ :attribute retire ou déplace un élément lié qu\'une entrée sync de son parent conserve.',
     'unlisted_by_sync' => 'Le champ :attribute contient une clé que l\'entrée sync de la relation ne liste pas.',
     'named_beside_sync' => 'Le champ :attribute ne liste ni ne retire un élément lié qu\'une autre entrée de la requête nomme.',
     'morph_to_aggregate' => 'Le champ :attribute ne peut pas être une relation MorphTo.',

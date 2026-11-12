@@ -80,7 +80,7 @@ class OptimisticLockingTest extends PackageTestCase
 
         $response->assertConflict()->assertExactJson([
             'message' => 'The record was changed by another request.',
-            'conflicts' => [['path' => 'mutate.1', 'key' => $this->floor->id, 'version' => self::NOW]],
+            'conflicts' => [['reason' => 'version', 'path' => 'mutate.1', 'key' => $this->floor->id, 'version' => self::NOW]],
         ]);
         $this->assertSame(['Desk lamp', 'Floor light'], $this->names());
         $this->assertSame([39, 39], Product::query()->orderBy('id')->pluck('price')->all());
@@ -132,7 +132,7 @@ class OptimisticLockingTest extends PackageTestCase
 
         $response->assertConflict()->assertExactJson([
             'message' => 'The record was changed by another request.',
-            'conflicts' => [['path' => 'mutate.0.relations.products.1', 'key' => $this->floor->id, 'version' => self::NOW]],
+            'conflicts' => [['reason' => 'version', 'path' => 'mutate.0.relations.products.1', 'key' => $this->floor->id, 'version' => self::NOW]],
         ]);
         $this->assertSame('Lighting', $this->lighting->fresh()?->name);
         $this->assertSame([39, 39], Product::query()->orderBy('id')->pluck('price')->all());
@@ -151,7 +151,7 @@ class OptimisticLockingTest extends PackageTestCase
 
         $response->assertConflict()->assertExactJson([
             'message' => 'The record was changed by another request.',
-            'conflicts' => [['path' => 'mutate.0.relations.products.0', 'key' => $this->floor->id, 'version' => '2026-01-02T08:00:00.000000Z']],
+            'conflicts' => [['reason' => 'version', 'path' => 'mutate.0.relations.products.0', 'key' => $this->floor->id, 'version' => '2026-01-02T08:00:00.000000Z']],
         ]);
     }
 

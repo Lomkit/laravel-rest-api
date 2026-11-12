@@ -13,7 +13,7 @@ final class NamedRows
     /** @var array<string, LinkedRow> */
     private array $rows = [];
 
-    /** @var list<array{string, string}> */
+    /** @var list<DeletedRow> */
     private array $deleted = [];
 
     /** @var list<LinkedSync> */
@@ -29,7 +29,7 @@ final class NamedRows
         $this->rows[$row->identity] = $row;
 
         if ($node->operation === MutationOperation::Delete) {
-            $this->deleted[] = [$node->path.'.key', $row->identity];
+            $this->deleted[] = new DeletedRow($node->path.'.key', $row->identity);
         }
     }
 
@@ -38,18 +38,21 @@ final class NamedRows
         $this->syncs[] = $sync;
     }
 
-    /** @return array<string, Violation> */
-    public function violations(): array
+    /**
+     * @param  list<LinkStep>  $steps
+     * @return array<string, Violation>
+     */
+    public function violations(array $steps): array
     {
         $violations = [];
 
-        foreach ($this->deleted as [$path, $identity]) {
-            if ($this->counts[$identity] > 1) {
-                $violations[$path] ??= Violation::repeated($path);
-            }
-        }
-
         foreach ($this->syncs as $sync) {
+            foreach ($steps as $step) {
+                if ($sync->contradictedBy($step)) {
+                    $violations[$step->path] ??= Violation::keptBySync($step->path);
+                }
+            }
+
             foreach ($this->rows as $row) {
                 if ($sync->leavesOut($row)) {
                     $violations[$sync->path] ??= Violation::namedBesideSync($sync->path);
@@ -57,6 +60,17 @@ final class NamedRows
             }
         }
 
+        foreach ($this->deleted as $deleted) {
+            if ($this->counts[$deleted->identity] > 1 && ! $this->kept($deleted->identity)) {
+                $violations[$deleted->path] ??= Violation::repeated($deleted->path);
+            }
+        }
+
         return $violations;
+    }
+
+    private function kept(string $identity): bool
+    {
+        return array_any($this->syncs, fn (LinkedSync $sync): bool => $sync->keeps($identity));
     }
 }

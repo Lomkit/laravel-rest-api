@@ -147,7 +147,7 @@ class Relation
                 'required_on_update' => $this->isRequiredOnUpdate(),
                 'prohibited_on_update' => $this->isProhibitedOnUpdate(),
             ]]),
-            ...$selection->part('relations.operations', fn (): array => ['operations' => array_column($this->acceptedOperations(), 'value')]),
+            ...$selection->part('relations.operations', fn (): array => ['operations' => array_column($this->acceptedOperations(), 'value'), 'sync' => SyncMeaning::of($this)?->value]),
             'name' => $this->name(),
             ...$selection->part('relations.pivot_fields', $this->pivotFieldDetails(...)),
         ];

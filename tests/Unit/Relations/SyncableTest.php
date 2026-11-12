@@ -5,9 +5,12 @@ namespace Lomkit\Rest\Tests\Unit\Relations;
 use Lomkit\Rest\Exceptions\InvalidRelationException;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Details\DetailsSelection;
+use Lomkit\Rest\Relations\BelongsToMany;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Relations\MorphMany;
+use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Tests\Feature\Mutate\Stubs\SyncedHasMany;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
 use Lomkit\Rest\Tests\Fixtures\Library\LabelResource;
 use Lomkit\Rest\Tests\PackageTestCase;
@@ -90,5 +93,18 @@ class SyncableTest extends PackageTestCase
         $this->assertTrue($relation->syncsChildren());
         $this->assertFalse($relation->writesRelatedRows(MutationOperation::Sync));
         $this->assertTrue($relation->writesRelatedRows(MutationOperation::Update));
+    }
+
+    #[Test]
+    public function it_details_what_the_sync_of_each_relation_does(): void
+    {
+        $sync = fn (Relation $relation): mixed => $relation->toDetails(DetailsSelection::of(['relations.operations']))['sync'];
+
+        $this->assertSame('check', $sync(HasMany::make('tickets', TicketResource::class)->syncable()));
+        $this->assertSame('link', $sync(SyncedHasMany::make('tickets', TicketResource::class)));
+        $this->assertSame('replace', $sync(BelongsToMany::make('tags', TagResource::class)));
+        $this->assertSame('link', $sync(BelongsToMany::make('tags', TagResource::class)->withoutOperations(MutationOperation::Detach)));
+        $this->assertNull($sync(HasMany::make('tickets', TicketResource::class)));
+        $this->assertNull($sync(BelongsToMany::make('tags', TagResource::class)->withoutOperations(MutationOperation::Sync)));
     }
 }

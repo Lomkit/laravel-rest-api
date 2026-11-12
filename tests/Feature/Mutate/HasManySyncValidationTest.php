@@ -60,7 +60,7 @@ class HasManySyncValidationTest extends WriteTraceTestCase
             ],
             'a delete of a key that the sync lists' => [
                 [['operation' => 'sync', 'key' => [101, 102, 103]], ['operation' => 'delete', 'key' => [103]]],
-                [$at(1, 'key') => ['The '.$at(1, 'key').' field holds a key that the sync entry of the relation keeps.', 'The '.$at(1, 'key').' field has a duplicate value.']],
+                [$at(1, 'key') => ['The '.$at(1, 'key').' field removes or moves a related row that a sync entry of its parent keeps.']],
             ],
             'an update of a key that the sync does not list' => [
                 [['operation' => 'sync', 'key' => [101, 103]], ['operation' => 'update', 'key' => [101, 102], 'attributes' => ['status' => 'closed']]],
@@ -80,6 +80,14 @@ class HasManySyncValidationTest extends WriteTraceTestCase
             'the option of a sync that keeps the other rows' => [
                 [['operation' => 'sync', 'key' => [101, 102, 103], 'without_detaching' => true]],
                 [$at(0, 'without_detaching') => ['The '.$at(0, 'without_detaching').' field is prohibited.']],
+            ],
+            'a detach on a foreign key that does not accept null' => [
+                [['operation' => 'sync', 'key' => [101, 103]], ['operation' => 'detach', 'key' => [102]]],
+                [$at(1, 'key') => ['The '.$at(1, 'key').' field is prohibited: this relation cannot be detached, its link column does not accept null.']],
+            ],
+            'more keys than a list holds' => [
+                [['operation' => 'sync', 'key' => range(1, 101)]],
+                [$at(0, 'key') => ['The '.$at(0, 'key').' field must not have more than 100 items.']],
             ],
             'a key that is not a child of the parent' => [
                 [['operation' => 'sync', 'key' => [101, 102, 103, 104]]],
@@ -101,8 +109,42 @@ class HasManySyncValidationTest extends WriteTraceTestCase
             ['operation' => 'update', 'key' => 101, 'relations' => ['labels' => [['operation' => 'sync', 'key' => [101]], ['operation' => 'detach', 'key' => [101]]]]],
         ]]);
 
-        $this->assertExactErrors($response, ['mutate.0.relations.labels.1.key' => ['The mutate.0.relations.labels.1.key field holds a key that the sync entry of the relation keeps.']]);
+        $this->assertExactErrors($response, ['mutate.0.relations.labels.1.key' => ['The mutate.0.relations.labels.1.key field removes or moves a related row that a sync entry of its parent keeps.']]);
         $this->assertSame($labels, Label::query()->orderBy('id')->pluck('labelable_id', 'id')->all());
+    }
+
+    /** @param array<string, mixed> $other */
+    #[Test]
+    #[DataProvider('contradictingEntries')]
+    public function it_refuses_an_entry_that_removes_or_moves_a_row_that_a_sync_of_its_parent_keeps(array $other): void
+    {
+        $this->assertRefused(['mutate' => [
+            ['operation' => 'update', 'key' => 101, 'relations' => ['tickets' => [['operation' => 'sync', 'key' => [101, 102, 103]]]]],
+            $other,
+        ]], ['mutate.1.relations.tickets.0.key' => ['The mutate.1.relations.tickets.0.key field removes or moves a related row that a sync entry of its parent keeps.']]);
+    }
+
+    /** @return array<string, array{array<string, mixed>}> */
+    public static function contradictingEntries(): array
+    {
+        return [
+            'a delete in another list of the parent' => [['operation' => 'update', 'key' => 101, 'relations' => ['tickets' => [['operation' => 'delete', 'key' => [103]]]]]],
+            'an attach under another parent' => [['operation' => 'update', 'key' => 102, 'relations' => ['tickets' => [['operation' => 'attach', 'key' => [103]]]]]],
+        ];
+    }
+
+    #[Test]
+    public function it_refuses_a_detach_in_another_list_of_the_parent_of_a_row_that_a_sync_keeps(): void
+    {
+        $this->app?->bind(BookResource::class, SyncingBookResource::class);
+
+        $response = $this->postJson('/api/books/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => 101, 'relations' => ['labels' => [['operation' => 'sync', 'key' => [101]]]]],
+            ['operation' => 'update', 'key' => 101, 'relations' => ['labels' => [['operation' => 'detach', 'key' => [101]]]]],
+        ]]);
+
+        $this->assertExactErrors($response, ['mutate.1.relations.labels.0.key' => ['The mutate.1.relations.labels.0.key field removes or moves a related row that a sync entry of its parent keeps.']]);
+        $this->assertSame(101, Label::query()->findOrFail(101)->getAttribute('labelable_id'));
     }
 
     #[Test]

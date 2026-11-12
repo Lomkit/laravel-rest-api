@@ -8,11 +8,12 @@ use Lomkit\Rest\Support\Translation;
 
 final class SyncConflict extends HttpResponseException
 {
-    public function __construct(public readonly string $path, public readonly int|string $key)
+    /** @param non-empty-list<array{reason: string, path: string, key: int|string}> $conflicts */
+    public function __construct(public readonly array $conflicts)
     {
         $message = Translation::line('rest::errors.sync_conflict');
 
-        parent::__construct(new JsonResponse(['message' => $message, 'conflicts' => [['path' => $path, 'key' => $key]]], JsonResponse::HTTP_CONFLICT));
+        parent::__construct(new JsonResponse(['message' => $message, 'conflicts' => $conflicts], JsonResponse::HTTP_CONFLICT));
 
         $this->message = $message;
     }

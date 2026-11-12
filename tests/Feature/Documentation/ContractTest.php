@@ -457,7 +457,7 @@ class ContractTest extends DocumentationTestCase
 
         $response->assertConflict()->assertExactJson([
             'message' => 'The record was changed by another request.',
-            'conflicts' => [['path' => 'mutate.1', 'key' => 1, 'version' => '2026-01-01T00:00:00.000000Z']],
+            'conflicts' => [['reason' => 'version', 'path' => 'mutate.1', 'key' => 1, 'version' => '2026-01-01T00:00:00.000000Z']],
         ]);
         $this->assertSame(['$ref' => '#/components/responses/RestConflict'], $document['paths']['/shows/mutate']['post']['responses'][409]);
         $this->assertSame([], $validator->schemaErrors($document, '#/components/responses/RestConflict/content/application~1json/schema', $response->json()));
@@ -479,7 +479,7 @@ class ContractTest extends DocumentationTestCase
 
         $response->assertConflict()->assertExactJson([
             'message' => 'The relation has a related row that the sync neither lists nor removes. Read the relation again, without include limits or filters, then send the request again.',
-            'conflicts' => [['path' => 'mutate.0.relations.shows.0.key', 'key' => 1]],
+            'conflicts' => [['reason' => 'unlisted', 'path' => 'mutate.0.relations.shows.0', 'key' => 1]],
         ]);
         $this->assertSame(['$ref' => '#/components/responses/RestConflict'], $document['paths']['/stages/mutate']['post']['responses'][409]);
         $this->assertSame([], $validator->schemaErrors($document, '#/components/responses/RestConflict/content/application~1json/schema', $response->json()));

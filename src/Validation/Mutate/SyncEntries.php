@@ -49,24 +49,19 @@ final readonly class SyncEntries
     /** @param array<string, true> $listed */
     private function beside(MutationNode $node, array $listed): void
     {
-        if ($node->operation === MutationOperation::Create || $node->operation === MutationOperation::Sync) {
+        $operation = $node->operation;
+
+        if (in_array($operation, [MutationOperation::Create, MutationOperation::Sync, MutationOperation::Delete, MutationOperation::Detach], true)) {
             return;
         }
 
-        $keys = self::keys($node);
-        $removes = $node->operation === MutationOperation::Delete || $node->operation === MutationOperation::Detach;
-
-        if (! $removes && $node->operation !== MutationOperation::Update) {
+        if ($operation !== MutationOperation::Update) {
             $this->rules->reject(Violation::besideSync($node->path.'.operation'));
 
             return;
         }
 
-        if ($removes && array_intersect_key($keys, $listed) !== []) {
-            $this->rules->reject(Violation::keptBySync($node->path.'.key'));
-        }
-
-        if (! $removes && array_diff_key($keys, $listed) !== []) {
+        if (array_diff_key(self::keys($node), $listed) !== []) {
             $this->rules->reject(Violation::unlistedBySync($node->path.'.key'));
         }
     }

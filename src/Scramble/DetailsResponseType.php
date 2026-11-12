@@ -15,6 +15,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Relations\Relation;
+use Lomkit\Rest\Relations\SyncMeaning;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
 use Lomkit\Rest\Support\Overrides;
@@ -108,12 +109,16 @@ final class DetailsResponseType
             'resource' => (new StringType)->setDescription('The related resource class; absent on a MorphTo relation with several types'),
             'relation' => (new StringType)->enum($names),
             'constraints' => $constraints,
-            'operations' => Schemas::list((new StringType)->enum(array_column(MutationOperation::cases(), 'value')), 'With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry. On a HasMany or MorphMany relation, sync takes keys only and checks that its list, with the delete and detach entries next to it, accounts for every child that the user can see'),
+            'operations' => Schemas::list((new StringType)->enum(array_column(MutationOperation::cases(), 'value')), 'With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry'),
+            'sync' => (new StringType)
+                ->enum(array_column(SyncMeaning::cases(), 'value'))
+                ->nullable(true)
+                ->setDescription('With relations.operations: what a `sync` entry of the relation does; null when the relation takes no sync. `replace`: the attached rows become the listed rows. `link`: the listed rows are linked, and no row is removed. `check`: on a syncable HasMany or MorphMany, the listed children are kept, nothing is written, and the request answers 409 when the list, with the delete and detach entries next to it, leaves out a child that the user can see'),
             'name' => new StringType,
             'pivot_fields' => Schemas::list(DetailsEntryTypes::pivotField(), 'With relations.pivot_fields, on many-to-many relations only: the pivot fields of the relation'),
             'types' => $types,
             'morph' => $morph,
-        ], ['resource', 'constraints', 'operations', 'pivot_fields', 'types', 'morph']);
+        ], ['resource', 'constraints', 'operations', 'sync', 'pivot_fields', 'types', 'morph']);
     }
 
     private static function rules(): ObjectType

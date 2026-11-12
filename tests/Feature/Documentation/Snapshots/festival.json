@@ -5551,7 +5551,7 @@
                                         },
                                         "operations": {
                                             "type": "array",
-                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry. On a HasMany or MorphMany relation, sync takes keys only and checks that its list, with the delete and detach entries next to it, accounts for every child that the user can see",
+                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
                                             "items": {
                                                 "type": "string",
                                                 "enum": [
@@ -5564,6 +5564,19 @@
                                                     "delete"
                                                 ]
                                             }
+                                        },
+                                        "sync": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "description": "With relations.operations: what a `sync` entry of the relation does; null when the relation takes no sync. `replace`: the attached rows become the listed rows. `link`: the listed rows are linked, and no row is removed. `check`: on a syncable HasMany or MorphMany, the listed children are kept, nothing is written, and the request answers 409 when the list, with the delete and detach entries next to it, leaves out a child that the user can see",
+                                            "enum": [
+                                                "check",
+                                                "replace",
+                                                "link",
+                                                null
+                                            ]
                                         },
                                         "name": {
                                             "type": "string"
@@ -9023,7 +9036,7 @@
                                         },
                                         "operations": {
                                             "type": "array",
-                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry. On a HasMany or MorphMany relation, sync takes keys only and checks that its list, with the delete and detach entries next to it, accounts for every child that the user can see",
+                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
                                             "items": {
                                                 "type": "string",
                                                 "enum": [
@@ -9036,6 +9049,19 @@
                                                     "delete"
                                                 ]
                                             }
+                                        },
+                                        "sync": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "description": "With relations.operations: what a `sync` entry of the relation does; null when the relation takes no sync. `replace`: the attached rows become the listed rows. `link`: the listed rows are linked, and no row is removed. `check`: on a syncable HasMany or MorphMany, the listed children are kept, nothing is written, and the request answers 409 when the list, with the delete and detach entries next to it, leaves out a child that the user can see",
+                                            "enum": [
+                                                "check",
+                                                "replace",
+                                                "link",
+                                                null
+                                            ]
                                         },
                                         "name": {
                                             "type": "string"
@@ -14576,7 +14602,7 @@
                                         },
                                         "operations": {
                                             "type": "array",
-                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry. On a HasMany or MorphMany relation, sync takes keys only and checks that its list, with the delete and detach entries next to it, accounts for every child that the user can see",
+                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
                                             "items": {
                                                 "type": "string",
                                                 "enum": [
@@ -14589,6 +14615,19 @@
                                                     "delete"
                                                 ]
                                             }
+                                        },
+                                        "sync": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "description": "With relations.operations: what a `sync` entry of the relation does; null when the relation takes no sync. `replace`: the attached rows become the listed rows. `link`: the listed rows are linked, and no row is removed. `check`: on a syncable HasMany or MorphMany, the listed children are kept, nothing is written, and the request answers 409 when the list, with the delete and detach entries next to it, leaves out a child that the user can see",
+                                            "enum": [
+                                                "check",
+                                                "replace",
+                                                "link",
+                                                null
+                                            ]
                                         },
                                         "name": {
                                             "type": "string"
@@ -17363,7 +17402,37 @@
                             "operation": {
                                 "type": "string",
                                 "enum": [
-                                    "sync",
+                                    "sync"
+                                ]
+                            },
+                            "key": {
+                                "description": "The keys of the children to keep, a key or a list: with the `delete` and `detach` entries next to the sync, they must account for every child that the user can see",
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 100
+                                    }
+                                ]
+                            }
+                        },
+                        "required": [
+                            "operation",
+                            "key"
+                        ],
+                        "additionalProperties": false
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": [
                                     "delete"
                                 ]
                             },
@@ -17664,26 +17733,61 @@
                                 },
                                 "conflicts": {
                                     "type": "array",
-                                    "description": "The update entries whose `version` is not the version of their row, and the `key` of the sync entries whose list leaves out a child, with that child: nothing was written",
+                                    "description": "The entries in conflict, by `reason`: nothing was written. `version`: an update entry whose `version` is not the version of its row. `unlisted`: a sync entry whose list, with the `delete` and `detach` entries next to it, leaves out `key`, a child that the user can see",
                                     "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "path": {
-                                                "type": "string"
-                                            },
-                                            "key": {
-                                                "type": [
-                                                    "integer",
-                                                    "string"
+                                        "oneOf": [
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "reason": {
+                                                        "type": "string",
+                                                        "const": "version"
+                                                    },
+                                                    "path": {
+                                                        "type": "string",
+                                                        "description": "The update entry"
+                                                    },
+                                                    "key": {
+                                                        "type": [
+                                                            "integer",
+                                                            "string"
+                                                        ]
+                                                    },
+                                                    "version": {
+                                                        "description": "The version of the row as the request found it, written as the search returns it; null when the row is gone"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "reason",
+                                                    "path",
+                                                    "key",
+                                                    "version"
                                                 ]
                                             },
-                                            "version": {
-                                                "description": "On an update entry: the version of the row as the request found it, written as the search returns it; null when the row is gone"
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "reason": {
+                                                        "type": "string",
+                                                        "const": "unlisted"
+                                                    },
+                                                    "path": {
+                                                        "type": "string",
+                                                        "description": "The sync entry"
+                                                    },
+                                                    "key": {
+                                                        "type": [
+                                                            "integer",
+                                                            "string"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "reason",
+                                                    "path",
+                                                    "key"
+                                                ]
                                             }
-                                        },
-                                        "required": [
-                                            "path",
-                                            "key"
                                         ]
                                     }
                                 }

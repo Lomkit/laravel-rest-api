@@ -56,7 +56,7 @@ final readonly class ChildWrites extends RelationWrites
         $seed = $parent->seed($children->getLocalKeyName(), $type);
         $single = ($children instanceof HasOne || $children instanceof MorphOne) && ! $children->isOneOfMany();
         $syncs = [];
-        $accounted = [];
+        $removed = [];
 
         foreach ($this->nodes() as $node) {
             $check = match (true) {
@@ -81,26 +81,29 @@ final readonly class ChildWrites extends RelationWrites
             );
 
             if ($this->syncs($node)) {
-                $syncs[] = $path;
+                $syncs[$path] = $rows;
             }
 
-            if ($this->syncs($node) || self::unlinks($node)) {
-                $accounted = [...$accounted, ...$rows];
+            if (self::unlinks($node)) {
+                $removed = [...$removed, ...$rows];
             }
         }
 
-        foreach ($syncs as $path) {
-            $replay->named->sync(new LinkedSync($path, $column, $owner, $accounted));
+        foreach ($syncs as $path => $kept) {
+            $replay->named->sync(new LinkedSync($path, $column, $owner, $kept, $removed));
         }
     }
 
     #[\Override]
     public function check(Model $parent, WriteChecks $checks): void
     {
+        $syncs = [];
+        $accounted = [];
+
         foreach ($this->nodes() as $node) {
             if ($this->syncs($node)) {
-                $checks->walk($this->relation->resource(), $node);
-                SyncPrecondition::verify($this->relation, $this->children($parent), $node, $this->accountedKeys());
+                $syncs[] = $node;
+                $accounted = [...$accounted, ...$checks->walk($this->relation->resource(), $node)];
 
                 continue;
             }
@@ -108,30 +111,25 @@ final readonly class ChildWrites extends RelationWrites
             $deletes = $node->operation === MutationOperation::Delete;
             $moves = ! in_array($node->operation, [MutationOperation::Create, MutationOperation::Update], true);
             $keys = $deletes ? new PlannedKeys : $this->planned($parent, $node->operation === MutationOperation::Detach);
+            $children = $checks->walk($this->relation->resource(), $node, $keys, $moves);
 
-            foreach ($checks->walk($this->relation->resource(), $node, $keys, $moves) as $child) {
+            foreach ($children as $child) {
                 $checks->link($this->relation, $node, $parent, $child, self::unlinks($node));
             }
+
+            if (self::unlinks($node)) {
+                $accounted = [...$accounted, ...$children];
+            }
+        }
+
+        foreach ($syncs as $sync) {
+            $checks->syncs->claim(new SyncClaim($this->relation, $this->children($parent), $sync->path, array_map(fn (Model $row): mixed => $row->getKey(), $accounted)));
         }
     }
 
     private function syncs(MutationNode $node): bool
     {
         return $node->operation === MutationOperation::Sync && $this->relation->syncsChildren();
-    }
-
-    /** @return list<int|string> */
-    private function accountedKeys(): array
-    {
-        $keys = [];
-
-        foreach ($this->nodes() as $node) {
-            if ($this->syncs($node) || self::unlinks($node)) {
-                $keys = [...$keys, ...(is_array($node->key) ? $node->key : [$node->key])];
-            }
-        }
-
-        return array_values(array_filter($keys, fn (int|string|null $key): bool => $key !== null));
     }
 
     private static function unlinks(MutationNode $node): bool
