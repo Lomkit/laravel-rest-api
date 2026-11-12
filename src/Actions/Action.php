@@ -23,7 +23,6 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use ReflectionMethod;
 
-/** @phpstan-consistent-constructor */
 class Action
 {
     use Batchable;

@@ -19,7 +19,6 @@ use Lomkit\Rest\Http\Requests\MetricRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Routing\Endpoint;
 
-/** @phpstan-consistent-constructor */
 abstract class Metric
 {
     use HasCache;

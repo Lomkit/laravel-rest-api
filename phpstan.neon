@@ -2,10 +2,12 @@ includes:
     - vendor/larastan/larastan/extension.neon
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon
     - vendor/tomasvotruba/type-coverage/config/extension.neon
+    - extension.neon
 
 parameters:
     paths:
         - src
+        - tests/Analysis
     level: 10
     phpVersion: 80300
     checkMissingOverrideMethodAttribute: true
