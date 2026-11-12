@@ -13,7 +13,6 @@ use Lomkit\Rest\Fields\Details\InputFieldDetails;
 use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Requests\RestRequest;
 
-/** @phpstan-consistent-constructor */
 class Instruction
 {
     use HasInputFields;
