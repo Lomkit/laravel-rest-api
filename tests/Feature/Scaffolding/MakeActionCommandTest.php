@@ -17,6 +17,7 @@ class MakeActionCommandTest extends ScaffoldingTestCase
     {
         $this->artisan('rest:action', ['name' => 'ScaffoldedAction'])
             ->expectsOutputToContain('Action [app/Rest/Actions/ScaffoldedAction.php] created successfully.')
+            ->expectsOutputToContain('List it in the actions() of a resource by its class: ScaffoldedAction::class.')
             ->assertSuccessful();
 
         $this->loadGeneratedClass(ScaffoldedAction::class);

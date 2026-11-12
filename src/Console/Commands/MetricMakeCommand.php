@@ -96,6 +96,12 @@ class MetricMakeCommand extends RestGeneratorCommand
     }
 
     #[\Override]
+    protected function afterWritten(): void
+    {
+        $this->components->info('List it in the metrics() of a resource by its class: '.class_basename($this->qualifyClass($this->getNameInput())).'::class.');
+    }
+
+    #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace.'\Rest\Metrics';

@@ -2,6 +2,8 @@
 
 namespace Lomkit\Rest\Http;
 
+use Illuminate\Contracts\Container\Container;
+use Illuminate\Support\ItemNotFoundException;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Authorization\CachedAbilities;
@@ -35,12 +37,6 @@ final class ResourceDefinition
     /** @var array<int, Instruction>|null */
     private ?array $instructions = null;
 
-    /** @var array<int, Action>|null */
-    private ?array $actions = null;
-
-    /** @var array<int, Metric>|null */
-    private ?array $metrics = null;
-
     private ?ResourceLimits $limits = null;
 
     private ?ResolvedText $text = null;
@@ -52,11 +48,15 @@ final class ResourceDefinition
     /** @var WeakMap<Action|Instruction, FieldSet> */
     private WeakMap $inputs;
 
+    private readonly ResourceDeclarations $declarations;
+
     public function __construct(
         private readonly Resource $resource,
         private readonly RestRequest $request,
+        Container $container,
     ) {
         $this->inputs = new WeakMap;
+        $this->declarations = new ResourceDeclarations($resource, $container);
     }
 
     public function fields(): FieldSet
@@ -92,22 +92,22 @@ final class ResourceDefinition
         return $this->instructions ??= $this->boundInstructions($this->resource->instructions());
     }
 
+    /** @internal */
+    public function declarations(): ResourceDeclarations
+    {
+        return $this->declarations;
+    }
+
     /** @return array<int, Action> */
     public function actions(): array
     {
-        return $this->actions ??= array_map(
-            fn (Action $action): Action => $action->resource($this->resource)->ensureValid(),
-            $this->resource->actions(),
-        );
+        return $this->declarations->actions()->all();
     }
 
     /** @return array<int, Metric> */
     public function metrics(): array
     {
-        return $this->metrics ??= array_map(
-            fn (Metric $metric): Metric => $metric->resource($this->resource)->ensureValid(),
-            $this->resource->metrics(),
-        );
+        return $this->declarations->metrics()->all();
     }
 
     public function scope(string $name): ?Scope
@@ -139,17 +139,17 @@ final class ResourceDefinition
 
     public function actionExists(string $key): bool
     {
-        return array_any($this->actions(), fn (Action $action): bool => $action->uriKey() === $key);
+        return $this->declarations->actions()->find($key) !== null;
     }
 
     public function action(string $key): Action
     {
-        return collect($this->actions())->sole(fn (Action $action): bool => $action->uriKey() === $key);
+        return $this->declarations->actions()->find($key) ?? throw new ItemNotFoundException;
     }
 
     public function metric(string $key): ?Metric
     {
-        return array_find($this->metrics(), fn (Metric $metric): bool => $metric->uriKey() === $key);
+        return $this->declarations->metrics()->find($key);
     }
 
     public function inputFields(Action|Instruction $declaration): FieldSet

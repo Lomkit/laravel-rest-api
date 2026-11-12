@@ -170,6 +170,7 @@ class MakeMetricCommandTest extends ScaffoldingTestCase
     {
         $this->artisan('rest:metric', ['name' => $name, ...$options, '--no-interaction' => true])
             ->expectsOutputToContain("Metric [app/Rest/Metrics/{$name}.php] created successfully.")
+            ->expectsOutputToContain("List it in the metrics() of a resource by its class: {$name}::class.")
             ->assertSuccessful();
 
         $this->assertSame($expected, $this->metric($name));

@@ -8,6 +8,8 @@ use Lomkit\Rest\Metrics\PartitionResult;
 
 class ShowsByStatus extends Partition
 {
+    public array $withoutMiddleware = ['auth'];
+
     #[\Override]
     public function calculate(Builder $query): PartitionResult
     {

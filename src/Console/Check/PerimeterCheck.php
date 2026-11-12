@@ -18,7 +18,7 @@ final readonly class PerimeterCheck
     public function __construct(private Container $container) {}
 
     /** @param list<string> $controllers */
-    public function run(array $controllers): PerimeterReport
+    public function run(array $controllers, DeclarationReport $declarations): PerimeterReport
     {
         $context = new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
         $resources = ControllerResources::of($controllers);
@@ -29,9 +29,7 @@ final readonly class PerimeterCheck
         }
 
         foreach ($resources as $resource) {
-            $definition = $context->resource($resource)->definition();
-
-            foreach ($definition->actions() as $action) {
+            foreach ($declarations->actionsOf($resource) as $action) {
                 $report = self::checkAction($resource, $action, $report);
             }
         }

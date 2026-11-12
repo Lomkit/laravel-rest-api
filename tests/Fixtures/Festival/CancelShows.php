@@ -14,6 +14,12 @@ class CancelShows extends Action
 {
     public ActionTarget $target = ActionTarget::Resources;
 
+    public ?int $maxResources = 2;
+
+    public bool $destructive = true;
+
+    public ?string $confirm = 'Cancel the selected shows?';
+
     #[\Override]
     public function fields(): array
     {

@@ -4,14 +4,12 @@ namespace Lomkit\Rest\Http\Routing;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\Request;
-use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\ResourceDefinition;
 use Lomkit\Rest\Http\RestContext;
-use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Query\Trashed;
 
 final readonly class EndpointRoutes
@@ -61,12 +59,12 @@ final readonly class EndpointRoutes
 
         $declarations = $definition === null ? [] : self::declarations($endpoint, $definition);
 
-        return [...array_map(fn (Action|Metric $declaration): RouteDefinition => $this->declarationRoute($endpoint, $route, $declaration), $declarations), $route];
+        return [...array_map(fn (DeclaredRoute $declaration): RouteDefinition => $this->declarationRoute($endpoint, $route, $declaration), $declarations), $route];
     }
 
-    private function declarationRoute(Endpoint $endpoint, RouteDefinition $catchAll, Action|Metric $declaration): RouteDefinition
+    private function declarationRoute(Endpoint $endpoint, RouteDefinition $catchAll, DeclaredRoute $declaration): RouteDefinition
     {
-        $key = $declaration->uriKey();
+        $key = $declaration->key;
 
         return new RouteDefinition(
             $catchAll->methods,
@@ -75,15 +73,16 @@ final readonly class EndpointRoutes
             $catchAll->uses,
             $catchAll->middleware->with($declaration->middleware)->without($declaration->withoutMiddleware),
             [(string) $endpoint->parameter() => $key],
+            $declaration->fingerprint(),
         );
     }
 
-    /** @return list<Action|Metric> */
+    /** @return list<DeclaredRoute> */
     private static function declarations(Endpoint $endpoint, ResourceDefinition $definition): array
     {
         return match ($endpoint) {
-            Endpoint::Operate => array_values($definition->actions()),
-            Endpoint::Metric => array_values($definition->metrics()),
+            Endpoint::Operate => $definition->declarations()->actions()->routes(),
+            Endpoint::Metric => $definition->declarations()->metrics()->routes(),
             default => [],
         };
     }

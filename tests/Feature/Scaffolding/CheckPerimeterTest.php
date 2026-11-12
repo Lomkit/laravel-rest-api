@@ -34,6 +34,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
 
         $this->assertSame(
             "  routes and policies ... 14 routes authenticated, 2 policies found\n"
+            ."  declarations ... 2 actions, 0 metrics built\n"
             ."  rows ... 1 resource with a perimeter, 2 marked #[WithoutPerimeter]\n"
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\ContinentResource ... #[WithoutPerimeter]\n"
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
@@ -53,6 +54,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
 
         $this->assertSame(
             "  routes and policies ... 6 routes authenticated, 1 policy found\n"
+            ."  declarations ... 0 actions, 0 metrics built\n"
             ."  rows ... FAILED\n"
             .'  ⇂ '.rtrim(self::JOURNAL_PROBLEM, '.')."\n"
             ."  actions ... no action runs on rows\n"
@@ -70,6 +72,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
 
         $this->assertSame(
             "  routes and policies ... 7 routes authenticated, 1 policy found\n"
+            ."  declarations ... 1 action, 0 metrics built\n"
             ."  rows ... 1 resource with a perimeter\n"
             ."  actions ... FAILED\n"
             .'  ⇂ '.rtrim(self::EXPORT_PROBLEM, '.')."\n"
@@ -95,6 +98,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                 'policies' => 4,
                 'problems' => [],
                 'search' => '/api/trips/search',
+                'declarations' => ['actions' => 3, 'metrics' => 0, 'problems' => []],
                 'rows' => [
                     'perimeter' => ['Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'Lomkit\Rest\Tests\Fixtures\Atlas\BookingResource'],
                     'without_perimeter' => ['Lomkit\Rest\Tests\Fixtures\Atlas\ContinentResource', 'Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource'],
@@ -121,6 +125,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
 
         $this->assertSame(
             "  routes and policies ... 14 routes authenticated, 2 policies found\n"
+            ."  declarations ... 2 actions, 0 metrics built\n"
             ."  rows ... FAILED\n"
             .'  ⇂ '.rtrim(self::JOURNAL_PROBLEM, '.')."\n"
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
@@ -145,6 +150,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                 'policies' => 1,
                 'problems' => [],
                 'search' => '/api/trips/search',
+                'declarations' => ['actions' => 2, 'metrics' => 0, 'problems' => []],
                 'rows' => [
                     'perimeter' => ['Lomkit\Rest\Tests\Fixtures\Atlas\TripResource'],
                     'without_perimeter' => ['Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource'],
@@ -170,6 +176,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
         $this->assertSame(
             "  routes and policies ... FAILED\n"
             ."  ⇂ No route uses a controller of the package. Register resources with Rest::resource() in routes/api.php, and check that bootstrap/app.php loads routes/api.php\n"
+            ."  declarations ... 0 actions, 0 metrics built\n"
             ."  rows ... 0 resources with a perimeter\n"
             ."  actions ... no action runs on rows\n"
             ."  relations ... no relation accepts detach\n",

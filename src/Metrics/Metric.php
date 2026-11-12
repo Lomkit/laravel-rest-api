@@ -8,7 +8,6 @@ use Dedoc\Scramble\Support\Generator\Types\Type;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Str;
 use Lomkit\Rest\Concerns\HasMeta;
 use Lomkit\Rest\Concerns\HasRouteMiddleware;
 use Lomkit\Rest\Concerns\Makeable;
@@ -18,6 +17,7 @@ use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Requests\MetricRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Support\DeclarationName;
 
 abstract class Metric
 {
@@ -40,12 +40,12 @@ abstract class Metric
 
     public function name(): string
     {
-        return $this->name ?: Str::of(class_basename(static::class))->beforeLast('Metric')->snake(' ')->title()->toString();
+        return DeclarationName::of($this->name, static::class, self::class);
     }
 
     public function uriKey(): string
     {
-        return Str::slug($this->name(), '-', null);
+        return DeclarationName::uriKey($this->name());
     }
 
     public function request(): RestRequest
