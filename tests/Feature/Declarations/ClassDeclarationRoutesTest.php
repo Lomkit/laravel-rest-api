@@ -155,8 +155,8 @@ class ClassDeclarationRoutesTest extends DeclarationTestCase
     /** @return array<string, array{bool, class-string, string}> */
     public static function dynamicKeys(): array
     {
-        $action = ': its route key must be read without building it. Set $name, or list the action as an instance.';
-        $metric = ': its route key must be read without building it. Set $name, or list the metric as an instance.';
+        $action = ': its route key must be read without building it. Set $uriKey for the route key and $name for the label, or list the action as an instance.';
+        $metric = ': its route key must be read without building it. Set $uriKey for the route key and $name for the label, or list the metric as an instance.';
 
         return [
             'an action that overrides name()' => [false, NamedByMethodAction::class, NamedByMethodAction::class.' is listed by its class, but it overrides name()'.$action],

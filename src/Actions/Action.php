@@ -36,6 +36,8 @@ class Action
 
     public ?string $name = null;
 
+    public ?string $uriKey = null;
+
     public ActionTarget $target = ActionTarget::Search;
 
     public int $chunkCount = 100;
@@ -57,7 +59,7 @@ class Action
 
     public function uriKey(): string
     {
-        return DeclarationName::uriKey($this->name());
+        return DeclarationName::uriKey($this->uriKey, $this->name());
     }
 
     public function request(): RestRequest

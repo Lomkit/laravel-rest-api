@@ -51,10 +51,10 @@ final readonly class DeclaredRoute
         }
 
         $defaults = $declarable->getDefaultProperties();
-        $name = $defaults['name'] ?? null;
+        $name = DeclarationName::of(self::text($defaults['name'] ?? null), $declarable->getName(), $kind->base());
 
         return new self(
-            DeclarationName::uriKey(DeclarationName::of(is_string($name) ? $name : null, $declarable->getName(), $kind->base())),
+            DeclarationName::uriKey(self::text($defaults['uriKey'] ?? null), $name),
             self::middlewareList($defaults['middleware'] ?? []),
             self::middlewareList($defaults['withoutMiddleware'] ?? []),
         );
@@ -78,6 +78,11 @@ final readonly class DeclaredRoute
         }
 
         return $declarable;
+    }
+
+    private static function text(mixed $value): ?string
+    {
+        return is_string($value) ? $value : null;
     }
 
     /** @return list<string> */

@@ -29,6 +29,8 @@ abstract class Metric
 
     public ?string $name = null;
 
+    public ?string $uriKey = null;
+
     public bool $withoutSearching = false;
 
     public int $weekStartsOn = CarbonInterface::MONDAY;
@@ -45,7 +47,7 @@ abstract class Metric
 
     public function uriKey(): string
     {
-        return DeclarationName::uriKey($this->name());
+        return DeclarationName::uriKey($this->uriKey, $this->name());
     }
 
     public function request(): RestRequest

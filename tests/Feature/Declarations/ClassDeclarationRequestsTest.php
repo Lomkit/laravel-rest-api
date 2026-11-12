@@ -26,7 +26,9 @@ use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketsByStatus;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\GuardingAction;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\GuardingMetric;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\NinthDayMetric;
+use Lomkit\Rest\Tests\Feature\Declarations\Stubs\PromotedKeyMetric;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\QueuedCloseTickets;
+use Lomkit\Rest\Tests\Feature\Declarations\Stubs\RekeyingAction;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\RenamingAction;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\SkippingAction;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\UnguardingMetric;
@@ -182,6 +184,8 @@ class ClassDeclarationRequestsTest extends DeclarationTestCase
             'an action that adds middleware' => [false, GuardingAction::class, '/desk-tickets/actions/guarding'],
             'a metric that drops middleware' => [true, UnguardingMetric::class, '/desk-tickets/metrics/unguarding'],
             'a metric that adds middleware' => [true, GuardingMetric::class, '/desk-tickets/metrics/guarding'],
+            'an action that changes its route key' => [false, RekeyingAction::class, '/desk-tickets/actions/rekeying'],
+            'a metric whose promoted constructor parameter sets its route key' => [true, PromotedKeyMetric::class, '/desk-tickets/metrics/promoted-key'],
         ];
     }
 
