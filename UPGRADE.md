@@ -4,6 +4,7 @@
 
 Version 3.3 adds features.
 
+- `ActionFields` and `InstructionFields` read an input in a given type: `$fields->string('reason')`, `integer()`, `float()`, `boolean()`, `date()` (a `CarbonImmutable`), `enum('status', Status::class)` and `array()`. Each returns the value that the field cast, or `null` when the value is `null`: sent as `null`, or not sent and without default. `float()` also converts an `int` or a numeric string (`"19.99"` gives `19.99`), and `integer()` a string that is exactly an integer (`"3"` gives `3`; `"3.5"` and `"1e3"` throw). The other readers convert nothing. A value of another type, a case of another enum included, throws `Lomkit\Rest\Exceptions\InvalidFieldException`, as a name that `fields()` does not declare does. `$fields->amount` still returns the value as the field cast it, so a `Number` sent as `"19.99"` stays that string. `has()`, `filled()`, `only()` and `toArray()` do not change.
 - `PivotWrite::user()` returns the user that the package checked the policies for, `null` for a guest, as `ActionFields::user()` does: a `PivotPersister` can record who linked a row without reading the authentication state. The user is an optional last argument of the `PivotWrite` constructor, so code that builds a `PivotWrite` keeps working.
 
 ## 3.2 additions

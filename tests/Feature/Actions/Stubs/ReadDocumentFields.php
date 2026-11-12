@@ -9,6 +9,7 @@ use Lomkit\Rest\Fields\DateTime;
 use Lomkit\Rest\Fields\Enum;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Fields\Json;
+use Lomkit\Rest\Fields\Number;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Tests\Fixtures\Archive\Document;
 
@@ -34,6 +35,8 @@ class ReadDocumentFields extends Action
             Enum::make('priority', DocumentPriority::class)->default(DocumentPriority::Normal),
             Integer::make('copies'),
             Json::make('labels'),
+            Number::make('amount'),
+            Number::make('qty'),
             Text::make('note')->nullable(),
             Text::make('reason'),
         ];
