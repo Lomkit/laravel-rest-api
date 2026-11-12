@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany as EloquentBelongsToMany;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Contracts\PivotRelation;
+use Lomkit\Rest\Contracts\SyncableRelation;
 use Lomkit\Rest\Fields\Details\FieldDetails;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Details\DetailsSelection;
@@ -116,6 +117,11 @@ class Relation
     {
         $supported = array_values(array_filter($this->mutationOperations(), fn (MutationOperation $operation): bool => $operation !== MutationOperation::Delete));
         $operations = $this->operationSelection()->from($supported, $this instanceof PivotRelation);
+        $removal = ChildRemoval::of($this);
+
+        if ($removal !== null) {
+            $operations[] = OperationSelection::syncing($this, $removal, $operations);
+        }
 
         return $this->isDeletable() ? [...$operations, MutationOperation::Delete] : $operations;
     }
@@ -143,10 +149,18 @@ class Relation
                 'required_on_update' => $this->isRequiredOnUpdate(),
                 'prohibited_on_update' => $this->isProhibitedOnUpdate(),
             ]]),
-            ...$selection->part('relations.operations', fn (): array => ['operations' => array_column($this->acceptedOperations(), 'value')]),
+            ...$selection->part('relations.operations', $this->operationDetails(...)),
             'name' => $this->name(),
             ...$selection->part('relations.pivot_fields', $this->pivotFieldDetails(...)),
         ];
+    }
+
+    /** @return array{operations: list<string>, sync_removes?: ?string} */
+    private function operationDetails(): array
+    {
+        $operations = ['operations' => array_column($this->acceptedOperations(), 'value')];
+
+        return $this instanceof SyncableRelation ? [...$operations, 'sync_removes' => $this->syncRemoval()?->value] : $operations;
     }
 
     /** @return array{pivot_fields?: list<FieldDetails>} */

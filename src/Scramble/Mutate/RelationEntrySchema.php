@@ -12,6 +12,7 @@ use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\ChildRemoval;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\KeySchema;
@@ -93,10 +94,26 @@ final readonly class RelationEntrySchema
             return $entry;
         }
 
-        $entries = Schemas::list($entry, $relation->isDeletable() ? 'Each key of a `delete` entry counts as one entry.' : '');
+        $entries = Schemas::list($entry, self::listDescription($resource, $relation));
         $entries->setMax($resource->context()->limits()->sizes->relationEntries);
 
         return $entries;
+    }
+
+    private static function listDescription(Resource $resource, Relation $relation): string
+    {
+        $deletes = $relation->isDeletable() ? 'Each key of a `delete` entry counts as one entry.' : '';
+        $removal = ChildRemoval::of($relation);
+
+        if ($removal === null) {
+            return $deletes;
+        }
+
+        $max = $resource->context()->limits()->totals->entries;
+        $verb = $removal === ChildRemoval::Delete ? 'deletes' : 'detaches';
+        $sync = "A `sync` entry keeps the children that it lists and {$verb} the others that the related resource reaches, at most {$max}. It comes once, next to `create` entries and `update` entries of the keys that it lists.";
+
+        return trim("{$deletes} {$sync}");
     }
 
     private function entry(Resource $resource, Relation $relation): Reference
@@ -160,7 +177,7 @@ final readonly class RelationEntrySchema
             'version' => MutationSchema::version($related, $operation),
             'attributes' => $write === null ? null : $this->writable->attributes($related, $write),
             'pivot' => $pivot === null ? null : $this->writable->pivot($relation, $pivot),
-            'without_detaching' => $operation === MutationOperation::Sync ? self::withoutDetaching($relation) : null,
+            'without_detaching' => $operation === MutationOperation::Sync && ! $relation->syncsChildren() ? self::withoutDetaching($relation) : null,
             'relations' => $writesRow && $operation->takesRelations() ? $this->relations($related, $operation) : null,
         ]);
     }

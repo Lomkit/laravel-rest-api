@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Relations\Traits;
 
 use Lomkit\Rest\Contracts\PivotRelation;
+use Lomkit\Rest\Contracts\SyncableRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Relations\OperationSelection;
 
@@ -31,7 +32,16 @@ trait SelectsOperations
 
     final public function writesRelatedRows(MutationOperation $operation): bool
     {
+        if ($operation === MutationOperation::Sync && $this->syncsChildren()) {
+            return false;
+        }
+
         return $operation === MutationOperation::Create || ! $this->operationSelection()->withdraws(MutationOperation::Update, $this->mutationOperations());
+    }
+
+    final public function syncsChildren(): bool
+    {
+        return $this instanceof SyncableRelation && $this->syncRemoval() !== null;
     }
 
     private function operationSelection(): OperationSelection

@@ -14,6 +14,7 @@ use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Metrics\Metric;
+use Lomkit\Rest\Relations\ChildRemoval;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scopes\Scope;
 use Lomkit\Rest\Scramble\Components\RecordSchema;
@@ -109,11 +110,15 @@ final class DetailsResponseType
             'relation' => (new StringType)->enum($names),
             'constraints' => $constraints,
             'operations' => Schemas::list((new StringType)->enum(array_column(MutationOperation::cases(), 'value')), 'With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry'),
+            'sync_removes' => (new StringType)
+                ->enum(array_column(ChildRemoval::cases(), 'value'))
+                ->nullable(true)
+                ->setDescription('With relations.operations, on HasMany and MorphMany relations only: what a `sync` entry does to the children that it does not list, set with syncable(); null when the relation has no such sync'),
             'name' => new StringType,
             'pivot_fields' => Schemas::list(DetailsEntryTypes::pivotField(), 'With relations.pivot_fields, on many-to-many relations only: the pivot fields of the relation'),
             'types' => $types,
             'morph' => $morph,
-        ], ['resource', 'constraints', 'operations', 'pivot_fields', 'types', 'morph']);
+        ], ['resource', 'constraints', 'operations', 'sync_removes', 'pivot_fields', 'types', 'morph']);
     }
 
     private static function rules(): ObjectType
