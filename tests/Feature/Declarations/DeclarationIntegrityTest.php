@@ -77,7 +77,7 @@ class DeclarationIntegrityTest extends DeclarationTestCase
     }
 
     #[Test]
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function it_reads_the_middleware_that_a_trait_declares(): void
     {
         DeskTicketResource::$moreActions = [TraitGuardedAction::class];
