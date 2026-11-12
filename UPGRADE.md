@@ -1,5 +1,11 @@
 # Upgrade Guide
 
+## 3.3 additions
+
+Version 3.3 adds features.
+
+- `PivotWrite::user()` returns the user that the package checked the policies for, `null` for a guest, as `ActionFields::user()` does: a `PivotPersister` can record who linked a row without reading the authentication state. The user is an optional last argument of the `PivotWrite` constructor, so code that builds a `PivotWrite` keeps working.
+
 ## 3.2 additions
 
 Version 3.2 adds features; a few many-to-many write details change, listed below.
