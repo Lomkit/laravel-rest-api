@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 use LogicException;
 use Lomkit\Rest\Fields\MutationOperation;
+use Lomkit\Rest\Relations\ChildRemoval;
 
 final readonly class ChildWrites extends RelationWrites
 {
@@ -51,13 +52,15 @@ final readonly class ChildWrites extends RelationWrites
         $single = ($children instanceof HasOne || $children instanceof MorphOne) && ! $children->isOneOfMany();
 
         foreach ($this->nodes() as $node) {
-            $check = match ($node->operation) {
-                MutationOperation::Update, MutationOperation::Detach, MutationOperation::Delete => LinkCheck::Current,
-                default => $single ? LinkCheck::Single : LinkCheck::None,
+            $removal = $this->removal($node);
+            $check = match (true) {
+                $removal !== null, in_array($node->operation, [MutationOperation::Update, MutationOperation::Detach, MutationOperation::Delete], true) => LinkCheck::Current,
+                $single => LinkCheck::Single,
+                default => LinkCheck::None,
             };
             $path = $check === LinkCheck::Single ? $node->path : $node->path.'.key';
 
-            if ($node->operation === MutationOperation::Detach) {
+            if ($node->operation === MutationOperation::Detach || $removal === ChildRemoval::Detach) {
                 $replay->clear($path, $column);
             }
 
@@ -65,11 +68,15 @@ final readonly class ChildWrites extends RelationWrites
                 $replay->single($path, $this->relation->acceptedOperations());
             }
 
-            $replay->walk(
+            $rows = $replay->walk(
                 $this->relation->resource(),
                 $node,
                 fn (LinkedRow $child): LinkStep => new LinkStep($path, $column, $child->identity, $child->link($column), $owner, self::unlinks($node), $check, $seed),
             );
+
+            if ($removal !== null) {
+                $replay->syncs->sync($path, $column, $owner, $rows);
+            }
         }
     }
 
@@ -85,6 +92,11 @@ final readonly class ChildWrites extends RelationWrites
                 $checks->link($this->relation, $node, $parent, $child, self::unlinks($node));
             }
         }
+    }
+
+    private function removal(MutationNode $node): ?ChildRemoval
+    {
+        return $node->operation === MutationOperation::Sync ? ChildRemoval::of($this->relation) : null;
     }
 
     private static function unlinks(MutationNode $node): bool

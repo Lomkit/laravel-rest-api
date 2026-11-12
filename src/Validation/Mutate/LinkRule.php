@@ -24,6 +24,7 @@ final readonly class LinkRule implements ValidationRule
             $relation === null => [],
             $operation === MutationOperation::Update, $operation === MutationOperation::Detach, $operation === MutationOperation::Delete => [$entry->at('key')->path],
             $relation instanceof PivotRelation && $operation === MutationOperation::Attach => [$entry->at('key')->path],
+            $relation->syncsChildren() && $operation === MutationOperation::Sync => [$entry->at('key')->path],
             $relation->hasMultipleEntries() => [],
             $operation === MutationOperation::Create, $operation === MutationOperation::Attach => [$entry->path],
             default => [],

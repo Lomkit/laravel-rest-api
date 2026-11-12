@@ -84,6 +84,11 @@ final readonly class LinkColumn
         return self::owner($this->morphType === null ? null : self::text($row->getRawOriginal($this->morphType)), $row->getRawOriginal($this->foreignKey));
     }
 
+    public function links(Model $row, string $owner): bool
+    {
+        return self::table($row) === self::table($this->child) && $this->of($row) === $owner;
+    }
+
     /**
      * @param  array<string, array{?string, mixed}>  $owners
      * @return array<string, string>

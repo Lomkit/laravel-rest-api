@@ -34,12 +34,11 @@ final class LinkReplay
     /** @var array<string, list<MutationOperation>> */
     private array $singles = [];
 
-    public readonly PivotLedger $pivots;
-
-    public function __construct(private readonly RowSet $rows)
-    {
-        $this->pivots = new PivotLedger;
-    }
+    public function __construct(
+        private readonly RowSet $rows,
+        public readonly PivotLedger $pivots = new PivotLedger,
+        public readonly SyncLedger $syncs = new SyncLedger,
+    ) {}
 
     /** @param list<MutationNode> $nodes */
     public function plan(Resource $resource, array $nodes): void
@@ -133,9 +132,7 @@ final class LinkReplay
             }
         }
 
-        foreach ($this->pivots->violations() as $path => $violation) {
-            $violations[$path] ??= $violation;
-        }
+        $violations += $this->pivots->violations() + $this->syncs->violations();
 
         foreach ($this->deleted as [$path, $identity]) {
             if ($this->named[$identity] > 1) {
@@ -170,6 +167,7 @@ final class LinkReplay
         }
 
         $this->named[$row->identity] = ($this->named[$row->identity] ?? 0) + 1;
+        $this->syncs->name($row);
 
         if ($node->operation === MutationOperation::Delete) {
             $this->deleted[] = [$node->path.'.key', $row->identity];

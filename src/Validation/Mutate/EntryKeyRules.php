@@ -58,7 +58,7 @@ final readonly class EntryKeyRules
         ]);
         $this->rules->addWhenPresent($entry->at('relations'), self::whenOperation('prohibited_if', $entry, fn (MutationOperation $candidate): bool => ! $candidate->takesRelations() || ! $writesRow($candidate)));
         $key = $this->keys->read($entry->at('key'), $resource, $operation, $listed, $runs);
-        $this->rules->add($entry->at('without_detaching')->path, ['boolean', 'prohibited_unless:'.$entry->at('operation')->path.','.MutationOperation::Sync->value]);
+        $this->rules->add($entry->at('without_detaching')->path, $relation?->syncsChildren() === true ? ['prohibited'] : ['boolean', 'prohibited_unless:'.$entry->at('operation')->path.','.MutationOperation::Sync->value]);
         $this->version($entry, $resource, $operation, $key);
 
         return $key;
