@@ -15,6 +15,8 @@ use Lomkit\Rest\Config\ConfigValue;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\Routing\DeclaredRouteSource;
+use Lomkit\Rest\Http\Routing\FreshRoutes;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
 use Lomkit\Rest\Http\Routing\RememberedRoutes;
 use Lomkit\Rest\Http\Routing\ResourceRegistrar;
@@ -45,7 +47,7 @@ class Rest
             $controller,
             new RouteMiddleware($this->packageMiddleware()),
             $this->container,
-            ConfigValue::of($this->config, 'rest.routes.remember')->boolean(),
+            $this->routeSource(),
         );
     }
 
@@ -68,6 +70,15 @@ class Rest
     public function forgetRoutes(): void
     {
         RememberedRoutes::forget();
+    }
+
+    private function routeSource(): DeclaredRouteSource
+    {
+        if (ConfigValue::of($this->config, 'rest.routes.remember')->boolean()) {
+            return new RememberedRoutes;
+        }
+
+        return new FreshRoutes;
     }
 
     /** @return list<string> */

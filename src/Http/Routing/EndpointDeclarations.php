@@ -17,7 +17,7 @@ final class EndpointDeclarations
     public function __construct(
         private readonly string $controller,
         private readonly Container $container,
-        private readonly bool $remember,
+        private readonly DeclaredRouteSource $source,
     ) {}
 
     /** @return list<DeclaredRoute> */
@@ -27,11 +27,7 @@ final class EndpointDeclarations
             return [];
         }
 
-        if (! $this->remember) {
-            return $this->read($endpoint);
-        }
-
-        return RememberedRoutes::remember($this->controller::resourceClass(), $endpoint, fn (): array => $this->read($endpoint));
+        return $this->source->routes($this->controller::resourceClass(), $endpoint, fn (): array => $this->read($endpoint));
     }
 
     /** @return list<DeclaredRoute> */

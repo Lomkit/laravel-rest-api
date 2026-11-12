@@ -249,9 +249,12 @@ return [
     | resource class until the PHP process ends, and a later registration
     | of that resource class reuses them without building the resource.
     | It helps a process that registers the routes more than once, such as
-    | a test suite. Call Rest::forgetRoutes() after a change of actions()
-    | or metrics() in the same process. In production, cache the routes
-    | with "php artisan route:cache" instead.
+    | a test suite. The routes reflect whatever actions() and metrics() read
+    | at the first registration: config, env, static properties, container
+    | bindings. In a test that changes them, forget the routes before
+    | parent::setUp() and in tearDown(), or use the
+    | Lomkit\Rest\Testing\ForgetsRoutes trait, which does both. In
+    | production, cache the routes with "php artisan route:cache" instead.
     |
     */
 

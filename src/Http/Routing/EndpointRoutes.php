@@ -22,7 +22,7 @@ final readonly class EndpointRoutes
         private RouteMiddleware $middleware,
         private array $endpointMiddleware,
         private Container $container,
-        private bool $remembersRoutes = false,
+        private DeclaredRouteSource $routeSource = new FreshRoutes,
     ) {}
 
     /**
@@ -33,7 +33,7 @@ final readonly class EndpointRoutes
     {
         $this->checkSoftDeletes($endpoints);
 
-        $declarations = new EndpointDeclarations($this->controller, $this->container, $this->remembersRoutes);
+        $declarations = new EndpointDeclarations($this->controller, $this->container, $this->routeSource);
         $definitions = [];
 
         foreach ($endpoints as $endpoint) {

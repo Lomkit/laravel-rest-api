@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Tests\Feature\Declarations;
 
 use Illuminate\Routing\RouteCollection;
 use Lomkit\Rest\Facades\Rest;
+use Lomkit\Rest\Testing\ForgetsRoutes;
 use Lomkit\Rest\Tests\Concerns\CompilesRoutes;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeclarationLog;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskCloseTickets;
@@ -15,22 +16,7 @@ use PHPUnit\Framework\Attributes\Test;
 class RememberedRoutesTest extends DeclarationTestCase
 {
     use CompilesRoutes;
-
-    #[\Override]
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Rest::forgetRoutes();
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        Rest::forgetRoutes();
-
-        parent::tearDown();
-    }
+    use ForgetsRoutes;
 
     #[Test]
     #[DataProvider('forms')]
