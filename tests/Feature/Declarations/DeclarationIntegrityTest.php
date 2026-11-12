@@ -26,6 +26,7 @@ use Lomkit\Rest\Tests\Feature\Declarations\Stubs\TicketJournal;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\ToggledQueuedAction;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\TraitGuardedAction;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\Attributes\Test;
 use Throwable;
 
@@ -76,6 +77,7 @@ class DeclarationIntegrityTest extends DeclarationTestCase
     }
 
     #[Test]
+    #[RequiresPhp('>= 8.5')]
     public function it_reads_the_middleware_that_a_trait_declares(): void
     {
         DeskTicketResource::$moreActions = [TraitGuardedAction::class];
