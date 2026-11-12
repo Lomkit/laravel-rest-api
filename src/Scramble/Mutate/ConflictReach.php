@@ -5,8 +5,9 @@ namespace Lomkit\Rest\Scramble\Mutate;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Relations\Relation;
 
-final class VersionReach
+final class ConflictReach
 {
     public static function of(Resource $resource): bool
     {
@@ -18,7 +19,7 @@ final class VersionReach
             $next = [];
 
             foreach ($level as [$current, $updated]) {
-                if ($updated && $current->definition()->version() !== null) {
+                if (self::conflicts($current, $updated, $at < $depth)) {
                     return true;
                 }
 
@@ -34,6 +35,15 @@ final class VersionReach
         }
 
         return false;
+    }
+
+    private static function conflicts(Resource $resource, bool $updated, bool $nests): bool
+    {
+        if ($updated && $resource->definition()->version() !== null) {
+            return true;
+        }
+
+        return $nests && array_any($resource->definition()->relations(), fn (Relation $relation): bool => $relation->syncsChildren());
     }
 
     /** @return list<array{Resource, bool}> */

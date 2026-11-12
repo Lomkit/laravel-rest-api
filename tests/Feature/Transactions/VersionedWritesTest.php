@@ -134,7 +134,7 @@ class VersionedWritesTest extends PackageTestCase
         $first->assertOk();
         $second->assertConflict()->assertExactJson([
             'message' => 'The record was changed by another request.',
-            'conflicts' => [['path' => 'mutate.0', 'key' => 1, 'version' => '2026-03-01T10:00:00.000000Z']],
+            'conflicts' => [['reason' => 'version', 'path' => 'mutate.0', 'key' => 1, 'version' => '2026-03-01T10:00:00.000000Z']],
         ]);
         $this->assertSame([true], $locked);
         $this->assertSame('Final report', $this->document()->title);

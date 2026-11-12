@@ -27,14 +27,17 @@ final class WriteChecks
     /** @var array<int, list<Check>> */
     private array $pending = [];
 
-    /** @var array<int, Model> */
-    private array $drafts = [];
+    private readonly WalkedRows $walked;
 
     public readonly PivotSet $pivots;
 
-    public function __construct(private readonly RowSet $rows)
+    public readonly SyncClaims $syncs;
+
+    public function __construct(RowSet $rows)
     {
+        $this->walked = new WalkedRows($rows);
         $this->pivots = new PivotSet;
+        $this->syncs = new SyncClaims;
     }
 
     /** @param list<MutationNode> $nodes */
@@ -52,7 +55,7 @@ final class WriteChecks
     {
         $rows = [];
 
-        foreach ($this->rowsOf($resource, $node) as $row) {
+        foreach ($this->walked->of($resource, $node) as $row) {
             $writes = RelationWrites::ofNode($resource, $row, $node);
             $attributes = $node->attributes ?? [];
             $planned = $keys;
@@ -86,12 +89,12 @@ final class WriteChecks
 
     public function row(Resource $resource, mixed $key): ?Model
     {
-        return is_int($key) || is_string($key) ? $this->rows->peek($resource, $key) : null;
+        return $this->walked->row($resource, $key);
     }
 
     public function draft(Resource $resource, MutationNode $node): Model
     {
-        return $this->drafts[spl_object_id($node)] ??= $resource::newModel();
+        return $this->walked->draft($resource, $node);
     }
 
     public function link(Relation $relation, MutationNode $node, Model $parent, Model $related, bool $detach): void
@@ -167,29 +170,6 @@ final class WriteChecks
             ->context()
             ->authorizer()
             ->plan($checks);
-    }
-
-    /** @return list<Model> */
-    private function rowsOf(Resource $resource, MutationNode $node): array
-    {
-        if ($node->operation === MutationOperation::Create) {
-            $draft = $this->draft($resource, $node);
-            unset($this->drafts[spl_object_id($node)]);
-
-            return [$draft];
-        }
-
-        $rows = [];
-
-        foreach (is_array($node->key) ? $node->key : [$node->key] as $key) {
-            $row = $this->row($resource, $key);
-
-            if ($row !== null) {
-                $rows[] = $row;
-            }
-        }
-
-        return $rows;
     }
 
     private static function created(Model $model): bool

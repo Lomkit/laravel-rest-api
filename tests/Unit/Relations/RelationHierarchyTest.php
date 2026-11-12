@@ -5,6 +5,7 @@ namespace Lomkit\Rest\Tests\Unit\Relations;
 use Lomkit\Rest\Contracts\OwnerRelation;
 use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
+use Lomkit\Rest\Contracts\SyncableRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Requests\RestRequest;
@@ -46,7 +47,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class RelationHierarchyTest extends PackageTestCase
 {
-    private const array DETAILS = ['resource', 'relation', 'constraints', 'operations', 'name'];
+    private const array DETAILS = ['resource', 'relation', 'constraints', 'operations', 'sync', 'name'];
 
     private const array WRITES = [
         BelongsTo::class => OwnerWrites::class,
@@ -121,6 +122,7 @@ class RelationHierarchyTest extends PackageTestCase
         $this->assertSame($base === BelongsTo::class, $relation instanceof OwnerRelation);
         $this->assertSame($base === BelongsToMany::class, $relation instanceof PivotRelation);
         $this->assertSame($class === MorphTo::class, $relation instanceof PolymorphicRelation);
+        $this->assertSame(in_array($class, [HasMany::class, MorphMany::class], true), $relation instanceof SyncableRelation);
     }
 
     /**
@@ -203,7 +205,7 @@ class RelationHierarchyTest extends PackageTestCase
         $relation = $this->declared($resource, $name);
         [$details, $reserved] = match (true) {
             $base === BelongsToMany::class => [[...self::DETAILS, 'pivot_fields'], ['pivot']],
-            $class === MorphTo::class => [['relation', 'constraints', 'operations', 'name', 'types', 'morph'], ['@type']],
+            $class === MorphTo::class => [['relation', 'constraints', 'operations', 'sync', 'name', 'types', 'morph'], ['@type']],
             default => [self::DETAILS, []],
         };
 

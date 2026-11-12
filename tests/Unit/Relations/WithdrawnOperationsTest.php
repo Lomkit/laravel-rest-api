@@ -111,9 +111,9 @@ class WithdrawnOperationsTest extends PackageTestCase
     public function it_refuses_to_withdraw_an_operation_that_the_relation_does_not_accept(): void
     {
         $this->expectException(InvalidRelationException::class);
-        $this->expectExceptionMessage('The HasMany relation [tickets] cannot withdraw the sync operation: it does not accept it. Withdraw only the operations it accepts [create, update, attach, detach].');
+        $this->expectExceptionMessage('The HasMany relation [tickets] cannot withdraw the toggle operation: it does not accept it. Withdraw only the operations it accepts [create, update, attach, detach].');
 
-        HasMany::make('tickets', TicketResource::class)->withoutOperations(MutationOperation::Sync);
+        HasMany::make('tickets', TicketResource::class)->withoutOperations(MutationOperation::Toggle);
     }
 
     #[Test]

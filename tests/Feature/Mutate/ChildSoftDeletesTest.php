@@ -64,4 +64,25 @@ class ChildSoftDeletesTest extends PackageTestCase
         $response->assertUnprocessable();
         $response->assertExactJson(['message' => 'The selected mutate.0.relations.shows.0.key is invalid.', 'errors' => ['mutate.0.relations.shows.0.key' => ['The selected mutate.0.relations.shows.0.key is invalid.']]]);
     }
+
+    #[Test]
+    public function it_leaves_the_trashed_children_out_of_the_check_of_a_sync(): void
+    {
+        DB::table('shows')->insert(['id' => 4, 'stage_code' => 'main', 'title' => 'Rained out', 'starts_on' => '2026-06-30', 'status' => 'planned', 'deleted_at' => '2026-02-01 08:00:00']);
+
+        $response = $this->postJson('/api/stages/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => 'main', 'relations' => ['shows' => [['operation' => 'sync', 'key' => [1]], ['operation' => 'delete', 'key' => [2]]]]],
+        ]]);
+
+        $response->assertOk();
+        $response->assertExactJson(['operations' => [['operation' => 'update', 'key' => 'main', 'relations' => ['shows' => [['operation' => 'sync', 'key' => [1]], ['operation' => 'delete', 'key' => [2]]]]]]]);
+        $this->assertSame(
+            ['1 main -', '2 main 2026-03-01 09:00:00', '3 side -', '4 main 2026-02-01 08:00:00'],
+            Show::withTrashed()
+                ->orderBy('id')
+                ->get()
+                ->map(fn (Show $show): string => $show->getKey().' '.$show->getAttribute('stage_code').' '.($show->getRawOriginal('deleted_at') ?? '-'))
+                ->all(),
+        );
+    }
 }

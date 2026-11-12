@@ -158,6 +158,31 @@ final readonly class Violation
         return new self($key, 'rest::validation.kept_links');
     }
 
+    public static function repeatedSync(string $key): self
+    {
+        return new self($key, 'rest::validation.repeated_sync');
+    }
+
+    public static function besideSync(string $key): self
+    {
+        return new self($key, 'rest::validation.beside_sync');
+    }
+
+    public static function keptBySync(string $key): self
+    {
+        return new self($key, 'rest::validation.kept_by_sync');
+    }
+
+    public static function unlistedBySync(string $key): self
+    {
+        return new self($key, 'rest::validation.unlisted_by_sync');
+    }
+
+    public static function namedBesideSync(string $key): self
+    {
+        return new self($key, 'rest::validation.named_beside_sync');
+    }
+
     public static function throughMorphTo(string $key): self
     {
         return new self($key, 'rest::validation.through_morph_to');

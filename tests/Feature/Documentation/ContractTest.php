@@ -374,6 +374,7 @@ class ContractTest extends DocumentationTestCase
             'a row created under a relation to many' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['comments' => [['operation' => 'create', 'attributes' => ['rating' => 4, 'body' => 'Great']]]]]]],
             'a list of keys' => ['/stages/mutate', [['operation' => 'update', 'key' => 'side', 'relations' => ['shows' => [['operation' => 'attach', 'key' => [1, 2]]]]]]],
             'a deleted child row' => ['/stages/mutate', [['operation' => 'update', 'key' => 'main', 'relations' => ['shows' => [['operation' => 'delete', 'key' => [1]]]]]]],
+            'a sync of the children' => ['/stages/mutate', [['operation' => 'update', 'key' => 'main', 'relations' => ['shows' => [['operation' => 'sync', 'key' => [1]], ['operation' => 'update', 'key' => 1, 'attributes' => ['seats' => 250]]]]]]],
             'pivot fields and a sync that keeps the other rows' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['artists' => [['operation' => 'sync', 'key' => [1], 'pivot' => ['role' => 'guest'], 'without_detaching' => true]]]]]],
             'a morph-to-many relation' => ['/shows/mutate', [['operation' => 'update', 'key' => 2, 'relations' => ['labels' => [['operation' => 'attach', 'key' => 1, 'pivot' => ['position' => 1]]]]]]],
             'a row of each type of a morph relation' => ['/notes/mutate', [
@@ -426,6 +427,8 @@ class ContractTest extends DocumentationTestCase
             'a delete on a relation that does not take it' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['comments' => [['operation' => 'delete', 'key' => [1]]]]]]],
             'attributes on a delete' => ['/stages/mutate', [['operation' => 'update', 'key' => 'main', 'relations' => ['shows' => [['operation' => 'delete', 'key' => 1, 'attributes' => ['title' => 'Late show']]]]]]],
             'the sync option on an attach' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['artists' => [['operation' => 'attach', 'key' => 1, 'without_detaching' => true]]]]]],
+            'attributes on a sync of the children' => ['/stages/mutate', [['operation' => 'update', 'key' => 'main', 'relations' => ['shows' => [['operation' => 'sync', 'key' => [1], 'attributes' => ['title' => 'Late show']]]]]]],
+            'the sync option on a sync of the children' => ['/stages/mutate', [['operation' => 'update', 'key' => 'main', 'relations' => ['shows' => [['operation' => 'sync', 'key' => [1], 'without_detaching' => true]]]]]],
             'a pivot on a detach' => ['/shows/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['artists' => [['operation' => 'detach', 'key' => 1, 'pivot' => ['role' => 'lead']]]]]]],
             'a relation through another relation' => ['/stages/mutate', [['operation' => 'update', 'key' => 'main', 'relations' => ['comments' => [['operation' => 'attach', 'key' => 1]]]]]],
             'a morph relation without its type' => ['/notes/mutate', [['operation' => 'update', 'key' => 1, 'relations' => ['notable' => ['operation' => 'attach', 'key' => 2]]]]],
@@ -454,11 +457,33 @@ class ContractTest extends DocumentationTestCase
 
         $response->assertConflict()->assertExactJson([
             'message' => 'The record was changed by another request.',
-            'conflicts' => [['path' => 'mutate.1', 'key' => 1, 'version' => '2026-01-01T00:00:00.000000Z']],
+            'conflicts' => [['reason' => 'version', 'path' => 'mutate.1', 'key' => 1, 'version' => '2026-01-01T00:00:00.000000Z']],
         ]);
         $this->assertSame(['$ref' => '#/components/responses/RestConflict'], $document['paths']['/shows/mutate']['post']['responses'][409]);
         $this->assertSame([], $validator->schemaErrors($document, '#/components/responses/RestConflict/content/application~1json/schema', $response->json()));
         $this->assertNull(Show::query()->findOrFail(2)->stage_code);
+    }
+
+    #[Test]
+    public function it_answers_a_sync_that_leaves_out_a_child_as_the_document_describes(): void
+    {
+        $this->seedFestival();
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+        $validator = new OpenApiValidator;
+        $body = ['mutate' => [['operation' => 'update', 'key' => 'main', 'relations' => ['shows' => [['operation' => 'sync', 'key' => []]]]]]];
+
+        $this->assertSame([], $validator->requestErrors($document, '/stages/mutate', 'post', $body));
+
+        $response = $this->postJson('api/stages/mutate', $body);
+
+        $response->assertConflict()->assertExactJson([
+            'message' => 'The relation has a related row that the sync neither lists nor removes. Read the relation again, without include limits or filters, then send the request again.',
+            'conflicts' => [['reason' => 'unlisted', 'path' => 'mutate.0.relations.shows.0', 'key' => 1]],
+        ]);
+        $this->assertSame(['$ref' => '#/components/responses/RestConflict'], $document['paths']['/stages/mutate']['post']['responses'][409]);
+        $this->assertSame([], $validator->schemaErrors($document, '#/components/responses/RestConflict/content/application~1json/schema', $response->json()));
+        $this->assertSame('main', Show::query()->findOrFail(1)->stage_code);
     }
 
     #[Test]

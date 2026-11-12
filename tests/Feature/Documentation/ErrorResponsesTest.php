@@ -33,12 +33,19 @@ class ErrorResponsesTest extends DocumentationTestCase
                 'message' => ['type' => 'string'],
                 'conflicts' => [
                     'type' => 'array',
-                    'description' => 'The update entries whose `version` is not the version of their row: nothing was written',
-                    'items' => [
-                        'type' => 'object',
-                        'properties' => ['path' => ['type' => 'string'], 'key' => ['type' => ['integer', 'string']], 'version' => ['description' => 'The version of the row as the request found it, written as the search returns it; null when the row is gone']],
-                        'required' => ['path', 'key', 'version'],
-                    ],
+                    'description' => 'The entries in conflict, by `reason`: nothing was written. `version`: an update entry whose `version` is not the version of its row. `unlisted`: a sync entry whose list, with the `delete` and `detach` entries next to it, leaves out `key`, a child that the user can see',
+                    'items' => ['oneOf' => [
+                        [
+                            'type' => 'object',
+                            'properties' => ['reason' => ['type' => 'string', 'const' => 'version'], 'path' => ['type' => 'string', 'description' => 'The update entry'], 'key' => ['type' => ['integer', 'string']], 'version' => ['description' => 'The version of the row as the request found it, written as the search returns it; null when the row is gone']],
+                            'required' => ['reason', 'path', 'key', 'version'],
+                        ],
+                        [
+                            'type' => 'object',
+                            'properties' => ['reason' => ['type' => 'string', 'const' => 'unlisted'], 'path' => ['type' => 'string', 'description' => 'The sync entry'], 'key' => ['type' => ['integer', 'string']]],
+                            'required' => ['reason', 'path', 'key'],
+                        ],
+                    ]],
                 ],
             ],
             'required' => ['message', 'conflicts'],

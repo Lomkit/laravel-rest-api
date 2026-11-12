@@ -27,7 +27,9 @@ class StageResource extends Resource
     public function relations(): array
     {
         return [
-            HasMany::make('shows', ShowResource::class)->deletable(),
+            HasMany::make('shows', ShowResource::class)
+                ->deletable()
+                ->syncable(),
             HasManyThrough::make('comments', CommentResource::class),
         ];
     }

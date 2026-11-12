@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Scramble\Mutate;
 
 use Dedoc\Scramble\Support\Generator\Reference;
-use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
@@ -93,7 +92,8 @@ final readonly class RelationEntrySchema
             return $entry;
         }
 
-        $entries = Schemas::list($entry, $relation->isDeletable() ? 'Each key of a `delete` entry counts as one entry.' : '');
+        $deletes = $relation->isDeletable() ? 'Each key of a `delete` entry counts as one entry.' : '';
+        $entries = Schemas::list($entry, trim($deletes.' '.SyncSchema::children($relation)));
         $entries->setMax($resource->context()->limits()->sizes->relationEntries);
 
         return $entries;
@@ -156,24 +156,13 @@ final readonly class RelationEntrySchema
         $pivot = $relation instanceof PivotRelation ? $operation->pivotWriteOperation() : null;
 
         return array_filter([
-            'key' => $operation->requiresKey() ? $this->key($relation, $related) : null,
+            'key' => $operation->requiresKey() ? SyncSchema::keys($relation, $related, $operation) ?? $this->key($relation, $related) : null,
             'version' => MutationSchema::version($related, $operation),
             'attributes' => $write === null ? null : $this->writable->attributes($related, $write),
             'pivot' => $pivot === null ? null : $this->writable->pivot($relation, $pivot),
-            'without_detaching' => $operation === MutationOperation::Sync ? self::withoutDetaching($relation) : null,
+            'without_detaching' => SyncSchema::withoutDetaching($relation, $operation),
             'relations' => $writesRow && $operation->takesRelations() ? $this->relations($related, $operation) : null,
         ]);
-    }
-
-    private static function withoutDetaching(Relation $relation): Type
-    {
-        if ($relation->syncRequiresWithoutDetaching()) {
-            return (new BooleanType)
-                ->const(true)
-                ->setDescription('Must be true: the relation does not detach rows, so the rows that `key` does not list stay attached');
-        }
-
-        return (new BooleanType)->setDescription('When true, the rows that `key` does not list stay attached');
     }
 
     private function key(Relation $relation, Resource $related): Type

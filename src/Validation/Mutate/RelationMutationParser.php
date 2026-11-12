@@ -154,6 +154,7 @@ final readonly class RelationMutationParser
         }
 
         $this->countDeletions($value, $nodes);
+        (new SyncEntries($this->rules))->check($relation, $nodes);
 
         return $nodes;
     }

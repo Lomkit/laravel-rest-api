@@ -19,7 +19,7 @@
   "scopes": [],
   "relations": [
     {"resource": "Lomkit\\Rest\\Tests\\Fixtures\\Catalog\\CategoryResource", "relation": "category",
-     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "operations": ["create", "update", "attach", "detach"], "name": "BelongsTo"}],
+     "constraints": {"required_on_creation": false, "prohibited_on_creation": false, "required_on_update": false, "prohibited_on_update": false}, "operations": ["create", "update", "attach", "detach"], "sync": null, "name": "BelongsTo"}],
   "rules": {"all": {}, "create": {}, "update": {}},
   "text": null,
   "gates": ["view", "create", "update", "delete"],

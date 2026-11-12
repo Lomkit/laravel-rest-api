@@ -117,6 +117,10 @@ class Relation
         $supported = array_values(array_filter($this->mutationOperations(), fn (MutationOperation $operation): bool => $operation !== MutationOperation::Delete));
         $operations = $this->operationSelection()->from($supported, $this instanceof PivotRelation);
 
+        if ($this->syncsChildren()) {
+            $operations[] = MutationOperation::Sync;
+        }
+
         return $this->isDeletable() ? [...$operations, MutationOperation::Delete] : $operations;
     }
 
@@ -143,7 +147,7 @@ class Relation
                 'required_on_update' => $this->isRequiredOnUpdate(),
                 'prohibited_on_update' => $this->isProhibitedOnUpdate(),
             ]]),
-            ...$selection->part('relations.operations', fn (): array => ['operations' => array_column($this->acceptedOperations(), 'value')]),
+            ...$selection->part('relations.operations', fn (): array => ['operations' => array_column($this->acceptedOperations(), 'value'), 'sync' => SyncMeaning::of($this)?->value]),
             'name' => $this->name(),
             ...$selection->part('relations.pivot_fields', $this->pivotFieldDetails(...)),
         ];

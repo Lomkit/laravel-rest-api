@@ -120,7 +120,7 @@ class FrenchMessagesTest extends HelpdeskTestCase
 
         $response->assertConflict()->assertExactJson([
             'message' => 'L\'élément a été modifié par une autre requête.',
-            'conflicts' => [['path' => 'mutate.0', 'key' => $lamp->id, 'version' => '2026-03-01T10:00:00.000000Z']],
+            'conflicts' => [['reason' => 'version', 'path' => 'mutate.0', 'key' => $lamp->id, 'version' => '2026-03-01T10:00:00.000000Z']],
         ]);
     }
 

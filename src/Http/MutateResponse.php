@@ -45,6 +45,7 @@ final readonly class MutateResponse implements Responsable
 
         $checks->authorize($resource, $nodes);
         $request->versions()->verify();
+        $checks->syncs->verify();
         $gate->pass(fn (): ?Confirmation => $resource->mutateConfirmation(new PendingMutation($nodes, $request->rows())));
 
         $resource->mutatingAll($nodes);

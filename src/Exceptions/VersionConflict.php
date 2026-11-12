@@ -8,7 +8,7 @@ use Lomkit\Rest\Support\Translation;
 
 final class VersionConflict extends HttpResponseException
 {
-    /** @param non-empty-list<array{path: string, key: int|string, version: mixed}> $conflicts */
+    /** @param non-empty-list<array{reason: string, path: string, key: int|string, version: mixed}> $conflicts */
     public function __construct(public readonly array $conflicts)
     {
         $message = Translation::line('rest::errors.version_conflict');

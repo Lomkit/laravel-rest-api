@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Relations;
 
 use Lomkit\Rest\Contracts\PivotRelation;
+use Lomkit\Rest\Contracts\SyncableRelation;
 use Lomkit\Rest\Exceptions\InvalidRelationException;
 use Lomkit\Rest\Fields\MutationOperation;
 
@@ -79,6 +80,10 @@ final readonly class OperationSelection
         foreach ($operations as $operation) {
             if ($operation === MutationOperation::Delete) {
                 throw InvalidRelationException::deleteOperation($type, $relation->relation, $keep);
+            }
+
+            if ($operation === MutationOperation::Sync && $relation instanceof SyncableRelation && ! in_array(MutationOperation::Sync, $relation->mutationOperations(), true)) {
+                throw InvalidRelationException::syncOperation($type, $relation->relation, $keep);
             }
 
             if (! in_array($operation, $relation->mutationOperations(), true)) {
