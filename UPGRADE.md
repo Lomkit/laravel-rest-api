@@ -1,5 +1,11 @@
 # Upgrade Guide
 
+## 3.3 additions
+
+Version 3.3 adds features and changes no existing behaviour.
+
+- `ActionFields` and `InstructionFields` read an input in a given type: `$fields->string('reason')`, `integer()`, `float()`, `boolean()`, `date()` (a `CarbonImmutable`), `enum('status', Status::class)` and `array()`. Each returns the value that the field cast, or `null` when the value is `null`: sent as `null`, or not sent and without default. A value of another type, a case of another enum included, throws `Lomkit\Rest\Exceptions\InvalidFieldException`, as a name that `fields()` does not declare does. The readers convert nothing, except `float()`, which returns an `int` as a `float`. `$fields->reason`, `has()`, `filled()`, `only()` and `toArray()` do not change.
+
 ## 3.2 additions
 
 Version 3.2 adds features; a few many-to-many write details change, listed below.
