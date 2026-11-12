@@ -38,6 +38,13 @@ final class InvalidFieldException extends LogicException
         return new self("{$owner} does not declare the input [{$name}].");
     }
 
+    public static function unexpectedInputType(string $owner, string $name, string $expected, mixed $value): self
+    {
+        $given = $value instanceof UnitEnum ? $value::class.'::'.$value->name : get_debug_type($value);
+
+        return new self("The input [{$name}] of {$owner} is [{$given}], not [{$expected}].");
+    }
+
     public static function writeRulesOnInput(string $owner, string $name): self
     {
         return new self("{$owner} declares creation or update rules on the input field [{$name}]. Input fields take rules() only.");

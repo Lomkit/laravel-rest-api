@@ -21,6 +21,11 @@ final readonly class CastValues
         return new self($inputs->toArray(), $inputs->names(), $owner);
     }
 
+    public function owner(): string
+    {
+        return $this->owner;
+    }
+
     public function get(string $name): mixed
     {
         return $this->has($name) ? $this->values[$name] : null;
