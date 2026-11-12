@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Relations\Persisters;
 
+use Illuminate\Auth\GenericUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Facades\Event;
@@ -41,6 +42,7 @@ class PivotPersistersTest extends WeightedPivotTestCase
         Rest::resource('persisted-tickets', PersistedTicketController::class)->register();
         Rest::resource('persisted-tags', PersistedTagController::class)->register();
         RecordingPivots::$calls = [];
+        RecordingPivots::$users = [];
         PersistedTicketResource::$persister = RecordingPivots::class;
     }
 
@@ -110,6 +112,32 @@ class PivotPersistersTest extends WeightedPivotTestCase
                 yield $name.', '.$case => [$relation, $linked, $entry, $calls, $rows];
             }
         }
+    }
+
+    #[Test]
+    #[DataProvider('relations')]
+    public function it_gives_the_persister_the_user_of_the_request(string $relation): void
+    {
+        $user = new GenericUser(['id' => 7]);
+        $this->actingAs($user);
+        $this->link($relation, ['a' => ['position' => 1, 'weight' => 1], 'b' => ['position' => 2, 'weight' => 2]]);
+
+        $response = $this->mutate($relation, $this->resolve($relation, ['operation' => 'sync', 'key' => ['b', 'c'], 'pivot' => ['position' => 9]]));
+
+        $response->assertOk();
+        $this->assertSame([['detach', $user], ['attach', $user], ['updatePivot', $user]], RecordingPivots::$users);
+    }
+
+    #[Test]
+    #[DataProvider('relations')]
+    public function it_gives_the_persister_no_user_for_a_guest(string $relation): void
+    {
+        $this->link($relation, ['a' => ['position' => 1, 'weight' => 1], 'b' => ['position' => 2, 'weight' => 2]]);
+
+        $response = $this->mutate($relation, $this->resolve($relation, ['operation' => 'sync', 'key' => ['b', 'c'], 'pivot' => ['position' => 9]]));
+
+        $response->assertOk();
+        $this->assertSame([['detach', null], ['attach', null], ['updatePivot', null]], RecordingPivots::$users);
     }
 
     #[Test]

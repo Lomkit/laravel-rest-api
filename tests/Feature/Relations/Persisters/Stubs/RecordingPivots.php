@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Tests\Feature\Relations\Persisters\Stubs;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Lomkit\Rest\Contracts\PivotPersister;
 use Lomkit\Rest\Mutations\EloquentPivots;
 use Lomkit\Rest\Mutations\PivotWrite;
@@ -10,6 +11,9 @@ class RecordingPivots implements PivotPersister
 {
     /** @var list<string> */
     public static array $calls = [];
+
+    /** @var list<array{string, Authenticatable|null}> */
+    public static array $users = [];
 
     #[\Override]
     public function attach(PivotWrite $write): void
@@ -35,5 +39,6 @@ class RecordingPivots implements PivotPersister
     private static function record(string $primitive, PivotWrite $write): void
     {
         self::$calls[] = $primitive.' ['.implode(', ', $write->keys()).'] '.json_encode($write->pivot, JSON_THROW_ON_ERROR);
+        self::$users[] = [$primitive, $write->user()];
     }
 }
