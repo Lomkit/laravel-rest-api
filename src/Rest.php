@@ -16,6 +16,7 @@ use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Middleware\EnforceExpectsJson;
 use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\Routing\PendingResourceRegistration;
+use Lomkit\Rest\Http\Routing\RememberedRoutes;
 use Lomkit\Rest\Http\Routing\ResourceRegistrar;
 use Lomkit\Rest\Http\Routing\RouteMiddleware;
 use Lomkit\Rest\Http\Routing\UriSegment;
@@ -44,6 +45,7 @@ class Rest
             $controller,
             new RouteMiddleware($this->packageMiddleware()),
             $this->container,
+            ConfigValue::of($this->config, 'rest.routes.remember')->boolean(),
         );
     }
 
@@ -61,6 +63,11 @@ class Rest
     public function forgetAuthorizations(): void
     {
         DecisionStamps::renew($this->decisions(), null);
+    }
+
+    public function forgetRoutes(): void
+    {
+        RememberedRoutes::forget();
     }
 
     /** @return list<string> */

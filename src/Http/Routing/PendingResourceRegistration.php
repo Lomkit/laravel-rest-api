@@ -26,6 +26,7 @@ final class PendingResourceRegistration
         private readonly string $controller,
         private RouteMiddleware $middleware,
         private readonly Container $container,
+        private readonly bool $remembersRoutes = false,
     ) {
         $this->selection = new EndpointSelection;
         $this->names = new RouteNames($name->value);
@@ -123,7 +124,7 @@ final class PendingResourceRegistration
     {
         $this->settled = true;
 
-        $routes = new EndpointRoutes($this->name, $this->controller, ResourceVerbs::current(), $this->names, $this->middleware, $this->endpointMiddleware, $this->container);
+        $routes = new EndpointRoutes($this->name, $this->controller, ResourceVerbs::current(), $this->names, $this->middleware, $this->endpointMiddleware, $this->container, $this->remembersRoutes);
 
         return $this->registrar->register($routes->definitions($this->selection->resolve()));
     }

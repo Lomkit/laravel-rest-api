@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Lomkit\Rest\Search\Run\PendingSearch search(class-string<\Lomkit\Rest\Http\Resource> $resource)
  * @method static void forgetAuthorizationsFor(\Illuminate\Contracts\Auth\Authenticatable $user)
  * @method static void forgetAuthorizations()
+ * @method static void forgetRoutes()
  *
  * @see \Lomkit\Rest\Rest
  */

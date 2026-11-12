@@ -3,13 +3,9 @@
 namespace Lomkit\Rest\Http\Routing;
 
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Http\Request;
 use Lomkit\Rest\Exceptions\InvalidControllerException;
 use Lomkit\Rest\Exceptions\InvalidResourceException;
 use Lomkit\Rest\Http\Controllers\Controller;
-use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\ResourceDefinition;
-use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Query\Trashed;
 
 final readonly class EndpointRoutes
@@ -26,6 +22,7 @@ final readonly class EndpointRoutes
         private RouteMiddleware $middleware,
         private array $endpointMiddleware,
         private Container $container,
+        private bool $remembersRoutes = false,
     ) {}
 
     /**
@@ -36,18 +33,18 @@ final readonly class EndpointRoutes
     {
         $this->checkSoftDeletes($endpoints);
 
-        $definition = $this->definition($endpoints);
+        $declarations = new EndpointDeclarations($this->controller, $this->container, $this->remembersRoutes);
         $definitions = [];
 
         foreach ($endpoints as $endpoint) {
-            array_push($definitions, ...$this->for($endpoint, $definition));
+            array_push($definitions, ...$this->for($endpoint, $declarations));
         }
 
         return $definitions;
     }
 
     /** @return list<RouteDefinition> */
-    private function for(Endpoint $endpoint, ?ResourceDefinition $definition): array
+    private function for(Endpoint $endpoint, EndpointDeclarations $declarations): array
     {
         $route = new RouteDefinition(
             $endpoint->methods(),
@@ -57,9 +54,7 @@ final readonly class EndpointRoutes
             $this->middlewareFor($endpoint),
         );
 
-        $declarations = $definition === null ? [] : self::declarations($endpoint, $definition);
-
-        return [...array_map(fn (DeclaredRoute $declaration): RouteDefinition => $this->declarationRoute($endpoint, $route, $declaration), $declarations), $route];
+        return [...array_map(fn (DeclaredRoute $declaration): RouteDefinition => $this->declarationRoute($endpoint, $route, $declaration), $declarations->for($endpoint)), $route];
     }
 
     private function declarationRoute(Endpoint $endpoint, RouteDefinition $catchAll, DeclaredRoute $declaration): RouteDefinition
@@ -74,30 +69,6 @@ final readonly class EndpointRoutes
             $catchAll->middleware->with($declaration->middleware)->without($declaration->withoutMiddleware),
             [(string) $endpoint->parameter() => $key],
         );
-    }
-
-    /** @return list<DeclaredRoute> */
-    private static function declarations(Endpoint $endpoint, ResourceDefinition $definition): array
-    {
-        return match ($endpoint) {
-            Endpoint::Operate => $definition->declarations()->actions()->routes(),
-            Endpoint::Metric => $definition->declarations()->metrics()->routes(),
-            default => [],
-        };
-    }
-
-    /** @param list<Endpoint> $endpoints */
-    private function definition(array $endpoints): ?ResourceDefinition
-    {
-        if (! array_any($endpoints, fn (Endpoint $endpoint): bool => in_array($endpoint, [Endpoint::Operate, Endpoint::Metric], true)) || ! is_subclass_of($this->controller, Controller::class)) {
-            return null;
-        }
-
-        $context = new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
-
-        return $context
-            ->resource($this->controller::resourceClass())
-            ->definition();
     }
 
     /** @param list<Endpoint> $endpoints */

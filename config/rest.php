@@ -238,4 +238,25 @@ return [
         'enabled' => false,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Routes
+    |--------------------------------------------------------------------------
+    |
+    | To register the routes of the actions and metrics, the package builds
+    | each resource and reads its actions() and metrics(). When "remember"
+    | is true, it keeps the route keys and middleware that it read for each
+    | resource class until the PHP process ends, and a later registration
+    | of that resource class reuses them without building the resource.
+    | It helps a process that registers the routes more than once, such as
+    | a test suite. Call Rest::forgetRoutes() after a change of actions()
+    | or metrics() in the same process. In production, cache the routes
+    | with "php artisan route:cache" instead.
+    |
+    */
+
+    'routes' => [
+        'remember' => env('REST_ROUTES_REMEMBER', false),
+    ],
+
 ];
