@@ -105,7 +105,7 @@ class MetricCacheTest extends SalesTestCase
 
         $team = $user === null ? 'N;' : 'i:1;';
         $perimeter = $scope === CacheScope::Global ? ',"'.$this->perimeterOf(1).'"' : '';
-        $parts = '["Lomkit\\\\Rest\\\\Tests\\\\Feature\\\\Metrics\\\\Stubs\\\\TeamOrderResource","Lomkit\\\\Rest\\\\Tests\\\\Feature\\\\Metrics\\\\Stubs\\\\TotalRevenue","total-revenue",{"cacheScope":"'.$scope->value.'","name":null,"weekStartsOn":1,"withoutSearching":false},30,"UTC",{"filters":[{"field":"status","value":"paid"}]},"a:1:{s:4:\"team\";'.$team.'}"'.$perimeter.']';
+        $parts = '["Lomkit\\\\Rest\\\\Tests\\\\Feature\\\\Metrics\\\\Stubs\\\\TeamOrderResource","Lomkit\\\\Rest\\\\Tests\\\\Feature\\\\Metrics\\\\Stubs\\\\TotalRevenue","total-revenue",{"cacheScope":"'.$scope->value.'","name":null,"uriKey":null,"weekStartsOn":1,"withoutSearching":false},30,"UTC",{"filters":[{"field":"status","value":"paid"}]},"a:1:{s:4:\"team\";'.$team.'}"'.$perimeter.']';
         $this->assertSame(['rest.metrics.'.hash('sha256', $identity.$parts)], $keys);
     }
 

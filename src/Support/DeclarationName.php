@@ -15,8 +15,8 @@ final readonly class DeclarationName
         return $name ?: Str::of(class_basename($class))->beforeLast(class_basename($base))->snake(' ')->title()->toString();
     }
 
-    public static function uriKey(string $name): string
+    public static function uriKey(?string $uriKey, string $name): string
     {
-        return Str::slug($name, '-', null);
+        return $uriKey ?: Str::slug($name, '-', null);
     }
 }
