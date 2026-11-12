@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Scramble\Mutate;
 
 use Dedoc\Scramble\Support\Generator\Reference;
-use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
@@ -12,7 +11,6 @@ use Lomkit\Rest\Contracts\PivotRelation;
 use Lomkit\Rest\Contracts\PolymorphicRelation;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Relations\ChildRemoval;
 use Lomkit\Rest\Relations\Relation;
 use Lomkit\Rest\Scramble\ComponentRegistry;
 use Lomkit\Rest\Scramble\Components\KeySchema;
@@ -94,26 +92,11 @@ final readonly class RelationEntrySchema
             return $entry;
         }
 
-        $entries = Schemas::list($entry, self::listDescription($resource, $relation));
+        $deletes = $relation->isDeletable() ? 'Each key of a `delete` entry counts as one entry.' : '';
+        $entries = Schemas::list($entry, trim($deletes.' '.SyncSchema::children($resource, $relation)));
         $entries->setMax($resource->context()->limits()->sizes->relationEntries);
 
         return $entries;
-    }
-
-    private static function listDescription(Resource $resource, Relation $relation): string
-    {
-        $deletes = $relation->isDeletable() ? 'Each key of a `delete` entry counts as one entry.' : '';
-        $removal = ChildRemoval::of($relation);
-
-        if ($removal === null) {
-            return $deletes;
-        }
-
-        $max = $resource->context()->limits()->totals->entries;
-        $verb = $removal === ChildRemoval::Delete ? 'deletes' : 'detaches';
-        $sync = "A `sync` entry keeps the children that it lists and {$verb} the others that the related resource reaches, at most {$max}. It comes once, next to `create` entries and `update` entries of the keys that it lists.";
-
-        return trim("{$deletes} {$sync}");
     }
 
     private function entry(Resource $resource, Relation $relation): Reference
@@ -177,20 +160,9 @@ final readonly class RelationEntrySchema
             'version' => MutationSchema::version($related, $operation),
             'attributes' => $write === null ? null : $this->writable->attributes($related, $write),
             'pivot' => $pivot === null ? null : $this->writable->pivot($relation, $pivot),
-            'without_detaching' => $operation === MutationOperation::Sync && ! $relation->syncsChildren() ? self::withoutDetaching($relation) : null,
+            'without_detaching' => SyncSchema::withoutDetaching($relation, $operation),
             'relations' => $writesRow && $operation->takesRelations() ? $this->relations($related, $operation) : null,
         ]);
-    }
-
-    private static function withoutDetaching(Relation $relation): Type
-    {
-        if ($relation->syncRequiresWithoutDetaching()) {
-            return (new BooleanType)
-                ->const(true)
-                ->setDescription('Must be true: the relation does not detach rows, so the rows that `key` does not list stay attached');
-        }
-
-        return (new BooleanType)->setDescription('When true, the rows that `key` does not list stay attached');
     }
 
     private function key(Relation $relation, Resource $related): Type
