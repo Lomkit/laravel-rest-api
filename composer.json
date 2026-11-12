@@ -1,7 +1,8 @@
 {
   "name": "lomkit/laravel-rest-api",
-  "description": "A package to build quick and robust rest api for the Laravel framework.",
-  "keywords": ["laravel", "rest", "api", "lomkit", "graphql"],
+  "description": "A Laravel package that turns Eloquent models into a REST API: search, writes, actions and metrics, checked against your policies and documented with OpenAPI.",
+  "keywords": ["laravel", "eloquent", "rest", "rest-api", "api", "crud", "search", "openapi", "lomkit"],
+  "homepage": "https://laravel-rest-api.lomkit.com",
   "license": "MIT",
   "authors": [
     {
@@ -9,6 +10,11 @@
       "email": "gautier@lomkit.com"
     }
   ],
+  "support": {
+    "docs": "https://laravel-rest-api.lomkit.com",
+    "issues": "https://github.com/Lomkit/laravel-rest-api/issues",
+    "source": "https://github.com/Lomkit/laravel-rest-api"
+  },
   "require": {
     "php": "^8.3",
     "laravel/framework": "^13.30"

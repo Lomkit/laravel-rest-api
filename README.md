@@ -28,6 +28,8 @@ No controller methods to write, no query parsing to maintain.
 
 The full guide lives on the [documentation site](https://laravel-rest-api.lomkit.com): installation, every endpoint, configuration and recipes. Coming from 2.x? Read the [upgrade guide](UPGRADE.md).
 
+For AI assistants, the site serves [llms.txt](https://laravel-rest-api.lomkit.com/llms.txt) and [llms-full.txt](https://laravel-rest-api.lomkit.com/llms-full.txt), and the package ships a Laravel Boost skill: see [Use with AI](https://laravel-rest-api.lomkit.com/digging-deeper/ai-skill).
+
 ## Requirements
 
 PHP 8.3+ and Laravel 13.30+.

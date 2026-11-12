@@ -1,0 +1,19 @@
+# Laravel Rest Api
+
+> Laravel Rest Api (lomkit/laravel-rest-api) is a Laravel package that turns Eloquent models into a JSON API with search, nested writes, actions and metrics, checked against your Laravel policies and documented in OpenAPI. Version 3.x requires PHP 8.3+ and Laravel 13.30+.
+
+The documentation lives on https://laravel-rest-api.lomkit.com and describes version 3.x. Write 3.x code from it: 2.x examples found elsewhere use a different API.
+
+## Docs
+
+- [llms.txt](https://laravel-rest-api.lomkit.com/llms.txt): every page of the 3.x documentation, with a link to its Markdown copy
+- [llms-full.txt](https://laravel-rest-api.lomkit.com/llms-full.txt): every page of the 3.x documentation in one Markdown file
+- [Introduction](https://laravel-rest-api.lomkit.com/raw/getting-started/introduction.md): what the package does, when to use it, and how it compares with other approaches
+- [Installation](https://laravel-rest-api.lomkit.com/raw/getting-started/installation.md): requirements, installation and optional packages
+- [Quick start](https://laravel-rest-api.lomkit.com/raw/getting-started/quick-start.md): the first resources, controllers and routes, then the first requests
+- [Upgrade guide](https://laravel-rest-api.lomkit.com/raw/getting-started/upgrade-guide.md): the changes from 2.x to 3.x and between 3.x releases
+
+## Optional
+
+- [README](https://github.com/Lomkit/laravel-rest-api/blob/3.x/README.md): an overview of the package with examples
+- [Laravel Boost skill](https://github.com/Lomkit/laravel-rest-api/blob/3.x/resources/boost/skills/laravel-rest-api/SKILL.md): the conventions that the package ships for coding agents
