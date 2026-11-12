@@ -7,6 +7,7 @@ use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Http\Routing\DeclarationKind;
 use Lomkit\Rest\Metrics\Metric;
 
+/** @internal */
 final class ResourceDeclarations
 {
     /** @var DeclarationList<Action>|null */

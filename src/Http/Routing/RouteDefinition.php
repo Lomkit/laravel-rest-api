@@ -15,16 +15,23 @@ final readonly class RouteDefinition
         public string $uses,
         public RouteMiddleware $middleware,
         public array $defaults = [],
+        public ?string $fingerprint = null,
     ) {}
 
-    /** @return array{uses: string, as: string, middleware: list<string>, excluded_middleware: list<string>} */
+    /** @return array{uses: string, as: string, middleware: list<string>, excluded_middleware: list<string>, rest_declaration?: string} */
     public function action(): array
     {
-        return [
+        $action = [
             'uses' => $this->uses,
             'as' => $this->name,
             'middleware' => $this->middleware->included,
             'excluded_middleware' => $this->middleware->excluded,
         ];
+
+        if ($this->fingerprint === null) {
+            return $action;
+        }
+
+        return [...$action, RouteFingerprint::ACTION_KEY => $this->fingerprint];
     }
 }

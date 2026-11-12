@@ -47,6 +47,31 @@ final class InvalidActionException extends LogicException
         return new self("[{$class}] is listed in actions(), but it does not extend ".Action::class.'.');
     }
 
+    public static function baseListed(): self
+    {
+        return new self('actions() lists '.Action::class.' itself. List a class that extends it.');
+    }
+
+    public static function notInstantiable(string $class): self
+    {
+        return new self("{$class} is listed in actions(), but it is abstract or cannot be instantiated. List a concrete class.");
+    }
+
+    public static function foreignBinding(string $class, string $bound): self
+    {
+        return new self("The container builds [{$bound}] for {$class}, listed in actions(): bind {$class} to itself or to a class that extends it.");
+    }
+
+    public static function reboundRoute(string $class, string $bound): self
+    {
+        return new self("The container builds {$bound} for {$class}, listed in actions() by its class, and {$bound} has another route key or other middleware. The binding changes the route: list {$bound} instead, or bind a class with the same route.");
+    }
+
+    public static function staleRoute(string $class): self
+    {
+        return new self("{$class} has another route key or other middleware than its route was registered with. Run php artisan route:cache again, or stop changing its route in its constructor.");
+    }
+
     public static function dynamicKey(string $action, string $method): self
     {
         return new self("{$action} is listed by its class, but it overrides {$method}(): its route key must be read without building it. Set \$name, or list the action as an instance.");

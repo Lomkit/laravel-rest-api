@@ -6,11 +6,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Route;
 use LogicException;
+use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Actions\OperationNode;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\Routing\DeclarationKind;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Http\Routing\RouteFingerprint;
 use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Validation\Cursor;
 use Lomkit\Rest\Validation\Operate\OperationParser;
@@ -39,7 +42,7 @@ class OperateRequest extends RestRequest
             throw new HttpException(404);
         }
 
-        $action = $resource->definition()->action($key);
+        $action = $this->declaredAction($resource, $key);
 
         if ($action->abilities() !== []) {
             $authorizer->plan([Check::onClass($resource, 'viewAny')]);
@@ -88,6 +91,15 @@ class OperateRequest extends RestRequest
         return is_string($key) ? $key : null;
     }
 
+    private function declaredAction(Resource $resource, string $key): Action
+    {
+        $action = $resource->definition()->action($key);
+
+        RouteFingerprint::check(RouteFingerprint::onRoute($this->route()), $action, DeclarationKind::Action);
+
+        return $action;
+    }
+
     private function parse(Resource $resource): OperationNode
     {
         $key = $this->actionKey();
@@ -98,7 +110,7 @@ class OperateRequest extends RestRequest
 
         return (new OperationParser(fn (): Builder => $this->keysQuery($resource), $this->reachLog()))->parse(
             Cursor::of($this->all(), $this->parsedRules()->violations()),
-            $resource->definition()->action($key),
+            $this->declaredAction($resource, $key),
             ValidationContext::root($resource, $this->budget(), $this->parsedRules()),
         );
     }

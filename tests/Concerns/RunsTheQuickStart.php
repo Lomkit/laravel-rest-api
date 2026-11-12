@@ -9,6 +9,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Route;
+use Lomkit\Rest\Console\Check\DeclarationCheck;
 use Lomkit\Rest\Console\Check\DetachCheck;
 use Lomkit\Rest\Console\Check\PerimeterCheck;
 use Lomkit\Rest\Console\QuickStart\ExposureCheck;
@@ -131,11 +132,12 @@ trait RunsTheQuickStart
             $controllers = array_values(array_filter($arguments, fn (string $argument): bool => ! str_starts_with($argument, '--')));
             $this->app->make(HttpKernel::class);
             $access = $this->app->make(ExposureCheck::class)->run($controllers);
-            $rows = $this->app->make(PerimeterCheck::class)->run($controllers);
+            $declarations = $this->app->make(DeclarationCheck::class)->run($controllers);
+            $rows = $this->app->make(PerimeterCheck::class)->run($controllers, $declarations);
             $links = $this->app->make(DetachCheck::class)->run($controllers);
-            $report = (string) json_encode([...$access->toArray(), ...$rows->toArray(), ...$links->toArray()], JSON_UNESCAPED_SLASHES);
+            $report = (string) json_encode([...$access->toArray(), ...$declarations->toArray(), ...$rows->toArray(), ...$links->toArray()], JSON_UNESCAPED_SLASHES);
 
-            return Process::result($report, '', $access->passed() && $rows->passed() && $links->passed() ? 0 : 1);
+            return Process::result($report, '', $access->passed() && $declarations->passed() && $rows->passed() && $links->passed() ? 0 : 1);
         }]);
     }
 

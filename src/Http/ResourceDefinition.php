@@ -92,6 +92,7 @@ final class ResourceDefinition
         return $this->instructions ??= $this->boundInstructions($this->resource->instructions());
     }
 
+    /** @internal */
     public function declarations(): ResourceDeclarations
     {
         return $this->declarations;

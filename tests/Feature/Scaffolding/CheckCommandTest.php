@@ -118,6 +118,7 @@ class CheckCommandTest extends ScaffoldingTestCase
                 'policies' => 2,
                 'problems' => ['POST /api/labels/search is not behind an authentication middleware.'],
                 'search' => '/api/books/search',
+                'declarations' => ['actions' => 0, 'metrics' => 0, 'problems' => []],
                 'rows' => [
                     'perimeter' => [],
                     'without_perimeter' => [BookResource::class, LabelResource::class, LoanResource::class, ShelfResource::class],
@@ -218,6 +219,6 @@ class CheckCommandTest extends ScaffoldingTestCase
 
         $this->assertSame($expectedExitCode, $exitCode, $contents);
 
-        return Str::before($contents, '  rows ... ');
+        return Str::before($contents, '  declarations ... ');
     }
 }

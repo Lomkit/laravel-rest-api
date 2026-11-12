@@ -47,7 +47,7 @@ final readonly class DocumentationContext
         }
 
         return match ($this->endpoint) {
-            Endpoint::Operate => array_find($this->resource->definition()->actions(), fn (Action $action): bool => $action->uriKey() === $key),
+            Endpoint::Operate => $this->resource->definition()->declarations()->actions()->find($key),
             Endpoint::Metric => $this->resource->definition()->metric($key),
             default => null,
         };

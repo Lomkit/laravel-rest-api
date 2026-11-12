@@ -16,8 +16,8 @@ use Lomkit\Rest\Exceptions\InvalidMetricException;
 use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Requests\MetricRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\Routing\DeclarationKind;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Support\DeclarationName;
 
 abstract class Metric
 {
@@ -40,12 +40,12 @@ abstract class Metric
 
     public function name(): string
     {
-        return DeclarationKind::Metric->displayName($this->name, static::class);
+        return DeclarationName::of($this->name, static::class, self::class);
     }
 
     public function uriKey(): string
     {
-        return DeclarationKind::Metric->uriKey($this->name());
+        return DeclarationName::uriKey($this->name());
     }
 
     public function request(): RestRequest

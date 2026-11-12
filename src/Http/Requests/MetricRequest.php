@@ -9,7 +9,9 @@ use LogicException;
 use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Http\Routing\DeclarationKind;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Http\Routing\RouteFingerprint;
 use Lomkit\Rest\Metrics\Metric;
 use Lomkit\Rest\Metrics\MetricNode;
 use Lomkit\Rest\Metrics\MetricRange;
@@ -82,8 +84,15 @@ class MetricRequest extends RestRequest
     private function metric(Resource $resource): ?Metric
     {
         $key = $this->metricKey();
+        $metric = $key === null ? null : $resource->definition()->metric($key);
 
-        return $key === null ? null : $resource->definition()->metric($key);
+        if ($metric === null) {
+            return null;
+        }
+
+        RouteFingerprint::check(RouteFingerprint::onRoute($this->route()), $metric, DeclarationKind::Metric);
+
+        return $metric;
     }
 
     private function parse(Resource $resource): MetricNode

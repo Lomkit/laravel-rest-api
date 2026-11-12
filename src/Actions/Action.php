@@ -19,8 +19,8 @@ use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\OperateResponse;
 use Lomkit\Rest\Http\Requests\OperateRequest;
 use Lomkit\Rest\Http\Requests\RestRequest;
-use Lomkit\Rest\Http\Routing\DeclarationKind;
 use Lomkit\Rest\Http\Routing\Endpoint;
+use Lomkit\Rest\Support\DeclarationName;
 use ReflectionMethod;
 
 /** @template TModel of Model = Model */
@@ -52,12 +52,12 @@ class Action
 
     public function name(): string
     {
-        return DeclarationKind::Action->displayName($this->name, static::class);
+        return DeclarationName::of($this->name, static::class, self::class);
     }
 
     public function uriKey(): string
     {
-        return DeclarationKind::Action->uriKey($this->name());
+        return DeclarationName::uriKey($this->name());
     }
 
     public function request(): RestRequest
