@@ -5565,6 +5565,18 @@
                                                 ]
                                             }
                                         },
+                                        "sync_removes": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "description": "With relations.operations, on HasMany and MorphMany relations only: what a `sync` entry does to the children that it does not list, set with syncable(); null when the relation has no such sync",
+                                            "enum": [
+                                                "detach",
+                                                "delete",
+                                                null
+                                            ]
+                                        },
                                         "name": {
                                             "type": "string"
                                         },
@@ -9036,6 +9048,18 @@
                                                     "delete"
                                                 ]
                                             }
+                                        },
+                                        "sync_removes": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "description": "With relations.operations, on HasMany and MorphMany relations only: what a `sync` entry does to the children that it does not list, set with syncable(); null when the relation has no such sync",
+                                            "enum": [
+                                                "detach",
+                                                "delete",
+                                                null
+                                            ]
                                         },
                                         "name": {
                                             "type": "string"
@@ -14590,6 +14614,18 @@
                                                 ]
                                             }
                                         },
+                                        "sync_removes": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "description": "With relations.operations, on HasMany and MorphMany relations only: what a `sync` entry does to the children that it does not list, set with syncable(); null when the relation has no such sync",
+                                            "enum": [
+                                                "detach",
+                                                "delete",
+                                                null
+                                            ]
+                                        },
                                         "name": {
                                             "type": "string"
                                         },
@@ -17363,6 +17399,7 @@
                             "operation": {
                                 "type": "string",
                                 "enum": [
+                                    "sync",
                                     "delete"
                                 ]
                             },
@@ -17397,7 +17434,7 @@
                 "properties": {
                     "shows": {
                         "type": "array",
-                        "description": "Each key of a `delete` entry counts as one entry.",
+                        "description": "Each key of a `delete` entry counts as one entry. A `sync` entry keeps the children that it lists and deletes the others that the related resource reaches, at most 1000. It comes once, next to `create` entries and `update` entries of the keys that it lists.",
                         "items": {
                             "$ref": "#/components/schemas/StageRelationMutationShows"
                         },

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Concerns\RunsTheQuickStart;
+use Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\SyncedCountryController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\KeptTripController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\RemoteTripController;
 use Lomkit\Rest\Tests\Fixtures\Atlas\TripController;
@@ -48,6 +49,20 @@ class CheckDetachTest extends ScaffoldingTestCase
             ."  actions ... 1 action checks each row\n"
             ."  relations ... FAILED\n"
             .'  ⇂ '.rtrim(self::COUNTRY_PROBLEM, '.')."\n",
+            $output,
+        );
+    }
+
+    #[Test]
+    public function it_fails_for_a_relation_whose_sync_detaches_a_foreign_key_that_does_not_accept_null(): void
+    {
+        $this->expose('countries', SyncedCountryController::class);
+
+        $output = $this->check(1, SyncedCountryController::class);
+
+        $this->assertStringContainsString("  relations ... FAILED\n", $output);
+        $this->assertStringContainsString(
+            '  ⇂ Lomkit\Rest\Tests\Feature\Scaffolding\Stubs\SyncedCountryResource accepts detach on its [trips] relation and its sync detaches the rows that it leaves out, but trips.country_id does not accept null: each detach and each sync is refused with a 422. Sync by ChildRemoval::Delete and add ->withoutOperations(MutationOperation::Detach) to the relation, or make the column nullable'."\n",
             $output,
         );
     }

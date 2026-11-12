@@ -1,5 +1,13 @@
 # Upgrade Guide
 
+## 3.3 additions
+
+Version 3.3 adds features; `/details` adds one key, listed below.
+
+- A `HasMany` or `MorphMany` relation can sync its children: `HasMany::make('lines', LineResource::class)->deletable()->syncable(ChildRemoval::Delete)`, or `->syncable(ChildRemoval::Detach)` (`Lomkit\Rest\Relations\ChildRemoval`). `{"operation": "sync", "key": [12, 15]}` keeps the listed children and deletes (through `performDelete()`) or detaches the other children that the `perimeterQuery()` of the related resource returns; rows hidden by a global scope, trashed rows included, stay. A relation list takes one `sync`, next to `create` entries and `update` entries of the keys that it lists, and the `sync` takes `key` alone. Before any write, the package locks the parent row, reads the children to remove with a locking read, refuses with a `422` a sync that removes more than `totals.entries` children of one parent row, and checks `view` on each kept child and `delete`, or `update` with the null keys, plus the link check of `detach`, on each removed child. The removed rows run their model events, not the resource hooks, and are not listed in `operations` or `ResourceMutated`. `rest:check` reports a sync by detach on a foreign key that does not accept null. Without `syncable()`, a relation accepts no `sync`, as before.
+- `/details` adds `sync_removes` to each `HasMany` and `MorphMany` relation: `"delete"`, `"detach"`, or `null` without `syncable()`. A client that compares relation entries key by key sees the new key.
+- A custom relation that lists `MutationOperation::Sync` in `mutationOperations()` keeps its sync, which links the rows that it names and removes none; it cannot also declare `syncable()`. The two meanings may merge in 4.0. A relation subclass that already declares `syncable()`, `syncRemoval()` or `syncsChildren()` renames its method.
+
 ## 3.2 additions
 
 Version 3.2 adds features; a few many-to-many write details change, listed below.

@@ -12,6 +12,7 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Mutations\LinkColumn;
 use Lomkit\Rest\Mutations\NullableColumns;
+use Lomkit\Rest\Relations\ChildRemoval;
 use Lomkit\Rest\Relations\Relation;
 
 final readonly class DetachCheck
@@ -67,6 +68,10 @@ final readonly class DetachCheck
 
         if ($column === null) {
             return $report->withDetachable($resource, $relation->relation);
+        }
+
+        if (ChildRemoval::of($relation) === ChildRemoval::Detach) {
+            return $report->withProblem("{$resource} accepts detach on its [{$relation->relation}] relation and its sync detaches the rows that it leaves out, but {$column} does not accept null: each detach and each sync is refused with a 422. Sync by ChildRemoval::Delete and add ->withoutOperations(MutationOperation::Detach) to the relation, or make the column nullable.");
         }
 
         return $report->withProblem("{$resource} accepts detach on its [{$relation->relation}] relation, but {$column} does not accept null: each detach is refused with a 422. Add ->withoutOperations(MutationOperation::Detach) to the relation, or make the column nullable.");
