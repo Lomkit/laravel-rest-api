@@ -38,6 +38,8 @@ class FieldReadersTest extends PackageTestCase
             'integer' => [fn (FieldValues $fields): ?int => $fields->integer('seats'), 12],
             'float' => [fn (FieldValues $fields): ?float => $fields->float('rate'), 1.5],
             'float from an integer' => [fn (FieldValues $fields): ?float => $fields->float('ratio'), 2.0],
+            'float from a numeric string' => [fn (FieldValues $fields): ?float => $fields->float('price'), 19.99],
+            'integer from an integer string' => [fn (FieldValues $fields): ?int => $fields->integer('code'), 3],
             'boolean' => [fn (FieldValues $fields): ?bool => $fields->boolean('notify'), false],
             'enum' => [fn (FieldValues $fields): ?PostStatus => $fields->enum('status', PostStatus::class), PostStatus::Review],
             'array' => [fn (FieldValues $fields): ?array => $fields->array('tags'), ['red', 'blue']],
@@ -112,6 +114,8 @@ class FieldReadersTest extends PackageTestCase
         return [
             'string' => [fn (FieldValues $fields): ?string => $fields->string('seats'), 'The input [seats] of '.self::OWNER.' is [int], not [string].'],
             'integer' => [fn (FieldValues $fields): ?int => $fields->integer('rate'), 'The input [rate] of '.self::OWNER.' is [float], not [int].'],
+            'integer from a decimal string' => [fn (FieldValues $fields): ?int => $fields->integer('price'), 'The input [price] of '.self::OWNER.' is [string], not [int].'],
+            'integer from an exponent string' => [fn (FieldValues $fields): ?int => $fields->integer('exponent'), 'The input [exponent] of '.self::OWNER.' is [string], not [int].'],
             'float' => [fn (FieldValues $fields): ?float => $fields->float('reason'), 'The input [reason] of '.self::OWNER.' is [string], not [float].'],
             'boolean' => [fn (FieldValues $fields): ?bool => $fields->boolean('seats'), 'The input [seats] of '.self::OWNER.' is [int], not [bool].'],
             'date' => [fn (FieldValues $fields): ?CarbonImmutable => $fields->date('reason'), 'The input [reason] of '.self::OWNER.' is [string], not [Carbon\CarbonImmutable].'],
@@ -147,7 +151,7 @@ class FieldReadersTest extends PackageTestCase
     {
         $fields = self::actionFields();
 
-        $this->assertSame(['Late delivery', 12, 1.5, '2026-03-01'], [$fields->reason, $fields->seats, $fields->rate, $fields->starts_on?->toDateString()]);
+        $this->assertSame(['Late delivery', 12, 1.5, '19.99', '2026-03-01'], [$fields->reason, $fields->seats, $fields->rate, $fields->price, $fields->starts_on?->toDateString()]);
     }
 
     private static function actionFields(): ActionFields
@@ -164,6 +168,9 @@ class FieldReadersTest extends PackageTestCase
             Integer::make('seats'),
             Number::make('rate'),
             Number::make('ratio'),
+            Number::make('price'),
+            Text::make('code'),
+            Text::make('exponent'),
             Boolean::make('notify'),
             Date::make('starts_on'),
             DateTime::make('starts_at'),
@@ -177,6 +184,9 @@ class FieldReadersTest extends PackageTestCase
             ['name' => 'seats', 'value' => '12'],
             ['name' => 'rate', 'value' => 1.5],
             ['name' => 'ratio', 'value' => 2],
+            ['name' => 'price', 'value' => '19.99'],
+            ['name' => 'code', 'value' => '3'],
+            ['name' => 'exponent', 'value' => '1e3'],
             ['name' => 'notify', 'value' => '0'],
             ['name' => 'starts_on', 'value' => '2026-03-01'],
             ['name' => 'starts_at', 'value' => '2026-03-01T09:30:00+02:00'],

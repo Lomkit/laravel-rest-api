@@ -49,22 +49,26 @@ abstract readonly class FieldValues
             return $value;
         }
 
-        throw $this->unexpected($name, 'int', $value);
+        if (! is_string($value)) {
+            throw $this->unexpected($name, 'int', $value);
+        }
+
+        return filter_var($value, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE) ?? throw $this->unexpected($name, 'int', $value);
     }
 
     public function float(string $name): ?float
     {
         $value = $this->values->get($name);
 
-        if (is_int($value)) {
-            return (float) $value;
-        }
-
         if ($value === null || is_float($value)) {
             return $value;
         }
 
-        throw $this->unexpected($name, 'float', $value);
+        if (! is_numeric($value)) {
+            throw $this->unexpected($name, 'float', $value);
+        }
+
+        return (float) $value;
     }
 
     public function boolean(string $name): ?bool

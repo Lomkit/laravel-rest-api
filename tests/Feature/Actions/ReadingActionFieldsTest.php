@@ -104,25 +104,40 @@ class ReadingActionFieldsTest extends PackageTestCase
     }
 
     #[Test]
-    #[DataProvider('numbers')]
-    public function it_reads_a_number_input_as_a_number(mixed $sent, int|float $property, float $read): void
+    #[DataProvider('amounts')]
+    public function it_keeps_a_number_input_as_sent_and_reads_it_as_a_float(mixed $sent, float $read): void
     {
-        $this->postJson('/field-documents/actions/read-document-fields', ['search' => [], 'fields' => [['name' => 'rate', 'value' => $sent]]])->assertOk();
+        $fields = $this->sendNumbers(['amount' => $sent]);
 
-        $fields = ReadDocumentFields::$runs[0]['fields'];
-
-        $this->assertSame([$property, $read], [$fields->rate, $fields->float('rate')]);
+        $this->assertSame([$sent, $read], [$fields->amount, $fields->float('amount')]);
     }
 
-    /** @return array<string, array{mixed, int|float, float}> */
-    public static function numbers(): array
+    /** @return array<string, array{mixed, float}> */
+    public static function amounts(): array
     {
         return [
-            'a decimal string' => ['1.5', 1.5, 1.5],
-            'an integer string' => ['2', 2, 2.0],
-            'a decimal' => [1.5, 1.5, 1.5],
-            'an integer' => [2, 2, 2.0],
+            'a decimal string' => ['1.5', 1.5],
+            'a decimal' => [1.5, 1.5],
+            'an integer' => [1, 1.0],
         ];
+    }
+
+    #[Test]
+    public function it_reads_an_integer_string_of_a_number_input_as_an_integer(): void
+    {
+        $fields = $this->sendNumbers(['qty' => '3']);
+
+        $this->assertSame(['3', 3], [$fields->qty, $fields->integer('qty')]);
+    }
+
+    #[Test]
+    public function it_refuses_to_read_a_decimal_string_as_an_integer(): void
+    {
+        $fields = $this->sendNumbers(['qty' => '3.5']);
+
+        $this->expectExceptionObject(new InvalidFieldException('The input [qty] of '.ReadDocumentFields::class.'::fields() is [string], not [int].'));
+
+        $fields->integer('qty');
     }
 
     #[Test]
@@ -284,6 +299,15 @@ class ReadingActionFieldsTest extends PackageTestCase
             'labels' => ['red', 'blue'],
             'note' => null,
         ];
+    }
+
+    /** @param array<string, mixed> $values */
+    private function sendNumbers(array $values): ActionFields
+    {
+        $entries = array_map(fn (string $name, mixed $value): array => ['name' => $name, 'value' => $value], array_keys($values), $values);
+        $this->postJson('/field-documents/actions/read-document-fields', ['search' => [], 'fields' => $entries])->assertOk();
+
+        return ReadDocumentFields::$runs[0]['fields'];
     }
 
     private function runAction(string $action): ActionFields

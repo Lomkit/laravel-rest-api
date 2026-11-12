@@ -2,11 +2,9 @@
 
 ## 3.3 additions
 
-Version 3.3 adds features; one input cast changes, listed below.
+Version 3.3 adds features.
 
-- `ActionFields` and `InstructionFields` read an input in a given type: `$fields->string('reason')`, `integer()`, `float()`, `boolean()`, `date()` (a `CarbonImmutable`), `enum('status', Status::class)` and `array()`. Each returns the value that the field cast, or `null` when the value is `null`: sent as `null`, or not sent and without default. A value of another type, a case of another enum included, throws `Lomkit\Rest\Exceptions\InvalidFieldException`, as a name that `fields()` does not declare does. The readers convert nothing, except `float()`, which returns an `int` as a `float`. `$fields->reason`, `has()`, `filled()`, `only()` and `toArray()` do not change.
-
-- A `Number` input of a scope, an instruction or an action sent as a numeric string now arrives as a number: `"1.5"` as `1.5`, `"2"` as `2`, as an `Integer` input already does. A JSON number arrives as before. Code that compared such a value to a string compares it to a number.
+- `ActionFields` and `InstructionFields` read an input in a given type: `$fields->string('reason')`, `integer()`, `float()`, `boolean()`, `date()` (a `CarbonImmutable`), `enum('status', Status::class)` and `array()`. Each returns the value that the field cast, or `null` when the value is `null`: sent as `null`, or not sent and without default. `float()` also converts an `int` or a numeric string (`"19.99"` gives `19.99`), and `integer()` a string that is exactly an integer (`"3"` gives `3`; `"3.5"` and `"1e3"` throw). The other readers convert nothing. A value of another type, a case of another enum included, throws `Lomkit\Rest\Exceptions\InvalidFieldException`, as a name that `fields()` does not declare does. `$fields->amount` still returns the value as the field cast it, so a `Number` sent as `"19.99"` stays that string. `has()`, `filled()`, `only()` and `toArray()` do not change.
 
 ## 3.2 additions
 

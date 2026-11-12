@@ -35,7 +35,8 @@ class ReadDocumentFields extends Action
             Enum::make('priority', DocumentPriority::class)->default(DocumentPriority::Normal),
             Integer::make('copies'),
             Json::make('labels'),
-            Number::make('rate'),
+            Number::make('amount'),
+            Number::make('qty'),
             Text::make('note')->nullable(),
             Text::make('reason'),
         ];
