@@ -37,6 +37,11 @@ class TracingPolicy
         return self::record('update', $model);
     }
 
+    public function delete(?Authenticatable $user, Model $model): bool
+    {
+        return self::record('delete', $model);
+    }
+
     public function attachTag(?Authenticatable $user, Model $model, Model $related): bool
     {
         return self::record('attachTag', $model, $related);

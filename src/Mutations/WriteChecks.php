@@ -30,12 +30,11 @@ final class WriteChecks
     /** @var array<int, Model> */
     private array $drafts = [];
 
-    public readonly PivotSet $pivots;
-
-    public function __construct(private readonly RowSet $rows)
-    {
-        $this->pivots = new PivotSet;
-    }
+    public function __construct(
+        private readonly RowSet $rows,
+        public readonly PivotSet $pivots = new PivotSet,
+        public readonly ChildSet $children = new ChildSet,
+    ) {}
 
     /** @param list<MutationNode> $nodes */
     public function authorize(Resource $resource, array $nodes): void
@@ -47,12 +46,15 @@ final class WriteChecks
         $this->plan($resource, $this->checks);
     }
 
-    /** @return list<Model> */
-    public function walk(Resource $resource, MutationNode $node, PlannedKeys $keys = new PlannedKeys, bool $moves = false): array
+    /**
+     * @param  list<Model>|null  $named
+     * @return list<Model>
+     */
+    public function walk(Resource $resource, MutationNode $node, PlannedKeys $keys = new PlannedKeys, bool $moves = false, ?array $named = null): array
     {
         $rows = [];
 
-        foreach ($this->rowsOf($resource, $node) as $row) {
+        foreach ($named ?? $this->rowsOf($resource, $node) as $row) {
             $writes = RelationWrites::ofNode($resource, $row, $node);
             $attributes = $node->attributes ?? [];
             $planned = $keys;
@@ -179,17 +181,9 @@ final class WriteChecks
             return [$draft];
         }
 
-        $rows = [];
+        $keys = is_array($node->key) ? $node->key : [$node->key];
 
-        foreach (is_array($node->key) ? $node->key : [$node->key] as $key) {
-            $row = $this->row($resource, $key);
-
-            if ($row !== null) {
-                $rows[] = $row;
-            }
-        }
-
-        return $rows;
+        return array_values(array_filter(array_map(fn (int|string|null $key): ?Model => $this->row($resource, $key), $keys)));
     }
 
     private static function created(Model $model): bool
