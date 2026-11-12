@@ -2,9 +2,11 @@
 
 ## 3.3 additions
 
-Version 3.3 adds features and changes no existing behaviour.
+Version 3.3 adds features; one input cast changes, listed below.
 
 - `ActionFields` and `InstructionFields` read an input in a given type: `$fields->string('reason')`, `integer()`, `float()`, `boolean()`, `date()` (a `CarbonImmutable`), `enum('status', Status::class)` and `array()`. Each returns the value that the field cast, or `null` when the value is `null`: sent as `null`, or not sent and without default. A value of another type, a case of another enum included, throws `Lomkit\Rest\Exceptions\InvalidFieldException`, as a name that `fields()` does not declare does. The readers convert nothing, except `float()`, which returns an `int` as a `float`. `$fields->reason`, `has()`, `filled()`, `only()` and `toArray()` do not change.
+
+- A `Number` input of a scope, an instruction or an action sent as a numeric string now arrives as a number: `"1.5"` as `1.5`, `"2"` as `2`, as an `Integer` input already does. A JSON number arrives as before. Code that compared such a value to a string compares it to a number.
 
 ## 3.2 additions
 

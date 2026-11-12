@@ -40,4 +40,18 @@ class Number extends Field
 
         return $value + 0;
     }
+
+    #[\Override]
+    protected function castValue(mixed $value): mixed
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        if (! is_numeric($value)) {
+            return $value;
+        }
+
+        return $value + 0;
+    }
 }

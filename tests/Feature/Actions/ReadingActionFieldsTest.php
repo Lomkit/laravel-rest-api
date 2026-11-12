@@ -104,6 +104,28 @@ class ReadingActionFieldsTest extends PackageTestCase
     }
 
     #[Test]
+    #[DataProvider('numbers')]
+    public function it_reads_a_number_input_as_a_number(mixed $sent, int|float $property, float $read): void
+    {
+        $this->postJson('/field-documents/actions/read-document-fields', ['search' => [], 'fields' => [['name' => 'rate', 'value' => $sent]]])->assertOk();
+
+        $fields = ReadDocumentFields::$runs[0]['fields'];
+
+        $this->assertSame([$property, $read], [$fields->rate, $fields->float('rate')]);
+    }
+
+    /** @return array<string, array{mixed, int|float, float}> */
+    public static function numbers(): array
+    {
+        return [
+            'a decimal string' => ['1.5', 1.5, 1.5],
+            'an integer string' => ['2', 2, 2.0],
+            'a decimal' => [1.5, 1.5, 1.5],
+            'an integer' => [2, 2, 2.0],
+        ];
+    }
+
+    #[Test]
     public function it_gives_the_inputs_in_declaration_order(): void
     {
         $fields = $this->runAction('read-document-fields');
