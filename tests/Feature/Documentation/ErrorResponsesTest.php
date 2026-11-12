@@ -33,11 +33,11 @@ class ErrorResponsesTest extends DocumentationTestCase
                 'message' => ['type' => 'string'],
                 'conflicts' => [
                     'type' => 'array',
-                    'description' => 'The update entries whose `version` is not the version of their row: nothing was written',
+                    'description' => 'The update entries whose `version` is not the version of their row, and the `key` of the sync entries whose list leaves out a child, with that child: nothing was written',
                     'items' => [
                         'type' => 'object',
-                        'properties' => ['path' => ['type' => 'string'], 'key' => ['type' => ['integer', 'string']], 'version' => ['description' => 'The version of the row as the request found it, written as the search returns it; null when the row is gone']],
-                        'required' => ['path', 'key', 'version'],
+                        'properties' => ['path' => ['type' => 'string'], 'key' => ['type' => ['integer', 'string']], 'version' => ['description' => 'On an update entry: the version of the row as the request found it, written as the search returns it; null when the row is gone']],
+                        'required' => ['path', 'key'],
                     ],
                 ],
             ],

@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Mutate\Stubs;
 
-use Lomkit\Rest\Relations\ChildRemoval;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
@@ -15,7 +14,7 @@ class SyncingTeamResource extends TeamResource
         return [
             HasMany::make('tickets', TicketResource::class)
                 ->deletable()
-                ->syncable(ChildRemoval::Delete),
+                ->syncable(),
         ];
     }
 }

@@ -22,23 +22,21 @@ final class LinkReplay
     /** @var list<MutationNode> */
     private array $nodes = [];
 
-    /** @var array<string, int> */
-    private array $named = [];
-
-    /** @var list<array{string, string}> */
-    private array $deleted = [];
-
     /** @var array<string, LinkColumn> */
     private array $cleared = [];
 
     /** @var array<string, list<MutationOperation>> */
     private array $singles = [];
 
-    public function __construct(
-        private readonly RowSet $rows,
-        public readonly PivotLedger $pivots = new PivotLedger,
-        public readonly SyncLedger $syncs = new SyncLedger,
-    ) {}
+    public readonly PivotLedger $pivots;
+
+    public readonly NamedRows $named;
+
+    public function __construct(private readonly RowSet $rows)
+    {
+        $this->pivots = new PivotLedger;
+        $this->named = new NamedRows;
+    }
 
     /** @param list<MutationNode> $nodes */
     public function plan(Resource $resource, array $nodes): void
@@ -63,7 +61,7 @@ final class LinkReplay
         $rows = $this->rowsOf($resource, $node);
 
         foreach ($rows as $row) {
-            $this->name($node, $row);
+            $this->named->name($node, $row);
             $writes = RelationWrites::ofNode($resource, $row->model, $node);
             $from = count($this->steps);
 
@@ -132,12 +130,12 @@ final class LinkReplay
             }
         }
 
-        $violations += $this->pivots->violations() + $this->syncs->violations();
+        foreach ($this->pivots->violations() as $path => $violation) {
+            $violations[$path] ??= $violation;
+        }
 
-        foreach ($this->deleted as [$path, $identity]) {
-            if ($this->named[$identity] > 1) {
-                $violations[$path] ??= Violation::repeated($path);
-            }
+        foreach ($this->named->violations() as $path => $violation) {
+            $violations[$path] ??= $violation;
         }
 
         foreach ($this->cleared as $path => $column) {
@@ -158,20 +156,6 @@ final class LinkReplay
         }
 
         return Violation::keptRecord($step->path, $operations);
-    }
-
-    private function name(MutationNode $node, LinkedRow $row): void
-    {
-        if ($node->operation === MutationOperation::Create) {
-            return;
-        }
-
-        $this->named[$row->identity] = ($this->named[$row->identity] ?? 0) + 1;
-        $this->syncs->name($row);
-
-        if ($node->operation === MutationOperation::Delete) {
-            $this->deleted[] = [$node->path.'.key', $row->identity];
-        }
     }
 
     /** @return list<LinkedRow> */

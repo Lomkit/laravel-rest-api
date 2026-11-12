@@ -77,13 +77,13 @@ class ChildSyncTransactionsTest extends PackageTestCase
     /** @param array<int, int|null> $parents */
     #[Test]
     #[DataProvider('removals')]
-    public function it_reads_the_children_again_when_it_runs_a_deadlocked_transaction_again(string $relation, array $parents): void
+    public function it_checks_and_writes_the_sync_again_when_it_runs_a_deadlocked_transaction_again(string $relation, string $removal, array $parents): void
     {
         config(['rest.transactions.attempts' => 2]);
         Interruptions::reset([Interruptions::deadlock()]);
 
         $response = $this->postJson('/syncing-documents/mutate', ['mutate' => [
-            ['operation' => 'update', 'key' => 1, 'relations' => [$relation => [['operation' => 'sync', 'key' => [2]]]]],
+            ['operation' => 'update', 'key' => 1, 'relations' => [$relation => [['operation' => 'sync', 'key' => [2]], ['operation' => $removal, 'key' => [3, 4]]]]],
         ]]);
 
         $response->assertOk();
@@ -92,44 +92,91 @@ class ChildSyncTransactionsTest extends PackageTestCase
         $this->assertSame($parents, self::parents());
     }
 
-    /** @return array<string, array{string, array<int, int|null>}> */
+    /** @return array<string, array{string, string, array<int, int|null>}> */
     public static function removals(): array
     {
         return [
-            'delete' => ['children', [1 => null, 2 => 1]],
-            'detach' => ['detachedChildren', [1 => null, 2 => 1, 3 => null, 4 => null]],
+            'delete' => ['children', 'delete', [1 => null, 2 => 1]],
+            'detach' => ['detachedChildren', 'detach', [1 => null, 2 => 1, 3 => null, 4 => null]],
         ];
     }
 
     #[Test]
-    public function it_locks_the_parent_and_the_children_it_removes_until_the_commit(): void
+    public function it_refuses_the_sync_when_a_child_appears_before_the_transaction_runs_again(): void
+    {
+        config(['rest.transactions.attempts' => 2]);
+        Interruptions::reset([Interruptions::deadlock()]);
+        Event::listen(TransactionRolledBack::class, function (): void {
+            if (SyncingDocument::query()->where('title', 'Addendum')->doesntExist()) {
+                SyncingDocument::query()->create(['title' => 'Addendum', 'parent_id' => 1]);
+            }
+        });
+
+        $response = $this->postJson('/syncing-documents/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => 1, 'attributes' => ['title' => 'Final report'], 'relations' => ['children' => [['operation' => 'sync', 'key' => [2, 3, 4]]]]],
+        ]]);
+
+        $response->assertConflict()->assertExactJson([
+            'message' => 'The relation has a related row that the sync neither lists nor removes. Read the relation again, without include limits or filters, then send the request again.',
+            'conflicts' => [['path' => 'mutate.0.relations.children.0.key', 'key' => 5]],
+        ]);
+        $this->assertSame(['mutatedAll'], Interruptions::$runs);
+        $this->assertSame(['begin secondary', 'rollback secondary', 'begin secondary', 'rollback secondary'], $this->transactions);
+        $this->assertSame('Annual report', SyncingDocument::query()->findOrFail(1)->getAttribute('title'));
+    }
+
+    #[Test]
+    public function it_checks_the_sync_of_each_parent_of_a_key_list(): void
+    {
+        SyncingDocument::query()->create(['title' => 'Appendix', 'parent_id' => 2]);
+        $sync = fn (array $keys): array => ['mutate' => [['operation' => 'update', 'key' => 1, 'relations' => ['children' => [
+            ['operation' => 'sync', 'key' => [2, 3, 4]],
+            ['operation' => 'update', 'key' => $keys, 'relations' => ['children' => [
+                ['operation' => 'sync', 'key' => []],
+                ['operation' => 'create', 'attributes' => ['title' => 'Kickoff']],
+            ]]],
+        ]]]]];
+
+        $response = $this->postJson('/syncing-documents/mutate', $sync([3, 2]));
+
+        $response->assertConflict()->assertJsonPath('conflicts', [['path' => 'mutate.0.relations.children.1.relations.children.0.key', 'key' => 5]]);
+        $this->assertSame(0, SyncingDocument::query()->where('title', 'Kickoff')->count());
+
+        $this->postJson('/syncing-documents/mutate', $sync([3, 4]))->assertOk();
+        $this->assertSame([3, 4], SyncingDocument::query()
+            ->where('title', 'Kickoff')
+            ->orderBy('parent_id')
+            ->pluck('parent_id')
+            ->all());
+    }
+
+    #[Test]
+    public function it_locks_the_parent_of_a_sync_until_the_commit(): void
     {
         if (DB::connection('secondary')->getDriverName() === 'sqlite') {
             $this->markTestSkipped('SQLite has no row locks: it locks the whole database for a write.');
         }
 
-        $locked = [];
+        $locked = null;
         SyncingDocumentResource::$whileWriting = function () use (&$locked): void {
-            foreach ([1, 3] as $id) {
-                try {
-                    DB::connection('competitor')
-                        ->table('documents')
-                        ->where('id', $id)
-                        ->lock('for update nowait')
-                        ->first();
-                    $locked[$id] = false;
-                } catch (QueryException) {
-                    $locked[$id] = true;
-                }
+            try {
+                DB::connection('competitor')
+                    ->table('documents')
+                    ->where('id', 1)
+                    ->lock('for update nowait')
+                    ->first();
+                $locked = false;
+            } catch (QueryException) {
+                $locked = true;
             }
         };
 
         $response = $this->postJson('/syncing-documents/mutate', ['mutate' => [
-            ['operation' => 'update', 'key' => 1, 'relations' => ['children' => [['operation' => 'sync', 'key' => [2]]]]],
+            ['operation' => 'update', 'key' => 1, 'relations' => ['children' => [['operation' => 'sync', 'key' => [2]], ['operation' => 'delete', 'key' => [3, 4]]]]],
         ]]);
 
         $response->assertOk();
-        $this->assertSame([1 => true, 3 => true], $locked);
+        $this->assertTrue($locked);
         $this->assertSame([1 => null, 2 => 1], self::parents());
     }
 

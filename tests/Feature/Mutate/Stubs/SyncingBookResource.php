@@ -2,7 +2,6 @@
 
 namespace Lomkit\Rest\Tests\Feature\Mutate\Stubs;
 
-use Lomkit\Rest\Relations\ChildRemoval;
 use Lomkit\Rest\Relations\HasOne;
 use Lomkit\Rest\Relations\MorphMany;
 use Lomkit\Rest\Tests\Fixtures\Library\BookResource;
@@ -16,7 +15,7 @@ class SyncingBookResource extends BookResource
     {
         return [
             HasOne::make('loan', LoanResource::class),
-            MorphMany::make('labels', LabelResource::class)->syncable(ChildRemoval::Detach),
+            MorphMany::make('labels', LabelResource::class)->syncable(),
         ];
     }
 }

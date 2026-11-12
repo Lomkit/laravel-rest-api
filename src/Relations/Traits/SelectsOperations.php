@@ -41,7 +41,7 @@ trait SelectsOperations
 
     final public function syncsChildren(): bool
     {
-        return $this instanceof SyncableRelation && $this->syncRemoval() !== null;
+        return $this instanceof SyncableRelation && $this->isSyncable();
     }
 
     private function operationSelection(): OperationSelection

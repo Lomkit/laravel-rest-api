@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 use LogicException;
 use Lomkit\Rest\Fields\MutationOperation;
-use Lomkit\Rest\Relations\ChildRemoval;
 
 final readonly class ChildWrites extends RelationWrites
 {
@@ -25,10 +24,8 @@ final readonly class ChildWrites extends RelationWrites
                 continue;
             }
 
-            $removal = $this->removal($node);
-
-            if ($removal !== null) {
-                $this->sync($parent, $node, $removal, $mutator, $log);
+            if ($this->syncs($node)) {
+                $mutator->each($resource, $node, $log);
 
                 continue;
             }
@@ -58,17 +55,18 @@ final readonly class ChildWrites extends RelationWrites
         $owner = $parent->owner($children->getLocalKeyName(), $type);
         $seed = $parent->seed($children->getLocalKeyName(), $type);
         $single = ($children instanceof HasOne || $children instanceof MorphOne) && ! $children->isOneOfMany();
+        $syncs = [];
+        $accounted = [];
 
         foreach ($this->nodes() as $node) {
-            $removal = $this->removal($node);
             $check = match (true) {
-                $removal !== null, in_array($node->operation, [MutationOperation::Update, MutationOperation::Detach, MutationOperation::Delete], true) => LinkCheck::Current,
+                $this->syncs($node), in_array($node->operation, [MutationOperation::Update, MutationOperation::Detach, MutationOperation::Delete], true) => LinkCheck::Current,
                 $single => LinkCheck::Single,
                 default => LinkCheck::None,
             };
             $path = $check === LinkCheck::Single ? $node->path : $node->path.'.key';
 
-            if ($node->operation === MutationOperation::Detach || $removal === ChildRemoval::Detach) {
+            if ($node->operation === MutationOperation::Detach) {
                 $replay->clear($path, $column);
             }
 
@@ -82,9 +80,17 @@ final readonly class ChildWrites extends RelationWrites
                 fn (LinkedRow $child): LinkStep => new LinkStep($path, $column, $child->identity, $child->link($column), $owner, self::unlinks($node), $check, $seed),
             );
 
-            if ($removal !== null) {
-                $replay->syncs->sync($path, $column, $owner, $rows);
+            if ($this->syncs($node)) {
+                $syncs[] = $path;
             }
+
+            if ($this->syncs($node) || self::unlinks($node)) {
+                $accounted = [...$accounted, ...$rows];
+            }
+        }
+
+        foreach ($syncs as $path) {
+            $replay->named->sync(new LinkedSync($path, $column, $owner, $accounted));
         }
     }
 
@@ -92,10 +98,9 @@ final readonly class ChildWrites extends RelationWrites
     public function check(Model $parent, WriteChecks $checks): void
     {
         foreach ($this->nodes() as $node) {
-            $removal = $this->removal($node);
-
-            if ($removal !== null) {
-                $this->checkSync($parent, $node, $removal, $checks);
+            if ($this->syncs($node)) {
+                $checks->walk($this->relation->resource(), $node);
+                SyncPrecondition::verify($this->relation, $this->children($parent), $node, $this->accountedKeys());
 
                 continue;
             }
@@ -110,40 +115,23 @@ final readonly class ChildWrites extends RelationWrites
         }
     }
 
-    private function checkSync(Model $parent, MutationNode $node, ChildRemoval $removal, WriteChecks $checks): void
+    private function syncs(MutationNode $node): bool
     {
-        $resource = $this->relation->resource();
-        $listed = $checks->walk($resource, $node);
-        $removed = $checks->children->plan($this->relation, $parent, $node, $listed);
-        $removing = self::removing($node, $removal);
-        $keys = $removal === ChildRemoval::Delete ? new PlannedKeys : $this->planned($parent, true);
-
-        foreach ($checks->walk($resource, $removing, $keys, true, $removed) as $child) {
-            $checks->link($this->relation, $removing, $parent, $child, true);
-        }
+        return $node->operation === MutationOperation::Sync && $this->relation->syncsChildren();
     }
 
-    private function sync(Model $parent, MutationNode $node, ChildRemoval $removal, Mutator $mutator, OperationLog $log): void
+    /** @return list<int|string> */
+    private function accountedKeys(): array
     {
-        $resource = $this->relation->resource();
-        $removing = self::removing($node, $removal);
-        $keys = $this->keys($parent, true);
+        $keys = [];
 
-        foreach ($mutator->checks->children->written($node) as $child) {
-            $mutator->remove($resource, $removing, $child, $keys);
+        foreach ($this->nodes() as $node) {
+            if ($this->syncs($node) || self::unlinks($node)) {
+                $keys = [...$keys, ...(is_array($node->key) ? $node->key : [$node->key])];
+            }
         }
 
-        $mutator->each($resource, $node, $log);
-    }
-
-    private function removal(MutationNode $node): ?ChildRemoval
-    {
-        return $node->operation === MutationOperation::Sync ? ChildRemoval::of($this->relation) : null;
-    }
-
-    private static function removing(MutationNode $node, ChildRemoval $removal): MutationNode
-    {
-        return new MutationNode($removal->operation(), null, null, null, null, null, $node->depth, null, $node->path);
+        return array_values(array_filter($keys, fn (int|string|null $key): bool => $key !== null));
     }
 
     private static function unlinks(MutationNode $node): bool

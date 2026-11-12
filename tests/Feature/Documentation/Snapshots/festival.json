@@ -5551,7 +5551,7 @@
                                         },
                                         "operations": {
                                             "type": "array",
-                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
+                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry. On a HasMany or MorphMany relation, sync takes keys only and checks that its list, with the delete and detach entries next to it, accounts for every child that the user can see",
                                             "items": {
                                                 "type": "string",
                                                 "enum": [
@@ -5564,18 +5564,6 @@
                                                     "delete"
                                                 ]
                                             }
-                                        },
-                                        "sync_removes": {
-                                            "type": [
-                                                "string",
-                                                "null"
-                                            ],
-                                            "description": "With relations.operations, on HasMany and MorphMany relations only: what a `sync` entry does to the children that it does not list, set with syncable(); null when the relation has no such sync",
-                                            "enum": [
-                                                "detach",
-                                                "delete",
-                                                null
-                                            ]
                                         },
                                         "name": {
                                             "type": "string"
@@ -9035,7 +9023,7 @@
                                         },
                                         "operations": {
                                             "type": "array",
-                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
+                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry. On a HasMany or MorphMany relation, sync takes keys only and checks that its list, with the delete and detach entries next to it, accounts for every child that the user can see",
                                             "items": {
                                                 "type": "string",
                                                 "enum": [
@@ -9048,18 +9036,6 @@
                                                     "delete"
                                                 ]
                                             }
-                                        },
-                                        "sync_removes": {
-                                            "type": [
-                                                "string",
-                                                "null"
-                                            ],
-                                            "description": "With relations.operations, on HasMany and MorphMany relations only: what a `sync` entry does to the children that it does not list, set with syncable(); null when the relation has no such sync",
-                                            "enum": [
-                                                "detach",
-                                                "delete",
-                                                null
-                                            ]
                                         },
                                         "name": {
                                             "type": "string"
@@ -14600,7 +14576,7 @@
                                         },
                                         "operations": {
                                             "type": "array",
-                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry",
+                                            "description": "With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry. On a HasMany or MorphMany relation, sync takes keys only and checks that its list, with the delete and detach entries next to it, accounts for every child that the user can see",
                                             "items": {
                                                 "type": "string",
                                                 "enum": [
@@ -14613,18 +14589,6 @@
                                                     "delete"
                                                 ]
                                             }
-                                        },
-                                        "sync_removes": {
-                                            "type": [
-                                                "string",
-                                                "null"
-                                            ],
-                                            "description": "With relations.operations, on HasMany and MorphMany relations only: what a `sync` entry does to the children that it does not list, set with syncable(); null when the relation has no such sync",
-                                            "enum": [
-                                                "detach",
-                                                "delete",
-                                                null
-                                            ]
                                         },
                                         "name": {
                                             "type": "string"
@@ -17434,7 +17398,7 @@
                 "properties": {
                     "shows": {
                         "type": "array",
-                        "description": "Each key of a `delete` entry counts as one entry. A `sync` entry keeps the children that it lists and deletes the others that the related resource reaches, at most 1000. It comes once, next to `create` entries and `update` entries of the keys that it lists.",
+                        "description": "Each key of a `delete` entry counts as one entry. A `sync` entry lists the children to keep and comes once, next to `create` entries, `update` entries of the keys that it lists, and `delete` or `detach` entries of other keys. It removes nothing: when a child that the user can see is neither listed nor removed by these entries, the request answers 409 and writes nothing.",
                         "items": {
                             "$ref": "#/components/schemas/StageRelationMutationShows"
                         },
@@ -17700,7 +17664,7 @@
                                 },
                                 "conflicts": {
                                     "type": "array",
-                                    "description": "The update entries whose `version` is not the version of their row: nothing was written",
+                                    "description": "The update entries whose `version` is not the version of their row, and the `key` of the sync entries whose list leaves out a child, with that child: nothing was written",
                                     "items": {
                                         "type": "object",
                                         "properties": {
@@ -17714,13 +17678,12 @@
                                                 ]
                                             },
                                             "version": {
-                                                "description": "The version of the row as the request found it, written as the search returns it; null when the row is gone"
+                                                "description": "On an update entry: the version of the row as the request found it, written as the search returns it; null when the row is gone"
                                             }
                                         },
                                         "required": [
                                             "path",
-                                            "key",
-                                            "version"
+                                            "key"
                                         ]
                                     }
                                 }

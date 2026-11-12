@@ -2,21 +2,26 @@
 
 namespace Lomkit\Rest\Relations\Traits;
 
-use Lomkit\Rest\Relations\ChildRemoval;
+use Lomkit\Rest\Exceptions\InvalidRelationException;
+use Lomkit\Rest\Fields\MutationOperation;
 
 trait SyncsChildren
 {
-    private ?ChildRemoval $syncRemoval = null;
+    private bool $syncable = false;
 
-    public function syncable(ChildRemoval $removal): static
+    public function syncable(bool $syncable = true): static
     {
-        $this->syncRemoval = $removal;
+        if ($syncable && in_array(MutationOperation::Sync, $this->mutationOperations(), true)) {
+            throw InvalidRelationException::syncAlreadyAccepted(class_basename($this), $this->relation);
+        }
+
+        $this->syncable = $syncable;
 
         return $this;
     }
 
-    public function syncRemoval(): ?ChildRemoval
+    public function isSyncable(): bool
     {
-        return $this->syncRemoval;
+        return $this->syncable;
     }
 }

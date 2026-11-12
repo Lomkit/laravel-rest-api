@@ -5,8 +5,6 @@ namespace Lomkit\Rest\Scramble\Mutate;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Fields\MutationOperation;
-use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Relations\ChildRemoval;
 use Lomkit\Rest\Relations\Relation;
 
 final readonly class SyncSchema
@@ -26,17 +24,12 @@ final readonly class SyncSchema
         return (new BooleanType)->setDescription('When true, the rows that `key` does not list stay attached');
     }
 
-    public static function children(Resource $resource, Relation $relation): string
+    public static function children(Relation $relation): string
     {
-        $removal = ChildRemoval::of($relation);
-
-        if ($removal === null) {
+        if (! $relation->syncsChildren()) {
             return '';
         }
 
-        $max = $resource->context()->limits()->totals->entries;
-        $verb = $removal === ChildRemoval::Delete ? 'deletes' : 'detaches';
-
-        return "A `sync` entry keeps the children that it lists and {$verb} the others that the related resource reaches, at most {$max}. It comes once, next to `create` entries and `update` entries of the keys that it lists.";
+        return 'A `sync` entry lists the children to keep and comes once, next to `create` entries, `update` entries of the keys that it lists, and `delete` or `detach` entries of other keys. It removes nothing: when a child that the user can see is neither listed nor removed by these entries, the request answers 409 and writes nothing.';
     }
 }

@@ -14,7 +14,7 @@ use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\Generator\Types\Type;
 use Lomkit\Rest\Actions\Action;
 use Lomkit\Rest\Http\Routing\Endpoint;
-use Lomkit\Rest\Scramble\Mutate\VersionReach;
+use Lomkit\Rest\Scramble\Mutate\ConflictReach;
 
 final readonly class ErrorResponses
 {
@@ -33,7 +33,7 @@ final readonly class ErrorResponses
         $operation->addResponse($this->shared('RestForbidden', 403, 'Forbidden', self::forbidden()));
         $operation->addResponse($this->shared('RestNotFound', 404, 'Not found', self::message()));
 
-        if ($context->endpoint === Endpoint::Mutate && VersionReach::of($context->resource)) {
+        if ($context->endpoint === Endpoint::Mutate && ConflictReach::of($context->resource)) {
             $operation->addResponse($this->shared('RestConflict', 409, 'Conflict', self::conflict()));
         }
 
@@ -98,12 +98,12 @@ final readonly class ErrorResponses
         $conflict = Schemas::required([
             'path' => new StringType,
             'key' => self::key(),
-            'version' => (new MixedType)->setDescription('The version of the row as the request found it, written as the search returns it; null when the row is gone'),
-        ]);
+            'version' => (new MixedType)->setDescription('On an update entry: the version of the row as the request found it, written as the search returns it; null when the row is gone'),
+        ], ['version']);
 
         return Schemas::required([
             'message' => new StringType,
-            'conflicts' => Schemas::list($conflict, 'The update entries whose `version` is not the version of their row: nothing was written'),
+            'conflicts' => Schemas::list($conflict, 'The update entries whose `version` is not the version of their row, and the `key` of the sync entries whose list leaves out a child, with that child: nothing was written'),
         ]);
     }
 

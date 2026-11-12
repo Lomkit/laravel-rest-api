@@ -206,7 +206,6 @@ class RelationHierarchyTest extends PackageTestCase
         [$details, $reserved] = match (true) {
             $base === BelongsToMany::class => [[...self::DETAILS, 'pivot_fields'], ['pivot']],
             $class === MorphTo::class => [['relation', 'constraints', 'operations', 'name', 'types', 'morph'], ['@type']],
-            $class === HasMany::class, $class === MorphMany::class => [['resource', 'relation', 'constraints', 'operations', 'sync_removes', 'name'], []],
             default => [self::DETAILS, []],
         };
 

@@ -63,26 +63,6 @@ final readonly class OperationSelection
         return in_array($operation, $supported, true) && ! $this->accepts($operation);
     }
 
-    /** @param list<MutationOperation> $accepted */
-    public static function syncing(Relation $relation, ChildRemoval $removal, array $accepted): MutationOperation
-    {
-        $type = class_basename($relation);
-
-        if (in_array(MutationOperation::Sync, $relation->mutationOperations(), true)) {
-            throw InvalidRelationException::syncAlreadyAccepted($type, $relation->relation);
-        }
-
-        if ($removal === ChildRemoval::Delete && ! $relation->isDeletable()) {
-            throw InvalidRelationException::syncDeleteWithoutDelete($type, $relation->relation);
-        }
-
-        if ($removal === ChildRemoval::Detach && ! in_array(MutationOperation::Detach, $accepted, true)) {
-            throw InvalidRelationException::syncDetachWithoutDetach($type, $relation->relation);
-        }
-
-        return MutationOperation::Sync;
-    }
-
     private function accepts(MutationOperation $operation): bool
     {
         return ($this->kept === null || isset($this->kept[$operation->value])) && ! isset($this->withdrawn[$operation->value]);

@@ -58,11 +58,10 @@ class ScrambleDetailsTest extends ScrambleTestCase
         $pivotFields = '{"type":"array","description":"With relations.pivot_fields, on many-to-many relations only: the pivot fields of the relation","items":'.self::PIVOT_FIELD.'}';
         $types = '{"type":"object","description":"MorphTo only: the resource class of each morph type","additionalProperties":{"type":"string"}}';
         $morph = '{"type":"object","description":"MorphTo only: the columns of the relation","properties":{"type_column":{"type":"string"},"key_column":{"type":"string"}},"required":["type_column","key_column"]}';
-        $operations = '{"type":"array","description":"With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry","items":{"type":"string","enum":["create","update","attach","detach","sync","toggle","delete"]}}';
-        $syncRemoves = '{"type":["string","null"],"description":"With relations.operations, on HasMany and MorphMany relations only: what a `sync` entry does to the children that it does not list, set with syncable(); null when the relation has no such sync","enum":["detach","delete",null]}';
+        $operations = '{"type":"array","description":"With relations.operations: the operations that the entries of the relation accept in mutate; empty when the relation takes no entry. On a HasMany or MorphMany relation, sync takes keys only and checks that its list, with the delete and detach entries next to it, accounts for every child that the user can see","items":{"type":"string","enum":["create","update","attach","detach","sync","toggle","delete"]}}';
 
         $this->assertSame(
-            '{"type":"object","properties":{"resource":{"type":"string","description":"The related resource class; absent on a MorphTo relation with several types"},"relation":{"type":"string","enum":["author"]},"constraints":'.$constraints.',"operations":'.$operations.',"sync_removes":'.$syncRemoves.',"name":{"type":"string"},"pivot_fields":'.$pivotFields.',"types":'.$types.',"morph":'.$morph.'},"required":["relation","name"]}',
+            '{"type":"object","properties":{"resource":{"type":"string","description":"The related resource class; absent on a MorphTo relation with several types"},"relation":{"type":"string","enum":["author"]},"constraints":'.$constraints.',"operations":'.$operations.',"name":{"type":"string"},"pivot_fields":'.$pivotFields.',"types":'.$types.',"morph":'.$morph.'},"required":["relation","name"]}',
             json_encode($this->details()['relations']['items']),
         );
     }

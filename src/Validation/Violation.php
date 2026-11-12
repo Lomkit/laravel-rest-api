@@ -168,6 +168,11 @@ final readonly class Violation
         return new self($key, 'rest::validation.beside_sync');
     }
 
+    public static function keptBySync(string $key): self
+    {
+        return new self($key, 'rest::validation.kept_by_sync');
+    }
+
     public static function unlistedBySync(string $key): self
     {
         return new self($key, 'rest::validation.unlisted_by_sync');

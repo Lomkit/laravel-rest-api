@@ -5,7 +5,6 @@ namespace Lomkit\Rest\Tests\Fixtures\Festival;
 use Lomkit\Rest\Fields\ID;
 use Lomkit\Rest\Fields\Text;
 use Lomkit\Rest\Http\Resource;
-use Lomkit\Rest\Relations\ChildRemoval;
 use Lomkit\Rest\Relations\HasMany;
 use Lomkit\Rest\Relations\HasManyThrough;
 
@@ -30,7 +29,7 @@ class StageResource extends Resource
         return [
             HasMany::make('shows', ShowResource::class)
                 ->deletable()
-                ->syncable(ChildRemoval::Delete),
+                ->syncable(),
             HasManyThrough::make('comments', CommentResource::class),
         ];
     }

@@ -93,7 +93,7 @@ final readonly class RelationEntrySchema
         }
 
         $deletes = $relation->isDeletable() ? 'Each key of a `delete` entry counts as one entry.' : '';
-        $entries = Schemas::list($entry, trim($deletes.' '.SyncSchema::children($resource, $relation)));
+        $entries = Schemas::list($entry, trim($deletes.' '.SyncSchema::children($relation)));
         $entries->setMax($resource->context()->limits()->sizes->relationEntries);
 
         return $entries;

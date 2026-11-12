@@ -79,22 +79,6 @@ final readonly class Mutator
         $log->end();
     }
 
-    /** @param array<string, mixed> $unlinked */
-    public function remove(Resource $resource, MutationNode $removal, Model $model, array $unlinked): void
-    {
-        if ($removal->operation !== MutationOperation::Delete) {
-            $this->write($resource, $model, $removal, new OperationLog, $unlinked, null);
-
-            return;
-        }
-
-        $resource->performDelete($model);
-        $resource
-            ->context()
-            ->authorizer()
-            ->forget($model);
-    }
-
     /**
      * @param  array<string, mixed>  $owned
      * @param  (Closure(Model): void)|null  $linking

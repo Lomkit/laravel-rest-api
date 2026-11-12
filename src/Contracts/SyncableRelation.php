@@ -2,11 +2,9 @@
 
 namespace Lomkit\Rest\Contracts;
 
-use Lomkit\Rest\Relations\ChildRemoval;
-
 interface SyncableRelation
 {
-    public function syncable(ChildRemoval $removal): static;
+    public function syncable(bool $syncable = true): static;
 
-    public function syncRemoval(): ?ChildRemoval;
+    public function isSyncable(): bool;
 }

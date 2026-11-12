@@ -3,7 +3,6 @@
 namespace Lomkit\Rest\Tests\Feature\Transactions\Stubs;
 
 use Closure;
-use Lomkit\Rest\Relations\ChildRemoval;
 use Lomkit\Rest\Relations\HasMany;
 
 class SyncingDocumentResource extends RetriedDocumentResource
@@ -18,8 +17,8 @@ class SyncingDocumentResource extends RetriedDocumentResource
         return [
             HasMany::make('children', self::class)
                 ->deletable()
-                ->syncable(ChildRemoval::Delete),
-            HasMany::make('detachedChildren', self::class)->syncable(ChildRemoval::Detach),
+                ->syncable(),
+            HasMany::make('detachedChildren', self::class)->syncable(),
         ];
     }
 

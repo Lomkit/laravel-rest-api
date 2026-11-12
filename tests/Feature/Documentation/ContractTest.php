@@ -465,6 +465,28 @@ class ContractTest extends DocumentationTestCase
     }
 
     #[Test]
+    public function it_answers_a_sync_that_leaves_out_a_child_as_the_document_describes(): void
+    {
+        $this->seedFestival();
+        $this->actingAs(new User(['id' => 1, 'name' => 'Ada']));
+        $document = $this->document();
+        $validator = new OpenApiValidator;
+        $body = ['mutate' => [['operation' => 'update', 'key' => 'main', 'relations' => ['shows' => [['operation' => 'sync', 'key' => []]]]]]];
+
+        $this->assertSame([], $validator->requestErrors($document, '/stages/mutate', 'post', $body));
+
+        $response = $this->postJson('api/stages/mutate', $body);
+
+        $response->assertConflict()->assertExactJson([
+            'message' => 'The relation has a related row that the sync neither lists nor removes. Read the relation again, without include limits or filters, then send the request again.',
+            'conflicts' => [['path' => 'mutate.0.relations.shows.0.key', 'key' => 1]],
+        ]);
+        $this->assertSame(['$ref' => '#/components/responses/RestConflict'], $document['paths']['/stages/mutate']['post']['responses'][409]);
+        $this->assertSame([], $validator->schemaErrors($document, '#/components/responses/RestConflict/content/application~1json/schema', $response->json()));
+        $this->assertSame('main', Show::query()->findOrFail(1)->stage_code);
+    }
+
+    #[Test]
     public function it_documents_field_examples_that_their_schema_accepts(): void
     {
         $document = $this->document();

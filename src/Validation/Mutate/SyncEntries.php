@@ -53,13 +53,20 @@ final readonly class SyncEntries
             return;
         }
 
-        if ($node->operation !== MutationOperation::Update) {
+        $keys = self::keys($node);
+        $removes = $node->operation === MutationOperation::Delete || $node->operation === MutationOperation::Detach;
+
+        if (! $removes && $node->operation !== MutationOperation::Update) {
             $this->rules->reject(Violation::besideSync($node->path.'.operation'));
 
             return;
         }
 
-        if (array_diff_key(self::keys($node), $listed) !== []) {
+        if ($removes && array_intersect_key($keys, $listed) !== []) {
+            $this->rules->reject(Violation::keptBySync($node->path.'.key'));
+        }
+
+        if (! $removes && array_diff_key($keys, $listed) !== []) {
             $this->rules->reject(Violation::unlistedBySync($node->path.'.key'));
         }
     }
