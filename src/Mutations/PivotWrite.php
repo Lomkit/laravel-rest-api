@@ -2,6 +2,7 @@
 
 namespace Lomkit\Rest\Mutations;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use LogicException;
@@ -20,10 +21,16 @@ final readonly class PivotWrite
         public array $related,
         public array $pivot,
         public MutationNode $entry,
+        private ?Authenticatable $user = null,
     ) {
         if ($related === []) {
             throw PivotPersisterException::noRelatedRows($relation);
         }
+    }
+
+    public function user(): ?Authenticatable
+    {
+        return $this->user;
     }
 
     /** @return BelongsToMany<Model, Model> */
