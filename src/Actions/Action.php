@@ -23,6 +23,7 @@ use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Routing\Endpoint;
 use ReflectionMethod;
 
+/** @template TModel of Model = Model */
 class Action
 {
     use Batchable;
@@ -171,11 +172,13 @@ class Action
         ];
     }
 
-    /** @param Collection<array-key, Model> $models */
+    /** @param Collection<array-key, TModel> $models */
     public function handle(ActionFields $fields, Collection $models): void {}
 
+    /** @param TModel $row */
     public function beforeRow(ActionFields $fields, Model $row): void {}
 
+    /** @param TModel $row */
     public function handleRow(ActionFields $fields, Model $row): void {}
 
     public function withBatch(ActionFields $fields, PendingBatch $batch): void {}
