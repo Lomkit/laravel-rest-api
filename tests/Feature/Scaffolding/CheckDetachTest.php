@@ -43,7 +43,7 @@ class CheckDetachTest extends ScaffoldingTestCase
 
         $this->assertSame(
             "  routes and policies ... 8 routes authenticated, 1 policy found\n"
-            ."  declarations ... 2 actions, 0 metrics built\n"
+            ."  declarations ... 2 actions, 0 metrics, 0 instructions built\n"
             ."  rows ... 1 resource with a perimeter, 1 marked #[WithoutPerimeter]\n"
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
             ."  actions ... 1 action checks each row\n"

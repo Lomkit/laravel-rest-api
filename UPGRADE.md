@@ -1,5 +1,11 @@
 # Upgrade Guide
 
+## 3.5 additions
+
+Version 3.5 adds features.
+
+- `instructions()` accepts class names next to instances: `return [HeldByInstruction::class, UnendedInstruction::make()->meta(['group' => 'dates'])];`. The container builds a listed class the first time the resource reads its instructions in a request (a search, `/details`, the OpenAPI document, `rest:check`), once per request, so its constructor can inject services; registering the routes reads no instruction. List an instruction by its class, and keep the instance form for one built with arguments or reused with other settings. An instruction listed by its class can still override `name()` or `uriKey()`. When the instructions are read, `Lomkit\Rest\Exceptions\InvalidInstructionException` refuses a name that is not a class extending `Instruction`, `Instruction::class` itself, an abstract class and a container binding that returns another class, with a message that names the resource. `php artisan rest:check` builds every instruction and reports these errors, and a constructor parameter that the container cannot resolve, in its `declarations` section, which now counts the instructions built (`4 actions, 2 metrics, 3 instructions built`, and `"instructions": 3` in the `declarations` key of `--json`).
+
 ## 3.4 additions
 
 Version 3.4 adds features.

@@ -14,4 +14,10 @@ final class TicketDeskResource extends Resource
     {
         return [CloseTicketsAction::class, DetachTicketTagsAction::make()];
     }
+
+    #[\Override]
+    public function instructions(): array
+    {
+        return [RankTicketsInstruction::class, TaggedTicketsInstruction::make()];
+    }
 }

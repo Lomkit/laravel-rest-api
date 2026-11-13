@@ -111,7 +111,7 @@ class ShowResource extends Resource
     #[\Override]
     public function instructions(): array
     {
-        return [OnlyFeatured::make()];
+        return self::$instances ? [OnlyFeatured::make()] : [OnlyFeatured::class];
     }
 
     #[\Override]

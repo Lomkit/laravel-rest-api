@@ -8,7 +8,9 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\Request;
 use LogicException;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Exceptions\InvalidInstructionException;
 use Lomkit\Rest\Http\DeclarationList;
+use Lomkit\Rest\Http\InstructionList;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\RestContext;
 use Lomkit\Rest\Metrics\Metric;
@@ -27,6 +29,7 @@ final readonly class DeclarationCheck
             $declarations = $context->resource($resource)->definition()->declarations();
             $report = self::build($resource, $declarations->actions(), $report, fn (DeclarationReport $report, Action $action): DeclarationReport => $report->withAction($resource, $action));
             $report = self::build($resource, $declarations->metrics(), $report, fn (DeclarationReport $report): DeclarationReport => $report->withMetric());
+            $report = self::buildInstructions($resource, $declarations->instructions(), $report);
         }
 
         return $report;
@@ -43,6 +46,22 @@ final readonly class DeclarationCheck
         foreach ($declarations->indexes() as $index) {
             try {
                 $report = $built($report, $declarations->at($index));
+            } catch (LogicException|BindingResolutionException $exception) {
+                $report = $report->withProblem("{$resource}: {$exception->getMessage()}");
+            }
+        }
+
+        return $report;
+    }
+
+    private static function buildInstructions(string $resource, InstructionList $instructions, DeclarationReport $report): DeclarationReport
+    {
+        foreach ($instructions->indexes() as $index) {
+            try {
+                $instructions->at($index);
+                $report = $report->withInstruction();
+            } catch (InvalidInstructionException $exception) {
+                $report = $report->withProblem($exception->getMessage());
             } catch (LogicException|BindingResolutionException $exception) {
                 $report = $report->withProblem("{$resource}: {$exception->getMessage()}");
             }
