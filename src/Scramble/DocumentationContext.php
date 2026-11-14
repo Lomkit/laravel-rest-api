@@ -2,11 +2,13 @@
 
 namespace Lomkit\Rest\Scramble;
 
+use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Str;
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Authorization\ActingUser;
 use Lomkit\Rest\Http\Controllers\Controller;
 use Lomkit\Rest\Http\Requests\RestRequest;
 use Lomkit\Rest\Http\Resource;
@@ -28,7 +30,8 @@ final readonly class DocumentationContext
     public static function guest(Route $route, string $method, Endpoint $endpoint, string $controller, Container $container, ComponentRegistry $components): self
     {
         $request = RestRequest::createFrom(Request::create('/'.$route->uri(), strtoupper($method)));
-        $resource = (new RestContext($request, $container))->resource($controller::resourceClass());
+        $guest = ActingUser::of($container->make(AuthManager::class)->getDefaultDriver(), null);
+        $resource = (new RestContext($request, $container, $guest))->resource($controller::resourceClass());
 
         return new self($route, $endpoint, $resource, self::nameOf($resource), $components);
     }

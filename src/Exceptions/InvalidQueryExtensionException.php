@@ -70,4 +70,41 @@ final class InvalidQueryExtensionException extends InvalidExtensionException
     {
         return self::about($name, "The [{$name}] extension adds {$part->value} to the query of {$resource} while adding to its rows. An augmentation adds columns, subqueries and eager loads only: restrict rows with RestrictsQueries.");
     }
+
+    public static function invalidLimit(string $name, string $resource, string $method, int $value): self
+    {
+        return self::about($name, "The [{$name}] extension passes {$value} to {$method}() for {$resource}. Page sizes, totals and include limits are 1 or more.");
+    }
+
+    /** @param list<string> $names */
+    public static function noPageSize(string $resource, array $names): self
+    {
+        $extensions = implode(', ', $names);
+
+        return self::about($names[0] ?? '', "The extensions [{$extensions}] narrow the page sizes of {$resource} to none. Keep at least one size of its limits() that every allowSizes() lists, at or below every maxSize() and maxTotal() they set.");
+    }
+
+    /**
+     * @param  list<string>  $names
+     * @param  list<int>  $allowed
+     */
+    public static function defaultAboveSizes(string $resource, array $names, int $default, array $allowed): self
+    {
+        $extensions = implode(', ', $names);
+        $sizes = implode(', ', $allowed);
+
+        return self::about($names[0] ?? '', "The extensions [{$extensions}] narrow the page sizes of {$resource} to [{$sizes}], all above its default limit {$default}, and narrowing never raises it. Keep a size of {$default} or less.");
+    }
+
+    /**
+     * @param  list<string>  $names
+     * @param  list<int>  $allowed
+     */
+    public static function includeLimitAboveSizes(string $resource, array $names, int $includeLimit, array $allowed): self
+    {
+        $extensions = implode(', ', $names);
+        $sizes = implode(', ', $allowed);
+
+        return self::about($names[0] ?? '', "The extensions [{$extensions}] narrow the include limit of {$resource} to {$includeLimit}, below every page size [{$sizes}], and narrowing never raises it. Keep a page size of {$includeLimit} or less.");
+    }
 }

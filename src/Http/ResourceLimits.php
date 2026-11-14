@@ -30,8 +30,20 @@ final readonly class ResourceLimits
             throw InvalidResourceException::maxTotalTooLow($resource::class, $resource->maxTotal, $largest);
         }
 
-        $maxPage = $largest === 1 ? PHP_INT_MAX : intdiv(PHP_INT_MAX, $largest) + 1;
+        return new self($allowed, $resource->defaultLimit, $resource->includeLimit, $resource->maxTotal, self::maxPage($allowed));
+    }
 
-        return new self($allowed, $resource->defaultLimit, $resource->includeLimit, $resource->maxTotal, $maxPage);
+    /** @param list<int> $allowed */
+    public function narrowedTo(array $allowed, int $defaultLimit, int $includeLimit, ?int $maxTotal): self
+    {
+        return new self($allowed, $defaultLimit, $includeLimit, $maxTotal, self::maxPage($allowed));
+    }
+
+    /** @param list<int> $allowed */
+    private static function maxPage(array $allowed): int
+    {
+        $largest = max([1, ...$allowed]);
+
+        return $largest === 1 ? PHP_INT_MAX : intdiv(PHP_INT_MAX, $largest) + 1;
     }
 }
