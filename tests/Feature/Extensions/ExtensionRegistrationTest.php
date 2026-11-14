@@ -163,6 +163,16 @@ final class ExtensionRegistrationTest extends PackageTestCase
     }
 
     #[Test]
+    public function it_refuses_a_registration_after_a_route_without_declarations_is_registered(): void
+    {
+        Route::prefix('api')->group(fn () => Rest::resource('products', ProductController::class)->only('search', 'details')->register());
+
+        $this->expectExceptionObject(InvalidExtensionException::lateRegistration('noting', NotingExtension::class));
+
+        Rest::registerExtension('noting', NotingExtension::class);
+    }
+
+    #[Test]
     public function it_refuses_a_registration_after_a_resource_reads_its_own_context(): void
     {
         (new ProductResource)->context();
