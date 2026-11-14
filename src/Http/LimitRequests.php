@@ -23,7 +23,7 @@ final class LimitRequests
     public function allowSizes(string $extension, array $sizes): void
     {
         foreach ($sizes as $size) {
-            $this->ensurePositive($extension, 'allowSizes', $size);
+            $this->ensurePositive($extension, __FUNCTION__, $size);
         }
 
         $this->sizes = $this->sizes === null ? array_values(array_unique($sizes)) : array_values(array_intersect($this->sizes, $sizes));
@@ -31,19 +31,19 @@ final class LimitRequests
 
     public function maxSize(string $extension, int $size): void
     {
-        $this->ensurePositive($extension, 'maxSize', $size);
+        $this->ensurePositive($extension, __FUNCTION__, $size);
         $this->maxSize = min($this->maxSize ?? $size, $size);
     }
 
     public function maxTotal(string $extension, int $total): void
     {
-        $this->ensurePositive($extension, 'maxTotal', $total);
+        $this->ensurePositive($extension, __FUNCTION__, $total);
         $this->maxTotal = min($this->maxTotal ?? $total, $total);
     }
 
     public function includeLimit(string $extension, int $limit): void
     {
-        $this->ensurePositive($extension, 'includeLimit', $limit);
+        $this->ensurePositive($extension, __FUNCTION__, $limit);
         $this->includeLimit = min($this->includeLimit ?? $limit, $limit);
     }
 
