@@ -65,5 +65,7 @@ final readonly class QueryPlan implements Clause
         }
 
         $this->limit->apply($query);
+
+        PlanAugmentation::apply($this, $query);
     }
 }

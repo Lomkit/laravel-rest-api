@@ -32,7 +32,7 @@ final readonly class PageQuery
         ];
 
         if ($this->maxTotal === null) {
-            $total = $counts ? $this->query->toBase()->getCountForPagination() : $seen;
+            $total = $counts ? $this->counted()->toBase()->getCountForPagination() : $seen;
 
             return new LengthAwarePaginator($rows, $total, $perPage, $page, $options);
         }
@@ -53,9 +53,15 @@ final readonly class PageQuery
             ->count();
     }
 
+    /** @return Builder<Model> */
+    private function counted(): Builder
+    {
+        return CountedQueries::withoutAdditions($this->query);
+    }
+
     private function countedRows(): QueryBuilder
     {
-        $base = $this->query->toBase();
+        $base = $this->counted()->toBase();
 
         if ($base->groups !== null || $base->havings !== null) {
             return $base

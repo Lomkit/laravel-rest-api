@@ -1,0 +1,166 @@
+<?php
+
+namespace Lomkit\Rest\Search\Plan;
+
+use Closure;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Str;
+use Lomkit\Rest\Exceptions\InvalidQueryExtensionException;
+use Lomkit\Rest\Extensions\ExtensionName;
+use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Query\OuterQueryShape;
+use Lomkit\Rest\Search\Plan\Columns\RelationKeys;
+
+/** @internal */
+final class QueryAdditions
+{
+    public const string ALIAS_SEPARATOR = '__';
+
+    public const int MAX_ALIAS = 63;
+
+    private const string COLUMN = '/^[A-Za-z_][A-Za-z0-9_]*\z/';
+
+    /** @var array<string, string> */
+    private array $columns = [];
+
+    /** @var array<string, array{string, Closure|QueryBuilder|EloquentBuilder<Model>}> */
+    private array $selects = [];
+
+    /** @var array<string, array{string, Closure|null}> */
+    private array $loads = [];
+
+    public function __construct(
+        private readonly Resource $resource,
+        private readonly RenderedLevel $level,
+    ) {}
+
+    public function column(string $extension, string $column): void
+    {
+        if (preg_match(self::COLUMN, $column) !== 1) {
+            throw InvalidQueryExtensionException::invalidColumn($extension, $column, $this->resource::class);
+        }
+
+        $this->columns[$column] ??= $extension;
+    }
+
+    /** @param Closure|QueryBuilder|EloquentBuilder<Model> $subquery */
+    public function select(string $extension, string $alias, Closure|QueryBuilder|EloquentBuilder $subquery): string
+    {
+        if (! ExtensionName::matches($alias)) {
+            throw InvalidQueryExtensionException::invalidAlias($extension, $alias);
+        }
+
+        $final = $extension.self::ALIAS_SEPARATOR.$alias;
+
+        if (strlen($final) > self::MAX_ALIAS) {
+            throw InvalidQueryExtensionException::aliasTooLong($extension, $final, $this->resource::class);
+        }
+
+        if (isset($this->selects[$final])) {
+            throw InvalidQueryExtensionException::aliasTaken($final, $this->resource::class, self::sorted([$this->selects[$final][0], $extension]));
+        }
+
+        if ($this->resource->definition()->fields()->has($final)) {
+            throw InvalidQueryExtensionException::aliasNamesField($extension, $final, $this->resource::class);
+        }
+
+        $this->selects[$final] = [$extension, $subquery];
+
+        return $final;
+    }
+
+    public function with(string $extension, string $relation, ?Closure $constraint): void
+    {
+        if (! $this->resource::newModel()->isRelation(Str::before($relation, '.'))) {
+            throw InvalidQueryExtensionException::unknownRelation($extension, $relation, $this->resource::class);
+        }
+
+        if (isset($this->loads[$relation])) {
+            throw InvalidQueryExtensionException::relationTaken($relation, $this->resource::class, self::sorted([$this->loads[$relation][0], $extension]));
+        }
+
+        $this->loads[$relation] = [$extension, $constraint];
+    }
+
+    /** @param EloquentBuilder<Model> $query */
+    public function applyTo(EloquentBuilder $query): void
+    {
+        $shape = OuterQueryShape::of($query);
+        $loads = $this->keptLoads($query);
+        $keys = [];
+
+        foreach (array_keys($loads) as $relation) {
+            array_push($keys, ...RelationKeys::between($query->getModel(), Str::before($relation, '.'))->parent());
+        }
+
+        if ($loads !== []) {
+            $query->with($loads);
+        }
+
+        AddedColumns::merge($query, [...array_keys($this->columns), ...$keys]);
+        $this->ensureUnchanged($query, $shape, $this->owners([...$this->columns, ...array_column($this->loads, 0)]));
+
+        foreach ($this->selects as $alias => [$extension, $subquery]) {
+            $before = OuterQueryShape::of($query);
+            $query->addSelect([$alias => $subquery]);
+            $this->ensureUnchanged($query, $before, [$extension]);
+        }
+    }
+
+    /**
+     * @param  EloquentBuilder<Model>  $query
+     * @return array<string, Closure>
+     */
+    private function keptLoads(EloquentBuilder $query): array
+    {
+        $loaded = $query->getEagerLoads();
+        $kept = [];
+
+        foreach ($this->loads as $relation => [, $constraint]) {
+            $segment = Str::before($relation, '.');
+
+            if (in_array($segment, $this->level->relations, true) || isset($loaded[$segment])) {
+                continue;
+            }
+
+            $kept[$relation] = $constraint ?? static function (): void {};
+        }
+
+        return $kept;
+    }
+
+    /**
+     * @param  EloquentBuilder<Model>  $query
+     * @param  list<string>  $owners
+     */
+    private function ensureUnchanged(EloquentBuilder $query, OuterQueryShape $before, array $owners): void
+    {
+        $part = OuterQueryShape::of($query)->changedFrom($before);
+
+        if ($part !== null) {
+            throw InvalidQueryExtensionException::augmentedQuery(implode(', ', $owners), $this->resource::class, $part);
+        }
+    }
+
+    /**
+     * @param  array<array-key, string>  $owners
+     * @return list<string>
+     */
+    private function owners(array $owners): array
+    {
+        return self::sorted(array_values(array_unique($owners)));
+    }
+
+    /**
+     * @param  list<string>  $names
+     * @return list<string>
+     */
+    private static function sorted(array $names): array
+    {
+        sort($names);
+
+        return $names;
+    }
+}
