@@ -3,6 +3,7 @@
 namespace Lomkit\Rest\Concerns;
 
 use Illuminate\Auth\Access\Response;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Authorization\Changes;
 use Lomkit\Rest\Authorization\Check;
@@ -33,6 +34,9 @@ trait Authorizable
     {
         return [];
     }
+
+    /** @param Collection<int, Model> $rows */
+    public function prepareAuthorization(string $ability, Collection $rows): void {}
 
     /** @param list<Model|Changes> $arguments */
     public function authorizeTo(string $ability, Model|string $model, array $arguments = []): void

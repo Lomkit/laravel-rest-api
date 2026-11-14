@@ -1,5 +1,20 @@
 # Upgrade Guide
 
+## 3.6 additions
+
+Version 3.6 adds a feature.
+
+- A resource can prepare the row checks of its policies in bulk: override `prepareAuthorization(string $ability, Collection $rows): void` (an `Illuminate\Database\Eloquent\Collection`, empty by default). The package calls it once per ability with the rows it is about to check, before the policy runs for them: the gates of a page and of each include level, each included resource with its own rows; the rows of `destroy`, `restore` and `forceDestroy`; each chunk of the rows of an action with `authorizeEach()`; the `delete` and `view` checks of `mutate`; and `inspectEach()` and `authorizeEach()` of the authorizer. Load there in one query what the policy reads for each row, so that the checks of a page run no query per row:
+
+  ```php
+  public function prepareAuthorization(string $ability, Collection $rows): void
+  {
+      $rows->loadMissing('team');
+  }
+  ```
+
+  The policy still runs for each row, with `Gate::before()`, an overridden `authorizedTo()` and the `Response` of the policy: the hook decides nothing. The user is `$this->request()->user()`, the user the policies check for, also in a search run with `Rest::search()->as($user)`. The rows are the rows whose decision is not known yet: a decision already made in the request or read from `authorizationCache()` leaves its row out, and when no row is left the hook is not called. Only stored, unchanged rows checked alone are handed: class-level checks (`viewAny`, `create`), the drafts of `create`, the `update` checks of `mutate`, which carry their `Changes`, and the link abilities, which also receive the related row, never reach it. An exception thrown by the hook stops the request before the policy runs. A resource that does not override it behaves as before.
+
 ## 3.5 additions
 
 Version 3.5 adds features.

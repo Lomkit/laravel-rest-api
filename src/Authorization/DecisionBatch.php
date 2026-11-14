@@ -17,10 +17,14 @@ final class DecisionBatch
 
     private int $depth = 0;
 
+    private readonly DecisionPreparation $preparation;
+
     public function __construct(
         private readonly DecisionStore $store,
         private readonly DecisionMemo $memo,
-    ) {}
+    ) {
+        $this->preparation = new DecisionPreparation;
+    }
 
     /**
      * @template TResult
@@ -31,10 +35,12 @@ final class DecisionBatch
      */
     public function around(array $checks, Closure $decide): mixed
     {
-        $this->read($checks);
+        $storable = $this->read($checks);
         $this->depth++;
 
         try {
+            $this->preparation->prepare($this->undecided($checks, $storable));
+
             return $decide();
         } finally {
             $this->depth--;
@@ -52,17 +58,21 @@ final class DecisionBatch
         $storable = $this->read($checks);
         $decisions = [];
 
-        foreach ($checks as $key => $check) {
-            $stored = isset($storable[$key]) ? $this->read[$key] ?? null : null;
-            $decisions[$key] = $stored ?? $evaluate($check);
+        try {
+            $this->preparation->prepare($this->undecided($checks, $storable));
 
-            if ($stored === null && isset($storable[$key])) {
-                $this->checks[$key] = $check;
-                $this->decisions[$key] = $decisions[$key];
+            foreach ($checks as $key => $check) {
+                $stored = isset($storable[$key]) ? $this->read[$key] ?? null : null;
+                $decisions[$key] = $stored ?? $evaluate($check);
+
+                if ($stored === null && isset($storable[$key])) {
+                    $this->checks[$key] = $check;
+                    $this->decisions[$key] = $decisions[$key];
+                }
             }
+        } finally {
+            $this->flush();
         }
-
-        $this->flush();
 
         return $decisions;
     }
@@ -87,6 +97,16 @@ final class DecisionBatch
         return $storable;
     }
 
+    /**
+     * @param  array<string, Check>  $checks
+     * @param  array<string, Check>  $storable
+     * @return array<string, Check>
+     */
+    private function undecided(array $checks, array $storable): array
+    {
+        return array_filter($checks, fn (string $key): bool => ! isset($storable[$key], $this->read[$key]), ARRAY_FILTER_USE_KEY);
+    }
+
     private function flush(): void
     {
         if ($this->depth > 0) {
@@ -96,6 +116,7 @@ final class DecisionBatch
         $checks = $this->checks;
         $decisions = $this->decisions;
         $this->read = $this->checks = $this->decisions = [];
+        $this->preparation->reset();
 
         if ($checks !== []) {
             $this->store->putMany($checks, $decisions);
