@@ -40,7 +40,8 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
             ."  actions ... 1 action checks each row\n"
             ."  relations ... no relation accepts detach, 1 skipped\n"
-            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource [country] ... skipped, no trips table\n",
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource [country] ... skipped, no trips table\n"
+            ."  extensions ... none registered\n",
             $output,
         );
     }
@@ -58,7 +59,8 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             ."  rows ... FAILED\n"
             .'  ⇂ '.rtrim(self::JOURNAL_PROBLEM, '.')."\n"
             ."  actions ... no action runs on rows\n"
-            ."  relations ... no relation accepts detach\n",
+            ."  relations ... no relation accepts detach\n"
+            ."  extensions ... none registered\n",
             $output,
         );
     }
@@ -76,7 +78,8 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             ."  rows ... 1 resource with a perimeter\n"
             ."  actions ... FAILED\n"
             .'  ⇂ '.rtrim(self::EXPORT_PROBLEM, '.')."\n"
-            ."  relations ... no relation accepts detach\n",
+            ."  relations ... no relation accepts detach\n"
+            ."  extensions ... none registered\n",
             $output,
         );
     }
@@ -109,6 +112,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                     'problems' => [self::EXPORT_PROBLEM],
                 ],
                 'relations' => ['detachable' => [], 'skipped' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'relation' => 'country', 'table' => 'trips']], 'problems' => []],
+                'extensions' => ['registered' => [], 'problems' => []],
             ],
             json_decode($output->fetch(), true),
         );
@@ -131,7 +135,8 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             ."  Lomkit\Rest\Tests\Fixtures\Atlas\CountryResource ... #[WithoutPerimeter]\n"
             ."  actions ... 1 action checks each row\n"
             ."  relations ... no relation accepts detach, 1 skipped\n"
-            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource [country] ... skipped, no trips table\n",
+            ."  Lomkit\Rest\Tests\Fixtures\Atlas\TripResource [country] ... skipped, no trips table\n"
+            ."  extensions ... none registered\n",
             $output,
         );
     }
@@ -161,6 +166,7 @@ class CheckPerimeterTest extends ScaffoldingTestCase
                     'problems' => [],
                 ],
                 'relations' => ['detachable' => [], 'skipped' => [['resource' => 'Lomkit\Rest\Tests\Fixtures\Atlas\TripResource', 'relation' => 'country', 'table' => 'trips']], 'problems' => []],
+                'extensions' => ['registered' => [], 'problems' => []],
             ],
             json_decode($output->fetch(), true),
         );
@@ -179,7 +185,8 @@ class CheckPerimeterTest extends ScaffoldingTestCase
             ."  declarations ... 0 actions, 0 metrics, 0 instructions built\n"
             ."  rows ... 0 resources with a perimeter\n"
             ."  actions ... no action runs on rows\n"
-            ."  relations ... no relation accepts detach\n",
+            ."  relations ... no relation accepts detach\n"
+            ."  extensions ... none registered\n",
             $output,
         );
     }
