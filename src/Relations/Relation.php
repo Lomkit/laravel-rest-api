@@ -11,6 +11,7 @@ use Lomkit\Rest\Fields\Details\FieldDetails;
 use Lomkit\Rest\Fields\MutationOperation;
 use Lomkit\Rest\Http\Details\DetailsSelection;
 use Lomkit\Rest\Http\Resource;
+use Lomkit\Rest\Query\Clauses\PerimeterClause;
 use Lomkit\Rest\Relations\Traits\Constrained;
 use Lomkit\Rest\Relations\Traits\SelectsOperations;
 use Lomkit\Rest\Validation\Mutate\EntryRule;
@@ -173,7 +174,7 @@ class Relation
     {
         $resource->context()->authorizer()->ensurePlanned(Check::onClass($resource, 'viewAny'));
 
-        $resource->perimeterQuery($query);
+        (new PerimeterClause($resource))->apply($query);
     }
 
     protected function modelRelation(): mixed

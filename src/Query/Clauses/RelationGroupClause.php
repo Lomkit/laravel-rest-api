@@ -34,8 +34,6 @@ final readonly class RelationGroupClause implements Clause
     {
         $this->filters->apply($query);
 
-        $query->where(function (EloquentBuilder $query): void {
-            $this->relation->applyPerimeter($query);
-        });
+        $this->relation->applyPerimeter($query);
     }
 }
