@@ -1494,10 +1494,11 @@ public function register(): void
 ### Writing an extension
 
 ```php
+use Lomkit\Rest\Extensions\Contexts\RestrictionContext;
 use Lomkit\Rest\Extensions\Extension;
-use Lomkit\Rest\Extensions\Kinds\SomeKind;
+use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
 
-final class ArchiveExtension extends Extension implements SomeKind
+final class ArchiveExtension extends Extension implements RestrictsQueries
 {
     public function __construct(private readonly ArchivePolicy $policy) {}
 
@@ -1512,15 +1513,144 @@ final class ArchiveExtension extends Extension implements SomeKind
     {
         return is_subclass_of($resource, ArchivableResource::class);
     }
+
+    #[\Override]
+    public function restrict(RestrictionContext $context): void
+    {
+        if (! $this->policy->showsArchived($context->user)) {
+            $context->query->where($context->query->qualifyColumn('archived'), false);
+        }
+    }
 }
 ```
 
 - `name()` returns the name of the extension, which prefixes every key it adds. A subclass inherits it; override it only to run the subclass beside its parent.
 - Register the class, never an instance: the container builds each extension once per context (request, queued job, search), at first use, so its constructor can inject services. `registerExtension()` takes a class name, so an instance is a PHP `TypeError`; in `registerExtensions()` or the config, it throws `InvalidExtensionException`. Keep settings in properties; for other settings, register a subclass. Never bind the extension as a singleton: one instance would then serve every context of an Octane or queue worker.
-- `SomeKind` stands for the kinds the extension implements, the interfaces of `Lomkit\Rest\Extensions\Kinds`; the constructor injects what their methods use. Implement at least one kind. An abstract class is refused at registration, or, listed in the config, when a context first reads its extensions; a class with no kind or a binding that builds another class is refused when the extensions are built.
+- `RestrictsQueries` is one of the kinds the extension implements, the interfaces of `Lomkit\Rest\Extensions\Kinds` described below; the constructor injects what their methods use. Each kind method receives one context object of `Lomkit\Rest\Extensions\Contexts`, and each kind calls its extensions in name order. Implement at least one kind. An abstract class is refused at registration, or, listed in the config, when a context first reads its extensions; a class with no kind or a binding that builds another class is refused when the extensions are built.
 - `appliesTo()` returns `true` by default. Each context (request, queued job, search) asks it once per resource class and keeps the answer: answer from the resource class and the config, never from the user or the request (use a request kind for that).
 - An exception thrown by an extension reaches the caller.
 - With no extension registered, nothing is built and nothing is read beyond the config.
+
+### Restricting queries (`RestrictsQueries`)
+
+App: `'tenant' => \Vendor\Tenancy\TenantExtension::class` in `rest.extensions`.
+
+Package:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\RestrictionContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\RestrictsQueries;
+
+final class TenantExtension extends Extension implements RestrictsQueries
+{
+    public function __construct(private readonly CurrentTenant $tenant) {}
+
+    #[\Override]
+    public function restrict(RestrictionContext $context): void
+    {
+        if ($context->user === null) {
+            $context->query->whereRaw('0 = 1');
+
+            return;
+        }
+
+        $context->query->where($context->query->qualifyColumn('tenant_id'), $this->tenant->id());
+    }
+}
+```
+
+- Guarantees: `$context->query` is the Eloquent builder of the extension's own where group. The group comes after `perimeterQuery()`, inside its own parentheses, and is AND-ed with the perimeter and with the other extensions: an `orWhere()` in it cannot widen the rows. It reaches every path of the perimeter: searches and includes (through a pivot too), relation filters, sorts and aggregates, metrics and the `global` key of their cache, the key lookups of `mutate`, `destroy`, `restore`, `forceDestroy` and actions, the rows of queued actions, child syncs, attached pivot rows, the records read after a write and the write gates of rendered rows. It also applies to `#[WithoutPerimeter]` resources. `$context->resource` is the restricted resource, the related one on a relation path.
+- Forbids: anything but where clauses. A join, order, limit, offset, select, distinct, lock, group, having, union, eager load, `from()`, `beforeQuery()` callback or removed global scope (`withTrashed()`, `withoutGlobalScope()`) throws `Lomkit\Rest\Exceptions\InvalidQueryExtensionException`, which names the extension and the resource. Reach another table with `whereHas()` or `whereExists()`.
+- `$context->user` is the user of the request, `null` for a guest: decide the rows of a guest yourself (`0 = 1` hides them all).
+- Qualify columns with `$context->query->qualifyColumn()`: pivot reads join another table.
+- A restriction may run several times in one request, and again on each attempt of a write transaction: keep it free of side effects.
+- Write where clauses only: a global scope added with `withGlobalScope()` or an `afterQuery()` callback in the group is not applied.
+- A text search through a search engine on a restricted resource throws `InvalidTextSearchException`: restrictions do not reach engine pages yet.
+
+### Adding to rendered rows (`AugmentsQueries`)
+
+App: `'locks' => \Vendor\Locks\LockColumnsExtension::class` in `rest.extensions`.
+
+Package:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\AugmentationContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\AugmentsQueries;
+
+final class LockColumnsExtension extends Extension implements AugmentsQueries
+{
+    #[\Override]
+    public function augment(AugmentationContext $context): void
+    {
+        if (! in_array('update', $context->gates, true)) {
+            return;
+        }
+
+        $context->column('owner_id');
+        $context->select('locked', Lock::query()->selectRaw('count(*) > 0')->whereColumn('locks.post_id', 'posts.id'));
+        $context->with('approvals');
+    }
+}
+```
+
+`select()` returns the final alias, here `locks__locked`: the attribute that the policy then reads on each row.
+
+- Guarantees: runs only on the rows that a response renders (a search page, the rows of `Rest::search()`, the records read after a write, the rows of a search engine page), at every include level, after the planned columns. Never on a count, an action, a metric, an aggregate or a key lookup. The policies and gates receive the very models that carry the added columns. Added columns, subqueries and eager loads never render: `fields()` alone decides the output. `$context->gates` lists the row gates rendered on these rows (`[]` on an include level that the client did not search). `$context->resource` and `$context->user` are the resource of the level and the user of the request.
+- Forbids: where clauses and any other change to the query: the context offers `column()`, `select()` and `with()` only. An alias that is not 1 to 32 lowercase letters, digits or underscores starting with a letter, longer than 63 characters with its prefix (PostgreSQL), selected twice or equal to a field name; a column that is not a plain column name; a relation that the model does not declare or that two extensions load. Each throws `InvalidQueryExtensionException`.
+- An eager load on a relation that the client includes at that level is skipped: the include keeps its rows and its perimeter. `with()` selects the keys that the load needs.
+- The default `paginate()` and `PageQuery` count without the augmentation, also under a `GROUP BY`. A `paginate()` override that counts with `$query->paginate()` counts the query it receives, with its added columns.
+
+### Narrowing limits (`NarrowsLimits`)
+
+App: `'quota' => \Vendor\Plans\PlanLimitsExtension::class` in `rest.extensions`.
+
+Package:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\LimitsContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\NarrowsLimits;
+
+final class PlanLimitsExtension extends Extension implements NarrowsLimits
+{
+    #[\Override]
+    public function narrowLimits(LimitsContext $context): void
+    {
+        $context->allowSizes([10, 25]);
+        $context->maxTotal(1000);
+        $context->includeLimit(5);
+    }
+}
+```
+
+- Guarantees: never upward, in any extension order. `allowSizes()` intersects the sizes of `limits()`; `maxSize()` and `maxTotal()` drop the larger sizes; `maxTotal()` and `includeLimit()` take the minimum with the resource. The default page size becomes the largest size left at or below `$defaultLimit`, and the include limit the largest size left at or below the narrowed include limit. Validation, paging, includes and `/details` use the limits of the current user (`$context->user`). The OpenAPI document is built for a guest, so it shows the limits of a guest, and `total_capped` is optional on the pages of a resource that an extension may cap.
+- Forbids: a value below 1, and a narrowing that leaves no size, no size at or below `$defaultLimit` or none at or below the include limit. Each throws `InvalidQueryExtensionException`, naming the extensions and the resource.
+
+### Declaring instructions (`DeclaresInstructions`)
+
+App: `'arc' => \Vendor\Archive\ArchiveExtension::class` in `rest.extensions`.
+
+Package:
+
+```php
+use Lomkit\Rest\Extensions\Contexts\InstructionsContext;
+use Lomkit\Rest\Extensions\Extension;
+use Lomkit\Rest\Extensions\Kinds\DeclaresInstructions;
+
+final class ArchiveExtension extends Extension implements DeclaresInstructions
+{
+    #[\Override]
+    public function instructions(InstructionsContext $context): array
+    {
+        return is_subclass_of($context->resource, ArchivableResource::class) ? [WithArchivedInstruction::class] : [];
+    }
+}
+```
+
+- Guarantees: a static kind. It receives the resource class only, no user, and its instructions are read with those of the resource. The key of each instruction is the extension name, a dot and its `uriKey()` (`arc.with-archived`, `$instruction->publicUriKey()`), in requests, `/details`, search meta and the OpenAPI document. Like any instruction, it runs inside its own where group, AND-ed with the rest of the search. An instance returned for several resources is copied for each.
+- Forbids: a key that another instruction of the resource or of an extension takes, and the entries that `instructions()` of a resource refuses (a class that does not extend `Instruction`, `Instruction::class` itself, an abstract class, a binding that builds another class). Each throws `InvalidQueryExtensionException`, naming the extension and the resource, and `rest:check` reports it.
 
 ## Artisan commands shipped by the package
 
@@ -1534,7 +1664,7 @@ final class ArchiveExtension extends Extension implements SomeKind
 - `rest:response {Name}` — scaffold a custom Response class.
 - `rest:policy {Name} --model=Model` — generate a policy that allows every ability in `app/Policies`: `viewAny`, `view`, `create`, `update` and `delete` (plus `restore` and `forceDelete` with `SoftDeletes`) return `true`. Edit it before production. The user parameter is typed with the model of the default guard's user provider. Without `--model`, the model is guessed from the name (`PostPolicy` → `App\Models\Post`). A model that Gate already maps to another policy keeps it: nothing is written, and with `--force` the file is written but Gate still uses the other policy until you register the new one with `Gate::policy()`.
 - `rest:quick-start --model=Post --model=Tag` — for each model, write the resource from its table (as `--generate`), the controller and, when Gate finds no policy, a policy that allows every ability, then append `Rest::resource('posts', PostsController::class)->middleware('auth:sanctum')` to `routes/api.php` once per controller (`auth:<guard>` with `--guard=<guard>`). Related models that are not chosen are skipped. Interactively it asks for the models, and for the guard when an install is needed and `--guard` is not passed, `--install-api` included; with `-n`, `--model` is required, the guard is `sanctum` unless `--guard` is passed, and `--install-api` is required when `routes/api.php` is missing, or when the run adds routes and the package of the guard (Laravel Sanctum or Laravel Passport) is missing. It ends with a check in a fresh process (routes authenticated, a policy found per model) and exits 1 when blocked. Existing files are reported as `kept`, so a rerun changes nothing.
-- `rest:check` — check the resources that the routes reach, and exit 1 on any problem (run it in CI). Without arguments it checks every controller that a route uses; `rest:check PostsController` checks the named controllers. It reports each route without an authentication middleware or with an undefined guard, each controller model without a policy, each action or metric of these controllers, and each instruction of their resources or of a resource their relations reach (an include reads them), that throws when it is built (it builds every one: `declarations ... 4 actions, 2 metrics, 3 instructions built`; each problem names its resource), each resource reached by these controllers, or through their relations, that does not override `perimeterQuery()` (`every row is visible to users who pass viewAny`), and each action on the `Search` or `Resources` target whose `authorizeEach()` returns null, and each relation that accepts `detach` while its foreign key or morph type does not accept null (`... accepts detach on its [team] relation, but tickets.team_id does not accept null`: add `->withoutOperations(MutationOperation::Detach)` or make the column nullable). This check reads the database schema (`Schema::getColumns()`): a relation whose table does not exist yet is listed as skipped (`... [country] ... skipped, no trips table`), and a schema that cannot be read is a problem that names the table and the connection. Mark a resource whose rows are meant for every user who passes `viewAny` (countries, currencies) with `#[\Lomkit\Rest\Attributes\WithoutPerimeter]`: it is listed as such, not as a problem, and a subclass inherits the attribute; a parent resource of the application that overrides `perimeterQuery()` counts for its subclasses. An action that only reads returns `'view'` from `authorizeEach()`. `--json` prints `routes`, `policies`, `problems` (routes and policies), `search`, `declarations` (`actions`, `metrics` and `instructions` built, `problems`), `rows` (`perimeter`, `without_perimeter`, `problems`), `actions` (`checked`, `problems`), `relations` (`detachable`, the other relations that accept `detach`, `skipped`, with their `table`, and `problems`), and `extensions` (`registered`, each with its `name`, `null` for a disabled class, `class`, `origin` and `disabled`, `problems` and `notes`). It also lists the extensions (name, class, origin and disabled state), builds each enabled one and reports each entry it refuses, each pair of classes with one name and each class that cannot be built; the other extensions are still listed and built. A `disabled_extensions` entry that disables nothing is noted, without failing.
+- `rest:check` — check the resources that the routes reach, and exit 1 on any problem (run it in CI). Without arguments it checks every controller that a route uses; `rest:check PostsController` checks the named controllers. It reports each route without an authentication middleware or with an undefined guard, each controller model without a policy, each action or metric of these controllers, and each instruction of their resources or of a resource their relations reach (an include reads them), extension instructions included, that throws when it is built, and each instruction key that two instructions of a resource take (it builds every one: `declarations ... 4 actions, 2 metrics, 3 instructions built`; each problem names its resource), each resource reached by these controllers, or through their relations, that does not override `perimeterQuery()` (`every row is visible to users who pass viewAny`), and each action on the `Search` or `Resources` target whose `authorizeEach()` returns null, and each relation that accepts `detach` while its foreign key or morph type does not accept null (`... accepts detach on its [team] relation, but tickets.team_id does not accept null`: add `->withoutOperations(MutationOperation::Detach)` or make the column nullable). This check reads the database schema (`Schema::getColumns()`): a relation whose table does not exist yet is listed as skipped (`... [country] ... skipped, no trips table`), and a schema that cannot be read is a problem that names the table and the connection. Mark a resource whose rows are meant for every user who passes `viewAny` (countries, currencies) with `#[\Lomkit\Rest\Attributes\WithoutPerimeter]`: it is listed as such, not as a problem, and a subclass inherits the attribute; a parent resource of the application that overrides `perimeterQuery()` counts for its subclasses. An action that only reads returns `'view'` from `authorizeEach()`. `--json` prints `routes`, `policies`, `problems` (routes and policies), `search`, `declarations` (`actions`, `metrics` and `instructions` built, `problems`), `rows` (`perimeter`, `without_perimeter`, `problems`), `actions` (`checked`, `problems`), `relations` (`detachable`, the other relations that accept `detach`, `skipped`, with their `table`, and `problems`), and `extensions` (`registered`, each with its `name`, `null` for a disabled class, `class`, `origin` and `disabled`, `problems` and `notes`). It also lists the extensions (name, class, origin and disabled state), builds each enabled one and reports each entry it refuses, each pair of classes with one name and each class that cannot be built; the other extensions are still listed and built. A `disabled_extensions` entry that disables nothing is noted, without failing.
 - The generators keep an existing class unless `--force` (`-f`) is passed, and read the published `stubs/rest.<name>.stub` before the package stubs. Stubs published under 2.x generate untyped properties, which are a fatal error in 3.x: delete them, or publish them again with `php artisan stub:publish --force`.
 
 ## Working conventions and gotchas
