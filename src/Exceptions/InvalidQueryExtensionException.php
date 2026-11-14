@@ -56,7 +56,12 @@ final class InvalidQueryExtensionException extends InvalidExtensionException
 
     public static function unknownRelation(string $name, string $relation, string $resource): self
     {
-        return self::about($name, "The [{$name}] extension eager loads [{$relation}], which is not a relation of the model of {$resource}. Give with() the name of a relation method of the model.");
+        return self::about($name, "The [{$name}] extension eager loads [{$relation}], which is not a path of relations from the model of {$resource}. Give with() the name of a public relation method of the model, declared with a Relation return type, and a dot before each further relation.");
+    }
+
+    public static function loadThroughMorphTo(string $name, string $relation, string $morphTo, string $resource): self
+    {
+        return self::about($name, "The [{$name}] extension eager loads [{$relation}] on {$resource}, past the MorphTo relation [{$morphTo}], whose target models are not known before the rows load. Load [{$morphTo}] alone.");
     }
 
     /** @param list<string> $names */

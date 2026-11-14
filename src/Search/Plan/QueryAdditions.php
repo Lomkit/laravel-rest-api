@@ -73,9 +73,7 @@ final class QueryAdditions
 
     public function with(string $extension, string $relation, ?Closure $constraint): void
     {
-        if (! $this->resource::newModel()->isRelation(Str::before($relation, '.'))) {
-            throw InvalidQueryExtensionException::unknownRelation($extension, $relation, $this->resource::class);
-        }
+        AugmentedLoad::ensureDeclared($extension, $this->resource, $relation);
 
         if (isset($this->loads[$relation])) {
             throw InvalidQueryExtensionException::relationTaken($relation, $this->resource::class, self::sorted([$this->loads[$relation][0], $extension]));
@@ -92,7 +90,7 @@ final class QueryAdditions
         $keys = [];
 
         foreach (array_keys($loads) as $relation) {
-            array_push($keys, ...RelationKeys::between($query->getModel(), Str::before($relation, '.'))->parent());
+            array_push($keys, ...RelationKeys::between($query->getModel(), Str::before($relation, AugmentedLoad::SEPARATOR))->parent());
         }
 
         if ($loads !== []) {
@@ -119,7 +117,7 @@ final class QueryAdditions
         $kept = [];
 
         foreach ($this->loads as $relation => [, $constraint]) {
-            $segment = Str::before($relation, '.');
+            $segment = Str::before($relation, AugmentedLoad::SEPARATOR);
 
             if (in_array($segment, $this->level->relations, true) || isset($loaded[$segment])) {
                 continue;

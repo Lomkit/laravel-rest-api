@@ -297,9 +297,31 @@ class AugmentedRowsTest extends PackageTestCase
     }
 
     #[Test]
-    public function it_refuses_an_unknown_relation(): void
+    #[DataProvider('undeclaredRelations')]
+    public function it_refuses_an_unknown_relation_without_calling_it(string $relation): void
     {
-        $this->expectRefusal(static fn (AugmentationContext $context): mixed => $context->with('editors'), InvalidQueryExtensionException::unknownRelation('first', 'editors', PathAuthorResource::class));
+        $this->captureQueries();
+
+        try {
+            $this->expectRefusal(static fn (AugmentationContext $context): mixed => $context->with($relation), InvalidQueryExtensionException::unknownRelation('first', $relation, PathAuthorResource::class));
+        } finally {
+            $this->assertSame([], array_values(array_filter($this->statements, static fn (array $statement): bool => ! str_starts_with($statement[0], 'select'))));
+        }
+    }
+
+    /** @return array<string, array{string}> */
+    public static function undeclaredRelations(): array
+    {
+        return [
+            'a missing method' => ['editors'],
+            'a method that saves' => ['save'],
+            'a method that touches' => ['touch'],
+            'a method that deletes' => ['delete'],
+            'a method that returns a value' => ['getKey'],
+            'a selection of columns' => ['posts:id'],
+            'a method of the related model' => ['posts.save'],
+            'a method two relations away' => ['posts.author.touch'],
+        ];
     }
 
     #[Test]
