@@ -10,14 +10,18 @@ use Lomkit\Rest\Http\Resource;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\AbstractDeskInstruction;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeclarationLog;
+use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTagMatch;
+use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTagResource;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketBacklog;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketController;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTicketResource;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\DeskTitleMatch;
+use Lomkit\Rest\Tests\Feature\Declarations\Stubs\EngineOnlyDeskInstruction;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\LabelledDeskInstruction;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\NamedDeskInstruction;
 use Lomkit\Rest\Tests\Feature\Declarations\Stubs\TicketJournal;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\NewestFirst;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -191,7 +195,7 @@ class ClassInstructionsTest extends DeclarationTestCase
         $report = json_decode($output->fetch(), true);
 
         $this->assertContains(DeskTitleMatch::class, DeclarationLog::$built);
-        $this->assertSame(['actions' => 4, 'metrics' => 3, 'instructions' => 2, 'problems' => []], $report['declarations']);
+        $this->assertSame(['actions' => 4, 'metrics' => 3, 'instructions' => 3, 'problems' => []], $report['declarations']);
     }
 
     #[Test]
@@ -206,7 +210,7 @@ class ClassInstructionsTest extends DeclarationTestCase
         $report = json_decode($output->fetch(), true);
 
         $this->assertSame(1, $exitCode);
-        $this->assertSame(['actions' => 4, 'metrics' => 3, 'instructions' => 2, 'problems' => [$unresolvable, $abstract]], $report['declarations']);
+        $this->assertSame(['actions' => 4, 'metrics' => 3, 'instructions' => 3, 'problems' => [$unresolvable, $abstract]], $report['declarations']);
 
         Artisan::call('rest:check', ['controllers' => [DeskTicketController::class]], $output = new BufferedOutput);
         $text = $output->fetch();
@@ -214,6 +218,95 @@ class ClassInstructionsTest extends DeclarationTestCase
         $this->assertMatchesRegularExpression('/  declarations \.+ FAILED  \n  ⇂ /u', $text);
         $this->assertStringContainsString("  ⇂ {$unresolvable}  \n", $text);
         $this->assertStringContainsString('  ⇂ '.rtrim($abstract, '.')."  \n", $text);
+    }
+
+    #[Test]
+    public function it_builds_no_class_instruction_for_a_search_without_instructions(): void
+    {
+        $this->seedTickets();
+        Rest::resource('desk-tickets', DeskTicketController::class)->register();
+
+        $this->postJson('/desk-tickets/search', ['search' => ['sorts' => [['field' => 'id', 'direction' => 'asc']]]])
+            ->assertOk()
+            ->assertJsonPath('data.*.title', ['Printer jam', 'Printer toner']);
+
+        $this->assertSame([], DeclarationLog::$built);
+
+        $this->postJson('/desk-tickets/search', ['search' => ['instructions' => [['name' => 'title-match']]]])->assertOk();
+
+        $this->assertSame([DeskTitleMatch::class], DeclarationLog::$built);
+    }
+
+    #[Test]
+    public function it_runs_a_class_instruction_of_an_included_resource(): void
+    {
+        $tickets = $this->seedTickets();
+        $hardware = Tag::create(['name' => 'Hardware']);
+        $tickets['Printer jam']->tags()->attach($hardware, ['position' => 1]);
+        $tickets['Printer jam']->tags()->attach(Tag::create(['name' => 'Software']), ['position' => 2]);
+        $tickets['Printer toner']->tags()->attach($hardware, ['position' => 1]);
+        Rest::resource('desk-tickets', DeskTicketController::class)->register();
+
+        $rows = $this->postJson('/desk-tickets/search', ['search' => [
+            'sorts' => [['field' => 'id', 'direction' => 'asc']],
+            'includes' => [['relation' => 'tags', 'instructions' => [['name' => 'tag-match', 'fields' => [['name' => 'word', 'value' => 'Soft']]]]]],
+        ]])
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame([['Software'], []], array_map(fn (array $row): array => array_column($row['tags'], 'name'), $rows));
+        $this->assertSame([DeskTagMatch::class], DeclarationLog::$built);
+        $this->assertSame(['matched tag Soft'], DeclarationLog::$journal);
+    }
+
+    #[Test]
+    public function it_runs_a_class_instruction_in_the_search_of_an_action_and_of_a_metric(): void
+    {
+        $tickets = $this->seedTickets();
+        Rest::resource('desk-tickets', DeskTicketController::class)->register();
+        $this->postJson('/desk-tickets/actions/close-tickets', ['search' => ['instructions' => [['name' => 'title-match', 'fields' => [['name' => 'word', 'value' => 'toner']]]]]])
+            ->assertOk()
+            ->assertExactJson(['data' => ['impacted' => 1, 'result' => null]]);
+        $this->postJson('/desk-tickets/metrics/ticket-backlog', ['search' => ['instructions' => [['name' => 'title-match']]]])
+            ->assertOk()
+            ->assertExactJson(['data' => ['type' => 'gauge', 'value' => 1, 'max' => 10]]);
+
+        $this->assertSame('open', $tickets['Printer jam']->fresh()?->status);
+        $this->assertSame('closed', $tickets['Printer toner']->fresh()?->status);
+        $this->assertSame(['matched toner', 'closed 1', 'matched jam'], DeclarationLog::$journal);
+    }
+
+    #[Test]
+    public function it_reports_a_broken_instruction_of_a_resource_reached_through_a_relation_in_the_check(): void
+    {
+        DeskTagResource::$broken = true;
+        Rest::resource('desk-tickets', DeskTicketController::class)->register();
+        $unresolvable = DeskTagResource::class.': Unresolvable dependency resolving [Parameter #0 [ <required> string $label ]] in class '.LabelledDeskInstruction::class;
+
+        $exitCode = Artisan::call('rest:check', ['controllers' => [DeskTicketController::class], '--json' => true], $output = new BufferedOutput);
+        $report = json_decode($output->fetch(), true);
+
+        $this->assertSame(1, $exitCode);
+        $this->assertSame(['actions' => 4, 'metrics' => 3, 'instructions' => 3, 'problems' => [$unresolvable]], $report['declarations']);
+
+        Artisan::call('rest:check', ['controllers' => [DeskTicketController::class]], $output = new BufferedOutput);
+
+        $this->assertStringContainsString("  ⇂ {$unresolvable}  \n", $output->fetch());
+    }
+
+    #[Test]
+    public function it_names_the_resource_once_in_each_instruction_problem_of_the_check(): void
+    {
+        DeskTicketResource::$moreInstructions = [EngineOnlyDeskInstruction::class, Instruction::class];
+        Rest::resource('desk-tickets', DeskTicketController::class)->register();
+
+        Artisan::call('rest:check', ['controllers' => [DeskTicketController::class], '--json' => true], $output = new BufferedOutput);
+        $report = json_decode($output->fetch(), true);
+
+        $this->assertSame([
+            DeskTicketResource::class.': '.InvalidInstructionException::engineOnly(EngineOnlyDeskInstruction::class)->getMessage(),
+            InvalidInstructionException::baseListed(DeskTicketResource::class)->getMessage(),
+        ], $report['declarations']['problems']);
     }
 
     private function desk(): Resource

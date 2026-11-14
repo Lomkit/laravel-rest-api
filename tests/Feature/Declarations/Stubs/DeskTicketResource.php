@@ -3,8 +3,12 @@
 namespace Lomkit\Rest\Tests\Feature\Declarations\Stubs;
 
 use Lomkit\Rest\Actions\Action;
+use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Instructions\Instruction;
 use Lomkit\Rest\Metrics\Metric;
+use Lomkit\Rest\Relations\BelongsTo;
+use Lomkit\Rest\Relations\BelongsToMany;
+use Lomkit\Rest\Relations\MorphToMany;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\GuestTicketBacklog;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\MetricTicketResource;
 use Lomkit\Rest\Tests\Feature\Metrics\Stubs\NewestFirst;
@@ -15,6 +19,8 @@ use Lomkit\Rest\Tests\Feature\Routing\Stubs\ThrottledWatchTickets;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\CloseTickets;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\RefreshTickets;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\ReportOutage;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\TagResource;
+use Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource;
 
 class DeskTicketResource extends MetricTicketResource
 {
@@ -34,6 +40,20 @@ class DeskTicketResource extends MetricTicketResource
 
     /** @var list<Instruction|class-string<Instruction>> */
     public static array $moreInstructions = [];
+
+    #[\Override]
+    public function relations(): array
+    {
+        return [
+            BelongsTo::make('team', TeamResource::class),
+            BelongsToMany::make('tags', DeskTagResource::class)
+                ->pivotFields([Integer::make('position')->nullable()])
+                ->abilities(attach: 'attachTag', detach: 'detachTag'),
+            MorphToMany::make('labels', TagResource::class)
+                ->pivotFields([Integer::make('position')->nullable()])
+                ->abilities(attach: 'attachTag', detach: 'detachTag'),
+        ];
+    }
 
     #[\Override]
     public function actions(): array
@@ -92,6 +112,7 @@ class DeskTicketResource extends MetricTicketResource
         self::$moreMetrics = [];
         self::$instructionsByClass = true;
         self::$moreInstructions = [];
+        DeskTagResource::$broken = false;
         parent::reset();
     }
 }

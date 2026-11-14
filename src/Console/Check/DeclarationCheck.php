@@ -23,13 +23,17 @@ final readonly class DeclarationCheck
     public function run(array $controllers): DeclarationReport
     {
         $context = new RestContext(RestRequest::createFrom($this->container->make(Request::class)), $this->container);
+        $resources = ControllerResources::of($controllers);
         $report = new DeclarationReport;
 
-        foreach (ControllerResources::of($controllers) as $resource) {
+        foreach ($resources as $resource) {
             $declarations = $context->resource($resource)->definition()->declarations();
             $report = self::build($resource, $declarations->actions(), $report, fn (DeclarationReport $report, Action $action): DeclarationReport => $report->withAction($resource, $action));
             $report = self::build($resource, $declarations->metrics(), $report, fn (DeclarationReport $report): DeclarationReport => $report->withMetric());
-            $report = self::buildInstructions($resource, $declarations->instructions(), $report);
+        }
+
+        foreach ((new ReachedResources($context))->from($resources) as $resource) {
+            $report = self::buildInstructions($resource, $context->resource($resource)->definition()->declarations()->instructions(), $report);
         }
 
         return $report;
@@ -60,13 +64,20 @@ final readonly class DeclarationCheck
             try {
                 $instructions->at($index);
                 $report = $report->withInstruction();
-            } catch (InvalidInstructionException $exception) {
-                $report = $report->withProblem($exception->getMessage());
             } catch (LogicException|BindingResolutionException $exception) {
-                $report = $report->withProblem("{$resource}: {$exception->getMessage()}");
+                $report = $report->withProblem(self::instructionProblem($resource, $exception));
             }
         }
 
         return $report;
+    }
+
+    private static function instructionProblem(string $resource, LogicException|BindingResolutionException $exception): string
+    {
+        if ($exception instanceof InvalidInstructionException && $exception->namesResource($resource)) {
+            return $exception->getMessage();
+        }
+
+        return "{$resource}: {$exception->getMessage()}";
     }
 }
