@@ -139,9 +139,12 @@ class ClassDeclarationRoutesTest extends DeclarationTestCase
 
         $this->assertSame([], DeclarationLog::$built);
         $this->assertSame([
+            RuntimeExtensions::class,
             'request',
             RuntimeExtensions::class,
             DeskTicketResource::class,
+            RuntimeExtensions::class,
+            RuntimeExtensions::class,
             'request',
             RuntimeExtensions::class,
             'Lomkit\Rest\Tests\Fixtures\Helpdesk\TeamResource',
