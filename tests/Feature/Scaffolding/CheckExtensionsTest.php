@@ -137,6 +137,27 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
         $this->assertSame(['registered' => [], 'problems' => [$problem]], $report['extensions']);
     }
 
+    #[Test]
+    #[WithConfig('rest.extensions', ['counting' => CountingExtension::class, 'Bad' => NotingExtension::class, 0 => BothKindsExtension::class])]
+    public function it_lists_the_other_extensions_beside_a_refused_config_entry(): void
+    {
+        Rest::registerExtension('noting', NotingExtension::class);
+
+        $report = $this->report(1, TripController::class);
+
+        $this->assertSame([
+            'registered' => [
+                ['name' => 'noting', 'class' => NotingExtension::class, 'origin' => 'runtime', 'disabled' => false],
+                ['name' => 'counting', 'class' => CountingExtension::class, 'origin' => 'config', 'disabled' => false],
+            ],
+            'problems' => [
+                InvalidExtensionException::invalidName('Bad')->getMessage(),
+                InvalidExtensionException::missingName(BothKindsExtension::class)->getMessage(),
+            ],
+        ], $report['extensions']);
+        $this->assertSame([NotingExtension::class, CountingExtension::class], ExtensionLog::$built);
+    }
+
     private function expose(string $name, string $controller): void
     {
         Route::prefix('api')->group(function () use ($name, $controller): void {

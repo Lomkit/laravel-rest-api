@@ -6,8 +6,14 @@ use Lomkit\Rest\Exceptions\InvalidExtensionException;
 
 final readonly class ExtensionList
 {
-    /** @param list<ExtensionEntry> $entries */
-    private function __construct(public array $entries) {}
+    /**
+     * @param  list<ExtensionEntry>  $entries
+     * @param  list<InvalidExtensionException>  $refused
+     */
+    private function __construct(
+        public array $entries,
+        public array $refused,
+    ) {}
 
     /**
      * @param  array<array-key, mixed>  $configured
@@ -16,22 +22,34 @@ final readonly class ExtensionList
     public static function merge(array $configured, array $registered): self
     {
         $entries = [];
+        $refused = [];
 
         foreach ($registered as $name => $class) {
             $entries[$name] = new ExtensionEntry($name, $class, ExtensionOrigin::Runtime, false);
         }
 
         foreach ($configured as $name => $value) {
-            $entry = self::configured($name, $value, $entries[$name] ?? null);
+            try {
+                $entry = self::configured($name, $value, $entries[$name] ?? null);
+            } catch (InvalidExtensionException $exception) {
+                $refused[] = $exception;
+
+                continue;
+            }
+
             $entries[$entry->name] = $entry;
         }
 
-        return new self(array_values($entries));
+        return new self(array_values($entries), $refused);
     }
 
     /** @return array<string, string> */
     public function enabled(): array
     {
+        if ($this->refused !== []) {
+            throw $this->refused[0];
+        }
+
         $enabled = [];
 
         foreach ($this->entries as $entry) {

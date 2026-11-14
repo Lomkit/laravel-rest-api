@@ -22,14 +22,13 @@ final readonly class ExtensionCheck
         $configured = RestConfig::from($this->container->make(Repository::class))->extensions;
         $registered = $this->container->make(RuntimeExtensions::class)->all();
 
-        try {
-            $list = ExtensionList::merge($configured, $registered);
-        } catch (InvalidExtensionException $exception) {
-            return (new ExtensionReport)->withProblem($exception->getMessage());
-        }
-
+        $list = ExtensionList::merge($configured, $registered);
         $factory = new ExtensionFactory($this->container);
         $report = new ExtensionReport;
+
+        foreach ($list->refused as $exception) {
+            $report = $report->withProblem($exception->getMessage());
+        }
 
         foreach ($list->entries as $entry) {
             $report = $report->withEntry($entry);

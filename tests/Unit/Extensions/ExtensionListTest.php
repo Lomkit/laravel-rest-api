@@ -67,11 +67,41 @@ final class ExtensionListTest extends TestCase
     }
 
     #[Test]
+    public function it_keeps_the_valid_entries_beside_the_refused_ones(): void
+    {
+        $list = ExtensionList::merge(
+            ['counting' => CountingExtension::class, 'Bad' => NotingExtension::class, 0 => InjectedExtension::class, 'archive' => 1, 'tenant' => false],
+            ['noting' => NotingExtension::class],
+        );
+
+        $this->assertEquals([
+            new ExtensionEntry('noting', NotingExtension::class, ExtensionOrigin::Runtime, false),
+            new ExtensionEntry('counting', CountingExtension::class, ExtensionOrigin::Config, false),
+            new ExtensionEntry('tenant', null, ExtensionOrigin::Config, true),
+        ], $list->entries);
+        $this->assertEquals([
+            InvalidExtensionException::invalidName('Bad'),
+            InvalidExtensionException::missingName(InjectedExtension::class),
+            InvalidExtensionException::notAClass('archive', 'int'),
+        ], $list->refused);
+    }
+
+    #[Test]
+    public function it_refuses_the_enabled_list_with_the_first_refused_entry(): void
+    {
+        $list = ExtensionList::merge(['Bad' => NotingExtension::class, 'Worse' => CountingExtension::class], []);
+
+        $this->expectExceptionObject(InvalidExtensionException::invalidName('Bad'));
+
+        $list->enabled();
+    }
+
+    #[Test]
     public function it_refuses_a_config_list_without_names(): void
     {
         $this->expectExceptionObject(InvalidExtensionException::missingName(NotingExtension::class));
 
-        ExtensionList::merge([NotingExtension::class], []);
+        ExtensionList::merge([NotingExtension::class], [])->enabled();
     }
 
     #[Test]
@@ -79,7 +109,7 @@ final class ExtensionListTest extends TestCase
     {
         $this->expectExceptionObject(InvalidExtensionException::invalidName('Acl'));
 
-        ExtensionList::merge(['Acl' => NotingExtension::class], []);
+        ExtensionList::merge(['Acl' => NotingExtension::class], [])->enabled();
     }
 
     #[Test]
@@ -87,7 +117,7 @@ final class ExtensionListTest extends TestCase
     {
         $this->expectExceptionObject(InvalidExtensionException::invalidName("acl\n"));
 
-        ExtensionList::merge(["acl\n" => NotingExtension::class], []);
+        ExtensionList::merge(["acl\n" => NotingExtension::class], [])->enabled();
     }
 
     #[Test]
@@ -96,7 +126,7 @@ final class ExtensionListTest extends TestCase
     {
         $this->expectExceptionObject(InvalidExtensionException::notAClass('acl', $type));
 
-        ExtensionList::merge(['acl' => $value], []);
+        ExtensionList::merge(['acl' => $value], [])->enabled();
     }
 
     #[Test]
@@ -104,7 +134,7 @@ final class ExtensionListTest extends TestCase
     {
         $this->expectExceptionObject(InvalidExtensionException::instanceGiven('acl', NotingExtension::class));
 
-        ExtensionList::merge(['acl' => new NotingExtension], []);
+        ExtensionList::merge(['acl' => new NotingExtension], [])->enabled();
     }
 
     /** @return array<string, array{mixed, string}> */
