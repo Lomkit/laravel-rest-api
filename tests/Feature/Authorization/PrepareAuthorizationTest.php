@@ -4,7 +4,6 @@ namespace Lomkit\Rest\Tests\Feature\Authorization;
 
 use Illuminate\Auth\Access\Events\GateEvaluated;
 use Illuminate\Auth\GenericUser;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -14,11 +13,16 @@ use Lomkit\Rest\Authorization\Authorizer;
 use Lomkit\Rest\Authorization\Check;
 use Lomkit\Rest\Authorization\Decision;
 use Lomkit\Rest\Authorization\DecisionStore;
+use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Facades\Rest;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\PreloadedTicketController;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\PreparedTagController;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\PreparedTeamController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\PreparedTicketController;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\PreparedTicketResource;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ReviewTickets;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\ScannedTicket;
+use Lomkit\Rest\Tests\Feature\Authorization\Stubs\TeamDirectory;
 use Lomkit\Rest\Tests\Feature\Authorization\Stubs\TeamReadingTicketPolicy;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Tag;
 use Lomkit\Rest\Tests\Fixtures\Helpdesk\Ticket;
@@ -34,8 +38,13 @@ class PrepareAuthorizationTest extends HelpdeskTestCase
         parent::setUp();
 
         ReviewTickets::reset();
+        PreparedTicketResource::$received = [];
+        ScannedTicket::$scans = 0;
+        $this->app->instance(TeamDirectory::class, new TeamDirectory);
         Rest::resource('prepared-tickets', PreparedTicketController::class)->register();
         Rest::resource('preloaded-tickets', PreloadedTicketController::class)->register();
+        Rest::resource('prepared-teams', PreparedTeamController::class)->register();
+        Rest::resource('prepared-tags', PreparedTagController::class)->withSoftDeletes()->register();
     }
 
     #[Test]
@@ -107,15 +116,146 @@ class PrepareAuthorizationTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_prepares_the_row_checks_of_an_action_once_per_chunk(): void
+    public function it_prepares_for_the_user_a_search_runs_as(): void
     {
-        ['Printer jam' => $jam, 'Printer toner' => $toner] = $this->seedTickets();
+        $jam = $this->seedTickets()['Printer jam'];
+        $lead = new GenericUser(['id' => TicketPolicy::LEAD]);
+
+        $this->actingAs(new GenericUser(['id' => 7]));
+        Rest::search(PreparedTicketResource::class)
+            ->as($lead)
+            ->payload(['filters' => [['field' => 'id', 'value' => $jam->id]], 'gates' => ['update']])
+            ->render();
+
+        $this->assertSame(['viewAny', 'prepare update '.$jam->id.' for '.TicketPolicy::LEAD, 'update '.$jam->id], $this->tickets->calls);
+        $this->assertSame($lead, PreparedTicketResource::$received[0]->user);
+    }
+
+    #[Test]
+    public function it_prepares_each_chunk_of_an_action_with_the_rows_of_that_chunk(): void
+    {
+        ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
         ReviewTickets::$ability = 'escalate';
 
-        $this->postJson('/prepared-tickets/actions/review-tickets', ['resources' => [$jam->id, $toner->id]])->assertOk();
+        $this->postJson('/prepared-tickets/actions/review-tickets', ['resources' => [$jam->id, $reset->id, $toner->id, $laptop->id]])->assertForbidden();
 
-        $this->assertSame(['viewAny', 'prepare escalate '.$this->keys($jam, $toner).' for guest', ...$this->calls('escalate', $jam, $toner)], $this->tickets->calls);
-        $this->assertSame([[$jam->id, $toner->id]], ReviewTickets::$runs);
+        $this->assertSame([
+            'viewAny',
+            'prepare escalate '.$this->keys($jam, $reset).' for guest',
+            ...$this->calls('escalate', $jam, $reset),
+            'prepare escalate '.$this->keys($toner, $laptop).' for guest',
+            ...$this->calls('escalate', $toner, $laptop),
+        ], $this->tickets->calls);
+        $this->assertSame([], ReviewTickets::$runs);
+    }
+
+    #[Test]
+    public function it_prepares_each_chunk_of_an_action_that_skips_the_refused_rows(): void
+    {
+        ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
+
+        $this->postJson('/prepared-tickets/actions/review-allowed-tickets', ['resources' => [$jam->id, $reset->id, $toner->id, $laptop->id]])->assertOk();
+
+        $this->assertSame([
+            'viewAny',
+            'prepare update '.$this->keys($jam, $reset).' for guest',
+            ...$this->calls('update', $jam, $reset),
+            'prepare update '.$this->keys($toner, $laptop).' for guest',
+            ...$this->calls('update', $toner, $laptop),
+        ], $this->tickets->calls);
+        $this->assertSame([[$jam->id], [$toner->id]], ReviewTickets::$runs);
+    }
+
+    #[Test]
+    public function it_prepares_the_rows_of_one_resource_at_two_levels_in_one_call(): void
+    {
+        ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
+
+        $response = $this->postJson('/prepared-tickets/search', ['search' => [
+            'filters' => [['field' => 'id', 'operator' => 'in', 'value' => [$jam->id, $reset->id]]],
+            'gates' => ['update'],
+            'includes' => [['relation' => 'team.tickets', 'gates' => ['update']]],
+            'sorts' => [['field' => 'id']],
+        ]])->assertOk();
+
+        $this->assertSame([
+            'viewAny',
+            'prepare update '.$this->keys($jam, $reset, $toner, $laptop).' for guest',
+            ...$this->calls('update', $jam, $toner, $reset, $laptop),
+        ], $this->tickets->calls);
+        $this->assertSame([true, false], array_column($response->json('data.*.gates.authorized_to_update'), 'allowed'));
+        $included = [];
+
+        foreach ($response->json('data') as $row) {
+            foreach ($row['team']['tickets'] as $ticket) {
+                $included[$ticket['id']] = $ticket['gates']['authorized_to_update']['allowed'];
+            }
+        }
+
+        ksort($included);
+        $this->assertSame([$jam->id => true, $reset->id => false, $toner->id => true, $laptop->id => false], $included);
+    }
+
+    #[Test]
+    public function it_prepares_the_rows_of_a_restore_and_of_a_force_destroy(): void
+    {
+        [$hardware, $network] = [Tag::create(['name' => 'Hardware']), Tag::create(['name' => 'Network'])];
+        $hardware->delete();
+        $network->delete();
+        $keys = $hardware->id.','.$network->id;
+
+        $this->postJson('/prepared-tags/restore', ['resources' => [$hardware->id, $network->id]])->assertOk();
+        $hardware->delete();
+        $network->delete();
+        $this->deleteJson('/prepared-tags/force', ['resources' => [$hardware->id, $network->id]])->assertOk();
+
+        $this->assertSame([
+            'viewAny',
+            'prepare restore '.$keys,
+            ...$this->calls('restore', $hardware, $network),
+            'viewAny',
+            'prepare forceDelete '.$keys,
+            ...$this->calls('forceDelete', $hardware, $network),
+        ], $this->tags->calls);
+    }
+
+    #[Test]
+    public function it_prepares_the_rows_a_mutation_deletes_or_views_and_leaves_a_row_it_changed_out(): void
+    {
+        ['Printer jam' => $jam, 'Password reset' => $reset, 'Printer toner' => $toner, 'Laptop setup' => $laptop] = $this->seedTickets();
+        [$billing, $support] = [$jam->team_id, $reset->team_id];
+        $mouse = Ticket::create(['team_id' => $support, 'title' => 'Mouse broken', 'status' => 'open']);
+
+        $this->actingAs(new GenericUser(['id' => TicketPolicy::LEAD]));
+
+        $this->postJson('/prepared-tickets/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => $jam->id, 'relations' => [
+                'team' => ['operation' => 'update', 'key' => $billing, 'attributes' => ['name' => 'Billing desk']],
+            ]],
+            ['operation' => 'update', 'key' => $toner->id, 'relations' => ['team' => ['operation' => 'attach', 'key' => $billing]]],
+            ['operation' => 'update', 'key' => $mouse->id, 'relations' => ['team' => ['operation' => 'attach', 'key' => $support]]],
+        ]])->assertOk();
+
+        $this->assertSame(['prepare view '.$support, 'update '.$billing, 'view '.$billing, 'view '.$support], $this->teams->calls);
+        $this->tickets->calls = [];
+        $this->postJson('/prepared-teams/mutate', ['mutate' => [
+            ['operation' => 'update', 'key' => $support, 'relations' => ['tickets' => [['operation' => 'delete', 'key' => [$laptop->id]]]]],
+        ]])->assertOk();
+        $this->assertSame(['prepare delete '.$laptop->id.' for '.TicketPolicy::LEAD, 'delete '.$laptop->id], $this->tickets->calls);
+    }
+
+    #[Test]
+    public function it_does_no_preparation_work_for_a_resource_without_the_hook(): void
+    {
+        $this->seedTickets();
+        $tickets = ScannedTicket::query()->orderBy('id')->get();
+
+        $plain = $this->authorizer()->inspectEach(new TicketResource, 'update', $tickets);
+
+        $this->assertSame(0, ScannedTicket::$scans);
+        $this->assertSame([null, 'Closed tickets are read-only.', null, 'Closed tickets are read-only.'], array_map(fn (Decision $decision): ?string => $decision->message, $plain));
+        $this->authorizer()->inspectEach(new PreparedTicketResource, 'update', $tickets);
+        $this->assertSame(4, ScannedTicket::$scans);
     }
 
     #[Test]
@@ -218,7 +358,7 @@ class PrepareAuthorizationTest extends HelpdeskTestCase
         $failing = new class extends TicketResource
         {
             #[\Override]
-            public function prepareAuthorization(string $ability, Collection $rows): void
+            public function prepareAuthorization(PendingChecks $checks): void
             {
                 throw new LogicException('The preload failed.');
             }
@@ -238,7 +378,7 @@ class PrepareAuthorizationTest extends HelpdeskTestCase
     }
 
     #[Test]
-    public function it_answers_the_policy_from_the_preloaded_rows_without_a_query_per_row(): void
+    public function it_answers_the_policy_from_a_lookup_read_once_without_a_query_per_row(): void
     {
         $this->app->instance(TicketPolicy::class, $this->tickets = new TeamReadingTicketPolicy);
         $tickets = array_values($this->seedTickets());

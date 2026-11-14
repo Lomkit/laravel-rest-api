@@ -3,10 +3,10 @@
 namespace Lomkit\Rest\Concerns;
 
 use Illuminate\Auth\Access\Response;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Lomkit\Rest\Authorization\Changes;
 use Lomkit\Rest\Authorization\Check;
+use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Http\Routing\Endpoint;
 
 trait Authorizable
@@ -35,8 +35,7 @@ trait Authorizable
         return [];
     }
 
-    /** @param Collection<int, Model> $rows */
-    public function prepareAuthorization(string $ability, Collection $rows): void {}
+    public function prepareAuthorization(PendingChecks $checks): void {}
 
     /** @param list<Model|Changes> $arguments */
     public function authorizeTo(string $ability, Model|string $model, array $arguments = []): void

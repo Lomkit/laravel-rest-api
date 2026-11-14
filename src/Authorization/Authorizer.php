@@ -4,6 +4,7 @@ namespace Lomkit\Rest\Authorization;
 
 use Closure;
 use Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lomkit\Rest\Exceptions\AuthorizationDenied;
@@ -22,8 +23,9 @@ final class Authorizer
         DecisionStore $store = new NullDecisionStore,
         private readonly DecisionMemo $memo = new DecisionMemo,
         private readonly bool $strict = false,
+        ?Authenticatable $user = null,
     ) {
-        $this->batch = new DecisionBatch($store, $memo);
+        $this->batch = new DecisionBatch($store, $memo, new DecisionPreparation($user));
     }
 
     public function inspect(Check $check): Decision

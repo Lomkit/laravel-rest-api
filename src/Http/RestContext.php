@@ -98,6 +98,7 @@ final class RestContext
             $this->container->make(Gate::class)->forUser($user),
             $this->decisionStore($acting),
             strict: $this->config()->strict,
+            user: $user,
         );
     }
 

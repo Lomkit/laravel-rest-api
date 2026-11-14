@@ -2,8 +2,8 @@
 
 namespace Lomkit\Rest\Tests\Feature\Authorization\Stubs;
 
-use Illuminate\Database\Eloquent\Collection;
 use Lomkit\Rest\Actions\ActionTarget;
+use Lomkit\Rest\Authorization\PendingChecks;
 use Lomkit\Rest\Fields\Integer;
 use Lomkit\Rest\Relations\BelongsTo;
 use Lomkit\Rest\Relations\BelongsToMany;
@@ -13,12 +13,16 @@ use Lomkit\Rest\Tests\Fixtures\Helpdesk\TicketResource;
 
 class PreparedTicketResource extends TicketResource
 {
-    #[\Override]
-    public function prepareAuthorization(string $ability, Collection $rows): void
-    {
-        $user = $this->request()->user()?->getAuthIdentifier() ?? 'guest';
+    /** @var list<PendingChecks> */
+    public static array $received = [];
 
-        app(TicketPolicy::class)->calls[] = 'prepare '.$ability.' '.implode(',', $rows->modelKeys()).' for '.$user;
+    #[\Override]
+    public function prepareAuthorization(PendingChecks $checks): void
+    {
+        self::$received[] = $checks;
+        $user = $checks->user?->getAuthIdentifier() ?? 'guest';
+
+        app(TicketPolicy::class)->calls[] = 'prepare '.$checks->ability.' '.implode(',', $checks->rows->modelKeys()).' for '.$user;
     }
 
     #[\Override]
@@ -35,6 +39,9 @@ class PreparedTicketResource extends TicketResource
     #[\Override]
     public function actions(): array
     {
-        return [ReviewTickets::make()->target(ActionTarget::Resources)];
+        return [
+            ReviewTickets::make()->target(ActionTarget::Resources),
+            ReviewAllowedTickets::make()->target(ActionTarget::Resources)->skipUnauthorized(),
+        ];
     }
 }

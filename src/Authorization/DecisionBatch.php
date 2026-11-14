@@ -17,14 +17,11 @@ final class DecisionBatch
 
     private int $depth = 0;
 
-    private readonly DecisionPreparation $preparation;
-
     public function __construct(
         private readonly DecisionStore $store,
         private readonly DecisionMemo $memo,
-    ) {
-        $this->preparation = new DecisionPreparation;
-    }
+        private readonly DecisionPreparation $preparation = new DecisionPreparation,
+    ) {}
 
     /**
      * @template TResult
@@ -39,7 +36,7 @@ final class DecisionBatch
         $this->depth++;
 
         try {
-            $this->preparation->prepare($this->undecided($checks, $storable));
+            $this->preparation->prepare($checks, $this->decided($storable));
 
             return $decide();
         } finally {
@@ -59,7 +56,7 @@ final class DecisionBatch
         $decisions = [];
 
         try {
-            $this->preparation->prepare($this->undecided($checks, $storable));
+            $this->preparation->prepare($checks, $this->decided($storable));
 
             foreach ($checks as $key => $check) {
                 $stored = isset($storable[$key]) ? $this->read[$key] ?? null : null;
@@ -98,13 +95,12 @@ final class DecisionBatch
     }
 
     /**
-     * @param  array<string, Check>  $checks
      * @param  array<string, Check>  $storable
-     * @return array<string, Check>
+     * @return Closure(string): bool
      */
-    private function undecided(array $checks, array $storable): array
+    private function decided(array $storable): Closure
     {
-        return array_filter($checks, fn (string $key): bool => ! isset($storable[$key], $this->read[$key]), ARRAY_FILTER_USE_KEY);
+        return fn (string $key): bool => isset($storable[$key], $this->read[$key]);
     }
 
     private function flush(): void
