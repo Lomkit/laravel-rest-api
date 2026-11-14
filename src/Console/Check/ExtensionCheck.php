@@ -3,15 +3,14 @@
 namespace Lomkit\Rest\Console\Check;
 
 use Illuminate\Contracts\Config\Repository;
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\Container;
-use LogicException;
 use Lomkit\Rest\Config\RestConfig;
 use Lomkit\Rest\Exceptions\InvalidExtensionException;
 use Lomkit\Rest\Extensions\ExtensionEntry;
 use Lomkit\Rest\Extensions\ExtensionFactory;
 use Lomkit\Rest\Extensions\ExtensionList;
 use Lomkit\Rest\Extensions\RuntimeExtensions;
+use Throwable;
 
 final readonly class ExtensionCheck
 {
@@ -39,7 +38,7 @@ final readonly class ExtensionCheck
 
             try {
                 $factory->make($entry->name, $entry->class);
-            } catch (LogicException|BindingResolutionException $exception) {
+            } catch (Throwable $exception) {
                 $report = $report->withProblem(self::problem($entry, $exception));
             }
         }
@@ -47,7 +46,7 @@ final readonly class ExtensionCheck
         return $report;
     }
 
-    private static function problem(ExtensionEntry $entry, LogicException|BindingResolutionException $exception): string
+    private static function problem(ExtensionEntry $entry, Throwable $exception): string
     {
         if ($exception instanceof InvalidExtensionException && $exception->namesExtension($entry->name)) {
             return $exception->getMessage();

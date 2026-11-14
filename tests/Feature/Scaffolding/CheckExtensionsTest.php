@@ -12,6 +12,7 @@ use Lomkit\Rest\Tests\Fixtures\Extensions\AbstractNotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\BothKindsExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\ExtensionLog;
+use Lomkit\Rest\Tests\Fixtures\Extensions\FailingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\KindlessExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\NotingExtension;
 use Lomkit\Rest\Tests\Fixtures\Extensions\UnresolvableExtension;
@@ -156,6 +157,34 @@ final class CheckExtensionsTest extends ScaffoldingTestCase
             ],
         ], $report['extensions']);
         $this->assertSame([NotingExtension::class, CountingExtension::class], ExtensionLog::$built);
+    }
+
+    #[Test]
+    #[WithConfig('rest.extensions', ['failing' => FailingExtension::class, 'counting' => CountingExtension::class])]
+    public function it_reports_an_extension_whose_constructor_throws(): void
+    {
+        $problem = 'The [failing] extension '.FailingExtension::class.' cannot be built: '.FailingExtension::MESSAGE;
+
+        $output = $this->check(1, TripController::class);
+        $report = $this->report(1, TripController::class);
+
+        $this->assertStringEndsWith(
+            "  extensions ... FAILED\n"
+            .'  ⇂ '.rtrim($problem, '.')."\n"
+            ."  failing ... Lomkit\Rest\Tests\Fixtures\Extensions\FailingExtension, config\n"
+            ."  counting ... Lomkit\Rest\Tests\Fixtures\Extensions\CountingExtension, config\n",
+            $output,
+        );
+        $this->assertStringContainsString('  routes ', $output);
+        $this->assertSame([
+            'registered' => [
+                ['name' => 'failing', 'class' => FailingExtension::class, 'origin' => 'config', 'disabled' => false],
+                ['name' => 'counting', 'class' => CountingExtension::class, 'origin' => 'config', 'disabled' => false],
+            ],
+            'problems' => [$problem],
+        ], $report['extensions']);
+        $this->assertArrayHasKey('routes', $report);
+        $this->assertSame([CountingExtension::class, CountingExtension::class], ExtensionLog::$built);
     }
 
     private function expose(string $name, string $controller): void
